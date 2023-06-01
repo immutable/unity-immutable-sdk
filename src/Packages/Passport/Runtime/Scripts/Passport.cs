@@ -9,8 +9,10 @@ namespace Immutable.Passport
 {
     public class Passport : MonoBehaviour
     {
-        [SerializeField] private BaseUwbClientManager clientManager;
-        private WebBrowserClient webBrowserClient;
+        #if UNITY_STANDALONE_WIN || UNITY_STANDALONE_WIN
+            [SerializeField] private BaseUwbClientManager clientManager;
+            private WebBrowserClient webBrowserClient;
+        #endif
 
         // Request ID to TaskCompletionSource
         // Storing TaskCompletionSource as an object as C# doesn't support wildcards like TaskCompletionSource<Any>

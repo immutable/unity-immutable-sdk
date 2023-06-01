@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "com.immutable.passport": {
-      "version": "file:C:/Users/natalie/Documents/unity-immutable-sdk/src/Packages/Passport",
+      "version": "file:C:../../Packages/Passport",
       "depth": 0,
       "source": "local",
       "dependencies": {}
