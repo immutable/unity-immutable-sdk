@@ -21,16 +21,19 @@ public class SampleScript : MonoBehaviour
     }
 
     public async void Connect() {
+        showOutput("Called Connect()");
         bool success = await passport.Connect();
         showOutput("Successfully connected to Passport");
     }
 
     public async void GetAddress() {
+        showOutput("Called GetAddress()");
         string? address = await passport.GetAddress();
         showOutput(address);
     }
 
     public async void Logout() {
+        showOutput("Called Logout()");
         passport.Logout();
         showOutput("Logged out");
     }

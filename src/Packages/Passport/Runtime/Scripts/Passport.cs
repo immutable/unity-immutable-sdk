@@ -126,8 +126,8 @@ namespace Immutable.Passport
         private void showBrowser() {
             // Match browser resolution ratio with browser size so the content is not distorted
             RectTransform rectTransform = clientManager.GetComponent<RectTransform>();
-            int w = (int) Math.Round(rectTransform.rect.width * 1.5);
-            int h = (int) Math.Round(rectTransform.rect.height * 1.5);
+            int w = (int) Math.Round(rectTransform.rect.width * 1.25);
+            int h = (int) Math.Round(rectTransform.rect.height * 1.25);
             webBrowserClient.Resize(new VoltstroStudios.UnityWebBrowser.Shared.Resolution((uint) w, (uint) h));
             gameObject.transform.localScale = new Vector3(1, 1, 1);
         }
