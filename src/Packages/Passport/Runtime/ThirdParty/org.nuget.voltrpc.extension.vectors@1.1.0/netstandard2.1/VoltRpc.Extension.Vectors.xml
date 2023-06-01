@@ -1,0 +1,176 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>VoltRpc.Extension.Vectors</name>
+    </assembly>
+    <members>
+        <member name="T:VoltRpc.Extension.Vectors.BufferedReaderVectorsExtensions">
+            <summary>
+               Provides System.Numerics.Vectors support to <see cref="T:VoltRpc.IO.BufferedReader"/>
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Extension.Vectors.BufferedReaderVectorsExtensions.ReadMatrix3X2(VoltRpc.IO.BufferedReader)">
+            <summary>
+                Reads a <see cref="T:System.Numerics.Matrix3x2"/>
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Extension.Vectors.BufferedReaderVectorsExtensions.ReadMatrix4X4(VoltRpc.IO.BufferedReader)">
+            <summary>
+                Reads a <see cref="T:System.Numerics.Matrix4x4"/>
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Extension.Vectors.BufferedReaderVectorsExtensions.ReadPlane(VoltRpc.IO.BufferedReader)">
+            <summary>
+                Reads a <see cref="T:System.Numerics.Plane"/>
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Extension.Vectors.BufferedReaderVectorsExtensions.ReadQuaternion(VoltRpc.IO.BufferedReader)">
+            <summary>
+                Reads a <see cref="T:System.Numerics.Quaternion"/>
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Extension.Vectors.BufferedReaderVectorsExtensions.ReadVector2(VoltRpc.IO.BufferedReader)">
+            <summary>
+                Reads a <see cref="T:System.Numerics.Vector2"/>
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Extension.Vectors.BufferedReaderVectorsExtensions.ReadVector3(VoltRpc.IO.BufferedReader)">
+            <summary>
+                Reads a <see cref="T:System.Numerics.Vector3"/>
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Extension.Vectors.BufferedReaderVectorsExtensions.ReadVector4(VoltRpc.IO.BufferedReader)">
+            <summary>
+                Reads a <see cref="T:System.Numerics.Vector4"/>
+            </summary>
+        </member>
+        <member name="T:VoltRpc.Extension.Vectors.BufferedWriterVectorsExtensions">
+            <summary>
+                Provides System.Numerics.Vectors support to <see cref="T:VoltRpc.IO.BufferedWriter"/>
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Extension.Vectors.BufferedWriterVectorsExtensions.WriteMatrix3X2(VoltRpc.IO.BufferedWriter,System.Numerics.Matrix3x2)">
+            <summary>
+                Writes a <see cref="T:System.Numerics.Matrix3x2"/>
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Extension.Vectors.BufferedWriterVectorsExtensions.WriteMatrix4X4(VoltRpc.IO.BufferedWriter,System.Numerics.Matrix4x4)">
+            <summary>
+                Writes a <see cref="T:System.Numerics.Matrix4x4"/>
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Extension.Vectors.BufferedWriterVectorsExtensions.WritePlane(VoltRpc.IO.BufferedWriter,System.Numerics.Plane)">
+            <summary>
+                Writes a <see cref="T:System.Numerics.Plane"/>
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Extension.Vectors.BufferedWriterVectorsExtensions.WriteQuaternion(VoltRpc.IO.BufferedWriter,System.Numerics.Quaternion)">
+            <summary>
+                Writes a <see cref="T:System.Numerics.Quaternion"/>
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Extension.Vectors.BufferedWriterVectorsExtensions.WriteVector2(VoltRpc.IO.BufferedWriter,System.Numerics.Vector2)">
+            <summary>
+                Writes a <see cref="T:System.Numerics.Vector2"/>
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Extension.Vectors.BufferedWriterVectorsExtensions.WriteVector3(VoltRpc.IO.BufferedWriter,System.Numerics.Vector3)">
+            <summary>
+                Writes a <see cref="T:System.Numerics.Vector3"/>
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Extension.Vectors.BufferedWriterVectorsExtensions.WriteVector4(VoltRpc.IO.BufferedWriter,System.Numerics.Vector4)">
+            <summary>
+                Writes a <see cref="T:System.Numerics.Vector4"/>
+            </summary>
+        </member>
+        <member name="T:VoltRpc.Extension.Vectors.Types.Matrix3X2TypeReadWriter">
+            <summary>
+                <see cref="T:VoltRpc.Types.TypeReadWriter`1"/> for a <see cref="T:System.Numerics.Matrix3x2"/>
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Extension.Vectors.Types.Matrix3X2TypeReadWriter.Write(VoltRpc.IO.BufferedWriter,System.Numerics.Matrix3x2)">
+            <inheritdoc />
+        </member>
+        <member name="M:VoltRpc.Extension.Vectors.Types.Matrix3X2TypeReadWriter.Read(VoltRpc.IO.BufferedReader)">
+            <inheritdoc />
+        </member>
+        <member name="T:VoltRpc.Extension.Vectors.Types.Matrix4X4TypeReadWriter">
+            <summary>
+                <see cref="T:VoltRpc.Types.TypeReadWriter`1"/> for a <see cref="T:System.Numerics.Matrix4x4"/>
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Extension.Vectors.Types.Matrix4X4TypeReadWriter.Write(VoltRpc.IO.BufferedWriter,System.Numerics.Matrix4x4)">
+            <inheritdoc />
+        </member>
+        <member name="M:VoltRpc.Extension.Vectors.Types.Matrix4X4TypeReadWriter.Read(VoltRpc.IO.BufferedReader)">
+            <inheritdoc />
+        </member>
+        <member name="T:VoltRpc.Extension.Vectors.Types.PlaneTypeReadWriter">
+            <summary>
+                <see cref="T:VoltRpc.Types.TypeReadWriter`1"/> for a <see cref="T:System.Numerics.Plane"/>
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Extension.Vectors.Types.PlaneTypeReadWriter.Write(VoltRpc.IO.BufferedWriter,System.Numerics.Plane)">
+            <inheritdoc />
+        </member>
+        <member name="M:VoltRpc.Extension.Vectors.Types.PlaneTypeReadWriter.Read(VoltRpc.IO.BufferedReader)">
+            <inheritdoc />
+        </member>
+        <member name="T:VoltRpc.Extension.Vectors.Types.QuaternionTypeReadWriter">
+            <summary>
+                <see cref="T:VoltRpc.Types.TypeReadWriter`1"/> for a <see cref="T:System.Numerics.Quaternion"/>
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Extension.Vectors.Types.QuaternionTypeReadWriter.Write(VoltRpc.IO.BufferedWriter,System.Numerics.Quaternion)">
+            <inheritdoc />
+        </member>
+        <member name="M:VoltRpc.Extension.Vectors.Types.QuaternionTypeReadWriter.Read(VoltRpc.IO.BufferedReader)">
+            <inheritdoc />
+        </member>
+        <member name="T:VoltRpc.Extension.Vectors.Types.Vector2TypeReadWriter">
+            <summary>
+                <see cref="T:VoltRpc.Types.TypeReadWriter`1"/> for a <see cref="T:System.Numerics.Vector2"/>
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Extension.Vectors.Types.Vector2TypeReadWriter.Write(VoltRpc.IO.BufferedWriter,System.Numerics.Vector2)">
+            <inheritdoc />
+        </member>
+        <member name="M:VoltRpc.Extension.Vectors.Types.Vector2TypeReadWriter.Read(VoltRpc.IO.BufferedReader)">
+            <inheritdoc />
+        </member>
+        <member name="T:VoltRpc.Extension.Vectors.Types.Vector3TypeReadWriter">
+            <summary>
+                <see cref="T:VoltRpc.Types.TypeReadWriter`1"/> for a <see cref="T:System.Numerics.Vector3"/>
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Extension.Vectors.Types.Vector3TypeReadWriter.Write(VoltRpc.IO.BufferedWriter,System.Numerics.Vector3)">
+            <inheritdoc />
+        </member>
+        <member name="M:VoltRpc.Extension.Vectors.Types.Vector3TypeReadWriter.Read(VoltRpc.IO.BufferedReader)">
+            <inheritdoc />
+        </member>
+        <member name="T:VoltRpc.Extension.Vectors.Types.Vector4TypeReadWriter">
+            <summary>
+                <see cref="T:VoltRpc.Types.TypeReadWriter`1"/> for a <see cref="T:System.Numerics.Vector4"/>
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Extension.Vectors.Types.Vector4TypeReadWriter.Write(VoltRpc.IO.BufferedWriter,System.Numerics.Vector4)">
+            <inheritdoc />
+        </member>
+        <member name="M:VoltRpc.Extension.Vectors.Types.Vector4TypeReadWriter.Read(VoltRpc.IO.BufferedReader)">
+            <inheritdoc />
+        </member>
+        <member name="T:VoltRpc.Extension.Vectors.Types.VectorsExtensionTypes">
+            <summary>
+                Vectors extension types manager
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Extension.Vectors.Types.VectorsExtensionTypes.InstallVectorsExtension(VoltRpc.Types.TypeReaderWriterManager)">
+            <summary>
+                Adds all <see cref="T:VoltRpc.Types.TypeReadWriter`1"/> that VoltRpc.Extension.Vectors supports
+            </summary>
+            <param name="readerWriterManager"></param>
+        </member>
+    </members>
+</doc>

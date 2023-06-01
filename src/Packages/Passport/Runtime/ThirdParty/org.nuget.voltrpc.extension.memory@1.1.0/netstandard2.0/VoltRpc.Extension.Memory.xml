@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>VoltRpc.Extension.Memory</name>
+    </assembly>
+    <members>
+        <member name="T:VoltRpc.Extension.Memory.BufferedReaderMemoryExtensions">
+            <summary>
+                Provides extensions to <see cref="T:VoltRpc.IO.BufferedReader"/> 
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Extension.Memory.BufferedReaderMemoryExtensions.ReadBytesSpanSlice(VoltRpc.IO.BufferedReader,System.Int32)">
+            <summary>
+                Reads from <see cref="T:VoltRpc.IO.BufferedReader"/> and returns a <see cref="T:System.Span`1"/> slice of the buffer
+            </summary>
+            <param name="reader"></param>
+            <param name="size"></param>
+            <returns></returns>
+        </member>
+        <member name="M:VoltRpc.Extension.Memory.BufferedReaderMemoryExtensions.ReadBytesSpanCopy(VoltRpc.IO.BufferedReader,System.Int32)">
+            <summary>
+                Reads from <see cref="T:VoltRpc.IO.BufferedReader"/> and returns a <see cref="T:System.Span`1"/> copy of it
+                <para>This method does allocate</para>
+            </summary>
+            <param name="reader"></param>
+            <param name="size"></param>
+            <returns></returns>
+        </member>
+        <member name="M:VoltRpc.Extension.Memory.BufferedReaderMemoryExtensions.ReadStringSpan(VoltRpc.IO.BufferedReader)">
+            <summary>
+                Reads a <see cref="T:System.String"/>, but is using <see cref="M:VoltRpc.Extension.Memory.BufferedReaderMemoryExtensions.ReadBytesSpanSlice(VoltRpc.IO.BufferedReader,System.Int32)"/> instead
+            </summary>
+            <param name="reader"></param>
+            <returns></returns>
+            <exception cref="T:System.IO.EndOfStreamException"></exception>
+        </member>
+        <member name="T:VoltRpc.Extension.Memory.BufferedWriterMemoryExtensions">
+            <summary>
+                Provides extensions to <see cref="T:VoltRpc.IO.BufferedWriter"/>
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Extension.Memory.BufferedWriterMemoryExtensions.WriteBytesSpan(VoltRpc.IO.BufferedWriter,System.ReadOnlySpan{System.Byte})">
+            <summary>
+                Writes a <see cref="T:System.Span`1"/> <see cref="T:System.Byte"/> to a <see cref="T:VoltRpc.IO.BufferedWriter"/>
+            </summary>
+            <param name="writer"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:VoltRpc.Extension.Memory.BufferedWriterMemoryExtensions.WriteBytesMemory(VoltRpc.IO.BufferedWriter,System.ReadOnlyMemory{System.Byte})">
+            <summary>
+                Writes a <see cref="T:System.Memory`1"/> <see cref="T:System.Byte"/> to a <see cref="T:VoltRpc.IO.BufferedWriter"/>
+            </summary>
+            <param name="writer"></param>
+            <param name="value"></param>
+        </member>
+    </members>
+</doc>

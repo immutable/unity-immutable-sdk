@@ -1,0 +1,16 @@
+{
+  "name": "com.immutable.passport",
+  "version": "0.0.1",
+  "description": "Immutable Passport Package",
+  "displayName": "Immutable Passport",
+  "author": {
+    "name": "Immutable",
+    "url": "https://immutable.com"
+  },
+  "keywords": [
+    "unity",
+    "immutable",
+    "passport"
+  ],
+  "unity": "2021.3"
+}

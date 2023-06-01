@@ -1,0 +1,1371 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>VoltRpc</name>
+    </assembly>
+    <members>
+        <member name="T:VoltRpc.Communication.AlreadyConnectedException">
+            <summary>
+                An <see cref="T:System.Exception"/> related to when an action is attempted to be done that cannot be done while the
+                <see cref="T:VoltRpc.Communication.Client"/> is already connected
+            </summary>
+        </member>
+        <member name="T:VoltRpc.Communication.AlreadyRunningException">
+            <summary>
+                An <see cref="T:System.Exception"/> related to when an action is attempted to be done that cannot be done while the
+                <see cref="T:VoltRpc.Communication.Host"/> is already running
+            </summary>
+        </member>
+        <member name="T:VoltRpc.Communication.Client">
+            <summary>
+                The <see cref="T:VoltRpc.Communication.Client" /> is what is used to send messages to a <see cref="T:VoltRpc.Communication.Host" />
+                <para>
+                    This base <see cref="T:VoltRpc.Communication.Client"/> has no implementation of actually connecting, a "communication layer"
+                    needs to be used, such as the <see cref="T:VoltRpc.Communication.TCP.TCPClient"/> communication layer
+                </para>
+                <para>
+                    In most normal cases, you will only have to use the generated proxy layer to interact with
+                    the <see cref="T:VoltRpc.Communication.Host"/>
+                </para>
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Communication.Client.DefaultBufferSize">
+            <summary>
+                The default size of the buffers
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Communication.Client.Services">
+            <summary>
+                All added services
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Communication.Client.version">
+            <summary>
+                Version this client wants to be
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Communication.Client.#ctor(System.Int32)">
+            <summary>
+                Creates a new <see cref="T:VoltRpc.Communication.Client" /> instance
+            </summary>
+            <param name="bufferSize">The initial size of the buffers</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Will throw if the buffer size is less then 16</exception>
+        </member>
+        <member name="P:VoltRpc.Communication.Client.TypeReaderWriterManager">
+            <summary>
+                The <see cref="T:VoltRpc.Types.TypeReaderWriterManager" /> for <see cref="T:VoltRpc.Communication.Client" />
+            </summary>
+        </member>
+        <member name="P:VoltRpc.Communication.Client.IsConnected">
+            <summary>
+                Is the <see cref="T:VoltRpc.Communication.Client" /> connected
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Communication.Client.Connect">
+            <summary>
+                Connects the <see cref="T:VoltRpc.Communication.Client" /> to a host
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Communication.Client.AddService``1">
+            <summary>
+                Tells the <see cref="T:VoltRpc.Communication.Client" /> what interfaces you might be using
+            </summary>
+            <typeparam name="T">The same interface that you are using on the server</typeparam>
+            <exception cref="T:System.NullReferenceException">Thrown if T's <see cref="P:System.Type.FullName" /> is null</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if T is not an interface, or has already been added as a service.</exception>
+        </member>
+        <member name="M:VoltRpc.Communication.Client.AddService(System.Type)">
+            <summary>
+                Tells the <see cref="T:VoltRpc.Communication.Client" /> what interfaces you might be using
+            </summary>
+            <exception cref="T:System.NullReferenceException">Thrown if interfaceType's <see cref="P:System.Type.FullName" /> is null</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">
+                Thrown if interfaceType is not an interface, or has already been added as
+                a service.
+            </exception>
+            <exception cref="T:VoltRpc.Communication.AlreadyConnectedException">Thrown if we are already connected</exception>
+        </member>
+        <member name="M:VoltRpc.Communication.Client.SetProtocolVersion(System.Object)">
+            <summary>
+                Sets what protocol version to use.
+                <para>Set value to null to reset back to none.</para>
+            </summary>
+            <param name="value">Value can be any object you want, as long as the <see cref="P:VoltRpc.Communication.Client.TypeReaderWriterManager"/> has a <see cref="T:VoltRpc.Types.TypeReadWriter`1"/> for it.</param>
+            <exception cref="T:VoltRpc.Communication.AlreadyConnectedException">Thrown if the <see cref="T:VoltRpc.Communication.Client"/> is already connected to a <see cref="T:VoltRpc.Communication.Host"/></exception>
+            <exception cref="T:VoltRpc.Types.NoTypeReaderWriterException">Thrown if the <see cref="P:VoltRpc.Communication.Client.TypeReaderWriterManager"/> doesn't have a <see cref="T:VoltRpc.Types.TypeReadWriter`1"/> for the value <see cref="T:System.Type"/>.</exception>
+        </member>
+        <member name="M:VoltRpc.Communication.Client.Initialize(System.IO.Stream,System.IO.Stream)">
+            <summary>
+                Initialize streams
+            </summary>
+            <param name="readStream">The <see cref="T:System.IO.Stream" /> to read from</param>
+            <param name="writeStream">The <see cref="T:System.IO.Stream" /> to write to</param>
+            <exception cref="T:System.ArgumentNullException">Thrown if either provided stream is null</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if we can't read or write to the respected streams</exception>
+        </member>
+        <member name="M:VoltRpc.Communication.Client.Initialize(VoltRpc.IO.BufferedReader,VoltRpc.IO.BufferedWriter)">
+            <summary>
+                Initialize streams
+            </summary>
+            <param name="bufferedRead">The <see cref="T:VoltRpc.IO.BufferedReader" /> that will be read from</param>
+            <param name="bufferedWrite">The <see cref="T:VoltRpc.IO.BufferedWriter" /> that will be written to</param>
+            <exception cref="T:System.ArgumentNullException">Thrown if either provided buffers is null</exception>
+        </member>
+        <member name="M:VoltRpc.Communication.Client.InvokeMethod(System.String,System.Object[])">
+            <summary>
+                Invokes a method on the server
+            </summary>
+            <param name="methodName">The full method name</param>
+            <param name="parameters">All parameters to be passed to the method</param>
+            <exception cref="T:VoltRpc.Communication.NotConnectedException">Thrown if the client is not connected to a host</exception>
+            <exception cref="T:System.MissingMethodException">
+                Thrown if the method name doesn't exist on either the client or host
+            </exception>
+            <exception cref="T:VoltRpc.Types.NoTypeReaderWriterException">
+                Thrown if the return type or parameter types doesn't have a <see cref="T:VoltRpc.Types.TypeReadWriter`1" />
+            </exception>
+            <exception cref="T:VoltRpc.Types.TypeReaderWriterException">
+                Thrown if the type reader/writer fails on the host
+            </exception>
+            <exception cref="T:VoltRpc.Communication.MethodInvokeFailedException">
+                Thrown if an <see cref="T:System.Exception" /> occurs while invoking a method on the host
+            </exception>
+        </member>
+        <member name="M:VoltRpc.Communication.Client.WriteParams(VoltRpc.Services.ServiceMethod,System.Collections.Generic.IReadOnlyList{System.Object})">
+            <summary>
+                Writes the parameters
+            </summary>
+            <param name="method"></param>
+            <param name="parameters"></param>
+            <exception cref="T:VoltRpc.Types.NoTypeReaderWriterException"></exception>
+        </member>
+        <member name="M:VoltRpc.Communication.Client.InvokeSyncCheck">
+            <summary>
+                Does a sync check against the host
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Communication.Client.HandleMessageResponse(VoltRpc.Communication.MessageResponse)">
+            <summary>
+                Handles a <see cref="T:VoltRpc.Communication.MessageResponse"/>
+            </summary>
+            <param name="messageResponse"></param>
+        </member>
+        <member name="P:VoltRpc.Communication.Client.HasDisposed">
+            <summary>
+                Has this object been disposed
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Communication.Client.CheckDispose">
+            <summary>
+                Checks the disposal state on this object
+            </summary>
+            <exception cref="T:System.ObjectDisposedException"></exception>
+        </member>
+        <member name="M:VoltRpc.Communication.Client.Finalize">
+            <summary>
+                Deconstructor for <see cref="T:VoltRpc.Communication.Client" />.
+                <para>
+                    Tells the server that we have disconnected and releases resources if it hasn't been done by
+                    <see cref="M:VoltRpc.Communication.Client.Dispose" /> already.
+                </para>
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Communication.Client.Dispose">
+            <summary>
+                Destroys the <see cref="T:VoltRpc.Communication.Client" /> instance
+            </summary>
+        </member>
+        <member name="T:VoltRpc.Communication.ConnectionFailedException">
+            <summary>
+                An <see cref="T:System.Exception" /> related to when the connection fails to connect
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Communication.ConnectionFailedException.#ctor(System.String)">
+            <summary>
+                Creates a new <see cref="T:VoltRpc.Communication.ConnectionFailedException" /> instance
+            </summary>
+            <param name="message"></param>
+        </member>
+        <member name="M:VoltRpc.Communication.ConnectionFailedException.#ctor(System.String,System.Exception)">
+            <summary>
+                Creates a new <see cref="T:VoltRpc.Communication.ConnectionFailedException" /> instance
+            </summary>
+            <param name="message"></param>
+            <param name="innerException"></param>
+        </member>
+        <member name="T:VoltRpc.Communication.Host">
+            <summary>
+                The <see cref="T:VoltRpc.Communication.Host" /> is what receives and responds to a <see cref="T:VoltRpc.Communication.Client" />'s requests
+                <para>
+                    This base <see cref="T:VoltRpc.Communication.Host"/> has no actual implementation of handling connections,
+                    a "communication layer" needs to be used for that, such as <see cref="T:VoltRpc.Communication.TCP.TCPHost"/>
+                </para>
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Communication.Host.DefaultBufferSize">
+            <summary>
+                The default size of the buffers
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Communication.Host.BufferSize">
+            <summary>
+                This size of the buffer
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Communication.Host.Logger">
+            <summary>
+                Logger
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Communication.Host.Services">
+            <summary>
+                All the added services
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Communication.Host.version">
+            <summary>
+                Version this host wants to be
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Communication.Host.#ctor(VoltRpc.Logging.ILogger,System.Int32)">
+            <summary>
+                Creates a new <see cref="T:VoltRpc.Communication.Host" /> instance
+            </summary>
+            <param name="logger">The <see cref="T:VoltRpc.Logging.ILogger" /> to use</param>
+            <param name="bufferSize">The initial size of the buffers</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Will throw if the buffer size is less then 16</exception>
+        </member>
+        <member name="P:VoltRpc.Communication.Host.TypeReaderWriterManager">
+            <summary>
+                The <see cref="T:VoltRpc.Types.TypeReaderWriterManager" /> for <see cref="T:VoltRpc.Communication.Host" />
+            </summary>
+        </member>
+        <member name="P:VoltRpc.Communication.Host.ConnectionCount">
+            <summary>
+                Count of number of connections
+            </summary>
+        </member>
+        <member name="P:VoltRpc.Communication.Host.MaxConnectionsCount">
+            <summary>
+                What is the maximum amount of connections
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if value is 0 or less</exception>
+        </member>
+        <member name="P:VoltRpc.Communication.Host.IsRunning">
+            <summary>
+                Is the <see cref="T:VoltRpc.Communication.Host" /> running?
+            </summary>
+        </member>
+        <member name="P:VoltRpc.Communication.Host.HideStacktrace">
+            <summary>
+                Hides the stacktrace from the client when an <see cref="T:System.Exception" /> is thrown
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Communication.Host.protocolInfo">
+            <summary>
+                User set protocol info
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Communication.Host.StartListeningAsync">
+            <summary>
+                Starts listening for incoming requests
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Communication.Host.StartListening">
+            <summary>
+                Starts listening for incoming requests
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Communication.Host.AddService``1(``0)">
+            <summary>
+                Adds a service to this <see cref="T:VoltRpc.Communication.Host" />
+            </summary>
+            <param name="service">The service <see cref="T:System.Object" /> to add</param>
+            <typeparam name="T">The service type</typeparam>
+            <exception cref="T:System.ArgumentException">Thrown if the service has already been added</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if T is not an interface</exception>
+        </member>
+        <member name="M:VoltRpc.Communication.Host.AddService(System.Type,System.Object)">
+            <summary>
+                Adds a service to this <see cref="T:VoltRpc.Communication.Host" />
+            </summary>
+            <param name="serviceType">The <see cref="T:System.Type" /> of a service</param>
+            <param name="serviceObject">The actual service <see cref="T:System.Object" /> itself</param>
+            <exception cref="T:System.ArgumentException">Thrown if the service has already been added</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if serviceType is not an interface</exception>
+        </member>
+        <member name="M:VoltRpc.Communication.Host.SetProtocolVersion(System.Object)">
+            <summary>
+                Sets what protocol version to use.
+                <para>Set value to null to reset back to none.</para>
+            </summary>
+            <param name="value">Value can be any object you want, as long as the <see cref="P:VoltRpc.Communication.Host.TypeReaderWriterManager"/> has a <see cref="T:VoltRpc.Types.TypeReadWriter`1"/> for it.</param>
+            <exception cref="T:VoltRpc.Communication.AlreadyRunningException">Thrown if the <see cref="T:VoltRpc.Communication.Host"/> is already running</exception>
+            <exception cref="T:VoltRpc.Types.NoTypeReaderWriterException">Thrown if the <see cref="P:VoltRpc.Communication.Host.TypeReaderWriterManager"/> doesn't have a <see cref="T:VoltRpc.Types.TypeReadWriter`1"/> for the value <see cref="T:System.Type"/>.</exception>
+        </member>
+        <member name="M:VoltRpc.Communication.Host.ProcessRequest(System.IO.Stream,System.IO.Stream)">
+            <summary>
+                Processes a request from a client
+                <para>
+                    This override will automatically create the <see cref="T:VoltRpc.IO.BufferedReader" /> and <see cref="T:VoltRpc.IO.BufferedWriter" /> for
+                    you
+                    then call <see cref="M:VoltRpc.Communication.Host.ProcessRequest(VoltRpc.IO.BufferedReader,VoltRpc.IO.BufferedWriter)" />.
+                    <para>This is the preferred process request method to call.</para>
+                </para>
+            </summary>
+            <param name="readStream">The <see cref="T:System.IO.Stream" /> to read from</param>
+            <param name="writeStream">The <see cref="T:System.IO.Stream" /> to write to</param>
+            <exception cref="T:System.ArgumentNullException">Thrown if either provide stream is null</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if we can't read or write to the respected stream</exception>
+        </member>
+        <member name="M:VoltRpc.Communication.Host.ProcessRequest(VoltRpc.IO.BufferedReader,VoltRpc.IO.BufferedWriter)">
+            <summary>
+                Processes a request from a client
+                <para>
+                    You should only call this if you need to provide a custom <see cref="T:VoltRpc.IO.BufferedReader" /> and/or
+                    <see cref="T:VoltRpc.IO.BufferedWriter" />.
+                    For example you are using a <see cref="T:System.IO.Stream" /> that needs <see cref="P:System.IO.Stream.Position" />.
+                </para>
+            </summary>
+            <param name="reader">The <see cref="T:VoltRpc.IO.BufferedReader" /> to read from</param>
+            <param name="writer">The <see cref="T:VoltRpc.IO.BufferedWriter" /> to write to</param>
+            <exception cref="T:System.ArgumentNullException">Thrown if either buffer is null</exception>
+        </member>
+        <member name="M:VoltRpc.Communication.Host.ProcessSyncCheck(VoltRpc.IO.BufferedReader,VoltRpc.IO.BufferedWriter)">
+            <summary>
+                Process a sync check message
+            </summary>
+            <param name="reader"></param>
+            <param name="writer"></param>
+            <returns>Returns true if sync message was good</returns>
+        </member>
+        <member name="M:VoltRpc.Communication.Host.CheckDispose">
+            <summary>
+                Checks if the object has been disposed
+            </summary>
+            <exception cref="T:System.ObjectDisposedException"></exception>
+        </member>
+        <member name="P:VoltRpc.Communication.Host.HasDisposed">
+            <summary>
+                Has this object been disposed
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Communication.Host.Dispose">
+            <summary>
+                Destroys the <see cref="T:VoltRpc.Communication.Host" /> instance
+            </summary>
+        </member>
+        <member name="T:VoltRpc.Communication.MessageResponse">
+            <summary>
+                A response from a message
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Communication.MessageResponse.MethodNotFound">
+            <summary>
+                The method wasn't found
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Communication.MessageResponse.MethodExecutedSuccessful">
+            <summary>
+                The method was executed successfully
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Communication.MessageResponse.MethodExecuteFailException">
+            <summary>
+                The method failed while being invoked
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Communication.MessageResponse.SyncRighto">
+            <summary>
+                Sync was all good mate!
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Communication.MessageResponse.SyncVersionMissMatch">
+            <summary>
+                Response when version info is a miss-match
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Communication.MessageResponse.SyncProtocolExistenceMissMatch">
+            <summary>
+                The existence of a protocol are miss-matched
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Communication.MessageResponse.SyncProtocolTypeMissMatch">
+            <summary>
+                The <see cref="T:System.Type"/> of the protocol value doesn't match
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Communication.MessageResponse.SyncProtocolValueMissMatch">
+            <summary>
+                The value of the protocol don't match
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Communication.MessageResponse.SyncServiceMissMatch">
+            <summary>
+                Some miss-match with services
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Communication.MessageResponse.TypeReadWriterFailMissing">
+            <summary>
+                The method failed to execute due to a missing type reader/writer
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Communication.MessageResponse.TypeReadWriterFail">
+            <summary>
+                The type reader/writer failed for some reason
+            </summary>
+        </member>
+        <member name="T:VoltRpc.Communication.MessageType">
+            <summary>
+                What type of message is this?
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Communication.MessageType.InvokeMethod">
+            <summary>
+                Invoke a message
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Communication.MessageType.Shutdown">
+            <summary>
+                Shutdown the connection
+            </summary>
+        </member>
+        <member name="T:VoltRpc.Communication.MethodInvokeFailedException">
+            <summary>
+                An <see cref="T:System.Exception" /> related to when a method fails on the host
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Communication.MethodInvokeFailedException.#ctor(System.String,System.String)">
+            <summary>
+                Creates a new <see cref="T:VoltRpc.Communication.MethodInvokeFailedException" /> instance
+            </summary>
+            <param name="innerExceptionMessage"></param>
+            <param name="innerStackTrace"></param>
+        </member>
+        <member name="M:VoltRpc.Communication.MethodInvokeFailedException.#ctor(System.String,System.String,System.String,System.String)">
+            <summary>
+                Creates a new <see cref="T:VoltRpc.Communication.MethodInvokeFailedException" /> instance
+            </summary>
+            <param name="message"></param>
+            <param name="stackTrace"></param>
+            <param name="innerExceptionMessage"></param>
+            <param name="innerStackTrace"></param>
+        </member>
+        <member name="P:VoltRpc.Communication.MethodInvokeFailedException.StackTrace">
+            <inheritdoc />
+        </member>
+        <member name="T:VoltRpc.Communication.NotConnectedException">
+            <summary>
+                An <see cref="T:System.Exception"/> related to when a method is attempted to be called,
+                but the <see cref="T:VoltRpc.Communication.Client"/> has not connected yet
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Communication.NotConnectedException.#ctor(System.String)">
+            <summary>
+                Create new <see cref="T:VoltRpc.Communication.NotConnectedException" />
+            </summary>
+            <param name="message"></param>
+        </member>
+        <member name="T:VoltRpc.Communication.Syncing.ProtocolSyncException">
+            <summary>
+                An <see cref="T:System.Exception"/> related to a protocol sync error
+                <para>
+                    This could be due to the set protocol being different between the <see cref="T:VoltRpc.Communication.Host"/> and
+                    <see cref="T:VoltRpc.Communication.Client"/>, either from different <see cref="T:VoltRpc.Types.TypeReadWriter`1"/> or different
+                    values
+                </para>
+            </summary>
+        </member>
+        <member name="T:VoltRpc.Communication.Syncing.SyncServiceMissMatchException">
+            <summary>
+                An <see cref="T:System.Exception"/> related to an error with syncing
+                <para>
+                    The <see cref="T:VoltRpc.Communication.Syncing.SyncServiceMissMatchException"/> is thrown when the interfaces that the <see cref="T:VoltRpc.Communication.Host"/>
+                    and <see cref="T:VoltRpc.Communication.Client"/> use have differences
+                </para>
+            </summary>
+        </member>
+        <member name="T:VoltRpc.Communication.TCP.TCPClient">
+            <summary>
+                A <see cref="T:VoltRpc.Communication.Client" /> that uses TCP to communicate
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Communication.TCP.TCPClient.DefaultReceiveTimeout">
+            <summary>
+                Default receive timeout time
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Communication.TCP.TCPClient.DefaultSendTimeout">
+            <summary>
+                Default send timeout time
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Communication.TCP.TCPClient.DefaultConnectionTimeout">
+            <summary>
+                Default connection timeout time
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Communication.TCP.TCPClient.#ctor(System.Net.IPEndPoint,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+                Creates a new <see cref="T:VoltRpc.Communication.TCP.TCPClient" /> instance
+            </summary>
+            <param name="endPoint">The <see cref="T:System.Net.IPEndPoint" /> to connect to</param>
+            <param name="bufferSize">The size of the buffers</param>
+            <param name="connectionTimeout">The timeout time for connection</param>
+            <param name="receiveTimeout">The receive timeout</param>
+            <param name="sendTimeout">The send timeout</param>
+        </member>
+        <member name="M:VoltRpc.Communication.TCP.TCPClient.#ctor(System.Net.IPEndPoint,System.Int32,System.Int32)">
+            <summary>
+                Creates a new <see cref="T:VoltRpc.Communication.TCP.TCPClient" /> instance
+            </summary>
+            <param name="endPoint">The <see cref="T:System.Net.IPEndPoint" /> to connect to</param>
+            <param name="receiveTimeout">The receive timeout</param>
+            <param name="sendTimeout">The send timeout</param>
+        </member>
+        <member name="M:VoltRpc.Communication.TCP.TCPClient.#ctor(System.Net.IPEndPoint,System.Int32)">
+            <summary>
+                Creates a new <see cref="T:VoltRpc.Communication.TCP.TCPClient" /> instance
+            </summary>
+            <param name="endPoint">The <see cref="T:System.Net.IPEndPoint" /> to connect to</param>
+            <param name="connectionTimeout">The timeout time for connection</param>
+        </member>
+        <member name="M:VoltRpc.Communication.TCP.TCPClient.#ctor(System.Net.IPEndPoint)">
+            <summary>
+                Creates a new <see cref="T:VoltRpc.Communication.TCP.TCPClient" /> instance
+            </summary>
+            <param name="endPoint">The <see cref="T:System.Net.IPEndPoint" /> to connect to</param>
+        </member>
+        <member name="M:VoltRpc.Communication.TCP.TCPClient.Connect">
+            <inheritdoc />
+            <exception cref="T:System.TimeoutException">Thrown if a connection timeout occurs</exception>
+            <exception cref="T:VoltRpc.Communication.ConnectionFailedException">Thrown if an unknown error occurs while connecting.</exception>
+        </member>
+        <member name="M:VoltRpc.Communication.TCP.TCPClient.Dispose">
+            <inheritdoc />
+        </member>
+        <member name="T:VoltRpc.Communication.TCP.TCPHost">
+            <summary>
+                A <see cref="T:VoltRpc.Communication.Host" /> that uses TCP to communicate
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Communication.TCP.TCPHost.DefaultReceiveTimeout">
+            <summary>
+                Default receive timeout time
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Communication.TCP.TCPHost.DefaultSendTimeout">
+            <summary>
+                Default send timeout time
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Communication.TCP.TCPHost.#ctor(System.Net.IPEndPoint,VoltRpc.Logging.ILogger,System.Int32,System.Int32,System.Int32)">
+            <summary>
+                Creates a new <see cref="T:VoltRpc.Communication.TCP.TCPHost" /> instance
+            </summary>
+            <param name="endPoint">The <see cref="T:System.Net.IPEndPoint" /> to listen on</param>
+            <param name="logger">The <see cref="T:VoltRpc.Logging.ILogger" /> to use. Will default to <see cref="T:VoltRpc.Logging.NullLogger" /> if null</param>
+            <param name="bufferSize">The initial size of the buffers</param>
+            <param name="receiveTimeout">How long until timeout from receiving</param>
+            <param name="sendTimeout">How long until timeout from sending</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Will throw if the buffer size is less then 16</exception>
+        </member>
+        <member name="M:VoltRpc.Communication.TCP.TCPHost.#ctor(System.Net.IPEndPoint,System.Int32,System.Int32,System.Int32)">
+            <summary>
+                Creates a new <see cref="T:VoltRpc.Communication.TCP.TCPHost" /> instance
+            </summary>
+            <param name="endPoint">The <see cref="T:System.Net.IPEndPoint" /> to listen on</param>
+            <param name="bufferSize">The initial size of the buffers</param>
+            <param name="receiveTimeout">How long until timeout from receiving</param>
+            <param name="sendTimeout">How long until timeout from sending</param>
+        </member>
+        <member name="M:VoltRpc.Communication.TCP.TCPHost.#ctor(System.Net.IPEndPoint,VoltRpc.Logging.ILogger,System.Int32,System.Int32)">
+            <summary>
+                Creates a new <see cref="T:VoltRpc.Communication.TCP.TCPHost" /> instance
+            </summary>
+            <param name="endPoint">The <see cref="T:System.Net.IPEndPoint" /> to listen on</param>
+            <param name="logger">The <see cref="T:VoltRpc.Logging.ILogger" /> to use. Will default to <see cref="T:VoltRpc.Logging.NullLogger" /> if null</param>
+            <param name="receiveTimeout">How long until timeout from receiving</param>
+            <param name="sendTimeout">How long until timeout from sending</param>
+        </member>
+        <member name="M:VoltRpc.Communication.TCP.TCPHost.#ctor(System.Net.IPEndPoint,System.Int32,System.Int32)">
+            <summary>
+                Creates a new <see cref="T:VoltRpc.Communication.TCP.TCPHost" /> instance
+            </summary>
+            <param name="endPoint">The <see cref="T:System.Net.IPEndPoint" /> to listen on</param>
+            <param name="receiveTimeout">How long until timeout from receiving</param>
+            <param name="sendTimeout">How long until timeout from sending</param>
+        </member>
+        <member name="M:VoltRpc.Communication.TCP.TCPHost.#ctor(System.Net.IPEndPoint,VoltRpc.Logging.ILogger)">
+            <summary>
+                Creates a new <see cref="T:VoltRpc.Communication.TCP.TCPHost" /> instance
+            </summary>
+            <param name="endPoint">The <see cref="T:System.Net.IPEndPoint" /> to listen on</param>
+            <param name="logger">The <see cref="T:VoltRpc.Logging.ILogger" /> to use. Will default to <see cref="T:VoltRpc.Logging.NullLogger" /> if null</param>
+        </member>
+        <member name="M:VoltRpc.Communication.TCP.TCPHost.StartListening">
+            <inheritdoc />
+        </member>
+        <member name="M:VoltRpc.Communication.TCP.TCPHost.Dispose">
+            <inheritdoc />
+        </member>
+        <member name="T:VoltRpc.IO.BufferedReader">
+            <summary>
+                A buffered reader for a <see cref="T:System.IO.Stream" />
+            </summary>
+        </member>
+        <member name="F:VoltRpc.IO.BufferedReader.IncomingStream">
+            <summary>
+                The incoming <see cref="T:System.IO.Stream" />
+            </summary>
+        </member>
+        <member name="F:VoltRpc.IO.BufferedReader.encoding">
+            <summary>
+                Internal access to the underlining <see cref="T:System.Text.UTF8Encoding"/> for <see cref="T:System.String"/>s
+            </summary>
+        </member>
+        <member name="F:VoltRpc.IO.BufferedReader.buffer">
+            <summary>
+                Internal access to the underlining buffer
+            </summary>
+        </member>
+        <member name="F:VoltRpc.IO.BufferedReader.readLength">
+            <summary>
+                Current read length of the underlining <see cref="T:System.IO.Stream"/>
+            </summary>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedReader.#ctor(System.IO.Stream,System.Int32)">
+            <summary>
+                Creates a new <see cref="T:VoltRpc.IO.BufferedReader" /> instance
+            </summary>
+            <param name="incoming"></param>
+            <param name="bufferSize"></param>
+        </member>
+        <member name="P:VoltRpc.IO.BufferedReader.Position">
+            <summary>
+                The current position of the buffer
+            </summary>
+        </member>
+        <member name="P:VoltRpc.IO.BufferedReader.Length">
+            <summary>
+                The length of the buffer
+            </summary>
+        </member>
+        <member name="P:VoltRpc.IO.BufferedReader.IncomingStreamNeedToAdjustPosition">
+            <summary>
+                You may need to override this if your <see cref="T:System.IO.Stream"/> requires it
+            </summary>
+        </member>
+        <member name="P:VoltRpc.IO.BufferedReader.IncomingStreamPosition">
+            <summary>
+                You may need to override this if your <see cref="T:System.IO.Stream" /> requires it
+            </summary>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedReader.ReadBlittable``1">
+            <summary>
+                Reads a blittable type
+            </summary>
+            <typeparam name="T"></typeparam>
+            <returns></returns>
+            <exception cref="T:System.IO.EndOfStreamException"></exception>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedReader.ReadByte">
+            <summary>
+                Reads a <see cref="T:System.Byte" />
+            </summary>
+            <returns></returns>
+            <exception cref="T:System.IO.EndOfStreamException"></exception>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedReader.ReadBytesSegment(System.Int32)">
+            <summary>
+                Reads an array of <see cref="T:System.Byte" />s as an <see cref="T:System.ArraySegment`1" />
+            </summary>
+            <param name="count"></param>
+            <returns></returns>
+            <exception cref="T:System.IO.EndOfStreamException"></exception>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedReader.ReadString">
+            <summary>
+                Reads a <see cref="T:System.String" />
+            </summary>
+            <returns></returns>
+            <exception cref="T:System.IO.EndOfStreamException"></exception>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedReader.ReadStream(System.Int32)">
+            <summary>
+                Reads more of the underlining <see cref="T:System.IO.Stream"/>
+            </summary>
+            <exception cref="T:System.IO.EndOfStreamException"></exception>
+        </member>
+        <member name="P:VoltRpc.IO.BufferedReader.HasDisposed">
+            <summary>
+                Has this object been disposed
+            </summary>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedReader.CheckDispose">
+            <summary>
+                Checks the disposal state on this object
+            </summary>
+            <exception cref="T:System.ObjectDisposedException"></exception>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedReader.Finalize">
+            <summary>
+                Destructor for this object
+            </summary>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedReader.Dispose">
+            <summary>
+                Disposes of this <see cref="T:VoltRpc.IO.BufferedReader"/> instance
+                <para>This method SHOULD NOT be used! VoltRpc will dispose of this object when it is done with it!</para>
+                <para>NOTE: This disposal method will NOT call <see cref="M:System.IO.Stream.Dispose"/> on the underlying <see cref="F:VoltRpc.IO.BufferedReader.IncomingStream"/></para>
+            </summary>
+        </member>
+        <member name="T:VoltRpc.IO.BufferedReaderExtensions">
+            <summary>
+                Read methods for <see cref="T:VoltRpc.IO.BufferedReader"/>
+            </summary>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedReaderExtensions.ReadSByte(VoltRpc.IO.BufferedReader)">
+            <summary>
+                Reads a <see cref="T:System.SByte" />
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedReaderExtensions.ReadBool(VoltRpc.IO.BufferedReader)">
+            <summary>
+                Reads a <see cref="T:System.Boolean" />
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedReaderExtensions.ReadUShort(VoltRpc.IO.BufferedReader)">
+            <summary>
+                Reads a <see cref="T:System.UInt16" />
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedReaderExtensions.ReadShort(VoltRpc.IO.BufferedReader)">
+            <summary>
+                Reads a <see cref="T:System.Int16" />
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedReaderExtensions.ReadChar(VoltRpc.IO.BufferedReader)">
+            <summary>
+                Reads a <see cref="T:System.Char" />
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedReaderExtensions.ReadUInt(VoltRpc.IO.BufferedReader)">
+            <summary>
+                Reads a <see cref="T:System.UInt32" />
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedReaderExtensions.ReadInt(VoltRpc.IO.BufferedReader)">
+            <summary>
+                Reads a <see cref="T:System.Int32" />
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedReaderExtensions.ReadULong(VoltRpc.IO.BufferedReader)">
+            <summary>
+                Reads a <see cref="T:System.UInt64" />
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedReaderExtensions.ReadLong(VoltRpc.IO.BufferedReader)">
+            <summary>
+                Reads a <see cref="T:System.Int64" />
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedReaderExtensions.ReadFloat(VoltRpc.IO.BufferedReader)">
+            <summary>
+                Reads a <see cref="T:System.Single" />
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedReaderExtensions.ReadDouble(VoltRpc.IO.BufferedReader)">
+            <summary>
+                Reads a <see cref="T:System.Double" />
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedReaderExtensions.ReadDecimal(VoltRpc.IO.BufferedReader)">
+            <summary>
+                Reads a <see cref="T:System.Decimal" />
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:VoltRpc.IO.BufferedWriter">
+            <summary>
+                A buffered writer for a <see cref="T:System.IO.Stream" />
+            </summary>
+        </member>
+        <member name="F:VoltRpc.IO.BufferedWriter.MaxStringLength">
+            <summary>
+                Max length for a <see cref="T:System.String" />
+            </summary>
+        </member>
+        <member name="F:VoltRpc.IO.BufferedWriter.OutputStream">
+            <summary>
+                Output <see cref="T:System.IO.Stream" />
+            </summary>
+        </member>
+        <member name="F:VoltRpc.IO.BufferedWriter.encoding">
+            <summary>
+                Internal access to the underlining <see cref="T:System.Text.UTF8Encoding"/> for <see cref="T:System.String"/>s
+            </summary>
+        </member>
+        <member name="F:VoltRpc.IO.BufferedWriter.buffer">
+            <summary>
+                Internal access to the underlining buffer
+            </summary>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedWriter.#ctor(System.IO.Stream,System.Int32)">
+            <summary>
+                Creates a new <see cref="T:VoltRpc.IO.BufferedWriter" /> instance
+            </summary>
+            <param name="output"></param>
+            <param name="bufferSize"></param>
+        </member>
+        <member name="P:VoltRpc.IO.BufferedWriter.Position">
+            <summary>
+                The current position of the buffer
+            </summary>
+        </member>
+        <member name="P:VoltRpc.IO.BufferedWriter.Length">
+            <summary>
+                The length of the buffer
+            </summary>
+        </member>
+        <member name="P:VoltRpc.IO.BufferedWriter.OutputStreamPosition">
+            <summary>
+                You may need to override this if your <see cref="T:System.IO.Stream" /> requires it
+            </summary>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedWriter.Reset">
+            <summary>
+                Reset position
+            </summary>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedWriter.WriteByte(System.Byte)">
+            <summary>
+                Writes a <see cref="T:System.Byte" />
+            </summary>
+            <param name="value">The value to write</param>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedWriter.WriteBytes(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+                Writes an array of <see cref="T:System.Byte" />s
+            </summary>
+            <param name="bytesBuffer"></param>
+            <param name="offset"></param>
+            <param name="count"></param>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedWriter.WriteString(System.String)">
+            <summary>
+                Writes a <see cref="T:System.String" />
+            </summary>
+            <param name="value"></param>
+            <exception cref="T:System.IndexOutOfRangeException"></exception>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedWriter.Flush">
+            <summary>
+                Writes the buffer to the out <see cref="T:System.IO.Stream" />
+            </summary>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedWriter.EnsureCapacity(System.Int32)">
+            <summary>
+                Ensures the buffer's capacity is large enough to write the size
+            </summary>
+            <param name="value"></param>
+        </member>
+        <member name="P:VoltRpc.IO.BufferedWriter.HasDisposed">
+            <summary>
+                Has this object been disposed
+            </summary>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedWriter.CheckDispose">
+            <summary>
+                Checks the disposal state on this object
+            </summary>
+            <exception cref="T:System.ObjectDisposedException"></exception>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedWriter.Finalize">
+            <summary>
+                Destructor for this object
+            </summary>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedWriter.Dispose">
+            <summary>
+                Disposes of this <see cref="T:VoltRpc.IO.BufferedWriter"/> instance
+                <para>This method SHOULD NOT be used! VoltRpc will dispose of this object when it is done with it!</para>
+                <para>NOTE: This disposal method will NOT call <see cref="M:System.IO.Stream.Dispose"/> on the underlying <see cref="F:VoltRpc.IO.BufferedWriter.OutputStream"/></para>
+            </summary>
+        </member>
+        <member name="T:VoltRpc.IO.BufferedWriterExtensions">
+            <summary>
+                Provides extensions for <see cref="T:VoltRpc.IO.BufferedWriter"/>
+            </summary>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedWriterExtensions.WriteSByte(VoltRpc.IO.BufferedWriter,System.SByte)">
+            <summary>
+                Writes a <see cref="T:System.SByte" />
+            </summary>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedWriterExtensions.WriteBool(VoltRpc.IO.BufferedWriter,System.Boolean)">
+            <summary>
+                Writes a <see cref="T:System.Boolean" />
+            </summary>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedWriterExtensions.WriteUShort(VoltRpc.IO.BufferedWriter,System.UInt16)">
+            <summary>
+                Writes a <see cref="T:System.UInt16" />
+            </summary>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedWriterExtensions.WriteShort(VoltRpc.IO.BufferedWriter,System.Int16)">
+            <summary>
+                Writes a <see cref="T:System.Int16" />
+            </summary>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedWriterExtensions.WriteChar(VoltRpc.IO.BufferedWriter,System.Char)">
+            <summary>
+                Writes a <see cref="T:System.Char" />
+            </summary>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedWriterExtensions.WriteUInt(VoltRpc.IO.BufferedWriter,System.UInt32)">
+            <summary>
+                Writes a <see cref="T:System.UInt32" />
+            </summary>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedWriterExtensions.WriteInt(VoltRpc.IO.BufferedWriter,System.Int32)">
+            <summary>
+                Writes a <see cref="T:System.Int32" />
+            </summary>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedWriterExtensions.WriteULong(VoltRpc.IO.BufferedWriter,System.UInt64)">
+            <summary>
+                Writes a <see cref="T:System.UInt64" />
+            </summary>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedWriterExtensions.WriteLong(VoltRpc.IO.BufferedWriter,System.Int64)">
+            <summary>
+                Writes a <see cref="T:System.Int64" />
+            </summary>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedWriterExtensions.WriteFloat(VoltRpc.IO.BufferedWriter,System.Single)">
+            <summary>
+                Writes a <see cref="T:System.Single" />
+            </summary>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedWriterExtensions.WriteDouble(VoltRpc.IO.BufferedWriter,System.Double)">
+            <summary>
+                Writes a <see cref="T:System.Double" />
+            </summary>
+        </member>
+        <member name="M:VoltRpc.IO.BufferedWriterExtensions.WriteDecimal(VoltRpc.IO.BufferedWriter,System.Decimal)">
+            <summary>
+                Writes a <see cref="T:System.Decimal" />
+            </summary>
+        </member>
+        <member name="T:VoltRpc.IO.IoUtils">
+            <summary>
+                Provides utils that are shared with IO stuff
+            </summary>
+        </member>
+        <member name="M:VoltRpc.IO.IoUtils.CreateBuffer(System.Int32)">
+            <summary>
+                Creates a byte array designed for buffers
+            </summary>
+            <param name="lenght"></param>
+            <returns></returns>
+        </member>
+        <member name="T:VoltRpc.Logging.ConsoleLogger">
+            <summary>
+                Logger for <see cref="T:System.Console" />
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Logging.ConsoleLogger.#ctor(VoltRpc.Logging.LogVerbosity)">
+            <summary>
+                Creates a new <see cref="T:VoltRpc.Logging.ConsoleLogger" /> instance
+            </summary>
+            <param name="logVerbosity"></param>
+        </member>
+        <member name="P:VoltRpc.Logging.ConsoleLogger.LogVerbosity">
+            <inheritdoc />
+        </member>
+        <member name="M:VoltRpc.Logging.ConsoleLogger.Debug(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:VoltRpc.Logging.ConsoleLogger.Info(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:VoltRpc.Logging.ConsoleLogger.Warn(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:VoltRpc.Logging.ConsoleLogger.Error(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:VoltRpc.Logging.ILogger">
+            <summary>
+                Provides an interface for logging
+            </summary>
+        </member>
+        <member name="P:VoltRpc.Logging.ILogger.LogVerbosity">
+            <summary>
+                Logging level
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Logging.ILogger.Debug(System.String)">
+            <summary>
+                Log a debug message
+            </summary>
+            <param name="message"></param>
+        </member>
+        <member name="M:VoltRpc.Logging.ILogger.Info(System.String)">
+            <summary>
+                Log a info message
+            </summary>
+            <param name="message"></param>
+        </member>
+        <member name="M:VoltRpc.Logging.ILogger.Warn(System.String)">
+            <summary>
+                Log a waring message
+            </summary>
+            <param name="message"></param>
+        </member>
+        <member name="M:VoltRpc.Logging.ILogger.Error(System.String)">
+            <summary>
+                Log a error message
+            </summary>
+            <param name="message"></param>
+        </member>
+        <member name="T:VoltRpc.Logging.LogVerbosity">
+            <summary>
+                What level to log at
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Logging.LogVerbosity.Debug">
+            <summary>
+                Debug level
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Logging.LogVerbosity.Info">
+            <summary>
+                Info level
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Logging.LogVerbosity.Warn">
+            <summary>
+                Warning level
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Logging.LogVerbosity.Error">
+            <summary>
+                Error level
+            </summary>
+        </member>
+        <member name="T:VoltRpc.Logging.NullLogger">
+            <summary>
+                Null <see cref="T:VoltRpc.Logging.ILogger" />
+            </summary>
+        </member>
+        <member name="P:VoltRpc.Logging.NullLogger.LogVerbosity">
+            <inheritdoc />
+        </member>
+        <member name="M:VoltRpc.Logging.NullLogger.Debug(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:VoltRpc.Logging.NullLogger.Info(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:VoltRpc.Logging.NullLogger.Warn(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:VoltRpc.Logging.NullLogger.Error(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:VoltRpc.Proxy.GenerateProxyAttribute">
+            <summary>
+                Marks an interface to have a proxy generated for
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Proxy.GenerateProxyAttribute.#ctor">
+            <summary>
+                Creates a new <see cref="T:VoltRpc.Proxy.GenerateProxyAttribute"/> instance
+            </summary>
+        </member>
+        <member name="P:VoltRpc.Proxy.GenerateProxyAttribute.GeneratedName">
+            <summary>
+                What name to use for the generated proxy.
+                <para>
+                    By default, the generated proxy name will be {Interface Name}_GeneratedProxy.
+                </para>
+            </summary>
+        </member>
+        <member name="P:VoltRpc.Proxy.GenerateProxyAttribute.GeneratedNamespace">
+            <summary>
+                What namespace to use for the generated proxy.
+                <para>
+                    By default, the generated proxy namespace will be VoltRpc.Proxy.Generated.
+                </para>
+            </summary>
+        </member>
+        <member name="P:VoltRpc.Proxy.GenerateProxyAttribute.ForcePublic">
+            <summary>
+                Forces the generated proxy to be public
+                <para>
+                    By default, the generated proxy visibility will be the same as the interfaces
+                </para>
+            </summary>
+        </member>
+        <member name="T:VoltRpc.Types.ITypeReadWriter">
+            <summary>
+                Interface for reading and writing a <see cref="T:System.Type" />
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Types.ITypeReadWriter.Write(VoltRpc.IO.BufferedWriter,System.Object)">
+            <summary>
+                Write the type
+            </summary>
+            <param name="writer"></param>
+            <param name="obj"></param>
+            <returns></returns>
+        </member>
+        <member name="M:VoltRpc.Types.ITypeReadWriter.Read(VoltRpc.IO.BufferedReader)">
+            <summary>
+                Read the type
+            </summary>
+            <param name="reader"></param>
+            <returns></returns>
+        </member>
+        <member name="T:VoltRpc.Types.NoTypeReaderWriterException">
+            <summary>
+                Exception when there is no type reader/writer available
+            </summary>
+        </member>
+        <member name="T:VoltRpc.Types.TypeReaderWriterException">
+            <summary>
+                <see cref="T:System.Exception" /> related to something with a type reader writer
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Types.TypeReaderWriterException.#ctor(System.String,System.String)">
+            <summary>
+                Creates a new <see cref="T:VoltRpc.Types.TypeReaderWriterException" /> instance
+            </summary>
+            <param name="innerExceptionMessage"></param>
+            <param name="innerStackTrace"></param>
+        </member>
+        <member name="M:VoltRpc.Types.TypeReaderWriterException.#ctor(System.String,System.String,System.String,System.String)">
+            <summary>
+                Creates a new <see cref="T:VoltRpc.Types.TypeReaderWriterException" /> instance
+            </summary>
+            <param name="message"></param>
+            <param name="stackTrace"></param>
+            <param name="innerExceptionMessage"></param>
+            <param name="innerStackTrace"></param>
+        </member>
+        <member name="P:VoltRpc.Types.TypeReaderWriterException.StackTrace">
+            <inheritdoc />
+        </member>
+        <member name="T:VoltRpc.Types.TypeReaderWriterManager">
+            <summary>
+                Manger for <see cref="T:VoltRpc.Types.TypeReadWriter`1" />s
+            </summary>
+        </member>
+        <member name="F:VoltRpc.Types.TypeReaderWriterManager.DefaultTypeReaderWriters">
+            <summary>
+                Default <see cref="T:VoltRpc.Types.TypeReadWriter`1" /> to be added
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Types.TypeReaderWriterManager.#ctor(System.Boolean)">
+            <summary>
+                Creates a new <see cref="T:VoltRpc.Types.TypeReaderWriterManager" /> instance
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Types.TypeReaderWriterManager.AddType``1(VoltRpc.Types.TypeReadWriter{``0})">
+            <summary>
+                Adds a <see cref="T:VoltRpc.Types.TypeReadWriter`1" />
+                <para>
+                    If the <see cref="T:System.Type" /> has already been added, it will be overriden
+                </para>
+            </summary>
+            <param name="typeReadWriter">The <see cref="T:VoltRpc.Types.TypeReadWriter`1"/> to add</param>
+            <typeparam name="T">The base <see cref="T:System.Type" /> to add</typeparam>
+        </member>
+        <member name="M:VoltRpc.Types.TypeReaderWriterManager.AddType(System.Type,VoltRpc.Types.ITypeReadWriter)">
+            <summary>
+                Adds a <see cref="T:VoltRpc.Types.ITypeReadWriter" />
+                <para>
+                    If the <see cref="T:System.Type" /> has already been added, it will be overriden
+                </para>
+            </summary>
+            <param name="type">The <see cref="T:System.Type" /> to add</param>
+            <param name="typeReadWriter">The <see cref="T:VoltRpc.Types.ITypeReadWriter" /> for <see cref="T:System.Type" /></param>
+            <exception cref="T:System.NullReferenceException">Thrown if the type is an array, and the base type is null.</exception>
+        </member>
+        <member name="M:VoltRpc.Types.TypeReaderWriterManager.AddType(System.String,VoltRpc.Types.ITypeReadWriter)">
+            <summary>
+                Adds a <see cref="T:VoltRpc.Types.ITypeReadWriter" />
+                <para>
+                    If the <see cref="T:System.Type" /> has already been added, it will be overriden
+                </para>
+            </summary>
+            <param name="typeFullName">The <see cref="T:System.Type" /> full name to add</param>
+            <param name="typeReadWriter">The <see cref="T:VoltRpc.Types.ITypeReadWriter" /> for <see cref="T:System.Type" /></param>
+        </member>
+        <member name="M:VoltRpc.Types.TypeReaderWriterManager.GetType(System.String)">
+            <summary>
+                Gets a <see cref="T:VoltRpc.Types.ITypeReadWriter" />
+            </summary>
+            <param name="typeFullName">The <see cref="T:System.Type" /> full name</param>
+            <returns>Will return null if <see cref="T:VoltRpc.Types.ITypeReadWriter" /> hasn't been added for <see cref="T:System.Type" /></returns>
+        </member>
+        <member name="M:VoltRpc.Types.TypeReaderWriterManager.GetType(System.Type)">
+            <summary>
+                Gets a <see cref="T:VoltRpc.Types.ITypeReadWriter" />
+            </summary>
+            <param name="type">The <see cref="T:System.Type" /> to get</param>
+            <returns>Will return null if <see cref="T:VoltRpc.Types.ITypeReadWriter" /> hasn't been added for <see cref="T:System.Type" /></returns>
+        </member>
+        <member name="M:VoltRpc.Types.TypeReaderWriterManager.GetType``1">
+            <summary>
+                Gets a <see cref="T:VoltRpc.Types.ITypeReadWriter" />
+            </summary>
+            <typeparam name="T">The <see cref="T:System.Type" /> to get</typeparam>
+            <returns>Will return null if <see cref="T:VoltRpc.Types.ITypeReadWriter" /> hasn't been added for <see cref="T:System.Type" /></returns>
+        </member>
+        <member name="T:VoltRpc.Types.TypeReadWriter`1">
+            <summary>
+                Interface for reading and writing a type.
+                <para><see cref="M:VoltRpc.Types.TypeReadWriter`1.Read(VoltRpc.IO.BufferedReader)"/> should read exactly how it is written to the <see cref="T:VoltRpc.IO.BufferedWriter"/> in <see cref="M:VoltRpc.Types.TypeReadWriter`1.Write(VoltRpc.IO.BufferedWriter,`0)"/>.</para>
+            </summary>
+            <typeparam name="T">The <see cref="T:System.Type"/> to read and write</typeparam>
+        </member>
+        <member name="M:VoltRpc.Types.TypeReadWriter`1.Write(VoltRpc.IO.BufferedWriter,`0)">
+            <summary>
+                Called when the type needs to be written
+            </summary>
+            <param name="writer">The <see cref="T:VoltRpc.IO.BufferedWriter"/> to write to</param>
+            <param name="value">The value that needs to be written to the <see cref="T:VoltRpc.IO.BufferedWriter"/></param>
+        </member>
+        <member name="M:VoltRpc.Types.TypeReadWriter`1.Read(VoltRpc.IO.BufferedReader)">
+            <summary>
+                Called when the type needs to be read
+            </summary>
+            <param name="reader">The <see cref="T:VoltRpc.IO.BufferedReader"/> to read from</param>
+            <returns>Return the read value from the <see cref="T:VoltRpc.IO.BufferedReader"/></returns>
+        </member>
+        <member name="T:VoltRpc.Types.TypesHelper">
+            <summary>
+                Helper methods for <see cref="T:System.Type" />s
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Types.TypesHelper.GetTypeName(System.Type)">
+            <summary>
+                Gets a <see cref="T:System.Type" />'s full name
+            </summary>
+            <param name="type">The <see cref="T:System.Type" /> to get the full name from</param>
+            <returns>Returns the fullname of the <see cref="T:System.Type" /></returns>
+            <exception cref="T:System.ArgumentNullException">Throw if provided type is null</exception>
+            <exception cref="T:System.NullReferenceException">Thrown if type is an array, but it's item type is null!</exception>
+        </member>
+        <member name="M:VoltRpc.Types.TypesHelper.GetTypeBaseName(System.Type)">
+            <summary>
+                Gets a <see cref="T:System.Type"/> base, then it's name
+            </summary>
+            <param name="type"></param>
+            <returns></returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:VoltRpc.Types.TypesHelper.GetTypeBase(System.Type)">
+            <summary>
+                Gets the absolute base <see cref="T:System.Type" /> of a <see cref="T:System.Type" />.
+                <para>Checks if refs and arrays</para>
+            </summary>
+            <param name="type"></param>
+            <returns></returns>
+            <exception cref="T:System.NullReferenceException"></exception>
+        </member>
+        <member name="T:VoltRpc.Types.VoltTypeInfo">
+            <summary>
+                Contains information the VoltRpc needs on a <see cref="T:System.Type"/>
+            </summary>
+        </member>
+        <member name="M:VoltRpc.Types.VoltTypeInfo.#ctor(System.Type)">
+            <summary>
+                Creates a new <see cref="T:VoltRpc.Types.VoltTypeInfo"/>
+            </summary>
+            <param name="type"></param>
+            <exception cref="T:System.NullReferenceException"></exception>
+        </member>
+        <member name="P:VoltRpc.Types.VoltTypeInfo.BaseType">
+            <summary>
+                The base <see cref="T:System.Type"/>
+            </summary>
+        </member>
+        <member name="P:VoltRpc.Types.VoltTypeInfo.TypeName">
+            <summary>
+                The fullname of the <see cref="T:System.Type"/>
+            </summary>
+        </member>
+        <member name="P:VoltRpc.Types.VoltTypeInfo.IsArray">
+            <summary>
+                Is this <see cref="T:System.Type"/> an array?
+            </summary>
+        </member>
+        <member name="T:VoltRpc.Versioning.LibVersion">
+            <summary>
+                Contains version info on the VoltRpc library
+            </summary>
+        </member>
+        <member name="P:VoltRpc.Versioning.LibVersion.Version">
+            <summary>
+                Current <see cref="T:VoltRpc.Versioning.LibVersion.VersionInfo"/> about VoltRpc
+            </summary>
+        </member>
+        <member name="T:VoltRpc.Versioning.LibVersion.VersionInfo">
+            <summary>
+                Info on the VoltRpc version
+            </summary>
+        </member>
+        <member name="P:VoltRpc.Versioning.LibVersion.VersionInfo.Major">
+            <summary>
+                Major version number
+            </summary>
+        </member>
+        <member name="P:VoltRpc.Versioning.LibVersion.VersionInfo.Minor">
+            <summary>
+                Minor version number
+            </summary>
+        </member>
+        <member name="P:VoltRpc.Versioning.LibVersion.VersionInfo.Patch">
+            <summary>
+                Patch version number
+            </summary>
+        </member>
+        <member name="T:VoltRpc.Versioning.VersionMissMatchException">
+            <summary>
+                <see cref="T:System.Exception"/> related to when there is a version miss-match between
+                the <see cref="T:VoltRpc.Communication.Host"/> and <see cref="T:VoltRpc.Communication.Client"/>
+            </summary>
+        </member>
+        <member name="P:VoltRpc.Versioning.VersionMissMatchException.ExceptedVersion">
+            <summary>
+                What the excepted version was
+            </summary>
+        </member>
+        <member name="T:ThisAssembly">
+            <summary>
+            Provides access to the current assembly information as pure constants, 
+             without requiring reflection.
+            </summary>
+        </member>
+        <member name="T:ThisAssembly.Info">
+            <summary>
+            Gets the AssemblyInfo attributes.
+            </summary>
+        </member>
+    </members>
+</doc>
