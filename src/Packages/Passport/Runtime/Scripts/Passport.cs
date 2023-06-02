@@ -9,6 +9,8 @@ namespace Immutable.Passport
 {
     public class Passport : MonoBehaviour
     {
+        public static Passport Instance { get; private set; }
+
         #if UNITY_STANDALONE_WIN || UNITY_STANDALONE_WIN
             [SerializeField] private BaseUwbClientManager clientManager;
             private WebBrowserClient webBrowserClient;
@@ -23,12 +25,22 @@ namespace Immutable.Passport
         // TODO to remove and replace it with device code auth
         TaskCompletionSource<bool> loginTask;
 
+        public event PassportReady OnReady;
+
         void Start()
         {
             webBrowserClient = clientManager.browserClient;
             webBrowserClient.OnUnityPostMessage += OnUnityPostMessage;
 
             hideBrowser();
+        }
+
+        void Awake() {
+            if (Instance == null) {
+                Instance = this;
+                // Keep this alive in every scene
+                DontDestroyOnLoad(this.gameObject);
+            }
         }
 
         #region Passport request
@@ -90,6 +102,10 @@ namespace Immutable.Passport
                     hideBrowser();
                     loginTask?.TrySetResult(true);
                     loginTask = null;
+                    break;
+                // May change based on how we design the web app
+                case "IMX_FUNCTIONS_READY":
+                    OnReady?.Invoke();
                     break;
                 default:
                     handleResponse(message);

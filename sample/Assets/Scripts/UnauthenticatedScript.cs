@@ -2,43 +2,39 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using Immutable.Passport;
 using UnityEditor;
 
-public class SampleScript : MonoBehaviour
+public class UnauthenticatedScript : MonoBehaviour
 {
     [SerializeField] private Passport passport;
 
     [SerializeField] private Text output;
 
     [SerializeField] private Button connectButton;
-    [SerializeField] private Button getAddressButton;
-    [SerializeField] private Button logoutButton;
 
     void Start()
     {
-        Debug.Log($"Found passport? {passport != null}");
+        passport.OnReady += OnReady;
+
+        Debug.Log($"UnauthenticatedScript Found passport? {Passport.Instance != null}");
+    }
+
+    private void OnReady() {
+        showOutput("UnauthenticatedScript Passport is ready");
     }
 
     public async void Connect() {
         showOutput("Called Connect()");
         bool success = await passport.Connect();
         showOutput("Successfully connected to Passport");
-    }
-
-    public async void GetAddress() {
-        showOutput("Called GetAddress()");
-        string? address = await passport.GetAddress();
-        showOutput(address);
-    }
-
-    public async void Logout() {
-        showOutput("Called Logout()");
-        passport.Logout();
-        showOutput("Logged out");
+        SceneManager.LoadScene(sceneName:"AuthenticatedScene");
     }
 
     private void showOutput(string message) {
-        output.text = message;
+        if (output != null) {
+            output.text = message;
+        }
     }
 }
