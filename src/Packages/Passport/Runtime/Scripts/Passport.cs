@@ -63,9 +63,8 @@ namespace Immutable.Passport
             // });
         }
 
-        public async Task<TokenResponse> ConfirmCode() {
-            TokenResponse tokenResponse = await auth.ConfirmCode();
-            return tokenResponse;
+        public async Task ConfirmCode() {
+            await auth.ConfirmCode();
         }
 
         public Task<string?> GetAddress() {
@@ -75,6 +74,24 @@ namespace Immutable.Passport
         public void Logout() {
             hideBrowser();
             call(PassportFunction.LOGOUT);
+        }
+
+        public string? getAccessToken() {
+            string token = PlayerPrefs.GetString(PassportConstants.KEY_PREFS_ACCESS_TOKEN, "");
+            if (string.IsNullOrWhiteSpace(token)) {
+                return null;
+            } else {
+                return token;
+            }
+        }
+
+        public string? getIdToken() {
+            string token = PlayerPrefs.GetString(PassportConstants.KEY_PREFS_ID_TOKEN, "");
+            if (string.IsNullOrWhiteSpace(token)) {
+                return null;
+            } else {
+                return token;
+            }
         }
 
         private Task<T> createCallTask<T>(string fxName, string? data = null) {

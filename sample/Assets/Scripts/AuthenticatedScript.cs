@@ -12,6 +12,8 @@ public class AuthenticatedScript : MonoBehaviour
 
     [SerializeField] private Text output;
 
+    [SerializeField] private Button accessTokenButton;
+    [SerializeField] private Button idTokenButton;
     [SerializeField] private Button getAddressButton;
     [SerializeField] private Button logoutButton;
 
@@ -35,6 +37,14 @@ public class AuthenticatedScript : MonoBehaviour
         showOutput("Called Logout()");
         passport.Logout();
         showOutput("Logged out");
+    }
+
+    public void GetAccessToken() {
+        showOutput(passport.getAccessToken());
+    }
+
+    public void GetIdToken() {
+        showOutput(passport.getIdToken());
     }
 
     private void showOutput(string message) {

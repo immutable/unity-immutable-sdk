@@ -5,9 +5,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
-using UnityEngine.Networking;
-using UnityEngine.UI;
-
+using Immutable.Passport;
 
 namespace Immutable.Passport.Auth {
     public class DeviceCodeAuth {
@@ -62,14 +60,14 @@ namespace Immutable.Passport.Auth {
         /// The token response
         /// </return>
         /// </summary>
-        public async Task<TokenResponse> ConfirmCode() {
+        public async Task ConfirmCode() {
             if (deviceCodeResponse != null) {
                 // Poll for token
                 Application.OpenURL(deviceCodeResponse.verification_uri_complete);
                 var tokenResponse = await PollForTokenTask(deviceCodeResponse.device_code, deviceCodeResponse.interval);
                 if (tokenResponse != null) {
-                    // TODO store token securely, instead of returning it back to the game
-                    return tokenResponse;
+                    PlayerPrefs.SetString(PassportConstants.KEY_PREFS_ACCESS_TOKEN, tokenResponse.access_token);
+                    PlayerPrefs.SetString(PassportConstants.KEY_PREFS_ID_TOKEN, tokenResponse.id_token);
                 } else {
                     throw new Exception($"Failed to login");
                 }
