@@ -1,9 +1,11 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Immutable.Passport;
+using Immutable.Passport.Auth;
 using UnityEditor;
 
 public class UnauthenticatedScript : MonoBehaviour
@@ -13,12 +15,15 @@ public class UnauthenticatedScript : MonoBehaviour
     [SerializeField] private Text output;
 
     [SerializeField] private Button connectButton;
+    [SerializeField] private Text userCodeText;
+    [SerializeField] private Button proceedLoginButton;
 
     void Start()
     {
         passport.OnReady += OnReady;
 
-        Debug.Log($"UnauthenticatedScript Found passport? {Passport.Instance != null}");
+        userCodeText.gameObject.SetActive(false);
+        proceedLoginButton.gameObject.SetActive(false);
     }
 
     private void OnReady() {
@@ -26,10 +31,33 @@ public class UnauthenticatedScript : MonoBehaviour
     }
 
     public async void Connect() {
-        showOutput("Called Connect()");
-        bool success = await passport.Connect();
-        showOutput("Successfully connected to Passport");
-        SceneManager.LoadScene(sceneName:"AuthenticatedScene");
+        try {
+            showOutput("Called Connect()");
+            userCodeText.gameObject.SetActive(false);
+            proceedLoginButton.gameObject.SetActive(false);
+
+            string code = await passport.Connect();
+            showOutput($"Code to verify: {code}");
+
+            userCodeText.gameObject.SetActive(true);
+            userCodeText.text = code;
+            proceedLoginButton.gameObject.SetActive(true);
+        } catch (Exception ex) {
+            string error = $"Connect() error: {ex.Message}";
+            Debug.Log(error);
+            showOutput(error);
+        }
+    }
+
+    public async void ConfirmCode() {
+        try {
+            showOutput("Called ConfirmCode()");
+            TokenResponse token = await passport.ConfirmCode();
+            showOutput($"Token: {token.token_type} {token.access_token}");
+            SceneManager.LoadScene(sceneName:"AuthenticatedScene");
+        } catch (Exception ex) {
+            showOutput($"ConfirmCode() error: {ex.Message}");
+        }
     }
 
     private void showOutput(string message) {

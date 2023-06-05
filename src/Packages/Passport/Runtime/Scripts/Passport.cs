@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 using VoltstroStudios.UnityWebBrowser.Core;
+using Immutable.Passport.Auth;
 
 namespace Immutable.Passport
 {
@@ -25,7 +26,10 @@ namespace Immutable.Passport
         // TODO to remove and replace it with device code auth
         TaskCompletionSource<bool> loginTask;
 
+        // TODO find a better way of notifying when the web app is ready
         public event PassportReady OnReady;
+
+        private DeviceCodeAuth auth = new();
 
         void Start()
         {
@@ -46,14 +50,22 @@ namespace Immutable.Passport
         #region Passport request
 
         // TODO replace with device code auth
-        public Task<bool> Connect() {
-            showBrowser();
-            return Task.Run(() => {
-                var t = new TaskCompletionSource<bool>();
-                call(PassportFunction.CONNECT);
-                loginTask = t;
-                return t.Task;
-            });
+        public async Task<string> Connect() {
+            string code = await auth.Login();
+            Debug.Log($"Got code: {code}");
+            return code;
+            // showBrowser();
+            // return Task.Run(() => {
+            //     var t = new TaskCompletionSource<bool>();
+            //     call(PassportFunction.CONNECT);
+            //     loginTask = t;
+            //     return t.Task;
+            // });
+        }
+
+        public async Task<TokenResponse> ConfirmCode() {
+            TokenResponse tokenResponse = await auth.ConfirmCode();
+            return tokenResponse;
         }
 
         public Task<string?> GetAddress() {
