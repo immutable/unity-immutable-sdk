@@ -52,7 +52,7 @@ public class AuthenticatedScript : MonoBehaviour
     public async void SignMessage() {
         showOutput("Called SignMessage()...");
         string? result = await passport.SignMessage(signInput.text);
-        showOutput($"Result: ${result}");
+        showOutput(result);
     }
 
     private void showOutput(string message) {

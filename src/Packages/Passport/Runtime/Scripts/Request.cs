@@ -4,7 +4,7 @@ using Immutable.Passport.Auth;
 
 namespace Immutable.Passport
 {
-    class Request {
+    internal class Request {
         public string fxName;
         public string requestId;
         public string? data;
@@ -16,7 +16,7 @@ namespace Immutable.Passport
         }
     }
 
-    public class GetImxProviderRequest {
+    internal class GetImxProviderRequest {
         public string idToken;
         public string accessToken;
         public string? refreshToken;

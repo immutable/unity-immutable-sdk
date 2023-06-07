@@ -4,20 +4,20 @@ using UnityEngine;
 
 namespace Immutable.Passport
 {
-    public class Response {
+    internal class Response {
         public string? responseFor;
         public string? requestId;
     }
 
-    public class AddressResponse : Response {
+    internal class AddressResponse : Response {
         public string? address;
     }
 
-    public class GetImxProviderResponse : Response {
+    internal class GetImxProviderResponse : Response {
         public bool success;
     }
 
-    public class SignMessageResponse : Response {
+    internal class SignMessageResponse : Response {
         public string? result;
     }
 }

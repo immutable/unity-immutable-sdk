@@ -37,8 +37,6 @@ namespace Immutable.Passport.Auth {
         private const string ERROR_CODE_EXPIRED_TOKEN = "expired_token";
         private const string ERROR_CODE_ACCESS_DENIED = "access_denied";
 
-        
-
         private DeviceCodeResponse? deviceCodeResponse;
 
         private User? user;
@@ -46,16 +44,30 @@ namespace Immutable.Passport.Auth {
         private CredentialsManager manager = new();
 
         /// <summary>
+        /// Logs the user into Passport using Device Authorisation Grant.
+        ///
+        /// The user does not need to log in if the previously issued access token is still valid.
         /// <returns>
-        /// The end-user verification code
+        /// The end-user verification code if confirmation is required, otherwise null;
         /// </returns>
         /// </summary>
-        public async Task<string> Login() {
-            deviceCodeResponse = await GetDeviceCodeTask();
-            if (deviceCodeResponse != null) {
-                return deviceCodeResponse.user_code;
+        public async Task<string?> Login() {
+            Debug.Log($"{TAG} Called Login()");
+            // If access token exists and is still valid, get saved credentials
+            if (manager.HasValidCredentials()) {
+                Debug.Log($"{TAG} Access token exists and is still valid");
+                TokenResponse? savedCreds = manager.GetCredentials();
+                user = savedCreds.ToUser();
+                return null;
             } else {
-                throw new Exception($"Failed to get device code");
+                // Access token does not exist or is no longer valid
+                Debug.Log($"{TAG} Starting device code authorisation...");
+                deviceCodeResponse = await GetDeviceCodeTask();
+                if (deviceCodeResponse != null) {
+                    return deviceCodeResponse.user_code;
+                } else {
+                    throw new Exception($"Failed to get device code");
+                }
             }
         }
 
@@ -75,7 +87,10 @@ namespace Immutable.Passport.Auth {
 
                     // Only persist credentials that contain the necessary data
                     if (user?.MetadatExists() == true) {
+                        Debug.Log($"{TAG} Credentials has all necessary data, saving...");
                         manager.SaveCredentials(tokenResponse);
+                    } else {
+                        Debug.Log($"{TAG} Credentials does not have all necessary data to save");
                     }
 
                     return user;
@@ -178,6 +193,11 @@ namespace Immutable.Passport.Auth {
                 Debug.Log($"{TAG} {TAG_GET_TOKEN} {ex.Message}");
                 throw ex;
             }
+        }
+
+        public void Logout() {
+            // TODO implement log out
+            manager.ClearCredentials();
         }
 
         public User? GetUser() {

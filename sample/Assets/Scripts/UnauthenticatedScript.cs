@@ -27,40 +27,50 @@ public class UnauthenticatedScript : MonoBehaviour
     }
 
     private void OnReady() {
-        showOutput("UnauthenticatedScript Passport is ready");
+        ShowOutput("UnauthenticatedScript Passport is ready");
     }
 
     public async void Connect() {
         try {
-            showOutput("Called Connect()...");
+            ShowOutput("Called Connect()...");
             userCodeText.gameObject.SetActive(false);
             proceedLoginButton.gameObject.SetActive(false);
 
-            string code = await passport.Connect();
-            showOutput($"Code to verify: {code}");
+            string? code = await passport.Connect();
 
-            userCodeText.gameObject.SetActive(true);
-            userCodeText.text = code;
-            proceedLoginButton.gameObject.SetActive(true);
+            if (code != null) {
+                // Code confirmation required
+                ShowOutput($"Code to verify: {code}");
+                userCodeText.gameObject.SetActive(true);
+                userCodeText.text = code;
+                proceedLoginButton.gameObject.SetActive(true);
+            } else {
+                // No need to confirm code, log user straight in
+                NavigateToAuthenticatedScene();
+            }
         } catch (Exception ex) {
             string error = $"Connect() error: {ex.Message}";
             Debug.Log(error);
-            showOutput(error);
+            ShowOutput(error);
         }
     }
 
     public async void ConfirmCode() {
         try {
-            showOutput("Called ConfirmCode()...");
+            ShowOutput("Called ConfirmCode()...");
             await passport.ConfirmCode();
-            showOutput("Confirmed code");
-            SceneManager.LoadScene(sceneName:"AuthenticatedScene");
+            ShowOutput("Confirmed code");
+            NavigateToAuthenticatedScene();
         } catch (Exception ex) {
-            showOutput($"ConfirmCode() error: {ex.Message}");
+            ShowOutput($"ConfirmCode() error: {ex.Message}");
         }
     }
 
-    private void showOutput(string message) {
+    private void NavigateToAuthenticatedScene() {
+        SceneManager.LoadScene(sceneName:"AuthenticatedScene");
+    }
+
+    private void ShowOutput(string message) {
         if (output != null) {
             output.text = message;
         }

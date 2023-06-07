@@ -7,6 +7,7 @@ namespace Immutable.Passport.Auth {
         public string idToken;
         public string accessToken;
         public string? refreshToken;
+
         public UserProfile? profile;
 
         public string? etherKey;

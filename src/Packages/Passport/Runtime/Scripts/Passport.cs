@@ -48,28 +48,47 @@ namespace Immutable.Passport
 
         #region Passport request
 
-        public async Task<string> Connect() {
-            string code = await auth.Login();
-            Debug.Log($"Got code: {code}");
-            return code;
+        /// <summary>
+        /// Connects the user to Passport.
+        ///
+        /// If code confirmation is required, call ConfirmCode().
+        /// <returns>
+        /// The end-user verification code if confirmation is required, otherwise null;
+        /// </returns>
+        /// </summary>
+        public async Task<string?> Connect() {
+            string? code = await auth.Login();
+            User? user = auth.GetUser();
+            if (code != null) {
+                // Code confirmation required
+                return code;
+            } else if (user != null) {
+                // Credentials are still valid, get provider
+                await GetImxProvider(user);
+                return null;
+            } else {
+                // Should never get to here, but if it happens, log the user to reset everything
+                auth.Logout();
+                throw new InvalidOperationException("Something went wrong, call Connect() again");
+            }
         }
 
         User? u;
 
         public async Task ConfirmCode() {
             User user = await auth.ConfirmCode();
-            bool success = await GetImxProvider(user);
-            if (!success) {
-                throw new Exception("Failed to get IMX provider");
-            }
+            await GetImxProvider(user);
         }
 
-        private Task<bool> GetImxProvider(User u) {
+        private async Task GetImxProvider(User u) {
             // Only send necessary values
             GetImxProviderRequest user = new GetImxProviderRequest(u.idToken, u.accessToken, u.refreshToken, u.profile, u.etherKey);
             string data = JsonConvert.SerializeObject(user);
 
-            return createCallTask<bool>(PassportFunction.GET_IMX_PROVIDER, data);
+            bool success = await createCallTask<bool>(PassportFunction.GET_IMX_PROVIDER, data);
+            if (!success) {
+                throw new Exception("Failed to get IMX provider");
+            }
         }
 
         public Task<string?> GetAddress() {
