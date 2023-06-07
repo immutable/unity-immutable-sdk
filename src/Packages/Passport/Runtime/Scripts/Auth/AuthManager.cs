@@ -58,6 +58,9 @@ namespace Immutable.Passport.Auth {
                 Debug.Log($"{TAG} Access token exists and is still valid");
                 TokenResponse? savedCreds = manager.GetCredentials();
                 user = savedCreds.ToUser();
+                Debug.Log($"{TAG} etherKey: {user?.etherKey}");
+                Debug.Log($"{TAG} userAdminKey: {user?.userAdminKey}");
+                Debug.Log($"{TAG} starkKey: {user?.starkKey}");
                 return null;
             } else {
                 // Access token does not exist or is no longer valid

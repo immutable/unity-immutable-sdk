@@ -34,8 +34,6 @@ namespace Immutable.Passport
         {
             webBrowserClient = clientManager.browserClient;
             webBrowserClient.OnUnityPostMessage += OnUnityPostMessage;
-
-            hideBrowser();
         }
 
         void Awake() {
@@ -96,7 +94,6 @@ namespace Immutable.Passport
         }
 
         public void Logout() {
-            hideBrowser();
             call(PassportFunction.LOGOUT);
         }
 
@@ -199,14 +196,6 @@ namespace Immutable.Passport
                         break;
                 }
             }
-        }
-
-        #endregion
-
-        #region Browser
-
-        private void hideBrowser() {
-            gameObject.transform.localScale = new Vector3(0, 0, 0);
         }
 
         #endregion
