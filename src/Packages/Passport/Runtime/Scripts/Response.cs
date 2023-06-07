@@ -12,4 +12,8 @@ namespace Immutable.Passport
     public class AddressResponse : Response {
         public string? address;
     }
+
+    public class GetImxProviderResponse : Response {
+        public bool success;
+    }
 }

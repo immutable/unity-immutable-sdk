@@ -1314,19 +1314,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7406282292938168294, guid: 7e2c042634c43914c998b1584c3058cf, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 367.5
+      value: 662.8181
       objectReference: {fileID: 0}
     - target: {fileID: 7406282292938168294, guid: 7e2c042634c43914c998b1584c3058cf, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1
+      value: 0.5884375
       objectReference: {fileID: 0}
     - target: {fileID: 7406282292938168294, guid: 7e2c042634c43914c998b1584c3058cf, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1
+      value: 0.5884375
       objectReference: {fileID: 0}
     - target: {fileID: 7406282292938168294, guid: 7e2c042634c43914c998b1584c3058cf, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1
+      value: 0.5884375
       objectReference: {fileID: 0}
     - target: {fileID: 7406282292938168294, guid: 7e2c042634c43914c998b1584c3058cf, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1358,11 +1358,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7406282292938168294, guid: 7e2c042634c43914c998b1584c3058cf, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 714.5
+      value: 1449.7079
       objectReference: {fileID: 0}
     - target: {fileID: 7406282292938168294, guid: 7e2c042634c43914c998b1584c3058cf, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 333.75
+      value: 527.1485
       objectReference: {fileID: 0}
     - target: {fileID: 7406282292938168294, guid: 7e2c042634c43914c998b1584c3058cf, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -1375,6 +1375,10 @@ PrefabInstance:
     - target: {fileID: 7406282292938168294, guid: 7e2c042634c43914c998b1584c3058cf, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8706560016382071360, guid: 7e2c042634c43914c998b1584c3058cf, type: 3}
+      propertyPath: browserClient.initialUrl
+      value: https://nattb8.github.io
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7e2c042634c43914c998b1584c3058cf, type: 3}
@@ -1461,7 +1465,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 167431872}
   m_HandleRect: {fileID: 167431871}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:

@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using UnityEngine;
 using VoltstroStudios.UnityWebBrowser.Core;
 using Immutable.Passport.Auth;
+using Newtonsoft.Json;
+using Immutable.Passport.Utility;
 
 namespace Immutable.Passport
 {
@@ -22,9 +24,6 @@ namespace Immutable.Passport
         // and using TaskCompletionSource<object> doesn't work. 
         // Future considerations: we could create a base class for the response type too TaskCompletionSource<BaseClass>
         IDictionary<string, object> requestTaskMap = new Dictionary<string, object>();
-
-        // TODO to remove and replace it with device code auth
-        TaskCompletionSource<bool> loginTask;
 
         // TODO find a better way of notifying when the web app is ready
         public event PassportReady OnReady;
@@ -49,22 +48,28 @@ namespace Immutable.Passport
 
         #region Passport request
 
-        // TODO replace with device code auth
         public async Task<string> Connect() {
             string code = await auth.Login();
             Debug.Log($"Got code: {code}");
             return code;
-            // showBrowser();
-            // return Task.Run(() => {
-            //     var t = new TaskCompletionSource<bool>();
-            //     call(PassportFunction.CONNECT);
-            //     loginTask = t;
-            //     return t.Task;
-            // });
         }
 
+        User? u;
+
         public async Task ConfirmCode() {
-            await auth.ConfirmCode();
+            User user = await auth.ConfirmCode();
+            bool success = await GetImxProvider(user);
+            if (!success) {
+                throw new Exception("Failed to get IMX provider");
+            }
+        }
+
+        public Task<bool> GetImxProvider(User u) {
+            // Only send necessary values
+            GetImxProviderRequest user = new GetImxProviderRequest(u.idToken, u.accessToken, u.refreshToken, u.profile, u.etherKey);
+            string data = JsonConvert.SerializeObject(user);
+
+            return createCallTask<bool>(PassportFunction.GET_IMX_PROVIDER, data);
         }
 
         public Task<string?> GetAddress() {
@@ -76,22 +81,22 @@ namespace Immutable.Passport
             call(PassportFunction.LOGOUT);
         }
 
-        public string? getAccessToken() {
-            string token = PlayerPrefs.GetString(PassportConstants.KEY_PREFS_ACCESS_TOKEN, "");
-            if (string.IsNullOrWhiteSpace(token)) {
+        public string? GetAccessToken() {
+            // string token = PlayerPrefs.GetString(PassportConstants.KEY_PREFS_ACCESS_TOKEN, "");
+            // if (string.IsNullOrWhiteSpace(token)) {
                 return null;
-            } else {
-                return token;
-            }
+            // } else {
+            //     return token;
+            // }
         }
 
-        public string? getIdToken() {
-            string token = PlayerPrefs.GetString(PassportConstants.KEY_PREFS_ID_TOKEN, "");
-            if (string.IsNullOrWhiteSpace(token)) {
+        public string? GetIdToken() {
+            // string token = PlayerPrefs.GetString(PassportConstants.KEY_PREFS_ID_TOKEN, "");
+            // if (string.IsNullOrWhiteSpace(token)) {
                 return null;
-            } else {
-                return token;
-            }
+            // } else {
+            //     return token;
+            // }
         }
 
         private Task<T> createCallTask<T>(string fxName, string? data = null) {
@@ -109,10 +114,14 @@ namespace Immutable.Passport
         private string call(string fxName, string? data = null) {
             string requestId = Guid.NewGuid().ToString();
             Request request = new Request(fxName, requestId, data);
-            string requestJson = JsonUtility.ToJson(request).Replace("\"", "\\\"");
+            // string requestJson = JsonUtility.ToJson(request).Replace("\\", "\\\\").Replace("\"", "\\\"");
+            string requestJson = JsonConvert.SerializeObject(request).Replace("\\", "\\\\").Replace("\"", "\\\"");
+
+            Debug.Log($"call: requestJson {requestJson}");
 
             // Call the function on the JS side
             string js = @$"callFunction(""{requestJson}"")";
+            Debug.Log($"call js {js}");
             webBrowserClient.ExecuteJs(js);
 
             return requestId;
@@ -125,13 +134,6 @@ namespace Immutable.Passport
         private void OnUnityPostMessage(string message) {
             Debug.Log($"[Unity] OnUnityPostMessage: {message}");
             switch (message) {
-                // Login case for now
-                // TODO to remove this switch case after we implement device auth code
-                case "IMX_PROVIDER_SET":
-                    hideBrowser();
-                    loginTask?.TrySetResult(true);
-                    loginTask = null;
-                    break;
                 // May change based on how we design the web app
                 case "IMX_FUNCTIONS_READY":
                     OnReady?.Invoke();
@@ -147,15 +149,23 @@ namespace Immutable.Passport
 
             // Check if the reponse returned is valid and the task to return the reponse exists
             if (response != null && response.responseFor != null && response.requestId != null && requestTaskMap.ContainsKey(response.requestId)) {
+                string requestId = response.requestId;
+
+                // TODO handle errors from TS SDK
+                // TODO throw error if task for request ID does not exist
+                // TODO refactor dupliate code when get getting response and setting result
                 switch (response.responseFor) {
                     case PassportFunction.GET_ADDRESS:
                         AddressResponse? addressResponse = JsonUtility.FromJson<AddressResponse>(message);
-                        // Get the task for this request ID
-                        TaskCompletionSource<string?> completion = requestTaskMap[response.requestId] as TaskCompletionSource<string?>;
-                        // Return the address
-                        completion.TrySetResult(addressResponse?.address);
-                        // Remove task from the map as we don't need it anymore
-                        requestTaskMap.Remove(addressResponse.requestId);
+                        TaskCompletionSource<string?> addressCompletion = requestTaskMap[requestId] as TaskCompletionSource<string?>;
+                        addressCompletion.TrySetResult(addressResponse?.address);
+                        requestTaskMap.Remove(requestId);
+                        break;
+                    case PassportFunction.GET_IMX_PROVIDER:
+                        GetImxProviderResponse? providerResponse = JsonUtility.FromJson<GetImxProviderResponse>(message);
+                        TaskCompletionSource<bool> providerCompletion = requestTaskMap[requestId] as TaskCompletionSource<bool>;
+                        providerCompletion.TrySetResult(providerResponse?.success == true);
+                        requestTaskMap.Remove(requestId);
                         break;
                     default:
                         break;
@@ -166,16 +176,6 @@ namespace Immutable.Passport
         #endregion
 
         #region Browser
-
-        // TODO to remove once we implement device auth code
-        private void showBrowser() {
-            // Match browser resolution ratio with browser size so the content is not distorted
-            RectTransform rectTransform = clientManager.GetComponent<RectTransform>();
-            int w = (int) Math.Round(rectTransform.rect.width * 1.25);
-            int h = (int) Math.Round(rectTransform.rect.height * 1.25);
-            webBrowserClient.Resize(new VoltstroStudios.UnityWebBrowser.Shared.Resolution((uint) w, (uint) h));
-            gameObject.transform.localScale = new Vector3(1, 1, 1);
-        }
 
         private void hideBrowser() {
             gameObject.transform.localScale = new Vector3(0, 0, 0);

@@ -23,6 +23,19 @@ namespace Immutable.Passport.Auth {
         public int expires_in { get; set; }
     }
 
+    internal class IdTokenPayload {
+        public IdTokenPassport? passport { get; set; }
+        public string? email { get; set; }
+        public string? nickname { get; set; }
+        public string? sub { get; set; }
+    }
+
+    internal class IdTokenPassport {
+        public string? ether_key { get; set; }
+        public string? stark_key { get; set; }
+        public string? user_admin_key { get; set; }
+    }
+
     internal class ErrorResponse {
         public string error { get; set; }
         public string error_description { get; set; }

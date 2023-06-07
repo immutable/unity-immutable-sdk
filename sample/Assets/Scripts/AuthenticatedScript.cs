@@ -40,11 +40,11 @@ public class AuthenticatedScript : MonoBehaviour
     }
 
     public void GetAccessToken() {
-        showOutput(passport.getAccessToken());
+        showOutput(passport.GetAccessToken());
     }
 
     public void GetIdToken() {
-        showOutput(passport.getIdToken());
+        showOutput(passport.GetIdToken());
     }
 
     private void showOutput(string message) {

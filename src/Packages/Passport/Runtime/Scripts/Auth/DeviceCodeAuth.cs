@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
 using Immutable.Passport;
+using Immutable.Passport.Storage;
 
 namespace Immutable.Passport.Auth {
     public class DeviceCodeAuth {
@@ -14,12 +15,12 @@ namespace Immutable.Passport.Auth {
         private const string TAG_POLL_FOR_TOKEN = "[Poll For Token]";
         private const string TAG_GET_TOKEN = "[Get Token]";
 
-        private const string DOMAIN = "https://prod.immutable.auth0app.com";
+        private const string DOMAIN = "https://auth.immutable.com";
         private const string PATH_AUTH_CODE = "/oauth/device/code";
         private const string PATH_TOKEN = "/oauth/token";
 
         private const string CLIENT_ID = "ZJL7JvetcDFBNDlgRs5oJoxuAUUl6uQj";
-        private const string SCOPE = "openid offline_access profile email";
+        private const string SCOPE = "openid offline_access profile email transact";
         private const string AUDIENCE = "platform_api";
         private const string GRANT_TYPE = "urn:ietf:params:oauth:grant-type:device_code";
 
@@ -38,7 +39,9 @@ namespace Immutable.Passport.Auth {
 
         private readonly HttpClient client = new HttpClient();
 
-        DeviceCodeResponse? deviceCodeResponse;
+        private DeviceCodeResponse? deviceCodeResponse;
+
+        private CredentialsManager manager = new();
 
         /// <summary>
         /// <returns>
@@ -60,14 +63,20 @@ namespace Immutable.Passport.Auth {
         /// The token response
         /// </return>
         /// </summary>
-        public async Task ConfirmCode() {
+        public async Task<User> ConfirmCode() {
             if (deviceCodeResponse != null) {
                 // Poll for token
                 Application.OpenURL(deviceCodeResponse.verification_uri_complete);
                 var tokenResponse = await PollForTokenTask(deviceCodeResponse.device_code, deviceCodeResponse.interval);
                 if (tokenResponse != null) {
-                    PlayerPrefs.SetString(PassportConstants.KEY_PREFS_ACCESS_TOKEN, tokenResponse.access_token);
-                    PlayerPrefs.SetString(PassportConstants.KEY_PREFS_ID_TOKEN, tokenResponse.id_token);
+                    User user = tokenResponse.ToUser();
+
+                    // Only persist credentials that contain the necessary data
+                    if (user.MetadatExists()) {
+                        manager.SaveCredentials(tokenResponse);
+                    }
+
+                    return user;
                 } else {
                     throw new Exception($"Failed to login");
                 }
@@ -111,6 +120,8 @@ namespace Immutable.Passport.Auth {
                 var errorResponse = JsonConvert.DeserializeObject<ErrorResponse>(responseString);
 
                 if (tokenResponse != null && tokenResponse.refresh_token != null) {
+                    Debug.Log("Token response id token: " + tokenResponse.id_token);
+                    Debug.Log("Token response access token: " + tokenResponse.access_token);
                     needToPoll = false;
                     return tokenResponse;
                 } else if (errorResponse != null) {
