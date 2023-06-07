@@ -16,6 +16,8 @@ public class AuthenticatedScript : MonoBehaviour
     [SerializeField] private Button idTokenButton;
     [SerializeField] private Button getAddressButton;
     [SerializeField] private Button logoutButton;
+    [SerializeField] private Button signMessageButton;
+    [SerializeField] private InputField signInput;
 
     void Start()
     {
@@ -28,13 +30,13 @@ public class AuthenticatedScript : MonoBehaviour
     }
 
     public async void GetAddress() {
-        showOutput($"Called GetAddress() {Passport.Instance != null}");
+        showOutput($"Called GetAddress()...");
         string? address = await Passport.Instance.GetAddress();
         showOutput(address);
     }
 
     public async void Logout() {
-        showOutput("Called Logout()");
+        showOutput("Called Logout()...");
         passport.Logout();
         showOutput("Logged out");
     }
@@ -45,6 +47,12 @@ public class AuthenticatedScript : MonoBehaviour
 
     public void GetIdToken() {
         showOutput(passport.GetIdToken());
+    }
+
+    public async void SignMessage() {
+        showOutput("Called SignMessage()...");
+        string? result = await passport.SignMessage(signInput.text);
+        showOutput($"Result: ${result}");
     }
 
     private void showOutput(string message) {

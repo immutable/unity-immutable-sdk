@@ -32,7 +32,7 @@ public class UnauthenticatedScript : MonoBehaviour
 
     public async void Connect() {
         try {
-            showOutput("Called Connect()");
+            showOutput("Called Connect()...");
             userCodeText.gameObject.SetActive(false);
             proceedLoginButton.gameObject.SetActive(false);
 
@@ -51,7 +51,7 @@ public class UnauthenticatedScript : MonoBehaviour
 
     public async void ConfirmCode() {
         try {
-            showOutput("Called ConfirmCode()");
+            showOutput("Called ConfirmCode()...");
             await passport.ConfirmCode();
             showOutput("Confirmed code");
             SceneManager.LoadScene(sceneName:"AuthenticatedScene");

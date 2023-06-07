@@ -16,4 +16,8 @@ namespace Immutable.Passport
     public class GetImxProviderResponse : Response {
         public bool success;
     }
+
+    public class SignMessageResponse : Response {
+        public string? result;
+    }
 }

@@ -99,6 +99,10 @@ namespace Immutable.Passport
             }
         }
 
+        public Task<string?> SignMessage(string message) {
+            return createCallTask<string?>(PassportFunction.SIGN_MESSAGE, message);
+        }
+
         private Task<T> createCallTask<T>(string fxName, string? data = null) {
             return Task.Run(() => {
                 var t = new TaskCompletionSource<T>();
@@ -114,7 +118,6 @@ namespace Immutable.Passport
         private string call(string fxName, string? data = null) {
             string requestId = Guid.NewGuid().ToString();
             Request request = new Request(fxName, requestId, data);
-            // string requestJson = JsonUtility.ToJson(request).Replace("\\", "\\\\").Replace("\"", "\\\"");
             string requestJson = JsonConvert.SerializeObject(request).Replace("\\", "\\\\").Replace("\"", "\\\"");
 
             Debug.Log($"call: requestJson {requestJson}");
@@ -165,6 +168,12 @@ namespace Immutable.Passport
                         GetImxProviderResponse? providerResponse = JsonUtility.FromJson<GetImxProviderResponse>(message);
                         TaskCompletionSource<bool> providerCompletion = requestTaskMap[requestId] as TaskCompletionSource<bool>;
                         providerCompletion.TrySetResult(providerResponse?.success == true);
+                        requestTaskMap.Remove(requestId);
+                        break;
+                    case PassportFunction.SIGN_MESSAGE:
+                        SignMessageResponse? signResponse = JsonUtility.FromJson<SignMessageResponse>(message);
+                        TaskCompletionSource<string?> signCompletion = requestTaskMap[requestId] as TaskCompletionSource<string?>;
+                        signCompletion.TrySetResult(signResponse?.result);
                         requestTaskMap.Remove(requestId);
                         break;
                     default:
