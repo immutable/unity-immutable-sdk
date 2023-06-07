@@ -9,7 +9,7 @@ using Immutable.Passport;
 using Immutable.Passport.Storage;
 
 namespace Immutable.Passport.Auth {
-    public class DeviceCodeAuth {
+    public class AuthManager {
         private const string TAG = "[Device Code Auth]";
         private const string TAG_GET_DEVICE_CODE = "[Get Device Code]";
         private const string TAG_POLL_FOR_TOKEN = "[Poll For Token]";
@@ -37,10 +37,12 @@ namespace Immutable.Passport.Auth {
         private const string ERROR_CODE_EXPIRED_TOKEN = "expired_token";
         private const string ERROR_CODE_ACCESS_DENIED = "access_denied";
 
-        private readonly HttpClient client = new HttpClient();
+        
 
         private DeviceCodeResponse? deviceCodeResponse;
 
+        private User? user;
+        private readonly HttpClient client = new();
         private CredentialsManager manager = new();
 
         /// <summary>
@@ -69,10 +71,10 @@ namespace Immutable.Passport.Auth {
                 Application.OpenURL(deviceCodeResponse.verification_uri_complete);
                 var tokenResponse = await PollForTokenTask(deviceCodeResponse.device_code, deviceCodeResponse.interval);
                 if (tokenResponse != null) {
-                    User user = tokenResponse.ToUser();
+                    user = tokenResponse.ToUser();
 
                     // Only persist credentials that contain the necessary data
-                    if (user.MetadatExists()) {
+                    if (user?.MetadatExists() == true) {
                         manager.SaveCredentials(tokenResponse);
                     }
 
@@ -176,6 +178,10 @@ namespace Immutable.Passport.Auth {
                 Debug.Log($"{TAG} {TAG_GET_TOKEN} {ex.Message}");
                 throw ex;
             }
+        }
+
+        public User? GetUser() {
+            return user;
         }
     }
 }

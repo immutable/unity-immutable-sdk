@@ -28,7 +28,7 @@ namespace Immutable.Passport
         // TODO find a better way of notifying when the web app is ready
         public event PassportReady OnReady;
 
-        private DeviceCodeAuth auth = new();
+        private AuthManager auth = new();
 
         void Start()
         {
@@ -64,7 +64,7 @@ namespace Immutable.Passport
             }
         }
 
-        public Task<bool> GetImxProvider(User u) {
+        private Task<bool> GetImxProvider(User u) {
             // Only send necessary values
             GetImxProviderRequest user = new GetImxProviderRequest(u.idToken, u.accessToken, u.refreshToken, u.profile, u.etherKey);
             string data = JsonConvert.SerializeObject(user);
@@ -82,21 +82,21 @@ namespace Immutable.Passport
         }
 
         public string? GetAccessToken() {
-            // string token = PlayerPrefs.GetString(PassportConstants.KEY_PREFS_ACCESS_TOKEN, "");
-            // if (string.IsNullOrWhiteSpace(token)) {
+            User? user = auth.GetUser();
+            if (user != null) {
+                return user.accessToken;
+            } else {
                 return null;
-            // } else {
-            //     return token;
-            // }
+            }
         }
 
         public string? GetIdToken() {
-            // string token = PlayerPrefs.GetString(PassportConstants.KEY_PREFS_ID_TOKEN, "");
-            // if (string.IsNullOrWhiteSpace(token)) {
+            User? user = auth.GetUser();
+            if (user != null) {
+                return user.idToken;
+            } else {
                 return null;
-            // } else {
-            //     return token;
-            // }
+            }
         }
 
         private Task<T> createCallTask<T>(string fxName, string? data = null) {

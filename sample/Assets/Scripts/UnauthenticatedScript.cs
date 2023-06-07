@@ -54,7 +54,7 @@ public class UnauthenticatedScript : MonoBehaviour
             showOutput("Called ConfirmCode()");
             await passport.ConfirmCode();
             showOutput("Confirmed code");
-            // SceneManager.LoadScene(sceneName:"AuthenticatedScene");
+            SceneManager.LoadScene(sceneName:"AuthenticatedScene");
         } catch (Exception ex) {
             showOutput($"ConfirmCode() error: {ex.Message}");
         }

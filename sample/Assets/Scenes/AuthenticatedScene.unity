@@ -247,7 +247,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1192763474}
         m_TargetAssemblyTypeName: AuthenticatedScript, Assembly-CSharp
-        m_MethodName: GetImxProvider
+        m_MethodName: GetAddress
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1156,7 +1156,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1341903191
 MonoBehaviour:
   m_ObjectHideFlags: 0
