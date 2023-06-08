@@ -174,8 +174,6 @@ namespace Immutable.Passport.Auth {
                 var errorResponse = JsonConvert.DeserializeObject<ErrorResponse>(responseString);
 
                 if (tokenResponse != null && tokenResponse.refresh_token != null) {
-                    Debug.Log("Token response id token: " + tokenResponse.id_token);
-                    Debug.Log("Token response access token: " + tokenResponse.access_token);
                     needToPoll = false;
                     return tokenResponse;
                 } else if (errorResponse != null) {

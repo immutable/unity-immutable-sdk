@@ -7,6 +7,8 @@ namespace Immutable.Passport
     internal class Response {
         public string? responseFor;
         public string? requestId;
+        public bool success;
+        public string? error;
     }
 
     internal class AddressResponse : Response {
@@ -14,7 +16,6 @@ namespace Immutable.Passport
     }
 
     internal class GetImxProviderResponse : Response {
-        public bool success;
     }
 
     internal class SignMessageResponse : Response {

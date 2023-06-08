@@ -7,6 +7,8 @@ using UnityEngine.SceneManagement;
 using Immutable.Passport;
 using Immutable.Passport.Auth;
 using UnityEditor;
+using VoltstroStudios.UnityWebBrowser.Core;
+using System.IO;
 
 public class UnauthenticatedScript : MonoBehaviour
 {
@@ -20,14 +22,18 @@ public class UnauthenticatedScript : MonoBehaviour
 
     void Start()
     {
-        passport.OnReady += OnReady;
-
+        connectButton.gameObject.SetActive(false);
         userCodeText.gameObject.SetActive(false);
         proceedLoginButton.gameObject.SetActive(false);
+
+        passport.OnReady += OnReady;
+
+        ShowOutput("Starting...");
     }
 
     private void OnReady() {
-        ShowOutput("UnauthenticatedScript Passport is ready");
+        ShowOutput("Passport is ready");
+        connectButton.gameObject.SetActive(true);
     }
 
     public async void Connect() {

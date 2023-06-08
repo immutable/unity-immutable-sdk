@@ -88,7 +88,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   browserClient:
     engine: {fileID: 11400000, guid: d220b59e561c4d046a0e37934347508f, type: 2}
-    initialUrl: https://nattb8.github.io
+    initialUrl: https://www.immutable.com
     resolution:
       Width: 960
       Height: 540
