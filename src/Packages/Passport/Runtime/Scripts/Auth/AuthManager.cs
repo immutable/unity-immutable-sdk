@@ -14,6 +14,7 @@ namespace Immutable.Passport.Auth {
         private const string TAG_GET_DEVICE_CODE = "[Get Device Code]";
         private const string TAG_POLL_FOR_TOKEN = "[Poll For Token]";
         private const string TAG_GET_TOKEN = "[Get Token]";
+        private const string TAG_GET_REFRESH_TOKEN = "[Refresh Token]";
 
         private const string DOMAIN = "https://auth.immutable.com";
         private const string PATH_AUTH_CODE = "/oauth/device/code";
@@ -22,13 +23,15 @@ namespace Immutable.Passport.Auth {
         private const string CLIENT_ID = "ZJL7JvetcDFBNDlgRs5oJoxuAUUl6uQj";
         private const string SCOPE = "openid offline_access profile email transact";
         private const string AUDIENCE = "platform_api";
-        private const string GRANT_TYPE = "urn:ietf:params:oauth:grant-type:device_code";
+        private const string GRANT_TYPE_DEVICE_CODE = "urn:ietf:params:oauth:grant-type:device_code";
+        private const string GRANT_TYPE_REFRESH_TOKEN = "refresh_token";
 
         private const string KEY_CLIENT_ID = "client_id";
         private const string KEY_SCOPE = "scope";
         private const string KEY_AUDIENCE = "audience";
         private const string KEY_GRANT_TYPE = "grant_type";
         private const string KEY_DEVICE_CODE = "device_code";
+        private const string KEY_REFRESH_TOKEN = "refresh_token";
         private const string KEY_CONTENT_TYPE = "Content-Type";
         private const string CONTENT_TYPE_FORM_URL_ENCODED = "application/x-www-form-urlencoded";
 
@@ -46,24 +49,29 @@ namespace Immutable.Passport.Auth {
         /// <summary>
         /// Logs the user into Passport using Device Authorisation Grant.
         ///
-        /// The user does not need to log in if the previously issued access token is still valid.
+        /// The user does not need to log in if the previously issued access token is still valid or
+        /// if the refresh token can be used to get a new access token.
         /// <returns>
         /// The end-user verification code if confirmation is required, otherwise null;
         /// </returns>
         /// </summary>
         public async Task<string?> Login() {
-            Debug.Log($"{TAG} Called Login()");
             // If access token exists and is still valid, get saved credentials
+            TokenResponse? savedCreds = manager.GetCredentials();
             if (manager.HasValidCredentials()) {
                 Debug.Log($"{TAG} Access token exists and is still valid");
-                TokenResponse? savedCreds = manager.GetCredentials();
                 user = savedCreds.ToUser();
-                Debug.Log($"{TAG} etherKey: {user?.etherKey}");
-                Debug.Log($"{TAG} userAdminKey: {user?.userAdminKey}");
-                Debug.Log($"{TAG} starkKey: {user?.starkKey}");
+                return null;
+            } else if (savedCreds?.refresh_token != null) {
+                // Access token does not exist or is not longer valid
+                // Use refresh token if it exists
+                Debug.Log($"{TAG} Refreshing token...");
+                TokenResponse? tokenResponse = await RefreshToken(savedCreds.refresh_token);
+                HandleTokenResponse(tokenResponse);
                 return null;
             } else {
-                // Access token does not exist or is no longer valid
+                // Can't use both access and refresh tokens
+                // Perform device code authorisation
                 Debug.Log($"{TAG} Starting device code authorisation...");
                 deviceCodeResponse = await GetDeviceCodeTask();
                 if (deviceCodeResponse != null) {
@@ -71,6 +79,31 @@ namespace Immutable.Passport.Auth {
                 } else {
                     throw new Exception($"Failed to get device code");
                 }
+            }
+        }
+
+        private async Task<TokenResponse?> RefreshToken(string refreshToken) {
+            var values = new Dictionary<string, string>
+            {
+                { KEY_CLIENT_ID, CLIENT_ID },
+                { KEY_GRANT_TYPE, GRANT_TYPE_REFRESH_TOKEN },
+                { KEY_REFRESH_TOKEN, refreshToken }
+            };
+
+            var content = new FormUrlEncodedContent(values);
+
+            try
+            {
+                using var response = await client.PostAsync($"{DOMAIN}{PATH_TOKEN}", content);
+                var responseString = await response.Content.ReadAsStringAsync();
+                Debug.Log($"{TAG} Refresh token response: " + responseString);
+                return JsonConvert.DeserializeObject<TokenResponse>(responseString);
+            }
+            catch (Exception ex)
+            {
+                // When the token has been canceled, it is not a timeout.
+                Debug.Log($"{TAG} {TAG_GET_REFRESH_TOKEN} {ex}");
+                throw ex;
             }
         }
 
@@ -85,23 +118,24 @@ namespace Immutable.Passport.Auth {
                 // Poll for token
                 Application.OpenURL(deviceCodeResponse.verification_uri_complete);
                 var tokenResponse = await PollForTokenTask(deviceCodeResponse.device_code, deviceCodeResponse.interval);
-                if (tokenResponse != null) {
-                    user = tokenResponse.ToUser();
-
-                    // Only persist credentials that contain the necessary data
-                    if (user?.MetadatExists() == true) {
-                        Debug.Log($"{TAG} Credentials has all necessary data, saving...");
-                        manager.SaveCredentials(tokenResponse);
-                    } else {
-                        Debug.Log($"{TAG} Credentials does not have all necessary data to save");
-                    }
-
-                    return user;
-                } else {
-                    throw new Exception($"Failed to login");
-                }
+                return HandleTokenResponse(tokenResponse);
             } else {
                 throw new Exception($"Could not find device code response. Make sure to call login() first.");
+            }
+        }
+
+        private User HandleTokenResponse(TokenResponse? tokenResponse) {
+            if (tokenResponse != null) {
+                user = tokenResponse.ToUser();
+
+                // Only persist credentials that contain the necessary data
+                if (user?.MetadatExists() == true) {
+                    manager.SaveCredentials(tokenResponse);
+                }
+
+                return user;
+            } else {
+                throw new Exception($"Failed to login");
             }
         }
 
@@ -178,7 +212,7 @@ namespace Immutable.Passport.Auth {
             var values = new Dictionary<string, string>
             {
                 { KEY_CLIENT_ID, CLIENT_ID },
-                { KEY_GRANT_TYPE, GRANT_TYPE },
+                { KEY_GRANT_TYPE, GRANT_TYPE_DEVICE_CODE },
                 { KEY_DEVICE_CODE, deviceCode }
             };
 
@@ -187,7 +221,7 @@ namespace Immutable.Passport.Auth {
             try {
                 using var response = await client.PostAsync($"{DOMAIN}{PATH_TOKEN}", content);
                 var responseString = await response.Content.ReadAsStringAsync();
-                Debug.Log("Token response: " + responseString);
+                Debug.Log($"{TAG} Token response: " + responseString);
                 return responseString;
             }
             catch (Exception ex)
