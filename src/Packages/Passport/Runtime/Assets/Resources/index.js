@@ -49,8 +49,8 @@ async function callFunction(jsonData) {
         let json = JSON.parse(jsonData);
         let fxName = json[keyFunctionName];
         let requestId = json[keyRequestId];
-        let data = JSON.parse(json[keyData]);
         try {
+            let data = JSON.parse(json[keyData]);
             switch (fxName) {
                 case PassportFunctions.getAddress: {
                     const address = await providerInstance?.getAddress();
