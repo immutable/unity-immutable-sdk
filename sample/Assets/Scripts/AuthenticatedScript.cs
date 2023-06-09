@@ -22,11 +22,6 @@ public class AuthenticatedScript : MonoBehaviour
     void Start()
     {
         passport = Passport.Instance;
-        passport.OnReady += OnReady;
-    }
-
-    private void OnReady() {
-        showOutput("AuthenticatedScript Passport is ready");
     }
 
     public async void GetAddress() {

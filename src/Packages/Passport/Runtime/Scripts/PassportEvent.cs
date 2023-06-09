@@ -1,4 +1,4 @@
 namespace Immutable.Passport
 {
-    public delegate void PassportReady();
+    public delegate void PassportReadyDelegate();
 }

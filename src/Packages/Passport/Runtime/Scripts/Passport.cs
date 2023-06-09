@@ -7,11 +7,16 @@ using VoltstroStudios.UnityWebBrowser.Core;
 using Immutable.Passport.Auth;
 using Newtonsoft.Json;
 using Immutable.Passport.Utility;
+using System.IO;
 
 namespace Immutable.Passport
 {
     public class Passport : MonoBehaviour
     {
+        private const string TAG = "[Passport]";
+
+        private const string INITIAL_URL = "https://www.immutable.com/";
+
         public static Passport Instance { get; private set; }
 
         #if UNITY_STANDALONE_WIN || UNITY_STANDALONE_WIN
@@ -25,15 +30,15 @@ namespace Immutable.Passport
         // Future considerations: we could create a base class for the response type too TaskCompletionSource<BaseClass>
         IDictionary<string, object> requestTaskMap = new Dictionary<string, object>();
 
-        // TODO find a better way of notifying when the web app is ready
-        public event PassportReady OnReady;
+        public event PassportReadyDelegate OnReady;
 
         private AuthManager auth = new();
 
-        void Start()
+        async void Start()
         {
             webBrowserClient = clientManager.browserClient;
             webBrowserClient.OnUnityPostMessage += OnUnityPostMessage;
+            webBrowserClient.OnLoadFinish += OnLoadFinish;
         }
 
         void Awake() {
@@ -41,6 +46,18 @@ namespace Immutable.Passport
                 Instance = this;
                 // Keep this alive in every scene
                 DontDestroyOnLoad(this.gameObject);
+            }
+        }
+
+        private void OnLoadFinish(string url) {
+            Debug.Log($"{TAG} On load finish: {url}");
+            if (url.StartsWith(INITIAL_URL)) {
+                Debug.Log($"{TAG} Browser is ready");
+                // Browser is considered ready to load local HTML file
+                // Once the initial URL is loaded 
+                string filePath = Path.GetFullPath("Packages/com.immutable.passport/Runtime/Assets/Resources/passport.html");
+                webBrowserClient.LoadUrl($"file:///{filePath}");
+                OnReady?.Invoke();
             }
         }
 
@@ -94,7 +111,7 @@ namespace Immutable.Passport
         }
 
         public void Logout() {
-            call(PassportFunction.LOGOUT);
+            auth.Logout();
         }
 
         public string? GetAccessToken() {
@@ -136,8 +153,6 @@ namespace Immutable.Passport
             Request request = new Request(fxName, requestId, data);
             string requestJson = JsonConvert.SerializeObject(request).Replace("\\", "\\\\").Replace("\"", "\\\"");
 
-            Debug.Log($"call: requestJson {requestJson}");
-
             // Call the function on the JS side
             string js = @$"callFunction(""{requestJson}"")";
             Debug.Log($"call js {js}");
@@ -152,15 +167,7 @@ namespace Immutable.Passport
 
         private void OnUnityPostMessage(string message) {
             Debug.Log($"[Unity] OnUnityPostMessage: {message}");
-            switch (message) {
-                // May change based on how we design the web app
-                case "IMX_FUNCTIONS_READY":
-                    OnReady?.Invoke();
-                    break;
-                default:
-                    handleResponse(message);
-                    break;
-            }
+            handleResponse(message);
         }
 
         private void handleResponse(string message) {
@@ -183,7 +190,12 @@ namespace Immutable.Passport
                     case PassportFunction.GET_IMX_PROVIDER:
                         GetImxProviderResponse? providerResponse = JsonUtility.FromJson<GetImxProviderResponse>(message);
                         TaskCompletionSource<bool> providerCompletion = requestTaskMap[requestId] as TaskCompletionSource<bool>;
-                        providerCompletion.TrySetResult(providerResponse?.success == true);
+                        bool success = providerResponse?.success == true;
+                        if (success) {
+                            providerCompletion.TrySetResult(success);
+                        } else {
+                            providerCompletion.TrySetException(new Exception(providerResponse?.error));
+                        }
                         requestTaskMap.Remove(requestId);
                         break;
                     case PassportFunction.SIGN_MESSAGE:

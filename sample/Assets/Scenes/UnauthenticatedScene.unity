@@ -767,7 +767,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1192763472}
-        m_TargetAssemblyTypeName: SampleScript, Assembly-CSharp
+        m_TargetAssemblyTypeName: UnauthenticatedScript, Assembly-CSharp
         m_MethodName: Connect
         m_Mode: 1
         m_Arguments:
@@ -1378,7 +1378,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8706560016382071360, guid: 7e2c042634c43914c998b1584c3058cf, type: 3}
       propertyPath: browserClient.initialUrl
-      value: https://nattb8.github.io
+      value: https://www.immutable.com
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7e2c042634c43914c998b1584c3058cf, type: 3}
@@ -1465,7 +1465,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 167431872}
   m_HandleRect: {fileID: 167431871}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
