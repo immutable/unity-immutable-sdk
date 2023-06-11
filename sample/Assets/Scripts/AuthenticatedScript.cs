@@ -19,14 +19,9 @@ public class AuthenticatedScript : MonoBehaviour
     [SerializeField] private Button signMessageButton;
     [SerializeField] private InputField signInput;
 
-    private string outputString = "";
-
     void Start()
     {
         passport = Passport.Instance;
-
-        // Show logs output
-        Application.logMessageReceived += Log;
     }
 
     public async void GetAddress() {
@@ -58,18 +53,9 @@ public class AuthenticatedScript : MonoBehaviour
         ShowOutput(result);
     }
 
-    public void Log(string logString, string stackTrace, LogType type) {
-        ShowOutput(logString.Length > 1000 ? logString.Substring(0, 999) : logString);
-    }
-
     private void ShowOutput(string message) {
         if (output != null) {
-            if (outputString.Length == 0) {
-                outputString = message;
-            } else {
-                outputString = outputString + "\n" + message;
-            }
-            output.text = outputString;
+            output.text = message;
         }
     }
 }
