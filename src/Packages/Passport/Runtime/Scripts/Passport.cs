@@ -44,9 +44,15 @@ namespace Immutable.Passport
         void Awake() {
             if (Instance == null) {
                 Instance = this;
+
                 // Keep this alive in every scene
                 DontDestroyOnLoad(this.gameObject);
             }
+        }
+
+        public void Destroy() {
+            Instance = null;
+            Destroy(this.gameObject);
         }
 
         private void OnLoadFinish(string url) {
@@ -58,6 +64,8 @@ namespace Immutable.Passport
                 string filePath = Path.GetFullPath("Packages/com.immutable.passport/Runtime/Assets/Resources/passport.html");
                 webBrowserClient.LoadUrl($"file:///{filePath}");
                 OnReady?.Invoke();
+                // Clean up listener
+                webBrowserClient.OnLoadFinish -= OnLoadFinish;
             }
         }
 
@@ -184,7 +192,7 @@ namespace Immutable.Passport
                     case PassportFunction.GET_ADDRESS:
                         AddressResponse? addressResponse = JsonUtility.FromJson<AddressResponse>(message);
                         TaskCompletionSource<string?> addressCompletion = requestTaskMap[requestId] as TaskCompletionSource<string?>;
-                        addressCompletion.TrySetResult(addressResponse?.address);
+                        addressCompletion.SetResult(addressResponse?.address);
                         requestTaskMap.Remove(requestId);
                         break;
                     case PassportFunction.GET_IMX_PROVIDER:
@@ -192,16 +200,16 @@ namespace Immutable.Passport
                         TaskCompletionSource<bool> providerCompletion = requestTaskMap[requestId] as TaskCompletionSource<bool>;
                         bool success = providerResponse?.success == true;
                         if (success) {
-                            providerCompletion.TrySetResult(success);
+                            providerCompletion.SetResult(success);
                         } else {
-                            providerCompletion.TrySetException(new Exception(providerResponse?.error));
+                            providerCompletion.SetException(new Exception(providerResponse?.error));
                         }
                         requestTaskMap.Remove(requestId);
                         break;
                     case PassportFunction.SIGN_MESSAGE:
                         SignMessageResponse? signResponse = JsonUtility.FromJson<SignMessageResponse>(message);
                         TaskCompletionSource<string?> signCompletion = requestTaskMap[requestId] as TaskCompletionSource<string?>;
-                        signCompletion.TrySetResult(signResponse?.result);
+                        signCompletion.SetResult(signResponse?.result);
                         requestTaskMap.Remove(requestId);
                         break;
                     default:

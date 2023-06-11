@@ -3,6 +3,8 @@ using Immutable.Passport.Auth;
 using Immutable.Passport.Utility;
 using UnityEngine;
 using Newtonsoft.Json;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace Immutable.Passport.Storage {
     public class CredentialsManager {
@@ -18,13 +20,20 @@ namespace Immutable.Passport.Storage {
         }
 
         public TokenResponse? GetCredentials() {
-            Debug.Log($"{TAG} Get Credentials");
-            string json = PlayerPrefs.GetString(KEY_PREFS_CREDENTIALS, "");
-            Debug.Log($"{TAG} Get Credentials json {json}");
-            if (string.IsNullOrWhiteSpace(json) || json == "{}") {
+            try {
+                Debug.Log($"{TAG} Get Credentials");
+                PlayerPrefs.Save();
+                Debug.Log($"{TAG} Get Credentials Saved");
+                string json = PlayerPrefs.GetString(KEY_PREFS_CREDENTIALS, "");
+                Debug.Log($"{TAG} Get Credentials json {json}");
+                if (string.IsNullOrWhiteSpace(json) || json == "{}") {
+                    return null;
+                } else {
+                    return JsonConvert.DeserializeObject<TokenResponse>(json);
+                }
+            } catch (Exception ex) {
+                Debug.Log($"{TAG} Get Credentials error: {ex.Message}");
                 return null;
-            } else {
-                return JsonConvert.DeserializeObject<TokenResponse>(json);
             }
         }
 
@@ -44,7 +53,6 @@ namespace Immutable.Passport.Storage {
                 AccessTokenPayload? accessTokenPayload = JsonConvert.DeserializeObject<AccessTokenPayload>(accessToken);
                 Debug.Log($"{TAG} Access token payload is not null? {accessTokenPayload != null}");
 
-
                 long expiresAt = accessTokenPayload?.exp ?? 0;
                 long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                 bool valid = expiresAt > now;
@@ -57,6 +65,7 @@ namespace Immutable.Passport.Storage {
         }
 
         public void ClearCredentials() {
+            Debug.Log($"{TAG} Clear Credentials");
             PlayerPrefs.DeleteKey(KEY_PREFS_CREDENTIALS);
         }
     }

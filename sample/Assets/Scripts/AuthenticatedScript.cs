@@ -19,40 +19,57 @@ public class AuthenticatedScript : MonoBehaviour
     [SerializeField] private Button signMessageButton;
     [SerializeField] private InputField signInput;
 
+    private string outputString = "";
+
     void Start()
     {
         passport = Passport.Instance;
+
+        // Show logs output
+        Application.logMessageReceived += Log;
     }
 
     public async void GetAddress() {
-        showOutput($"Called GetAddress()...");
+        ShowOutput($"Called GetAddress()...");
         string? address = await Passport.Instance.GetAddress();
-        showOutput(address);
+        ShowOutput(address);
     }
 
     public async void Logout() {
-        showOutput("Called Logout()...");
         passport.Logout();
-        showOutput("Logged out");
+        // Destroying passport as we're redirecting the user back 
+        // to the scene which Passport is instantiated
+        // TODO Try handling this in the SDK
+        passport.Destroy();
+        SceneManager.LoadScene(sceneName:"UnauthenticatedScene");
     }
 
     public void GetAccessToken() {
-        showOutput(passport.GetAccessToken());
+        ShowOutput(passport.GetAccessToken());
     }
 
     public void GetIdToken() {
-        showOutput(passport.GetIdToken());
+        ShowOutput(passport.GetIdToken());
     }
 
     public async void SignMessage() {
-        showOutput("Called SignMessage()...");
+        ShowOutput("Called SignMessage()...");
         string? result = await passport.SignMessage(signInput.text);
-        showOutput(result);
+        ShowOutput(result);
     }
 
-    private void showOutput(string message) {
+    public void Log(string logString, string stackTrace, LogType type) {
+        ShowOutput(logString.Length > 1000 ? logString.Substring(0, 999) : logString);
+    }
+
+    private void ShowOutput(string message) {
         if (output != null) {
-            output.text = message;
+            if (outputString.Length == 0) {
+                outputString = message;
+            } else {
+                outputString = outputString + "\n" + message;
+            }
+            output.text = outputString;
         }
     }
 }

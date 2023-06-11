@@ -20,15 +20,19 @@ public class UnauthenticatedScript : MonoBehaviour
     [SerializeField] private Text userCodeText;
     [SerializeField] private Button proceedLoginButton;
 
+    private string outputString = "";
+
     void Start()
     {
+        ShowOutput("Starting...");
         connectButton.gameObject.SetActive(false);
         userCodeText.gameObject.SetActive(false);
         proceedLoginButton.gameObject.SetActive(false);
 
         passport.OnReady += OnReady;
 
-        ShowOutput("Starting...");
+        // Show logs output
+        Application.logMessageReceived += Log;
     }
 
     private void OnReady() {
@@ -76,9 +80,18 @@ public class UnauthenticatedScript : MonoBehaviour
         SceneManager.LoadScene(sceneName:"AuthenticatedScene");
     }
 
+    public void Log(string logString, string stackTrace, LogType type) {
+        ShowOutput(logString.Length > 1000 ? logString.Substring(0, 999) : logString);
+    }
+
     private void ShowOutput(string message) {
         if (output != null) {
-            output.text = message;
+            if (outputString.Length == 0) {
+                outputString = message;
+            } else {
+                outputString = outputString + "\n" + message;
+            }
+            output.text = outputString;
         }
     }
 }
