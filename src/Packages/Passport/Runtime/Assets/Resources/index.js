@@ -49,8 +49,8 @@ async function callFunction(jsonData) {
         let json = JSON.parse(jsonData);
         let fxName = json[keyFunctionName];
         let requestId = json[keyRequestId];
+        let data = json[keyData];
         try {
-            let data = JSON.parse(json[keyData]);
             switch (fxName) {
                 case PassportFunctions.getAddress: {
                     const address = await providerInstance?.getAddress();
@@ -63,7 +63,7 @@ async function callFunction(jsonData) {
                     break;
                 }
                 case PassportFunctions.getImxProvider: {
-                    let provider = await passportClient?.getImxProvider(data);
+                    let provider = await passportClient?.getImxProvider(JSON.parse(data));
                     var success = false;
                     if (provider !== null && provider !== undefined) {
                         providerInstance = provider;
