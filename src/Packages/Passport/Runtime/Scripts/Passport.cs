@@ -16,10 +16,14 @@ namespace Immutable.Passport
         private const string TAG = "[Passport]";
 
         private const string INITIAL_URL = "https://www.immutable.com/";
+        private const string SCHEME_FILE = "file:///";
+        private const string PASSPORT_PACKAGE_RESOURCES_DIRECTORY = "Packages/com.immutable.passport/Runtime/Assets/Resources";
+        private const string PASSPORT_DATA_DIRECTORY_NAME = "/Passport";
+        private const string PASSPORT_HTML_FILE_NAME = "/passport.html";
 
         public static Passport Instance { get; private set; }
 
-        #if UNITY_STANDALONE_WIN || UNITY_STANDALONE_WIN
+        #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
             [SerializeField] private BaseUwbClientManager clientManager;
             private WebBrowserClient webBrowserClient;
         #endif
@@ -61,8 +65,15 @@ namespace Immutable.Passport
                 Debug.Log($"{TAG} Browser is ready");
                 // Browser is considered ready to load local HTML file
                 // Once the initial URL is loaded 
-                string filePath = Path.GetFullPath("Packages/com.immutable.passport/Runtime/Assets/Resources/passport.html");
-                webBrowserClient.LoadUrl($"file:///{filePath}");
+                string filePath = "";
+#if UNITY_EDITOR
+                filePath = SCHEME_FILE + Path.GetFullPath($"{PASSPORT_PACKAGE_RESOURCES_DIRECTORY}{PASSPORT_HTML_FILE_NAME}");
+#else
+#if UNITY_STANDALONE_WIN
+                filePath = SCHEME_FILE + Path.GetFullPath(Application.dataPath) + PASSPORT_DATA_DIRECTORY_NAME + PASSPORT_HTML_FILE_NAME;
+#endif     
+#endif
+                webBrowserClient.LoadUrl(filePath);
                 OnReady?.Invoke();
                 // Clean up listener
                 webBrowserClient.OnLoadFinish -= OnLoadFinish;
@@ -96,8 +107,6 @@ namespace Immutable.Passport
             }
         }
 
-        User? u;
-
         public async Task ConfirmCode() {
             User user = await auth.ConfirmCode();
             await GetImxProvider(user);
@@ -105,8 +114,8 @@ namespace Immutable.Passport
 
         private async Task GetImxProvider(User u) {
             // Only send necessary values
-            GetImxProviderRequest user = new GetImxProviderRequest(u.idToken, u.accessToken, u.refreshToken, u.profile, u.etherKey);
-            string data = JsonConvert.SerializeObject(user);
+            GetImxProviderRequest request = new GetImxProviderRequest(u.idToken, u.accessToken, u.refreshToken, u.profile, u.etherKey);
+            string data = JsonConvert.SerializeObject(request);
 
             bool success = await createCallTask<bool>(PassportFunction.GET_IMX_PROVIDER, data);
             if (!success) {
@@ -145,15 +154,13 @@ namespace Immutable.Passport
         }
 
         private Task<T> createCallTask<T>(string fxName, string? data = null) {
-            return Task.Run(() => {
-                var t = new TaskCompletionSource<T>();
-                string requestId = call(fxName, data);
+            var t = new TaskCompletionSource<T>();
+            string requestId = call(fxName, data);
 
-                // Add task completion source to the map so we can return the reponse
-                requestTaskMap.Add(requestId, t);
+            // Add task completion source to the map so we can return the reponse
+            requestTaskMap.Add(requestId, t);
 
-                return t.Task;
-            });
+            return t.Task;
         }
 
         private string call(string fxName, string? data = null) {
@@ -163,8 +170,10 @@ namespace Immutable.Passport
 
             // Call the function on the JS side
             string js = @$"callFunction(""{requestJson}"")";
-            Debug.Log($"call js {js}");
+            Debug.Log($"{TAG} Call js: {js}");
             webBrowserClient.ExecuteJs(js);
+
+            Debug.Log($"{TAG} Executed js: {js}");
 
             return requestId;
         }
