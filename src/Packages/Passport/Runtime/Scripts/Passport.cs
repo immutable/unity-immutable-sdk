@@ -44,9 +44,15 @@ namespace Immutable.Passport
         void Awake() {
             if (Instance == null) {
                 Instance = this;
+
                 // Keep this alive in every scene
                 DontDestroyOnLoad(this.gameObject);
             }
+        }
+
+        public void Destroy() {
+            Instance = null;
+            Destroy(this.gameObject);
         }
 
         private void OnLoadFinish(string url) {
@@ -58,6 +64,8 @@ namespace Immutable.Passport
                 string filePath = Path.GetFullPath("Packages/com.immutable.passport/Runtime/Assets/Resources/passport.html");
                 webBrowserClient.LoadUrl($"file:///{filePath}");
                 OnReady?.Invoke();
+                // Clean up listener
+                webBrowserClient.OnLoadFinish -= OnLoadFinish;
             }
         }
 

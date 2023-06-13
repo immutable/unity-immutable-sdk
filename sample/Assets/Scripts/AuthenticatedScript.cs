@@ -36,17 +36,20 @@ public class AuthenticatedScript : MonoBehaviour
     }
 
     public async void Logout() {
-        showOutput("Called Logout()...");
         passport.Logout();
-        showOutput("Logged out");
+        // Destroying passport as we're redirecting the user back 
+        // to the scene which Passport is instantiated
+        // TODO Try handling this in the SDK
+        passport.Destroy();
+        SceneManager.LoadScene(sceneName:"UnauthenticatedScene");
     }
 
     public void GetAccessToken() {
-        showOutput(passport.GetAccessToken());
+        ShowOutput(passport.GetAccessToken());
     }
 
     public void GetIdToken() {
-        showOutput(passport.GetIdToken());
+        ShowOutput(passport.GetIdToken());
     }
 
     public async void SignMessage() {
@@ -59,7 +62,7 @@ public class AuthenticatedScript : MonoBehaviour
         }
     }
 
-    private void showOutput(string message) {
+    private void ShowOutput(string message) {
         if (output != null) {
             output.text = message;
         }

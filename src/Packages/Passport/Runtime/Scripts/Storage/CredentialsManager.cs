@@ -44,7 +44,6 @@ namespace Immutable.Passport.Storage {
                 AccessTokenPayload? accessTokenPayload = JsonConvert.DeserializeObject<AccessTokenPayload>(accessToken);
                 Debug.Log($"{TAG} Access token payload is not null? {accessTokenPayload != null}");
 
-
                 long expiresAt = accessTokenPayload?.exp ?? 0;
                 long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                 bool valid = expiresAt > now;
@@ -57,6 +56,7 @@ namespace Immutable.Passport.Storage {
         }
 
         public void ClearCredentials() {
+            Debug.Log($"{TAG} Clear Credentials");
             PlayerPrefs.DeleteKey(KEY_PREFS_CREDENTIALS);
         }
     }
