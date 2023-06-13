@@ -96,7 +96,7 @@ namespace Immutable.Passport.Auth {
             {
                 using var response = await client.PostAsync($"{DOMAIN}{PATH_TOKEN}", content);
                 var responseString = await response.Content.ReadAsStringAsync();
-                Debug.Log($"{TAG} Refresh token response: " + responseString);
+                Debug.Log($"{TAG} Refresh token response: {responseString}");
                 return JsonConvert.DeserializeObject<TokenResponse>(responseString);
             }
             catch (Exception ex)
@@ -153,7 +153,7 @@ namespace Immutable.Passport.Auth {
             {
                 using var response = await client.PostAsync($"{DOMAIN}{PATH_AUTH_CODE}", content);
                 var responseString = await response.Content.ReadAsStringAsync();
-                Debug.Log("Device code response: " + responseString);
+                Debug.Log($"{TAG} Device code response: {responseString}");
                 return JsonConvert.DeserializeObject<DeviceCodeResponse>(responseString);
             }
             catch (Exception ex)
@@ -219,7 +219,7 @@ namespace Immutable.Passport.Auth {
             try {
                 using var response = await client.PostAsync($"{DOMAIN}{PATH_TOKEN}", content);
                 var responseString = await response.Content.ReadAsStringAsync();
-                Debug.Log($"{TAG} Token response: " + responseString);
+                Debug.Log($"{TAG} Token response: {responseString}");
                 return responseString;
             }
             catch (Exception ex)
@@ -231,7 +231,6 @@ namespace Immutable.Passport.Auth {
         }
 
         public void Logout() {
-            // TODO implement log out
             manager.ClearCredentials();
         }
 

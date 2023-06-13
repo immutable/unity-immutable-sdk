@@ -22,13 +22,12 @@ public class UnauthenticatedScript : MonoBehaviour
 
     void Start()
     {
+        ShowOutput("Starting...");
         connectButton.gameObject.SetActive(false);
         userCodeText.gameObject.SetActive(false);
         proceedLoginButton.gameObject.SetActive(false);
 
         passport.OnReady += OnReady;
-
-        ShowOutput("Starting...");
     }
 
     private void OnReady() {
@@ -77,8 +76,6 @@ public class UnauthenticatedScript : MonoBehaviour
     }
 
     private void ShowOutput(string message) {
-        if (output != null) {
-            output.text = message;
-        }
+        output.text = message;
     }
 }
