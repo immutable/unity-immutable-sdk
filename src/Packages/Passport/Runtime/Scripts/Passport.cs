@@ -197,7 +197,7 @@ namespace Immutable.Passport
             string requestId = response.requestId;
             Exception? exception = (response.success == false || response.error != null) ? new Exception(response.error) : null;
 
-            if (requestTaskMap.ContainsKey(response.requestId)) {
+            if (requestTaskMap.ContainsKey(requestId)) {
                 switch (response.responseFor) {
                     case PassportFunction.GET_ADDRESS:
                         notifyRequestResult<string?>(requestId, JsonUtility.FromJson<AddressResponse>(message)?.address, exception);
@@ -212,17 +212,25 @@ namespace Immutable.Passport
                         break;
                 }
             } else {
-                // TODO throw error if task for request ID does not exist
+                throw new Exception($"No TaskCompletionSource for request id {requestId} found.");
             }
         }
         
         private void notifyRequestResult<T>(string requestId, T result, Exception? e)
         {
             TaskCompletionSource<T?> completion = requestTaskMap[requestId] as TaskCompletionSource<T?>;
-            if (e != null)
-                completion.TrySetException(e);
-            else
-                completion.TrySetResult(result);
+            try {
+                if (e != null) {
+                    if (!completion.TrySetException(e))
+                        throw new Exception($"Unable to set exception for for request id {requestId}. Task has already been completed.");
+                } else {
+                    if(!completion.TrySetResult(result))
+                        throw new Exception($"Unable to set result for for request id {requestId}. Task has already been completed.");
+                }
+            } catch (ObjectDisposedException exception) {
+                throw new Exception($"Task for request id {requestId} has already been disposed and can't be updated.");
+            }
+
             requestTaskMap.Remove(requestId);
         }
 
