@@ -3,8 +3,6 @@ using Immutable.Passport.Auth;
 using Immutable.Passport.Utility;
 using UnityEngine;
 using Newtonsoft.Json;
-using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
 
 namespace Immutable.Passport.Storage {
     public class CredentialsManager {
