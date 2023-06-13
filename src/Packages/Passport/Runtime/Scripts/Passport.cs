@@ -28,8 +28,6 @@ namespace Immutable.Passport
             private WebBrowserClient webBrowserClient;
         #endif
 
-        [SerializeField] public TextAsset htmlFile;
-
         // Request ID to TaskCompletionSource
         // Storing TaskCompletionSource as an object as C# doesn't support wildcards like TaskCompletionSource<Any>
         // and using TaskCompletionSource<object> doesn't work. 

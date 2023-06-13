@@ -26,12 +26,12 @@ public class AuthenticatedScript : MonoBehaviour
     }
 
     public async void GetAddress() {
-        showOutput($"Called GetAddress()...");
+        ShowOutput($"Called GetAddress()...");
         try {
             string? address = await Passport.Instance.GetAddress();
-            showOutput(address);
+            ShowOutput(address);
         } catch (Exception e) {
-            showOutput("Unable to get address");
+            ShowOutput("Unable to get address");
         }
     }
 
@@ -53,12 +53,12 @@ public class AuthenticatedScript : MonoBehaviour
     }
 
     public async void SignMessage() {
-        showOutput("Called SignMessage()...");
+        ShowOutput("Called SignMessage()...");
         try {
             string? result = await passport.SignMessage(signInput.text);
-            showOutput(result);
+            ShowOutput(result);
         } catch (Exception e) {
-            showOutput("Unable to sign message");
+            ShowOutput("Unable to sign message");
         }
     }
 
