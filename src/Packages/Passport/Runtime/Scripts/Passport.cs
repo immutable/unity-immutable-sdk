@@ -174,40 +174,39 @@ namespace Immutable.Passport
             Response? response = JsonUtility.FromJson<Response>(message);
 
             // Check if the reponse returned is valid and the task to return the reponse exists
-            if (response != null && response.responseFor != null && response.requestId != null && requestTaskMap.ContainsKey(response.requestId)) {
-                string requestId = response.requestId;
+            if (response == null || response.responseFor == null || response.requestId == null)
+                return;
 
-                // TODO handle errors from TS SDK
-                // TODO throw error if task for request ID does not exist
-                // TODO refactor dupliate code when get getting response and setting result
+            string requestId = response.requestId;
+            Exception? exception = (response.success == false || response.error != null) ? new Exception(response.error) : null;
+
+            if (requestTaskMap.ContainsKey(response.requestId)) {
                 switch (response.responseFor) {
                     case PassportFunction.GET_ADDRESS:
-                        AddressResponse? addressResponse = JsonUtility.FromJson<AddressResponse>(message);
-                        TaskCompletionSource<string?> addressCompletion = requestTaskMap[requestId] as TaskCompletionSource<string?>;
-                        addressCompletion.TrySetResult(addressResponse?.address);
-                        requestTaskMap.Remove(requestId);
+                        notifyRequestResult<string?>(requestId, JsonUtility.FromJson<AddressResponse>(message)?.address, exception);
                         break;
                     case PassportFunction.GET_IMX_PROVIDER:
-                        GetImxProviderResponse? providerResponse = JsonUtility.FromJson<GetImxProviderResponse>(message);
-                        TaskCompletionSource<bool> providerCompletion = requestTaskMap[requestId] as TaskCompletionSource<bool>;
-                        bool success = providerResponse?.success == true;
-                        if (success) {
-                            providerCompletion.TrySetResult(success);
-                        } else {
-                            providerCompletion.TrySetException(new Exception(providerResponse?.error));
-                        }
-                        requestTaskMap.Remove(requestId);
+                        notifyRequestResult<bool>(requestId, response.success, exception);
                         break;
                     case PassportFunction.SIGN_MESSAGE:
-                        SignMessageResponse? signResponse = JsonUtility.FromJson<SignMessageResponse>(message);
-                        TaskCompletionSource<string?> signCompletion = requestTaskMap[requestId] as TaskCompletionSource<string?>;
-                        signCompletion.TrySetResult(signResponse?.result);
-                        requestTaskMap.Remove(requestId);
+                        notifyRequestResult<string?>(requestId, JsonUtility.FromJson<SignMessageResponse>(message)?.result, exception);
                         break;
                     default:
                         break;
                 }
+            } else {
+                // TODO throw error if task for request ID does not exist
             }
+        }
+        
+        private void notifyRequestResult<T>(string requestId, T result, Exception? e)
+        {
+            TaskCompletionSource<T?> completion = requestTaskMap[requestId] as TaskCompletionSource<T?>;
+            if (e != null)
+                completion.TrySetException(e);
+            else
+                completion.TrySetResult(result);
+            requestTaskMap.Remove(requestId);
         }
 
         #endregion

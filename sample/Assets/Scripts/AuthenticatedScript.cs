@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -26,8 +27,12 @@ public class AuthenticatedScript : MonoBehaviour
 
     public async void GetAddress() {
         showOutput($"Called GetAddress()...");
-        string? address = await Passport.Instance.GetAddress();
-        showOutput(address);
+        try {
+            string? address = await Passport.Instance.GetAddress();
+            showOutput(address);
+        } catch (Exception e) {
+            showOutput("Unable to get address");
+        }
     }
 
     public async void Logout() {
@@ -46,8 +51,12 @@ public class AuthenticatedScript : MonoBehaviour
 
     public async void SignMessage() {
         showOutput("Called SignMessage()...");
-        string? result = await passport.SignMessage(signInput.text);
-        showOutput(result);
+        try {
+            string? result = await passport.SignMessage(signInput.text);
+            showOutput(result);
+        } catch (Exception e) {
+            showOutput("Unable to sign message");
+        }
     }
 
     private void showOutput(string message) {
