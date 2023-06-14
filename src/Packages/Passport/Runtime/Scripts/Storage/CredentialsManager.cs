@@ -8,24 +8,28 @@ namespace Immutable.Passport.Storage {
     public class CredentialsManager {
         private const string TAG = "[Credentials Manager]";
 
-        private const string KEY_PREFS_CREDENTIALS = "prefs_credentials";
+        public static string KEY_PREFS_CREDENTIALS = "prefs_credentials";
         
         public void SaveCredentials(TokenResponse tokenResponse) {
             Debug.Log($"{TAG} Save Credentials");
             string json = JsonConvert.SerializeObject(tokenResponse);
             Debug.Log($"{TAG} Save Credentials json {json}");
-            PlayerPrefs.SetString(KEY_PREFS_CREDENTIALS, json);
+            SetStringToPlayerPrefs(KEY_PREFS_CREDENTIALS, json);
         }
 
         public TokenResponse? GetCredentials() {
             Debug.Log($"{TAG} Get Credentials");
-            string json = PlayerPrefs.GetString(KEY_PREFS_CREDENTIALS, "");
+            string json = GetStringFromPlayerPrefs(KEY_PREFS_CREDENTIALS, "");
             Debug.Log($"{TAG} Get Credentials json {json}");
             if (string.IsNullOrWhiteSpace(json) || json == "{}") {
                 return null;
             } else {
-                return JsonConvert.DeserializeObject<TokenResponse>(json);
+                return DeserializeTokenResponse(json);
             }
+        }
+
+        protected virtual TokenResponse DeserializeTokenResponse(string json) {
+            return JsonConvert.DeserializeObject<TokenResponse>(json);
         }
 
         /// Checks whether the access token is still valid
@@ -42,22 +46,38 @@ namespace Immutable.Passport.Storage {
 
                 // Grab the expiry time
                 AccessTokenPayload? accessTokenPayload = JsonConvert.DeserializeObject<AccessTokenPayload>(accessToken);
-                Debug.Log($"{TAG} Access token payload is not null? {accessTokenPayload != null}");
 
                 long expiresAt = accessTokenPayload?.exp ?? 0;
-                long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                long now = GetCurrentTimeSeconds();
                 bool valid = expiresAt > now;
                 Debug.Log($"{TAG} Access Token expires (UTC seconds): {expiresAt}");
                 Debug.Log($"{TAG} Time now (UTC seconds): {now}");
                 return valid;
             } else {
+                Debug.Log($"{TAG} No Credentials");
                 return false;
             }
         }
 
+        protected virtual long GetCurrentTimeSeconds() {
+            return DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        }
+
         public void ClearCredentials() {
             Debug.Log($"{TAG} Clear Credentials");
-            PlayerPrefs.DeleteKey(KEY_PREFS_CREDENTIALS);
+            DeleteKeyFromPlayerPrefs(KEY_PREFS_CREDENTIALS);
+        }
+
+        protected virtual void SetStringToPlayerPrefs(string key, string value) {
+            PlayerPrefs.SetString(key, value);
+        }
+
+        protected virtual string GetStringFromPlayerPrefs(string key, string defaultValue) {
+            return PlayerPrefs.GetString(key, defaultValue);
+        }
+
+        protected virtual void DeleteKeyFromPlayerPrefs(string key) {
+            PlayerPrefs.DeleteKey(key);
         }
     }
 }
