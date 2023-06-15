@@ -14,6 +14,7 @@ namespace Immutable.Passport
     public class Passport : MonoBehaviour
     {
         private const string TAG = "[Passport]";
+        private const string GAME_OBJECT_NAME = "Passport";
 
         private const string INITIAL_URL = "https://www.immutable.com/";
         private const string SCHEME_FILE = "file:///";
@@ -24,8 +25,7 @@ namespace Immutable.Passport
         public static Passport Instance { get; private set; }
 
         #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-            [SerializeField] private BaseUwbClientManager clientManager;
-            private WebBrowserClient webBrowserClient;
+            private WebBrowserClient webBrowserClient = new();
         #endif
 
         // Request ID to TaskCompletionSource
@@ -38,25 +38,33 @@ namespace Immutable.Passport
 
         private AuthManager auth = new();
 
-        async void Start()
+        public static Passport Init() {
+            if (Instance == null) {
+                // Create game object, so we dispose the browser on destroy
+                GameObject go = new GameObject(GAME_OBJECT_NAME);
+                // Add passport to the game object
+                go.AddComponent<Passport>();
+                // Save passport instance
+                Instance = go.GetComponent<Passport>();
+            }
+            return Instance;
+        }
+
+        private void Start()
         {
-            webBrowserClient = clientManager.browserClient;
+            webBrowserClient.Init();
             webBrowserClient.OnUnityPostMessage += OnUnityPostMessage;
             webBrowserClient.OnLoadFinish += OnLoadFinish;
         }
 
-        void Awake() {
-            if (Instance == null) {
-                Instance = this;
-
-                // Keep this alive in every scene
-                DontDestroyOnLoad(this.gameObject);
-            }
+        private void Awake() {
+            // Keep this alive in every scene
+            DontDestroyOnLoad(this.gameObject);
         }
 
-        public void Destroy() {
-            Instance = null;
-            Destroy(this.gameObject);
+        private void OnDestroy()
+        {
+            webBrowserClient.Dispose();
         }
 
         private void OnLoadFinish(string url) {

@@ -12,7 +12,6 @@ using System.IO;
 
 public class UnauthenticatedScript : MonoBehaviour
 {
-    [SerializeField] private Passport passport;
 
     [SerializeField] private Text output;
 
@@ -27,7 +26,12 @@ public class UnauthenticatedScript : MonoBehaviour
         userCodeText.gameObject.SetActive(false);
         proceedLoginButton.gameObject.SetActive(false);
 
-        passport.OnReady += OnReady;
+        if (Passport.Instance == null) {
+            Passport.Init();
+            Passport.Instance.OnReady += OnReady;
+        } else {
+            OnReady();
+        }
     }
 
     private void OnReady() {
@@ -41,7 +45,7 @@ public class UnauthenticatedScript : MonoBehaviour
             userCodeText.gameObject.SetActive(false);
             proceedLoginButton.gameObject.SetActive(false);
 
-            string? code = await passport.Connect();
+            string? code = await Passport.Instance.Connect();
 
             if (code != null) {
                 // Code confirmation required
@@ -63,7 +67,7 @@ public class UnauthenticatedScript : MonoBehaviour
     public async void ConfirmCode() {
         try {
             ShowOutput("Called ConfirmCode()...");
-            await passport.ConfirmCode();
+            await Passport.Instance.ConfirmCode();
             ShowOutput("Confirmed code");
             NavigateToAuthenticatedScene();
         } catch (Exception ex) {
@@ -76,6 +80,8 @@ public class UnauthenticatedScript : MonoBehaviour
     }
 
     private void ShowOutput(string message) {
-        output.text = message;
+        if (output != null) {
+            output.text = message;
+        }
     }
 }

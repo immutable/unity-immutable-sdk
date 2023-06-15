@@ -9,8 +9,6 @@ using UnityEditor;
 
 public class AuthenticatedScript : MonoBehaviour
 {
-    private Passport passport;
-
     [SerializeField] private Text output;
 
     [SerializeField] private Button accessTokenButton;
@@ -19,11 +17,6 @@ public class AuthenticatedScript : MonoBehaviour
     [SerializeField] private Button logoutButton;
     [SerializeField] private Button signMessageButton;
     [SerializeField] private InputField signInput;
-
-    void Start()
-    {
-        passport = Passport.Instance;
-    }
 
     public async void GetAddress() {
         ShowOutput($"Called GetAddress()...");
@@ -36,26 +29,22 @@ public class AuthenticatedScript : MonoBehaviour
     }
 
     public async void Logout() {
-        passport.Logout();
-        // Destroying passport as we're redirecting the user back 
-        // to the scene which Passport is instantiated
-        // TODO Try handling this in the SDK
-        passport.Destroy();
+        Passport.Instance.Logout();
         SceneManager.LoadScene(sceneName:"UnauthenticatedScene");
     }
 
     public void GetAccessToken() {
-        ShowOutput(passport.GetAccessToken());
+        ShowOutput(Passport.Instance.GetAccessToken());
     }
 
     public void GetIdToken() {
-        ShowOutput(passport.GetIdToken());
+        ShowOutput(Passport.Instance.GetIdToken());
     }
 
     public async void SignMessage() {
         ShowOutput("Called SignMessage()...");
         try {
-            string? result = await passport.SignMessage(signInput.text);
+            string? result = await Passport.Instance.SignMessage(signInput.text);
             ShowOutput(result);
         } catch (Exception e) {
             ShowOutput("Unable to sign message");
