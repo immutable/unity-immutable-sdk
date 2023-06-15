@@ -20,6 +20,7 @@ using VoltstroStudios.UnityWebBrowser.Events;
 using VoltstroStudios.UnityWebBrowser.Helper;
 using VoltstroStudios.UnityWebBrowser.Logging;
 using VoltstroStudios.UnityWebBrowser.Shared;
+using VoltstroStudios.UnityWebBrowser.Shared.Core;
 using VoltstroStudios.UnityWebBrowser.Shared.Events;
 using VoltstroStudios.UnityWebBrowser.Shared.Popups;
 using Object = UnityEngine.Object;
@@ -58,11 +59,14 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         [Header("Browser Settings")] [Tooltip("The active browser engine this instance is using")]
         public Engine engine;
 
+        private const string ENGINE_APP_NAME = "UnityWebBrowser.Engine.Cef";
+        private const string ENGINE_FILE_LOCATION = "Packages/com.immutable.passport/Runtime/ThirdParty/UnityWebBrowser.Engine.Cef.Win-x64/Engine/";
+
         /// <summary>
         ///     The initial URl the browser will start at
         /// </summary>
         [Tooltip("The initial URl the browser will start at")]
-        public string initialUrl = "https://voltstro.dev";
+        public string initialUrl = "https://www.immutable.com";
 
         #region Resoltuion
 
@@ -255,7 +259,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         private NativeArray<byte> textureData;
         internal NativeArray<byte> nextTextureData;
 
-        internal WebBrowserClient()
+        public WebBrowserClient()
         {
         }
 
@@ -263,9 +267,22 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         ///     Inits the browser client
         /// </summary>
         /// <exception cref="FileNotFoundException"></exception>
-        internal void Init()
+        public void Init()
         {
-            //Get the path to the UWB process we are using and make sure it exists
+            // Get the path to the Windows UWB process
+            EngineConfiguration engineConfiguration = new EngineConfiguration();
+            engineConfiguration.engineAppName = ENGINE_APP_NAME;
+            Engine.EnginePlatformFiles[] engineFiles = new Engine.EnginePlatformFiles[]
+            {
+                new Engine.EnginePlatformFiles()
+                {
+                    platform = Platform.Windows64, 
+                    engineFileLocation = ENGINE_FILE_LOCATION
+                }
+            };
+            engineConfiguration.engineFiles = engineFiles;
+            engine = engineConfiguration;
+
             string browserEnginePath = WebBrowserUtils.GetBrowserEngineProcessPath(engine);
             logger.Debug($"Starting browser engine process from '{browserEnginePath}'...");
 
@@ -273,6 +290,10 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             {
                 logger.Error("The engine process could not be found!");
                 throw new FileNotFoundException("The engine process could not be found!");
+            }
+
+            if (communicationLayer == null) {
+                communicationLayer = new TCPCommunicationLayer();
             }
 
             //Check communication layer
