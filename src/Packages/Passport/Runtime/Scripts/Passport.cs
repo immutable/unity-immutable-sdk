@@ -31,7 +31,6 @@ namespace Immutable.Passport
         // Request ID to TaskCompletionSource
         // Storing TaskCompletionSource as an object as C# doesn't support wildcards like TaskCompletionSource<Any>
         // and using TaskCompletionSource<object> doesn't work. 
-        // Future considerations: we could create a base class for the response type too TaskCompletionSource<BaseClass>
         IDictionary<string, object> requestTaskMap = new Dictionary<string, object>();
 
         public event PassportReadyDelegate OnReady;
@@ -173,15 +172,14 @@ namespace Immutable.Passport
 
         private string call(string fxName, string? data = null) {
             string requestId = Guid.NewGuid().ToString();
+            Debug.Log($"{TAG} Call {fxName} (request ID: {requestId})");
+
             Request request = new Request(fxName, requestId, data);
             string requestJson = JsonConvert.SerializeObject(request).Replace("\\", "\\\\").Replace("\"", "\\\"");
 
             // Call the function on the JS side
             string js = @$"callFunction(""{requestJson}"")";
-            Debug.Log($"{TAG} Call js: {js}");
             webBrowserClient.ExecuteJs(js);
-
-            Debug.Log($"{TAG} Executed js: {js}");
 
             return requestId;
         }
