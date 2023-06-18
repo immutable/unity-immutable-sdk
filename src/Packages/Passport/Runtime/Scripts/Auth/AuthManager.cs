@@ -43,8 +43,15 @@ namespace Immutable.Passport.Auth {
         private DeviceCodeResponse? deviceCodeResponse;
 
         private User? user;
-        private readonly HttpClient client = new();
-        private CredentialsManager manager = new();
+        private readonly HttpClient client;
+        private ICredentialsManager manager;
+
+        public AuthManager() : this(new HttpClient(), new CredentialsManager()) {}
+
+        public AuthManager(HttpClient client, ICredentialsManager manager) {
+            this.client = client;
+            this.manager = manager;
+        }
 
         /// <summary>
         /// Logs the user into Passport using Device Authorisation Grant.
@@ -67,18 +74,23 @@ namespace Immutable.Passport.Auth {
                 // Use refresh token if it exists
                 Debug.Log($"{TAG} Refreshing token...");
                 TokenResponse? tokenResponse = await RefreshToken(savedCreds.refresh_token);
-                HandleTokenResponse(tokenResponse);
-                return null;
-            } else {
-                // Can't use both access and refresh tokens
-                // Perform device code authorisation
-                Debug.Log($"{TAG} Starting device code authorisation...");
-                deviceCodeResponse = await GetDeviceCodeTask();
-                if (deviceCodeResponse != null) {
-                    return deviceCodeResponse.user_code;
-                } else {
-                    throw new Exception($"Failed to get device code");
+                try {
+                    HandleTokenResponse(tokenResponse);
+                    return null;
+                } catch (Exception e) {
+                    Debug.Log($"{TAG} Token refresh failed");
+                    // Fallback to device code below
                 }
+            } 
+            
+            // Can't use both access and refresh tokens
+            // Perform device code authorisation
+            Debug.Log($"{TAG} Starting device code authorisation...");
+            deviceCodeResponse = await GetDeviceCodeTask();
+            if (deviceCodeResponse != null) {
+                return deviceCodeResponse.user_code;
+            } else {
+                throw new Exception($"Failed to get device code");
             }
         }
 
@@ -126,17 +138,17 @@ namespace Immutable.Passport.Auth {
 
         private User HandleTokenResponse(TokenResponse? tokenResponse) {
             if (tokenResponse != null) {
-                user = tokenResponse.ToUser();
+                var newUser = tokenResponse.ToUser();
 
                 // Only persist credentials that contain the necessary data
-                if (user?.MetadatExists() == true) {
+                if (newUser?.MetadatExists() == true) {
+                    user = newUser;
                     manager.SaveCredentials(tokenResponse);
-                }
-
-                return user;
-            } else {
-                throw new Exception($"Failed to login");
+                    return newUser;
+                }    
             }
+
+            throw new Exception($"Failed to login");
         }
 
         private async Task<DeviceCodeResponse> GetDeviceCodeTask() {
@@ -177,7 +189,6 @@ namespace Immutable.Passport.Auth {
                     needToPoll = false;
                     return tokenResponse;
                 } else if (errorResponse != null) {
-                    Debug.Log(responseString);
                     ErrorResponse? response = JsonConvert.DeserializeObject<ErrorResponse>(responseString);
                     switch (response.error) {
                         case ERROR_CODE_AUTH_PENDING:

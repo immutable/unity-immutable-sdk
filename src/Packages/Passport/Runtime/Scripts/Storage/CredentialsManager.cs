@@ -5,7 +5,16 @@ using UnityEngine;
 using Newtonsoft.Json;
 
 namespace Immutable.Passport.Storage {
-    public class CredentialsManager {
+
+    public interface ICredentialsManager
+    {
+        void SaveCredentials(TokenResponse tokenResponse);
+        TokenResponse? GetCredentials();
+        bool HasValidCredentials();
+        void ClearCredentials();
+    }
+
+    public class CredentialsManager : ICredentialsManager {
         private const string TAG = "[Credentials Manager]";
 
         public static string KEY_PREFS_CREDENTIALS = "prefs_credentials";
