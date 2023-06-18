@@ -8,6 +8,7 @@ using Immutable.Passport.Auth;
 using Newtonsoft.Json;
 using Immutable.Passport.Utility;
 using System.IO;
+using Immutable.Passport.Model;
 
 namespace Immutable.Passport
 {
@@ -126,7 +127,7 @@ namespace Immutable.Passport
 
             bool success = await createCallTask<bool>(PassportFunction.GET_IMX_PROVIDER, data);
             if (!success) {
-                throw new Exception("Failed to get IMX provider");
+                throw new PassportException("Failed to get IMX provider", PassportErrorType.WALLET_CONNECTION_ERROR);
             }
         }
 
@@ -201,7 +202,7 @@ namespace Immutable.Passport
                 return;
 
             string requestId = response.requestId;
-            Exception? exception = (response.success == false || response.error != null) ? new Exception(response.error) : null;
+            PassportException? exception = parseError(response);
 
             if (requestTaskMap.ContainsKey(requestId)) {
                 switch (response.responseFor) {
@@ -218,23 +219,41 @@ namespace Immutable.Passport
                         break;
                 }
             } else {
-                throw new Exception($"No TaskCompletionSource for request id {requestId} found.");
+                throw new PassportException($"No TaskCompletionSource for request id {requestId} found.");
+            }
+        }
+
+        private PassportException? parseError(Response? response) {
+            if (response != null && (response.success == false || response.error != null)) {
+                // Failed or error occured
+                try {
+                    if (response.errorType != null) {
+                        PassportErrorType type = (PassportErrorType) System.Enum.Parse(typeof(PassportErrorType), response.errorType);
+                        return new PassportException(response.error, type);
+                    }
+                } catch (Exception ex) {
+                    Debug.Log($"{TAG} Parse passport type error: {ex.Message}");
+                }
+                return new PassportException(response.error);
+            } else {
+                // No error
+                return null;
             }
         }
         
-        private void notifyRequestResult<T>(string requestId, T result, Exception? e)
+        private void notifyRequestResult<T>(string requestId, T result, PassportException? e)
         {
             TaskCompletionSource<T?> completion = requestTaskMap[requestId] as TaskCompletionSource<T?>;
             try {
                 if (e != null) {
                     if (!completion.TrySetException(e))
-                        throw new Exception($"Unable to set exception for for request id {requestId}. Task has already been completed.");
+                        throw new PassportException($"Unable to set exception for for request id {requestId}. Task has already been completed.");
                 } else {
                     if(!completion.TrySetResult(result))
-                        throw new Exception($"Unable to set result for for request id {requestId}. Task has already been completed.");
+                        throw new PassportException($"Unable to set result for for request id {requestId}. Task has already been completed.");
                 }
             } catch (ObjectDisposedException exception) {
-                throw new Exception($"Task for request id {requestId} has already been disposed and can't be updated.");
+                throw new PassportException($"Task for request id {requestId} has already been disposed and can't be updated.");
             }
 
             requestTaskMap.Remove(requestId);

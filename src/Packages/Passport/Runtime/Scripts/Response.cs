@@ -4,6 +4,7 @@ namespace Immutable.Passport
         public string? responseFor;
         public string? requestId;
         public bool success;
+        public string? errorType;
         public string? error;
     }
 
