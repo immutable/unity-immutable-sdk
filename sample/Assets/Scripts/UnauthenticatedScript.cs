@@ -19,68 +19,86 @@ public class UnauthenticatedScript : MonoBehaviour
     [SerializeField] private Text userCodeText;
     [SerializeField] private Button proceedLoginButton;
 
-    void Start()
+    async void Start()
     {
-        ShowOutput("Starting...");
-        connectButton.gameObject.SetActive(false);
-        userCodeText.gameObject.SetActive(false);
-        proceedLoginButton.gameObject.SetActive(false);
-
-        if (Passport.Instance == null) {
-            Passport.Init();
-            Passport.Instance.OnReady += OnReady;
-        } else {
-            OnReady();
+        try 
+        {
+            ShowOutput("Starting...");
+            connectButton.gameObject.SetActive(false);
+            userCodeText.gameObject.SetActive(false);
+            proceedLoginButton.gameObject.SetActive(false);
+            
+            await Passport.Init();
+            connectButton.gameObject.SetActive(true);
+        } 
+        catch (Exception ex) 
+        {
+            ShowOutput($"Start() error: {ex.Message}");
         }
     }
 
-    private void OnReady() {
+    private void OnReady() 
+    {
         ShowOutput("Passport is ready");
         connectButton.gameObject.SetActive(true);
     }
 
-    public async void Connect() {
-        try {
+    public async void Connect() 
+    {
+        try 
+        {
             ShowOutput("Called Connect()...");
             userCodeText.gameObject.SetActive(false);
             proceedLoginButton.gameObject.SetActive(false);
 
             string? code = await Passport.Instance.Connect();
 
-            if (code != null) {
+            if (code != null) 
+            {
                 // Code confirmation required
                 ShowOutput($"Code to verify: {code}");
                 userCodeText.gameObject.SetActive(true);
                 userCodeText.text = code;
                 proceedLoginButton.gameObject.SetActive(true);
-            } else {
+            }
+            else 
+            {
                 // No need to confirm code, log user straight in
                 NavigateToAuthenticatedScene();
             }
-        } catch (Exception ex) {
+        } 
+        catch (Exception ex) 
+        {
             string error = $"Connect() error: {ex.Message}";
             Debug.Log(error);
             ShowOutput(error);
         }
     }
 
-    public async void ConfirmCode() {
-        try {
+    public async void ConfirmCode() 
+    {
+        try 
+        {
             ShowOutput("Called ConfirmCode()...");
             await Passport.Instance.ConfirmCode();
             ShowOutput("Confirmed code");
             NavigateToAuthenticatedScene();
-        } catch (Exception ex) {
+        } 
+        catch (Exception ex) 
+        {
             ShowOutput($"ConfirmCode() error: {ex.Message}");
         }
     }
 
-    private void NavigateToAuthenticatedScene() {
+    private void NavigateToAuthenticatedScene() 
+    {
         SceneManager.LoadScene(sceneName:"AuthenticatedScene");
     }
 
-    private void ShowOutput(string message) {
-        if (output != null) {
+    private void ShowOutput(string message) 
+    {
+        if (output != null) 
+        {
             output.text = message;
         }
     }

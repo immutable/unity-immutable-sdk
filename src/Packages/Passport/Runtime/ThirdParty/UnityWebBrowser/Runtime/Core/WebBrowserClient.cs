@@ -267,11 +267,12 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         ///     Inits the browser client
         /// </summary>
         /// <exception cref="FileNotFoundException"></exception>
-        public void Init()
+        public async UniTask Init()
         {
             // Get the path to the Windows UWB process
             EngineConfiguration engineConfiguration = new EngineConfiguration();
             engineConfiguration.engineAppName = ENGINE_APP_NAME;
+#if UNITY_EDITOR
             Engine.EnginePlatformFiles[] engineFiles = new Engine.EnginePlatformFiles[]
             {
                 new Engine.EnginePlatformFiles()
@@ -281,6 +282,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
                 }
             };
             engineConfiguration.engineFiles = engineFiles;
+#endif
             engine = engineConfiguration;
 
             string browserEnginePath = WebBrowserUtils.GetBrowserEngineProcessPath(engine);
@@ -393,11 +395,19 @@ namespace VoltstroStudios.UnityWebBrowser.Core
 
             cancellationSource = new CancellationTokenSource();
 
-            //Start the engine process
-            UniTask.Create(() => 
-                 StartEngineProcess(arguments))
-                .ContinueWith(() => WaitForEngineReadyTask(cancellationSource.Token))
-                .Forget();
+            try 
+            {
+                //Start the engine process
+                await UniTask.Create(() => 
+                    StartEngineProcess(arguments))
+                    .ContinueWith(() => WaitForEngineReadyTask(cancellationSource.Token));
+            }
+            catch (Exception ex) 
+            {
+                // Need to catch and then rethrow otherwise the exception
+                // goes to UniTaskScheduler.UnobservedTaskException
+                throw ex;
+            }
         }
 
         #region Starting
@@ -431,7 +441,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
                         ReadySignalReceived, cancellationToken: cancellationToken)
                     .Timeout(TimeSpan.FromMilliseconds(engineStartupTimeout));
             }
-            catch (TimeoutException)
+            catch (TimeoutException ex)
             {
                 logger.Error(engineProcess.HasExited
                     ? $"The engine did not get ready within engine startup timeout! The engine process is not even running! Exit code: {engineProcess.ExitCode}."
@@ -440,6 +450,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
                 {
                     Dispose();
                 }
+                throw ex;
             }
             catch (OperationCanceledException)
             {
@@ -452,6 +463,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
                 {
                     Dispose();
                 }
+                throw ex;
             }
         }
 
