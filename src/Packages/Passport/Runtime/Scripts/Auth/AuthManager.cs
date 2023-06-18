@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using UnityEngine;
 using Immutable.Passport;
 using Immutable.Passport.Storage;
+using Immutable.Passport.Model;
 
 namespace Immutable.Passport.Auth {
     public class AuthManager {
@@ -90,7 +91,7 @@ namespace Immutable.Passport.Auth {
             if (deviceCodeResponse != null) {
                 return deviceCodeResponse.user_code;
             } else {
-                throw new Exception($"Failed to get device code");
+                throw new PassportException($"Failed to get device code", PassportErrorType.AUTHENTICATION_ERROR);
             }
         }
 
@@ -132,7 +133,7 @@ namespace Immutable.Passport.Auth {
                 var tokenResponse = await PollForTokenTask(deviceCodeResponse.device_code, deviceCodeResponse.interval);
                 return HandleTokenResponse(tokenResponse);
             } else {
-                throw new Exception($"Could not find device code response. Make sure to call login() first.");
+                throw new PassportException($"Could not find device code response. Make sure to call login() first.", PassportErrorType.AUTHENTICATION_ERROR);
             }
         }
 
@@ -148,7 +149,7 @@ namespace Immutable.Passport.Auth {
                 }    
             }
 
-            throw new Exception($"Failed to login");
+            throw new PassportException($"Failed to login", PassportErrorType.AUTHENTICATION_ERROR);
         }
 
         private async Task<DeviceCodeResponse> GetDeviceCodeTask() {
@@ -206,11 +207,11 @@ namespace Immutable.Passport.Auth {
                             throw new UnauthorizedAccessException("User denied access");
                             break;
                         default:
-                            throw new Exception("Error getting token");
+                            throw new PassportException("Error getting token", PassportErrorType.AUTHENTICATION_ERROR);
                             break;
                     }
                 } else {
-                    throw new Exception("Error getting token");
+                    throw new PassportException("Error getting token", PassportErrorType.AUTHENTICATION_ERROR);
                 }
             }
 

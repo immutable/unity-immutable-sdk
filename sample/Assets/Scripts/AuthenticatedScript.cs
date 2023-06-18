@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Immutable.Passport;
+using Immutable.Passport.Model;
 using UnityEditor;
 
 public class AuthenticatedScript : MonoBehaviour
@@ -23,6 +24,8 @@ public class AuthenticatedScript : MonoBehaviour
         try {
             string? address = await Passport.Instance.GetAddress();
             ShowOutput(address);
+        } catch (PassportException e) {
+            ShowOutput($"Unable to get address: {e.Type}");
         } catch (Exception e) {
             ShowOutput("Unable to get address");
         }

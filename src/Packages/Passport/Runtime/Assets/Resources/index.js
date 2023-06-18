@@ -44,65 +44,70 @@ const callbackToUnity = function (data) {
 }
 
 async function callFunction(jsonData) {
+    console.log(`Call function ${jsonData}`);
+
+    var fxName = null;
+    var requestId = null;
+
     try {
-        console.log(`Call function ${jsonData}`);
         let json = JSON.parse(jsonData);
-        let fxName = json[keyFunctionName];
-        let requestId = json[keyRequestId];
+        fxName = json[keyFunctionName];
+        requestId = json[keyRequestId];
         let data = json[keyData];
-        try {
-            switch (fxName) {
-                case PassportFunctions.getAddress: {
-                    const address = await providerInstance?.getAddress();
-                    callbackToUnity({
-                        responseFor: fxName,
-                        requestId: requestId,
-                        success: true,
-                        address: address
-                    });
-                    break;
-                }
-                case PassportFunctions.getImxProvider: {
-                    let provider = await passportClient?.getImxProvider(JSON.parse(data));
-                    var success = false;
-                    if (provider !== null && provider !== undefined) {
-                        providerInstance = provider;
-                        success = true;
-                        console.log("IMX provider set");
-                    } else {
-                        console.log("No IMX provider");
-                    }
-                    callbackToUnity({
-                        responseFor: fxName,
-                        requestId: requestId,
-                        success: true
-                    });
-                    break;
-                }
-                case PassportFunctions.signMessage: {
-                    let signed = await passportClient?.signMessage(data);
-                    callbackToUnity({
-                        responseFor: fxName,
-                        requestId: requestId,
-                        success: true,
-                        result: signed
-                    });
-                    break;
-                }
+
+        switch (fxName) {
+            case PassportFunctions.getAddress: {
+                const address = await providerInstance?.getAddress();
+                callbackToUnity({
+                    responseFor: fxName,
+                    requestId: requestId,
+                    success: true,
+                    address: address
+                });
+                break;
             }
-        } catch (error) {
-            callbackToUnity({
-                responseFor: fxName,
-                requestId: requestId,
-                success: false,
-                error: error.message
-            });
+            case PassportFunctions.getImxProvider: {
+                let provider = await passportClient?.getImxProvider(JSON.parse(data));
+                var success = false;
+                if (provider !== null && provider !== undefined) {
+                    providerInstance = provider;
+                    success = true;
+                    console.log("IMX provider set");
+                } else {
+                    console.log("No IMX provider");
+                }
+                callbackToUnity({
+                    responseFor: fxName,
+                    requestId: requestId,
+                    success: true
+                });
+                break;
+            }
+            case PassportFunctions.signMessage: {
+                let signed = await passportClient?.signMessage(data);
+                callbackToUnity({
+                    responseFor: fxName,
+                    requestId: requestId,
+                    success: true,
+                    result: signed
+                });
+                break;
+            }
         }
     } catch (error) {
-        window.console.log(error);
+        console.log(error);
+
+        var errorType = null;
+        if (error instanceof passport.PassportError) {
+            errorType = error.type;
+        }
+
         callbackToUnity({
+            responseFor: fxName,
+            requestId: requestId,
             success: false,
-            error: error.message
-         });
+            error: error.message,
+            errorType: error instanceof passport.PassportError ? error.type : null
+        });
     }
 }
