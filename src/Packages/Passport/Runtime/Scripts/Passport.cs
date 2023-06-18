@@ -22,7 +22,6 @@ namespace Immutable.Passport
         private const string PASSPORT_PACKAGE_RESOURCES_DIRECTORY = "Packages/com.immutable.passport/Runtime/Assets/Resources";
         private const string PASSPORT_DATA_DIRECTORY_NAME = "/Passport";
         private const string PASSPORT_HTML_FILE_NAME = "/passport.html";
-        private const int START_UP_TIMEOUT_MS = 30000; // 30 seconds
 
         public static Passport Instance { get; private set; }
 
