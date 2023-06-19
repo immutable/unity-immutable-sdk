@@ -2,7 +2,8 @@
     "name": "Immutable.Passport.Runtime",
     "rootNamespace": "Immutable.Passport",
     "references": [
-        "VoltstroStudios.UnityWebBrowser"
+        "VoltstroStudios.UnityWebBrowser",
+        "UniTask"
     ],
     "includePlatforms": [
         "Editor",
