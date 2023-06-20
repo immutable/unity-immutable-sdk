@@ -165,16 +165,18 @@ namespace Immutable.Passport
             GetImxProviderRequest request = new GetImxProviderRequest(u.idToken, u.accessToken, u.refreshToken, u.profile, u.etherKey);
             string data = JsonConvert.SerializeObject(request);
 
-            bool success = await communicationsManager.Call<bool>(PassportFunction.GET_IMX_PROVIDER, data);
+            string response = await communicationsManager.Call(PassportFunction.GET_IMX_PROVIDER, data);
+            bool success = JsonUtility.FromJson<Response>(response)?.success == true;
             if (!success) 
             {
                 throw new PassportException("Failed to get IMX provider", PassportErrorType.WALLET_CONNECTION_ERROR);
             }
         }
 
-        public Task<string?> GetAddress() 
+        public async Task<string?> GetAddress() 
         {
-            return communicationsManager.Call<string?>(PassportFunction.GET_ADDRESS);
+            string response = await communicationsManager.Call(PassportFunction.GET_ADDRESS);
+            return JsonUtility.FromJson<AddressResponse>(response)?.address;
         }
 
         public void Logout()
@@ -208,9 +210,10 @@ namespace Immutable.Passport
             }
         }
 
-        public Task<string?> SignMessage(string message) 
+        public async Task<string?> SignMessage(string message) 
         {
-            return communicationsManager.Call<string?>(PassportFunction.SIGN_MESSAGE, message);
+            string response = await communicationsManager.Call(PassportFunction.SIGN_MESSAGE, message);
+            return JsonUtility.FromJson<StringResponse>(response)?.result;
         }
     }
 }

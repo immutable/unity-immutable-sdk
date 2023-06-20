@@ -42,7 +42,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
     ///     </para>
     /// </summary>
     [Serializable]
-    public class WebBrowserClient : IDisposable
+    public class WebBrowserClient : IWebBrowserClient, IDisposable
     {
         #region Profile Markers
 

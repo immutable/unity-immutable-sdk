@@ -1,3 +1,4 @@
+using System.Net;
 using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -7,36 +8,29 @@ using UnityEngine;
 using Newtonsoft.Json;
 
 namespace Immutable.Passport.Core {
-    internal class BrowserCommunicationsManager 
+    public class BrowserCommunicationsManager 
     {
         private const string TAG = "[Browser Communications Manager]";
+        private IDictionary<string, TaskCompletionSource<string>> requestTaskMap = new Dictionary<string, TaskCompletionSource<string>>();
+        private IWebBrowserClient webBrowserClient;
 
-        // Request ID to TaskCompletionSource
-        // Storing TaskCompletionSource as an object as C# doesn't support wildcards like TaskCompletionSource<Any>
-        // and using TaskCompletionSource<object> doesn't work. 
-        private IDictionary<string, object> requestTaskMap = new Dictionary<string, object>();
-
-        private WebBrowserClient webBrowserClient;
-
-        internal BrowserCommunicationsManager(WebBrowserClient webBrowserClient) {
+        public BrowserCommunicationsManager(IWebBrowserClient webBrowserClient) {
             this.webBrowserClient = webBrowserClient;
             this.webBrowserClient.OnUnityPostMessage += OnUnityPostMessage;
         }
 
         #region Unity to Browser
 
-        internal Task<T> Call<T>(string fxName, string? data = null) {
-            var t = new TaskCompletionSource<T>();
-            string requestId = CallFunction(fxName, data);
-
-            // Add task completion source to the map so we can return the reponse
+        public Task<string> Call(string fxName, string? data = null) {
+            var t = new TaskCompletionSource<string>();
+            string requestId = Guid.NewGuid().ToString();
+            // Add task completion source to the map so we can return the response
             requestTaskMap.Add(requestId, t);
-
+            CallFunction(requestId, fxName, data);
             return t.Task;
         }
 
-        private string CallFunction(string fxName, string? data = null) {
-            string requestId = Guid.NewGuid().ToString();
+        private void CallFunction(string requestId, string fxName, string? data = null) {
             Debug.Log($"{TAG} Call {fxName} (request ID: {requestId})");
 
             Request request = new Request(fxName, requestId, data);
@@ -45,8 +39,6 @@ namespace Immutable.Passport.Core {
             // Call the function on the JS side
             string js = @$"callFunction(""{requestJson}"")";
             webBrowserClient.ExecuteJs(js);
-
-            return requestId;
         }
 
         #endregion
@@ -69,26 +61,14 @@ namespace Immutable.Passport.Core {
             PassportException? exception = ParseError(response);
 
             if (requestTaskMap.ContainsKey(requestId)) {
-                switch (response.responseFor) {
-                    case PassportFunction.GET_ADDRESS:
-                        NotifyRequestResult<string?>(requestId, JsonUtility.FromJson<AddressResponse>(message)?.address, exception);
-                        break;
-                    case PassportFunction.GET_IMX_PROVIDER:
-                        NotifyRequestResult<bool>(requestId, response.success, exception);
-                        break;
-                    case PassportFunction.SIGN_MESSAGE:
-                        NotifyRequestResult<string?>(requestId, JsonUtility.FromJson<SignMessageResponse>(message)?.result, exception);
-                        break;
-                    default:
-                        break;
-                }
+                NotifyRequestResult(requestId, message, exception);
             } else {
                 throw new PassportException($"No TaskCompletionSource for request id {requestId} found.");
             }
         }
 
-        private PassportException? ParseError(Response? response) {
-            if (response != null && (response.success == false || response.error != null)) {
+        private PassportException? ParseError(Response response) {
+            if (response.success == false || !String.IsNullOrEmpty(response.error)) {
                 // Failed or error occured
                 try {
                     if (response.errorType != null) {
@@ -105,9 +85,9 @@ namespace Immutable.Passport.Core {
             }
         }
         
-        private void NotifyRequestResult<T>(string requestId, T result, PassportException? e)
+        private void NotifyRequestResult(string requestId, string result, PassportException? e)
         {
-            TaskCompletionSource<T?> completion = requestTaskMap[requestId] as TaskCompletionSource<T?>;
+            TaskCompletionSource<string>? completion = requestTaskMap[requestId] as TaskCompletionSource<string>;
             try {
                 if (e != null) {
                     if (!completion.TrySetException(e))

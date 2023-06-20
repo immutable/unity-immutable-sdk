@@ -4,7 +4,7 @@ using Immutable.Passport.Auth;
 
 namespace Immutable.Passport
 {
-    internal class Request {
+    public class Request {
         public string fxName;
         public string requestId;
         public string? data;
