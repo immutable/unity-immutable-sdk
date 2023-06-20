@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
 using Immutable.Passport.Storage;
@@ -62,7 +62,7 @@ namespace Immutable.Passport.Auth
         /// The end-user verification code if confirmation is required, otherwise null;
         /// </returns>
         /// </summary>
-        public async Task<string?> Login()
+        public async UniTask<string?> Login()
         {
             // If access token exists and is still valid, get saved credentials
             TokenResponse? savedCreds = manager.GetCredentials();
@@ -104,7 +104,7 @@ namespace Immutable.Passport.Auth
             }
         }
 
-        private async Task<TokenResponse?> RefreshToken(string refreshToken)
+        private async UniTask<TokenResponse?> RefreshToken(string refreshToken)
         {
             var values = new Dictionary<string, string>
             {
@@ -136,7 +136,7 @@ namespace Immutable.Passport.Auth
         /// The token response
         /// </return>
         /// </summary>
-        public async Task<User> ConfirmCode()
+        public async Task<UniTask> ConfirmCode()
         {
             if (deviceCodeResponse != null)
             {
@@ -169,7 +169,7 @@ namespace Immutable.Passport.Auth
             throw new PassportException($"Failed to login", PassportErrorType.AUTHENTICATION_ERROR);
         }
 
-        private async Task<DeviceCodeResponse?> GetDeviceCodeTask()
+        private async UniTask<DeviceCodeResponse?> GetDeviceCodeTask()
         {
             var values = new Dictionary<string, string>
             {
@@ -196,12 +196,12 @@ namespace Immutable.Passport.Auth
         }
 
 #pragma warning disable IDE0059
-        private async Task<TokenResponse?> PollForTokenTask(string deviceCode, int interval)
+        private async UniTask<TokenResponse?> PollForTokenTask(string deviceCode, int interval)
         {
             bool needToPoll = true;
             while (needToPoll)
             {
-                await Task.Delay(interval * 1000);
+                await UniTask.Delay(interval * 1000);
 
                 var responseString = await GetTokenTask(deviceCode);
                 var tokenResponse = JsonConvert.DeserializeObject<TokenResponse>(responseString);
@@ -250,7 +250,7 @@ namespace Immutable.Passport.Auth
         }
 #pragma warning restore IDE0059
 
-        private async Task<string> GetTokenTask(string deviceCode)
+        private async UniTask<string> GetTokenTask(string deviceCode)
         {
             var values = new Dictionary<string, string>
             {

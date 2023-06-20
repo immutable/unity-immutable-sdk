@@ -1,5 +1,4 @@
 using System;
-using System.Threading.Tasks;
 using UnityEngine;
 using VoltstroStudios.UnityWebBrowser.Core;
 using Immutable.Passport.Auth;
@@ -136,7 +135,7 @@ namespace Immutable.Passport
         /// The end-user verification code if confirmation is required, otherwise null;
         /// </returns>
         /// </summary>
-        public async Task<string?> Connect()
+        public async UniTask<string?> Connect()
         {
             string? code = await auth.Login();
             User? user = auth.GetUser();
@@ -159,13 +158,13 @@ namespace Immutable.Passport
             }
         }
 
-        public async Task ConfirmCode()
+        public async UniTask ConfirmCode() 
         {
             User user = await auth.ConfirmCode();
             await GetImxProvider(user);
         }
 
-        private async Task GetImxProvider(User u)
+        private async UniTask GetImxProvider(User u) 
         {
             // Only send necessary values
             GetImxProviderRequest request = new(u.idToken, u.accessToken, u.refreshToken, u.profile, u.etherKey);
@@ -179,7 +178,7 @@ namespace Immutable.Passport
             }
         }
 
-        public async Task<string?> GetAddress()
+        public async UniTask<string?> GetAddress() 
         {
             string response = await GetBrowserCommunicationsManager().Call(PassportFunction.GET_ADDRESS);
             return JsonUtility.FromJson<AddressResponse>(response)?.address;
@@ -216,7 +215,7 @@ namespace Immutable.Passport
             }
         }
 
-        public async Task<string?> SignMessage(string message)
+        public async UniTask<string?> SignMessage(string message)
         {
             string response = await GetBrowserCommunicationsManager().Call(PassportFunction.SIGN_MESSAGE, message);
             return JsonUtility.FromJson<StringResponse>(response)?.result;

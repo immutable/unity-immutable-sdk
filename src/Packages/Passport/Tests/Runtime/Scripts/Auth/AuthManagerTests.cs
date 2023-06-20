@@ -29,11 +29,11 @@ namespace Immutable.Passport.Auth
             manager = new AuthManager(httpMock.ToHttpClient(), credentialsManager);
         }
 
-        private void PrepareForConfirmCode() {
+        private async void PrepareForConfirmCode() {
             credentialsManager.hasValidCredentials = false;
             credentialsManager.token = null;
             AddDeviceCodeResponse();
-            var code = manager.Login().Result;
+            var code = await manager.Login();
         }
 
         private void AddDeviceCodeResponse() {
@@ -43,12 +43,12 @@ namespace Immutable.Passport.Auth
         }
 
         [Test]
-        public void Login_Success_FreshLogin()
+        public async Task Login_Success_FreshLogin()
         {
             credentialsManager.hasValidCredentials = false;
             credentialsManager.token = null;
             AddDeviceCodeResponse();
-            var code = manager.Login().Result;
+            var code = await manager.Login();
             var request = httpMock.requests[0];
 
             Assert.AreEqual(request.RequestUri, "https://auth.immutable.com/oauth/device/code");
@@ -57,17 +57,17 @@ namespace Immutable.Passport.Auth
         }
 
         [Test]
-        public void Login_Success_ExistingCredentials()
+        public async Task Login_Success_ExistingCredentials()
         {
             credentialsManager.hasValidCredentials = true;
             credentialsManager.token = new TokenResponse();
-            var code = manager.Login().Result;
+            var code = await manager.Login();
             Assert.Null(code);
             Assert.NotNull(manager.GetUser());
         }
 
         [Test]
-        public void Login_Success_UsingRefreshToken()
+        public async Task Login_Success_UsingRefreshToken()
         {
             credentialsManager.hasValidCredentials = false;
             credentialsManager.token = new TokenResponse();
@@ -78,18 +78,19 @@ namespace Immutable.Passport.Auth
 
             Assert.Null(manager.GetUser());
 
-            var code = manager.Login().Result;
+            var code = await manager.Login();
             Assert.Null(code);
             Assert.NotNull(manager.GetUser());
 
             var request = httpMock.requests[0];
             Assert.AreEqual(request.RequestUri, "https://auth.immutable.com/oauth/token");
             Assert.AreEqual(request.Method, HttpMethod.Post);
-            Assert.True(request.Content.ReadAsStringAsync().Result.Contains("refresh_token=thisIsTheRefreshToken"));
+            string stringContent = await request.Content.ReadAsStringAsync();
+            Assert.True(stringContent.Contains("refresh_token=thisIsTheRefreshToken"));
         }
         
         [Test]
-        public void Login_Failed_GetDeviceCode()
+        public async Task Login_Failed_GetDeviceCode()
         {
             credentialsManager.hasValidCredentials = false;
             credentialsManager.token = null;
@@ -97,7 +98,7 @@ namespace Immutable.Passport.Auth
             httpMock.responses.Add(deviceCodeResponse);
             Exception? e = null;
             try {
-                var result = manager.Login().Result;
+                var result = await manager.Login();
             } catch (Exception exception) {
                 e = exception;
             }
@@ -108,7 +109,7 @@ namespace Immutable.Passport.Auth
         }
 
         [Test]
-        public void Login_Success_RefreshFailed_DeviceCodeFallback()
+        public async Task Login_Success_RefreshFailed_DeviceCodeFallback()
         {
             credentialsManager.hasValidCredentials = false;
             credentialsManager.token = new TokenResponse();
@@ -119,7 +120,7 @@ namespace Immutable.Passport.Auth
 
             AddDeviceCodeResponse();
 
-            var code = manager.Login().Result;
+            var code = await manager.Login();
             Assert.AreEqual(code, "userCode");
 
             var request = httpMock.requests[0];
@@ -148,7 +149,8 @@ namespace Immutable.Passport.Auth
             var request = httpMock.requests[1];
             Assert.AreEqual(request.RequestUri, "https://auth.immutable.com/oauth/token");
             Assert.AreEqual(request.Method, HttpMethod.Post);
-            Assert.True(request.Content.ReadAsStringAsync().Result.Contains("device_code=deviceCode"));
+            var stringContent = await request.Content.ReadAsStringAsync();
+            Assert.True(stringContent.Contains("device_code=deviceCode"));
         }
 
         [Test]
