@@ -1,8 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
-
 namespace Immutable.Passport.Auth
 {
+#pragma warning disable CS8618
+#pragma warning disable IDE1006
     /// <summary>
     /// The specification about the response is described in "3.2. Device Authorization Response".
     /// See https://datatracker.ietf.org/doc/html/rfc8628#section-3.2
@@ -52,4 +51,6 @@ namespace Immutable.Passport.Auth
         public string error { get; set; }
         public string error_description { get; set; }
     }
+#pragma warning restore CS8618
+#pragma warning restore IDE1006
 }

@@ -12,8 +12,8 @@ namespace Immutable.Passport.Core
     public class BrowserCommunicationsManager
     {
         private const string TAG = "[Browser Communications Manager]";
-        private IDictionary<string, TaskCompletionSource<string>> requestTaskMap = new Dictionary<string, TaskCompletionSource<string>>();
-        private IWebBrowserClient webBrowserClient;
+        private readonly IDictionary<string, TaskCompletionSource<string>> requestTaskMap = new Dictionary<string, TaskCompletionSource<string>>();
+        private readonly IWebBrowserClient webBrowserClient;
 
         public BrowserCommunicationsManager(IWebBrowserClient webBrowserClient)
         {
@@ -37,7 +37,7 @@ namespace Immutable.Passport.Core
         {
             Debug.Log($"{TAG} Call {fxName} (request ID: {requestId})");
 
-            Request request = new Request(fxName, requestId, data);
+            Request request = new(fxName, requestId, data);
             string requestJson = JsonConvert.SerializeObject(request).Replace("\\", "\\\\").Replace("\"", "\\\"");
 
             // Call the function on the JS side
@@ -83,7 +83,7 @@ namespace Immutable.Passport.Core
                 // Failed or error occured
                 try
                 {
-                    if (response.errorType != null)
+                    if (response.error != null && response.errorType != null)
                     {
                         PassportErrorType type = (PassportErrorType)System.Enum.Parse(typeof(PassportErrorType), response.errorType);
                         return new PassportException(response.error, type);
@@ -93,7 +93,7 @@ namespace Immutable.Passport.Core
                 {
                     Debug.Log($"{TAG} Parse passport type error: {ex.Message}");
                 }
-                return new PassportException(response.error);
+                return new PassportException(response.error ?? "Failed to parse error");
             }
             else
             {
@@ -118,7 +118,7 @@ namespace Immutable.Passport.Core
                         throw new PassportException($"Unable to set result for for request id {requestId}. Task has already been completed.");
                 }
             }
-            catch (ObjectDisposedException exception)
+            catch (ObjectDisposedException)
             {
                 throw new PassportException($"Task for request id {requestId} has already been disposed and can't be updated.");
             }

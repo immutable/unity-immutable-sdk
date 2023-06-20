@@ -4,6 +4,7 @@
 // This project is under the MIT license. See the LICENSE.md file for more details.
 
 using System;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace VoltstroStudios.UnityWebBrowser.Core
@@ -26,10 +27,10 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         [Tooltip("The browser client, what handles the communication between the UWB engine and Unity")]
         public WebBrowserClient browserClient = new();
 
-        private void Start()
+        private async Task StartAsync()
         {
             //Start the browser client
-            browserClient.Init();
+            await browserClient.Init();
 
             OnStart();
         }
@@ -52,7 +53,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         }
 
         /// <summary>
-        ///     Override this instead of using <see cref="Start" />
+        ///     Override this instead of using <see cref="StartAsync" />
         /// </summary>
         protected virtual void OnStart()
         {

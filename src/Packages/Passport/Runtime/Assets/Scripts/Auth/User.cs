@@ -1,4 +1,3 @@
-using Immutable.Passport;
 using Immutable.Passport.Utility;
 using Newtonsoft.Json;
 
@@ -23,14 +22,14 @@ namespace Immutable.Passport.Auth
             this.refreshToken = refreshToken;
 
             // Get values from id token
-            string? idTokenJson = JwtUtility.decodeJwt(idToken);
+            string? idTokenJson = JwtUtility.DecodeJwt(idToken);
             if (idTokenJson != null)
             {
-                IdTokenPayload idTokenPayload = JsonConvert.DeserializeObject<IdTokenPayload>(idTokenJson);
-                profile = new UserProfile(idTokenPayload.email, idTokenPayload.nickname, idTokenPayload.sub);
-                etherKey = idTokenPayload.passport?.ether_key;
-                starkKey = idTokenPayload.passport?.stark_key;
-                userAdminKey = idTokenPayload.passport?.user_admin_key;
+                IdTokenPayload? idTokenPayload = JsonConvert.DeserializeObject<IdTokenPayload>(idTokenJson);
+                profile = new UserProfile(idTokenPayload?.email, idTokenPayload?.nickname, idTokenPayload?.sub);
+                etherKey = idTokenPayload?.passport?.ether_key;
+                starkKey = idTokenPayload?.passport?.stark_key;
+                userAdminKey = idTokenPayload?.passport?.user_admin_key;
             }
         }
 

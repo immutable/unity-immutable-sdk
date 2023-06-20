@@ -1,7 +1,5 @@
 using System;
 using System.Text;
-using System.Collections.Generic;
-using Newtonsoft.Json;
 using UnityEngine;
 
 namespace Immutable.Passport.Utility
@@ -10,7 +8,7 @@ namespace Immutable.Passport.Utility
     {
         private const string TAG = "[JWT Utility]";
 
-        public static string? decodeJwt(string jwt)
+        public static string? DecodeJwt(string jwt)
         {
             try
             {

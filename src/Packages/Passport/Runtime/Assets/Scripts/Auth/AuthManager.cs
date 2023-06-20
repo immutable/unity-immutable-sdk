@@ -1,11 +1,9 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
-using Immutable.Passport;
 using Immutable.Passport.Storage;
 using Immutable.Passport.Model;
 
@@ -35,8 +33,6 @@ namespace Immutable.Passport.Auth
         private const string KEY_GRANT_TYPE = "grant_type";
         private const string KEY_DEVICE_CODE = "device_code";
         private const string KEY_REFRESH_TOKEN = "refresh_token";
-        private const string KEY_CONTENT_TYPE = "Content-Type";
-        private const string CONTENT_TYPE_FORM_URL_ENCODED = "application/x-www-form-urlencoded";
 
         private const string ERROR_CODE_AUTH_PENDING = "authorization_pending";
         private const string ERROR_CODE_SLOW_DOWN = "slow_down";
@@ -47,7 +43,7 @@ namespace Immutable.Passport.Auth
 
         private User? user;
         private readonly HttpClient client;
-        private ICredentialsManager manager;
+        private readonly ICredentialsManager manager;
 
         public AuthManager() : this(new HttpClient(), new CredentialsManager()) { }
 
@@ -70,7 +66,7 @@ namespace Immutable.Passport.Auth
         {
             // If access token exists and is still valid, get saved credentials
             TokenResponse? savedCreds = manager.GetCredentials();
-            if (manager.HasValidCredentials())
+            if (savedCreds != null && manager.HasValidCredentials())
             {
                 Debug.Log($"{TAG} Access token exists and is still valid");
                 user = savedCreds.ToUser();
@@ -87,7 +83,7 @@ namespace Immutable.Passport.Auth
                     HandleTokenResponse(tokenResponse);
                     return null;
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     Debug.Log($"{TAG} Token refresh failed");
                     // Fallback to device code below
@@ -146,7 +142,7 @@ namespace Immutable.Passport.Auth
             {
                 // Poll for token
                 Application.OpenURL(deviceCodeResponse.verification_uri_complete);
-                var tokenResponse = await PollForTokenTask(deviceCodeResponse.device_code, deviceCodeResponse.interval);
+                TokenResponse? tokenResponse = await PollForTokenTask(deviceCodeResponse.device_code, deviceCodeResponse.interval);
                 return HandleTokenResponse(tokenResponse);
             }
             else
@@ -173,7 +169,7 @@ namespace Immutable.Passport.Auth
             throw new PassportException($"Failed to login", PassportErrorType.AUTHENTICATION_ERROR);
         }
 
-        private async Task<DeviceCodeResponse> GetDeviceCodeTask()
+        private async Task<DeviceCodeResponse?> GetDeviceCodeTask()
         {
             var values = new Dictionary<string, string>
             {
@@ -199,7 +195,8 @@ namespace Immutable.Passport.Auth
             }
         }
 
-        private async Task<TokenResponse> PollForTokenTask(string deviceCode, int interval)
+#pragma warning disable IDE0059
+        private async Task<TokenResponse?> PollForTokenTask(string deviceCode, int interval)
         {
             bool needToPoll = true;
             while (needToPoll)
@@ -218,25 +215,29 @@ namespace Immutable.Passport.Auth
                 else if (errorResponse != null)
                 {
                     ErrorResponse? response = JsonConvert.DeserializeObject<ErrorResponse>(responseString);
-                    switch (response.error)
+                    if (response != null)
                     {
-                        case ERROR_CODE_AUTH_PENDING:
-                            Debug.Log($"{TAG} {TAG_POLL_FOR_TOKEN} Authorization still pending");
-                            break;
-                        case ERROR_CODE_SLOW_DOWN:
-                            Debug.Log($"{TAG} {TAG_POLL_FOR_TOKEN} Polling too fast");
-                            break;
-                        case ERROR_CODE_EXPIRED_TOKEN:
-                            needToPoll = false;
-                            throw new InvalidOperationException("Token expired, please login again");
-                            break;
-                        case ERROR_CODE_ACCESS_DENIED:
-                            needToPoll = false;
-                            throw new UnauthorizedAccessException("User denied access");
-                            break;
-                        default:
-                            throw new PassportException("Error getting token", PassportErrorType.AUTHENTICATION_ERROR);
-                            break;
+                        switch (response.error)
+                        {
+                            case ERROR_CODE_AUTH_PENDING:
+                                Debug.Log($"{TAG} {TAG_POLL_FOR_TOKEN} Authorization still pending");
+                                break;
+                            case ERROR_CODE_SLOW_DOWN:
+                                Debug.Log($"{TAG} {TAG_POLL_FOR_TOKEN} Polling too fast");
+                                break;
+                            case ERROR_CODE_EXPIRED_TOKEN:
+                                needToPoll = false;
+                                throw new InvalidOperationException("Token expired, please login again");
+                            case ERROR_CODE_ACCESS_DENIED:
+                                needToPoll = false;
+                                throw new UnauthorizedAccessException("User denied access");
+                            default:
+                                throw new PassportException("Error getting token", PassportErrorType.AUTHENTICATION_ERROR);
+                        }
+                    }
+                    else
+                    {
+                        throw new PassportException("Error getting token", PassportErrorType.AUTHENTICATION_ERROR);
                     }
                 }
                 else
@@ -247,6 +248,7 @@ namespace Immutable.Passport.Auth
 
             return null;
         }
+#pragma warning restore IDE0059
 
         private async Task<string> GetTokenTask(string deviceCode)
         {

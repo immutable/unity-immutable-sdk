@@ -44,7 +44,7 @@ namespace Immutable.Passport.Storage
             }
         }
 
-        protected virtual TokenResponse DeserializeTokenResponse(string json)
+        protected virtual TokenResponse? DeserializeTokenResponse(string json)
         {
             return JsonConvert.DeserializeObject<TokenResponse>(json);
         }
@@ -57,7 +57,7 @@ namespace Immutable.Passport.Storage
             if (response != null)
             {
                 Debug.Log($"{TAG} Decoding access token...");
-                string? accessToken = JwtUtility.decodeJwt(response.access_token);
+                string? accessToken = JwtUtility.DecodeJwt(response.access_token);
                 if (accessToken == null)
                 {
                     Debug.Log($"{TAG} Could not decode access token...");

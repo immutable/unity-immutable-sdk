@@ -4,7 +4,6 @@ using UnityEngine;
 using VoltstroStudios.UnityWebBrowser.Core;
 using Immutable.Passport.Auth;
 using Newtonsoft.Json;
-using Immutable.Passport.Utility;
 using System.IO;
 using Immutable.Passport.Model;
 using Immutable.Passport.Core;
@@ -20,19 +19,23 @@ namespace Immutable.Passport
         private const string INITIAL_URL = "https://www.immutable.com/";
         private const string SCHEME_FILE = "file:///";
         private const string PASSPORT_PACKAGE_RESOURCES_DIRECTORY = "Packages/com.immutable.passport/Runtime/Assets/Resources";
+#pragma warning disable IDE0051
+#if UNITY_STANDALONE_WIN
         private const string PASSPORT_DATA_DIRECTORY_NAME = "/Passport";
+#endif
+#pragma warning restore IDE0051
         private const string PASSPORT_HTML_FILE_NAME = "/passport.html";
 
-        public static Passport Instance { get; private set; }
+        public static Passport? Instance { get; private set; }
 
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-        private WebBrowserClient webBrowserClient = new();
+        private readonly WebBrowserClient webBrowserClient = new();
 #endif
 
         private static bool? readySignalReceived = null;
 
-        private AuthManager auth = new();
-        private BrowserCommunicationsManager communicationsManager;
+        private readonly AuthManager auth = new();
+        private BrowserCommunicationsManager? communicationsManager;
 
         private Passport()
         {
@@ -43,7 +46,7 @@ namespace Immutable.Passport
             if (Instance == null)
             {
                 // Create game object, so we dispose the browser on destroy
-                GameObject go = new GameObject(GAME_OBJECT_NAME);
+                GameObject go = new(GAME_OBJECT_NAME);
                 // Add passport to the game object
                 go.AddComponent<Passport>();
                 // Save passport instance
@@ -69,6 +72,7 @@ namespace Immutable.Passport
                 });
         }
 
+#pragma warning disable IDE0051
         private async void Start()
         {
             try
@@ -99,6 +103,7 @@ namespace Immutable.Passport
         {
             webBrowserClient.Dispose();
         }
+#pragma warning restore IDE0051
 
         private void OnLoadFinish(string url)
         {
@@ -163,10 +168,10 @@ namespace Immutable.Passport
         private async Task GetImxProvider(User u)
         {
             // Only send necessary values
-            GetImxProviderRequest request = new GetImxProviderRequest(u.idToken, u.accessToken, u.refreshToken, u.profile, u.etherKey);
+            GetImxProviderRequest request = new(u.idToken, u.accessToken, u.refreshToken, u.profile, u.etherKey);
             string data = JsonConvert.SerializeObject(request);
 
-            string response = await communicationsManager.Call(PassportFunction.GET_IMX_PROVIDER, data);
+            string? response = await GetBrowserCommunicationsManager().Call(PassportFunction.GET_IMX_PROVIDER, data);
             bool success = JsonUtility.FromJson<Response>(response)?.success == true;
             if (!success)
             {
@@ -176,7 +181,7 @@ namespace Immutable.Passport
 
         public async Task<string?> GetAddress()
         {
-            string response = await communicationsManager.Call(PassportFunction.GET_ADDRESS);
+            string response = await GetBrowserCommunicationsManager().Call(PassportFunction.GET_ADDRESS);
             return JsonUtility.FromJson<AddressResponse>(response)?.address;
         }
 
@@ -213,8 +218,17 @@ namespace Immutable.Passport
 
         public async Task<string?> SignMessage(string message)
         {
-            string response = await communicationsManager.Call(PassportFunction.SIGN_MESSAGE, message);
+            string response = await GetBrowserCommunicationsManager().Call(PassportFunction.SIGN_MESSAGE, message);
             return JsonUtility.FromJson<StringResponse>(response)?.result;
+        }
+
+        private BrowserCommunicationsManager GetBrowserCommunicationsManager()
+        {
+            if (communicationsManager != null)
+            {
+                return communicationsManager;
+            }
+            throw new PassportException("Browser communications manager not initialised");
         }
     }
 }

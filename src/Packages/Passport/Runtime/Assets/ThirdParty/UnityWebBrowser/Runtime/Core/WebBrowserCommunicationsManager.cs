@@ -202,6 +202,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             if (!IsConnected)
                 return;
 
+#pragma warning disable CS4014
             UniTask.RunOnThreadPool(() =>
             {
                 sendEventMarker.Begin();
@@ -220,6 +221,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
                 sendEventMarker.End();
                 return UniTask.CompletedTask;
             });
+#pragma warning restore CS4014
         }
 
         #region Client Events

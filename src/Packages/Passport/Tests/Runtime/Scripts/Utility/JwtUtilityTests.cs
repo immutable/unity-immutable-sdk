@@ -10,7 +10,7 @@ namespace Immutable.Passport.Utility.Tests
         {
             string jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmF" + 
                 "tZSI6IkltbXV0YWJsZSIsImlhdCI6MTUxNjIzOTAyMn0.3uo_vJDobJs97abKHJY48qaYaFdUj0o02admvkedyp4";
-            string actual = JwtUtility.decodeJwt(jwt);
+            string actual = JwtUtility.DecodeJwt(jwt);
 
             string expected = @"{""sub"":""1234567890"",""name"":""Immutable"",""iat"":1516239022}";
             StringAssert.AreEqualIgnoringCase(expected, actual);
@@ -19,7 +19,7 @@ namespace Immutable.Passport.Utility.Tests
         [Test]
         public void DecodeJwtTestFailed()
         {
-            Assert.Null(JwtUtility.decodeJwt("Immutable"));
+            Assert.Null(JwtUtility.DecodeJwt("Immutable"));
         }
     }
 }
