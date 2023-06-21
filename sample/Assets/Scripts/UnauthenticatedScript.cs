@@ -6,12 +6,15 @@ using Immutable.Passport;
 
 public class UnauthenticatedScript : MonoBehaviour
 {
-
+#pragma warning disable CS8618
     [SerializeField] private Text output;
 
     [SerializeField] private Button connectButton;
     [SerializeField] private Text userCodeText;
     [SerializeField] private Button proceedLoginButton;
+
+    private Passport passport;
+#pragma warning restore CS8618
 
     async void Start()
     {
@@ -22,8 +25,9 @@ public class UnauthenticatedScript : MonoBehaviour
             userCodeText.gameObject.SetActive(false);
             proceedLoginButton.gameObject.SetActive(false);
 
-            await Passport.Init();
+            passport = await Passport.Init();
             connectButton.gameObject.SetActive(true);
+            ShowOutput("Ready");
         }
         catch (Exception ex)
         {
@@ -31,11 +35,13 @@ public class UnauthenticatedScript : MonoBehaviour
         }
     }
 
+#pragma warning disable IDE0051
     private void OnReady()
     {
         ShowOutput("Passport is ready");
         connectButton.gameObject.SetActive(true);
     }
+#pragma warning restore IDE0051
 
     public async void Connect()
     {
@@ -45,7 +51,7 @@ public class UnauthenticatedScript : MonoBehaviour
             userCodeText.gameObject.SetActive(false);
             proceedLoginButton.gameObject.SetActive(false);
 
-            string? code = await Passport.Instance.Connect();
+            string? code = await passport.Connect();
 
             if (code != null)
             {
@@ -74,7 +80,7 @@ public class UnauthenticatedScript : MonoBehaviour
         try
         {
             ShowOutput("Called ConfirmCode()...");
-            await Passport.Instance.ConfirmCode();
+            await passport.ConfirmCode();
             ShowOutput("Confirmed code");
             NavigateToAuthenticatedScene();
         }
