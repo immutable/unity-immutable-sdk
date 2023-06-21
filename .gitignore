@@ -78,7 +78,3 @@ crashlytics-build.properties
 
 .DS_Store
 ._.DS_Store
-
-# Analysers
-analyzers/
-omnisharp.json*
