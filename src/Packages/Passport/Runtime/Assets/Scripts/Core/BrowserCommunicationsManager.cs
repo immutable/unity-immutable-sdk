@@ -23,6 +23,12 @@ namespace Immutable.Passport.Core
         private readonly IWebBrowserClient webBrowserClient;
         public event OnBrowserReadyDelegate OnReady;
 
+        /// <summary>
+        ///     Timeout time for waiting for each call to respond in milliseconds
+        ///     Default value: 1 minute
+        /// </summary>
+        public int callTimeout = 60000;
+
         public BrowserCommunicationsManager(IWebBrowserClient webBrowserClient)
         {
             this.webBrowserClient = webBrowserClient;
@@ -38,7 +44,8 @@ namespace Immutable.Passport.Core
             // Add task completion source to the map so we can return the response
             requestTaskMap.Add(requestId, t);
             CallFunction(requestId, fxName, data);
-            return t.Task;
+            return t.Task
+                .Timeout(TimeSpan.FromMilliseconds(callTimeout));;
         }
 
         private void CallFunction(string requestId, string fxName, string? data = null)
