@@ -14,6 +14,10 @@ const PassportFunctions = {
     signMessage: "signMessage"
 }
 
+// To notify Unity that this file is loaded
+const initRequest = "init";
+const initRequestId = "1";
+
 const getPassportConfig = () => {
     const sharedConfigurationValues = {
         scope,
@@ -111,3 +115,12 @@ async function callFunction(jsonData) {
         });
     }
 }
+
+console.log("index.js loaded");
+// File loaded
+// This is to prevent callFunction not defined error
+callbackToUnity({
+    responseFor: initRequest,
+    requestId: initRequestId,
+    success: true
+});
