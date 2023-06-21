@@ -1,12 +1,9 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Immutable.Passport;
 using Immutable.Passport.Model;
-using UnityEditor;
 
 public class AuthenticatedScript : MonoBehaviour
 {
@@ -19,43 +16,58 @@ public class AuthenticatedScript : MonoBehaviour
     [SerializeField] private Button signMessageButton;
     [SerializeField] private InputField signInput;
 
-    public async void GetAddress() {
+    public async void GetAddress()
+    {
         ShowOutput($"Called GetAddress()...");
-        try {
+        try
+        {
             string? address = await Passport.Instance.GetAddress();
             ShowOutput(address);
-        } catch (PassportException e) {
+        }
+        catch (PassportException e)
+        {
             ShowOutput($"Unable to get address: {e.Type}");
-        } catch (Exception e) {
+        }
+        catch (Exception)
+        {
             ShowOutput("Unable to get address");
         }
     }
 
-    public async void Logout() {
+    public void Logout()
+    {
         Passport.Instance.Logout();
-        SceneManager.LoadScene(sceneName:"UnauthenticatedScene");
+        SceneManager.LoadScene(sceneName: "UnauthenticatedScene");
     }
 
-    public void GetAccessToken() {
+    public void GetAccessToken()
+    {
         ShowOutput(Passport.Instance.GetAccessToken());
     }
 
-    public void GetIdToken() {
+    public void GetIdToken()
+    {
         ShowOutput(Passport.Instance.GetIdToken());
     }
 
-    public async void SignMessage() {
+    public async void SignMessage()
+    {
         ShowOutput("Called SignMessage()...");
-        try {
+        try
+        {
             string? result = await Passport.Instance.SignMessage(signInput.text);
             ShowOutput(result);
-        } catch (Exception e) {
+        }
+        catch (Exception)
+        {
             ShowOutput("Unable to sign message");
         }
     }
 
-    private void ShowOutput(string message) {
-        if (output != null) {
+    private void ShowOutput(string message)
+    {
+        if (output != null)
+        {
             output.text = message;
         }
     }

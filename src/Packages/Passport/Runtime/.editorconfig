@@ -1,0 +1,6 @@
+root = true
+
+# Treat everything in ThirdParty as generated code so 
+# analysers don't analyse it
+[/Assets/ThirdParty/**]
+generated_code = true
