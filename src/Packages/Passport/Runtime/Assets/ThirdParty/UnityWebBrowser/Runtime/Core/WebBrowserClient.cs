@@ -61,7 +61,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         public Engine engine;
 
         private const string ENGINE_APP_NAME = "UnityWebBrowser.Engine.Cef";
-        private const string ENGINE_FILE_LOCATION = "Packages/com.immutable.passport/Runtime/Assets/ThirdParty/UnityWebBrowser.Engine.Cef.Win-x64/Engine/";
+        public static string ENGINE_FILE_LOCATION = "Packages/com.immutable.passport/Runtime/Assets/ThirdParty/UnityWebBrowser.Engine.Cef.Win-x64/Engine/";
 
         /// <summary>
         ///     The initial URl the browser will start at
