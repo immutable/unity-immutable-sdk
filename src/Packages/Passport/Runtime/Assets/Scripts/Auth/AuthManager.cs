@@ -136,7 +136,7 @@ namespace Immutable.Passport.Auth
         /// The token response
         /// </return>
         /// </summary>
-        public async Task<UniTask> ConfirmCode()
+        public async UniTask<User> ConfirmCode()
         {
             if (deviceCodeResponse != null)
             {
