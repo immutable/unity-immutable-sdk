@@ -23,8 +23,8 @@ namespace Immutable.Passport
 
         private static bool? readySignalReceived = null;
 
-        private readonly AuthManager auth = new();
-        private BrowserCommunicationsManager? communicationsManager;
+        // private readonly AuthManager auth = new();
+        private PassportImpl? passportImpl = null;
 
         private Passport()
         {
@@ -69,6 +69,7 @@ namespace Immutable.Passport
                 communicationsManager = new BrowserCommunicationsManager(webBrowserClient);
                 communicationsManager.OnReady += () => readySignalReceived = true;
                 await webBrowserClient.Init();
+                passportImpl = new PassportImpl(new AuthManager(), communicationsManager);
             }
             catch (Exception ex)
             {
@@ -112,97 +113,46 @@ namespace Immutable.Passport
         /// </summary>
         public async UniTask<string?> Connect()
         {
-            string? code = await auth.Login();
-            User? user = auth.GetUser();
-            if (code != null)
-            {
-                // Code confirmation required
-                return code;
-            }
-            else if (user != null)
-            {
-                // Credentials are still valid, get provider
-                await GetImxProvider(user);
-                return null;
-            }
-            else
-            {
-                // Should never get to here, but if it happens, log the user to reset everything
-                auth.Logout();
-                throw new InvalidOperationException("Something went wrong, call Connect() again");
-            }
+            return await GetPassportImpl().Connect();
         }
 
         public async UniTask ConfirmCode() 
         {
-            User user = await auth.ConfirmCode();
-            await GetImxProvider(user);
-        }
-
-        private async UniTask GetImxProvider(User u) 
-        {
-            // Only send necessary values
-            GetImxProviderRequest request = new(u.idToken, u.accessToken, u.refreshToken, u.profile, u.etherKey);
-            string data = JsonConvert.SerializeObject(request);
-
-            string? response = await GetBrowserCommunicationsManager().Call(PassportFunction.GET_IMX_PROVIDER, data);
-            bool success = JsonUtility.FromJson<Response>(response)?.success == true;
-            if (!success)
-            {
-                throw new PassportException("Failed to get IMX provider", PassportErrorType.WALLET_CONNECTION_ERROR);
-            }
+            await GetPassportImpl().ConfirmCode();
         }
 
         public async UniTask<string?> GetAddress() 
         {
-            string response = await GetBrowserCommunicationsManager().Call(PassportFunction.GET_ADDRESS);
-            return JsonUtility.FromJson<AddressResponse>(response)?.address;
+            return await GetPassportImpl().GetAddress();
         }
 
         public void Logout()
         {
-            auth.Logout();
+            GetPassportImpl().Logout();
         }
 
         public string? GetAccessToken()
         {
-            User? user = auth.GetUser();
-            if (user != null)
-            {
-                return user.accessToken;
-            }
-            else
-            {
-                return null;
-            }
+            return GetPassportImpl().GetAccessToken();
         }
 
         public string? GetIdToken()
         {
-            User? user = auth.GetUser();
-            if (user != null)
-            {
-                return user.idToken;
-            }
-            else
-            {
-                return null;
-            }
+            return GetPassportImpl().GetIdToken();
         }
 
         public async UniTask<string?> SignMessage(string message)
         {
-            string response = await GetBrowserCommunicationsManager().Call(PassportFunction.SIGN_MESSAGE, message);
-            return JsonUtility.FromJson<StringResponse>(response)?.result;
+            return await GetPassportImpl().SignMessage(message);
         }
 
-        private BrowserCommunicationsManager GetBrowserCommunicationsManager()
+        private PassportImpl GetPassportImpl()
         {
-            if (communicationsManager != null)
+            if (passportImpl != null)
             {
-                return communicationsManager;
+                return passportImpl;
             }
-            throw new PassportException("Browser communications manager not initialised");
+            throw new PassportException("Passport not initialised");
         }
     }
 }
