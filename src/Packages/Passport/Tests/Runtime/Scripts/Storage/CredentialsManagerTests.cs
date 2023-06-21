@@ -10,8 +10,8 @@ namespace Immutable.Passport.Storage
     [TestFixture]
     public class CredentialsManagerTests
     {
-        internal static string ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6Ikp" + 
-            "vaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjEyM30.kRqQkJudxgI3koJAp9K4ENp6E2ExFQ5VchogaTWx6Fk";
+        internal static string ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6Ikp" +
+            "vaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjcyMDB9.zKW_cyLXjQ0Vbc7LsrHGo6fIUfCy9QQhFNdKN5JxlZY";
         internal static string REFRESH_TOKEN = "refreshToken";
         internal static string ID_TOKEN = "idToken";
         internal static string TOKEN_TYPE = "Bearer";
@@ -98,7 +98,10 @@ namespace Immutable.Passport.Storage
         [Test]
         public void HasValidCredentialsTest_Invalid()
         {
-            manager.mockCurrentTimeSeconds = 999;
+            manager.mockCurrentTimeSeconds = 3600;
+            Assert.False(manager.HasValidCredentials());
+
+            manager.mockCurrentTimeSeconds = 9999;
             Assert.False(manager.HasValidCredentials());
         }
 

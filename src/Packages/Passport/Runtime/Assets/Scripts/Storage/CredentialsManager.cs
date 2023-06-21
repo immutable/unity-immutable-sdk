@@ -20,6 +20,8 @@ namespace Immutable.Passport.Storage
         private const string TAG = "[Credentials Manager]";
 
         public static string KEY_PREFS_CREDENTIALS = "prefs_credentials";
+        // The minimum time in seconds that the access token should last before expiration
+        private const long VALID_CREDENTIALS_MIN_TTL_SEC = 3600; // 1 hour
 
         public void SaveCredentials(TokenResponse tokenResponse)
         {
@@ -68,7 +70,7 @@ namespace Immutable.Passport.Storage
                 AccessTokenPayload? accessTokenPayload = JsonConvert.DeserializeObject<AccessTokenPayload>(accessToken);
 
                 long expiresAt = accessTokenPayload?.exp ?? 0;
-                long now = GetCurrentTimeSeconds();
+                long now = GetCurrentTimeSeconds() + VALID_CREDENTIALS_MIN_TTL_SEC;
                 bool valid = expiresAt > now;
                 Debug.Log($"{TAG} Access Token expires (UTC seconds): {expiresAt}");
                 Debug.Log($"{TAG} Time now (UTC seconds): {now}");
