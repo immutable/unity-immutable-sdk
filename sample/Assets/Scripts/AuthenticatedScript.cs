@@ -7,6 +7,7 @@ using Immutable.Passport.Model;
 
 public class AuthenticatedScript : MonoBehaviour
 {
+#pragma warning disable CS8618
     [SerializeField] private Text output;
 
     [SerializeField] private Button accessTokenButton;
@@ -16,13 +17,28 @@ public class AuthenticatedScript : MonoBehaviour
     [SerializeField] private Button signMessageButton;
     [SerializeField] private InputField signInput;
 
+    private Passport passport;
+#pragma warning restore CS8618
+
+    void Start()
+    {
+        if (Passport.Instance != null)
+        {
+            passport = Passport.Instance;
+        }
+        else
+        {
+            ShowOutput("Passport Instance is null");
+        }
+    }
+
     public async void GetAddress()
     {
         ShowOutput($"Called GetAddress()...");
         try
         {
-            string? address = await Passport.Instance.GetAddress();
-            ShowOutput(address);
+            string? address = await passport.GetAddress();
+            ShowOutput(address ?? "No address");
         }
         catch (PassportException e)
         {
@@ -36,18 +52,18 @@ public class AuthenticatedScript : MonoBehaviour
 
     public void Logout()
     {
-        Passport.Instance.Logout();
+        passport.Logout();
         SceneManager.LoadScene(sceneName: "UnauthenticatedScene");
     }
 
     public void GetAccessToken()
     {
-        ShowOutput(Passport.Instance.GetAccessToken());
+        ShowOutput(passport.GetAccessToken() ?? "No access token");
     }
 
     public void GetIdToken()
     {
-        ShowOutput(Passport.Instance.GetIdToken());
+        ShowOutput(passport.GetIdToken() ?? "No ID token");
     }
 
     public async void SignMessage()
@@ -55,8 +71,8 @@ public class AuthenticatedScript : MonoBehaviour
         ShowOutput("Called SignMessage()...");
         try
         {
-            string? result = await Passport.Instance.SignMessage(signInput.text);
-            ShowOutput(result);
+            string? result = await passport.SignMessage(signInput.text);
+            ShowOutput(result ?? "No result");
         }
         catch (Exception)
         {
