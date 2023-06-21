@@ -3,6 +3,7 @@
     "rootNamespace": "",
     "references": [
          "VoltstroStudios.UnityWebBrowser",
+         "UniTask",
         "GUID:78c2789dfc155bf4b9e815b0ca402b9b"
     ],
     "includePlatforms": [

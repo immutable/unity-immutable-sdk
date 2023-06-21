@@ -1,6 +1,6 @@
 using System.Net;
 using System;
-using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using VoltstroStudios.UnityWebBrowser.Core;
 using Immutable.Passport.Model;
@@ -12,7 +12,7 @@ namespace Immutable.Passport.Core
     public class BrowserCommunicationsManager
     {
         private const string TAG = "[Browser Communications Manager]";
-        private readonly IDictionary<string, TaskCompletionSource<string>> requestTaskMap = new Dictionary<string, TaskCompletionSource<string>>();
+        private readonly IDictionary<string, UniTaskCompletionSource<string>> requestTaskMap = new Dictionary<string, UniTaskCompletionSource<string>>();
         private readonly IWebBrowserClient webBrowserClient;
 
         public BrowserCommunicationsManager(IWebBrowserClient webBrowserClient)
@@ -23,9 +23,9 @@ namespace Immutable.Passport.Core
 
         #region Unity to Browser
 
-        public Task<string> Call(string fxName, string? data = null)
+        public UniTask<string> Call(string fxName, string? data = null)
         {
-            var t = new TaskCompletionSource<string>();
+            var t = new UniTaskCompletionSource<string>();
             string requestId = Guid.NewGuid().ToString();
             // Add task completion source to the map so we can return the response
             requestTaskMap.Add(requestId, t);
@@ -104,7 +104,7 @@ namespace Immutable.Passport.Core
 
         private void NotifyRequestResult(string requestId, string result, PassportException? e)
         {
-            TaskCompletionSource<string>? completion = requestTaskMap[requestId] as TaskCompletionSource<string>;
+            UniTaskCompletionSource<string>? completion = requestTaskMap[requestId] as UniTaskCompletionSource<string>;
             try
             {
                 if (e != null)
