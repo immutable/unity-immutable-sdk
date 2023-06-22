@@ -11,7 +11,13 @@ using Immutable.Passport;
 namespace Immutable.Passport.Core
 {
     public delegate void OnBrowserReadyDelegate();
-    public class BrowserCommunicationsManager
+    
+    public interface IBrowserCommunicationsManager
+    {
+        public UniTask<string> Call(string fxName, string? data = null);
+    }
+
+    public class BrowserCommunicationsManager : IBrowserCommunicationsManager
     {
         private const string TAG = "[Browser Communications Manager]";
 

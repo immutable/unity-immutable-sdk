@@ -9,7 +9,15 @@ using Immutable.Passport.Model;
 
 namespace Immutable.Passport.Auth
 {
-    public class AuthManager
+    public interface IAuthManager 
+    {
+        public UniTask<string?> Login();
+        public void Logout();
+        public UniTask<User> ConfirmCode();
+        public User? GetUser();
+        
+    }
+    public class AuthManager : IAuthManager
     {
         private const string TAG = "[Device Code Auth]";
         private const string TAG_GET_DEVICE_CODE = "[Get Device Code]";

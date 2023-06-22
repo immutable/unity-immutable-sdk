@@ -9,7 +9,7 @@ namespace Immutable.Passport
         public string? error;
     }
 
-    internal class AddressResponse : Response
+    public class AddressResponse : Response
     {
         public string? address;
     }
@@ -18,7 +18,7 @@ namespace Immutable.Passport
     {
     }
 
-    internal class StringResponse : Response
+    public class StringResponse : Response
     {
         public string? result;
     }
