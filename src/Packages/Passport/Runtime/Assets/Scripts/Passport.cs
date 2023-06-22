@@ -46,7 +46,7 @@ namespace Immutable.Passport
                 readySignalReceived = true;
             }
 
-            // Wait until we get a ready signal, or timeout
+            // Wait until we get a ready signal
             return UniTask.WaitUntil(() => readySignalReceived != null)
                 .ContinueWith(() =>
                 {
@@ -92,6 +92,15 @@ namespace Immutable.Passport
             webBrowserClient.Dispose();
         }
 #pragma warning restore IDE0051
+
+        /// <summary>
+        ///     Sets the timeout time for waiting for each call to respond (in milliseconds).
+        ///     This only applies to functions that uses the browser communications manager.
+        /// </summary>
+        public void setCallTimeout(int ms) 
+        {
+            GetBrowserCommunicationsManager().callTimeout = ms;
+        }
 
         /// <summary>
         /// Connects the user to Passport.
