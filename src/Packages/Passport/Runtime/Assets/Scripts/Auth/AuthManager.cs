@@ -26,9 +26,9 @@ namespace Immutable.Passport.Auth
         private const string TAG_GET_TOKEN = "[Get Token]";
         private const string TAG_GET_REFRESH_TOKEN = "[Refresh Token]";
 
-        private const string DOMAIN = "https://auth.immutable.com";
-        private const string PATH_AUTH_CODE = "/oauth/device/code";
-        private const string PATH_TOKEN = "/oauth/token";
+        public const string DOMAIN = "https://auth.immutable.com";
+        public const string PATH_AUTH_CODE = "/oauth/device/code";
+        public const string PATH_TOKEN = "/oauth/token";
 
         private const string CLIENT_ID = "ZJL7JvetcDFBNDlgRs5oJoxuAUUl6uQj";
         private const string SCOPE = "openid offline_access profile email transact";

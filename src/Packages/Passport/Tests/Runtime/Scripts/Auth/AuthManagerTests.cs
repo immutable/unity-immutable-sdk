@@ -15,7 +15,45 @@ namespace Immutable.Passport.Auth
     [TestFixture]
     public class AuthManagerTests
     {
-        internal static string VALID_TOKEN_RESPONSE = "{\"access_token\":\"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjNhYVl5dGR3d2UwMzJzMXIzVElyOSJ9.eyJlbWFpbCI6ImRvbWluaWMubXVycmF5QGltbXV0YWJsZS5jb20iLCJvcmciOiJhNTdiMWYzZC1mYTU3LTRiNzgtODZkYy05ZDEyZDM1YjlhNjgiLCJldGhlcl9rZXkiOiIweGRlMDYzYmViNmNmNDhlNGMxOTcxYzc3N2M0OGY0NTU3MTA1MjU5ZWMiLCJzdGFya19rZXkiOiIweGM1NTYxZGU3Nzg4NTUxOTY0ZWQxMjI0Yzc2ZjQ5ZDk5ZmVjODkyOGQ1OWVkNTcwZTExZGIwYzk3ZGYwMTFmIiwidXNlcl9hZG1pbl9rZXkiOiIweGY4MjY4OTI0MWU3NTM1YjYyNTgyMmI4M2I1OWMxZDM3ZWUwOTBiZGMiLCJpc3MiOiJodHRwczovL2F1dGguaW1tdXRhYmxlLmNvbS8iLCJzdWIiOiJlbWFpbHw2NDJiN2Q0YWI5N2IzYWMyNDg3NzBlNTEiLCJhdWQiOlsicGxhdGZvcm1fYXBpIiwiaHR0cHM6Ly9wcm9kLmltbXV0YWJsZS5hdXRoMGFwcC5jb20vdXNlcmluZm8iXSwiaWF0IjoxNjg2ODg5MDgwLCJleHAiOjE2ODY5NzU0ODAsImF6cCI6IlpKTDdKdmV0Y0RGQk5EbGdSczVvSm94dUFVVWw2dVFqIiwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCB0cmFuc2FjdCBvZmZsaW5lX2FjY2VzcyJ9.aqFem4Pp0k91YWdYuxBo1wfCrYAHy1Y1zIqof2GMQXd_mwhGBkHotUlgFAsOIQmvO6lQG5m3cHLR9zlEsFJ_2AJuJg3NTNnF0dEx12H5hx24_aN4qDga8Q9KNDdGc3x4LAxv48PH-P6OcdMnpWekCUPAI3zZ9qWC1YWU9HaouQuBJNbUV8ujyooFGOP4YzejQf2Uyxz9wmzDiMS-e70BSmY8IPRR2A3QjOEo7oI3enqM_jylfbDo8BsDRouDbwbZrMeX-rcJ_HBY5iZEdagVpcvOmfZCaad55MI_WJcXHrDMzmLqck1fd15Oklo7fajQtiG0ByINxTmm9_0YnEy02w\",\"refresh_token\":\"v1.NOQCr0kkmy0Cky_Doia8VgJdclSKOOOrkicjZ4NFeabS5J7xNct-oRwO2H65ua0mPOhzWfIf8lhxlM1sIUBqLoc\",\"id_token\":\"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjNhYVl5dGR3d2UwMzJzMXIzVElyOSJ9.eyJkZXZlbG9wZXJfaHViIjp7ImFjdGl2YXRlZCI6dHJ1ZSwib3JnYW5pemF0aW9uIjp7ImlkIjoiYTU3YjFmM2QtZmE1Ny00Yjc4LTg2ZGMtOWQxMmQzNWI5YTY4In0sInJlc3BvbnNlSWQiOiI4MzhiangzOG1maG15cWs3bjgzOGJqeGZrMjdhZXQxMCIsInJlc3BvbnNlcyI6eyJmdW5kaW5nIjoiUHJlZmVyIG5vdCB0byBzYXkiLCJoYXZlTWludGVkTmZ0c0JlZm9yZSI6Ik5vIiwicGVvcGxlIjoiSnVzdCBtZSIsInByb2plY3RTdGFnZSI6IkNvbmNlcHQiLCJwcm9qZWN0VHlwZSI6Ik90aGVyIiwicm9sZSI6Ik90aGVyIn0sInJvbGVzIjpbXSwidXNlck1ldGFkYXRhIjp7InJlY2VpdmVNYXJrZXRpbmdFbWFpbHNDb25zZW50Ijp7ImNvbnNlbnRlZCI6ZmFsc2UsImRhdGUiOiIyMDIzLTA0LTIwVDAxOjA2OjI2LjgwOFoiLCJ2ZXJzaW9uIjoxfX19LCJwYXNzcG9ydCI6eyJldGhlcl9rZXkiOiIweGRlMDYzYmViNmNmNDhlNGMxOTcxYzc3N2M0OGY0NTU3MTA1MjU5ZWMiLCJzdGFya19rZXkiOiIweGM1NTYxZGU3Nzg4NTUxOTY0ZWQxMjI0Yzc2ZjQ5ZDk5ZmVjODkyOGQ1OWVkNTcwZTExZGIwYzk3ZGYwMTFmIiwidXNlcl9hZG1pbl9rZXkiOiIweGY4MjY4OTI0MWU3NTM1YjYyNTgyMmI4M2I1OWMxZDM3ZWUwOTBiZGMifSwibmlja25hbWUiOiJkb21pbmljLm11cnJheSIsIm5hbWUiOiJkb21pbmljLm11cnJheUBpbW11dGFibGUuY29tIiwicGljdHVyZSI6Imh0dHBzOi8vcy5ncmF2YXRhci5jb20vYXZhdGFyL2NkOTkwYWNiYzYwNWQ4ZDdiYWMwNjExMWFkZTljNWI1P3M9NDgwJnI9cGcmZD1odHRwcyUzQSUyRiUyRmNkbi5hdXRoMC5jb20lMkZhdmF0YXJzJTJGZG8ucG5nIiwidXBkYXRlZF9hdCI6IjIwMjMtMDYtMTNUMDY6MTE6MjQuOTgxWiIsImVtYWlsIjoiZG9taW5pYy5tdXJyYXlAaW1tdXRhYmxlLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJpc3MiOiJodHRwczovL2F1dGguaW1tdXRhYmxlLmNvbS8iLCJhdWQiOiJaSkw3SnZldGNERkJORGxnUnM1b0pveHVBVVVsNnVRaiIsImlhdCI6MTY4Njg4OTA4MCwiZXhwIjoxNjg2OTI1MDgwLCJzdWIiOiJlbWFpbHw2NDJiN2Q0YWI5N2IzYWMyNDg3NzBlNTEifQ.X1G-59ay7yKCHUdq01Kntx4JLgNv5KjQSeWjDULuG1CNDS8eUrlWvZS1bok77AQd683GflTjoM50T6KuDanW0pcsDGcZDnGQ-yj8-Eb381zrWybkYok3AkJbzRJ2M9AQsFdv6wjjQg78xAFgutRev4XtCsEApD7wIfCFi8EkqLwJMDbkjzNjyRjVHP8g_h6XfkI23iRhjz0qSySV3ogmLxxkPse9uOILfXvB5SczJWe6RPRZKoMk-uoqAbDPNgSAa7G_PoPAQd404vYrkltVV3tT8bxiyasO_Uhk9Djre0_dnzJ3Cqfmmlvk7kS9g22ELFvIJBJ0zgcCzqa6fIFDZQ\",\"token_type\":\"Bearer\",\"expires_in\":86400}";
+        private const string KEY_DEVICE_CODE = "device_code";
+        private const string KEY_REFRESH_TOKEN = "refresh_token";
+        private const string USER_CODE = "userCode";
+        private const string DEVICE_CODE = "deviceCode";
+        internal const string ACCESS_TOKEN = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjNhYVl5dGR3d2UwMzJzMXIzVElyOSJ9." +
+            "eyJlbWFpbCI6ImRvbWluaWMubXVycmF5QGltbXV0YWJsZS5jb20iLCJvcmciOiJhNTdiMWYzZC1mYTU3LTRiNzgtODZkYy05ZDEyZDM1YjlhNj" +
+            "giLCJldGhlcl9rZXkiOiIweGRlMDYzYmViNmNmNDhlNGMxOTcxYzc3N2M0OGY0NTU3MTA1MjU5ZWMiLCJzdGFya19rZXkiOiIweGM1NTYxZGU3" +
+            "Nzg4NTUxOTY0ZWQxMjI0Yzc2ZjQ5ZDk5ZmVjODkyOGQ1OWVkNTcwZTExZGIwYzk3ZGYwMTFmIiwidXNlcl9hZG1pbl9rZXkiOiIweGY4MjY4OT" + 
+            "I0MWU3NTM1YjYyNTgyMmI4M2I1OWMxZDM3ZWUwOTBiZGMiLCJpc3MiOiJodHRwczovL2F1dGguaW1tdXRhYmxlLmNvbS8iLCJzdWIiOiJlbWFp" + 
+            "bHw2NDJiN2Q0YWI5N2IzYWMyNDg3NzBlNTEiLCJhdWQiOlsicGxhdGZvcm1fYXBpIiwiaHR0cHM6Ly9wcm9kLmltbXV0YWJsZS5hdXRoMGFwcC" + 
+            "5jb20vdXNlcmluZm8iXSwiaWF0IjoxNjg2ODg5MDgwLCJleHAiOjE2ODY5NzU0ODAsImF6cCI6IlpKTDdKdmV0Y0RGQk5EbGdSczVvSm94dUFV" +
+            "VWw2dVFqIiwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCB0cmFuc2FjdCBvZmZsaW5lX2FjY2VzcyJ9.aqFem4Pp0k91YWdYuxBo1wfCr" +
+            "YAHy1Y1zIqof2GMQXd_mwhGBkHotUlgFAsOIQmvO6lQG5m3cHLR9zlEsFJ_2AJuJg3NTNnF0dEx12H5hx24_aN4qDga8Q9KNDdGc3x4LAxv48P" +
+            "H-P6OcdMnpWekCUPAI3zZ9qWC1YWU9HaouQuBJNbUV8ujyooFGOP4YzejQf2Uyxz9wmzDiMS-e70BSmY8IPRR2A3QjOEo7oI3enqM_jylfbDo8" +
+            "BsDRouDbwbZrMeX-rcJ_HBY5iZEdagVpcvOmfZCaad55MI_WJcXHrDMzmLqck1fd15Oklo7fajQtiG0ByINxTmm9_0YnEy02w";
+        internal const string REFRESH_TOKEN = "v1.NOQCr0kkmy0Cky_Doia8VgJdclSKOOOrkicjZ4NFeabS5J7xNct-oRwO2H65ua0mPOhzWfIf8lhxlM1sIUBqLoc";
+        internal const string ID_TOKEN = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjNhYVl5dGR3d2UwMzJzMXIzVElyOSJ9.eyJk" + 
+            "ZXZlbG9wZXJfaHViIjp7ImFjdGl2YXRlZCI6dHJ1ZSwib3JnYW5pemF0aW9uIjp7ImlkIjoiYTU3YjFmM2QtZmE1Ny00Yjc4LTg2ZGMtOWQxMm" +
+            "QzNWI5YTY4In0sInJlc3BvbnNlSWQiOiI4MzhiangzOG1maG15cWs3bjgzOGJqeGZrMjdhZXQxMCIsInJlc3BvbnNlcyI6eyJmdW5kaW5nIjoi" + 
+            "UHJlZmVyIG5vdCB0byBzYXkiLCJoYXZlTWludGVkTmZ0c0JlZm9yZSI6Ik5vIiwicGVvcGxlIjoiSnVzdCBtZSIsInByb2plY3RTdGFnZSI6Ik" + 
+            "NvbmNlcHQiLCJwcm9qZWN0VHlwZSI6Ik90aGVyIiwicm9sZSI6Ik90aGVyIn0sInJvbGVzIjpbXSwidXNlck1ldGFkYXRhIjp7InJlY2VpdmVN" +
+            "YXJrZXRpbmdFbWFpbHNDb25zZW50Ijp7ImNvbnNlbnRlZCI6ZmFsc2UsImRhdGUiOiIyMDIzLTA0LTIwVDAxOjA2OjI2LjgwOFoiLCJ2ZXJzaW" + 
+            "9uIjoxfX19LCJwYXNzcG9ydCI6eyJldGhlcl9rZXkiOiIweGRlMDYzYmViNmNmNDhlNGMxOTcxYzc3N2M0OGY0NTU3MTA1MjU5ZWMiLCJzdGFy" + 
+            "a19rZXkiOiIweGM1NTYxZGU3Nzg4NTUxOTY0ZWQxMjI0Yzc2ZjQ5ZDk5ZmVjODkyOGQ1OWVkNTcwZTExZGIwYzk3ZGYwMTFmIiwidXNlcl9hZG" +
+            "1pbl9rZXkiOiIweGY4MjY4OTI0MWU3NTM1YjYyNTgyMmI4M2I1OWMxZDM3ZWUwOTBiZGMifSwibmlja25hbWUiOiJkb21pbmljLm11cnJheSIs" +
+            "Im5hbWUiOiJkb21pbmljLm11cnJheUBpbW11dGFibGUuY29tIiwicGljdHVyZSI6Imh0dHBzOi8vcy5ncmF2YXRhci5jb20vYXZhdGFyL2NkOT" +
+            "kwYWNiYzYwNWQ4ZDdiYWMwNjExMWFkZTljNWI1P3M9NDgwJnI9cGcmZD1odHRwcyUzQSUyRiUyRmNkbi5hdXRoMC5jb20lMkZhdmF0YXJzJTJG" +
+            "ZG8ucG5nIiwidXBkYXRlZF9hdCI6IjIwMjMtMDYtMTNUMDY6MTE6MjQuOTgxWiIsImVtYWlsIjoiZG9taW5pYy5tdXJyYXlAaW1tdXRhYmxlLm" +
+            "NvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJpc3MiOiJodHRwczovL2F1dGguaW1tdXRhYmxlLmNvbS8iLCJhdWQiOiJaSkw3SnZldGNERkJO" +
+            "RGxnUnM1b0pveHVBVVVsNnVRaiIsImlhdCI6MTY4Njg4OTA4MCwiZXhwIjoxNjg2OTI1MDgwLCJzdWIiOiJlbWFpbHw2NDJiN2Q0YWI5N2IzYW" +
+            "MyNDg3NzBlNTEifQ.X1G-59ay7yKCHUdq01Kntx4JLgNv5KjQSeWjDULuG1CNDS8eUrlWvZS1bok77AQd683GflTjoM50T6KuDanW0pcsDGcZD" +
+            "nGQ-yj8-Eb381zrWybkYok3AkJbzRJ2M9AQsFdv6wjjQg78xAFgutRev4XtCsEApD7wIfCFi8EkqLwJMDbkjzNjyRjVHP8g_h6XfkI23iRhjz0" +
+            "qSySV3ogmLxxkPse9uOILfXvB5SczJWe6RPRZKoMk-uoqAbDPNgSAa7G_PoPAQd404vYrkltVV3tT8bxiyasO_Uhk9Djre0_dnzJ3Cqfmmlvk7" +
+            "kS9g22ELFvIJBJ0zgcCzqa6fIFDZQ";
+        internal const string TOKEN_TYPE = "Bearer";
+        internal const int EXPIRES_IN = 86400;
+        internal static string VALID_TOKEN_RESPONSE = @$"{{""access_token"":""{ACCESS_TOKEN}"",""{KEY_REFRESH_TOKEN}"":""{REFRESH_TOKEN}"",""id_token"":""{ID_TOKEN}"",""token_type"":""{TOKEN_TYPE}"",""expires_in"":{EXPIRES_IN}}}";
+        private static string TOKEN_ENDPOINT = $"{AuthManager.DOMAIN}{AuthManager.PATH_TOKEN}";
+        private static string AUTH_CODE_ENDPOINT = $"{AuthManager.DOMAIN}{AuthManager.PATH_AUTH_CODE}";
 
         private AuthManager manager;
         private MockHttpMessageHandler httpMock;
@@ -38,7 +76,8 @@ namespace Immutable.Passport.Auth
 
         private void AddDeviceCodeResponse() {
             var deviceCodeResponse = new HttpResponseMessage(HttpStatusCode.OK);
-            deviceCodeResponse.Content = new StringContent("{\"device_code\": \"deviceCode\",\"user_code\": \"userCode\",\"verification_uri\": \"verificationUri\",\"expires_in\": 3600000,\"interval\": 1,\"verification_uri_complete\": \"verificationUriComplete\"}");
+            deviceCodeResponse.Content = new StringContent(@$"{{""{KEY_DEVICE_CODE}"": ""{DEVICE_CODE}"",""user_code"": ""{USER_CODE}""," + 
+                @$"""verification_uri"": ""verificationUri"",""expires_in"": 3600000,""interval"": 1,""verification_uri_complete"": ""verificationUriComplete""}}");
             httpMock.responses.Add(deviceCodeResponse);
         }
 
@@ -51,9 +90,9 @@ namespace Immutable.Passport.Auth
             var code = await manager.Login();
             var request = httpMock.requests[0];
 
-            Assert.AreEqual(request.RequestUri, "https://auth.immutable.com/oauth/device/code");
+            Assert.AreEqual(request.RequestUri, AUTH_CODE_ENDPOINT);
             Assert.AreEqual(request.Method, HttpMethod.Post);
-            Assert.AreEqual(code, "userCode");
+            Assert.AreEqual(code, USER_CODE);
         }
 
         [Test]
@@ -71,7 +110,7 @@ namespace Immutable.Passport.Auth
         {
             credentialsManager.hasValidCredentials = false;
             credentialsManager.token = new TokenResponse();
-            credentialsManager.token.refresh_token = "thisIsTheRefreshToken";
+            credentialsManager.token.refresh_token = REFRESH_TOKEN;
             var refreshTokenResponse = new HttpResponseMessage(HttpStatusCode.OK);
             refreshTokenResponse.Content = new StringContent(VALID_TOKEN_RESPONSE);
             httpMock.responses.Add(refreshTokenResponse);
@@ -83,10 +122,10 @@ namespace Immutable.Passport.Auth
             Assert.NotNull(manager.GetUser());
 
             var request = httpMock.requests[0];
-            Assert.AreEqual(request.RequestUri, "https://auth.immutable.com/oauth/token");
+            Assert.AreEqual(request.RequestUri, TOKEN_ENDPOINT);
             Assert.AreEqual(request.Method, HttpMethod.Post);
             string stringContent = await request.Content.ReadAsStringAsync();
-            Assert.True(stringContent.Contains("refresh_token=thisIsTheRefreshToken"));
+            Assert.True(stringContent.Contains($"{KEY_REFRESH_TOKEN}={REFRESH_TOKEN}"));
         }
         
         [Test]
@@ -104,7 +143,7 @@ namespace Immutable.Passport.Auth
             }
             Assert.NotNull(e);
             var request = httpMock.requests[0];
-            Assert.AreEqual(request.RequestUri, "https://auth.immutable.com/oauth/device/code");
+            Assert.AreEqual(request.RequestUri, AUTH_CODE_ENDPOINT);
             Assert.AreEqual(request.Method, HttpMethod.Post);
         }
 
@@ -113,7 +152,7 @@ namespace Immutable.Passport.Auth
         {
             credentialsManager.hasValidCredentials = false;
             credentialsManager.token = new TokenResponse();
-            credentialsManager.token.refresh_token = "thisIsTheRefreshToken";
+            credentialsManager.token.refresh_token = REFRESH_TOKEN;
             var refreshTokenResponse = new HttpResponseMessage(HttpStatusCode.OK);
             refreshTokenResponse.Content = new StringContent("{}");
             httpMock.responses.Add(refreshTokenResponse);
@@ -121,13 +160,13 @@ namespace Immutable.Passport.Auth
             AddDeviceCodeResponse();
 
             var code = await manager.Login();
-            Assert.AreEqual(code, "userCode");
+            Assert.AreEqual(code, USER_CODE);
 
             var request = httpMock.requests[0];
-            Assert.AreEqual(request.RequestUri, "https://auth.immutable.com/oauth/token");
+            Assert.AreEqual(request.RequestUri, TOKEN_ENDPOINT);
 
             var deviceCodeRequest = httpMock.requests[1];
-            Assert.AreEqual(deviceCodeRequest.RequestUri, "https://auth.immutable.com/oauth/device/code");
+            Assert.AreEqual(deviceCodeRequest.RequestUri, AUTH_CODE_ENDPOINT);
         }
 
         [Test]
@@ -147,10 +186,10 @@ namespace Immutable.Passport.Auth
 
             Assert.AreEqual(2, httpMock.requests.Count);
             var request = httpMock.requests[1];
-            Assert.AreEqual(request.RequestUri, "https://auth.immutable.com/oauth/token");
+            Assert.AreEqual(request.RequestUri, TOKEN_ENDPOINT);
             Assert.AreEqual(request.Method, HttpMethod.Post);
             var stringContent = await request.Content.ReadAsStringAsync();
-            Assert.True(stringContent.Contains("device_code=deviceCode"));
+            Assert.True(stringContent.Contains($"{KEY_DEVICE_CODE}={DEVICE_CODE}"));
         }
 
         [Test]
@@ -158,11 +197,11 @@ namespace Immutable.Passport.Auth
         {
             PrepareForConfirmCode();
             var slowDownResponse = new HttpResponseMessage(HttpStatusCode.OK);
-            slowDownResponse.Content = new StringContent("{\"error\":\"authorization_pending\",\"error_description\":\"description\"}");
+            slowDownResponse.Content = new StringContent(CreateErrorJsonString("authorization_pending"));
             httpMock.responses.Add(slowDownResponse);
 
             var expiredResponse = new HttpResponseMessage(HttpStatusCode.OK);
-            expiredResponse.Content = new StringContent("{\"error\":\"expired_token\",\"error_description\":\"description\"}");
+            expiredResponse.Content = new StringContent(CreateErrorJsonString("expired_token"));
             httpMock.responses.Add(expiredResponse);
 
             Assert.Null(manager.GetUser());
@@ -184,11 +223,11 @@ namespace Immutable.Passport.Auth
         {
             PrepareForConfirmCode();
             var slowDownResponse = new HttpResponseMessage(HttpStatusCode.OK);
-            slowDownResponse.Content = new StringContent("{\"error\":\"slow_down\",\"error_description\":\"description\"}");
+            slowDownResponse.Content = new StringContent(CreateErrorJsonString("slow_down"));
             httpMock.responses.Add(slowDownResponse);
 
             var expiredResponse = new HttpResponseMessage(HttpStatusCode.OK);
-            expiredResponse.Content = new StringContent("{\"error\":\"access_denied\",\"error_description\":\"description\"}");
+            expiredResponse.Content = new StringContent(CreateErrorJsonString("access_denied"));
             httpMock.responses.Add(expiredResponse);
 
             Assert.Null(manager.GetUser());
@@ -210,7 +249,7 @@ namespace Immutable.Passport.Auth
         {
             PrepareForConfirmCode();
             var unexpectedResponse = new HttpResponseMessage(HttpStatusCode.OK);
-            unexpectedResponse.Content = new StringContent("{\"error\":\"whats_this\",\"error_description\":\"description\"}");
+            unexpectedResponse.Content = new StringContent(CreateErrorJsonString("whats_this"));
             httpMock.responses.Add(unexpectedResponse);
 
             Assert.Null(manager.GetUser());
@@ -245,6 +284,26 @@ namespace Immutable.Passport.Auth
             }
             Assert.NotNull(e);
             Assert.AreEqual(2, httpMock.requests.Count);
+        }
+
+        [Test]
+        public async Task HasCredentialsSavedTest()
+        {
+            Assert.False(manager.HasCredentialsSaved());
+
+            credentialsManager.token = new TokenResponse() {
+                access_token = AuthManagerTests.ACCESS_TOKEN,
+                refresh_token = AuthManagerTests.REFRESH_TOKEN,
+                id_token = AuthManagerTests.ID_TOKEN,
+                token_type = AuthManagerTests.TOKEN_TYPE,
+                expires_in = AuthManagerTests.EXPIRES_IN
+            };
+            Assert.True(manager.HasCredentialsSaved());
+        }
+
+        private string CreateErrorJsonString(string error)
+        {
+            return @$"{{""error"":""{error}"",""error_description"":""description""}}";
         }
     }
 
