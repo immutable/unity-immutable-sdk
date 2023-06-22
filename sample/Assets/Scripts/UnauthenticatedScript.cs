@@ -12,6 +12,7 @@ public class UnauthenticatedScript : MonoBehaviour
     [SerializeField] private Button connectButton;
     [SerializeField] private Text userCodeText;
     [SerializeField] private Button proceedLoginButton;
+    [SerializeField] private Button logoutButton;
 
     private Passport passport;
 #pragma warning restore CS8618
@@ -24,9 +25,14 @@ public class UnauthenticatedScript : MonoBehaviour
             connectButton.gameObject.SetActive(false);
             userCodeText.gameObject.SetActive(false);
             proceedLoginButton.gameObject.SetActive(false);
+            logoutButton.gameObject.SetActive(false);
 
             passport = await Passport.Init();
             connectButton.gameObject.SetActive(true);
+            if (passport.HasCredentialsSaved())
+            {
+                logoutButton.gameObject.SetActive(true);
+            }
             ShowOutput("Ready");
         }
         catch (Exception ex)
@@ -88,6 +94,12 @@ public class UnauthenticatedScript : MonoBehaviour
         {
             ShowOutput($"ConfirmCode() error: {ex.Message}");
         }
+    }
+
+    public void Logout()
+    {
+        passport.Logout();
+        logoutButton.gameObject.SetActive(false);
     }
 
     private void NavigateToAuthenticatedScene()

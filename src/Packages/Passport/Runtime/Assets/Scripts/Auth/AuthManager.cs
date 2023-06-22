@@ -15,6 +15,7 @@ namespace Immutable.Passport.Auth
         public void Logout();
         public UniTask<User> ConfirmCode();
         public User? GetUser();
+        public bool HasCredentialsSaved();
         
     }
     public class AuthManager : IAuthManager
@@ -25,9 +26,9 @@ namespace Immutable.Passport.Auth
         private const string TAG_GET_TOKEN = "[Get Token]";
         private const string TAG_GET_REFRESH_TOKEN = "[Refresh Token]";
 
-        private const string DOMAIN = "https://auth.immutable.com";
-        private const string PATH_AUTH_CODE = "/oauth/device/code";
-        private const string PATH_TOKEN = "/oauth/token";
+        public const string DOMAIN = "https://auth.immutable.com";
+        public const string PATH_AUTH_CODE = "/oauth/device/code";
+        public const string PATH_TOKEN = "/oauth/token";
 
         private const string CLIENT_ID = "ZJL7JvetcDFBNDlgRs5oJoxuAUUl6uQj";
         private const string SCOPE = "openid offline_access profile email transact";
@@ -293,6 +294,14 @@ namespace Immutable.Passport.Auth
         public User? GetUser()
         {
             return user;
+        }
+
+        /// <summary>
+        /// Checks if credentials exist but does not check if they're valid
+        /// </summary>
+        public bool HasCredentialsSaved()
+        {
+            return manager.GetCredentials() != null;
         }
     }
 }

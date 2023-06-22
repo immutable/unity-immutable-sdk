@@ -128,6 +128,14 @@ namespace Immutable.Passport
             GetPassportImpl().Logout();
         }
 
+        /// <summary>
+        /// Checks if credentials exist but does not check if they're valid
+        /// </summary>
+        public bool HasCredentialsSaved()
+        {
+            return GetPassportImpl().HasCredentialsSaved();
+        }
+
         public string? GetAccessToken()
         {
             return GetPassportImpl().GetAccessToken();
