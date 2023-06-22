@@ -22,8 +22,11 @@ namespace Immutable.Passport
         internal static string DEVICE_CODE = "deviceCode";
         internal static string ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6Ikp" + 
             "vaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjEyM30.kRqQkJudxgI3koJAp9K4ENp6E2ExFQ5VchogaTWx6Fk";
+        internal static string ACCESS_TOKEN_KEY = "accessToken";
         internal static string REFRESH_TOKEN = "refreshToken";
+        internal static string REFRESH_TOKEN_KEY = "refreshToken";
         internal static string ID_TOKEN = "idToken";
+        internal static string ID_TOKEN_KEY = "idToken";
         internal static string ADDRESS = "0xaddress";
         internal static string SIGNATURE = "0xsignature";
         internal static string MESSAGE = "message";
@@ -57,9 +60,9 @@ namespace Immutable.Passport
             auth.user = new User(ID_TOKEN, ACCESS_TOKEN, REFRESH_TOKEN);
             Assert.Null(await passport.Connect());
             Assert.AreEqual(PassportFunction.GET_IMX_PROVIDER, communicationsManager.fxName);
-            Assert.True(communicationsManager.data.Contains($"\"idToken\":\"{auth.user.idToken}\""));
-            Assert.True(communicationsManager.data.Contains($"\"accessToken\":\"{auth.user.accessToken}\""));
-            Assert.True(communicationsManager.data.Contains($"\"refreshToken\":\"{auth.user.refreshToken}\""));
+            Assert.True(communicationsManager.data.Contains($"\"{ID_TOKEN_KEY}\":\"{auth.user.idToken}\""));
+            Assert.True(communicationsManager.data.Contains($"\"{ACCESS_TOKEN_KEY}\":\"{auth.user.accessToken}\""));
+            Assert.True(communicationsManager.data.Contains($"\"{REFRESH_TOKEN_KEY}\":\"{auth.user.refreshToken}\""));
         }
 
         [Test]
@@ -90,9 +93,9 @@ namespace Immutable.Passport
             auth.user = new User(ID_TOKEN, ACCESS_TOKEN, REFRESH_TOKEN);
             Assert.Null(await passport.Connect());
             Assert.AreEqual(PassportFunction.GET_IMX_PROVIDER, communicationsManager.fxName);
-            Assert.True(communicationsManager.data.Contains($"\"idToken\":\"{auth.user.idToken}\""));
-            Assert.True(communicationsManager.data.Contains($"\"accessToken\":\"{auth.user.accessToken}\""));
-            Assert.True(communicationsManager.data.Contains($"\"refreshToken\":\"{auth.user.refreshToken}\""));
+            Assert.True(communicationsManager.data.Contains($"\"{ID_TOKEN_KEY}\":\"{auth.user.idToken}\""));
+            Assert.True(communicationsManager.data.Contains($"\"{ACCESS_TOKEN_KEY}\":\"{auth.user.accessToken}\""));
+            Assert.True(communicationsManager.data.Contains($"\"{REFRESH_TOKEN_KEY}\":\"{auth.user.refreshToken}\""));
         }
 
         [Test]
