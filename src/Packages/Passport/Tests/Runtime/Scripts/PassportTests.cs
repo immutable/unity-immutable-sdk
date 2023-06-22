@@ -207,6 +207,7 @@ namespace Immutable.Passport
         public User? user = null;
         public string? deviceCode = null;
         public bool logoutCalled = false;
+        public bool hasCredentialsSaved = false;
 
         public async UniTask<string?> Login()
         {
@@ -226,6 +227,11 @@ namespace Immutable.Passport
         public User? GetUser()
         {
             return user;
+        }
+
+        public bool HasCredentialsSaved()
+        {
+            return hasCredentialsSaved;
         }
     }
 

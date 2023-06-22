@@ -15,6 +15,7 @@ namespace Immutable.Passport.Auth
         public void Logout();
         public UniTask<User> ConfirmCode();
         public User? GetUser();
+        public bool HasCredentialsSaved();
         
     }
     public class AuthManager : IAuthManager
@@ -293,6 +294,14 @@ namespace Immutable.Passport.Auth
         public User? GetUser()
         {
             return user;
+        }
+
+        /// <summary>
+        /// Checks if credentials exist but does not check if they're valid
+        /// </summary>
+        public bool HasCredentialsSaved()
+        {
+            return manager.GetCredentials() != null;
         }
     }
 }

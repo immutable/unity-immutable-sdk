@@ -78,6 +78,11 @@ namespace Immutable.Passport
             auth.Logout();
         }
 
+        public bool HasCredentialsSaved()
+        {
+            return auth.HasCredentialsSaved();
+        }
+
 
         public string? GetAccessToken()
         {
