@@ -66,7 +66,7 @@ namespace Immutable.Passport
         {
             try
             {
-                communicationsManager = new BrowserCommunicationsManager(webBrowserClient);
+                BrowserCommunicationsManager communicationsManager = new BrowserCommunicationsManager(webBrowserClient);
                 communicationsManager.OnReady += () => readySignalReceived = true;
                 await webBrowserClient.Init();
                 passportImpl = new PassportImpl(new AuthManager(), communicationsManager);
@@ -100,7 +100,7 @@ namespace Immutable.Passport
         /// </summary>
         public void setCallTimeout(int ms) 
         {
-            GetBrowserCommunicationsManager().callTimeout = ms;
+            (GetPassportImpl().communicationsManager as BrowserCommunicationsManager).callTimeout = ms;
         }
 
         /// <summary>
