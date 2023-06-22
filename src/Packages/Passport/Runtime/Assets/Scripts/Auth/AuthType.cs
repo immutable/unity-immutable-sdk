@@ -25,7 +25,7 @@ namespace Immutable.Passport.Auth
         public int expires_in { get; set; }
     }
 
-    internal class AccessTokenPayload
+    internal class TokenPayload
     {
         public long? exp { get; set; }
     }

@@ -68,7 +68,7 @@ namespace Immutable.Passport.Auth
             TokenResponse? savedCreds = manager.GetCredentials();
             if (savedCreds != null && manager.HasValidCredentials())
             {
-                Debug.Log($"{TAG} Access token exists and is still valid");
+                Debug.Log($"{TAG} Tokens exist and are still valid");
                 user = savedCreds.ToUser();
                 return null;
             }
@@ -86,7 +86,8 @@ namespace Immutable.Passport.Auth
                 catch (Exception)
                 {
                     Debug.Log($"{TAG} Token refresh failed");
-                    // Fallback to device code below
+                    // Clear everything and fallback to device code below
+                    manager.ClearCredentials();
                 }
             }
 

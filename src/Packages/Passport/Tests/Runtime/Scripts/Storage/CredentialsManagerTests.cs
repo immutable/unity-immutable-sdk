@@ -10,10 +10,15 @@ namespace Immutable.Passport.Storage
     [TestFixture]
     public class CredentialsManagerTests
     {
-        internal static string ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6Ikp" + 
-            "vaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjEyM30.kRqQkJudxgI3koJAp9K4ENp6E2ExFQ5VchogaTWx6Fk";
+        internal static string ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6Ikp" +
+            "vaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjcyMDB9.zKW_cyLXjQ0Vbc7LsrHGo6fIUfCy9QQhFNdKN5JxlZY";
+        internal static string INVALID_ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmF" + 
+            "tZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjB9.JWKPB-5Q8rTYzl-MfhRGpP9WpDpQxC7JkIAGFMDZnpg";
         internal static string REFRESH_TOKEN = "refreshToken";
-        internal static string ID_TOKEN = "idToken";
+        internal static string ID_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwibmFtZSI6IklEIHRva2VuIiwiZXh" + 
+            "wIjo3MjAwfQ.k4THNItPrrW7g5WmbBhRlpUwW1_dRpg1Zwg6jBVAvnA";
+        internal static string INVALID_ID_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwibmFtZSI6IklEIHRva2V" + 
+            "uIiwiZXhwIjowfQ.DHDYnvJ9M8UMNeRD95oBQX91yn_snlMEpdK_qqilDB0";
         internal static string TOKEN_TYPE = "Bearer";
         internal static int EXPIRES_IN = 86400;
         internal static string SET_STRING = "SetString";
@@ -96,9 +101,40 @@ namespace Immutable.Passport.Storage
         }
 
         [Test]
-        public void HasValidCredentialsTest_Invalid()
+        public void HasValidCredentialsTest_BothInvalid()
         {
-            manager.mockCurrentTimeSeconds = 999;
+            manager.mockCurrentTimeSeconds = 3600;
+            Assert.False(manager.HasValidCredentials());
+
+            manager.mockCurrentTimeSeconds = 9999;
+            Assert.False(manager.HasValidCredentials());
+        }
+
+        [Test]
+        public void HasValidCredentialsTest_InvalidAccessToken()
+        {
+            manager.mockCurrentTimeSeconds = 1;
+            manager.mockToken = new TokenResponse() {
+                access_token = CredentialsManagerTests.INVALID_ACCESS_TOKEN,
+                refresh_token = CredentialsManagerTests.REFRESH_TOKEN,
+                id_token = CredentialsManagerTests.ID_TOKEN,
+                token_type = CredentialsManagerTests.TOKEN_TYPE,
+                expires_in = CredentialsManagerTests.EXPIRES_IN
+            };
+            Assert.False(manager.HasValidCredentials());
+        }
+
+        [Test]
+        public void HasValidCredentialsTest_InvalidIdToken()
+        {
+            manager.mockCurrentTimeSeconds = 1;
+            manager.mockToken = new TokenResponse() {
+                access_token = CredentialsManagerTests.ACCESS_TOKEN,
+                refresh_token = CredentialsManagerTests.REFRESH_TOKEN,
+                id_token = CredentialsManagerTests.INVALID_ID_TOKEN,
+                token_type = CredentialsManagerTests.TOKEN_TYPE,
+                expires_in = CredentialsManagerTests.EXPIRES_IN
+            };
             Assert.False(manager.HasValidCredentials());
         }
 
@@ -116,6 +152,7 @@ namespace Immutable.Passport.Storage
 
         private PlayerPrefsDelegate onPlayerPrefs;
         public string? mockTokenJson;
+        public TokenResponse? mockToken;
         public long mockCurrentTimeSeconds = 0;
 
         public TestableCredentialsManager(PlayerPrefsDelegate onPlayerPrefs) {
@@ -128,7 +165,7 @@ namespace Immutable.Passport.Storage
         }
 
         protected override TokenResponse DeserializeTokenResponse(string json) {
-            return new TokenResponse() {
+            return mockToken ?? new TokenResponse() {
                 access_token = CredentialsManagerTests.ACCESS_TOKEN,
                 refresh_token = CredentialsManagerTests.REFRESH_TOKEN,
                 id_token = CredentialsManagerTests.ID_TOKEN,
