@@ -25,7 +25,7 @@ public class UnauthenticatedScript : MonoBehaviour
             userCodeText.gameObject.SetActive(false);
             proceedLoginButton.gameObject.SetActive(false);
 
-            passport = await Passport.Init();
+            passport = await Passport.Initialise();
             connectButton.gameObject.SetActive(true);
             ShowOutput("Ready");
         }
