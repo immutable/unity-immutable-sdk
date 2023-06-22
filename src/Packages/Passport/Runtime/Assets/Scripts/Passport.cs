@@ -15,16 +15,6 @@ namespace Immutable.Passport
         private const string TAG = "[Passport]";
         private const string GAME_OBJECT_NAME = "Passport";
 
-        private const string INITIAL_URL = "https://www.immutable.com/";
-        private const string SCHEME_FILE = "file:///";
-        private const string PASSPORT_PACKAGE_RESOURCES_DIRECTORY = "Packages/com.immutable.passport/Runtime/Assets/Resources";
-#pragma warning disable IDE0051
-#if UNITY_STANDALONE_WIN
-        private const string PASSPORT_DATA_DIRECTORY_NAME = "/Passport";
-#endif
-#pragma warning restore IDE0051
-        private const string PASSPORT_HTML_FILE_NAME = "/passport.html";
-
         public static Passport? Instance { get; private set; }
 
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
@@ -76,11 +66,9 @@ namespace Immutable.Passport
         {
             try
             {
-                await webBrowserClient.Init();
-                webBrowserClient.OnLoadFinish += OnLoadFinish;
-
                 communicationsManager = new BrowserCommunicationsManager(webBrowserClient);
                 communicationsManager.OnReady += () => readySignalReceived = true;
+                await webBrowserClient.Init();
             }
             catch (Exception ex)
             {
@@ -104,25 +92,6 @@ namespace Immutable.Passport
             webBrowserClient.Dispose();
         }
 #pragma warning restore IDE0051
-
-        private void OnLoadFinish(string url)
-        {
-            Debug.Log($"{TAG} On load finish: {url}");
-            if (url.StartsWith(INITIAL_URL))
-            {
-                string filePath = "";
-#if UNITY_EDITOR
-                filePath = SCHEME_FILE + Path.GetFullPath($"{PASSPORT_PACKAGE_RESOURCES_DIRECTORY}{PASSPORT_HTML_FILE_NAME}");
-#else
-#if UNITY_STANDALONE_WIN
-                filePath = SCHEME_FILE + Path.GetFullPath(Application.dataPath) + PASSPORT_DATA_DIRECTORY_NAME + PASSPORT_HTML_FILE_NAME;
-#endif     
-#endif
-                webBrowserClient.LoadUrl(filePath);
-                // Clean up listener
-                webBrowserClient.OnLoadFinish -= OnLoadFinish;
-            }
-        }
 
         /// <summary>
         /// Connects the user to Passport.

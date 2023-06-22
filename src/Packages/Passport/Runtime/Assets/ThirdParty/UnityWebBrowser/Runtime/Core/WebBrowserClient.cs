@@ -63,11 +63,21 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         private const string ENGINE_APP_NAME = "UnityWebBrowser.Engine.Cef";
         public static string ENGINE_FILE_LOCATION = "Packages/com.immutable.passport/Runtime/Assets/ThirdParty/UnityWebBrowser.Engine.Cef.Win-x64/Engine/";
 
+        private const string SCHEME_FILE = "file:///";
+        private const string PASSPORT_PACKAGE_RESOURCES_DIRECTORY = "Packages/com.immutable.passport/Runtime/Assets/Resources";
+#pragma warning disable IDE0051
+#if UNITY_STANDALONE_WIN
+        private const string PASSPORT_DATA_DIRECTORY_NAME = "/Passport";
+#endif
+#pragma warning restore IDE0051
+        private const string PASSPORT_HTML_FILE_NAME = "/passport.html";
+        private const string INITIAL_URL = "https://www.immutable.com/";
+
         /// <summary>
         ///     The initial URl the browser will start at
         /// </summary>
         [Tooltip("The initial URl the browser will start at")]
-        public string initialUrl = "https://www.immutable.com";
+        public string initialUrl = INITIAL_URL;
 
         #region Resoltuion
 
@@ -322,6 +332,15 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             WebBrowserArgsBuilder argsBuilder = new();
 
             //Initial URL
+            string filePath = "";
+#if UNITY_EDITOR
+            filePath = SCHEME_FILE + Path.GetFullPath($"{PASSPORT_PACKAGE_RESOURCES_DIRECTORY}{PASSPORT_HTML_FILE_NAME}");
+#else
+#if UNITY_STANDALONE_WIN
+            filePath = SCHEME_FILE + Path.GetFullPath(Application.dataPath) + PASSPORT_DATA_DIRECTORY_NAME + PASSPORT_HTML_FILE_NAME;
+#endif     
+#endif
+            initialUrl = filePath;
             argsBuilder.AppendArgument("initial-url", initialUrl, true);
 
             //Width & Height
