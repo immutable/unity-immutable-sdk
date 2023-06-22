@@ -1,5 +1,4 @@
 using System;
-using UnityEngine;
 using VoltstroStudios.UnityWebBrowser.Core;
 using Immutable.Passport.Auth;
 using Newtonsoft.Json;
@@ -7,13 +6,15 @@ using System.IO;
 using Immutable.Passport.Model;
 using Immutable.Passport.Core;
 using Cysharp.Threading.Tasks;
+#if UNITY_EDITOR
+using UnityEngine;
+#endif
 
 namespace Immutable.Passport
 {
-    public class Passport : MonoBehaviour
+    public class Passport
     {
         private const string TAG = "[Passport]";
-        private const string GAME_OBJECT_NAME = "Passport";
 
         public static Passport? Instance { get; private set; }
 
@@ -26,22 +27,25 @@ namespace Immutable.Passport
         // private readonly AuthManager auth = new();
         private PassportImpl? passportImpl = null;
 
+        /// <summary>
+        /// <param name="productName">The name of the game. This is used to clean up resources associated with
+        /// Passport when the game quits. Use Application.productName.</param>
+        /// </summary> 
         private Passport()
         {
+#if UNITY_EDITOR
+            Application.quitting += OnQuit;
+#endif
         }
 
         public static UniTask<Passport> Init()
         {
             if (Instance == null)
             {
-                // Create game object, so we dispose the browser on destroy
-                GameObject go = new(GAME_OBJECT_NAME);
-                // Add passport to the game object
-                go.AddComponent<Passport>();
-                // Save passport instance
-                Instance = go.GetComponent<Passport>();
+                Instance = new Passport();
+                Instance.Initialise();
             }
-            else
+            else 
             {
                 readySignalReceived = true;
             }
@@ -61,9 +65,7 @@ namespace Immutable.Passport
                 });
         }
 
-#pragma warning disable IDE0051
-        private async void Start()
-        {
+        private async void Initialise() {
             try
             {
                 BrowserCommunicationsManager communicationsManager = new BrowserCommunicationsManager(webBrowserClient);
@@ -73,29 +75,24 @@ namespace Immutable.Passport
             }
             catch (Exception ex)
             {
-                Debug.Log($"{TAG} Failed to initialise browser: {ex.Message}");
-
                 // Reset values
                 readySignalReceived = false;
                 Instance = null;
-                Destroy(this.gameObject);
             }
         }
 
-        private void Awake()
+#if UNITY_EDITOR
+        private void OnQuit()
         {
-            // Keep this alive in every scene
-            DontDestroyOnLoad(this.gameObject);
-        }
-
-        private void OnDestroy()
-        {
+            // Need to clean up UWB resources when quitting the game in the editor
+            // as the child engine process would still be alive
+            Debug.Log($"{TAG} Quitting the Player");
             webBrowserClient.Dispose();
         }
-#pragma warning restore IDE0051
+#endif
 
         /// <summary>
-        ///     Sets the timeout time for waiting for each call to respond (in milliseconds).
+        ///     Sets the timeout time for` waiting for each call to respond (in milliseconds).
         ///     This only applies to functions that uses the browser communications manager.
         /// </summary>
         public void setCallTimeout(int ms) 
