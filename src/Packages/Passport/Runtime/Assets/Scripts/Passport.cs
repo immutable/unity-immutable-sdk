@@ -80,6 +80,7 @@ namespace Immutable.Passport
                 webBrowserClient.OnLoadFinish += OnLoadFinish;
 
                 communicationsManager = new BrowserCommunicationsManager(webBrowserClient);
+                communicationsManager.OnReady += () => readySignalReceived = true;
             }
             catch (Exception ex)
             {
@@ -109,9 +110,6 @@ namespace Immutable.Passport
             Debug.Log($"{TAG} On load finish: {url}");
             if (url.StartsWith(INITIAL_URL))
             {
-                Debug.Log($"{TAG} Browser is ready");
-                // Browser is considered ready to load local HTML file
-                // Once the initial URL is loaded 
                 string filePath = "";
 #if UNITY_EDITOR
                 filePath = SCHEME_FILE + Path.GetFullPath($"{PASSPORT_PACKAGE_RESOURCES_DIRECTORY}{PASSPORT_HTML_FILE_NAME}");
@@ -121,7 +119,6 @@ namespace Immutable.Passport
 #endif     
 #endif
                 webBrowserClient.LoadUrl(filePath);
-                readySignalReceived = true;
                 // Clean up listener
                 webBrowserClient.OnLoadFinish -= OnLoadFinish;
             }

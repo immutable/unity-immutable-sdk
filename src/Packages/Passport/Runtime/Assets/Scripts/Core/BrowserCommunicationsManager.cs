@@ -6,14 +6,22 @@ using VoltstroStudios.UnityWebBrowser.Core;
 using Immutable.Passport.Model;
 using UnityEngine;
 using Newtonsoft.Json;
+using Immutable.Passport;
 
 namespace Immutable.Passport.Core
 {
+    public delegate void OnBrowserReadyDelegate();
     public class BrowserCommunicationsManager
     {
         private const string TAG = "[Browser Communications Manager]";
+
+        // Used to notify that index.js file is loaded
+        public const string INIT = "init";
+        public const string INIT_REQUEST_ID = "1";
+
         private readonly IDictionary<string, UniTaskCompletionSource<string>> requestTaskMap = new Dictionary<string, UniTaskCompletionSource<string>>();
         private readonly IWebBrowserClient webBrowserClient;
+        public event OnBrowserReadyDelegate OnReady;
 
         public BrowserCommunicationsManager(IWebBrowserClient webBrowserClient)
         {
@@ -51,7 +59,7 @@ namespace Immutable.Passport.Core
 
         private void OnUnityPostMessage(string message)
         {
-            Debug.Log($"[Unity] OnUnityPostMessage: {message}");
+            Debug.Log($"{TAG} OnUnityPostMessage: {message}");
             HandleResponse(message);
         }
 
@@ -61,7 +69,17 @@ namespace Immutable.Passport.Core
 
             // Check if the reponse returned is valid and the task to return the reponse exists
             if (response == null || response.responseFor == null || response.requestId == null)
+            {
+                Debug.Log($"{TAG} Response from browser is incorrect. Check HTML/JS files.");
                 return;
+            }
+
+            // Special case to detect if index.js is loaded
+            if (response.responseFor == INIT && response.requestId == INIT_REQUEST_ID) {
+                Debug.Log($"{TAG} Browser is ready");
+                OnReady?.Invoke();
+                return;
+            }
 
             string requestId = response.requestId;
             PassportException? exception = ParseError(response);
