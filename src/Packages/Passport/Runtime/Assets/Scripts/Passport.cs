@@ -38,12 +38,12 @@ namespace Immutable.Passport
 #endif
         }
 
-        public static UniTask<Passport> Initialise()
+        public static UniTask<Passport> Init()
         {
             if (Instance == null)
             {
                 Instance = new Passport();
-                Instance.Init();
+                Instance.Initialise();
             }
             else 
             {
@@ -65,7 +65,7 @@ namespace Immutable.Passport
                 });
         }
 
-        private async void Init() {
+        private async void Initialise() {
             try
             {
                 BrowserCommunicationsManager communicationsManager = new BrowserCommunicationsManager(webBrowserClient);
