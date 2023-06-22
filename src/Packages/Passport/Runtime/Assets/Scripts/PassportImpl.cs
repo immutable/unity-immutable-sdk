@@ -10,7 +10,7 @@ using Cysharp.Threading.Tasks;
 
 namespace Immutable.Passport
 {
-    internal class PassportImpl
+    public class PassportImpl
     {
         private IAuthManager auth;
         private IBrowserCommunicationsManager communicationsManager;
