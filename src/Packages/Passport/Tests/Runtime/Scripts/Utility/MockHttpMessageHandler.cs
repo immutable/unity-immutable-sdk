@@ -13,10 +13,10 @@ namespace Immutable.Passport.Utility.Tests
     internal class MockHttpMessageHandler : HttpMessageHandler
     {
         // Requests made in order
-        public List<HttpRequestMessage> requests { get; private set; } = new List<HttpRequestMessage>(); 
+        public List<HttpRequestMessage> Requests { get; private set; } = new List<HttpRequestMessage>(); 
         
         // Responses to return matching request order 
-        public List<HttpResponseMessage> responses { get; private set; } = new List<HttpResponseMessage>();
+        public List<HttpResponseMessage> Responses { get; private set; } = new List<HttpResponseMessage>();
 
         public MockHttpMessageHandler()
         {
@@ -36,9 +36,9 @@ namespace Immutable.Passport.Utility.Tests
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             // Debug.Log("Request made: " + request.RequestUri);
-            requests.Add(request);
-            if (requests.Count <= responses.Count) {
-                return Task.FromResult(responses[requests.Count - 1]);
+            Requests.Add(request);
+            if (Requests.Count <= Responses.Count) {
+                return Task.FromResult(Responses[Requests.Count - 1]);
             }
 
             return Task.FromException<HttpResponseMessage>(new Exception($"No response for this request: {request.RequestUri}"));

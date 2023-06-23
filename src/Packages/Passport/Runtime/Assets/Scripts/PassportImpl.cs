@@ -12,7 +12,7 @@ namespace Immutable.Passport
 {
     public class PassportImpl
     {
-        private IAuthManager auth;
+        private readonly IAuthManager auth;
         public readonly IBrowserCommunicationsManager communicationsManager;
 
         public PassportImpl(IAuthManager authManager, IBrowserCommunicationsManager communicationsManager)

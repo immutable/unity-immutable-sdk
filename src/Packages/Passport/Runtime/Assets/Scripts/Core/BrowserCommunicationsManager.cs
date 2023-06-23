@@ -14,6 +14,7 @@ namespace Immutable.Passport.Core
     
     public interface IBrowserCommunicationsManager
     {
+        public void SetCallTimeout(int ms);
         public UniTask<string> Call(string fxName, string? data = null);
     }
 
@@ -27,13 +28,13 @@ namespace Immutable.Passport.Core
 
         private readonly IDictionary<string, UniTaskCompletionSource<string>> requestTaskMap = new Dictionary<string, UniTaskCompletionSource<string>>();
         private readonly IWebBrowserClient webBrowserClient;
-        public event OnBrowserReadyDelegate OnReady;
+        public event OnBrowserReadyDelegate? OnReady;
 
         /// <summary>
         ///     Timeout time for waiting for each call to respond in milliseconds
         ///     Default value: 1 minute
         /// </summary>
-        public int callTimeout = 60000;
+        private int callTimeout = 60000;
 
         public BrowserCommunicationsManager(IWebBrowserClient webBrowserClient)
         {
@@ -42,6 +43,11 @@ namespace Immutable.Passport.Core
         }
 
         #region Unity to Browser
+
+        public void SetCallTimeout(int ms)
+        {
+            callTimeout = ms;
+        }
 
         public UniTask<string> Call(string fxName, string? data = null)
         {
