@@ -27,7 +27,7 @@ namespace Immutable.Passport.Storage
         internal static string TOKEN_JSON = $@"{{""access_token"":""{ACCESS_TOKEN}"",""refresh_token"":""{REFRESH_TOKEN}""," +
             $@"""id_token"":""{ID_TOKEN}"",""token_type"":""{TOKEN_TYPE}"",""expires_in"":{EXPIRES_IN}}}";
 
-        private TokenResponse tokenResponse = new TokenResponse() {
+        private readonly TokenResponse tokenResponse = new() {
             access_token = ACCESS_TOKEN,
             refresh_token = REFRESH_TOKEN,
             id_token = ID_TOKEN,
@@ -35,9 +35,11 @@ namespace Immutable.Passport.Storage
             expires_in = EXPIRES_IN
         };
         
-        private string playPrefsFunctionCalled = null;
-        private string[] playPrefsFunctionValues = null;
+        private string? playPrefsFunctionCalled = null;
+        private string[]? playPrefsFunctionValues = null;
+#pragma warning disable CS8618
         private TestableCredentialsManager manager;
+#pragma warning restore CS8618
 
         [SetUp] 
         public void Init()
@@ -66,11 +68,12 @@ namespace Immutable.Passport.Storage
 
             Assert.AreEqual(GET_STRING, playPrefsFunctionCalled);
             Assert.AreEqual(new string[]{CredentialsManager.KEY_PREFS_CREDENTIALS, ""}, playPrefsFunctionValues);
-            Assert.AreEqual(ACCESS_TOKEN, actualTokenResponse.access_token);
-            Assert.AreEqual(REFRESH_TOKEN, actualTokenResponse.refresh_token);
-            Assert.AreEqual(ID_TOKEN, actualTokenResponse.id_token);
-            Assert.AreEqual(TOKEN_TYPE, actualTokenResponse.token_type);
-            Assert.AreEqual(EXPIRES_IN, actualTokenResponse.expires_in);
+            Assert.NotNull(actualTokenResponse);
+            Assert.AreEqual(ACCESS_TOKEN, actualTokenResponse?.access_token);
+            Assert.AreEqual(REFRESH_TOKEN, actualTokenResponse?.refresh_token);
+            Assert.AreEqual(ID_TOKEN, actualTokenResponse?.id_token);
+            Assert.AreEqual(TOKEN_TYPE, actualTokenResponse?.token_type);
+            Assert.AreEqual(EXPIRES_IN, actualTokenResponse?.expires_in);
         }
 
         [Test]
@@ -150,7 +153,7 @@ namespace Immutable.Passport.Storage
 
     class TestableCredentialsManager : CredentialsManager {
 
-        private PlayerPrefsDelegate onPlayerPrefs;
+        private readonly PlayerPrefsDelegate onPlayerPrefs;
         public string? mockTokenJson;
         public TokenResponse? mockToken;
         public long mockCurrentTimeSeconds = 0;

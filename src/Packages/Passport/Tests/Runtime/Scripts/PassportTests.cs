@@ -31,9 +31,11 @@ namespace Immutable.Passport
         internal static string SIGNATURE = "0xsignature";
         internal static string MESSAGE = "message";
 
+#pragma warning disable CS8618
         private MockAuthManager auth;
         private MockBrowserCommsManager communicationsManager;
         private PassportImpl passport;
+#pragma warning restore CS8618
 
         [SetUp] 
         public void Init()
@@ -53,16 +55,18 @@ namespace Immutable.Passport
         [Test]
         public async Task Connect_Success_ExistingCredentials()
         {
-            var response = new Response();
-            response.success = true;
+            var response = new Response
+            {
+                success = true
+            };
             auth.deviceCode = null;
             communicationsManager.response = JsonConvert.SerializeObject(response);
             auth.user = new User(ID_TOKEN, ACCESS_TOKEN, REFRESH_TOKEN);
             Assert.Null(await passport.Connect());
             Assert.AreEqual(PassportFunction.GET_IMX_PROVIDER, communicationsManager.fxName);
-            Assert.True(communicationsManager.data.Contains($"\"{ID_TOKEN_KEY}\":\"{auth.user.idToken}\""));
-            Assert.True(communicationsManager.data.Contains($"\"{ACCESS_TOKEN_KEY}\":\"{auth.user.accessToken}\""));
-            Assert.True(communicationsManager.data.Contains($"\"{REFRESH_TOKEN_KEY}\":\"{auth.user.refreshToken}\""));
+            Assert.True(communicationsManager.data?.Contains($"\"{ID_TOKEN_KEY}\":\"{auth.user.idToken}\"") == true);
+            Assert.True(communicationsManager.data?.Contains($"\"{ACCESS_TOKEN_KEY}\":\"{auth.user.accessToken}\"") == true);
+            Assert.True(communicationsManager.data?.Contains($"\"{REFRESH_TOKEN_KEY}\":\"{auth.user.refreshToken}\"") == true);
         }
 
         [Test]
@@ -87,15 +91,17 @@ namespace Immutable.Passport
         [Test]
         public async Task ConfirmCode_Success()
         {
-            var response = new Response();
-            response.success = true;
+            var response = new Response
+            {
+                success = true
+            };
             communicationsManager.response = JsonConvert.SerializeObject(response);
             auth.user = new User(ID_TOKEN, ACCESS_TOKEN, REFRESH_TOKEN);
             Assert.Null(await passport.Connect());
             Assert.AreEqual(PassportFunction.GET_IMX_PROVIDER, communicationsManager.fxName);
-            Assert.True(communicationsManager.data.Contains($"\"{ID_TOKEN_KEY}\":\"{auth.user.idToken}\""));
-            Assert.True(communicationsManager.data.Contains($"\"{ACCESS_TOKEN_KEY}\":\"{auth.user.accessToken}\""));
-            Assert.True(communicationsManager.data.Contains($"\"{REFRESH_TOKEN_KEY}\":\"{auth.user.refreshToken}\""));
+            Assert.True(communicationsManager.data?.Contains($"\"{ID_TOKEN_KEY}\":\"{auth.user.idToken}\"") == true);
+            Assert.True(communicationsManager.data?.Contains($"\"{ACCESS_TOKEN_KEY}\":\"{auth.user.accessToken}\"") == true);
+            Assert.True(communicationsManager.data?.Contains($"\"{REFRESH_TOKEN_KEY}\":\"{auth.user.refreshToken}\"") == true);
         }
 
         [Test]
@@ -117,9 +123,11 @@ namespace Immutable.Passport
         [Test]
         public async Task GetAddress_Success()
         {
-            var response = new AddressResponse();
-            response.success = true;
-            response.address = ADDRESS;
+            var response = new AddressResponse
+            {
+                success = true,
+                address = ADDRESS
+            };
             communicationsManager.response = JsonConvert.SerializeObject(response);
             var address = await passport.GetAddress();
             Assert.AreEqual(ADDRESS, address);
@@ -139,7 +147,7 @@ namespace Immutable.Passport
 
         [Test]
         
-        public async Task Logout_Success()
+        public void Logout_Success()
         {
             Assert.False(auth.logoutCalled);
             passport.Logout();
@@ -147,7 +155,7 @@ namespace Immutable.Passport
         }
 
         [Test]
-        public async Task GetAccessToken_Success()
+        public void GetAccessToken_Success()
         {
             auth.user = new User(ID_TOKEN, ACCESS_TOKEN, REFRESH_TOKEN);
             var accessToken = passport.GetAccessToken();
@@ -155,7 +163,7 @@ namespace Immutable.Passport
         }
 
         [Test]
-        public async Task GetAccessToken_Failed()
+        public void GetAccessToken_Failed()
         {
             auth.user = null;
             var accessToken = passport.GetAccessToken();
@@ -171,7 +179,7 @@ namespace Immutable.Passport
         }
 
         [Test]
-        public async Task GetIdToken_Failed()
+        public void GetIdToken_Failed()
         {
             auth.user = null;
             var idToken = passport.GetIdToken();
@@ -181,9 +189,11 @@ namespace Immutable.Passport
         [Test]
         public async Task SignMessage_Success()
         {
-            var response = new StringResponse();
-            response.success = true;
-            response.result = SIGNATURE;
+            var response = new StringResponse
+            {
+                success = true,
+                result = SIGNATURE
+            };
             communicationsManager.response = JsonConvert.SerializeObject(response);
             var signature = await passport.SignMessage(MESSAGE);
             Assert.AreEqual(SIGNATURE, signature);
@@ -209,9 +219,9 @@ namespace Immutable.Passport
         public bool logoutCalled = false;
         public bool hasCredentialsSaved = false;
 
-        public async UniTask<string?> Login()
+        public UniTask<string?> Login()
         {
-            return deviceCode;
+            return UniTask.FromResult(deviceCode);
         }
 
         public void Logout()
@@ -219,9 +229,9 @@ namespace Immutable.Passport
             logoutCalled = true;
         }
 
-        public async UniTask<User> ConfirmCode()
+        public UniTask<User> ConfirmCode()
         {
-            return user;
+            return UniTask.FromResult(user);
         }
 
         public User? GetUser()
@@ -239,12 +249,16 @@ namespace Immutable.Passport
     {
         public string response = "";
         public string fxName = "";
-        public string data = "";
-        public async UniTask<string> Call(string fxName, string? data = null)
+        public string? data = "";
+        public UniTask<string> Call(string fxName, string? data = null)
         {
             this.fxName = fxName;
             this.data = data;
-            return response;
+            return UniTask.FromResult(response);
+        }
+
+        public void SetCallTimeout(int ms)
+        {
         }
     }
 }

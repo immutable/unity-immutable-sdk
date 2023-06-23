@@ -68,12 +68,12 @@ namespace Immutable.Passport
         private async void Initialise() {
             try
             {
-                BrowserCommunicationsManager communicationsManager = new BrowserCommunicationsManager(webBrowserClient);
+                BrowserCommunicationsManager communicationsManager = new(webBrowserClient);
                 communicationsManager.OnReady += () => readySignalReceived = true;
                 await webBrowserClient.Init();
                 passportImpl = new PassportImpl(new AuthManager(), communicationsManager);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Reset values
                 readySignalReceived = false;
@@ -95,9 +95,9 @@ namespace Immutable.Passport
         ///     Sets the timeout time for` waiting for each call to respond (in milliseconds).
         ///     This only applies to functions that uses the browser communications manager.
         /// </summary>
-        public void setCallTimeout(int ms) 
+        public void SetCallTimeout(int ms) 
         {
-            (GetPassportImpl().communicationsManager as BrowserCommunicationsManager).callTimeout = ms;
+            GetPassportImpl().communicationsManager.SetCallTimeout(ms);
         }
 
         /// <summary>
