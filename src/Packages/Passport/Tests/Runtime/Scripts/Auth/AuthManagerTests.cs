@@ -22,22 +22,22 @@ namespace Immutable.Passport.Auth
         internal const string ACCESS_TOKEN = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjNhYVl5dGR3d2UwMzJzMXIzVElyOSJ9." +
             "eyJlbWFpbCI6ImRvbWluaWMubXVycmF5QGltbXV0YWJsZS5jb20iLCJvcmciOiJhNTdiMWYzZC1mYTU3LTRiNzgtODZkYy05ZDEyZDM1YjlhNj" +
             "giLCJldGhlcl9rZXkiOiIweGRlMDYzYmViNmNmNDhlNGMxOTcxYzc3N2M0OGY0NTU3MTA1MjU5ZWMiLCJzdGFya19rZXkiOiIweGM1NTYxZGU3" +
-            "Nzg4NTUxOTY0ZWQxMjI0Yzc2ZjQ5ZDk5ZmVjODkyOGQ1OWVkNTcwZTExZGIwYzk3ZGYwMTFmIiwidXNlcl9hZG1pbl9rZXkiOiIweGY4MjY4OT" + 
-            "I0MWU3NTM1YjYyNTgyMmI4M2I1OWMxZDM3ZWUwOTBiZGMiLCJpc3MiOiJodHRwczovL2F1dGguaW1tdXRhYmxlLmNvbS8iLCJzdWIiOiJlbWFp" + 
-            "bHw2NDJiN2Q0YWI5N2IzYWMyNDg3NzBlNTEiLCJhdWQiOlsicGxhdGZvcm1fYXBpIiwiaHR0cHM6Ly9wcm9kLmltbXV0YWJsZS5hdXRoMGFwcC" + 
+            "Nzg4NTUxOTY0ZWQxMjI0Yzc2ZjQ5ZDk5ZmVjODkyOGQ1OWVkNTcwZTExZGIwYzk3ZGYwMTFmIiwidXNlcl9hZG1pbl9rZXkiOiIweGY4MjY4OT" +
+            "I0MWU3NTM1YjYyNTgyMmI4M2I1OWMxZDM3ZWUwOTBiZGMiLCJpc3MiOiJodHRwczovL2F1dGguaW1tdXRhYmxlLmNvbS8iLCJzdWIiOiJlbWFp" +
+            "bHw2NDJiN2Q0YWI5N2IzYWMyNDg3NzBlNTEiLCJhdWQiOlsicGxhdGZvcm1fYXBpIiwiaHR0cHM6Ly9wcm9kLmltbXV0YWJsZS5hdXRoMGFwcC" +
             "5jb20vdXNlcmluZm8iXSwiaWF0IjoxNjg2ODg5MDgwLCJleHAiOjE2ODY5NzU0ODAsImF6cCI6IlpKTDdKdmV0Y0RGQk5EbGdSczVvSm94dUFV" +
             "VWw2dVFqIiwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCB0cmFuc2FjdCBvZmZsaW5lX2FjY2VzcyJ9.aqFem4Pp0k91YWdYuxBo1wfCr" +
             "YAHy1Y1zIqof2GMQXd_mwhGBkHotUlgFAsOIQmvO6lQG5m3cHLR9zlEsFJ_2AJuJg3NTNnF0dEx12H5hx24_aN4qDga8Q9KNDdGc3x4LAxv48P" +
             "H-P6OcdMnpWekCUPAI3zZ9qWC1YWU9HaouQuBJNbUV8ujyooFGOP4YzejQf2Uyxz9wmzDiMS-e70BSmY8IPRR2A3QjOEo7oI3enqM_jylfbDo8" +
             "BsDRouDbwbZrMeX-rcJ_HBY5iZEdagVpcvOmfZCaad55MI_WJcXHrDMzmLqck1fd15Oklo7fajQtiG0ByINxTmm9_0YnEy02w";
         internal const string REFRESH_TOKEN = "v1.NOQCr0kkmy0Cky_Doia8VgJdclSKOOOrkicjZ4NFeabS5J7xNct-oRwO2H65ua0mPOhzWfIf8lhxlM1sIUBqLoc";
-        internal const string ID_TOKEN = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjNhYVl5dGR3d2UwMzJzMXIzVElyOSJ9.eyJk" + 
+        internal const string ID_TOKEN = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjNhYVl5dGR3d2UwMzJzMXIzVElyOSJ9.eyJk" +
             "ZXZlbG9wZXJfaHViIjp7ImFjdGl2YXRlZCI6dHJ1ZSwib3JnYW5pemF0aW9uIjp7ImlkIjoiYTU3YjFmM2QtZmE1Ny00Yjc4LTg2ZGMtOWQxMm" +
-            "QzNWI5YTY4In0sInJlc3BvbnNlSWQiOiI4MzhiangzOG1maG15cWs3bjgzOGJqeGZrMjdhZXQxMCIsInJlc3BvbnNlcyI6eyJmdW5kaW5nIjoi" + 
-            "UHJlZmVyIG5vdCB0byBzYXkiLCJoYXZlTWludGVkTmZ0c0JlZm9yZSI6Ik5vIiwicGVvcGxlIjoiSnVzdCBtZSIsInByb2plY3RTdGFnZSI6Ik" + 
+            "QzNWI5YTY4In0sInJlc3BvbnNlSWQiOiI4MzhiangzOG1maG15cWs3bjgzOGJqeGZrMjdhZXQxMCIsInJlc3BvbnNlcyI6eyJmdW5kaW5nIjoi" +
+            "UHJlZmVyIG5vdCB0byBzYXkiLCJoYXZlTWludGVkTmZ0c0JlZm9yZSI6Ik5vIiwicGVvcGxlIjoiSnVzdCBtZSIsInByb2plY3RTdGFnZSI6Ik" +
             "NvbmNlcHQiLCJwcm9qZWN0VHlwZSI6Ik90aGVyIiwicm9sZSI6Ik90aGVyIn0sInJvbGVzIjpbXSwidXNlck1ldGFkYXRhIjp7InJlY2VpdmVN" +
-            "YXJrZXRpbmdFbWFpbHNDb25zZW50Ijp7ImNvbnNlbnRlZCI6ZmFsc2UsImRhdGUiOiIyMDIzLTA0LTIwVDAxOjA2OjI2LjgwOFoiLCJ2ZXJzaW" + 
-            "9uIjoxfX19LCJwYXNzcG9ydCI6eyJldGhlcl9rZXkiOiIweGRlMDYzYmViNmNmNDhlNGMxOTcxYzc3N2M0OGY0NTU3MTA1MjU5ZWMiLCJzdGFy" + 
+            "YXJrZXRpbmdFbWFpbHNDb25zZW50Ijp7ImNvbnNlbnRlZCI6ZmFsc2UsImRhdGUiOiIyMDIzLTA0LTIwVDAxOjA2OjI2LjgwOFoiLCJ2ZXJzaW" +
+            "9uIjoxfX19LCJwYXNzcG9ydCI6eyJldGhlcl9rZXkiOiIweGRlMDYzYmViNmNmNDhlNGMxOTcxYzc3N2M0OGY0NTU3MTA1MjU5ZWMiLCJzdGFy" +
             "a19rZXkiOiIweGM1NTYxZGU3Nzg4NTUxOTY0ZWQxMjI0Yzc2ZjQ5ZDk5ZmVjODkyOGQ1OWVkNTcwZTExZGIwYzk3ZGYwMTFmIiwidXNlcl9hZG" +
             "1pbl9rZXkiOiIweGY4MjY4OTI0MWU3NTM1YjYyNTgyMmI4M2I1OWMxZDM3ZWUwOTBiZGMifSwibmlja25hbWUiOiJkb21pbmljLm11cnJheSIs" +
             "Im5hbWUiOiJkb21pbmljLm11cnJheUBpbW11dGFibGUuY29tIiwicGljdHVyZSI6Imh0dHBzOi8vcy5ncmF2YXRhci5jb20vYXZhdGFyL2NkOT" +
@@ -60,23 +60,25 @@ namespace Immutable.Passport.Auth
         private MockHttpMessageHandler httpMock;
         private MockCredentialsManager credentialsManager;
 #pragma warning restore CS8618
-        
-        [SetUp] 
+
+        [SetUp]
         public void Init()
-        { 
+        {
             httpMock = new MockHttpMessageHandler();
             credentialsManager = new MockCredentialsManager();
             manager = new AuthManager(httpMock.ToHttpClient(), credentialsManager);
         }
 
-        private async void PrepareForConfirmCode() {
+        private async void PrepareForConfirmCode()
+        {
             credentialsManager.hasValidCredentials = false;
             credentialsManager.token = null;
             AddDeviceCodeResponse();
             _ = await manager.Login();
         }
 
-        private void AddDeviceCodeResponse() {
+        private void AddDeviceCodeResponse()
+        {
             var deviceCodeResponse = new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent(@$"{{""{KEY_DEVICE_CODE}"": ""{DEVICE_CODE}"",""user_code"": ""{USER_CODE}""," +
@@ -135,7 +137,7 @@ namespace Immutable.Passport.Auth
             string stringContent = await request.Content.ReadAsStringAsync();
             Assert.True(stringContent.Contains($"{KEY_REFRESH_TOKEN}={REFRESH_TOKEN}"));
         }
-        
+
         [Test]
         public async Task Login_Failed_GetDeviceCode()
         {
@@ -144,9 +146,12 @@ namespace Immutable.Passport.Auth
             var deviceCodeResponse = new HttpResponseMessage(HttpStatusCode.NotAcceptable);
             httpMock.Responses.Add(deviceCodeResponse);
             Exception? e = null;
-            try {
+            try
+            {
                 var result = await manager.Login();
-            } catch (Exception exception) {
+            }
+            catch (Exception exception)
+            {
                 e = exception;
             }
             Assert.NotNull(e);
@@ -225,9 +230,12 @@ namespace Immutable.Passport.Auth
             Assert.Null(manager.GetUser());
 
             Exception? e = null;
-            try {
+            try
+            {
                 var result = await manager.ConfirmCode();
-            } catch (Exception exception) {
+            }
+            catch (Exception exception)
+            {
                 e = exception;
                 Debug.Log("Exception: " + e);
             }
@@ -255,9 +263,12 @@ namespace Immutable.Passport.Auth
             Assert.Null(manager.GetUser());
 
             Exception? e = null;
-            try {
+            try
+            {
                 var result = await manager.ConfirmCode();
-            } catch (Exception exception) {
+            }
+            catch (Exception exception)
+            {
                 e = exception;
                 Debug.Log("Exception: " + e);
             }
@@ -279,9 +290,12 @@ namespace Immutable.Passport.Auth
             Assert.Null(manager.GetUser());
 
             Exception? e = null;
-            try {
+            try
+            {
                 var result = await manager.ConfirmCode();
-            } catch (Exception exception) {
+            }
+            catch (Exception exception)
+            {
                 e = exception;
                 Debug.Log("Exception: " + e);
             }
@@ -302,9 +316,12 @@ namespace Immutable.Passport.Auth
             Assert.Null(manager.GetUser());
 
             Exception? e = null;
-            try {
+            try
+            {
                 var result = await manager.ConfirmCode();
-            } catch (Exception exception) {
+            }
+            catch (Exception exception)
+            {
                 e = exception;
                 Debug.Log("Exception: " + e);
             }
@@ -317,7 +334,8 @@ namespace Immutable.Passport.Auth
         {
             Assert.False(manager.HasCredentialsSaved());
 
-            credentialsManager.token = new TokenResponse() {
+            credentialsManager.token = new TokenResponse()
+            {
                 access_token = AuthManagerTests.ACCESS_TOKEN,
                 refresh_token = AuthManagerTests.REFRESH_TOKEN,
                 id_token = AuthManagerTests.ID_TOKEN,
@@ -333,23 +351,28 @@ namespace Immutable.Passport.Auth
         }
     }
 
-    internal class MockCredentialsManager : ICredentialsManager {
+    internal class MockCredentialsManager : ICredentialsManager
+    {
         public bool hasValidCredentials = false;
         public TokenResponse? token = null;
 
-        public void SaveCredentials(TokenResponse tokenResponse) {
+        public void SaveCredentials(TokenResponse tokenResponse)
+        {
             token = tokenResponse;
         }
 
-        public TokenResponse? GetCredentials() {
+        public TokenResponse? GetCredentials()
+        {
             return token;
         }
 
-        public bool HasValidCredentials() {
+        public bool HasValidCredentials()
+        {
             return hasValidCredentials;
         }
 
-        public void ClearCredentials() {
+        public void ClearCredentials()
+        {
 
         }
     }

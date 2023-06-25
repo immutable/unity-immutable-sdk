@@ -26,10 +26,10 @@ namespace Immutable.Passport.Core
         private BrowserCommunicationsManager manager;
         private MockBrowserClient mockClient;
 #pragma warning restore CS8618
-        
-        [SetUp] 
+
+        [SetUp]
         public void Init()
-        { 
+        {
             mockClient = new MockBrowserClient();
             manager = new BrowserCommunicationsManager(mockClient);
         }
@@ -73,9 +73,12 @@ namespace Immutable.Passport.Core
             mockClient.setRequestId = false;
 
             Exception? e = null;
-            try {
+            try
+            {
                 string response = await manager.Call(FUNCTION_NAME);
-            } catch (PassportException exception) {
+            }
+            catch (PassportException exception)
+            {
                 e = exception;
             }
 
@@ -94,12 +97,15 @@ namespace Immutable.Passport.Core
             };
 
             PassportException? e = null;
-            try {
+            try
+            {
                 string response = await manager.Call(FUNCTION_NAME);
-            } catch (PassportException exception) {
+            }
+            catch (PassportException exception)
+            {
                 e = exception;
             }
-            
+
             Assert.AreEqual(PassportErrorType.WALLET_CONNECTION_ERROR, e?.Type);
         }
 
@@ -114,12 +120,15 @@ namespace Immutable.Passport.Core
             };
 
             PassportException? e = null;
-            try {
+            try
+            {
                 string response = await manager.Call(FUNCTION_NAME);
-            } catch (PassportException exception) {
+            }
+            catch (PassportException exception)
+            {
                 e = exception;
             }
-            
+
             Assert.Null(e?.Type);
             Assert.AreEqual(ERROR, e?.Message);
         }
@@ -128,7 +137,8 @@ namespace Immutable.Passport.Core
         [Test]
         public void CallAndResponse_Success_BrowserReady()
         {
-            Response browserResponse = new() {
+            Response browserResponse = new()
+            {
                 responseFor = BrowserCommunicationsManager.INIT,
                 requestId = BrowserCommunicationsManager.INIT_REQUEST_ID,
                 success = true
@@ -143,7 +153,8 @@ namespace Immutable.Passport.Core
         }
     }
 
-    internal class MockBrowserClient : IWebBrowserClient {
+    internal class MockBrowserClient : IWebBrowserClient
+    {
         public event OnUnityPostMessageDelegate? OnUnityPostMessage;
         public Request? request = null;
         public Response? browserResponse = null;

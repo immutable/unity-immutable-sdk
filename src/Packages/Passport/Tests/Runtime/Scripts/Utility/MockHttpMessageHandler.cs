@@ -13,15 +13,15 @@ namespace Immutable.Passport.Utility.Tests
     internal class MockHttpMessageHandler : HttpMessageHandler
     {
         // Requests made in order
-        public List<HttpRequestMessage> Requests { get; private set; } = new List<HttpRequestMessage>(); 
-        
+        public List<HttpRequestMessage> Requests { get; private set; } = new List<HttpRequestMessage>();
+
         // Responses to return matching request order 
         public List<HttpResponseMessage> Responses { get; private set; } = new List<HttpResponseMessage>();
 
         public MockHttpMessageHandler()
         {
         }
-        
+
         public HttpClient ToHttpClient()
         {
             return new HttpClient(this);
@@ -37,7 +37,8 @@ namespace Immutable.Passport.Utility.Tests
         {
             // Debug.Log("Request made: " + request.RequestUri);
             Requests.Add(request);
-            if (Requests.Count <= Responses.Count) {
+            if (Requests.Count <= Responses.Count)
+            {
                 return Task.FromResult(Responses[Requests.Count - 1]);
             }
 

@@ -12,12 +12,12 @@ namespace Immutable.Passport.Storage
     {
         internal static string ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6Ikp" +
             "vaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjcyMDB9.zKW_cyLXjQ0Vbc7LsrHGo6fIUfCy9QQhFNdKN5JxlZY";
-        internal static string INVALID_ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmF" + 
+        internal static string INVALID_ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmF" +
             "tZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjB9.JWKPB-5Q8rTYzl-MfhRGpP9WpDpQxC7JkIAGFMDZnpg";
         internal static string REFRESH_TOKEN = "refreshToken";
-        internal static string ID_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwibmFtZSI6IklEIHRva2VuIiwiZXh" + 
+        internal static string ID_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwibmFtZSI6IklEIHRva2VuIiwiZXh" +
             "wIjo3MjAwfQ.k4THNItPrrW7g5WmbBhRlpUwW1_dRpg1Zwg6jBVAvnA";
-        internal static string INVALID_ID_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwibmFtZSI6IklEIHRva2V" + 
+        internal static string INVALID_ID_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwibmFtZSI6IklEIHRva2V" +
             "uIiwiZXhwIjowfQ.DHDYnvJ9M8UMNeRD95oBQX91yn_snlMEpdK_qqilDB0";
         internal static string TOKEN_TYPE = "Bearer";
         internal static int EXPIRES_IN = 86400;
@@ -27,27 +27,29 @@ namespace Immutable.Passport.Storage
         internal static string TOKEN_JSON = $@"{{""access_token"":""{ACCESS_TOKEN}"",""refresh_token"":""{REFRESH_TOKEN}""," +
             $@"""id_token"":""{ID_TOKEN}"",""token_type"":""{TOKEN_TYPE}"",""expires_in"":{EXPIRES_IN}}}";
 
-        private readonly TokenResponse tokenResponse = new() {
+        private readonly TokenResponse tokenResponse = new()
+        {
             access_token = ACCESS_TOKEN,
             refresh_token = REFRESH_TOKEN,
             id_token = ID_TOKEN,
             token_type = TOKEN_TYPE,
             expires_in = EXPIRES_IN
         };
-        
+
         private string? playPrefsFunctionCalled = null;
         private string[]? playPrefsFunctionValues = null;
 #pragma warning disable CS8618
         private TestableCredentialsManager manager;
 #pragma warning restore CS8618
 
-        [SetUp] 
+        [SetUp]
         public void Init()
-        { 
+        {
             manager = new TestableCredentialsManager(OnPlayerPrefsCalled);
         }
-        
-        private void OnPlayerPrefsCalled(string function, string[] values) {
+
+        private void OnPlayerPrefsCalled(string function, string[] values)
+        {
             playPrefsFunctionCalled = function;
             playPrefsFunctionValues = values;
         }
@@ -58,7 +60,7 @@ namespace Immutable.Passport.Storage
             manager.SaveCredentials(tokenResponse);
 
             Assert.AreEqual(SET_STRING, playPrefsFunctionCalled);
-            Assert.AreEqual(new string[]{CredentialsManager.KEY_PREFS_CREDENTIALS, TOKEN_JSON}, playPrefsFunctionValues);
+            Assert.AreEqual(new string[] { CredentialsManager.KEY_PREFS_CREDENTIALS, TOKEN_JSON }, playPrefsFunctionValues);
         }
 
         [Test]
@@ -67,7 +69,7 @@ namespace Immutable.Passport.Storage
             TokenResponse? actualTokenResponse = manager.GetCredentials();
 
             Assert.AreEqual(GET_STRING, playPrefsFunctionCalled);
-            Assert.AreEqual(new string[]{CredentialsManager.KEY_PREFS_CREDENTIALS, ""}, playPrefsFunctionValues);
+            Assert.AreEqual(new string[] { CredentialsManager.KEY_PREFS_CREDENTIALS, "" }, playPrefsFunctionValues);
             Assert.NotNull(actualTokenResponse);
             Assert.AreEqual(ACCESS_TOKEN, actualTokenResponse?.access_token);
             Assert.AreEqual(REFRESH_TOKEN, actualTokenResponse?.refresh_token);
@@ -94,7 +96,7 @@ namespace Immutable.Passport.Storage
             manager.ClearCredentials();
 
             Assert.AreEqual(DELETE_KEY, playPrefsFunctionCalled);
-            Assert.AreEqual(new string[]{CredentialsManager.KEY_PREFS_CREDENTIALS}, playPrefsFunctionValues);
+            Assert.AreEqual(new string[] { CredentialsManager.KEY_PREFS_CREDENTIALS }, playPrefsFunctionValues);
         }
 
         [Test]
@@ -117,7 +119,8 @@ namespace Immutable.Passport.Storage
         public void HasValidCredentialsTest_InvalidAccessToken()
         {
             manager.mockCurrentTimeSeconds = 1;
-            manager.mockToken = new TokenResponse() {
+            manager.mockToken = new TokenResponse()
+            {
                 access_token = CredentialsManagerTests.INVALID_ACCESS_TOKEN,
                 refresh_token = CredentialsManagerTests.REFRESH_TOKEN,
                 id_token = CredentialsManagerTests.ID_TOKEN,
@@ -131,7 +134,8 @@ namespace Immutable.Passport.Storage
         public void HasValidCredentialsTest_InvalidIdToken()
         {
             manager.mockCurrentTimeSeconds = 1;
-            manager.mockToken = new TokenResponse() {
+            manager.mockToken = new TokenResponse()
+            {
                 access_token = CredentialsManagerTests.ACCESS_TOKEN,
                 refresh_token = CredentialsManagerTests.REFRESH_TOKEN,
                 id_token = CredentialsManagerTests.INVALID_ID_TOKEN,
@@ -151,14 +155,16 @@ namespace Immutable.Passport.Storage
 
     delegate void PlayerPrefsDelegate(string function, string[] values);
 
-    class TestableCredentialsManager : CredentialsManager {
+    class TestableCredentialsManager : CredentialsManager
+    {
 
         private readonly PlayerPrefsDelegate onPlayerPrefs;
         public string? mockTokenJson;
         public TokenResponse? mockToken;
         public long mockCurrentTimeSeconds = 0;
 
-        public TestableCredentialsManager(PlayerPrefsDelegate onPlayerPrefs) {
+        public TestableCredentialsManager(PlayerPrefsDelegate onPlayerPrefs)
+        {
             this.onPlayerPrefs = onPlayerPrefs;
         }
 
@@ -167,27 +173,32 @@ namespace Immutable.Passport.Storage
             return mockCurrentTimeSeconds;
         }
 
-        protected override TokenResponse DeserializeTokenResponse(string json) {
-            return mockToken ?? new TokenResponse() {
+        protected override TokenResponse DeserializeTokenResponse(string json)
+        {
+            return mockToken ?? new TokenResponse()
+            {
                 access_token = CredentialsManagerTests.ACCESS_TOKEN,
                 refresh_token = CredentialsManagerTests.REFRESH_TOKEN,
                 id_token = CredentialsManagerTests.ID_TOKEN,
                 token_type = CredentialsManagerTests.TOKEN_TYPE,
                 expires_in = CredentialsManagerTests.EXPIRES_IN
             };
-        } 
-
-        protected override void SetStringToPlayerPrefs(string key, string value) {
-            onPlayerPrefs(CredentialsManagerTests.SET_STRING, new string[]{key, value});
         }
 
-        protected override string GetStringFromPlayerPrefs(string key, string defaultValue) {
-            onPlayerPrefs(CredentialsManagerTests.GET_STRING, new string[]{key, defaultValue});
+        protected override void SetStringToPlayerPrefs(string key, string value)
+        {
+            onPlayerPrefs(CredentialsManagerTests.SET_STRING, new string[] { key, value });
+        }
+
+        protected override string GetStringFromPlayerPrefs(string key, string defaultValue)
+        {
+            onPlayerPrefs(CredentialsManagerTests.GET_STRING, new string[] { key, defaultValue });
             return mockTokenJson ?? CredentialsManagerTests.TOKEN_JSON;
         }
 
-        protected override void DeleteKeyFromPlayerPrefs(string key) {
-            onPlayerPrefs(CredentialsManagerTests.DELETE_KEY, new string[]{key});
+        protected override void DeleteKeyFromPlayerPrefs(string key)
+        {
+            onPlayerPrefs(CredentialsManagerTests.DELETE_KEY, new string[] { key });
         }
     }
 }

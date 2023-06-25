@@ -20,7 +20,7 @@ namespace Immutable.Passport
     public class PassportImplTests
     {
         internal static string DEVICE_CODE = "deviceCode";
-        internal static string ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6Ikp" + 
+        internal static string ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6Ikp" +
             "vaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjEyM30.kRqQkJudxgI3koJAp9K4ENp6E2ExFQ5VchogaTWx6Fk";
         internal static string ACCESS_TOKEN_KEY = "accessToken";
         internal static string REFRESH_TOKEN = "refreshToken";
@@ -37,9 +37,9 @@ namespace Immutable.Passport
         private PassportImpl passport;
 #pragma warning restore CS8618
 
-        [SetUp] 
+        [SetUp]
         public void Init()
-        { 
+        {
             communicationsManager = new MockBrowserCommsManager();
             auth = new MockAuthManager();
             passport = new PassportImpl(auth, communicationsManager);
@@ -80,7 +80,7 @@ namespace Immutable.Passport
             {
                 Assert.Null(await passport.Connect());
             }
-            catch (InvalidOperationException e) 
+            catch (InvalidOperationException e)
             {
                 exception = e;
             }
@@ -113,7 +113,7 @@ namespace Immutable.Passport
             {
                 await passport.ConfirmCode();
             }
-            catch (PassportException e) 
+            catch (PassportException e)
             {
                 exception = e;
             }
@@ -146,7 +146,7 @@ namespace Immutable.Passport
         }
 
         [Test]
-        
+
         public void Logout_Success()
         {
             Assert.False(auth.logoutCalled);
