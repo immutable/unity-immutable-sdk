@@ -45,7 +45,7 @@ namespace Immutable.Passport
                 Instance = new Passport();
                 Instance.Initialise();
             }
-            else 
+            else
             {
                 readySignalReceived = true;
             }
@@ -65,7 +65,8 @@ namespace Immutable.Passport
                 });
         }
 
-        private async void Initialise() {
+        private async void Initialise()
+        {
             try
             {
                 BrowserCommunicationsManager communicationsManager = new(webBrowserClient);
@@ -95,7 +96,7 @@ namespace Immutable.Passport
         ///     Sets the timeout time for` waiting for each call to respond (in milliseconds).
         ///     This only applies to functions that uses the browser communications manager.
         /// </summary>
-        public void SetCallTimeout(int ms) 
+        public void SetCallTimeout(int ms)
         {
             GetPassportImpl().communicationsManager.SetCallTimeout(ms);
         }
@@ -113,12 +114,12 @@ namespace Immutable.Passport
             return await GetPassportImpl().Connect();
         }
 
-        public async UniTask ConfirmCode() 
+        public async UniTask ConfirmCode()
         {
             await GetPassportImpl().ConfirmCode();
         }
 
-        public async UniTask<string?> GetAddress() 
+        public async UniTask<string?> GetAddress()
         {
             return await GetPassportImpl().GetAddress();
         }
