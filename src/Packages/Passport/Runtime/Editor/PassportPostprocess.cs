@@ -1,8 +1,6 @@
 #if UNITY_EDITOR
 
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
@@ -42,16 +40,16 @@ namespace Immutable.Passport.Editor {
             string buildPassportPath = $"{buildDataPath}/Passport/";
 
             // Make sure it exists
-            DirectoryInfo buildUwbInfo = new(buildPassportPath);
-            if (!buildUwbInfo.Exists){
+            DirectoryInfo buildPassportInfo = new(buildPassportPath);
+            if (!buildPassportInfo.Exists){
                 Directory.CreateDirectory(buildPassportPath);
             } else {
                 // If the directory exists, clear it
-                foreach (FileInfo fileInfo in buildUwbInfo.EnumerateFiles()) {
+                foreach (FileInfo fileInfo in buildPassportInfo.EnumerateFiles()) {
                     fileInfo.Delete();
                 }
 
-                foreach (DirectoryInfo directoryInfo in buildUwbInfo.EnumerateDirectories()) {
+                foreach (DirectoryInfo directoryInfo in buildPassportInfo.EnumerateDirectories()) {
                     directoryInfo.Delete(true);
                 }
             }
@@ -61,31 +59,27 @@ namespace Immutable.Passport.Editor {
             Debug.Log("Copying Passport files...");
 
             // Find the location of the files
-            string engineFilesDir = Path.GetFullPath("Packages/com.immutable.passport/Runtime/Assets/Resources");
-            if (!Directory.Exists(engineFilesDir)) {
+            string passportWebFilesDir = Path.GetFullPath("Packages/com.immutable.passport/Runtime/Assets/Resources");
+            if (!Directory.Exists(passportWebFilesDir)) {
                 Debug.LogError("The Passport files directory doesn't exist!");
                 return;
             }
 
-            // Get all files that aren't .meta files
-            string[] files = Directory.EnumerateFiles(engineFilesDir, "*.*", SearchOption.AllDirectories)
-                .Where(fileType => !fileType.EndsWith(".meta"))
-                .ToArray();
-
-            int size = files.Length;
- 
-            // Copy files
-            for (int i = 0; i < size; i++) {
-                string file = files[i];
-                string destFileName = Path.GetFileName(file);
-                EditorUtility.DisplayProgressBar("Copying Passport Files", $"Copying {destFileName}", i / size);
-
-                File.Copy(file, $"{buildPassportPath}{destFileName}", true);
-
-                EditorUtility.ClearProgressBar();
+            foreach (string dir in Directory.GetDirectories(passportWebFilesDir, "*", SearchOption.AllDirectories)) 
+            {
+                string dirToCreate = dir.Replace(passportWebFilesDir, buildPassportPath); 
+                Directory.CreateDirectory(dirToCreate); 
+            }
+                
+            foreach (string newPath in Directory.GetFiles(passportWebFilesDir, "*.*", SearchOption.AllDirectories)) 
+            {
+                if (!newPath.EndsWith(".meta"))
+                {
+                    File.Copy(newPath, newPath.Replace(passportWebFilesDir, buildPassportPath), true); 
+                }
             }
 
-            Debug.Log($"Sucessfully copied {size} Passport files");
+            Debug.Log($"Sucessfully copied Passport web files");
         }
     }
 }
