@@ -208,24 +208,5 @@ namespace VoltstroStudios.UnityWebBrowser.Helper
             texture.SetPixels32(colors);
             texture.Apply();
         }
-
-        /// <summary>
-        ///     Copies a <see cref="ReadOnlyMemory{T}" /> to a <see cref="NativeArray{T}" />
-        /// </summary>
-        /// <param name="copyFrom"></param>
-        /// <param name="copyTo"></param>
-        /// <param name="token"></param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void CopySpanToNativeArray<T>(ReadOnlySpan<T> copyFrom, NativeArray<T> copyTo,
-            CancellationToken token) where T : struct
-        {
-            for (int i = 0; i < copyFrom.Length; i++)
-            {
-                if (token.IsCancellationRequested)
-                    return;
-
-                copyTo[i] = copyFrom[i];
-            }
-        }
     }
 }

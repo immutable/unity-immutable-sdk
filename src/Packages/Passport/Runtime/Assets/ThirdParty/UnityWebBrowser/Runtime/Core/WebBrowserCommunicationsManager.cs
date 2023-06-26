@@ -11,12 +11,10 @@ using Cysharp.Threading.Tasks;
 using Unity.Profiling;
 using UnityEngine.Scripting;
 using VoltRpc.Communication;
-using VoltstroStudios.UnityWebBrowser.Core.Popups;
 using VoltstroStudios.UnityWebBrowser.Logging;
 using VoltstroStudios.UnityWebBrowser.Shared;
 using VoltstroStudios.UnityWebBrowser.Shared.Core;
 using VoltstroStudios.UnityWebBrowser.Shared.Events;
-using VoltstroStudios.UnityWebBrowser.Shared.Popups;
 using VoltstroStudios.UnityWebBrowser.Shared.ReadWriters;
 
 namespace VoltstroStudios.UnityWebBrowser.Core
@@ -57,11 +55,8 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             ipcClient = browserClient.communicationLayer.CreateClient();
             ipcHost = browserClient.communicationLayer.CreateHost();
 
-            WebBrowserPopupService popupService = new(this);
-
             ReadWriterUtils.AddBaseTypeReadWriters(ipcHost.TypeReaderWriterManager);
             ipcHost.AddService<IClientControls>(this);
-            ipcHost.AddService<IPopupEngineControls>(popupService);
 
             ReadWriterUtils.AddBaseTypeReadWriters(ipcClient.TypeReaderWriterManager);
 
@@ -69,7 +64,6 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             ipcClient.TypeReaderWriterManager.AddType(pixelsEventTypeReader);
 
             ipcClient.AddService<IEngineControls>();
-            ipcClient.AddService<IPopupClientControls>();
             engineProxy = new EngineControls(ipcClient);
         }
 
