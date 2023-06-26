@@ -89,8 +89,7 @@ namespace Immutable.Passport.Auth
                 Debug.Log($"{TAG} Refreshing token...");
                 TokenResponse? tokenResponse = await RefreshToken(savedCreds.refresh_token, token);
 
-                if (token?.IsCancellationRequested == true)
-                    token?.ThrowIfCancellationRequested();
+                token?.ThrowIfCancellationRequested();
 
                 try
                 {

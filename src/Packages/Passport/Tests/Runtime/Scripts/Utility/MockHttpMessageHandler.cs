@@ -40,8 +40,7 @@ namespace Immutable.Passport.Utility.Tests
             if (Requests.Count <= Responses.Count)
             {
                 await Task.Delay(responseDelay);
-                if (cancellationToken.IsCancellationRequested)
-                    cancellationToken.ThrowIfCancellationRequested();
+                cancellationToken.ThrowIfCancellationRequested();
                 return Responses[Requests.Count - 1];
             }
 
