@@ -17,6 +17,7 @@ namespace Immutable.Passport.Utility.Tests
 
         // Responses to return matching request order 
         public List<HttpResponseMessage> Responses { get; private set; } = new List<HttpResponseMessage>();
+        public int responseDelay = 0;
 
         public MockHttpMessageHandler()
         {
@@ -33,16 +34,18 @@ namespace Immutable.Passport.Utility.Tests
         /// <param name="request">The request being sent</param>
         /// <param name="cancellationToken">The token used to cancel the request</param>
         /// <returns>A Task containing the future response message</returns>
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            // Debug.Log("Request made: " + request.RequestUri);
             Requests.Add(request);
             if (Requests.Count <= Responses.Count)
             {
-                return Task.FromResult(Responses[Requests.Count - 1]);
+                await Task.Delay(responseDelay);
+                if (cancellationToken.IsCancellationRequested)
+                    cancellationToken.ThrowIfCancellationRequested();
+                return Responses[Requests.Count - 1];
             }
 
-            return Task.FromException<HttpResponseMessage>(new Exception($"No response for this request: {request.RequestUri}"));
+            throw new Exception($"No response for this request: {request.RequestUri}");
         }
 
         /// <summary>

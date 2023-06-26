@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Reflection;
 using System.Collections.Generic;
 using NUnit.Framework;
@@ -214,7 +215,7 @@ namespace Immutable.Passport
         public bool logoutCalled = false;
         public bool hasCredentialsSaved = false;
 
-        public UniTask<string?> Login()
+        public UniTask<string?> Login(CancellationToken? token)
         {
             return UniTask.FromResult(deviceCode);
         }

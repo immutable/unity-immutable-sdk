@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using UnityEngine;
 using VoltstroStudios.UnityWebBrowser.Core;
 using Immutable.Passport.Auth;
@@ -21,9 +22,9 @@ namespace Immutable.Passport
             this.communicationsManager = communicationsManager;
         }
 
-        public async UniTask<string?> Connect()
+        public async UniTask<string?> Connect(CancellationToken? token = null)
         {
-            string? code = await auth.Login();
+            string? code = await auth.Login(token);
             User? user = auth.GetUser();
             if (code != null)
             {

@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using VoltstroStudios.UnityWebBrowser.Core;
 using Immutable.Passport.Auth;
 using Newtonsoft.Json;
@@ -109,9 +110,9 @@ namespace Immutable.Passport
         /// The end-user verification code if confirmation is required, otherwise null;
         /// </returns>
         /// </summary>
-        public async UniTask<string?> Connect()
+        public async UniTask<string?> Connect(CancellationToken? token = null)
         {
-            return await GetPassportImpl().Connect();
+            return await GetPassportImpl().Connect(token);
         }
 
         public async UniTask ConfirmCode()

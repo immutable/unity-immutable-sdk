@@ -6,6 +6,7 @@ using Immutable.Passport.Storage;
 using Immutable.Passport.Utility.Tests;
 using Immutable.Passport.Model;
 using UnityEngine;
+using System.Threading;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 
@@ -159,18 +160,95 @@ namespace Immutable.Passport.Auth
             {
                 refresh_token = REFRESH_TOKEN
             };
-            httpMock.Responses.Add(CreateMockResponse("{}"));
+            httpMock.Responses.Add(CreateMockResponse(VALID_TOKEN_RESPONSE));
 
-            AddDeviceCodeResponse();
+            Assert.Null(manager.GetUser());
 
             var code = await manager.Login();
-            Assert.AreEqual(code, USER_CODE);
+            Assert.Null(code);
+            Assert.NotNull(manager.GetUser());
 
             var request = httpMock.Requests[0];
             Assert.AreEqual(request.RequestUri, TOKEN_ENDPOINT);
+            Assert.AreEqual(request.Method, HttpMethod.Post);
+            string stringContent = await request.Content.ReadAsStringAsync();
+            Assert.True(stringContent.Contains($"{KEY_REFRESH_TOKEN}={REFRESH_TOKEN}"));
+        }
 
-            var deviceCodeRequest = httpMock.Requests[1];
-            Assert.AreEqual(deviceCodeRequest.RequestUri, AUTH_CODE_ENDPOINT);
+        [Test]
+        public async Task Login_Cancelled_OnRefresh()
+        {
+            httpMock.responseDelay = 2000;
+            credentialsManager.hasValidCredentials = false;
+            credentialsManager.token = new TokenResponse
+            {
+                refresh_token = REFRESH_TOKEN
+            };
+            httpMock.Responses.Add(CreateMockResponse(VALID_TOKEN_RESPONSE));
+
+            Assert.Null(manager.GetUser());
+
+            CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
+            cancelInASecond(cancelTokenSource).Start();
+
+            Exception? e = null;
+            try
+            {
+                var code = await manager.Login(cancelTokenSource.Token);
+            }
+            catch (Exception exception)
+            {
+                e = exception;
+            }
+
+            Assert.NotNull(e);
+            Assert.AreEqual(e?.GetType(), typeof(OperationCanceledException));
+            Assert.Null(manager.GetUser());
+
+            var request = httpMock.Requests[0];
+            Assert.AreEqual(request.RequestUri, TOKEN_ENDPOINT);
+            Assert.AreEqual(request.Method, HttpMethod.Post);
+            string stringContent = await request.Content.ReadAsStringAsync();
+            Assert.True(stringContent.Contains($"{KEY_REFRESH_TOKEN}={REFRESH_TOKEN}"));
+        }
+
+        [Test]
+        public async Task Login_Cancelled_OnDeviceCode()
+        {
+            httpMock.responseDelay = 2000;
+            credentialsManager.hasValidCredentials = false;
+            credentialsManager.token = null;
+            AddDeviceCodeResponse();
+
+            CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
+            cancelInASecond(cancelTokenSource).Start();
+
+            Exception? e = null;
+            try
+            {
+                var code = await manager.Login(cancelTokenSource.Token);
+            }
+            catch (Exception exception)
+            {
+                e = exception;
+            }
+
+            Assert.NotNull(e);
+            Assert.AreEqual(e?.GetType(), typeof(OperationCanceledException));
+            Assert.Null(manager.GetUser());
+
+            var request = httpMock.Requests[0];
+            Assert.AreEqual(request.RequestUri, AUTH_CODE_ENDPOINT);
+            Assert.AreEqual(request.Method, HttpMethod.Post);
+        }
+
+        private Task cancelInASecond(CancellationTokenSource cancelTokenSource)
+        {
+            return new Task(() =>
+            {
+                Thread.Sleep(100);
+                cancelTokenSource.Cancel();
+            });
         }
 
         [Test]
