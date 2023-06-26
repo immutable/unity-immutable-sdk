@@ -15,14 +15,12 @@ using Unity.Profiling;
 using UnityEngine;
 using VoltstroStudios.UnityWebBrowser.Communication;
 using VoltstroStudios.UnityWebBrowser.Core.Engines;
-using VoltstroStudios.UnityWebBrowser.Core.Popups;
 using VoltstroStudios.UnityWebBrowser.Events;
 using VoltstroStudios.UnityWebBrowser.Helper;
 using VoltstroStudios.UnityWebBrowser.Logging;
 using VoltstroStudios.UnityWebBrowser.Shared;
 using VoltstroStudios.UnityWebBrowser.Shared.Core;
 using VoltstroStudios.UnityWebBrowser.Shared.Events;
-using VoltstroStudios.UnityWebBrowser.Shared.Popups;
 using Object = UnityEngine.Object;
 using Resolution = VoltstroStudios.UnityWebBrowser.Shared.Resolution;
 
@@ -128,11 +126,6 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         /// </summary>
         [Tooltip("Enable or disable local storage")]
         public bool localStorage = true;
-
-        /// <summary>
-        ///     How to handle popups
-        /// </summary>
-        [Tooltip("How to handle popups")] public PopupAction popupAction;
 
         /// <summary>
         ///     Proxy Settings
@@ -382,9 +375,6 @@ namespace VoltstroStudios.UnityWebBrowser.Core
                 cachePath ??= new FileInfo($"{browserEngineMainDir}/UWBCache");
                 argsBuilder.AppendArgument("cache-path", cachePath.FullName, true);
             }
-
-            //Popups
-            argsBuilder.AppendArgument("popup-action", popupAction, true);
 
             //Setup web RTC
             if (webRtc)
@@ -682,16 +672,6 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         internal void InvokeFullscreen(bool fullscreen)
         {
             OnFullscreen?.Invoke(fullscreen);
-        }
-
-        /// <summary>
-        ///     Invoked when the browser gets a popup
-        /// </summary>
-        public event OnPopup OnPopup;
-
-        internal void InvokeOnPopup(WebBrowserPopupInfo popupInfo)
-        {
-            OnPopup?.Invoke(popupInfo);
         }
 
         #endregion
