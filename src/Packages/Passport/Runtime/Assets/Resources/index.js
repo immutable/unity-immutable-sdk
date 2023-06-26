@@ -1,4 +1,3 @@
-const clientId = "mjtCL8mt06BtbxSkp2vbrYStKWnXVZfo" // not required
 const scope = "openid offline_access profile email transact"
 const audience = "platform_api"
 const redirectUri = "https://localhost:3000/" // Not required
@@ -30,7 +29,7 @@ const getPassportConfig = () => {
         baseConfig: new config.ImmutableConfiguration({
             environment: config.Environment.SANDBOX,
         }),
-        clientId: clientId,
+        clientId: "NOT_REQUIRED",
         ...sharedConfigurationValues,
     };
 };
