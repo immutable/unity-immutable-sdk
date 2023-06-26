@@ -1,14 +1,13 @@
 using System;
 using System.Net;
 using System.Net.Http;
-using System.Reflection;
-using System.Collections.Generic;
 using NUnit.Framework;
 using Immutable.Passport.Storage;
-using Immutable.Passport.Auth;
 using Immutable.Passport.Utility.Tests;
+using Immutable.Passport.Model;
 using UnityEngine;
 using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 
 namespace Immutable.Passport.Auth
 {
@@ -199,24 +198,16 @@ namespace Immutable.Passport.Auth
         public async Task ConfirmCode_Failed_PendingAndExpired()
         {
             PrepareForConfirmCode();
-            
+
             httpMock.Responses.Add(CreateMockResponse(CreateErrorJsonString("authorization_pending")));
             httpMock.Responses.Add(CreateMockResponse(CreateErrorJsonString("expired_token")));
 
-            Assert.Null(manager.GetUser());
+            await ExpectError(() =>
+            {
+                Assert.Null(manager.GetUser());
+                return manager.ConfirmCode();
+            }, typeof(InvalidOperationException));
 
-            Exception? e = null;
-            try
-            {
-                var result = await manager.ConfirmCode();
-            }
-            catch (Exception exception)
-            {
-                e = exception;
-                Debug.Log("Exception: " + e);
-            }
-            Assert.NotNull(e);
-            Assert.AreEqual(e?.GetType(), typeof(InvalidOperationException));
             Assert.AreEqual(3, httpMock.Requests.Count);
         }
 
@@ -227,42 +218,28 @@ namespace Immutable.Passport.Auth
             httpMock.Responses.Add(CreateMockResponse(CreateErrorJsonString("slow_down")));
             httpMock.Responses.Add(CreateMockResponse(CreateErrorJsonString("access_denied")));
 
-            Assert.Null(manager.GetUser());
+            await ExpectError(() =>
+            {
+                Assert.Null(manager.GetUser());
+                return manager.ConfirmCode();
+            }, typeof(UnauthorizedAccessException));
 
-            Exception? e = null;
-            try
-            {
-                var result = await manager.ConfirmCode();
-            }
-            catch (Exception exception)
-            {
-                e = exception;
-                Debug.Log("Exception: " + e);
-            }
-            Assert.NotNull(e);
-            Assert.AreEqual(e?.GetType(), typeof(UnauthorizedAccessException));
             Assert.AreEqual(3, httpMock.Requests.Count);
         }
 
+        // jscpd:ignore-start
         [Test]
         public async Task ConfirmCode_Failed_UnexpectedErrorCode()
         {
             PrepareForConfirmCode();
             httpMock.Responses.Add(CreateMockResponse(CreateErrorJsonString("whats_this")));
 
-            Assert.Null(manager.GetUser());
+            await ExpectError(() =>
+            {
+                Assert.Null(manager.GetUser());
+                return manager.ConfirmCode();
+            }, typeof(PassportException));
 
-            Exception? e = null;
-            try
-            {
-                var result = await manager.ConfirmCode();
-            }
-            catch (Exception exception)
-            {
-                e = exception;
-                Debug.Log("Exception: " + e);
-            }
-            Assert.NotNull(e);
             Assert.AreEqual(2, httpMock.Requests.Count);
         }
 
@@ -272,20 +249,30 @@ namespace Immutable.Passport.Auth
             PrepareForConfirmCode();
             httpMock.Responses.Add(CreateMockResponse("{}"));
 
-            Assert.Null(manager.GetUser());
+            await ExpectError(() =>
+            {
+                Assert.Null(manager.GetUser());
+                return manager.ConfirmCode();
+            }, typeof(PassportException));
 
+            Assert.AreEqual(2, httpMock.Requests.Count);
+        }
+        // jscpd:ignore-end
+
+        private async Task ExpectError(Func<UniTask> action, Type errorType)
+        {
             Exception? e = null;
             try
             {
-                var result = await manager.ConfirmCode();
+                await action();
             }
             catch (Exception exception)
             {
+                Debug.Log($"Exception caught {exception.GetType()}");
                 e = exception;
-                Debug.Log("Exception: " + e);
             }
             Assert.NotNull(e);
-            Assert.AreEqual(2, httpMock.Requests.Count);
+            Assert.AreEqual(e?.GetType(), errorType);
         }
 
         [Test]
