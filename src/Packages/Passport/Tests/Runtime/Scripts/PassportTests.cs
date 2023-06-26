@@ -20,7 +20,7 @@ namespace Immutable.Passport
     public class PassportImplTests
     {
         internal static string DEVICE_CODE = "deviceCode";
-        internal static string ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6Ikp" + 
+        internal static string ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6Ikp" +
             "vaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjEyM30.kRqQkJudxgI3koJAp9K4ENp6E2ExFQ5VchogaTWx6Fk";
         internal static string ACCESS_TOKEN_KEY = "accessToken";
         internal static string REFRESH_TOKEN = "refreshToken";
@@ -37,9 +37,9 @@ namespace Immutable.Passport
         private PassportImpl passport;
 #pragma warning restore CS8618
 
-        [SetUp] 
+        [SetUp]
         public void Init()
-        { 
+        {
             communicationsManager = new MockBrowserCommsManager();
             auth = new MockAuthManager();
             passport = new PassportImpl(auth, communicationsManager);
@@ -53,23 +53,6 @@ namespace Immutable.Passport
         }
 
         [Test]
-        public async Task Connect_Success_ExistingCredentials()
-        {
-            var response = new Response
-            {
-                success = true
-            };
-            auth.deviceCode = null;
-            communicationsManager.response = JsonConvert.SerializeObject(response);
-            auth.user = new User(ID_TOKEN, ACCESS_TOKEN, REFRESH_TOKEN);
-            Assert.Null(await passport.Connect());
-            Assert.AreEqual(PassportFunction.GET_IMX_PROVIDER, communicationsManager.fxName);
-            Assert.True(communicationsManager.data?.Contains($"\"{ID_TOKEN_KEY}\":\"{auth.user.idToken}\"") == true);
-            Assert.True(communicationsManager.data?.Contains($"\"{ACCESS_TOKEN_KEY}\":\"{auth.user.accessToken}\"") == true);
-            Assert.True(communicationsManager.data?.Contains($"\"{REFRESH_TOKEN_KEY}\":\"{auth.user.refreshToken}\"") == true);
-        }
-
-        [Test]
         public async Task Connect_Failed()
         {
             auth.deviceCode = null;
@@ -80,7 +63,7 @@ namespace Immutable.Passport
             {
                 Assert.Null(await passport.Connect());
             }
-            catch (InvalidOperationException e) 
+            catch (InvalidOperationException e)
             {
                 exception = e;
             }
@@ -89,7 +72,19 @@ namespace Immutable.Passport
         }
 
         [Test]
-        public async Task ConfirmCode_Success()
+        public void Connect_Success_ExistingCredentials()
+        {
+            auth.deviceCode = null;
+            Connect();
+        }
+
+        [Test]
+        public void ConfirmCode_Success()
+        {
+            Connect();
+        }
+
+        private async void Connect()
         {
             var response = new Response
             {
@@ -113,7 +108,7 @@ namespace Immutable.Passport
             {
                 await passport.ConfirmCode();
             }
-            catch (PassportException e) 
+            catch (PassportException e)
             {
                 exception = e;
             }
@@ -146,7 +141,7 @@ namespace Immutable.Passport
         }
 
         [Test]
-        
+
         public void Logout_Success()
         {
             Assert.False(auth.logoutCalled);

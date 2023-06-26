@@ -71,7 +71,8 @@ namespace Immutable.Passport.Storage
             }
         }
 
-        private bool IsTokenValid(string jwt) {
+        private bool IsTokenValid(string jwt)
+        {
             Debug.Log($"{TAG} Decoding {jwt}...");
             string? token = JwtUtility.DecodeJwt(jwt);
             if (token == null)
@@ -83,7 +84,7 @@ namespace Immutable.Passport.Storage
             TokenPayload? tokenPayload = JsonConvert.DeserializeObject<TokenPayload>(token);
             long expiresAt = tokenPayload?.exp ?? 0;
             Debug.Log($"{TAG} Token expires (UTC seconds): {expiresAt}");
-            
+
             long now = GetCurrentTimeSeconds() + VALID_CREDENTIALS_MIN_TTL_SEC;
             Debug.Log($"{TAG} Time now (UTC seconds): {now}");
 

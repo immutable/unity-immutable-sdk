@@ -11,7 +11,7 @@ using Immutable.Passport;
 namespace Immutable.Passport.Core
 {
     public delegate void OnBrowserReadyDelegate();
-    
+
     public interface IBrowserCommunicationsManager
     {
         public void SetCallTimeout(int ms);
@@ -57,7 +57,7 @@ namespace Immutable.Passport.Core
             requestTaskMap.Add(requestId, t);
             CallFunction(requestId, fxName, data);
             return t.Task
-                .Timeout(TimeSpan.FromMilliseconds(callTimeout));;
+                .Timeout(TimeSpan.FromMilliseconds(callTimeout)); ;
         }
 
         private void CallFunction(string requestId, string fxName, string? data = null)
@@ -94,7 +94,8 @@ namespace Immutable.Passport.Core
             }
 
             // Special case to detect if index.js is loaded
-            if (response.responseFor == INIT && response.requestId == INIT_REQUEST_ID) {
+            if (response.responseFor == INIT && response.requestId == INIT_REQUEST_ID)
+            {
                 Debug.Log($"{TAG} Browser is ready");
                 OnReady?.Invoke();
                 return;

@@ -9,14 +9,14 @@ using Immutable.Passport.Model;
 
 namespace Immutable.Passport.Auth
 {
-    public interface IAuthManager 
+    public interface IAuthManager
     {
         public UniTask<string?> Login();
         public void Logout();
         public UniTask<User> ConfirmCode();
         public User? GetUser();
         public bool HasCredentialsSaved();
-        
+
     }
     public class AuthManager : IAuthManager
     {

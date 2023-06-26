@@ -8,7 +8,7 @@ namespace Immutable.Passport.Utility.Tests
         [Test]
         public void DecodeJwtTest()
         {
-            string jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmF" + 
+            string jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmF" +
                 "tZSI6IkltbXV0YWJsZSIsImlhdCI6MTUxNjIzOTAyMn0.3uo_vJDobJs97abKHJY48qaYaFdUj0o02admvkedyp4";
             string? actual = JwtUtility.DecodeJwt(jwt);
 
