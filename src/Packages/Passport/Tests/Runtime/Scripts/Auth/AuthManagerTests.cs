@@ -79,12 +79,8 @@ namespace Immutable.Passport.Auth
 
         private void AddDeviceCodeResponse()
         {
-            var deviceCodeResponse = new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent(@$"{{""{KEY_DEVICE_CODE}"": ""{DEVICE_CODE}"",""user_code"": ""{USER_CODE}""," +
-                @$"""verification_uri"": ""verificationUri"",""expires_in"": 3600000,""interval"": 1,""verification_uri_complete"": ""verificationUriComplete""}}")
-            };
-            httpMock.Responses.Add(deviceCodeResponse);
+            httpMock.Responses.Add(CreateMockResponse(@$"{{""{KEY_DEVICE_CODE}"": ""{DEVICE_CODE}"",""user_code"": ""{USER_CODE}""," +
+                @$"""verification_uri"": ""verificationUri"",""expires_in"": 3600000,""interval"": 1,""verification_uri_complete"": ""verificationUriComplete""}}"));
         }
 
         [Test]
@@ -119,11 +115,7 @@ namespace Immutable.Passport.Auth
             {
                 refresh_token = REFRESH_TOKEN
             };
-            var refreshTokenResponse = new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent(VALID_TOKEN_RESPONSE)
-            };
-            httpMock.Responses.Add(refreshTokenResponse);
+            httpMock.Responses.Add(CreateMockResponse(VALID_TOKEN_RESPONSE));
 
             Assert.Null(manager.GetUser());
 
@@ -168,11 +160,7 @@ namespace Immutable.Passport.Auth
             {
                 refresh_token = REFRESH_TOKEN
             };
-            var refreshTokenResponse = new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent("{}")
-            };
-            httpMock.Responses.Add(refreshTokenResponse);
+            httpMock.Responses.Add(CreateMockResponse("{}"));
 
             AddDeviceCodeResponse();
 
@@ -190,11 +178,7 @@ namespace Immutable.Passport.Auth
         public async Task ConfirmCode_Success()
         {
             PrepareForConfirmCode();
-            var tokenResponse = new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent(VALID_TOKEN_RESPONSE)
-            };
-            httpMock.Responses.Add(tokenResponse);
+            httpMock.Responses.Add(CreateMockResponse(VALID_TOKEN_RESPONSE));
 
             Assert.Null(manager.GetUser());
 
@@ -215,17 +199,9 @@ namespace Immutable.Passport.Auth
         public async Task ConfirmCode_Failed_PendingAndExpired()
         {
             PrepareForConfirmCode();
-            var slowDownResponse = new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent(CreateErrorJsonString("authorization_pending"))
-            };
-            httpMock.Responses.Add(slowDownResponse);
-
-            var expiredResponse = new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent(CreateErrorJsonString("expired_token"))
-            };
-            httpMock.Responses.Add(expiredResponse);
+            
+            httpMock.Responses.Add(CreateMockResponse(CreateErrorJsonString("authorization_pending")));
+            httpMock.Responses.Add(CreateMockResponse(CreateErrorJsonString("expired_token")));
 
             Assert.Null(manager.GetUser());
 
@@ -248,17 +224,8 @@ namespace Immutable.Passport.Auth
         public async Task ConfirmCode_Failed_SlowDownAndAccessDenied()
         {
             PrepareForConfirmCode();
-            var slowDownResponse = new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent(CreateErrorJsonString("slow_down"))
-            };
-            httpMock.Responses.Add(slowDownResponse);
-
-            var expiredResponse = new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent(CreateErrorJsonString("access_denied"))
-            };
-            httpMock.Responses.Add(expiredResponse);
+            httpMock.Responses.Add(CreateMockResponse(CreateErrorJsonString("slow_down")));
+            httpMock.Responses.Add(CreateMockResponse(CreateErrorJsonString("access_denied")));
 
             Assert.Null(manager.GetUser());
 
@@ -281,11 +248,7 @@ namespace Immutable.Passport.Auth
         public async Task ConfirmCode_Failed_UnexpectedErrorCode()
         {
             PrepareForConfirmCode();
-            var unexpectedResponse = new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent(CreateErrorJsonString("whats_this"))
-            };
-            httpMock.Responses.Add(unexpectedResponse);
+            httpMock.Responses.Add(CreateMockResponse(CreateErrorJsonString("whats_this")));
 
             Assert.Null(manager.GetUser());
 
@@ -307,11 +270,7 @@ namespace Immutable.Passport.Auth
         public async Task ConfirmCode_Failed_UnexpectedResponse()
         {
             PrepareForConfirmCode();
-            var unexpectedResponse = new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent("{}")
-            };
-            httpMock.Responses.Add(unexpectedResponse);
+            httpMock.Responses.Add(CreateMockResponse("{}"));
 
             Assert.Null(manager.GetUser());
 
@@ -348,6 +307,14 @@ namespace Immutable.Passport.Auth
         private string CreateErrorJsonString(string error)
         {
             return @$"{{""error"":""{error}"",""error_description"":""description""}}";
+        }
+
+        private HttpResponseMessage CreateMockResponse(string content, HttpStatusCode statusCode = HttpStatusCode.OK)
+        {
+            return new HttpResponseMessage(statusCode)
+            {
+                Content = new StringContent(content)
+            };
         }
     }
 

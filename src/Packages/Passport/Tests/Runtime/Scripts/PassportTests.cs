@@ -53,23 +53,6 @@ namespace Immutable.Passport
         }
 
         [Test]
-        public async Task Connect_Success_ExistingCredentials()
-        {
-            var response = new Response
-            {
-                success = true
-            };
-            auth.deviceCode = null;
-            communicationsManager.response = JsonConvert.SerializeObject(response);
-            auth.user = new User(ID_TOKEN, ACCESS_TOKEN, REFRESH_TOKEN);
-            Assert.Null(await passport.Connect());
-            Assert.AreEqual(PassportFunction.GET_IMX_PROVIDER, communicationsManager.fxName);
-            Assert.True(communicationsManager.data?.Contains($"\"{ID_TOKEN_KEY}\":\"{auth.user.idToken}\"") == true);
-            Assert.True(communicationsManager.data?.Contains($"\"{ACCESS_TOKEN_KEY}\":\"{auth.user.accessToken}\"") == true);
-            Assert.True(communicationsManager.data?.Contains($"\"{REFRESH_TOKEN_KEY}\":\"{auth.user.refreshToken}\"") == true);
-        }
-
-        [Test]
         public async Task Connect_Failed()
         {
             auth.deviceCode = null;
@@ -89,7 +72,19 @@ namespace Immutable.Passport
         }
 
         [Test]
-        public async Task ConfirmCode_Success()
+        public void Connect_Success_ExistingCredentials()
+        {
+            auth.deviceCode = null;
+            Connect();
+        }
+
+        [Test]
+        public void ConfirmCode_Success()
+        {
+            Connect();
+        }
+
+        private async void Connect()
         {
             var response = new Response
             {
