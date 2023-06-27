@@ -102,10 +102,10 @@ public class UnauthenticatedScript : MonoBehaviour
         }
     }
 
-    public async void CancelLogin()
+    public void CancelLogin()
     {
         ShowOutput("Login cancelled...");
-        loginTokenSource.Cancel();
+        loginTokenSource?.Cancel();
         connectButton.gameObject.SetActive(true);
         userCodeText.gameObject.SetActive(false);
         proceedLoginButton.gameObject.SetActive(false);
