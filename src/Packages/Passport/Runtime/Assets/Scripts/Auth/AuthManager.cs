@@ -14,7 +14,7 @@ namespace Immutable.Passport.Auth
     {
         public UniTask<string?> Login(CancellationToken? token = null);
         public void Logout();
-        public UniTask<User> ConfirmCode();
+        public UniTask<User> ConfirmCode(CancellationToken? token = null);
         public User? GetUser();
         public bool HasCredentialsSaved();
 
@@ -150,13 +150,13 @@ namespace Immutable.Passport.Auth
         /// The token response
         /// </return>
         /// </summary>
-        public async UniTask<User> ConfirmCode()
+        public async UniTask<User> ConfirmCode(CancellationToken? token = null)
         {
             if (deviceCodeResponse != null)
             {
                 // Poll for token
                 Application.OpenURL(deviceCodeResponse.verification_uri_complete);
-                TokenResponse? tokenResponse = await PollForTokenTask(deviceCodeResponse.device_code, deviceCodeResponse.interval);
+                TokenResponse? tokenResponse = await PollForTokenTask(deviceCodeResponse.device_code, deviceCodeResponse.interval, token);
                 return HandleTokenResponse(tokenResponse);
             }
             else
@@ -210,16 +210,18 @@ namespace Immutable.Passport.Auth
         }
 
 #pragma warning disable IDE0059
-        private async UniTask<TokenResponse?> PollForTokenTask(string deviceCode, int interval)
+        private async UniTask<TokenResponse?> PollForTokenTask(string deviceCode, int interval, CancellationToken? token)
         {
             bool needToPoll = true;
             while (needToPoll)
             {
                 await UniTask.Delay(interval * 1000);
 
-                var responseString = await GetTokenTask(deviceCode);
+                var responseString = await GetTokenTask(deviceCode, token);
                 var tokenResponse = JsonConvert.DeserializeObject<TokenResponse>(responseString);
                 var errorResponse = JsonConvert.DeserializeObject<ErrorResponse>(responseString);
+
+                token?.ThrowIfCancellationRequested();
 
                 if (tokenResponse != null && tokenResponse.refresh_token != null)
                 {
@@ -264,7 +266,7 @@ namespace Immutable.Passport.Auth
         }
 #pragma warning restore IDE0059
 
-        private async UniTask<string> GetTokenTask(string deviceCode)
+        private async UniTask<string> GetTokenTask(string deviceCode, CancellationToken? token)
         {
             var values = new Dictionary<string, string>
             {
@@ -277,7 +279,7 @@ namespace Immutable.Passport.Auth
 
             try
             {
-                using HttpResponseMessage response = await client.PostAsync($"{DOMAIN}{PATH_TOKEN}", content);
+                using HttpResponseMessage response = await post($"{DOMAIN}{PATH_TOKEN}", content, token);
                 var responseString = await response.Content.ReadAsStringAsync();
                 Debug.Log($"{TAG} Token response: {responseString}");
                 return responseString;

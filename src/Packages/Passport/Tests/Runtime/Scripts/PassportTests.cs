@@ -225,7 +225,7 @@ namespace Immutable.Passport
             logoutCalled = true;
         }
 
-        public UniTask<User> ConfirmCode()
+        public UniTask<User> ConfirmCode(CancellationToken? token)
         {
             return UniTask.FromResult(user);
         }
