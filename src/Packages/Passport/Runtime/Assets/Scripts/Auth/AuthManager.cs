@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Collections.Generic;
 using System.Net.Http;
 using Cysharp.Threading.Tasks;
@@ -11,7 +12,7 @@ namespace Immutable.Passport.Auth
 {
     public interface IAuthManager
     {
-        public UniTask<string?> Login();
+        public UniTask<string?> Login(CancellationToken? token = null);
         public void Logout();
         public UniTask<User> ConfirmCode();
         public User? GetUser();
@@ -71,7 +72,7 @@ namespace Immutable.Passport.Auth
         /// The end-user verification code if confirmation is required, otherwise null;
         /// </returns>
         /// </summary>
-        public async UniTask<string?> Login()
+        public async UniTask<string?> Login(CancellationToken? token = null)
         {
             // If access token exists and is still valid, get saved credentials
             TokenResponse? savedCreds = manager.GetCredentials();
@@ -86,7 +87,10 @@ namespace Immutable.Passport.Auth
                 // Access token does not exist or is not longer valid
                 // Use refresh token if it exists
                 Debug.Log($"{TAG} Refreshing token...");
-                TokenResponse? tokenResponse = await RefreshToken(savedCreds.refresh_token);
+                TokenResponse? tokenResponse = await RefreshToken(savedCreds.refresh_token, token);
+
+                token?.ThrowIfCancellationRequested();
+
                 try
                 {
                     HandleTokenResponse(tokenResponse);
@@ -103,7 +107,7 @@ namespace Immutable.Passport.Auth
             // Can't use both access and refresh tokens
             // Perform device code authorisation
             Debug.Log($"{TAG} Starting device code authorisation...");
-            deviceCodeResponse = await GetDeviceCodeTask();
+            deviceCodeResponse = await GetDeviceCodeTask(token);
             if (deviceCodeResponse != null)
             {
                 return deviceCodeResponse.user_code;
@@ -114,7 +118,7 @@ namespace Immutable.Passport.Auth
             }
         }
 
-        private async UniTask<TokenResponse?> RefreshToken(string refreshToken)
+        private async UniTask<TokenResponse?> RefreshToken(string refreshToken, CancellationToken? token = null)
         {
             var values = new Dictionary<string, string>
             {
@@ -127,7 +131,7 @@ namespace Immutable.Passport.Auth
 
             try
             {
-                using var response = await client.PostAsync($"{DOMAIN}{PATH_TOKEN}", content);
+                using HttpResponseMessage response = await post($"{DOMAIN}{PATH_TOKEN}", content, token);
                 var responseString = await response.Content.ReadAsStringAsync();
                 Debug.Log($"{TAG} Refresh token response: {responseString}");
                 return JsonConvert.DeserializeObject<TokenResponse>(responseString);
@@ -179,7 +183,7 @@ namespace Immutable.Passport.Auth
             throw new PassportException($"Failed to login", PassportErrorType.AUTHENTICATION_ERROR);
         }
 
-        private async UniTask<DeviceCodeResponse?> GetDeviceCodeTask()
+        private async UniTask<DeviceCodeResponse?> GetDeviceCodeTask(CancellationToken? token = null)
         {
             var values = new Dictionary<string, string>
             {
@@ -192,7 +196,7 @@ namespace Immutable.Passport.Auth
 
             try
             {
-                using var response = await client.PostAsync($"{DOMAIN}{PATH_AUTH_CODE}", content);
+                using HttpResponseMessage response = await post($"{DOMAIN}{PATH_AUTH_CODE}", content, token);
                 var responseString = await response.Content.ReadAsStringAsync();
                 Debug.Log($"{TAG} Device code response: {responseString}");
                 return JsonConvert.DeserializeObject<DeviceCodeResponse>(responseString);
@@ -273,7 +277,7 @@ namespace Immutable.Passport.Auth
 
             try
             {
-                using var response = await client.PostAsync($"{DOMAIN}{PATH_TOKEN}", content);
+                using HttpResponseMessage response = await client.PostAsync($"{DOMAIN}{PATH_TOKEN}", content);
                 var responseString = await response.Content.ReadAsStringAsync();
                 Debug.Log($"{TAG} Token response: {responseString}");
                 return responseString;
@@ -284,6 +288,13 @@ namespace Immutable.Passport.Auth
                 Debug.Log($"{TAG} {TAG_GET_TOKEN} {ex.Message}");
                 throw ex;
             }
+        }
+
+        private async UniTask<HttpResponseMessage> post(string requestUri, HttpContent content, CancellationToken? token)
+        {
+
+            HttpResponseMessage response = token != null ? await client.PostAsync(requestUri, content, (CancellationToken)token) : await client.PostAsync(requestUri, content);
+            return response;
         }
 
         public void Logout()

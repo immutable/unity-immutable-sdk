@@ -6,6 +6,7 @@ using Immutable.Passport.Storage;
 using Immutable.Passport.Utility.Tests;
 using Immutable.Passport.Model;
 using UnityEngine;
+using System.Threading;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 
@@ -76,10 +77,27 @@ namespace Immutable.Passport.Auth
             _ = await manager.Login();
         }
 
+        private void InitialiseWithRefreshToken()
+        {
+            credentialsManager.token = new TokenResponse
+            {
+                refresh_token = REFRESH_TOKEN
+            };
+            httpMock.Responses.Add(CreateMockResponse(VALID_TOKEN_RESPONSE));
+        }
+
         private void AddDeviceCodeResponse()
         {
             httpMock.Responses.Add(CreateMockResponse(@$"{{""{KEY_DEVICE_CODE}"": ""{DEVICE_CODE}"",""user_code"": ""{USER_CODE}""," +
                 @$"""verification_uri"": ""verificationUri"",""expires_in"": 3600000,""interval"": 1,""verification_uri_complete"": ""verificationUriComplete""}}"));
+        }
+
+        private async void VerifyRefreshRequest(HttpRequestMessage request)
+        {
+            Assert.AreEqual(request.RequestUri, TOKEN_ENDPOINT);
+            Assert.AreEqual(request.Method, HttpMethod.Post);
+            string stringContent = await request.Content.ReadAsStringAsync();
+            Assert.True(stringContent.Contains($"{KEY_REFRESH_TOKEN}={REFRESH_TOKEN}"));
         }
 
         [Test]
@@ -110,11 +128,7 @@ namespace Immutable.Passport.Auth
         public async Task Login_Success_UsingRefreshToken()
         {
             credentialsManager.hasValidCredentials = false;
-            credentialsManager.token = new TokenResponse
-            {
-                refresh_token = REFRESH_TOKEN
-            };
-            httpMock.Responses.Add(CreateMockResponse(VALID_TOKEN_RESPONSE));
+            InitialiseWithRefreshToken();
 
             Assert.Null(manager.GetUser());
 
@@ -122,11 +136,7 @@ namespace Immutable.Passport.Auth
             Assert.Null(code);
             Assert.NotNull(manager.GetUser());
 
-            var request = httpMock.Requests[0];
-            Assert.AreEqual(request.RequestUri, TOKEN_ENDPOINT);
-            Assert.AreEqual(request.Method, HttpMethod.Post);
-            string stringContent = await request.Content.ReadAsStringAsync();
-            Assert.True(stringContent.Contains($"{KEY_REFRESH_TOKEN}={REFRESH_TOKEN}"));
+            VerifyRefreshRequest(httpMock.Requests[0]);
         }
 
         [Test]
@@ -171,6 +181,56 @@ namespace Immutable.Passport.Auth
 
             var deviceCodeRequest = httpMock.Requests[1];
             Assert.AreEqual(deviceCodeRequest.RequestUri, AUTH_CODE_ENDPOINT);
+        }
+
+        [Test]
+        public async Task Login_Cancelled_OnRefresh()
+        {
+            httpMock.responseDelay = 2000;
+            credentialsManager.hasValidCredentials = false;
+            InitialiseWithRefreshToken();
+
+            Assert.Null(manager.GetUser());
+
+            await ExpectError(() =>
+            {
+                return manager.Login(GetTokenCancelledInASecond());
+            }, typeof(OperationCanceledException));
+
+            Assert.Null(manager.GetUser());
+
+            VerifyRefreshRequest(httpMock.Requests[0]);
+        }
+
+        [Test]
+        public async Task Login_Cancelled_OnDeviceCode()
+        {
+            httpMock.responseDelay = 2000;
+            credentialsManager.hasValidCredentials = false;
+            credentialsManager.token = null;
+            AddDeviceCodeResponse();
+
+            await ExpectError(() =>
+            {
+                return manager.Login(GetTokenCancelledInASecond());
+            }, typeof(OperationCanceledException));
+
+            Assert.Null(manager.GetUser());
+
+            var request = httpMock.Requests[0];
+            Assert.AreEqual(request.RequestUri, AUTH_CODE_ENDPOINT);
+            Assert.AreEqual(request.Method, HttpMethod.Post);
+        }
+
+        private CancellationToken GetTokenCancelledInASecond()
+        {
+            CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
+            new Task(() =>
+            {
+                Thread.Sleep(100);
+                cancelTokenSource.Cancel();
+            }).Start();
+            return cancelTokenSource.Token;
         }
 
         [Test]
