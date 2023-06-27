@@ -131,7 +131,7 @@ namespace Immutable.Passport.Auth
 
             try
             {
-                using HttpResponseMessage response = await post($"{DOMAIN}{PATH_TOKEN}", content, token);
+                using HttpResponseMessage response = await Post($"{DOMAIN}{PATH_TOKEN}", content, token);
                 var responseString = await response.Content.ReadAsStringAsync();
                 Debug.Log($"{TAG} Refresh token response: {responseString}");
                 return JsonConvert.DeserializeObject<TokenResponse>(responseString);
@@ -196,7 +196,7 @@ namespace Immutable.Passport.Auth
 
             try
             {
-                using HttpResponseMessage response = await post($"{DOMAIN}{PATH_AUTH_CODE}", content, token);
+                using HttpResponseMessage response = await Post($"{DOMAIN}{PATH_AUTH_CODE}", content, token);
                 var responseString = await response.Content.ReadAsStringAsync();
                 Debug.Log($"{TAG} Device code response: {responseString}");
                 return JsonConvert.DeserializeObject<DeviceCodeResponse>(responseString);
@@ -279,7 +279,7 @@ namespace Immutable.Passport.Auth
 
             try
             {
-                using HttpResponseMessage response = await post($"{DOMAIN}{PATH_TOKEN}", content, token);
+                using HttpResponseMessage response = await Post($"{DOMAIN}{PATH_TOKEN}", content, token);
                 var responseString = await response.Content.ReadAsStringAsync();
                 Debug.Log($"{TAG} Token response: {responseString}");
                 return responseString;
@@ -292,7 +292,7 @@ namespace Immutable.Passport.Auth
             }
         }
 
-        private async UniTask<HttpResponseMessage> post(string requestUri, HttpContent content, CancellationToken? token)
+        private async UniTask<HttpResponseMessage> Post(string requestUri, HttpContent content, CancellationToken? token)
         {
 
             HttpResponseMessage response = token != null ? await client.PostAsync(requestUri, content, (CancellationToken)token) : await client.PostAsync(requestUri, content);

@@ -224,7 +224,7 @@ namespace Immutable.Passport.Auth
 
         private CancellationToken GetTokenCancelledInASecond()
         {
-            CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
+            CancellationTokenSource cancelTokenSource = new();
             new Task(() =>
             {
                 Thread.Sleep(100);

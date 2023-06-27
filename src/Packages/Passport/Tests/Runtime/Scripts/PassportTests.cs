@@ -227,7 +227,7 @@ namespace Immutable.Passport
 
         public UniTask<User> ConfirmCode(CancellationToken? token)
         {
-            return UniTask.FromResult(user);
+            return user != null ? UniTask.FromResult(user) : throw new NullReferenceException();
         }
 
         public User? GetUser()
