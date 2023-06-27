@@ -45,9 +45,9 @@ namespace Immutable.Passport
             }
         }
 
-        public async UniTask ConfirmCode()
+        public async UniTask ConfirmCode(CancellationToken? token = null)
         {
-            User user = await auth.ConfirmCode();
+            User user = await auth.ConfirmCode(token);
             await GetImxProvider(user);
         }
 

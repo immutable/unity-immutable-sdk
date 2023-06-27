@@ -255,6 +255,22 @@ namespace Immutable.Passport.Auth
         }
 
         [Test]
+        public async Task ConfirmCode_Cancelled()
+        {
+            PrepareForConfirmCode();
+
+            httpMock.Responses.Add(CreateMockResponse(CreateErrorJsonString("authorization_pending")));
+
+            await ExpectError(() =>
+            {
+                Assert.Null(manager.GetUser());
+                return manager.ConfirmCode(GetTokenCancelledInASecond());
+            }, typeof(OperationCanceledException));
+
+            Assert.Null(manager.GetUser());
+        }
+
+        [Test]
         public async Task ConfirmCode_Failed_PendingAndExpired()
         {
             PrepareForConfirmCode();

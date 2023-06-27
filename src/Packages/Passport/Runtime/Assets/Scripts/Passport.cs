@@ -115,9 +115,9 @@ namespace Immutable.Passport
             return await GetPassportImpl().Connect(token);
         }
 
-        public async UniTask ConfirmCode()
+        public async UniTask ConfirmCode(CancellationToken? token = null)
         {
-            await GetPassportImpl().ConfirmCode();
+            await GetPassportImpl().ConfirmCode(token);
         }
 
         public async UniTask<string?> GetAddress()
