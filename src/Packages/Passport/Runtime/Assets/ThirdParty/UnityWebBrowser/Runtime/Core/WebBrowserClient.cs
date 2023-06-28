@@ -81,21 +81,6 @@ namespace VoltstroStudios.UnityWebBrowser.Core
 
         [SerializeField] private Resolution resolution = new(1920, 1080);
 
-        /// <summary>
-        ///     The resolution of the browser.
-        ///     <para>There is a chance that resizing the screen causes UWB to crash Unity, use carefully!</para>
-        ///     <para>Resizing in performance mode is not supported!</para>
-        /// </summary>
-        public Resolution Resolution
-        {
-            get => resolution;
-            set
-            {
-                resolution = value;
-                Resize(value);
-            }
-        }
-
         #endregion
 
         /// <summary>
@@ -261,7 +246,6 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         private WebBrowserCommunicationsManager communicationsManager;
         private CancellationTokenSource cancellationSource;
 
-        private object resizeLock;
         private NativeArray<byte> textureData;
         internal NativeArray<byte> nextTextureData;
 
@@ -315,7 +299,6 @@ namespace VoltstroStudios.UnityWebBrowser.Core
                 false);
             WebBrowserUtils.SetAllTextureColorToOne(BrowserTexture, backgroundColor);
 
-            resizeLock = new object();
             textureData = BrowserTexture.GetRawTextureData<byte>();
             nextTextureData = new NativeArray<byte>(textureData.ToArray(), Allocator.Persistent);
 
@@ -491,13 +474,6 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             {
                 logger.Debug("UWB startup success, connecting...");
                 communicationsManager.Connect();
-                //_ = Task.Run(PixelDataLoop);
-
-                Thread pixelDataLoopThread = new(PixelDataLoop)
-                {
-                    Name = "UWB Pixel Data Loop Thread"
-                };
-                pixelDataLoopThread.Start();
             }
             catch (Exception ex)
             {
@@ -512,54 +488,6 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         #endregion
 
         #region Main Loop
-
-        internal void PixelDataLoop()
-        {
-            CancellationToken token = cancellationSource.Token;
-            while (!token.IsCancellationRequested)
-                try
-                {
-                    if (!IsConnected)
-                        continue;
-
-                    if (engineProcess.HasExited)
-                    {
-                        logger.Error("It appears that the engine process has quit!");
-                        cancellationSource.Cancel();
-                        return;
-                    }
-
-                    Thread.Sleep(5);
-
-                    if (token.IsCancellationRequested)
-                        return;
-
-                    markerGetPixels.Begin();
-                    {
-                        lock (resizeLock)
-                        {
-                            markerGetPixelsRpc.Begin();
-                            {
-                                communicationsManager.GetPixels();
-                            }
-                            markerGetPixelsRpc.End();
-
-                            textureData.CopyFrom(nextTextureData);
-                        }
-                    }
-                    markerGetPixels.End();
-
-                    frames++;
-                }
-                catch (TaskCanceledException)
-                {
-                    //Do nothing
-                }
-                catch (Exception ex)
-                {
-                    logger.Error($"Error in data loop! {ex}");
-                }
-        }
 
         /// <summary>
         ///     Loads the pixel data into the <see cref="BrowserTexture" />
@@ -762,20 +690,6 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         }
 
         /// <summary>
-        ///     Gets the mouse scroll position
-        ///     <para>THIS IS INVOKED ON THE THREAD THAT IS CALLING THIS AND IS BLOCKING</para>
-        /// </summary>
-        /// <returns>Returns the mouse scroll position as a <see cref="Vector2" /></returns>
-        public Vector2 GetScrollPosition()
-        {
-            CheckIfIsReadyAndConnected();
-
-            //Gotta convert it to a Unity vector2
-            System.Numerics.Vector2 position = communicationsManager.GetScrollPosition();
-            return new Vector2(position.X, position.Y);
-        }
-
-        /// <summary>
         ///     Tells the browser to go forward
         /// </summary>
         public void GoForward()
@@ -825,30 +739,6 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             CheckIfIsReadyAndConnected();
 
             communicationsManager.ExecuteJs(js);
-        }
-
-        /// <summary>
-        ///     Resizes the screen.
-        /// </summary>
-        /// <param name="newResolution"></param>
-        /// <exception cref="UwbIsNotConnectedException"></exception>
-        /// <exception cref="NotSupportedException"></exception>
-        public void Resize(Resolution newResolution)
-        {
-            CheckIfIsReadyAndConnected();
-
-            lock (resizeLock)
-            {
-                BrowserTexture.Reinitialize((int)newResolution.Width, (int)newResolution.Height);
-                textureData = BrowserTexture.GetRawTextureData<byte>();
-                communicationsManager.Resize(newResolution);
-
-                nextTextureData.Dispose();
-                nextTextureData = new NativeArray<byte>(textureData.ToArray(), Allocator.Persistent);
-                communicationsManager.pixelsEventTypeReader.SetPixelDataArray(nextTextureData);
-            }
-
-            logger.Debug($"Resized to {newResolution}.");
         }
 
         [DebuggerStepThrough]
@@ -938,11 +828,8 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             }
 
             //Dispose of buffers
-            lock (resizeLock)
-            {
-                if (nextTextureData.IsCreated)
-                    nextTextureData.Dispose();
-            }
+            if (nextTextureData.IsCreated)
+                nextTextureData.Dispose();
         }
 
         #endregion
