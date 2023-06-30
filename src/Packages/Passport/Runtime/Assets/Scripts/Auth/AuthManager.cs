@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using System;
 using System.Threading;
 using System.Collections.Generic;
@@ -219,7 +220,7 @@ namespace Immutable.Passport.Auth
             bool needToPoll = true;
             while (needToPoll)
             {
-                await UniTask.Delay(interval * 1000);
+                Task.Delay(interval * 1000).Wait();
 
                 var responseString = await GetTokenTask(deviceCode, token);
                 var tokenResponse = JsonConvert.DeserializeObject<TokenResponse>(responseString);
