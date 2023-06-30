@@ -22,14 +22,14 @@ namespace Immutable.Passport
             this.communicationsManager = communicationsManager;
         }
 
-        public async UniTask<string?> Connect(CancellationToken? token = null)
+        public async UniTask<ConnectResponse?> Connect(CancellationToken? token = null)
         {
-            string? code = await auth.Login(token);
+            ConnectResponse? response = await auth.Login(token);
             User? user = auth.GetUser();
-            if (code != null)
+            if (response != null)
             {
                 // Code confirmation required
-                return code;
+                return response;
             }
             else if (user != null)
             {

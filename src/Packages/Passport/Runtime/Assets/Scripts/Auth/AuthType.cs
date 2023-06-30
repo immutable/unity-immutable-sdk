@@ -16,6 +16,12 @@ namespace Immutable.Passport.Auth
         public string verification_uri_complete { get; set; }
     }
 
+    public class ConnectResponse
+    {
+        public string code { get; set; }
+        public string url { get; set; }
+    }
+
     public class TokenResponse
     {
         public string access_token { get; set; }

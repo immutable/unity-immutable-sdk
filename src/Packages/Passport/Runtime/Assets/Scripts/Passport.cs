@@ -110,7 +110,7 @@ namespace Immutable.Passport
         /// The end-user verification code if confirmation is required, otherwise null;
         /// </returns>
         /// </summary>
-        public async UniTask<string?> Connect(CancellationToken? token = null)
+        public async UniTask<ConnectResponse?> Connect(CancellationToken? token = null)
         {
             return await GetPassportImpl().Connect(token);
         }

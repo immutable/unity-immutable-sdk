@@ -12,7 +12,7 @@ namespace Immutable.Passport.Auth
 {
     public interface IAuthManager
     {
-        public UniTask<string?> Login(CancellationToken? token = null);
+        public UniTask<ConnectResponse?> Login(CancellationToken? token = null);
         public void Logout();
         public UniTask<User> ConfirmCode(CancellationToken? token = null);
         public User? GetUser();
@@ -72,7 +72,7 @@ namespace Immutable.Passport.Auth
         /// The end-user verification code if confirmation is required, otherwise null;
         /// </returns>
         /// </summary>
-        public async UniTask<string?> Login(CancellationToken? token = null)
+        public async UniTask<ConnectResponse?> Login(CancellationToken? token = null)
         {
             // If access token exists and is still valid, get saved credentials
             TokenResponse? savedCreds = manager.GetCredentials();
@@ -110,7 +110,11 @@ namespace Immutable.Passport.Auth
             deviceCodeResponse = await GetDeviceCodeTask(token);
             if (deviceCodeResponse != null)
             {
-                return deviceCodeResponse.user_code;
+                return new ConnectResponse()
+                {
+                    code = deviceCodeResponse.user_code,
+                    url = deviceCodeResponse.verification_uri_complete
+                };
             }
             else
             {

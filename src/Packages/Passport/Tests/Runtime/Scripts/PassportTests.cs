@@ -215,9 +215,13 @@ namespace Immutable.Passport
         public bool logoutCalled = false;
         public bool hasCredentialsSaved = false;
 
-        public UniTask<string?> Login(CancellationToken? token)
+        public UniTask<ConnectResponse?> Login(CancellationToken? token)
         {
-            return UniTask.FromResult(deviceCode);
+            return UniTask.FromResult(deviceCode != null ? new ConnectResponse()
+            {
+                code = deviceCode,
+                url = ""
+            } : null);
         }
 
         public void Logout()
