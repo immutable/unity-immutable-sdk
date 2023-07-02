@@ -115,6 +115,15 @@ namespace Immutable.Passport
             return await GetPassportImpl().Connect(token);
         }
 
+        /// <summary>
+        /// Attempts to connect the user to Passport using the saved access or refresh token. It will not fallback
+        /// to device code auth like Connect().
+        /// </summary>
+        public async UniTask ConnectSilent(CancellationToken? token = null)
+        {
+            await GetPassportImpl().ConnectSilent(token);
+        }
+
         public async UniTask ConfirmCode(CancellationToken? token = null)
         {
             await GetPassportImpl().ConfirmCode(token);

@@ -14,6 +14,8 @@ namespace Immutable.Passport.Auth
     public interface IAuthManager
     {
         public UniTask<ConnectResponse?> Login(CancellationToken? token = null);
+        public UniTask<bool> LoginSilent(CancellationToken? token = null);
+
         public void Logout();
         public UniTask<User> ConfirmCode(CancellationToken? token = null);
         public User? GetUser();
@@ -71,39 +73,15 @@ namespace Immutable.Passport.Auth
         /// The user does not need to log in if the previously issued access token is still valid or
         /// if the refresh token can be used to get a new access token.
         /// <returns>
-        /// The end-user verification code if confirmation is required, otherwise null;
+        /// The end-user verification code and url if confirmation is required, otherwise null;
         /// </returns>
         /// </summary>
         public async UniTask<ConnectResponse?> Login(CancellationToken? token = null)
         {
-            // If access token exists and is still valid, get saved credentials
-            TokenResponse? savedCreds = manager.GetCredentials();
-            if (savedCreds != null && manager.HasValidCredentials())
+            bool success = await LoginSilent(token);
+            if (success)
             {
-                Debug.Log($"{TAG} Tokens exist and are still valid");
-                user = savedCreds.ToUser();
                 return null;
-            }
-            else if (savedCreds?.refresh_token != null)
-            {
-                // Access token does not exist or is not longer valid
-                // Use refresh token if it exists
-                Debug.Log($"{TAG} Refreshing token...");
-                TokenResponse? tokenResponse = await RefreshToken(savedCreds.refresh_token, token);
-
-                token?.ThrowIfCancellationRequested();
-
-                try
-                {
-                    HandleTokenResponse(tokenResponse);
-                    return null;
-                }
-                catch (Exception)
-                {
-                    Debug.Log($"{TAG} Token refresh failed");
-                    // Clear everything and fallback to device code below
-                    manager.ClearCredentials();
-                }
             }
 
             // Can't use both access and refresh tokens
@@ -122,6 +100,50 @@ namespace Immutable.Passport.Auth
             {
                 throw new PassportException($"Failed to get device code", PassportErrorType.AUTHENTICATION_ERROR);
             }
+        }
+
+        /// <summary>
+        /// Logs the user into Passport if the access token is still valid or
+        /// if the refresh token can be used to get a new access token. 
+        ///
+        /// This method does not fallback to logging the user in via device code auth like Login().
+        /// <returns>
+        /// True if user logged in successfully
+        /// </returns>
+        /// </summary>
+        public async UniTask<bool> LoginSilent(CancellationToken? token = null)
+        {
+            // If access token exists and is still valid, get saved credentials
+            TokenResponse? savedCreds = manager.GetCredentials();
+            if (savedCreds != null && manager.HasValidCredentials())
+            {
+                Debug.Log($"{TAG} Tokens exist and are still valid");
+                user = savedCreds.ToUser();
+                return true;
+            }
+            else if (savedCreds?.refresh_token != null)
+            {
+                // Access token does not exist or is not longer valid
+                // Use refresh token if it exists
+                Debug.Log($"{TAG} Refreshing token...");
+                TokenResponse? tokenResponse = await RefreshToken(savedCreds.refresh_token, token);
+
+                token?.ThrowIfCancellationRequested();
+
+                try
+                {
+                    HandleTokenResponse(tokenResponse);
+                    return true;
+                }
+                catch (Exception)
+                {
+                    Debug.Log($"{TAG} Token refresh failed");
+                    // Clear everything and fallback to device code below
+                    manager.ClearCredentials();
+                }
+            }
+
+            return false;
         }
 
         private async UniTask<TokenResponse?> RefreshToken(string refreshToken, CancellationToken? token = null)

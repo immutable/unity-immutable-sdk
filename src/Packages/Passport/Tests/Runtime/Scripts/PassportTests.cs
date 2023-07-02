@@ -235,6 +235,11 @@ namespace Immutable.Passport
             } : null);
         }
 
+        public UniTask<bool> LoginSilent(CancellationToken? token)
+        {
+            return UniTask.FromResult(true);
+        }
+
         public void Logout()
         {
             logoutCalled = true;

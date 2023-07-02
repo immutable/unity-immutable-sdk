@@ -20,6 +20,15 @@ namespace Immutable.Passport
             this.communicationsManager = communicationsManager;
         }
 
+        /// <summary>
+        /// Connects the user into Passport via device code auth and sets up the IMX provider.
+        ///
+        /// The user does not need to go through the device code auth flow if the saved access token is still valid or
+        /// the refresh token can be used to get a new access token.
+        /// <returns>
+        /// The end-user verification code and url if the user has to go through device code auth, otherwise null;
+        /// </returns>
+        /// </summary>
         public async UniTask<ConnectResponse?> Connect(CancellationToken? token = null)
         {
             ConnectResponse? response = await auth.Login(token);
@@ -37,9 +46,27 @@ namespace Immutable.Passport
             }
             else
             {
-                // Should never get to here, but if it happens, log the user to reset everything
+                // Should never get to here, but if it happens, log the user out to reset everything
                 auth.Logout();
                 throw new InvalidOperationException("Something went wrong, call Connect() again");
+            }
+        }
+
+
+        /// <summary>
+        /// Similar to Connect, however if the saved access token is no longer valid and the refresh token cannot be used,
+        /// it will not fallback to device code
+        /// <returns>
+        /// True if the user successfully logged in using the saved access or refresh token.
+        /// </returns>
+        /// </summary>
+        public async UniTask ConnectSilent(CancellationToken? token = null)
+        {
+            bool response = await auth.LoginSilent(token);
+            User? user = auth.GetUser();
+            if (response && user != null)
+            {
+                await GetImxProvider(user);
             }
         }
 
