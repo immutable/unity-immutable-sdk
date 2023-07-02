@@ -138,6 +138,11 @@ namespace Immutable.Passport
             return GetPassportImpl().HasCredentialsSaved();
         }
 
+        public string? GetEmail()
+        {
+            return GetPassportImpl().GetEmail();
+        }
+
         public string? GetAccessToken()
         {
             return GetPassportImpl().GetAccessToken();

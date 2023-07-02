@@ -1,10 +1,8 @@
 using System;
 using System.Threading;
 using UnityEngine;
-using VoltstroStudios.UnityWebBrowser.Core;
 using Immutable.Passport.Auth;
 using Newtonsoft.Json;
-using System.IO;
 using Immutable.Passport.Model;
 using Immutable.Passport.Core;
 using Cysharp.Threading.Tasks;
@@ -82,6 +80,11 @@ namespace Immutable.Passport
         public bool HasCredentialsSaved()
         {
             return auth.HasCredentialsSaved();
+        }
+
+        public string? GetEmail()
+        {
+            return auth.GetEmail();
         }
 
 

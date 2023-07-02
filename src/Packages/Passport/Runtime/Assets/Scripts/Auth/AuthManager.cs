@@ -18,6 +18,7 @@ namespace Immutable.Passport.Auth
         public UniTask<User> ConfirmCode(CancellationToken? token = null);
         public User? GetUser();
         public bool HasCredentialsSaved();
+        public string? GetEmail();
 
     }
     public class AuthManager : IAuthManager
@@ -320,6 +321,17 @@ namespace Immutable.Passport.Auth
         public bool HasCredentialsSaved()
         {
             return manager.GetCredentials() != null;
+        }
+
+        public string? GetEmail()
+        {
+            TokenResponse? savedCreds = manager.GetCredentials();
+            if (savedCreds != null)
+            {
+                User? user = savedCreds.ToUser();
+                return user?.profile?.email;
+            }
+            return null;
         }
     }
 }

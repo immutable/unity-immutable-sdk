@@ -55,6 +55,8 @@ namespace Immutable.Passport.Auth
         private static readonly string TOKEN_ENDPOINT = $"{AuthManager.DOMAIN}{AuthManager.PATH_TOKEN}";
         private static readonly string AUTH_CODE_ENDPOINT = $"{AuthManager.DOMAIN}{AuthManager.PATH_AUTH_CODE}";
 
+        private static readonly string EMAIL = "armin@immutable.com";
+
 #pragma warning disable CS8618
         private AuthManager manager;
         private MockHttpMessageHandler httpMock;
@@ -379,12 +381,21 @@ namespace Immutable.Passport.Auth
                 Content = new StringContent(content)
             };
         }
+
+        [Test]
+        public void GetEmailTest()
+        {
+            Assert.Null(manager.GetEmail());
+            credentialsManager.email = EMAIL;
+            Assert.AreEqual(EMAIL, credentialsManager.GetEmail());
+        }
     }
 
     internal class MockCredentialsManager : ICredentialsManager
     {
         public bool hasValidCredentials = false;
         public TokenResponse? token = null;
+        public string? email = null;
 
         public void SaveCredentials(TokenResponse tokenResponse)
         {
@@ -399,6 +410,11 @@ namespace Immutable.Passport.Auth
         public bool HasValidCredentials()
         {
             return hasValidCredentials;
+        }
+
+        public string? GetEmail()
+        {
+            return email;
         }
 
         public void ClearCredentials()

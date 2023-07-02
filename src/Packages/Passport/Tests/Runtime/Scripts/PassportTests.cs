@@ -31,6 +31,7 @@ namespace Immutable.Passport
         internal static string ADDRESS = "0xaddress";
         internal static string SIGNATURE = "0xsignature";
         internal static string MESSAGE = "message";
+        internal static string EMAIL = "reuben@immutable.com";
 
 #pragma warning disable CS8618
         private MockAuthManager auth;
@@ -206,6 +207,14 @@ namespace Immutable.Passport
             Assert.AreEqual(PassportFunction.SIGN_MESSAGE, communicationsManager.fxName);
             Assert.AreEqual(MESSAGE, communicationsManager.data);
         }
+
+        [Test]
+        public async Task GetEmailTest()
+        {
+            Assert.Null(passport.GetEmail());
+            auth.email = EMAIL;
+            Assert.AreEqual(EMAIL, passport.GetEmail());
+        }
     }
 
     internal class MockAuthManager : IAuthManager
@@ -214,6 +223,7 @@ namespace Immutable.Passport
         public string? deviceCode = null;
         public bool logoutCalled = false;
         public bool hasCredentialsSaved = false;
+        public string? email = null;
 
         public UniTask<ConnectResponse?> Login(CancellationToken? token)
         {
@@ -242,6 +252,11 @@ namespace Immutable.Passport
         public bool HasCredentialsSaved()
         {
             return hasCredentialsSaved;
+        }
+
+        public string? GetEmail()
+        {
+            return email;
         }
     }
 
