@@ -51,7 +51,8 @@ namespace Immutable.Passport
         public async Task Connect_Success_FreshLogin()
         {
             auth.deviceCode = DEVICE_CODE;
-            Assert.AreEqual(DEVICE_CODE, await passport.Connect());
+            var response = await passport.Connect();
+            Assert.AreEqual(DEVICE_CODE, response.code);
         }
 
         [Test]

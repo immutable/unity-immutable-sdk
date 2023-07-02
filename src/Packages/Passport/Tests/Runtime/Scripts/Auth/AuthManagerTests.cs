@@ -18,6 +18,7 @@ namespace Immutable.Passport.Auth
         private const string KEY_DEVICE_CODE = "device_code";
         private const string KEY_REFRESH_TOKEN = "refresh_token";
         private const string USER_CODE = "userCode";
+        private const string DEVICE_CODE_URL = "deviceCodeAuthUrl";
         private const string DEVICE_CODE = "deviceCode";
         internal const string ACCESS_TOKEN = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjNhYVl5dGR3d2UwMzJzMXIzVElyOSJ9." +
             "eyJlbWFpbCI6ImRvbWluaWMubXVycmF5QGltbXV0YWJsZS5jb20iLCJvcmciOiJhNTdiMWYzZC1mYTU3LTRiNzgtODZkYy05ZDEyZDM1YjlhNj" +
@@ -91,7 +92,7 @@ namespace Immutable.Passport.Auth
         private void AddDeviceCodeResponse()
         {
             httpMock.Responses.Add(CreateMockResponse(@$"{{""{KEY_DEVICE_CODE}"": ""{DEVICE_CODE}"",""user_code"": ""{USER_CODE}""," +
-                @$"""verification_uri"": ""verificationUri"",""expires_in"": 3600000,""interval"": 1,""verification_uri_complete"": ""verificationUriComplete""}}"));
+                @$"""verification_uri"": ""verificationUri"",""expires_in"": 3600000,""interval"": 1,""verification_uri_complete"": ""{DEVICE_CODE_URL}""}}"));
         }
 
         private async void VerifyRefreshRequest(HttpRequestMessage request)
@@ -108,12 +109,13 @@ namespace Immutable.Passport.Auth
             credentialsManager.hasValidCredentials = false;
             credentialsManager.token = null;
             AddDeviceCodeResponse();
-            var code = await manager.Login();
+            var response = await manager.Login();
             var request = httpMock.Requests[0];
 
             Assert.AreEqual(request.RequestUri, AUTH_CODE_ENDPOINT);
             Assert.AreEqual(request.Method, HttpMethod.Post);
-            Assert.AreEqual(code, USER_CODE);
+            Assert.AreEqual(response.code, USER_CODE);
+            Assert.AreEqual(response.url, DEVICE_CODE_URL);
         }
 
         [Test]
@@ -175,8 +177,9 @@ namespace Immutable.Passport.Auth
 
             AddDeviceCodeResponse();
 
-            var code = await manager.Login();
-            Assert.AreEqual(code, USER_CODE);
+            var response = await manager.Login();
+            Assert.AreEqual(USER_CODE, response.code);
+            Assert.AreEqual(DEVICE_CODE_URL, response.url);
 
             var request = httpMock.Requests[0];
             Assert.AreEqual(request.RequestUri, TOKEN_ENDPOINT);
