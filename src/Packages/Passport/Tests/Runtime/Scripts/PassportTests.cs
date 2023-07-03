@@ -31,6 +31,7 @@ namespace Immutable.Passport
         internal static string ADDRESS = "0xaddress";
         internal static string SIGNATURE = "0xsignature";
         internal static string MESSAGE = "message";
+        internal static string EMAIL = "reuben@immutable.com";
 
 #pragma warning disable CS8618
         private MockAuthManager auth;
@@ -50,7 +51,8 @@ namespace Immutable.Passport
         public async Task Connect_Success_FreshLogin()
         {
             auth.deviceCode = DEVICE_CODE;
-            Assert.AreEqual(DEVICE_CODE, await passport.Connect());
+            var response = await passport.Connect();
+            Assert.AreEqual(DEVICE_CODE, response.code);
         }
 
         [Test]
@@ -206,6 +208,14 @@ namespace Immutable.Passport
             Assert.AreEqual(PassportFunction.SIGN_MESSAGE, communicationsManager.fxName);
             Assert.AreEqual(MESSAGE, communicationsManager.data);
         }
+
+        [Test]
+        public async Task GetEmailTest()
+        {
+            Assert.Null(passport.GetEmail());
+            auth.email = EMAIL;
+            Assert.AreEqual(EMAIL, passport.GetEmail());
+        }
     }
 
     internal class MockAuthManager : IAuthManager
@@ -214,10 +224,20 @@ namespace Immutable.Passport
         public string? deviceCode = null;
         public bool logoutCalled = false;
         public bool hasCredentialsSaved = false;
+        public string? email = null;
 
-        public UniTask<string?> Login(CancellationToken? token)
+        public UniTask<ConnectResponse?> Login(CancellationToken? token)
         {
-            return UniTask.FromResult(deviceCode);
+            return UniTask.FromResult(deviceCode != null ? new ConnectResponse()
+            {
+                code = deviceCode,
+                url = ""
+            } : null);
+        }
+
+        public UniTask<bool> LoginSilent(CancellationToken? token)
+        {
+            return UniTask.FromResult(true);
         }
 
         public void Logout()
@@ -238,6 +258,11 @@ namespace Immutable.Passport
         public bool HasCredentialsSaved()
         {
             return hasCredentialsSaved;
+        }
+
+        public string? GetEmail()
+        {
+            return email;
         }
     }
 

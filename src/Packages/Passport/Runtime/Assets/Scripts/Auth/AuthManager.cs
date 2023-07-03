@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using System;
 using System.Threading;
 using System.Collections.Generic;
@@ -12,11 +13,14 @@ namespace Immutable.Passport.Auth
 {
     public interface IAuthManager
     {
-        public UniTask<string?> Login(CancellationToken? token = null);
+        public UniTask<ConnectResponse?> Login(CancellationToken? token = null);
+        public UniTask<bool> LoginSilent(CancellationToken? token = null);
+
         public void Logout();
         public UniTask<User> ConfirmCode(CancellationToken? token = null);
         public User? GetUser();
         public bool HasCredentialsSaved();
+        public string? GetEmail();
 
     }
     public class AuthManager : IAuthManager
@@ -69,10 +73,45 @@ namespace Immutable.Passport.Auth
         /// The user does not need to log in if the previously issued access token is still valid or
         /// if the refresh token can be used to get a new access token.
         /// <returns>
-        /// The end-user verification code if confirmation is required, otherwise null;
+        /// The end-user verification code and url if confirmation is required, otherwise null;
         /// </returns>
         /// </summary>
-        public async UniTask<string?> Login(CancellationToken? token = null)
+        public async UniTask<ConnectResponse?> Login(CancellationToken? token = null)
+        {
+            bool success = await LoginSilent(token);
+            if (success)
+            {
+                return null;
+            }
+
+            // Can't use both access and refresh tokens
+            // Perform device code authorisation
+            Debug.Log($"{TAG} Starting device code authorisation...");
+            deviceCodeResponse = await GetDeviceCodeTask(token);
+            if (deviceCodeResponse != null)
+            {
+                return new ConnectResponse()
+                {
+                    code = deviceCodeResponse.user_code,
+                    url = deviceCodeResponse.verification_uri_complete
+                };
+            }
+            else
+            {
+                throw new PassportException($"Failed to get device code", PassportErrorType.AUTHENTICATION_ERROR);
+            }
+        }
+
+        /// <summary>
+        /// Logs the user into Passport if the access token is still valid or
+        /// if the refresh token can be used to get a new access token. 
+        ///
+        /// This method does not fallback to logging the user in via device code auth like Login().
+        /// <returns>
+        /// True if user logged in successfully
+        /// </returns>
+        /// </summary>
+        public async UniTask<bool> LoginSilent(CancellationToken? token = null)
         {
             // If access token exists and is still valid, get saved credentials
             TokenResponse? savedCreds = manager.GetCredentials();
@@ -80,7 +119,7 @@ namespace Immutable.Passport.Auth
             {
                 Debug.Log($"{TAG} Tokens exist and are still valid");
                 user = savedCreds.ToUser();
-                return null;
+                return true;
             }
             else if (savedCreds?.refresh_token != null)
             {
@@ -94,7 +133,7 @@ namespace Immutable.Passport.Auth
                 try
                 {
                     HandleTokenResponse(tokenResponse);
-                    return null;
+                    return true;
                 }
                 catch (Exception)
                 {
@@ -104,18 +143,7 @@ namespace Immutable.Passport.Auth
                 }
             }
 
-            // Can't use both access and refresh tokens
-            // Perform device code authorisation
-            Debug.Log($"{TAG} Starting device code authorisation...");
-            deviceCodeResponse = await GetDeviceCodeTask(token);
-            if (deviceCodeResponse != null)
-            {
-                return deviceCodeResponse.user_code;
-            }
-            else
-            {
-                throw new PassportException($"Failed to get device code", PassportErrorType.AUTHENTICATION_ERROR);
-            }
+            return false;
         }
 
         private async UniTask<TokenResponse?> RefreshToken(string refreshToken, CancellationToken? token = null)
@@ -215,7 +243,7 @@ namespace Immutable.Passport.Auth
             bool needToPoll = true;
             while (needToPoll)
             {
-                await UniTask.Delay(interval * 1000);
+                Task.Delay(interval * 1000).Wait();
 
                 var responseString = await GetTokenTask(deviceCode, token);
                 var tokenResponse = JsonConvert.DeserializeObject<TokenResponse>(responseString);
@@ -315,6 +343,17 @@ namespace Immutable.Passport.Auth
         public bool HasCredentialsSaved()
         {
             return manager.GetCredentials() != null;
+        }
+
+        public string? GetEmail()
+        {
+            TokenResponse? savedCreds = manager.GetCredentials();
+            if (savedCreds != null)
+            {
+                User? user = savedCreds.ToUser();
+                return user?.profile?.email;
+            }
+            return null;
         }
     }
 }

@@ -3,7 +3,8 @@
     "rootNamespace": "VoltstroStudios.UnityWebBrowser",
     "references": [
         "VoltstroStudios.NativeArraySpanExtensions",
-        "UniTask"
+        "UniTask",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [
         "Editor",
