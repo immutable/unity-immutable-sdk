@@ -14,15 +14,36 @@ namespace Immutable.Passport.Utility
             {
                 string[] parts = jwt.Split(".");
                 string payload = parts[1];
-                string padded = payload.PadRight(payload.Length + (4 - payload.Length % 4) % 4, '=');
-                byte[] data = Convert.FromBase64String(padded);
-                return Encoding.UTF8.GetString(data);
+                return Base64DecodeToString(payload);
             }
             catch (Exception ex)
             {
-                Debug.Log($"{TAG} Error decoding JWT: {ex.Message}");
+                Debug.Log($"{TAG} Error decoding JWT: {ex.Message} - {jwt}");
                 return null;
             }
+        }
+
+        // https://github.com/greenygh0st/JWT-Decoder/blob/master/JWTDecoder/JWTDecoder.cs#L50
+        private static string Base64DecodeToString(string ToDecode)
+        {
+            string decodePrepped = ToDecode.Replace("-", "+").Replace("_", "/");
+
+            switch (decodePrepped.Length % 4)
+            {
+                case 0:
+                    break;
+                case 2:
+                    decodePrepped += "==";
+                    break;
+                case 3:
+                    decodePrepped += "=";
+                    break;
+                default:
+                    throw new Exception("Not a legal base64 string!");
+            }
+
+            byte[] data = Convert.FromBase64String(decodePrepped);
+            return System.Text.Encoding.UTF8.GetString(data);
         }
     }
 }
