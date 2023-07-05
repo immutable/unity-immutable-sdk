@@ -114,8 +114,8 @@ namespace Immutable.Passport.Auth
 
             Assert.AreEqual(request.RequestUri, AUTH_CODE_ENDPOINT);
             Assert.AreEqual(request.Method, HttpMethod.Post);
-            Assert.AreEqual(response.code, USER_CODE);
-            Assert.AreEqual(response.url, DEVICE_CODE_URL);
+            Assert.AreEqual(response?.code, USER_CODE);
+            Assert.AreEqual(response?.url, DEVICE_CODE_URL);
         }
 
         [Test]
@@ -178,8 +178,8 @@ namespace Immutable.Passport.Auth
             AddDeviceCodeResponse();
 
             var response = await manager.Login();
-            Assert.AreEqual(USER_CODE, response.code);
-            Assert.AreEqual(DEVICE_CODE_URL, response.url);
+            Assert.AreEqual(USER_CODE, response?.code);
+            Assert.AreEqual(DEVICE_CODE_URL, response?.url);
 
             var request = httpMock.Requests[0];
             Assert.AreEqual(request.RequestUri, TOKEN_ENDPOINT);
