@@ -12,7 +12,6 @@ using VoltstroStudios.UnityWebBrowser.Editor.EngineManagement;
 
 namespace VoltstroStudios.UnityWebBrowser.Core.Engines
 {
-    [CreateAssetMenu(menuName = "UWB/UWB Engine Configuration", fileName = "New UWB Engine Configuration")]
     public class EngineConfiguration : Engine
     {
         public string engineAppName;

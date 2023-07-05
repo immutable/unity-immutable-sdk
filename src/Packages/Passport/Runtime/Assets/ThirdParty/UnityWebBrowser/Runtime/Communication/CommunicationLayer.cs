@@ -16,7 +16,7 @@ namespace VoltstroStudios.UnityWebBrowser.Communication
     ///         <see cref="Host" /> to use.
     ///     </para>
     /// </summary>
-    public abstract class CommunicationLayer : ScriptableObject
+    public abstract class CommunicationLayer
     {
         /// <summary>
         ///     Timeout time for connection
