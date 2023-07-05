@@ -10,7 +10,7 @@ using VoltstroStudios.UnityWebBrowser.Shared.Core;
 
 namespace VoltstroStudios.UnityWebBrowser.Core.Engines
 {
-    public abstract class Engine : ScriptableObject
+    public abstract class Engine
     {
         public abstract string GetEngineExecutableName();
 

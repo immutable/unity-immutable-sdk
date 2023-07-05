@@ -52,7 +52,7 @@ namespace Immutable.Passport
         {
             auth.deviceCode = DEVICE_CODE;
             var response = await passport.Connect();
-            Assert.AreEqual(DEVICE_CODE, response.code);
+            Assert.AreEqual(DEVICE_CODE, response?.code);
         }
 
         [Test]
@@ -210,7 +210,7 @@ namespace Immutable.Passport
         }
 
         [Test]
-        public async Task GetEmailTest()
+        public void GetEmailTest()
         {
             Assert.Null(passport.GetEmail());
             auth.email = EMAIL;

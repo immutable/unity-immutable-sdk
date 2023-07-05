@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Immutable.Passport;
+using Immutable.Passport.Auth;
 using System.Threading;
 
 public class UnauthenticatedScript : MonoBehaviour
@@ -61,14 +62,14 @@ public class UnauthenticatedScript : MonoBehaviour
             userCodeText.gameObject.SetActive(false);
             proceedLoginButton.gameObject.SetActive(false);
 
-            string? code = await passport.Connect();
+            ConnectResponse? response = await passport.Connect();
 
-            if (code != null)
+            if (response != null)
             {
                 // Code confirmation required
-                ShowOutput($"Code to verify: {code}");
+                ShowOutput($"Code to verify: {response.code}");
                 userCodeText.gameObject.SetActive(true);
-                userCodeText.text = code;
+                userCodeText.text = response.code;
                 proceedLoginButton.gameObject.SetActive(true);
             }
             else
