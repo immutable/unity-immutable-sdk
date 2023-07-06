@@ -56,9 +56,6 @@ namespace Immutable.Passport
         /// <summary>
         /// Similar to Connect, however if the saved access token is no longer valid and the refresh token cannot be used,
         /// it will not fallback to device code
-        /// <returns>
-        /// True if the user successfully logged in using the saved access or refresh token.
-        /// </returns>
         /// </summary>
         public async UniTask ConnectSilent(CancellationToken? token = null)
         {
