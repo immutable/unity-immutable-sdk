@@ -24,15 +24,18 @@ namespace Immutable.Passport
         public string accessToken;
         public string? refreshToken;
         public UserProfile? profile;
-        public string? etherKey;
+        public UserImx? imx;
 
-        public GetImxProviderRequest(string idToken, string accessToken, string? refreshToken, UserProfile? profile, string? etherKey)
+        public GetImxProviderRequest(string idToken, string accessToken, string? refreshToken, UserProfile? profile, string? ethAddress)
         {
             this.idToken = idToken;
             this.accessToken = accessToken;
             this.refreshToken = refreshToken;
             this.profile = profile;
-            this.etherKey = etherKey;
+            this.imx = new UserImx()
+            {
+                ethAddress = ethAddress
+            };
         }
     }
 }

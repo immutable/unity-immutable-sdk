@@ -80,7 +80,7 @@ namespace Immutable.Passport
         private async UniTask GetImxProvider(User u)
         {
             // Only send necessary values
-            GetImxProviderRequest request = new(u.idToken, u.accessToken, u.refreshToken, u.profile, u.etherKey);
+            GetImxProviderRequest request = new(u.idToken, u.accessToken, u.refreshToken, u.profile, u.imx?.ethAddress);
             string data = JsonConvert.SerializeObject(request);
 
             string? response = await communicationsManager.Call(PassportFunction.GET_IMX_PROVIDER, data);

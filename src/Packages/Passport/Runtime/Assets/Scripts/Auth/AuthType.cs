@@ -47,9 +47,9 @@ namespace Immutable.Passport.Auth
 
     internal class IdTokenPassport
     {
-        public string? ether_key { get; set; }
-        public string? stark_key { get; set; }
-        public string? user_admin_key { get; set; }
+        public string? imx_eth_address { get; set; }
+        public string? imx_stark_address { get; set; }
+        public string? imx_user_admin_address { get; set; }
     }
 
     internal class ErrorResponse

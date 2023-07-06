@@ -83,6 +83,8 @@ public class UnauthenticatedScript : MonoBehaviour
             string error = $"Connect() error: {ex.Message}";
             Debug.Log(error);
             ShowOutput(error);
+            // Restart everything
+            passport.Logout();
         }
     }
 
