@@ -50,34 +50,22 @@ public class AuthenticatedScript : MonoBehaviour
         }
     }
 
-    public void Logout()
+    public async void Logout()
     {
-        passport.Logout();
+        await passport.Logout();
         SceneManager.LoadScene(sceneName: "UnauthenticatedScene");
     }
 
-    public void GetAccessToken()
+    public async void GetAccessToken()
     {
-        ShowOutput(passport.GetAccessToken() ?? "No access token");
+        string? accessToken = await passport.GetAccessToken();
+        ShowOutput(accessToken ?? "No access token");
     }
 
-    public void GetIdToken()
+    public async void GetIdToken()
     {
-        ShowOutput(passport.GetIdToken() ?? "No ID token");
-    }
-
-    public async void SignMessage()
-    {
-        ShowOutput("Called SignMessage()...");
-        try
-        {
-            string? result = await passport.SignMessage(signInput.text);
-            ShowOutput(result ?? "No result");
-        }
-        catch (Exception)
-        {
-            ShowOutput("Unable to sign message");
-        }
+        string? idToken = await passport.GetIdToken();
+        ShowOutput(idToken ?? "No ID token");
     }
 
     private void ShowOutput(string message)

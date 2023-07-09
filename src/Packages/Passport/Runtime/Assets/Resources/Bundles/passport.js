@@ -828,6 +828,7 @@ class MagicAdapter {
     }
     async login(idToken, network) {
         return withPassportError(async ()=>{
+            console.log(`login with magic ${this.config.magicPublishableApiKey} | network: ${network} | providerId: ${this.config.magicProviderId}`);
             this.magicClient = new (0, _magicSdk.Magic)(this.config.magicPublishableApiKey, {
                 extensions: [
                     new (0, _oidc.OpenIdExtension)()
