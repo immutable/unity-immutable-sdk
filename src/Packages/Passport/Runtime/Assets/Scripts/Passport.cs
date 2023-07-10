@@ -1,6 +1,8 @@
 using System;
 using System.Threading;
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
 using VoltstroStudios.UnityWebBrowser.Core;
+#endif
 using Immutable.Passport.Auth;
 using Immutable.Passport.Model;
 using Immutable.Passport.Core;
@@ -30,7 +32,7 @@ namespace Immutable.Passport
         /// </summary> 
         private Passport()
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR_WIN
             Application.quitting += OnQuit;
 #endif
         }
@@ -41,6 +43,7 @@ namespace Immutable.Passport
             {
                 Instance = new Passport();
                 Instance.Initialise();
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
                 // Wait until we get a ready signal
                 return UniTask.WaitUntil(() => readySignalReceived != null)
                     .ContinueWith(async () =>
@@ -55,6 +58,10 @@ namespace Immutable.Passport
                             throw new PassportException("Failed to initiliase Passport");
                         }
                     });
+#else
+                readySignalReceived = true;
+                return UniTask.FromResult(Instance);
+#endif
             }
             else
             {
@@ -67,9 +74,13 @@ namespace Immutable.Passport
         {
             try
             {
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
                 BrowserCommunicationsManager communicationsManager = new(webBrowserClient);
                 communicationsManager.OnReady += () => readySignalReceived = true;
                 await webBrowserClient.Init();
+#else
+                BrowserCommunicationsManager communicationsManager = new();
+#endif
                 passportImpl = new PassportImpl(communicationsManager);
             }
             catch (Exception)
@@ -80,7 +91,7 @@ namespace Immutable.Passport
             }
         }
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR_WIN
         private void OnQuit()
         {
             // Need to clean up UWB resources when quitting the game in the editor

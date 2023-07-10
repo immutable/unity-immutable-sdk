@@ -2,7 +2,9 @@ using System.Net;
 using System;
 using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
 using VoltstroStudios.UnityWebBrowser.Core;
+#endif
 using Immutable.Passport.Model;
 using UnityEngine;
 using Newtonsoft.Json;
@@ -27,7 +29,9 @@ namespace Immutable.Passport.Core
         public const string INIT_REQUEST_ID = "1";
 
         private readonly IDictionary<string, UniTaskCompletionSource<string>> requestTaskMap = new Dictionary<string, UniTaskCompletionSource<string>>();
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
         private readonly IWebBrowserClient webBrowserClient;
+#endif
         public event OnBrowserReadyDelegate? OnReady;
 
         /// <summary>
@@ -36,10 +40,16 @@ namespace Immutable.Passport.Core
         /// </summary>
         private int callTimeout = 60000;
 
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
         public BrowserCommunicationsManager(IWebBrowserClient webBrowserClient)
         {
             this.webBrowserClient = webBrowserClient;
             this.webBrowserClient.OnUnityPostMessage += OnUnityPostMessage;
+        }
+#endif
+
+        public BrowserCommunicationsManager()
+        {
         }
 
         #region Unity to Browser
@@ -69,7 +79,9 @@ namespace Immutable.Passport.Core
 
             // Call the function on the JS side
             string js = @$"callFunction(""{requestJson}"")";
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
             webBrowserClient.ExecuteJs(js);
+#endif
         }
 
         #endregion
