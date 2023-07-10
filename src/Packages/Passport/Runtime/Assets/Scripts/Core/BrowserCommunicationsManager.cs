@@ -5,6 +5,7 @@ using System.Collections.Generic;
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
 using VoltstroStudios.UnityWebBrowser.Core;
 #endif
+using Immutable.Browser.Core;
 using Immutable.Passport.Model;
 using UnityEngine;
 using Newtonsoft.Json;

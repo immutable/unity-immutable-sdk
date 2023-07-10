@@ -4,7 +4,8 @@
     "references": [
         "VoltstroStudios.NativeArraySpanExtensions",
         "UniTask",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "Immutable.Browser.Core"
     ],
     "includePlatforms": [
         "Editor",
