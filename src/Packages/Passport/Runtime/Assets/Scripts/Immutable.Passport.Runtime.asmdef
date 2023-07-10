@@ -6,6 +6,7 @@
         "UniTask"
     ],
     "includePlatforms": [
+        "Android",
         "Editor",
         "WindowsStandalone64"
     ],
