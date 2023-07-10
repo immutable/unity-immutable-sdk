@@ -57,11 +57,9 @@ import java.util.concurrent.FutureTask;
 
 class CWebViewPluginNoUiInterface {
     private CWebViewPluginNoUi mPlugin;
-    private String mGameObject;
 
-    public CWebViewPluginNoUiInterface(CWebViewPluginNoUi plugin, String gameObject) {
+    public CWebViewPluginNoUiInterface(CWebViewPluginNoUi plugin) {
         mPlugin = plugin;
-        mGameObject = gameObject;
     }
 
     @JavascriptInterface
@@ -75,15 +73,8 @@ class CWebViewPluginNoUiInterface {
             return;
         }
         if (mPlugin.IsInitialized()) {
-            mPlugin.MyUnitySendMessage(mGameObject, method, message);
+            mPlugin.MyUnitySendMessage(method, message);
         }
-//        a.runOnUiThread(new Runnable() {
-//            public void run() {
-//                if (mPlugin.IsInitialized()) {
-//                    mPlugin.MyUnitySendMessage(mGameObject, method, message);
-//                }
-//            }
-//        });
     }
 }
 
@@ -97,10 +88,8 @@ public class CWebViewPluginNoUi {
     public static boolean isDestroyed(final Activity a) {
         if (a == null) {
             return true;
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            return a.isDestroyed();
         } else {
-            return false;
+            return a.isDestroyed();
         }
     }
 
@@ -112,22 +101,21 @@ public class CWebViewPluginNoUi {
         this.callback = callback;
     }
 
-    public void MyUnitySendMessage(String gameObject, final String method, final String message) {
-        if (callback != null && Objects.equals(method, "CallFromJS"))
+    public void MyUnitySendMessage(final String method, final String message) {
+        if (callback != null)
             unityHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    callback.callFromJs(message);
+                    callback.call(method + ":" + message);
                 }
             });
-
     }
 
     public boolean IsInitialized() {
         return mWebView != null;
     }
 
-    public void Init(final String gameObject, final String ua) {
+    public void Init(final String ua) {
         final CWebViewPluginNoUi self = this;
         final Activity a = UnityPlayer.currentActivity;
         if (CWebViewPluginNoUi.isDestroyed(a)) {
@@ -149,15 +137,6 @@ public class CWebViewPluginNoUi {
                 } catch (Exception ignored) {
                 }
                 webView.setVisibility(View.INVISIBLE);
-//            webView.setFocusable(true);
-//            webView.setFocusableInTouchMode(true);
-
-                // webView.setWebChromeClient(new WebChromeClient() {
-                //     public boolean onConsoleMessage(android.webkit.ConsoleMessage cm) {
-                //         Log.d("Webview", cm.message());
-                //         return true;
-                //     }
-                // });
                 webView.setWebChromeClient(new WebChromeClient() {
                     @Override
                     public boolean onJsAlert(WebView view, String url, String message, JsResult result) {
@@ -192,32 +171,28 @@ public class CWebViewPluginNoUi {
                     }
                 });
 
-                mWebViewPlugin = new CWebViewPluginNoUiInterface(self, gameObject);
+                mWebViewPlugin = new CWebViewPluginNoUiInterface(self);
 
                 webView.setWebViewClient(new WebViewClient() {
 
                     @Override
                     public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-                        System.out.println("<<Gree>> onReceivedError: " + description);
                         webView.loadUrl("about:blank");
                         mWebViewPlugin.call("CallOnError", errorCode + "\t" + description + "\t" + failingUrl);
                     }
 
                     @Override
                     public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
-                        System.out.println("<<Gree>> onReceivedHttpError: " + errorResponse.getReasonPhrase());
                         mWebViewPlugin.call("CallOnHttpError", Integer.toString(errorResponse.getStatusCode()));
                     }
 
                     @Override
                     public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                        System.out.println("<<Gree>> onPageStarted: " + url);
                         mWebViewPlugin.call("CallOnStarted", url);
                     }
 
                     @Override
                     public void onPageFinished(WebView view, String url) {
-                        System.out.println("<<Gree>> onPageFinished: " + url);
                         mWebViewPlugin.call("CallOnLoaded", url);
                     }
 
@@ -227,8 +202,6 @@ public class CWebViewPluginNoUi {
 
                     @Override
                     public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                        System.out.println("<<Gree>> shouldOverrideUrlLoading: " + url);
-                        boolean pass = true;
                         if (url.startsWith("unity:")) {
                             String message = url.substring(6);
                             mWebViewPlugin.call("CallFromJS", message);
@@ -244,11 +217,6 @@ public class CWebViewPluginNoUi {
                             return false;
                         }
                         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                        PackageManager pm = a.getPackageManager();
-                        // List<ResolveInfo> apps = pm.queryIntentActivities(intent, 0);
-                        // if (apps.size() > 0) {
-                        //     view.getContext().startActivity(intent);
-                        // }
                         try {
                             view.getContext().startActivity(intent);
                         } catch (ActivityNotFoundException ex) {
@@ -262,7 +230,6 @@ public class CWebViewPluginNoUi {
                 if (ua != null && ua.length() > 0) {
                     webSettings.setUserAgentString(ua);
                 }
-//            mWebViewUA = webSettings.getUserAgentString();
                 webSettings.setJavaScriptEnabled(true);
                 webSettings.setGeolocationEnabled(true);
                 webSettings.setAllowUniversalAccessFromFileURLs(true);
@@ -277,7 +244,6 @@ public class CWebViewPluginNoUi {
     }
 
     public void LoadURL(final String url) {
-        System.out.println("<<Gree>> Load URL called: " + url + " webview is null" + (mWebView == null));
         final Activity a = UnityPlayer.currentActivity;
         if (CWebViewPlugin.isDestroyed(a)) {
             return;
@@ -287,7 +253,6 @@ public class CWebViewPluginNoUi {
                 if (mWebView == null) {
                     return;
                 }
-                System.out.println("<<Gree>> Load URL in block: " + url);
                 mWebView.loadUrl(url);
             }
         });
@@ -319,65 +284,6 @@ public class CWebViewPluginNoUi {
                     return;
                 }
                 mWebView.setNetworkAvailable(networkUp);
-            }
-        });
-    }
-
-    // as the following explicitly pause/resume, pauseTimers()/resumeTimers() are always
-    // called. this differs from OnApplicationPause().
-    public void Pause() {
-        final Activity a = UnityPlayer.currentActivity;
-        if (CWebViewPlugin.isDestroyed(a)) {
-            return;
-        }
-        a.runOnUiThread(new Runnable() {
-            public void run() {
-                if (mWebView == null) {
-                    return;
-                }
-                mWebView.onPause();
-                mWebView.pauseTimers();
-            }
-        });
-    }
-
-    public void Resume() {
-        final Activity a = UnityPlayer.currentActivity;
-        if (CWebViewPlugin.isDestroyed(a)) {
-            return;
-        }
-        a.runOnUiThread(new Runnable() {
-            public void run() {
-                if (mWebView == null) {
-                    return;
-                }
-                mWebView.onResume();
-                mWebView.resumeTimers();
-            }
-        });
-    }
-
-    // cf. https://stackoverflow.com/questions/31788748/webview-youtube-videos-playing-in-background-on-rotation-and-minimise/31789193#31789193
-    public void OnApplicationPause(final boolean paused) {
-        final Activity a = UnityPlayer.currentActivity;
-        if (CWebViewPlugin.isDestroyed(a)) {
-            return;
-        }
-        a.runOnUiThread(new Runnable() {
-            public void run() {
-                if (mWebView == null) {
-                    return;
-                }
-                if (paused) {
-                    mWebView.onPause();
-                    if (mWebView.getVisibility() == View.VISIBLE) {
-                        // cf. https://qiita.com/nbhd/items/d31711faa8852143f3a4
-                        mWebView.pauseTimers();
-                    }
-                } else {
-                    mWebView.onResume();
-                    mWebView.resumeTimers();
-                }
             }
         });
     }

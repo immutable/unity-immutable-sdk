@@ -79,33 +79,7 @@ public class WebViewObject
             this.callback = callback;
         }
 
-        public void callFromJs(String message) {
-            var i = s.IndexOf(':', 0);
-            if (i == -1)
-                continue;
-            switch (s.Substring(0, i)) {
-            case "CallFromJS":
-                CallFromJS(s.Substring(i + 1));
-                break;
-            case "CallOnError":
-                CallOnError(s.Substring(i + 1));
-                break;
-            case "CallOnHttpError":
-                CallOnHttpError(s.Substring(i + 1));
-                break;
-            case "CallOnLoaded":
-                CallOnLoaded(s.Substring(i + 1));
-                break;
-            case "CallOnStarted":
-                CallOnStarted(s.Substring(i + 1));
-                break;
-            case "CallOnHooked":
-                CallOnHooked(s.Substring(i + 1));
-                break;
-            case "CallOnCookies":
-                CallOnCookies(s.Substring(i + 1));
-                break;
-            Debug.Log("CALLBACK FROM JS " + message);
+        public void call(String message) {
             callback(message);
         }
     }
@@ -290,13 +264,35 @@ public class WebViewObject
     private static extern void _gree_unity_webview_destroy(string name);
 #endif
 
-    public static bool IsWebViewAvailable()
+    public void handleMessage(string message)
     {
-#if !UNITY_EDITOR && UNITY_ANDROID
-        return (new AndroidJavaObject("net.gree.unitywebview.CWebViewPlugin")).CallStatic<bool>("IsWebViewAvailable");
-#else
-        return true;
-#endif
+        var i = message.IndexOf(':', 0);
+        if (i == -1)
+            return;
+        switch (message.Substring(0, i))
+        {
+            case "CallFromJS":
+                CallFromJS(message.Substring(i + 1));
+                break;
+            case "CallOnError":
+                CallOnError(message.Substring(i + 1));
+                break;
+            case "CallOnHttpError":
+                CallOnHttpError(message.Substring(i + 1));
+                break;
+            case "CallOnLoaded":
+                CallOnLoaded(message.Substring(i + 1));
+                break;
+            case "CallOnStarted":
+                CallOnStarted(message.Substring(i + 1));
+                break;
+            case "CallOnHooked":
+                CallOnHooked(message.Substring(i + 1));
+                break;
+            case "CallOnCookies":
+                CallOnCookies(message.Substring(i + 1));
+                break;
+        }
     }
 
     public void Init(
@@ -384,22 +380,10 @@ public class WebViewObject
         rect = new Rect(0, 0, Screen.width, Screen.height);
 #elif UNITY_IPHONE
         webView = _CWebViewPlugin_Init("name", transparent, zoom, ua, enableWKWebView, wkContentMode, wkAllowsLinkPreview, wkAllowsBackForwardNavigationGestures, radius);
-        Debug.Log("DAHM: Is webview null? " + webView == null);
 #elif UNITY_ANDROID
         webView = new AndroidJavaObject("net.gree.unitywebview.CWebViewPluginNoUi");
-        // webView.Call("Init", name, transparent, zoom, androidForceDarkMode, ua, radius);
-        webView.Call("Init", "name", ua);
-        webView.Call("setCallback", new AndroidCallback((message) => CallFromJS(message)));
-
-        // using(AndroidJavaClass UnityClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
-        // {
-        //     AndroidJavaObject View = UnityClass.GetStatic<AndroidJavaObject>("currentActivity").Get<AndroidJavaObject>("mUnityPlayer").Call<AndroidJavaObject>("getView");
-        //     using(AndroidJavaObject Rct = new AndroidJavaObject("android.graphics.Rect"))
-        //     {
-        //         View.Call("getWindowVisibleDisplayFrame", Rct);
-        //         mWindowVisibleDisplayFrameHeight = Rct.Call<int>("height");
-        //     }
-        // }
+        webView.Call("Init", ua);
+        webView.Call("setCallback", new AndroidCallback((message) => handleMessage(message)));
 #else
         Debug.LogError("Webview is not supported on this platform.");
 #endif
@@ -418,9 +402,6 @@ public class WebViewObject
             return false;
         return _CWebViewPlugin_SetURLPattern(webView, allowPattern, denyPattern, hookPattern);
 #elif UNITY_ANDROID
-        if (webView == null)
-            return false;
-        return webView.Call<bool>("SetURLPattern", allowPattern, denyPattern, hookPattern);
 #endif
     }
 
@@ -437,12 +418,10 @@ public class WebViewObject
 #elif UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_LINUX
         //TODO: UNSUPPORTED
 #elif UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX || UNITY_IPHONE
-        Debug.Log($"{TAG} LoadURL Apple: {url} {webView == IntPtr.Zero}");
         if (webView == IntPtr.Zero)
             return;
         _CWebViewPlugin_LoadURL(webView, url);
 #elif UNITY_ANDROID
-        Debug.Log($"{TAG} LoadURL Android: {url} {webView != null}");
         if (webView == null)
             return;
         webView.Call("LoadURL", url);
