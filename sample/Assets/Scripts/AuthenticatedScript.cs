@@ -68,6 +68,12 @@ public class AuthenticatedScript : MonoBehaviour
         ShowOutput(idToken ?? "No ID token");
     }
 
+    public async void GetEmail()
+    {
+        string? email = await passport.GetEmail();
+        ShowOutput(email ?? "No email");
+    }
+
     private void ShowOutput(string message)
     {
         if (output != null)

@@ -47,10 +47,10 @@ namespace Immutable.Passport
         [Test]
         public async Task GetAddress_Success()
         {
-            var response = new AddressResponse
+            var response = new StringResponse
             {
                 success = true,
-                address = ADDRESS
+                result = ADDRESS
             };
             communicationsManager.response = JsonConvert.SerializeObject(response);
             var address = await passport.GetAddress();

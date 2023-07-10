@@ -23,7 +23,7 @@ namespace Immutable.Passport
         public async UniTask Init(string clientId)
         {
             string response = await communicationsManager.Call(PassportFunction.INIT, clientId);
-            InitResponse? initResponse = JsonUtility.FromJson<InitResponse>(response);
+            Response? initResponse = JsonUtility.FromJson<Response>(response);
             if (initResponse?.success == false)
             {
                 throw new PassportException(initResponse?.error ?? "Unable to initialise Passport");
@@ -144,7 +144,7 @@ namespace Immutable.Passport
         public async UniTask<string?> GetAddress()
         {
             string response = await communicationsManager.Call(PassportFunction.GET_ADDRESS);
-            return JsonUtility.FromJson<AddressResponse>(response)?.address;
+            return JsonUtility.FromJson<StringResponse>(response)?.result;
         }
 
 
@@ -166,9 +166,10 @@ namespace Immutable.Passport
             return savedCredentials?.accessToken != null && savedCredentials?.idToken != null;
         }
 
-        public string? GetEmail()
+        public async UniTask<string?> GetEmail()
         {
-            return null;//auth.GetEmail();
+            string response = await communicationsManager.Call(PassportFunction.GET_EMAIL);
+            return JsonUtility.FromJson<StringResponse>(response)?.result;
         }
 
         public async UniTask<string?> GetAccessToken()

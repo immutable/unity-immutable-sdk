@@ -9,7 +9,6 @@ namespace Immutable.Passport
         public const string CHECK_STORED_CREDENTIALS = "checkStoredCredentials";
         public const string GET_ADDRESS = "getAddress";
         public const string LOGOUT = "logout";
-        public const string GET_IMX_PROVIDER = "getImxProvider";
-        public const string SIGN_MESSAGE = "signMessage";
+        public const string GET_EMAIL = "getEmail";
     }
 }

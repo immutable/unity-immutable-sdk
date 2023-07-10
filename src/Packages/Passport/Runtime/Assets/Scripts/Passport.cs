@@ -41,26 +41,26 @@ namespace Immutable.Passport
             {
                 Instance = new Passport();
                 Instance.Initialise();
+                // Wait until we get a ready signal
+                return UniTask.WaitUntil(() => readySignalReceived != null)
+                    .ContinueWith(async () =>
+                    {
+                        if (readySignalReceived == true)
+                        {
+                            await Instance.GetPassportImpl().Init(clientId);
+                            return Instance;
+                        }
+                        else
+                        {
+                            throw new PassportException("Failed to initiliase Passport");
+                        }
+                    });
             }
             else
             {
                 readySignalReceived = true;
+                return UniTask.FromResult(Instance);
             }
-
-            // Wait until we get a ready signal
-            return UniTask.WaitUntil(() => readySignalReceived != null)
-                .ContinueWith(async () =>
-                {
-                    if (readySignalReceived == true)
-                    {
-                        await Instance.GetPassportImpl().Init(clientId);
-                        return Instance;
-                    }
-                    else
-                    {
-                        throw new PassportException("Failed to initiliase Passport");
-                    }
-                });
         }
 
         private async void Initialise()
@@ -144,9 +144,10 @@ namespace Immutable.Passport
             return GetPassportImpl().HasCredentialsSaved();
         }
 
-        public string? GetEmail()
+        public async UniTask<string?> GetEmail()
         {
-            return GetPassportImpl().GetEmail();
+            string? email = await GetPassportImpl().GetEmail();
+            return email;
         }
 
         public UniTask<string?> GetAccessToken()
