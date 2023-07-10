@@ -23,7 +23,7 @@ namespace Immutable.Passport.Editor
             string buildAppName = Path.GetFileNameWithoutExtension(buildFullOutputPath);
             string buildOutputPath = Path.GetDirectoryName(buildFullOutputPath);
 
-            Debug.Log("Copying passport HTML and JS files...");
+            Debug.Log("Copying passport browser files...");
 
             // Get the build's data folder
             string buildDataPath = Path.GetFullPath($"{buildOutputPath}/{buildAppName}_Data/");
