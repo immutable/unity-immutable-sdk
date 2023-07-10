@@ -6,11 +6,14 @@ using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 
-namespace Immutable.Passport.Editor {
-    internal class PassportPostprocess : IPostprocessBuildWithReport {
+namespace Immutable.Passport.Editor
+{
+    internal class PassportPostprocess : IPostprocessBuildWithReport
+    {
         public int callbackOrder => 0;
 
-        public void OnPostprocessBuild(BuildReport report) {
+        public void OnPostprocessBuild(BuildReport report)
+        {
             if (report.summary.result is BuildResult.Failed or BuildResult.Cancelled)
                 return;
 
@@ -24,13 +27,15 @@ namespace Immutable.Passport.Editor {
 
             // Get the build's data folder
             string buildDataPath = Path.GetFullPath($"{buildOutputPath}/{buildAppName}_Data/");
-            if (buildTarget == BuildTarget.StandaloneOSX) {
+            if (buildTarget == BuildTarget.StandaloneOSX)
+            {
                 buildDataPath =
                     Path.GetFullPath($"{buildOutputPath}/{buildAppName}.app/Contents/Resources/Data/");
             }
 
             // Check that the data folder exists
-            if (!Directory.Exists(buildDataPath)) {
+            if (!Directory.Exists(buildDataPath))
+            {
                 Debug.LogError(
                     "Failed to get the build's data folder. Make sure your build is the same name as your product name (In your project settings).");
                 return;
@@ -41,15 +46,20 @@ namespace Immutable.Passport.Editor {
 
             // Make sure it exists
             DirectoryInfo buildPassportInfo = new(buildPassportPath);
-            if (!buildPassportInfo.Exists){
+            if (!buildPassportInfo.Exists)
+            {
                 Directory.CreateDirectory(buildPassportPath);
-            } else {
+            }
+            else
+            {
                 // If the directory exists, clear it
-                foreach (FileInfo fileInfo in buildPassportInfo.EnumerateFiles()) {
+                foreach (FileInfo fileInfo in buildPassportInfo.EnumerateFiles())
+                {
                     fileInfo.Delete();
                 }
 
-                foreach (DirectoryInfo directoryInfo in buildPassportInfo.EnumerateDirectories()) {
+                foreach (DirectoryInfo directoryInfo in buildPassportInfo.EnumerateDirectories())
+                {
                     directoryInfo.Delete(true);
                 }
             }
@@ -60,22 +70,23 @@ namespace Immutable.Passport.Editor {
 
             // Find the location of the files
             string passportWebFilesDir = Path.GetFullPath("Packages/com.immutable.passport/Runtime/Assets/Resources");
-            if (!Directory.Exists(passportWebFilesDir)) {
+            if (!Directory.Exists(passportWebFilesDir))
+            {
                 Debug.LogError("The Passport files directory doesn't exist!");
                 return;
             }
 
-            foreach (string dir in Directory.GetDirectories(passportWebFilesDir, "*", SearchOption.AllDirectories)) 
+            foreach (string dir in Directory.GetDirectories(passportWebFilesDir, "*", SearchOption.AllDirectories))
             {
-                string dirToCreate = dir.Replace(passportWebFilesDir, buildPassportPath); 
-                Directory.CreateDirectory(dirToCreate); 
+                string dirToCreate = dir.Replace(passportWebFilesDir, buildPassportPath);
+                Directory.CreateDirectory(dirToCreate);
             }
-                
-            foreach (string newPath in Directory.GetFiles(passportWebFilesDir, "*.*", SearchOption.AllDirectories)) 
+
+            foreach (string newPath in Directory.GetFiles(passportWebFilesDir, "*.*", SearchOption.AllDirectories))
             {
                 if (!newPath.EndsWith(".meta"))
                 {
-                    File.Copy(newPath, newPath.Replace(passportWebFilesDir, buildPassportPath), true); 
+                    File.Copy(newPath, newPath.Replace(passportWebFilesDir, buildPassportPath), true);
                 }
             }
 

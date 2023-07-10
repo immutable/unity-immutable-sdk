@@ -50,7 +50,7 @@ namespace Immutable.Passport
             {
                 Debug.Log($"{TAG} Unable to connect with stored credentials");
             }
-            
+
             // Fallback to device code auth flow
             Debug.Log($"{TAG} Fallback to device code auth");
             ConnectResponse? connectResponse = await InitialiseDeviceCodeAuth();
@@ -66,7 +66,8 @@ namespace Immutable.Passport
                 deviceConnectResponse = JsonUtility.FromJson<DeviceConnectResponse>(callResponse);
                 if (deviceConnectResponse != null)
                 {
-                    return new ConnectResponse(){
+                    return new ConnectResponse()
+                    {
                         url = deviceConnectResponse.url,
                         code = deviceConnectResponse.code
                     };
@@ -75,7 +76,7 @@ namespace Immutable.Passport
 
             await Logout();
             throw new PassportException(
-                response?.error ?? "Something went wrong, please call Connect() again", 
+                response?.error ?? "Something went wrong, please call Connect() again",
                 PassportErrorType.AUTHENTICATION_ERROR
             );
         }
@@ -101,7 +102,7 @@ namespace Immutable.Passport
                 if (response?.success == false)
                 {
                     throw new PassportException(
-                        response?.error ?? "Unable to connect using stored credentials", 
+                        response?.error ?? "Unable to connect using stored credentials",
                         PassportErrorType.AUTHENTICATION_ERROR
                     );
                 }
@@ -116,12 +117,13 @@ namespace Immutable.Passport
                 Application.OpenURL(deviceConnectResponse.url);
 
                 // Start polling for token
-                ConfirmCodeRequest request = new(){
+                ConfirmCodeRequest request = new()
+                {
                     deviceCode = deviceConnectResponse.deviceCode,
                     interval = deviceConnectResponse.interval,
                     timeoutMs = timeoutMs
                 };
-            
+
                 string callResponse = await communicationsManager.Call(
                     PassportFunction.CONFIRM_CODE,
                     JsonConvert.SerializeObject(request)
@@ -130,7 +132,7 @@ namespace Immutable.Passport
                 if (response?.success == false)
                 {
                     throw new PassportException(
-                        response?.error ?? "Unable to confirm code, call Connect() again", 
+                        response?.error ?? "Unable to confirm code, call Connect() again",
                         PassportErrorType.AUTHENTICATION_ERROR
                     );
                 }
