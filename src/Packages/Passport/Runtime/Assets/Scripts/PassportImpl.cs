@@ -11,13 +11,23 @@ namespace Immutable.Passport
 {
     public class PassportImpl
     {
-        private readonly IAuthManager auth;
+        private const string TAG = "[Passport Implementation]";
         public readonly IBrowserCommunicationsManager communicationsManager;
+        private DeviceConnectResponse? deviceConnectResponse;
 
-        public PassportImpl(IAuthManager authManager, IBrowserCommunicationsManager communicationsManager)
+        public PassportImpl(IBrowserCommunicationsManager communicationsManager)
         {
-            this.auth = authManager;
             this.communicationsManager = communicationsManager;
+        }
+
+        public async UniTask Init(string clientId)
+        {
+            string response = await communicationsManager.Call(PassportFunction.INIT, clientId);
+            Response? initResponse = JsonUtility.FromJson<Response>(response);
+            if (initResponse?.success == false)
+            {
+                throw new PassportException(initResponse?.error ?? "Unable to initialise Passport");
+            }
         }
 
         /// <summary>
@@ -31,25 +41,44 @@ namespace Immutable.Passport
         /// </summary>
         public async UniTask<ConnectResponse?> Connect(CancellationToken? token = null)
         {
-            ConnectResponse? response = await auth.Login(token);
-            User? user = auth.GetUser();
-            if (response != null)
+            try
             {
-                // Code confirmation required
-                return response;
-            }
-            else if (user != null)
-            {
-                // Credentials are still valid, get provider
-                await GetImxProvider(user);
+                await ConnectSilent();
                 return null;
             }
-            else
+            catch (Exception)
             {
-                // Should never get to here, but if it happens, log the user out to reset everything
-                auth.Logout();
-                throw new InvalidOperationException("Something went wrong, call Connect() again");
+                Debug.Log($"{TAG} Unable to connect with stored credentials");
             }
+
+            // Fallback to device code auth flow
+            Debug.Log($"{TAG} Fallback to device code auth");
+            ConnectResponse? connectResponse = await InitialiseDeviceCodeAuth();
+            return connectResponse;
+        }
+
+        private async UniTask<ConnectResponse?> InitialiseDeviceCodeAuth()
+        {
+            string callResponse = await communicationsManager.Call(PassportFunction.CONNECT);
+            Response? response = JsonUtility.FromJson<Response>(callResponse);
+            if (response?.success == true)
+            {
+                deviceConnectResponse = JsonUtility.FromJson<DeviceConnectResponse>(callResponse);
+                if (deviceConnectResponse != null)
+                {
+                    return new ConnectResponse()
+                    {
+                        url = deviceConnectResponse.url,
+                        code = deviceConnectResponse.code
+                    };
+                }
+            }
+
+            await Logout();
+            throw new PassportException(
+                response?.error ?? "Something went wrong, please call Connect() again",
+                PassportErrorType.AUTHENTICATION_ERROR
+            );
         }
 
 
@@ -59,90 +88,103 @@ namespace Immutable.Passport
         /// </summary>
         public async UniTask ConnectSilent(CancellationToken? token = null)
         {
-            bool response = await auth.LoginSilent(token);
-            User? user = auth.GetUser();
-            if (response && user != null)
+            string callResponse = await communicationsManager.Call(PassportFunction.CHECK_STORED_CREDENTIALS);
+            TokenResponse? tokenResponse = JsonUtility.FromJson<TokenResponse>(callResponse);
+            if (tokenResponse != null)
             {
-                await GetImxProvider(user);
+                // Credentials exist in storage, try and connect with it
+                callResponse = await communicationsManager.Call(
+                    PassportFunction.CONNECT_WITH_CREDENTIALS,
+                    JsonConvert.SerializeObject(tokenResponse)
+                );
+
+                Response? response = JsonUtility.FromJson<Response>(callResponse);
+                if (response?.success == false)
+                {
+                    throw new PassportException(
+                        response?.error ?? "Unable to connect using stored credentials",
+                        PassportErrorType.AUTHENTICATION_ERROR
+                    );
+                }
             }
         }
 
-        public async UniTask ConfirmCode(CancellationToken? token = null)
+        public async UniTask ConfirmCode(long? timeoutMs = null, CancellationToken? token = null)
         {
-            User user = await auth.ConfirmCode(token);
-            await GetImxProvider(user);
-        }
-
-
-        private async UniTask GetImxProvider(User u)
-        {
-            // Only send necessary values
-            GetImxProviderRequest request = new(u.idToken, u.accessToken, u.refreshToken, u.profile, u.etherKey);
-            string data = JsonConvert.SerializeObject(request);
-
-            string? response = await communicationsManager.Call(PassportFunction.GET_IMX_PROVIDER, data);
-            bool success = JsonUtility.FromJson<Response>(response)?.success == true;
-            if (!success)
+            if (deviceConnectResponse != null)
             {
-                throw new PassportException("Failed to get IMX provider", PassportErrorType.WALLET_CONNECTION_ERROR);
+                // Open URL for user to confirm
+                Application.OpenURL(deviceConnectResponse.url);
+
+                // Start polling for token
+                ConfirmCodeRequest request = new()
+                {
+                    deviceCode = deviceConnectResponse.deviceCode,
+                    interval = deviceConnectResponse.interval,
+                    timeoutMs = timeoutMs
+                };
+
+                string callResponse = await communicationsManager.Call(
+                    PassportFunction.CONFIRM_CODE,
+                    JsonConvert.SerializeObject(request)
+                );
+                Response? response = JsonUtility.FromJson<Response>(callResponse);
+                if (response?.success == false)
+                {
+                    throw new PassportException(
+                        response?.error ?? "Unable to confirm code, call Connect() again",
+                        PassportErrorType.AUTHENTICATION_ERROR
+                    );
+                }
+            }
+            else
+            {
+                throw new PassportException("Call Connect() first", PassportErrorType.AUTHENTICATION_ERROR);
             }
         }
-
 
         public async UniTask<string?> GetAddress()
         {
             string response = await communicationsManager.Call(PassportFunction.GET_ADDRESS);
-            return JsonUtility.FromJson<AddressResponse>(response)?.address;
-        }
-
-
-        public void Logout()
-        {
-            auth.Logout();
-        }
-
-        public bool HasCredentialsSaved()
-        {
-            return auth.HasCredentialsSaved();
-        }
-
-        public string? GetEmail()
-        {
-            return auth.GetEmail();
-        }
-
-
-        public string? GetAccessToken()
-        {
-            User? user = auth.GetUser();
-            if (user != null)
-            {
-                return user.accessToken;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-
-        public string? GetIdToken()
-        {
-            User? user = auth.GetUser();
-            if (user != null)
-            {
-                return user.idToken;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        public async UniTask<string?> SignMessage(string message)
-        {
-            string response = await communicationsManager.Call(PassportFunction.SIGN_MESSAGE, message);
             return JsonUtility.FromJson<StringResponse>(response)?.result;
+        }
+
+
+        public async UniTask Logout()
+        {
+            await communicationsManager.Call(PassportFunction.LOGOUT);
+        }
+
+        private async UniTask<TokenResponse?> GetStoredCredentials()
+        {
+            Debug.Log($"{TAG} Get stored credentials...");
+            string callResponse = await communicationsManager.Call(PassportFunction.CHECK_STORED_CREDENTIALS);
+            return JsonUtility.FromJson<TokenResponse>(callResponse);
+        }
+
+        public async UniTask<bool> HasCredentialsSaved()
+        {
+            TokenResponse? savedCredentials = await GetStoredCredentials();
+            return savedCredentials?.accessToken != null && savedCredentials?.idToken != null;
+        }
+
+        public async UniTask<string?> GetEmail()
+        {
+            string response = await communicationsManager.Call(PassportFunction.GET_EMAIL);
+            return JsonUtility.FromJson<StringResponse>(response)?.result;
+        }
+
+        public async UniTask<string?> GetAccessToken()
+        {
+            TokenResponse? savedCredentials = await GetStoredCredentials();
+            return savedCredentials?.accessToken;
+        }
+
+
+        public async UniTask<string?> GetIdToken()
+        {
+            TokenResponse? savedCredentials = await GetStoredCredentials();
+            return savedCredentials?.idToken;
         }
     }
 }

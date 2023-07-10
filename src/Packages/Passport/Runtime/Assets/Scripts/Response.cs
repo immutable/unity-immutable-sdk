@@ -9,13 +9,12 @@ namespace Immutable.Passport
         public string? error;
     }
 
-    public class AddressResponse : Response
+    public class DeviceConnectResponse
     {
-        public string? address;
-    }
-
-    internal class GetImxProviderResponse : Response
-    {
+        public string code;
+        public string deviceCode;
+        public string url;
+        public int interval;
     }
 
     public class StringResponse : Response

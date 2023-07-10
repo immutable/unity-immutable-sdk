@@ -4,7 +4,6 @@ using System.Net.Http;
 using System.Reflection;
 using System.Collections.Generic;
 using NUnit.Framework;
-using Immutable.Passport.Storage;
 using Immutable.Passport.Auth;
 using Immutable.Passport.Model;
 using Immutable.Passport.Utility.Tests;

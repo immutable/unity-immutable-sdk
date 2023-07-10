@@ -2,8 +2,6 @@ using System;
 using System.Threading;
 using VoltstroStudios.UnityWebBrowser.Core;
 using Immutable.Passport.Auth;
-using Newtonsoft.Json;
-using System.IO;
 using Immutable.Passport.Model;
 using Immutable.Passport.Core;
 using Cysharp.Threading.Tasks;
@@ -24,8 +22,6 @@ namespace Immutable.Passport
 #endif
 
         private static bool? readySignalReceived = null;
-
-        // private readonly AuthManager auth = new();
         private PassportImpl? passportImpl = null;
 
         /// <summary>
@@ -39,31 +35,32 @@ namespace Immutable.Passport
 #endif
         }
 
-        public static UniTask<Passport> Init()
+        public static UniTask<Passport> Init(string clientId)
         {
             if (Instance == null)
             {
                 Instance = new Passport();
                 Instance.Initialise();
+                // Wait until we get a ready signal
+                return UniTask.WaitUntil(() => readySignalReceived != null)
+                    .ContinueWith(async () =>
+                    {
+                        if (readySignalReceived == true)
+                        {
+                            await Instance.GetPassportImpl().Init(clientId);
+                            return Instance;
+                        }
+                        else
+                        {
+                            throw new PassportException("Failed to initiliase Passport");
+                        }
+                    });
             }
             else
             {
                 readySignalReceived = true;
+                return UniTask.FromResult(Instance);
             }
-
-            // Wait until we get a ready signal
-            return UniTask.WaitUntil(() => readySignalReceived != null)
-                .ContinueWith(() =>
-                {
-                    if (readySignalReceived == true)
-                    {
-                        return Instance;
-                    }
-                    else
-                    {
-                        throw new PassportException("Failed to initiliase Passport");
-                    }
-                });
         }
 
         private async void Initialise()
@@ -73,7 +70,7 @@ namespace Immutable.Passport
                 BrowserCommunicationsManager communicationsManager = new(webBrowserClient);
                 communicationsManager.OnReady += () => readySignalReceived = true;
                 await webBrowserClient.Init();
-                passportImpl = new PassportImpl(new AuthManager(), communicationsManager);
+                passportImpl = new PassportImpl(communicationsManager);
             }
             catch (Exception)
             {
@@ -124,9 +121,9 @@ namespace Immutable.Passport
             await GetPassportImpl().ConnectSilent(token);
         }
 
-        public async UniTask ConfirmCode(CancellationToken? token = null)
+        public async UniTask ConfirmCode(long? timeoutMs = null, CancellationToken? token = null)
         {
-            await GetPassportImpl().ConfirmCode(token);
+            await GetPassportImpl().ConfirmCode(timeoutMs, token);
         }
 
         public async UniTask<string?> GetAddress()
@@ -134,37 +131,33 @@ namespace Immutable.Passport
             return await GetPassportImpl().GetAddress();
         }
 
-        public void Logout()
+        public async UniTask Logout()
         {
-            GetPassportImpl().Logout();
+            await GetPassportImpl().Logout();
         }
 
         /// <summary>
         /// Checks if credentials exist but does not check if they're valid
         /// </summary>
-        public bool HasCredentialsSaved()
+        public UniTask<bool> HasCredentialsSaved()
         {
             return GetPassportImpl().HasCredentialsSaved();
         }
 
-        public string? GetEmail()
+        public async UniTask<string?> GetEmail()
         {
-            return GetPassportImpl().GetEmail();
+            string? email = await GetPassportImpl().GetEmail();
+            return email;
         }
 
-        public string? GetAccessToken()
+        public UniTask<string?> GetAccessToken()
         {
             return GetPassportImpl().GetAccessToken();
         }
 
-        public string? GetIdToken()
+        public UniTask<string?> GetIdToken()
         {
             return GetPassportImpl().GetIdToken();
-        }
-
-        public async UniTask<string?> SignMessage(string message)
-        {
-            return await GetPassportImpl().SignMessage(message);
         }
 
         private PassportImpl GetPassportImpl()

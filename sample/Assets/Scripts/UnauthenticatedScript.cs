@@ -32,9 +32,10 @@ public class UnauthenticatedScript : MonoBehaviour
             logoutButton.gameObject.SetActive(false);
             cancelLoginButton.gameObject.SetActive(false);
 
-            passport = await Passport.Init();
+            passport = await Passport.Init("ZJL7JvetcDFBNDlgRs5oJoxuAUUl6uQj");
             connectButton.gameObject.SetActive(true);
-            if (passport.HasCredentialsSaved())
+            bool hasCredsSaved = await passport.HasCredentialsSaved();
+            if (hasCredsSaved)
             {
                 logoutButton.gameObject.SetActive(true);
             }
@@ -83,6 +84,8 @@ public class UnauthenticatedScript : MonoBehaviour
             string error = $"Connect() error: {ex.Message}";
             Debug.Log(error);
             ShowOutput(error);
+            // Restart everything
+            await passport.Logout();
         }
     }
 
@@ -93,7 +96,7 @@ public class UnauthenticatedScript : MonoBehaviour
             loginTokenSource = new CancellationTokenSource();
             cancelLoginButton.gameObject.SetActive(true);
             ShowOutput("Called ConfirmCode()...");
-            await passport.ConfirmCode(loginTokenSource.Token);
+            await passport.ConfirmCode(token: loginTokenSource.Token);
             ShowOutput("Confirmed code");
             NavigateToAuthenticatedScene();
         }
@@ -114,9 +117,9 @@ public class UnauthenticatedScript : MonoBehaviour
         cancelLoginButton.gameObject.SetActive(false);
     }
 
-    public void Logout()
+    public async void Logout()
     {
-        passport.Logout();
+        await passport.Logout();
         logoutButton.gameObject.SetActive(false);
     }
 

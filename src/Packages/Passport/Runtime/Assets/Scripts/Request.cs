@@ -18,22 +18,11 @@ namespace Immutable.Passport
         }
     }
 
-    internal class GetImxProviderRequest
+    internal class ConfirmCodeRequest
     {
-        public string idToken;
-        public string accessToken;
-        public string? refreshToken;
-        public UserProfile? profile;
-        public string? etherKey;
-
-        public GetImxProviderRequest(string idToken, string accessToken, string? refreshToken, UserProfile? profile, string? etherKey)
-        {
-            this.idToken = idToken;
-            this.accessToken = accessToken;
-            this.refreshToken = refreshToken;
-            this.profile = profile;
-            this.etherKey = etherKey;
-        }
+        public string deviceCode;
+        public int interval;
+        public long? timeoutMs;
     }
 }
 

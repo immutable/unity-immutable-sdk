@@ -68,7 +68,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         private const string PASSPORT_DATA_DIRECTORY_NAME = "/Passport";
 #endif
 #pragma warning restore IDE0051
-        private const string PASSPORT_HTML_FILE_NAME = "/passport.html";
+        private const string PASSPORT_HTML_FILE_NAME = "/index.html";
         private const string INITIAL_URL = "https://www.immutable.com/";
 
         /// <summary>
