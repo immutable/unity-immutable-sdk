@@ -33,7 +33,6 @@ namespace Immutable.Passport.Editor
                     Path.GetFullPath($"{buildOutputPath}/{buildAppName}.app/Contents/Resources/Data/");
             } else if (buildTarget == BuildTarget.Android)
             {
-                Debug.Log($"Android build data path: {buildOutputPath}/{buildAppName}/unityLibrary/src/main/assets/");
                 buildDataPath = Path.GetFullPath($"{buildOutputPath}/{buildAppName}/unityLibrary/src/main/assets/");
             }
 
