@@ -2,7 +2,7 @@ using Immutable.Browser.Core;
 using UnityEngine;
 using System.IO;
 
-namespace Immutable.Passport.Core
+namespace Immutable.Browser.Gree
 {
     public class GreeBrowserClient : IWebBrowserClient
     {

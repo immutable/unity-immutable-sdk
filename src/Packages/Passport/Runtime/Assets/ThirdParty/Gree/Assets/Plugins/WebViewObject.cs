@@ -86,19 +86,6 @@ public class WebViewObject
 
 
     AndroidJavaObject webView;
-    float mResumedTimestamp;
-    
-    void OnApplicationPause(bool paused)
-    {
-        if (webView == null)
-            return;
-        if (!paused && mKeyboardVisibleHeight > 0)
-        {
-            webView.Call("SetVisibility", false);
-            mResumedTimestamp = Time.realtimeSinceStartup;
-        }
-        webView.Call("OnApplicationPause", paused);
-    }
 #else
     IntPtr webView;
 #endif
@@ -402,6 +389,7 @@ public class WebViewObject
             return false;
         return _CWebViewPlugin_SetURLPattern(webView, allowPattern, denyPattern, hookPattern);
 #elif UNITY_ANDROID
+        return false;
 #endif
     }
 

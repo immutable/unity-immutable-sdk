@@ -31,11 +31,7 @@ namespace Immutable.Passport.Core
         public void Init()
         {
             mockClient = new MockBrowserClient();
-#if UNITY_EDITOR_WIN
             manager = new BrowserCommunicationsManager(mockClient);
-#else
-            manager = new BrowserCommunicationsManager();
-#endif
         }
 
         [Test]
