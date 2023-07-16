@@ -21,7 +21,7 @@ public class UnauthenticatedScript : MonoBehaviour
 
     async void Start()
     {
-        try 
+        try
         {
             ShowOutput("Starting...");
             connectButton.gameObject.SetActive(false);

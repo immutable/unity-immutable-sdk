@@ -64,7 +64,7 @@ namespace Immutable.Passport
 #else
                 readySignalReceived = true;
                 return Instance.Initialise()
-                    .ContinueWith(() => 
+                    .ContinueWith(() =>
                     {
                         return Instance;
                     });
