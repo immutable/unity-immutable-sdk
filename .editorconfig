@@ -2,5 +2,5 @@ root = true
 
 # Treat everything in ThirdParty as generated code so 
 # analysers don't analyse it
-[src/Packages/Passport/Runtime/Assets/ThirdParty/**]
+[src/Packages/Passport/Runtime/ThirdParty/**]
 generated_code = true

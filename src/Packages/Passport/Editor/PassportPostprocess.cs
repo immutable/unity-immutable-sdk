@@ -69,7 +69,7 @@ namespace Immutable.Passport.Editor
             Debug.Log("Copying Passport files...");
 
             // Find the location of the files
-            string passportWebFilesDir = Path.GetFullPath("Packages/com.immutable.passport/Runtime/Assets/Resources");
+            string passportWebFilesDir = Path.GetFullPath("Packages/com.immutable.passport/Runtime/Resources");
             if (!Directory.Exists(passportWebFilesDir))
             {
                 Debug.LogError("The Passport files directory doesn't exist!");

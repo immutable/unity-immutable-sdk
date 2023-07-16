@@ -59,10 +59,10 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         public Engine engine;
 
         private const string ENGINE_APP_NAME = "UnityWebBrowser.Engine.Cef";
-        public static string ENGINE_FILE_LOCATION = "Packages/com.immutable.passport/Runtime/Assets/ThirdParty/UnityWebBrowser.Engine.Cef.Win-x64/Engine/";
+        public static string ENGINE_FILE_LOCATION = "Packages/com.immutable.passport/Runtime/ThirdParty/UnityWebBrowser.Engine.Cef.Win-x64/Engine/";
 
         private const string SCHEME_FILE = "file:///";
-        private const string PASSPORT_PACKAGE_RESOURCES_DIRECTORY = "Packages/com.immutable.passport/Runtime/Assets/Resources";
+        private const string PASSPORT_PACKAGE_RESOURCES_DIRECTORY = "Packages/com.immutable.passport/Runtime/Resources";
 #pragma warning disable IDE0051
 #if UNITY_STANDALONE_WIN
         private const string PASSPORT_DATA_DIRECTORY_NAME = "/Passport";

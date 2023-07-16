@@ -57,6 +57,6 @@ jobs:
           VALIDATE_ALL_CODEBASE: true
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          FILTER_REGEX_EXCLUDE: (.*src/Packages/Passport/Runtime/Assets/ThirdParty/.*|.*src/Packages/Passport/Runtime/Assets/Resources/.*)
+          FILTER_REGEX_EXCLUDE: (.*src/Packages/Passport/Runtime/ThirdParty/.*|.*src/Packages/Passport/Runtime/Resources/.*)
           VALIDATE_MARKDOWN: false
           VALIDATE_GITLEAKS: false
