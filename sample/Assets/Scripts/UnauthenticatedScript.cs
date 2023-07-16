@@ -4,7 +4,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Immutable.Passport;
 using Immutable.Passport.Auth;
-using System.Threading;
+using Immutable.Passport.Model;
 
 public class UnauthenticatedScript : MonoBehaviour
 {
@@ -21,7 +21,7 @@ public class UnauthenticatedScript : MonoBehaviour
 
     async void Start()
     {
-        try
+        try 
         {
             ShowOutput("Starting...");
             connectButton.gameObject.SetActive(false);
@@ -30,13 +30,33 @@ public class UnauthenticatedScript : MonoBehaviour
             logoutButton.gameObject.SetActive(false);
 
             passport = await Passport.Init("ZJL7JvetcDFBNDlgRs5oJoxuAUUl6uQj");
-            connectButton.gameObject.SetActive(true);
+
+            // Check if user's logged in before
             bool hasCredsSaved = await passport.HasCredentialsSaved();
             if (hasCredsSaved)
             {
-                logoutButton.gameObject.SetActive(true);
+                // Use existing credentials to connect to Passport
+                ShowOutput("Connecting to Passport using saved credentials...");
+
+                bool connected = await passport.ConnectSilent();
+                if (connected)
+                {
+                    // Successfully connected to Passport
+                    NavigateToAuthenticatedScene();
+                }
+                else
+                {
+                    // Could not connect to Passport, enable connect button
+                    connectButton.gameObject.SetActive(true);
+                }
             }
-            ShowOutput("Ready");
+            else
+            {
+                // No existing credentials to use to connect
+                ShowOutput("Ready");
+                // Enable connect button
+                connectButton.gameObject.SetActive(true);
+            }
         }
         catch (Exception ex)
         {

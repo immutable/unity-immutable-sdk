@@ -42,10 +42,13 @@ namespace Immutable.Passport
             if (Instance == null)
             {
                 Instance = new Passport();
-                Instance.Initialise();
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
                 // Wait until we get a ready signal
-                return UniTask.WaitUntil(() => readySignalReceived != null)
+                return Instance.Initialise()
+                    .ContinueWith(async () =>
+                    {
+                        await UniTask.WaitUntil(() => readySignalReceived != null);
+                    })
                     .ContinueWith(async () =>
                     {
                         if (readySignalReceived == true)
@@ -55,12 +58,16 @@ namespace Immutable.Passport
                         }
                         else
                         {
-                            throw new PassportException("Failed to initiliase Passport");
+                            throw new PassportException("Failed to initiliase Passport", PassportErrorType.INITALISATION_ERROR);
                         }
                     });
 #else
                 readySignalReceived = true;
-                return UniTask.FromResult(Instance);
+                return Instance.Initialise()
+                    .ContinueWith(() => 
+                    {
+                        return Instance;
+                    });
 #endif
             }
             else
@@ -70,7 +77,7 @@ namespace Immutable.Passport
             }
         }
 
-        private async void Initialise()
+        private async UniTask Initialise()
         {
             try
             {
@@ -127,9 +134,9 @@ namespace Immutable.Passport
         /// Attempts to connect the user to Passport using the saved access or refresh token. It will not fallback
         /// to device code auth like Connect().
         /// </summary>
-        public async UniTask ConnectSilent()
+        public async UniTask<bool> ConnectSilent()
         {
-            await GetPassportImpl().ConnectSilent();
+            return await GetPassportImpl().ConnectSilent();
         }
 
         public async UniTask ConfirmCode(long? timeoutMs = null)

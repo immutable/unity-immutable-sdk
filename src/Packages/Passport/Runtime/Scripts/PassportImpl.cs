@@ -85,8 +85,11 @@ namespace Immutable.Passport
         /// <summary>
         /// Similar to Connect, however if the saved access token is no longer valid and the refresh token cannot be used,
         /// it will not fallback to device code
+        /// <returns>
+        /// True if the user is connected to Passport
+        /// </returns>
         /// </summary>
-        public async UniTask ConnectSilent()
+        public async UniTask<bool> ConnectSilent()
         {
             string callResponse = await communicationsManager.Call(PassportFunction.CHECK_STORED_CREDENTIALS);
             TokenResponse? tokenResponse = JsonUtility.FromJson<TokenResponse>(callResponse);
@@ -99,14 +102,10 @@ namespace Immutable.Passport
                 );
 
                 Response? response = JsonUtility.FromJson<Response>(callResponse);
-                if (response?.success == false)
-                {
-                    throw new PassportException(
-                        response?.error ?? "Unable to connect using stored credentials",
-                        PassportErrorType.AUTHENTICATION_ERROR
-                    );
-                }
+                return response?.success == true;
             }
+            await Logout();
+            return false;
         }
 
         public async UniTask ConfirmCode(long? timeoutMs = null)
