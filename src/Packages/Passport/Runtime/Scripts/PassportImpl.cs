@@ -39,7 +39,7 @@ namespace Immutable.Passport
         /// The end-user verification code and url if the user has to go through device code auth, otherwise null;
         /// </returns>
         /// </summary>
-        public async UniTask<ConnectResponse?> Connect(CancellationToken? token = null)
+        public async UniTask<ConnectResponse?> Connect()
         {
             try
             {
@@ -86,7 +86,7 @@ namespace Immutable.Passport
         /// Similar to Connect, however if the saved access token is no longer valid and the refresh token cannot be used,
         /// it will not fallback to device code
         /// </summary>
-        public async UniTask ConnectSilent(CancellationToken? token = null)
+        public async UniTask ConnectSilent()
         {
             string callResponse = await communicationsManager.Call(PassportFunction.CHECK_STORED_CREDENTIALS);
             TokenResponse? tokenResponse = JsonUtility.FromJson<TokenResponse>(callResponse);
@@ -109,7 +109,7 @@ namespace Immutable.Passport
             }
         }
 
-        public async UniTask ConfirmCode(long? timeoutMs = null, CancellationToken? token = null)
+        public async UniTask ConfirmCode(long? timeoutMs = null)
         {
             if (deviceConnectResponse != null)
             {

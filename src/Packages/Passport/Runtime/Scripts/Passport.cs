@@ -118,23 +118,23 @@ namespace Immutable.Passport
         /// The end-user verification code if confirmation is required, otherwise null;
         /// </returns>
         /// </summary>
-        public async UniTask<ConnectResponse?> Connect(CancellationToken? token = null)
+        public async UniTask<ConnectResponse?> Connect()
         {
-            return await GetPassportImpl().Connect(token);
+            return await GetPassportImpl().Connect();
         }
 
         /// <summary>
         /// Attempts to connect the user to Passport using the saved access or refresh token. It will not fallback
         /// to device code auth like Connect().
         /// </summary>
-        public async UniTask ConnectSilent(CancellationToken? token = null)
+        public async UniTask ConnectSilent()
         {
-            await GetPassportImpl().ConnectSilent(token);
+            await GetPassportImpl().ConnectSilent();
         }
 
-        public async UniTask ConfirmCode(long? timeoutMs = null, CancellationToken? token = null)
+        public async UniTask ConfirmCode(long? timeoutMs = null)
         {
-            await GetPassportImpl().ConfirmCode(timeoutMs, token);
+            await GetPassportImpl().ConfirmCode(timeoutMs);
         }
 
         public async UniTask<string?> GetAddress()

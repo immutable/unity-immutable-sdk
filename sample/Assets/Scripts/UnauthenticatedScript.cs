@@ -14,11 +14,9 @@ public class UnauthenticatedScript : MonoBehaviour
     [SerializeField] private Button connectButton;
     [SerializeField] private Text userCodeText;
     [SerializeField] private Button proceedLoginButton;
-    [SerializeField] private Button cancelLoginButton;
     [SerializeField] private Button logoutButton;
 
     private Passport passport;
-    private CancellationTokenSource? loginTokenSource = null;
 #pragma warning restore CS8618
 
     async void Start()
@@ -30,7 +28,6 @@ public class UnauthenticatedScript : MonoBehaviour
             userCodeText.gameObject.SetActive(false);
             proceedLoginButton.gameObject.SetActive(false);
             logoutButton.gameObject.SetActive(false);
-            cancelLoginButton.gameObject.SetActive(false);
 
             passport = await Passport.Init("ZJL7JvetcDFBNDlgRs5oJoxuAUUl6uQj");
             connectButton.gameObject.SetActive(true);
@@ -93,10 +90,8 @@ public class UnauthenticatedScript : MonoBehaviour
     {
         try
         {
-            loginTokenSource = new CancellationTokenSource();
-            cancelLoginButton.gameObject.SetActive(true);
             ShowOutput("Called ConfirmCode()...");
-            await passport.ConfirmCode(token: loginTokenSource.Token);
+            await passport.ConfirmCode();
             ShowOutput("Confirmed code");
             NavigateToAuthenticatedScene();
         }
@@ -109,12 +104,10 @@ public class UnauthenticatedScript : MonoBehaviour
     public void CancelLogin()
     {
         ShowOutput("Login cancelled...");
-        loginTokenSource?.Cancel();
         connectButton.gameObject.SetActive(true);
         userCodeText.gameObject.SetActive(false);
         proceedLoginButton.gameObject.SetActive(false);
         logoutButton.gameObject.SetActive(false);
-        cancelLoginButton.gameObject.SetActive(false);
     }
 
     public async void Logout()
