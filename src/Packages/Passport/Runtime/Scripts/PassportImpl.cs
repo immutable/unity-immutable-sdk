@@ -32,8 +32,11 @@ namespace Immutable.Passport
         {
             try
             {
-                await ConnectSilent();
-                return null;
+                bool connected = await ConnectSilent();
+                if (connected)
+                {
+                    return null;
+                }
             }
             catch (Exception)
             {
