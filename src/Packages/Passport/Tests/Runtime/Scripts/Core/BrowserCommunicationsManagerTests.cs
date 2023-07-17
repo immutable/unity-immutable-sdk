@@ -1,11 +1,6 @@
 using System;
-using System.Net;
-using System.Net.Http;
-using System.Reflection;
-using System.Collections.Generic;
 using NUnit.Framework;
 using Immutable.Passport.Model;
-using UnityEngine;
 using System.Threading.Tasks;
 using VoltstroStudios.UnityWebBrowser.Core;
 using VoltstroStudios.UnityWebBrowser.Events;
@@ -164,8 +159,7 @@ namespace Immutable.Passport.Core
         public void ExecuteJs(string js)
         {
             var json = Between(js, "callFunction(\"", "\")").Replace("\\\\", "\\").Replace("\\\"", "\"");
-            Debug.Log("ExecuteJs: " + js + "\nJSON: " + json);
-            request = JsonUtility.FromJson<Request>(json);
+            request = JsonConvert.DeserializeObject<Request>(json);
             if (setRequestId && browserResponse != null)
             {
                 browserResponse.requestId = request.requestId;

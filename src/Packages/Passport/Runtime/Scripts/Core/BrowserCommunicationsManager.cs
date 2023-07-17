@@ -48,10 +48,6 @@ namespace Immutable.Passport.Core
         }
 #endif
 
-        public BrowserCommunicationsManager()
-        {
-        }
-
         #region Unity to Browser
 
         public void SetCallTimeout(int ms)

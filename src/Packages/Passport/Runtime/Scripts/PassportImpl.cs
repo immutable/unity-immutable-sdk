@@ -21,7 +21,7 @@ namespace Immutable.Passport
         public async UniTask Init(string clientId)
         {
             string response = await communicationsManager.Call(PassportFunction.INIT, clientId);
-            Response? initResponse = JsonUtility.FromJson<Response>(response);
+            Response? initResponse = JsonConvert.DeserializeObject<Response>(response);
             if (initResponse?.success == false)
             {
                 throw new PassportException(initResponse?.error ?? "Unable to initialise Passport");
@@ -49,10 +49,10 @@ namespace Immutable.Passport
         private async UniTask<ConnectResponse?> InitialiseDeviceCodeAuth()
         {
             string callResponse = await communicationsManager.Call(PassportFunction.CONNECT);
-            Response? response = JsonUtility.FromJson<Response>(callResponse);
+            Response? response = JsonConvert.DeserializeObject<Response>(callResponse);
             if (response?.success == true)
             {
-                deviceConnectResponse = JsonUtility.FromJson<DeviceConnectResponse>(callResponse);
+                deviceConnectResponse = JsonConvert.DeserializeObject<DeviceConnectResponse>(callResponse);
                 if (deviceConnectResponse != null)
                 {
                     return new ConnectResponse()
@@ -75,7 +75,7 @@ namespace Immutable.Passport
             try
             {
                 string callResponse = await communicationsManager.Call(PassportFunction.CHECK_STORED_CREDENTIALS);
-                TokenResponse? tokenResponse = JsonUtility.FromJson<TokenResponse>(callResponse);
+                TokenResponse? tokenResponse = JsonConvert.DeserializeObject<TokenResponse>(callResponse);
                 if (tokenResponse != null)
                 {
                     // Credentials exist in storage, try and connect with it
@@ -84,7 +84,7 @@ namespace Immutable.Passport
                         JsonConvert.SerializeObject(tokenResponse)
                     );
 
-                    Response? response = JsonUtility.FromJson<Response>(callResponse);
+                    Response? response = JsonConvert.DeserializeObject<Response>(callResponse);
                     return response?.success == true;
                 }
             }
@@ -115,7 +115,7 @@ namespace Immutable.Passport
                     PassportFunction.CONFIRM_CODE,
                     JsonConvert.SerializeObject(request)
                 );
-                Response? response = JsonUtility.FromJson<Response>(callResponse);
+                Response? response = JsonConvert.DeserializeObject<Response>(callResponse);
                 if (response?.success == false)
                 {
                     throw new PassportException(
@@ -133,7 +133,7 @@ namespace Immutable.Passport
         public async UniTask<string?> GetAddress()
         {
             string response = await communicationsManager.Call(PassportFunction.GET_ADDRESS);
-            return JsonUtility.FromJson<StringResponse>(response)?.result;
+            return JsonConvert.DeserializeObject<StringResponse>(response)?.result;
         }
 
 
@@ -145,7 +145,7 @@ namespace Immutable.Passport
         private async UniTask<TokenResponse?> GetStoredCredentials()
         {
             string callResponse = await communicationsManager.Call(PassportFunction.CHECK_STORED_CREDENTIALS);
-            return JsonUtility.FromJson<TokenResponse>(callResponse);
+            return JsonConvert.DeserializeObject<TokenResponse>(callResponse);
         }
 
         public async UniTask<bool> HasCredentialsSaved()
@@ -157,7 +157,7 @@ namespace Immutable.Passport
         public async UniTask<string?> GetEmail()
         {
             string response = await communicationsManager.Call(PassportFunction.GET_EMAIL);
-            return JsonUtility.FromJson<StringResponse>(response)?.result;
+            return JsonConvert.DeserializeObject<StringResponse>(response)?.result;
         }
 
         public async UniTask<string?> GetAccessToken()
