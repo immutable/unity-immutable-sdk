@@ -18,7 +18,7 @@ namespace Immutable.Passport.Utility
             }
             catch (Exception ex)
             {
-                Debug.Log($"{TAG} Error decoding JWT: {ex.Message} - {jwt}");
+                Debug.LogError($"{TAG} Error decoding JWT: {ex.Message} - {jwt}");
                 return null;
             }
         }

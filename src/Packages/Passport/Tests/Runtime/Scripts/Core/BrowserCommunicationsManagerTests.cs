@@ -167,7 +167,6 @@ namespace Immutable.Passport.Core
         {
             var json = Between(js, "callFunction(\"", "\")").Replace("\\\\", "\\").Replace("\\\"", "\"");
             Debug.Log("ExecuteJs: " + js + "\nJSON: " + json);
-            Debug.Log(json);
             request = JsonUtility.FromJson<Request>(json);
             if (setRequestId && browserResponse != null)
             {

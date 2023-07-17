@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
 using VoltstroStudios.UnityWebBrowser.Core;
 #endif

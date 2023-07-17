@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 using UnityEngine;
 using Immutable.Passport.Auth;
 using Newtonsoft.Json;
@@ -39,7 +38,7 @@ namespace Immutable.Passport
             }
             catch (Exception)
             {
-                Debug.Log($"{TAG} Unable to connect with stored credentials");
+                Debug.LogError($"{TAG} Unable to connect with stored credentials");
             }
 
             // Fallback to device code auth flow
@@ -92,7 +91,7 @@ namespace Immutable.Passport
             }
             catch (Exception ex)
             {
-                Debug.Log($"{TAG} Failed to connect to Passport using saved credentials: {ex.Message}");
+                Debug.LogError($"{TAG} Failed to connect to Passport using saved credentials: {ex.Message}");
             }
             await Logout();
             return false;
@@ -146,7 +145,6 @@ namespace Immutable.Passport
 
         private async UniTask<TokenResponse?> GetStoredCredentials()
         {
-            Debug.Log($"{TAG} Get stored credentials...");
             string callResponse = await communicationsManager.Call(PassportFunction.CHECK_STORED_CREDENTIALS);
             return JsonUtility.FromJson<TokenResponse>(callResponse);
         }
