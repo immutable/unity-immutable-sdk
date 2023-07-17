@@ -1,4 +1,4 @@
-namespace Immutable.Passport.Auth
+namespace Immutable.Passport.Model
 {
 #pragma warning disable CS8618
 #pragma warning disable IDE1006

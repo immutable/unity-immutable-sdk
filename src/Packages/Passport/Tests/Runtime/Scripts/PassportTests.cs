@@ -5,7 +5,6 @@ using System.Threading;
 using System.Reflection;
 using System.Collections.Generic;
 using NUnit.Framework;
-using Immutable.Passport.Auth;
 using Immutable.Passport.Core;
 using Immutable.Passport.Model;
 using Immutable.Passport.Utility.Tests;

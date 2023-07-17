@@ -101,7 +101,7 @@ namespace Immutable.Passport.Core
             // Check if the reponse returned is valid and the task to return the reponse exists
             if (response == null || response.responseFor == null || response.requestId == null)
             {
-                Debug.Log($"{TAG} Response from browser is incorrect. Check HTML/JS files.");
+                Debug.LogError($"{TAG} Response from browser is incorrect. Check HTML/JS files.");
                 return;
             }
 
@@ -141,7 +141,7 @@ namespace Immutable.Passport.Core
                 }
                 catch (Exception ex)
                 {
-                    Debug.Log($"{TAG} Parse passport type error: {ex.Message}");
+                    Debug.LogError($"{TAG} Parse passport type error: {ex.Message}");
                 }
                 return new PassportException(response.error ?? "Failed to parse error");
             }

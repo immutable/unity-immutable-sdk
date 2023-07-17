@@ -19,13 +19,12 @@
 
 ## Installation
 
+### Compressed file
 1. Uncompress the zip file
-1. Open the Package Manager
-2. Click the add + button and select "Add package from disk..."
-3. Navigate to the package root folder
-4. Double clik the `package.json` file
-
-TODO
+2. Open the Package Manager
+3. Click the add + button and select "Add package from disk..."
+4. Navigate to the package root folder
+5. Double clik the `package.json` file
 
 ## Quick Start
 
@@ -45,7 +44,7 @@ public class ImmutableUnity : MonoBehaviour
 
 Passport is now accessible from anywhere via `Passport.Instance`.
 
-### Connect to Immutable Passport
+### Connect to Passport
 
 We use the [Device Code Authorisation](https://auth0.com/docs/get-started/authentication-and-authorization-flow/device-authorization-flow#:~:text=Your%20Auth0%20Authorization%20Server%20redirects,authorized%20to%20access%20the%20API.) flow to authenticate and authorise users.
 ```
@@ -89,7 +88,7 @@ catch (Exception)
 }
 ```
 
-### Log out of Immutable Passport
+### Log out of Passport
 
 ```
 await passport.Logout();
@@ -99,9 +98,7 @@ await passport.Logout();
 
 * Get address
 * Get access token
-* Get ID token.
-
-
+* Get ID token
 * Get email
 * Checks if there are any credentials saved
 

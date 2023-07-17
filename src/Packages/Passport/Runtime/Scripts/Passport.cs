@@ -1,9 +1,7 @@
 using System;
-using System.Threading;
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
 using VoltstroStudios.UnityWebBrowser.Core;
 #endif
-using Immutable.Passport.Auth;
 using Immutable.Passport.Model;
 using Immutable.Passport.Core;
 using Cysharp.Threading.Tasks;

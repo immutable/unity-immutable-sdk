@@ -1,7 +1,5 @@
 using System;
-using System.Threading;
 using UnityEngine;
-using Immutable.Passport.Auth;
 using Newtonsoft.Json;
 using Immutable.Passport.Model;
 using Immutable.Passport.Core;
@@ -39,7 +37,7 @@ namespace Immutable.Passport
             }
             catch (Exception)
             {
-                Debug.Log($"{TAG} Unable to connect with stored credentials");
+                Debug.LogError($"{TAG} Unable to connect with stored credentials");
             }
 
             // Fallback to device code auth flow
@@ -74,18 +72,25 @@ namespace Immutable.Passport
 
         public async UniTask<bool> ConnectSilent()
         {
-            string callResponse = await communicationsManager.Call(PassportFunction.CHECK_STORED_CREDENTIALS);
-            TokenResponse? tokenResponse = JsonUtility.FromJson<TokenResponse>(callResponse);
-            if (tokenResponse != null)
+            try
             {
-                // Credentials exist in storage, try and connect with it
-                callResponse = await communicationsManager.Call(
-                    PassportFunction.CONNECT_WITH_CREDENTIALS,
-                    JsonConvert.SerializeObject(tokenResponse)
-                );
+                string callResponse = await communicationsManager.Call(PassportFunction.CHECK_STORED_CREDENTIALS);
+                TokenResponse? tokenResponse = JsonUtility.FromJson<TokenResponse>(callResponse);
+                if (tokenResponse != null)
+                {
+                    // Credentials exist in storage, try and connect with it
+                    callResponse = await communicationsManager.Call(
+                        PassportFunction.CONNECT_WITH_CREDENTIALS,
+                        JsonConvert.SerializeObject(tokenResponse)
+                    );
 
-                Response? response = JsonUtility.FromJson<Response>(callResponse);
-                return response?.success == true;
+                    Response? response = JsonUtility.FromJson<Response>(callResponse);
+                    return response?.success == true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"{TAG} Failed to connect to Passport using saved credentials: {ex.Message}");
             }
             await Logout();
             return false;
@@ -139,7 +144,6 @@ namespace Immutable.Passport
 
         private async UniTask<TokenResponse?> GetStoredCredentials()
         {
-            Debug.Log($"{TAG} Get stored credentials...");
             string callResponse = await communicationsManager.Call(PassportFunction.CHECK_STORED_CREDENTIALS);
             return JsonUtility.FromJson<TokenResponse>(callResponse);
         }
