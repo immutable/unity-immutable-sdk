@@ -4,7 +4,8 @@
     "references": [
         "VoltstroStudios.UnityWebBrowser",
         "UniTask",
-        "Immutable.Browser.Core"
+        "Immutable.Browser.Core",
+        "unity-webview"
     ],
     "includePlatforms": [
         "Android",

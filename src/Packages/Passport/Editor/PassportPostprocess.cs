@@ -31,6 +31,9 @@ namespace Immutable.Passport.Editor
             {
                 buildDataPath =
                     Path.GetFullPath($"{buildOutputPath}/{buildAppName}.app/Contents/Resources/Data/");
+            } else if (buildTarget == BuildTarget.Android)
+            {
+                buildDataPath = Path.GetFullPath($"{buildOutputPath}/{buildAppName}/unityLibrary/src/main/assets/");
             }
 
             // Check that the data folder exists
