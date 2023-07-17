@@ -74,18 +74,25 @@ namespace Immutable.Passport
 
         public async UniTask<bool> ConnectSilent()
         {
-            string callResponse = await communicationsManager.Call(PassportFunction.CHECK_STORED_CREDENTIALS);
-            TokenResponse? tokenResponse = JsonUtility.FromJson<TokenResponse>(callResponse);
-            if (tokenResponse != null)
+            try
             {
-                // Credentials exist in storage, try and connect with it
-                callResponse = await communicationsManager.Call(
-                    PassportFunction.CONNECT_WITH_CREDENTIALS,
-                    JsonConvert.SerializeObject(tokenResponse)
-                );
+                string callResponse = await communicationsManager.Call(PassportFunction.CHECK_STORED_CREDENTIALS);
+                TokenResponse? tokenResponse = JsonUtility.FromJson<TokenResponse>(callResponse);
+                if (tokenResponse != null)
+                {
+                    // Credentials exist in storage, try and connect with it
+                    callResponse = await communicationsManager.Call(
+                        PassportFunction.CONNECT_WITH_CREDENTIALS,
+                        JsonConvert.SerializeObject(tokenResponse)
+                    );
 
-                Response? response = JsonUtility.FromJson<Response>(callResponse);
-                return response?.success == true;
+                    Response? response = JsonUtility.FromJson<Response>(callResponse);
+                    return response?.success == true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.Log($"{TAG} Failed to connect to Passport using saved credentials: {ex.Message}");
             }
             await Logout();
             return false;
