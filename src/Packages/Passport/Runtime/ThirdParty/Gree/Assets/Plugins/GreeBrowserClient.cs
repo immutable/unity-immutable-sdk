@@ -7,19 +7,14 @@ namespace Immutable.Browser.Gree
     public class GreeBrowserClient : IWebBrowserClient
     {
         private const string TAG = "[GreeBrowserClient]";
-        private const string SCHEME_FILE = "file:///";
         private const string ANDROID_DATA_DIRECTORY = "android_asset";
-#pragma warning disable IDE0051
-        private const string PASSPORT_DATA_DIRECTORY_NAME = "/Passport";
-#pragma warning restore IDE0051
-        private const string PASSPORT_HTML_FILE_NAME = "/index.html";
-        private readonly WebViewObject _webViewObject;
+        private readonly WebViewObject webViewObject;
         public event OnUnityPostMessageDelegate OnUnityPostMessage;
 
         public GreeBrowserClient()
         {
-            _webViewObject = new();
-            _webViewObject.Init(
+            webViewObject = new();
+            webViewObject.Init(
                 cb: _cb,
                 ld: (msg) =>
                 {
@@ -27,19 +22,19 @@ namespace Immutable.Browser.Gree
                 },
                 httpErr: (msg) =>
                 {
-                    Debug.Log($"{TAG} http err: {msg}");
+                    Debug.LogError($"{TAG} http err: {msg}");
                 },
                 err: (msg) =>
                 {
-                    Debug.Log($"{TAG} err: {msg}");
+                    Debug.LogError($"{TAG} err: {msg}");
                 }
             );
 #if UNITY_ANDROID
-            string filePath = SCHEME_FILE + ANDROID_DATA_DIRECTORY + PASSPORT_DATA_DIRECTORY_NAME + PASSPORT_HTML_FILE_NAME;
+            string filePath = Constants.SCHEME_FILE + ANDROID_DATA_DIRECTORY + Constants.PASSPORT_DATA_DIRECTORY_NAME + Constants.PASSPORT_HTML_FILE_NAME;
 #else
-            string filePath = SCHEME_FILE + Path.GetFullPath(Application.dataPath) + PASSPORT_DATA_DIRECTORY_NAME + PASSPORT_HTML_FILE_NAME;
+            string filePath = Constants.SCHEME_FILE + Path.GetFullPath(Application.dataPath) + Constants.PASSPORT_DATA_DIRECTORY_NAME + Constants.PASSPORT_HTML_FILE_NAME;
 #endif
-            _webViewObject.LoadURL(filePath);
+            webViewObject.LoadURL(filePath);
         }
 
         private void _cb(string msg)
@@ -55,7 +50,7 @@ namespace Immutable.Browser.Gree
 
         public void ExecuteJs(string js)
         {
-            _webViewObject.EvaluateJS(js);
+            webViewObject.EvaluateJS(js);
         }
     }
 }

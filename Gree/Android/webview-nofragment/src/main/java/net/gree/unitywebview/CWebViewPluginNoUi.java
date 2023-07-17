@@ -69,7 +69,7 @@ class CWebViewPluginNoUiInterface {
 
     public void call(final String method, final String message) {
         final Activity a = UnityPlayer.currentActivity;
-        if (CWebViewPlugin.isDestroyed(a)) {
+        if (CWebViewPluginNoUi.isDestroyed(a)) {
             return;
         }
         if (mPlugin.IsInitialized()) {
@@ -245,7 +245,7 @@ public class CWebViewPluginNoUi {
 
     public void LoadURL(final String url) {
         final Activity a = UnityPlayer.currentActivity;
-        if (CWebViewPlugin.isDestroyed(a)) {
+        if (CWebViewPluginNoUi.isDestroyed(a)) {
             return;
         }
         a.runOnUiThread(new Runnable() {
@@ -260,7 +260,7 @@ public class CWebViewPluginNoUi {
 
     public void EvaluateJS(final String js) {
         final Activity a = UnityPlayer.currentActivity;
-        if (CWebViewPlugin.isDestroyed(a)) {
+        if (CWebViewPluginNoUi.isDestroyed(a)) {
             return;
         }
         a.runOnUiThread(new Runnable() {
@@ -275,7 +275,7 @@ public class CWebViewPluginNoUi {
 
     public void SetNetworkAvailable(final boolean networkUp) {
         final Activity a = UnityPlayer.currentActivity;
-        if (CWebViewPlugin.isDestroyed(a)) {
+        if (CWebViewPluginNoUi.isDestroyed(a)) {
             return;
         }
         a.runOnUiThread(new Runnable() {

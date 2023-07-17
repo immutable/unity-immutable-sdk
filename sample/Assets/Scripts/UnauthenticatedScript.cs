@@ -59,8 +59,6 @@ public class UnauthenticatedScript : MonoBehaviour
         }
         catch (Exception ex)
         {
-            await passport.Logout();
-            connectButton.gameObject.SetActive(true);
             ShowOutput($"Start() error: {ex.Message}");
         }
     }
