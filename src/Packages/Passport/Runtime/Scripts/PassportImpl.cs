@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using Immutable.Passport.Auth;
 using Newtonsoft.Json;
 using Immutable.Passport.Model;
 using Immutable.Passport.Core;

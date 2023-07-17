@@ -1,7 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using Immutable.Passport.Auth;
-
 namespace Immutable.Passport
 {
     public class Request
