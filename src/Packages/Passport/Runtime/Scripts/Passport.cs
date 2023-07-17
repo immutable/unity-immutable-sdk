@@ -109,8 +109,8 @@ namespace Immutable.Passport
 #endif
 
         /// <summary>
-        ///     Sets the timeout time for` waiting for each call to respond (in milliseconds).
-        ///     This only applies to functions that uses the browser communications manager.
+        /// Sets the timeout time for` waiting for each call to respond (in milliseconds).
+        /// This only applies to functions that use the browser communications manager.
         /// </summary>
         public void SetCallTimeout(int ms)
         {
@@ -118,11 +118,12 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Connects the user to Passport.
+        /// Connects the user into Passport via device code auth and sets up the IMX provider.
         ///
-        /// If code confirmation is required, call ConfirmCode().
+        /// The user does not need to go through the device code auth flow if the saved access token is still valid or
+        /// the refresh token can be used to get a new access token.
         /// <returns>
-        /// The end-user verification code if confirmation is required, otherwise null;
+        /// The end-user verification code and url if the user has to go through device code auth, otherwise null
         /// </returns>
         /// </summary>
         public async UniTask<ConnectResponse?> Connect()
@@ -131,24 +132,40 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Attempts to connect the user to Passport using the saved access or refresh token. It will not fallback
-        /// to device code auth like Connect().
+        /// Similar to Connect, however if the saved access token is no longer valid and the refresh token cannot be used,
+        /// it will not fallback to device code.
+        /// <returns>
+        /// True if the user is connected to Passport
+        /// </returns>
         /// </summary>
         public async UniTask<bool> ConnectSilent()
         {
             return await GetPassportImpl().ConnectSilent();
         }
 
+        /// <summary>
+        /// Completes the device code auth flow. This will open the user's default browser and take them through Passport login.
+        /// Once authenticated, this function will set up the IMX provider.
+        /// </summary>
         public async UniTask ConfirmCode(long? timeoutMs = null)
         {
             await GetPassportImpl().ConfirmCode(timeoutMs);
         }
 
+        /// <summary>
+        /// Gets the wallet address of the logged in user.
+        /// <returns>
+        /// The wallet address, otherwise null
+        /// </returns>
+        /// </summary>
         public async UniTask<string?> GetAddress()
         {
             return await GetPassportImpl().GetAddress();
         }
 
+        /// <summary>
+        /// Logs the user out of Passport and removes any stored credentials
+        /// </summary>
         public async UniTask Logout()
         {
             await GetPassportImpl().Logout();
@@ -156,23 +173,44 @@ namespace Immutable.Passport
 
         /// <summary>
         /// Checks if credentials exist but does not check if they're valid
+        /// <returns>
+        /// True if there are crendentials saved
+        /// </returns>
         /// </summary>
         public UniTask<bool> HasCredentialsSaved()
         {
             return GetPassportImpl().HasCredentialsSaved();
         }
 
+        /// <summary>
+        /// Retrieves the email address of the user whose credentials are currently stored.
+        /// <returns>
+        /// The email address, otherwise null
+        /// </returns>
+        /// </summary>
         public async UniTask<string?> GetEmail()
         {
             string? email = await GetPassportImpl().GetEmail();
             return email;
         }
 
+        /// <summary>
+        /// Gets the currently saved access token without verifying its validity.
+        /// <returns>
+        /// The access token, otherwise null
+        /// </returns>
+        /// </summary>
         public UniTask<string?> GetAccessToken()
         {
             return GetPassportImpl().GetAccessToken();
         }
 
+        /// <summary>
+        /// Gets the currently saved ID token without verifying its validity.
+        /// <returns>
+        /// The ID token, otherwise null
+        /// </returns>
+        /// </summary>
         public UniTask<string?> GetIdToken()
         {
             return GetPassportImpl().GetIdToken();
