@@ -4,6 +4,7 @@ namespace Immutable.Passport.Model
 {
     public enum PassportErrorType
     {
+        INITALISATION_ERROR,
         AUTHENTICATION_ERROR,
         WALLET_CONNECTION_ERROR,
         USER_REGISTRATION_ERROR,

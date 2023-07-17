@@ -4,7 +4,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Immutable.Passport;
 using Immutable.Passport.Auth;
-using System.Threading;
+using Immutable.Passport.Model;
 
 public class UnauthenticatedScript : MonoBehaviour
 {
@@ -14,11 +14,9 @@ public class UnauthenticatedScript : MonoBehaviour
     [SerializeField] private Button connectButton;
     [SerializeField] private Text userCodeText;
     [SerializeField] private Button proceedLoginButton;
-    [SerializeField] private Button cancelLoginButton;
     [SerializeField] private Button logoutButton;
 
     private Passport passport;
-    private CancellationTokenSource? loginTokenSource = null;
 #pragma warning restore CS8618
 
     async void Start()
@@ -30,16 +28,35 @@ public class UnauthenticatedScript : MonoBehaviour
             userCodeText.gameObject.SetActive(false);
             proceedLoginButton.gameObject.SetActive(false);
             logoutButton.gameObject.SetActive(false);
-            cancelLoginButton.gameObject.SetActive(false);
 
             passport = await Passport.Init("ZJL7JvetcDFBNDlgRs5oJoxuAUUl6uQj");
-            connectButton.gameObject.SetActive(true);
+
+            // Check if user's logged in before
             bool hasCredsSaved = await passport.HasCredentialsSaved();
             if (hasCredsSaved)
             {
-                logoutButton.gameObject.SetActive(true);
+                // Use existing credentials to connect to Passport
+                ShowOutput("Connecting to Passport using saved credentials...");
+
+                bool connected = await passport.ConnectSilent();
+                if (connected)
+                {
+                    // Successfully connected to Passport
+                    NavigateToAuthenticatedScene();
+                }
+                else
+                {
+                    // Could not connect to Passport, enable connect button
+                    connectButton.gameObject.SetActive(true);
+                }
             }
-            ShowOutput("Ready");
+            else
+            {
+                // No existing credentials to use to connect
+                ShowOutput("Ready");
+                // Enable connect button
+                connectButton.gameObject.SetActive(true);
+            }
         }
         catch (Exception ex)
         {
@@ -93,10 +110,8 @@ public class UnauthenticatedScript : MonoBehaviour
     {
         try
         {
-            loginTokenSource = new CancellationTokenSource();
-            cancelLoginButton.gameObject.SetActive(true);
             ShowOutput("Called ConfirmCode()...");
-            await passport.ConfirmCode(token: loginTokenSource.Token);
+            await passport.ConfirmCode();
             ShowOutput("Confirmed code");
             NavigateToAuthenticatedScene();
         }
@@ -109,12 +124,10 @@ public class UnauthenticatedScript : MonoBehaviour
     public void CancelLogin()
     {
         ShowOutput("Login cancelled...");
-        loginTokenSource?.Cancel();
         connectButton.gameObject.SetActive(true);
         userCodeText.gameObject.SetActive(false);
         proceedLoginButton.gameObject.SetActive(false);
         logoutButton.gameObject.SetActive(false);
-        cancelLoginButton.gameObject.SetActive(false);
     }
 
     public async void Logout()
