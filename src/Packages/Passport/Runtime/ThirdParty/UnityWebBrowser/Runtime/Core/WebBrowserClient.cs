@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
+using Immutable.Browser.Core;
 using Unity.Collections;
 using Unity.Profiling;
 using UnityEngine;

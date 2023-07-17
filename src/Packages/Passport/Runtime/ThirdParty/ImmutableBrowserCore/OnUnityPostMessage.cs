@@ -1,4 +1,4 @@
-namespace VoltstroStudios.UnityWebBrowser.Events
+namespace Immutable.Browser.Core
 {
     public delegate void OnUnityPostMessageDelegate(string data);
 }

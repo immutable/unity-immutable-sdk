@@ -1,5 +1,6 @@
 using System;
 using NUnit.Framework;
+using Immutable.Browser.Core;
 using Immutable.Passport.Model;
 using System.Threading.Tasks;
 using VoltstroStudios.UnityWebBrowser.Core;
