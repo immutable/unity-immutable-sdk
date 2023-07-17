@@ -286,7 +286,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 416242725}
   m_HandleRect: {fileID: 416242724}
   m_Direction: 0
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -1399,7 +1399,6 @@ MonoBehaviour:
   connectButton: {fileID: 291915222}
   userCodeText: {fileID: 243938182}
   proceedLoginButton: {fileID: 727527416}
-  cancelLoginButton: {fileID: 0}
   logoutButton: {fileID: 488119249}
 --- !u!4 &1192763473
 Transform:

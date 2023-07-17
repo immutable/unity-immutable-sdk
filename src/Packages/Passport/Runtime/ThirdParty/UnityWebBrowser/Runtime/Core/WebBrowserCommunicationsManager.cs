@@ -35,8 +35,6 @@ namespace VoltstroStudios.UnityWebBrowser.Core
 
         public readonly IWebBrowserLogger logger;
 
-        public readonly PixelsEventTypeReader pixelsEventTypeReader;
-
         private readonly object threadLock;
         private readonly SynchronizationContext unityThread;
 
@@ -59,9 +57,6 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             ipcHost.AddService<IClientControls>(this);
 
             ReadWriterUtils.AddBaseTypeReadWriters(ipcClient.TypeReaderWriterManager);
-
-            pixelsEventTypeReader = new PixelsEventTypeReader(browserClient.nextTextureData);
-            ipcClient.TypeReaderWriterManager.AddType(pixelsEventTypeReader);
 
             ipcClient.AddService<IEngineControls>();
             engineProxy = new EngineControls(ipcClient);

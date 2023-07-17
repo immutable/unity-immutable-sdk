@@ -2,7 +2,6 @@
     "name": "VoltstroStudios.UnityWebBrowser",
     "rootNamespace": "VoltstroStudios.UnityWebBrowser",
     "references": [
-        "VoltstroStudios.NativeArraySpanExtensions",
         "UniTask",
         "Unity.InputSystem"
     ],
