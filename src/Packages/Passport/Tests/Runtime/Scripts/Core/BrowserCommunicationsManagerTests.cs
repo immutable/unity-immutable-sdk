@@ -1,6 +1,9 @@
 using System;
 using NUnit.Framework;
+using Immutable.Browser.Core;
 using Immutable.Passport.Model;
+using UnityEngine;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using VoltstroStudios.UnityWebBrowser.Core;
 using VoltstroStudios.UnityWebBrowser.Events;
@@ -23,11 +26,7 @@ namespace Immutable.Passport.Core
         public void Init()
         {
             mockClient = new MockBrowserClient();
-#if UNITY_EDITOR_WIN
             manager = new BrowserCommunicationsManager(mockClient);
-#else
-            manager = new BrowserCommunicationsManager();
-#endif
         }
 
         [Test]
@@ -127,6 +126,7 @@ namespace Immutable.Passport.Core
 
             Assert.Null(e?.Type);
             Assert.AreEqual(ERROR, e?.Message);
+            UnityEngine.TestTools.LogAssert.Expect(LogType.Error, new Regex("Parse passport type error"));
         }
 
 

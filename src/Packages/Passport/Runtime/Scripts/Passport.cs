@@ -1,7 +1,10 @@
 using System;
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
 using VoltstroStudios.UnityWebBrowser.Core;
+#else
+using Immutable.Browser.Gree;
 #endif
+using Immutable.Browser.Core;
 using Immutable.Passport.Model;
 using Immutable.Passport.Core;
 using Cysharp.Threading.Tasks;
@@ -18,7 +21,9 @@ namespace Immutable.Passport
         public static Passport? Instance { get; private set; }
 
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-        private readonly WebBrowserClient webBrowserClient = new();
+        private readonly IWebBrowserClient webBrowserClient = new WebBrowserClient();
+#else
+        private readonly IWebBrowserClient webBrowserClient = new GreeBrowserClient();
 #endif
 
         private static bool? readySignalReceived = null;
@@ -40,7 +45,6 @@ namespace Immutable.Passport
             if (Instance == null)
             {
                 Instance = new Passport();
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
                 // Wait until we get a ready signal
                 return Instance.Initialise()
                     .ContinueWith(async () =>
@@ -59,14 +63,6 @@ namespace Immutable.Passport
                             throw new PassportException("Failed to initiliase Passport", PassportErrorType.INITALISATION_ERROR);
                         }
                     });
-#else
-                readySignalReceived = true;
-                return Instance.Initialise()
-                    .ContinueWith(() =>
-                    {
-                        return Instance;
-                    });
-#endif
             }
             else
             {
@@ -79,12 +75,10 @@ namespace Immutable.Passport
         {
             try
             {
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
                 BrowserCommunicationsManager communicationsManager = new(webBrowserClient);
                 communicationsManager.OnReady += () => readySignalReceived = true;
-                await webBrowserClient.Init();
-#else
-                BrowserCommunicationsManager communicationsManager = new();
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+                await ((WebBrowserClient) webBrowserClient).Init();
 #endif
                 passportImpl = new PassportImpl(communicationsManager);
             }
@@ -102,7 +96,7 @@ namespace Immutable.Passport
             // Need to clean up UWB resources when quitting the game in the editor
             // as the child engine process would still be alive
             Debug.Log($"{TAG} Quitting the Player");
-            webBrowserClient.Dispose();
+            ((WebBrowserClient) webBrowserClient).Dispose();
         }
 #endif
 

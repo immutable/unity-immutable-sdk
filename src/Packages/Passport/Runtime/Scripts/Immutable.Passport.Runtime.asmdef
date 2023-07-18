@@ -3,7 +3,9 @@
     "rootNamespace": "Immutable.Passport",
     "references": [
         "VoltstroStudios.UnityWebBrowser",
-        "UniTask"
+        "UniTask",
+        "Immutable.Browser.Core",
+        "unity-webview"
     ],
     "includePlatforms": [
         "Android",

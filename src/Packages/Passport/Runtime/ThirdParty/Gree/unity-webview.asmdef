@@ -1,14 +1,16 @@
 {
-    "name": "Immutable.Passport.Runtime.Tests",
+    "name": "unity-webview",
     "rootNamespace": "",
     "references": [
-        "GUID:9e287cc7b3c8a0245a7d36254472d3c8",
-        "GUID:b68f5bb197434c84c8a4cc3e45e8408b",
-        "GUID:78c2789dfc155bf4b9e815b0ca402b9b",
         "GUID:95d173a3e67b39d40803000ed05b79f4"
     ],
     "includePlatforms": [
-        "Editor"
+        "Android",
+        "Editor",
+        "iOS",
+        "macOSStandalone",
+        "WebGL",
+        "WindowsStandalone64"
     ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
