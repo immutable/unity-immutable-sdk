@@ -20,7 +20,7 @@ namespace Immutable.Passport.Core
     public interface IBrowserCommunicationsManager
     {
         public void SetCallTimeout(int ms);
-        public UniTask<string> Call(string fxName, string? data = null);
+        public UniTask<string> Call(string fxName, string? data = null, bool ignoreTimeout = false);
     }
 
     public class BrowserCommunicationsManager : IBrowserCommunicationsManager
@@ -54,15 +54,17 @@ namespace Immutable.Passport.Core
             callTimeout = ms;
         }
 
-        public UniTask<string> Call(string fxName, string? data = null)
+        public UniTask<string> Call(string fxName, string? data = null, bool ignoreTimeout = false)
         {
             var t = new UniTaskCompletionSource<string>();
             string requestId = Guid.NewGuid().ToString();
             // Add task completion source to the map so we can return the response
             requestTaskMap.Add(requestId, t);
             CallFunction(requestId, fxName, data);
-            return t.Task
-                .Timeout(TimeSpan.FromMilliseconds(callTimeout)); ;
+            if (ignoreTimeout)
+                return t.Task;
+            else
+                return t.Task.Timeout(TimeSpan.FromMilliseconds(callTimeout));
         }
 
         private void CallFunction(string requestId, string fxName, string? data = null)

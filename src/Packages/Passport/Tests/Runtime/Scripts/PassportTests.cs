@@ -66,7 +66,7 @@ namespace Immutable.Passport
         public string response = "";
         public string fxName = "";
         public string? data = "";
-        public UniTask<string> Call(string fxName, string? data = null)
+        public UniTask<string> Call(string fxName, string? data = null, bool ignoreTimeout = false)
         {
             this.fxName = fxName;
             this.data = data;
