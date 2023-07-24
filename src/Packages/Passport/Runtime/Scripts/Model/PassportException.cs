@@ -26,5 +26,14 @@ namespace Immutable.Passport.Model
         {
             this.Type = type;
         }
+
+        /**
+        * The error message for api requests via axios that fail due to network connectivity is "Network Error".
+        * This isn't the most reliable way to determine connectivity but it is currently the best we have. 
+        */
+        public bool IsNetworkError()
+        {
+            return Message.EndsWith("Network Error");
+        }
     }
 }

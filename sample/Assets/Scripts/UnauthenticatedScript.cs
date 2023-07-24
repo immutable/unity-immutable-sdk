@@ -97,11 +97,21 @@ public class UnauthenticatedScript : MonoBehaviour
         }
         catch (Exception ex)
         {
-            string error = $"Connect() error: {ex.Message}";
+            PassportException passportException = ex as PassportException;
+            string error;
+            if (passportException != null && passportException.IsNetworkError())
+            {
+                error = $"Connect() error: Check your internet connection and try again";
+            }
+            else
+            {
+                error = $"Connect() error: {ex.Message}";
+                // Restart everything
+                await passport.Logout();
+            }
+
             Debug.Log(error);
             ShowOutput(error);
-            // Restart everything
-            await passport.Logout();
         }
     }
 
