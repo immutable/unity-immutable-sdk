@@ -46,7 +46,7 @@ namespace Immutable.Passport.Editor
             }
 
             // Passport folder in the data folder
-            string buildPassportPath = $"{buildDataPath}/Passport/";
+            string buildPassportPath = $"{buildDataPath}/ImmutableSDK/Passport/";
 
             // Make sure it exists
             DirectoryInfo buildPassportInfo = new(buildPassportPath);

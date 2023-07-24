@@ -55,12 +55,9 @@ namespace Immutable.Passport.Editor
             string fullDataPath = buildPath + filename + modifier + dataPath;
             Debug.Log("fullDataPath: " + fullDataPath);
 
-            Debug.Log("Create ImmutableSDK directory...");
+            // Copy SDK contents
             string outputDir = $"{path}ImmutableSDK/";
-            Directory.CreateDirectory(outputDir);
-
-            // Copy HTML file
-            CopyDirectory($"{fullDataPath}Passport", $"{outputDir}Passport");
+            CopyDirectory($"{fullDataPath}ImmutableSDK", outputDir);
 
             // Copy UWB files
             CopyDirectory($"{fullDataPath}UWB", $"{outputDir}UWB");
