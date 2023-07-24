@@ -59,9 +59,6 @@ namespace Immutable.Passport.Editor
             string outputDir = $"{path}ImmutableSDK/";
             CopyDirectory($"{fullDataPath}ImmutableSDK", outputDir);
 
-            // Copy UWB files
-            CopyDirectory($"{fullDataPath}UWB", $"{outputDir}UWB");
-
             // Copy DLLs
             CopyFiles($"{fullDataPath}Managed", $"{outputDir}Dlls", new List<string>(){
                 "Immutable.Browser.Core.dll",
