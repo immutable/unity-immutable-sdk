@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using Newtonsoft.Json;
+using Immutable.Passport.Json;
 using Immutable.Passport.Model;
 using Immutable.Passport.Core;
 using Cysharp.Threading.Tasks;
@@ -38,7 +39,7 @@ namespace Immutable.Passport
                     return null;
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 Debug.LogError($"{TAG} Unable to connect with stored credentials");
             }
@@ -77,12 +78,11 @@ namespace Immutable.Passport
         {
             try
             {
-                string callResponse = await communicationsManager.Call(PassportFunction.CHECK_STORED_CREDENTIALS);
-                TokenResponse? tokenResponse = JsonConvert.DeserializeObject<TokenResponse>(callResponse);
+                TokenResponse? tokenResponse = await GetStoredCredentials();
                 if (tokenResponse != null)
                 {
                     // Credentials exist in storage, try and connect with it
-                    callResponse = await communicationsManager.Call(
+                    string callResponse = await communicationsManager.Call(
                         PassportFunction.CONNECT_WITH_CREDENTIALS,
                         JsonConvert.SerializeObject(tokenResponse)
                     );
@@ -150,13 +150,13 @@ namespace Immutable.Passport
         private async UniTask<TokenResponse?> GetStoredCredentials()
         {
             string callResponse = await communicationsManager.Call(PassportFunction.CHECK_STORED_CREDENTIALS);
-            return JsonConvert.DeserializeObject<TokenResponse>(callResponse);
+            return callResponse.OptDeserializeObject<TokenResponse>();
         }
 
         public async UniTask<bool> HasCredentialsSaved()
         {
             TokenResponse? savedCredentials = await GetStoredCredentials();
-            return savedCredentials?.accessToken != null && savedCredentials?.idToken != null;
+            return savedCredentials != null;
         }
 
         public async UniTask<string?> GetEmail()

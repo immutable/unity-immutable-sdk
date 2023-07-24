@@ -1,3 +1,5 @@
+using Newtonsoft.Json;
+
 namespace Immutable.Passport.Model
 {
 #pragma warning disable CS8618
@@ -10,11 +12,15 @@ namespace Immutable.Passport.Model
 
     public class TokenResponse
     {
-        public string? accessToken;
+        [JsonProperty(Required = Required.Always)]
+        public string accessToken;
         public string? refreshToken;
-        public string? idToken;
-        public string? tokenType;
-        public int? expiresIn;
+        [JsonProperty(Required = Required.Always)]
+        public string idToken;
+        [JsonProperty(Required = Required.Always)]
+        public string tokenType;
+        [JsonProperty(Required = Required.Always)]
+        public int expiresIn;
     }
 #pragma warning restore CS8618
 #pragma warning restore IDE1006
