@@ -116,8 +116,7 @@ namespace Immutable.Passport
                 string callResponse = await communicationsManager.Call(
                     PassportFunction.CONFIRM_CODE,
                     JsonConvert.SerializeObject(request),
-                    // Ignore timeout, this flow can take minutes to complete. 15 minute expiry from Auth0. 
-                    true
+                    true // Ignore timeout, this flow can take minutes to complete. 15 minute expiry from Auth0.
                 );
                 Response? response = JsonConvert.DeserializeObject<Response>(callResponse);
                 if (response?.success == false)
