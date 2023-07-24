@@ -78,10 +78,12 @@ namespace Immutable.Passport.Editor
             string publicPath = Path.GetFullPath("Packages/com.immutable.passport/Runtime/Scripts/Public");
             CopyFiles(publicPath, $"{outputDir}Runtime", new List<string>() { "Passport.cs" });
             // Immutable assembly file
-            File.Copy($"./Assets/Editor/ImmutablePublicAssembly.txt", $"{outputDir}Immutable.Passport.Runtime.asmdef");
+            File.Copy($"./Assets/Editor/ImmutableSdkAssembly.txt", $"{outputDir}Immutable.Passport.Runtime.asmdef");
             // Create post process file
             Directory.CreateDirectory($"{outputDir}Editor");
             File.Copy($"./Assets/Editor/SdkPostProcess.txt", $"{outputDir}Editor/SdkPostProcess.cs");
+            // Read me file
+            File.Copy($"./Assets/Editor/README.txt", $"{outputDir}README.md");
 
             // Delete sample app
             Debug.Log("Deleting sample app...");
