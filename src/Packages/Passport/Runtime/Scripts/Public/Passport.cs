@@ -78,7 +78,7 @@ namespace Immutable.Passport
                 BrowserCommunicationsManager communicationsManager = new(webBrowserClient);
                 communicationsManager.OnReady += () => readySignalReceived = true;
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-                await ((WebBrowserClient) webBrowserClient).Init();
+                await ((WebBrowserClient)webBrowserClient).Init();
 #endif
                 passportImpl = new PassportImpl(communicationsManager);
             }
@@ -96,7 +96,7 @@ namespace Immutable.Passport
             // Need to clean up UWB resources when quitting the game in the editor
             // as the child engine process would still be alive
             Debug.Log($"{TAG} Quitting the Player");
-            ((WebBrowserClient) webBrowserClient).Dispose();
+            ((WebBrowserClient)webBrowserClient).Dispose();
         }
 #endif
 

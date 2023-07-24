@@ -8,9 +8,7 @@
         "Android",
         "Editor",
         "iOS",
-        "macOSStandalone",
-        "WebGL",
-        "WindowsStandalone64"
+        "macOSStandalone"
     ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
