@@ -1,3 +1,5 @@
+#if UNITY_EDITOR_WIN
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -137,3 +139,5 @@ namespace Immutable.Passport.Editor
         }
     }
 }
+
+#endif
