@@ -67,7 +67,6 @@ namespace Immutable.Passport
                 }
             }
 
-            await Logout();
             throw new PassportException(
                 response?.error ?? "Something went wrong, please call Connect() again",
                 PassportErrorType.AUTHENTICATION_ERROR
