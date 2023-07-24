@@ -16,10 +16,6 @@ namespace Immutable.Browser.Gree
             webViewObject = new();
             webViewObject.Init(
                 cb: _cb,
-                ld: (msg) =>
-                {
-                    Debug.Log($"{TAG} loaded: {msg}");
-                },
                 httpErr: (msg) =>
                 {
                     Debug.LogError($"{TAG} http err: {msg}");

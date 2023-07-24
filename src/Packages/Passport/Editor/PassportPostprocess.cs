@@ -36,6 +36,10 @@ namespace Immutable.Passport.Editor
             {
                 buildDataPath = Path.GetFullPath($"{buildOutputPath}/{buildAppName}/unityLibrary/src/main/assets/");
             }
+            else if (buildTarget == BuildTarget.iOS)
+            {
+                buildDataPath = Path.GetFullPath($"{buildOutputPath}/{buildAppName}/Data/");
+            }
 
             // Check that the data folder exists
             if (!Directory.Exists(buildDataPath))

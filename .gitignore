@@ -80,3 +80,4 @@ crashlytics-build.properties
 ._.DS_Store
 
 sample-passport-unity-game/
+sample/iosBuild
