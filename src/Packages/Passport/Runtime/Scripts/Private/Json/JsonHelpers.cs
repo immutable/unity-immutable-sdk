@@ -15,7 +15,7 @@ namespace Immutable.Passport.Json
             {
                 return JsonConvert.DeserializeObject<T>(json);
             }
-            catch (JsonSerializationException e)
+            catch (JsonSerializationException)
             {
                 return null;
             }

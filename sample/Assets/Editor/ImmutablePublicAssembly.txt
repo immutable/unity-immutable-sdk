@@ -1,23 +1,19 @@
 {
-    "name": "Immutable.Passport.Runtime",
+    "name": "Immutable.Passport.Runtime.Public",
     "rootNamespace": "Immutable.Passport",
-    "references": [
-        "VoltstroStudios.UnityWebBrowser",
-        "UniTask",
-        "Immutable.Browser.Core",
-        "unity-webview"
-    ],
     "includePlatforms": [
-        "Android",
         "Editor",
-        "iOS",
         "WindowsStandalone64"
     ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": true,
     "precompiledReferences": [
-        "Newtonsoft.Json.dll"
+        "Newtonsoft.Json.dll",
+        "Immutable.Passport.Runtime.Private.dll",
+        "UniTask.dll",
+        "VoltstroStudios.UnityWebBrowser.dll",
+        "Immutable.Browser.Core.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],
