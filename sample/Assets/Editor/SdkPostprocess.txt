@@ -46,12 +46,12 @@ namespace Immutable.Passport.Editor
             }
 
             Debug.Log("Copying Passport directory...");
-            CopyDirectory("./Assets/ImmutableSDK/Passport", $"{buildDataPath}/ImmutableSDK/Passport");
+            CopyDirectory("./Assets/ImmutableSDK/Runtime/Passport", $"{buildDataPath}/ImmutableSDK/Runtime/Passport");
 
             Debug.Log("Copying UWB directory...");
-            CopyDirectory("./Assets/ImmutableSDK/UWB", $"{buildDataPath}/ImmutableSDK/UWB");
+            CopyDirectory("./Assets/ImmutableSDK/Runtime/UWB", $"{buildDataPath}/ImmutableSDK/Runtime/UWB");
 
-            Debug.Log($"Sucessfully copied Passport web files");
+            Debug.Log($"Sucessfully copied Immutable SDK files");
         }
 
         private void CopyDirectory(string sourceDir, string destinationDir)

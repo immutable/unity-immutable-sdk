@@ -62,7 +62,7 @@ namespace Immutable.Passport.Editor
             CopyDirectory($"{fullDataPath}ImmutableSDK", outputDir);
 
             // Copy DLLs
-            CopyFiles($"{fullDataPath}Managed", $"{outputDir}Dlls", new List<string>(){
+            CopyFiles($"{fullDataPath}Managed", $"{outputDir}Runtime/Dlls", new List<string>(){
                 "Immutable.Browser.Core.dll",
                 "Immutable.Passport.Runtime.Private.dll",
                 "Newtonsoft.Json.dll",
@@ -77,11 +77,13 @@ namespace Immutable.Passport.Editor
             // Copy public Passport file
             string publicPath = Path.GetFullPath("Packages/com.immutable.passport/Runtime/Scripts/Public");
             CopyFiles(publicPath, $"{outputDir}Runtime", new List<string>() { "Passport.cs" });
-            // Immutable assembly file
-            File.Copy($"./Assets/Editor/ImmutableSdkAssembly.txt", $"{outputDir}Immutable.Passport.Runtime.asmdef");
+            // Immutable runtime assembly file
+            File.Copy($"./Assets/Editor/SdkRuntimeAssembly.txt", $"{outputDir}Runtime/Immutable.Passport.Runtime.asmdef");
             // Create post process file
             Directory.CreateDirectory($"{outputDir}Editor");
             File.Copy($"./Assets/Editor/SdkPostProcess.txt", $"{outputDir}Editor/SdkPostProcess.cs");
+            // Immutable edtitor assembly file
+            File.Copy($"./Assets/Editor/SdkEditorAssembly.txt", $"{outputDir}Editor/Immutable.Passport.Editor.asmdef");
             // Read me file
             File.Copy($"./Assets/Editor/README.txt", $"{outputDir}README.md");
 

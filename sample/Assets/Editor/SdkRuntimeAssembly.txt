@@ -1,5 +1,5 @@
 {
-    "name": "Immutable.Passport.Runtime.Public",
+    "name": "Immutable.Passport.Runtime",
     "rootNamespace": "Immutable.Passport",
     "includePlatforms": [
         "Editor",
