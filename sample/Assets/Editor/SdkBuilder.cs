@@ -65,7 +65,6 @@ namespace Immutable.Passport.Editor
             CopyFiles($"{fullDataPath}Managed", $"{outputDir}Runtime/Dlls", new List<string>(){
                 "Immutable.Browser.Core.dll",
                 "Immutable.Passport.Runtime.Private.dll",
-                "Immutable.Passport.Editor.dll",
                 "Newtonsoft.Json.dll",
                 "UniTask.dll",
                 "VoltRpc.dll",
