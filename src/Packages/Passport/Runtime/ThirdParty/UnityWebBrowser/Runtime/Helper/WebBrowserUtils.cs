@@ -52,7 +52,7 @@ namespace VoltstroStudios.UnityWebBrowser.Helper
 #elif UNITY_STANDALONE_OSX
             return Application.persistentDataPath;
 #else
-			return $"{Application.dataPath}/ImmutableSDK";
+			return $"{Application.dataPath}/ImmutableSDK/Runtime";
 #endif
         }
 
@@ -70,7 +70,7 @@ namespace VoltstroStudios.UnityWebBrowser.Helper
 #elif UNITY_STANDALONE_OSX
             return Path.GetFullPath($"{Application.dataPath}/Resources/Data/UWB/");
 #elif UNITY_STANDALONE
-		    return Path.GetFullPath($"{Application.dataPath}/ImmutableSDK/UWB/");
+		    return Path.GetFullPath($"{Application.dataPath}/ImmutableSDK/Runtime/UWB/");
 #endif
         }
 

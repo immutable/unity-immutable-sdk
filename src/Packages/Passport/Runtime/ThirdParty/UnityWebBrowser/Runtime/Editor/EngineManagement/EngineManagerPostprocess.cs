@@ -45,7 +45,7 @@ namespace VoltstroStudios.UnityWebBrowser.Editor.EngineManagement
             }
 
             //UWB folder in the data folder
-            string buildUwbPath = $"{buildDataPath}/ImmutableSDK/UWB/";
+            string buildUwbPath = $"{buildDataPath}/ImmutableSDK/Runtime/UWB/";
 
             //Make sure it exists
             DirectoryInfo buildUwbInfo = new(buildUwbPath);
