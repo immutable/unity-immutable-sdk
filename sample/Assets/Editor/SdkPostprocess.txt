@@ -65,7 +65,7 @@ namespace Immutable.Passport.Editor
                 if (!file.Name.EndsWith(".meta"))
                 {
                     string targetFilePath = Path.Combine(destinationDir, file.Name);
-                    file.CopyTo(targetFilePath);
+                    file.CopyTo(targetFilePath, true);
                 }
             }
 

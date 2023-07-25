@@ -14,6 +14,7 @@ public class UnauthenticatedScript : MonoBehaviour
     [SerializeField] private Text userCodeText;
     [SerializeField] private Button proceedLoginButton;
     [SerializeField] private Button logoutButton;
+    [SerializeField] private Button tryAgainButton;
 
     private Passport passport;
 #pragma warning restore CS8618
@@ -27,6 +28,7 @@ public class UnauthenticatedScript : MonoBehaviour
             userCodeText.gameObject.SetActive(false);
             proceedLoginButton.gameObject.SetActive(false);
             logoutButton.gameObject.SetActive(false);
+            tryAgainButton.gameObject.SetActive(false);
 
             passport = await Passport.Init("ZJL7JvetcDFBNDlgRs5oJoxuAUUl6uQj");
 
@@ -60,7 +62,13 @@ public class UnauthenticatedScript : MonoBehaviour
         catch (Exception ex)
         {
             ShowOutput($"Start() error: {ex.Message}");
+            tryAgainButton.gameObject.SetActive(true);
         }
+    }
+
+    public void OnTryAgain()
+    {
+        Start();
     }
 
 #pragma warning disable IDE0051
@@ -97,9 +105,8 @@ public class UnauthenticatedScript : MonoBehaviour
         }
         catch (Exception ex)
         {
-            PassportException passportException = ex as PassportException;
             string error;
-            if (passportException != null && passportException.IsNetworkError())
+            if (ex is PassportException passportException && passportException.IsNetworkError())
             {
                 error = $"Connect() error: Check your internet connection and try again";
             }
