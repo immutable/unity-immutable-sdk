@@ -8,9 +8,7 @@ using Immutable.Browser.Core;
 using Immutable.Passport.Model;
 using Immutable.Passport.Core;
 using Cysharp.Threading.Tasks;
-#if UNITY_EDITOR
 using UnityEngine;
-#endif
 
 namespace Immutable.Passport
 {
@@ -26,6 +24,22 @@ namespace Immutable.Passport
         private readonly IWebBrowserClient webBrowserClient = new GreeBrowserClient();
 #endif
 
+#if UNITY_ANDROID
+        class DeepLinkCallback : AndroidJavaProxy
+        {
+            private Action<string> callback;
+
+            public DeepLinkCallback(Action<string> callback) : base("com.immutable.authredirect.DeepLinkCallback") 
+            {
+                this.callback = callback;
+            }
+
+            public void onDeepLink(String uri) {
+                callback(uri);
+            }
+        }
+#endif
+
         private static bool? readySignalReceived = null;
         private PassportImpl? passportImpl = null;
 
@@ -37,10 +51,14 @@ namespace Immutable.Passport
         {
 #if UNITY_EDITOR_WIN
             Application.quitting += OnQuit;
+#elif UNITY_ANDROID
+            AndroidJavaClass deepLinkManager = new AndroidJavaClass("com.immutable.authredirect.DeepLinkManager");
+            deepLinkManager.CallStatic("setCallback", new DeepLinkCallback((uri) => OnDeepLinkActivated(uri)));
 #endif
+            Application.deepLinkActivated += OnDeepLinkActivated;
         }
 
-        public static UniTask<Passport> Init(string clientId)
+        public static UniTask<Passport> Init(string clientId, string? redirectUri = null)
         {
             if (Instance == null)
             {
@@ -55,7 +73,7 @@ namespace Immutable.Passport
                     {
                         if (readySignalReceived == true)
                         {
-                            await Instance.GetPassportImpl().Init(clientId);
+                            await Instance.GetPassportImpl().Init(clientId, redirectUri);
                             return Instance;
                         }
                         else
@@ -100,6 +118,11 @@ namespace Immutable.Passport
         }
 #endif
 
+        private async void OnDeepLinkActivated(string url)
+        {
+            await GetPassportImpl().CompletePKCEFlow(url);
+        }
+
         /// <summary>
         /// Sets the timeout time for` waiting for each call to respond (in milliseconds).
         /// This only applies to functions that use the browser communications manager.
@@ -121,6 +144,11 @@ namespace Immutable.Passport
         public async UniTask<ConnectResponse?> Connect()
         {
             return await GetPassportImpl().Connect();
+        }
+
+        public async UniTask ConnectPKCE()
+        {
+            await GetPassportImpl().ConnectPKCE();
         }
 
         /// <summary>

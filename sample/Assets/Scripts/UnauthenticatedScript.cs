@@ -28,7 +28,7 @@ public class UnauthenticatedScript : MonoBehaviour
             proceedLoginButton.gameObject.SetActive(false);
             logoutButton.gameObject.SetActive(false);
 
-            passport = await Passport.Init("ZJL7JvetcDFBNDlgRs5oJoxuAUUl6uQj");
+            passport = await Passport.Init("ZJL7JvetcDFBNDlgRs5oJoxuAUUl6uQj", "imxsample://callback");
 
             // Check if user's logged in before
             bool hasCredsSaved = await passport.HasCredentialsSaved();
@@ -79,8 +79,11 @@ public class UnauthenticatedScript : MonoBehaviour
             userCodeText.gameObject.SetActive(false);
             proceedLoginButton.gameObject.SetActive(false);
 
+#if UNITY_ANDROID
+            await passport.ConnectPKCE();
+            NavigateToAuthenticatedScene();
+#else
             ConnectResponse? response = await passport.Connect();
-
             if (response != null)
             {
                 // Code confirmation required
@@ -94,6 +97,7 @@ public class UnauthenticatedScript : MonoBehaviour
                 // No need to confirm code, log user straight in
                 NavigateToAuthenticatedScene();
             }
+#endif
         }
         catch (Exception ex)
         {
