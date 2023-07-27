@@ -19,6 +19,8 @@ namespace Immutable.Passport.Editor
 
         public void OnPostprocessBuild(BuildReport report)
         {
+            Debug.Log("Passport post-processing...");
+
             if (report.summary.result is BuildResult.Failed or BuildResult.Cancelled)
                 return;
 
@@ -28,8 +30,6 @@ namespace Immutable.Passport.Editor
             string buildAppName = Path.GetFileNameWithoutExtension(buildFullOutputPath);
             string buildOutputPath = Path.GetDirectoryName(buildFullOutputPath);
 
-            Debug.Log("Copying passport browser files...");
-
             // Get the build's data folder
             string buildDataPath = Path.GetFullPath($"{buildOutputPath}/{buildAppName}_Data/");
             if (buildTarget == BuildTarget.StandaloneOSX)
@@ -37,73 +37,18 @@ namespace Immutable.Passport.Editor
                 buildDataPath =
                     Path.GetFullPath($"{buildOutputPath}/{buildAppName}.app/Contents/Resources/Data/");
             }
-            else if (buildTarget == BuildTarget.Android)
-            {
-                buildDataPath = Path.GetFullPath($"{buildOutputPath}/{buildAppName}/unityLibrary/src/main/assets/");
-            }
             else if (buildTarget == BuildTarget.iOS)
             {
                 buildDataPath = Path.GetFullPath($"{buildOutputPath}/{buildAppName}/Data/");
             }
 
-            // Check that the data folder exists
-            if (!Directory.Exists(buildDataPath))
+            // Copy passport files to data directory for these target
+            // For other platforms, check the pre process file
+            if (buildTarget == BuildTarget.StandaloneWindows64 || buildTarget == BuildTarget.StandaloneOSX || buildTarget == BuildTarget.iOS)
             {
-                Debug.LogError(
-                    "Failed to get the build's data folder. Make sure your build is the same name as your product name (In your project settings).");
-                return;
+                CopyIntoDataDir(buildDataPath);
+                Debug.Log($"Sucessfully copied Passport files");
             }
-
-            // Passport folder in the data folder
-            string buildPassportPath = $"{buildDataPath}/ImmutableSDK/Runtime/Passport/";
-
-            // Make sure it exists
-            DirectoryInfo buildPassportInfo = new(buildPassportPath);
-            if (!buildPassportInfo.Exists)
-            {
-                Directory.CreateDirectory(buildPassportPath);
-            }
-            else
-            {
-                // If the directory exists, clear it
-                foreach (FileInfo fileInfo in buildPassportInfo.EnumerateFiles())
-                {
-                    fileInfo.Delete();
-                }
-
-                foreach (DirectoryInfo directoryInfo in buildPassportInfo.EnumerateDirectories())
-                {
-                    directoryInfo.Delete(true);
-                }
-            }
-
-            buildPassportPath = Path.GetFullPath(buildPassportPath);
-
-            Debug.Log("Copying Passport files...");
-
-            // Find the location of the files
-            string passportWebFilesDir = Path.GetFullPath("Packages/com.immutable.passport/Runtime/Resources");
-            if (!Directory.Exists(passportWebFilesDir))
-            {
-                Debug.LogError("The Passport files directory doesn't exist!");
-                return;
-            }
-
-            foreach (string dir in Directory.GetDirectories(passportWebFilesDir, "*", SearchOption.AllDirectories))
-            {
-                string dirToCreate = dir.Replace(passportWebFilesDir, buildPassportPath);
-                Directory.CreateDirectory(dirToCreate);
-            }
-
-            foreach (string newPath in Directory.GetFiles(passportWebFilesDir, "*.*", SearchOption.AllDirectories))
-            {
-                if (!newPath.EndsWith(".meta"))
-                {
-                    File.Copy(newPath, newPath.Replace(passportWebFilesDir, buildPassportPath), true);
-                }
-            }
-
-            Debug.Log($"Sucessfully copied Passport web files");
 
             if (buildTarget == BuildTarget.iOS) 
             {
@@ -160,6 +105,63 @@ namespace Immutable.Passport.Editor
                 }
 
                 File.WriteAllText(projPath, dst);
+            }
+        }
+
+        private void CopyIntoDataDir(string buildDataPath)
+        {
+            // Check that the data folder exists
+            if (!Directory.Exists(buildDataPath))
+            {
+                Debug.LogError(
+                    "Failed to get the build's data folder. Make sure your build is the same name as your product name (In your project settings).");
+                return;
+            }
+
+            // Passport folder in the data folder
+            string buildPassportPath = $"{buildDataPath}/ImmutableSDK/Runtime/Passport/";
+
+            // Make sure it exists
+            DirectoryInfo buildPassportInfo = new(buildPassportPath);
+            if (!buildPassportInfo.Exists)
+            {
+                Directory.CreateDirectory(buildPassportPath);
+            }
+            else
+            {
+                // If the directory exists, clear it
+                FileHelpers.ClearDirectory(buildPassportPath);
+            }
+
+            buildPassportPath = Path.GetFullPath(buildPassportPath);
+
+            CopyFilesTo(buildPassportPath);
+        }
+
+        private void CopyFilesTo(string destinationPath)
+        {
+            Debug.Log("Copying Passport files...");
+
+            // Find the location of the files
+            string passportWebFilesDir = Path.GetFullPath("Packages/com.immutable.passport/Runtime/Resources");
+            if (!Directory.Exists(passportWebFilesDir))
+            {
+                Debug.LogError("The Passport files directory doesn't exist!");
+                return;
+            }
+
+            foreach (string dir in Directory.GetDirectories(passportWebFilesDir, "*", SearchOption.AllDirectories))
+            {
+                string dirToCreate = dir.Replace(passportWebFilesDir, destinationPath);
+                Directory.CreateDirectory(dirToCreate);
+            }
+
+            foreach (string newPath in Directory.GetFiles(passportWebFilesDir, "*.*", SearchOption.AllDirectories))
+            {
+                if (!newPath.EndsWith(".meta"))
+                {
+                    File.Copy(newPath, newPath.Replace(passportWebFilesDir, destinationPath), true);
+                }
             }
         }
     }

@@ -4,11 +4,11 @@ namespace Immutable.Passport.Json
 {
     public static class JsonExtensions
     {
-        /**
-        * Return null if the deserialization fails. 
-        * To require non-null values apply [JsonProperty(Required = Required.Always)] 
-        * above member declarations.
-        */
+        /// <summary>
+        /// Return null if the deserialization fails. 
+        /// To require non-null values apply [JsonProperty(Required = Required.Always)] 
+        /// above member declarations.
+        /// </summary> 
         public static T? OptDeserializeObject<T>(this string json) where T : class
         {
             try
