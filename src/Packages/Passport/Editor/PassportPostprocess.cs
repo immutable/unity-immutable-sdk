@@ -1,6 +1,11 @@
 #if UNITY_EDITOR
 
 using System.IO;
+using System.Reflection;
+using System.Text.RegularExpressions;
+using System.Text;
+using System.Xml;
+using System;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
@@ -99,6 +104,63 @@ namespace Immutable.Passport.Editor
             }
 
             Debug.Log($"Sucessfully copied Passport web files");
+
+            if (buildTarget == BuildTarget.iOS) 
+            {
+                string projPath = $"{buildOutputPath}/{buildAppName}" + "/Unity-iPhone.xcodeproj/project.pbxproj";
+                var type = Type.GetType("UnityEditor.iOS.Xcode.PBXProject, UnityEditor.iOS.Extensions.Xcode");
+
+                if (type == null)
+                {
+                    Debug.LogError("unitywebview: failed to get PBXProject. please install iOS build support.");
+                    return;
+                }
+
+                var src = File.ReadAllText(projPath);
+                var proj = type.GetConstructor(Type.EmptyTypes).Invoke(null);
+                {
+                    var method = type.GetMethod("ReadFromString");
+                    method.Invoke(proj, new object[]{src});
+                }
+
+                var target = "";
+#if UNITY_2019_3_OR_NEWER
+                {
+                    var method = type.GetMethod("GetUnityFrameworkTargetGuid");
+                    target = (string)method.Invoke(proj, null);
+                }
+#else
+                {
+                    var method = type.GetMethod("TargetGuidByName");
+                    target = (string)method.Invoke(proj, new object[]{"Unity-iPhone"});
+                }
+#endif
+                {
+                    var method = type.GetMethod("AddFrameworkToProject");
+                    method.Invoke(proj, new object[]{target, "WebKit.framework", false});
+                }
+
+                var cflags = "";
+                if (EditorUserBuildSettings.development) {
+                    cflags += " -DUNITYWEBVIEW_DEVELOPMENT";
+                }
+
+                cflags = cflags.Trim();
+
+                if (!string.IsNullOrEmpty(cflags)) 
+                {
+                    var method = type.GetMethod("AddBuildProperty", new Type[]{typeof(string), typeof(string), typeof(string)});
+                    method.Invoke(proj, new object[]{target, "OTHER_CFLAGS", cflags});
+                }
+                
+                var dst = "";
+                {
+                    var method = type.GetMethod("WriteToString");
+                    dst = (string)method.Invoke(proj, null);
+                }
+
+                File.WriteAllText(projPath, dst);
+            }
         }
     }
 }
