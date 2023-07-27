@@ -14,6 +14,8 @@ namespace Immutable.Passport.Editor
 
         public void OnPostprocessBuild(BuildReport report)
         {
+            Debug.Log("Passport post-processing...");
+
             if (report.summary.result is BuildResult.Failed or BuildResult.Cancelled)
                 return;
 
@@ -23,8 +25,6 @@ namespace Immutable.Passport.Editor
             string buildAppName = Path.GetFileNameWithoutExtension(buildFullOutputPath);
             string buildOutputPath = Path.GetDirectoryName(buildFullOutputPath);
 
-            Debug.Log("Copying passport browser files...");
-
             // Get the build's data folder
             string buildDataPath = Path.GetFullPath($"{buildOutputPath}/{buildAppName}_Data/");
             if (buildTarget == BuildTarget.StandaloneOSX)
@@ -32,11 +32,18 @@ namespace Immutable.Passport.Editor
                 buildDataPath =
                     Path.GetFullPath($"{buildOutputPath}/{buildAppName}.app/Contents/Resources/Data/");
             }
-            else if (buildTarget == BuildTarget.Android)
-            {
-                buildDataPath = Path.GetFullPath($"{buildOutputPath}/{buildAppName}/unityLibrary/src/main/assets/");
-            }
 
+            // Copy passport files to data directory for these target
+            // For other platforms, check the pre process file
+            if (buildTarget == BuildTarget.StandaloneWindows64 || buildTarget == BuildTarget.StandaloneOSX)
+            {
+                CopyIntoDataDir(buildDataPath);
+                Debug.Log($"Sucessfully copied Passport files");
+            }
+        }
+
+        private void CopyIntoDataDir(string buildDataPath)
+        {
             // Check that the data folder exists
             if (!Directory.Exists(buildDataPath))
             {
@@ -57,19 +64,16 @@ namespace Immutable.Passport.Editor
             else
             {
                 // If the directory exists, clear it
-                foreach (FileInfo fileInfo in buildPassportInfo.EnumerateFiles())
-                {
-                    fileInfo.Delete();
-                }
-
-                foreach (DirectoryInfo directoryInfo in buildPassportInfo.EnumerateDirectories())
-                {
-                    directoryInfo.Delete(true);
-                }
+                FileHelpers.ClearDirectory(buildPassportPath);
             }
 
             buildPassportPath = Path.GetFullPath(buildPassportPath);
 
+            CopyFilesTo(buildPassportPath);
+        }
+
+        private void CopyFilesTo(string destinationPath)
+        {
             Debug.Log("Copying Passport files...");
 
             // Find the location of the files
@@ -82,7 +86,7 @@ namespace Immutable.Passport.Editor
 
             foreach (string dir in Directory.GetDirectories(passportWebFilesDir, "*", SearchOption.AllDirectories))
             {
-                string dirToCreate = dir.Replace(passportWebFilesDir, buildPassportPath);
+                string dirToCreate = dir.Replace(passportWebFilesDir, destinationPath);
                 Directory.CreateDirectory(dirToCreate);
             }
 
@@ -90,11 +94,9 @@ namespace Immutable.Passport.Editor
             {
                 if (!newPath.EndsWith(".meta"))
                 {
-                    File.Copy(newPath, newPath.Replace(passportWebFilesDir, buildPassportPath), true);
+                    File.Copy(newPath, newPath.Replace(passportWebFilesDir, destinationPath), true);
                 }
             }
-
-            Debug.Log($"Sucessfully copied Passport web files");
         }
     }
 }
