@@ -55,7 +55,6 @@ namespace Immutable.Passport
             AndroidJavaClass deepLinkManager = new AndroidJavaClass("com.immutable.authredirect.DeepLinkManager");
             deepLinkManager.CallStatic("setCallback", new DeepLinkCallback((uri) => OnDeepLinkActivated(uri)));
 #endif
-            Application.deepLinkActivated += OnDeepLinkActivated;
         }
 
         public static UniTask<Passport> Init(string clientId, string? redirectUri = null)
@@ -120,7 +119,8 @@ namespace Immutable.Passport
 
         private async void OnDeepLinkActivated(string url)
         {
-            await GetPassportImpl().CompletePKCEFlow(url);
+            if (url.StartsWith(GetPassportImpl().redirectUri))
+                await GetPassportImpl().CompletePKCEFlow(url);
         }
 
         /// <summary>

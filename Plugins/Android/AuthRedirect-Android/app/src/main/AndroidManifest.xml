@@ -15,11 +15,8 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
-                    android:host="callback"
-                    android:scheme="imxsample" />
-<!--                <data-->
-<!--                    android:host="${deepLinkDomain}"-->
-<!--                    android:scheme="${deepLinkScheme}" />-->
+                    android:host="${deepLinkDomain}"
+                    android:scheme="${deepLinkScheme}" />
             </intent-filter>
         </activity>
     </application>

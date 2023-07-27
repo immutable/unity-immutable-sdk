@@ -22,6 +22,7 @@ namespace Immutable.Passport
         public readonly IBrowserCommunicationsManager communicationsManager;
         private DeviceConnectResponse? deviceConnectResponse;
         private UniTaskCompletionSource<bool> pkceCompletionSource = new UniTaskCompletionSource<bool>();
+        public string? redirectUri = null;
 
         public PassportImpl(IBrowserCommunicationsManager communicationsManager)
         {
@@ -30,6 +31,7 @@ namespace Immutable.Passport
 
         public async UniTask Init(string clientId, string? redirectUri = null)
         {
+            this.redirectUri = redirectUri;
             InitRequest request = new() { clientId = clientId, redirectUri = redirectUri };
 
             string response = await communicationsManager.Call(
@@ -80,7 +82,7 @@ namespace Immutable.Passport
             }
         }
 
-        public async UniTask CompletePKCEFlow(string uriString)//string authCode, string state)
+        public async UniTask CompletePKCEFlow(string uriString)
         {
             var uri = new Uri(uriString);
             var query = HttpUtility.ParseQueryString(uri.Query);
