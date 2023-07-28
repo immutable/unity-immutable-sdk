@@ -38,7 +38,7 @@ namespace Immutable.Passport
         public readonly IBrowserCommunicationsManager communicationsManager;
         private DeviceConnectResponse? deviceConnectResponse;
         private UniTaskCompletionSource<bool> pkceCompletionSource = new UniTaskCompletionSource<bool>();
-    private string? redirectUri = null;
+        private string? redirectUri = null;
 
         public PassportImpl(IBrowserCommunicationsManager communicationsManager)
         {
