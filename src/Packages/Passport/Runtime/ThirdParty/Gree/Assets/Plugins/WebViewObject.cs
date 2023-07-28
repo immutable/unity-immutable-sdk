@@ -27,7 +27,7 @@ using System.Runtime.InteropServices;
 #if UNITY_2018_4_OR_NEWER
 using UnityEngine.Networking;
 #endif
-#if UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
+#if UNITY_STANDALONE_OSX
 using System.IO;
 using System.Text.RegularExpressions;
 using UnityEngine.Rendering;
@@ -90,7 +90,7 @@ public class WebViewObject
     IntPtr webView;
 #endif
 
-#if UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
+#if UNITY_STANDALONE_OSX
     [DllImport("WebView")]
     private static extern string _CWebViewPlugin_GetAppPath();
     [DllImport("WebView")]
@@ -191,7 +191,7 @@ public class WebViewObject
         int androidForceDarkMode = 0  // 0: follow system setting, 1: force dark off, 2: force dark on
         )
     {
-#if UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
+#if UNITY_STANDALONE_OSX
         _CWebViewPlugin_InitStatic(
             Application.platform == RuntimePlatform.OSXEditor,
             SystemInfo.graphicsDeviceType == GraphicsDeviceType.Metal);
@@ -200,15 +200,15 @@ public class WebViewObject
         onError = err;
         onHttpError = httpErr;
 #if UNITY_WEBGL
-#if !UNITY_EDITOR
+    #if !UNITY_EDITOR
         _gree_unity_webview_init();
-#endif
+    #endif
 #elif UNITY_WEBPLAYER
         Application.ExternalCall("unityWebView.init");
 #elif UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_LINUX
         //TODO: UNSUPPORTED
         Debug.LogError("Webview is not supported on this platform.");
-#elif UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
+#elif UNITY_STANDALONE_OSX
         {
             var uri = new Uri(_CWebViewPlugin_GetAppPath());
             var info = File.ReadAllText(uri.LocalPath + "Contents/Info.plist");
@@ -217,24 +217,24 @@ public class WebViewObject
                 Debug.LogWarning("<color=yellow>WebViewObject: NSAppTransportSecurity isn't configured to allow HTTP. If you need to allow any HTTP access, please shutdown Unity and invoke:</color>\n/usr/libexec/PlistBuddy -c \"Add NSAppTransportSecurity:NSAllowsArbitraryLoads bool true\" /Applications/Unity/Unity.app/Contents/Info.plist");
             }
         }
-#if UNITY_EDITOR_OSX
+    // #if UNITY_EDITOR_OSX
         // if (string.IsNullOrEmpty(ua)) {
         //     ua = @"Mozilla/5.0 (iPhone; CPU iPhone OS 7_1_2 like Mac OS X) AppleWebKit/537.51.2 (KHTML, like Gecko) Version/7.0 Mobile/11D257 Safari/9537.53";
         // }
-#endif
-        webView = _CWebViewPlugin_Init(ua);
+    // #endif
+        // webView = _CWebViewPlugin_Init(ua);
         // define pseudo requestAnimationFrame.
-        EvaluateJS(@"(function() {
-            var vsync = 1000 / 60;
-            var t0 = window.performance.now();
-            window.requestAnimationFrame = function(callback, element) {
-                var t1 = window.performance.now();
-                var duration = t1 - t0;
-                var d = vsync - ((duration > vsync) ? duration % vsync : duration);
-                var id = window.setTimeout(function() {t0 = window.performance.now(); callback(t1 + d);}, d);
-                return id;
-            };
-        })()");
+        // EvaluateJS(@"(function() {
+        //     var vsync = 1000 / 60;
+        //     var t0 = window.performance.now();
+        //     window.requestAnimationFrame = function(callback, element) {
+        //         var t1 = window.performance.now();
+        //         var duration = t1 - t0;
+        //         var d = vsync - ((duration > vsync) ? duration % vsync : duration);
+        //         var id = window.setTimeout(function() {t0 = window.performance.now(); callback(t1 + d);}, d);
+        //         return id;
+        //     };
+        // })()");
 #elif UNITY_IPHONE
         webView = _CWebViewPlugin_Init(ua);
         Singleton.Instance.onJS = ((message) => CallFromJS(message));
@@ -262,7 +262,7 @@ public class WebViewObject
         Application.ExternalCall("unityWebView.loadURL", url);
 #elif UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_LINUX
         //TODO: UNSUPPORTED
-#elif UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX || UNITY_IPHONE
+#elif UNITY_STANDALONE_OSX || UNITY_IPHONE
         if (webView == IntPtr.Zero)
             return;
         _CWebViewPlugin_LoadURL(webView, url);
@@ -283,7 +283,7 @@ public class WebViewObject
         Application.ExternalCall("unityWebView.evaluateJS", js);
 #elif UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_LINUX
         //TODO: UNSUPPORTED
-#elif UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX || UNITY_IPHONE
+#elif UNITY_STANDALONE_OSX || UNITY_IPHONE
         if (webView == IntPtr.Zero)
             return;
         _CWebViewPlugin_EvaluateJS(webView, js);

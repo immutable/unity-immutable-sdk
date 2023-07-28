@@ -1,9 +1,12 @@
+using Newtonsoft.Json;
+
 namespace Immutable.Passport
 {
     public class Response
     {
         public string? responseFor;
         public string? requestId;
+        [JsonProperty(Required = Required.Always)]
         public bool success;
         public string? errorType;
         public string? error;

@@ -8,9 +8,7 @@ using Immutable.Browser.Core;
 using Immutable.Passport.Model;
 using Immutable.Passport.Core;
 using Cysharp.Threading.Tasks;
-#if UNITY_EDITOR
 using UnityEngine;
-#endif
 
 namespace Immutable.Passport
 {
@@ -36,7 +34,7 @@ namespace Immutable.Passport
 #endif
         }
 
-        public static UniTask<Passport> Init(string clientId)
+        public static UniTask<Passport> Init(string clientId, string? redirectUri = null)
         {
             if (Instance == null)
             {
@@ -51,7 +49,7 @@ namespace Immutable.Passport
                     {
                         if (readySignalReceived == true)
                         {
-                            await Instance.GetPassportImpl().Init(clientId);
+                            await Instance.GetPassportImpl().Init(clientId, redirectUri);
                             return Instance;
                         }
                         else
@@ -118,6 +116,19 @@ namespace Immutable.Passport
         {
             return await GetPassportImpl().Connect();
         }
+
+#if UNITY_ANDROID
+        /// <summary>
+        /// Connects the user into Passport via PKCE auth and sets up the IMX provider.
+        ///
+        /// The user does not need to go through this flow if the saved access token is still valid or
+        /// the refresh token can be used to get a new access token.
+        /// </summary>
+        public async UniTask ConnectPKCE()
+        {
+            await GetPassportImpl().ConnectPKCE();
+        }
+#endif
 
         /// <summary>
         /// Similar to Connect, however if the saved access token is no longer valid and the refresh token cannot be used,

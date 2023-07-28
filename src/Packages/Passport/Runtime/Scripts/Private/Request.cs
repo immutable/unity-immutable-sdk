@@ -20,5 +20,17 @@ namespace Immutable.Passport
         public int interval;
         public long? timeoutMs;
     }
+
+    internal class ConnectPKCERequest
+    {
+        public string authorizationCode;
+        public string state;
+    }
+
+    internal class InitRequest
+    {
+        public string clientId;
+        public string? redirectUri;
+    }
 }
 
