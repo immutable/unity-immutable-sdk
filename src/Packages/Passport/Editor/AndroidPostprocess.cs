@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,7 +15,6 @@ public class AndroidPostprocess : IPostGenerateGradleAndroidProject
 
     void IPostGenerateGradleAndroidProject.OnPostGenerateGradleAndroidProject(string path)
     {
-        // string rootDirectory = Path.GetFullPath(Path.Combine(path, @".."));
         DirectoryInfo parentDir = Directory.GetParent(path);
         string rootDirectory = parentDir.FullName;
         var xmls = GetAndroidManifestPlaceholdersXMLsInProject();
@@ -63,3 +63,4 @@ public class AndroidPostprocess : IPostGenerateGradleAndroidProject
             SearchOption.AllDirectories);
     }
 }
+#endif

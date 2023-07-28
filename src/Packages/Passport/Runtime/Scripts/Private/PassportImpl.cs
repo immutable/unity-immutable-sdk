@@ -80,6 +80,13 @@ namespace Immutable.Passport
             {
                 Application.OpenURL(response.result);
             }
+            else
+            {
+                pkceCompletionSource.TrySetException(new PassportException(
+                    "Something went wrong, please call ConnectPKCE() again",
+                    PassportErrorType.AUTHENTICATION_ERROR
+                ));
+            }
         }
 
         public async UniTask CompletePKCEFlow(string uriString)
@@ -114,6 +121,7 @@ namespace Immutable.Passport
                     response?.error ?? "Something went wrong, please call ConnectPKCE() again",
                     PassportErrorType.AUTHENTICATION_ERROR
                 ));
+                return;
             }
 
             pkceCompletionSource.TrySetResult(true);
