@@ -16,17 +16,37 @@ namespace Immutable.Passport
         public Exception? exception;
     }
 
+#if UNITY_ANDROID
+    class DeepLinkCallback : AndroidJavaProxy
+    {
+        private Action<string> callback;
+
+        public DeepLinkCallback(Action<string> callback) : base("com.immutable.authredirect.DeepLinkCallback") 
+        {
+            this.callback = callback;
+        }
+
+        public void onDeepLink(String uri) {
+            callback(uri);
+        }
+    }
+#endif
+
     public class PassportImpl
     {
         private const string TAG = "[Passport Implementation]";
         public readonly IBrowserCommunicationsManager communicationsManager;
         private DeviceConnectResponse? deviceConnectResponse;
         private UniTaskCompletionSource<bool> pkceCompletionSource = new UniTaskCompletionSource<bool>();
-        public string? redirectUri = null;
+    private string? redirectUri = null;
 
         public PassportImpl(IBrowserCommunicationsManager communicationsManager)
         {
             this.communicationsManager = communicationsManager;
+#if UNITY_ANDROID
+            AndroidJavaClass deepLinkManager = new AndroidJavaClass("com.immutable.authredirect.DeepLinkManager");
+            deepLinkManager.CallStatic("setCallback", new DeepLinkCallback((uri) => OnDeepLinkActivated(uri)));
+#endif
         }
 
         public async UniTask Init(string clientId, string? redirectUri = null)
@@ -63,6 +83,12 @@ namespace Immutable.Passport
             Debug.Log($"{TAG} Fallback to device code auth");
             ConnectResponse? connectResponse = await InitialiseDeviceCodeAuth();
             return connectResponse;
+        }
+
+        private async void OnDeepLinkActivated(string url)
+        {
+            if (url.StartsWith(redirectUri))
+                await CompletePKCEFlow(url);
         }
 
         public UniTask<bool> ConnectPKCE()

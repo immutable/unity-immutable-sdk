@@ -24,22 +24,6 @@ namespace Immutable.Passport
         private readonly IWebBrowserClient webBrowserClient = new GreeBrowserClient();
 #endif
 
-#if UNITY_ANDROID
-        class DeepLinkCallback : AndroidJavaProxy
-        {
-            private Action<string> callback;
-
-            public DeepLinkCallback(Action<string> callback) : base("com.immutable.authredirect.DeepLinkCallback") 
-            {
-                this.callback = callback;
-            }
-
-            public void onDeepLink(String uri) {
-                callback(uri);
-            }
-        }
-#endif
-
         private static bool? readySignalReceived = null;
         private PassportImpl? passportImpl = null;
 
@@ -47,9 +31,6 @@ namespace Immutable.Passport
         {
 #if UNITY_EDITOR_WIN
             Application.quitting += OnQuit;
-#elif UNITY_ANDROID
-            AndroidJavaClass deepLinkManager = new AndroidJavaClass("com.immutable.authredirect.DeepLinkManager");
-            deepLinkManager.CallStatic("setCallback", new DeepLinkCallback((uri) => OnDeepLinkActivated(uri)));
 #endif
         }
 
@@ -113,12 +94,6 @@ namespace Immutable.Passport
         }
 #endif
 
-        private async void OnDeepLinkActivated(string url)
-        {
-            if (url.StartsWith(GetPassportImpl().redirectUri))
-                await GetPassportImpl().CompletePKCEFlow(url);
-        }
-
         /// <summary>
         /// Sets the timeout time for` waiting for each call to respond (in milliseconds).
         /// This only applies to functions that use the browser communications manager.
@@ -142,10 +117,18 @@ namespace Immutable.Passport
             return await GetPassportImpl().Connect();
         }
 
+#if UNITY_ANDROID
+        /// <summary>
+        /// Connects the user into Passport via PKCE auth and sets up the IMX provider.
+        ///
+        /// The user does not need to go through this flow if the saved access token is still valid or
+        /// the refresh token can be used to get a new access token.
+        /// </summary>
         public async UniTask ConnectPKCE()
         {
             await GetPassportImpl().ConnectPKCE();
         }
+#endif
 
         /// <summary>
         /// Similar to Connect, however if the saved access token is no longer valid and the refresh token cannot be used,

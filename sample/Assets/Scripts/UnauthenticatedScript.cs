@@ -88,6 +88,7 @@ public class UnauthenticatedScript : MonoBehaviour
             proceedLoginButton.gameObject.SetActive(false);
 
 #if UNITY_ANDROID
+            connectButton.gameObject.SetActive(false);
             await passport.ConnectPKCE();
             NavigateToAuthenticatedScene();
 #else
@@ -109,6 +110,9 @@ public class UnauthenticatedScript : MonoBehaviour
         }
         catch (Exception ex)
         {
+#if UNITY_ANDROID
+            connectButton.gameObject.SetActive(true);
+#endif
             string error;
             if (ex is PassportException passportException && passportException.IsNetworkError())
             {

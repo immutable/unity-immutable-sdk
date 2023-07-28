@@ -22,7 +22,7 @@ android {
         }
         versionCode **VERSIONCODE**
         versionName '**VERSIONNAME**'
-        ##MANIFEST_PLACEHOLDERS##
+        manifestPlaceholders = [deepLinkScheme: 'imxsample', deepLinkDomain: 'callback']
     }
 
     aaptOptions {
