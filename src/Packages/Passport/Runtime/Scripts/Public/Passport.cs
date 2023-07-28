@@ -43,10 +43,6 @@ namespace Immutable.Passport
         private static bool? readySignalReceived = null;
         private PassportImpl? passportImpl = null;
 
-        /// <summary>
-        /// <param name="productName">The name of the game. This is used to clean up resources associated with
-        /// Passport when the game quits. Use Application.productName.</param>
-        /// </summary> 
         private Passport()
         {
 #if UNITY_EDITOR_WIN

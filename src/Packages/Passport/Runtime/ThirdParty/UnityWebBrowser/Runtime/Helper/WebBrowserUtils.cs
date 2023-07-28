@@ -52,7 +52,16 @@ namespace VoltstroStudios.UnityWebBrowser.Helper
 #elif UNITY_STANDALONE_OSX
             return Application.persistentDataPath;
 #else
-			return $"{Application.dataPath}/ImmutableSDK/Runtime";
+            // TODO to remove this once we don't stop distributing the SDK Windows DLL version, 
+            // but also doesn't matter if it stays here
+            if (Application.isEditor) 
+            {
+                return Path.GetFullPath($"{Directory.GetParent(Application.dataPath).FullName}/Library");
+            }
+            else
+            {
+			    return $"{Application.dataPath}/ImmutableSDK/Runtime";
+            }
 #endif
         }
 

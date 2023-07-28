@@ -1,10 +1,9 @@
 {
-    "name": "Immutable.Passport.Editor",
+    "name": "ImmutableSDK.Editor",
     "rootNamespace": "Immutable.Passport.Editor",
     "references": [],
     "includePlatforms": [
-        "Editor",
-        "WindowsStandalone64"
+        "Editor"
     ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

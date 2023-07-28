@@ -1,5 +1,5 @@
 {
-    "name": "PassportEditor",
+    "name": "Immutable.Passport.Editor",
     "rootNamespace": "Immutable.Passport.Editor",
     "references": [],
     "includePlatforms": [

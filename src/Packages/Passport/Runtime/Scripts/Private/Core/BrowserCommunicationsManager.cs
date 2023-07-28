@@ -91,6 +91,7 @@ namespace Immutable.Passport.Core
 
         private void HandleResponse(string message)
         {
+            Debug.Log($"{TAG} HandleResponse message: " + message);
             Response? response = JsonUtility.FromJson<Response>(message);
 
             // Check if the reponse returned is valid and the task to return the reponse exists
