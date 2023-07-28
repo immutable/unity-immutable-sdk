@@ -109,7 +109,7 @@ Passport passport = await Passport.Init("YOUR_IMMUTABLE_CLIENT_ID", "mygame://ca
 4. Call `try { await ConnectPKCE(); } catch(Exception) { ... }` instead of `Connect()`
 5. In Unity go to Build Settings -> Player Settings -> Android -> Publishing Settings -> Check "Custom Launcher Gradle Template" under the Build section
 6. Open the newly generated `Assets/Plugins/Android/launcherTemplate.gradle` file
-7. At the bottom of the android defaultConfig block add the following line: `manifestPlaceholders = [deepLinkScheme: 'imxsample', deepLinkDomain: 'callback']`
+7. At the bottom of the `android defaultConfig` block add the following line: `manifestPlaceholders = [deepLinkScheme: 'imxsample', deepLinkDomain: 'callback']`
 ```
 android {
     defaultConfig {
