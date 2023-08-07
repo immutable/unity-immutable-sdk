@@ -104,17 +104,17 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Connects the user into Passport via device code auth and sets up the IMX provider.
+        /// Connects the user into Passport via device code auth and sets up the IMX provider. This will open the user's
+        /// default browser and take them through Passport login.
+        /// 
+        /// Once authenticated, this function will set up the IMX provider.
         ///
         /// The user does not need to go through the device code auth flow if the saved access token is still valid or
         /// the refresh token can be used to get a new access token.
-        /// <returns>
-        /// The end-user verification code and url if the user has to go through device code auth, otherwise null
-        /// </returns>
         /// </summary>
-        public async UniTask<ConnectResponse?> Connect()
+        public async UniTask Connect(long? timeoutMs = null)
         {
-            return await GetPassportImpl().Connect();
+            await GetPassportImpl().Connect(timeoutMs);
         }
 
 #if UNITY_ANDROID
@@ -140,15 +140,6 @@ namespace Immutable.Passport
         public async UniTask<bool> ConnectSilent()
         {
             return await GetPassportImpl().ConnectSilent();
-        }
-
-        /// <summary>
-        /// Completes the device code auth flow. This will open the user's default browser and take them through Passport login.
-        /// Once authenticated, this function will set up the IMX provider.
-        /// </summary>
-        public async UniTask ConfirmCode(long? timeoutMs = null)
-        {
-            await GetPassportImpl().ConfirmCode(timeoutMs);
         }
 
         /// <summary>

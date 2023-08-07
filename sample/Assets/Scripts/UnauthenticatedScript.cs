@@ -11,9 +11,6 @@ public class UnauthenticatedScript : MonoBehaviour
     [SerializeField] private Text output;
 
     [SerializeField] private Button connectButton;
-    [SerializeField] private Text userCodeText;
-    [SerializeField] private Button proceedLoginButton;
-    [SerializeField] private Button logoutButton;
     [SerializeField] private Button tryAgainButton;
 
     private Passport passport;
@@ -25,9 +22,6 @@ public class UnauthenticatedScript : MonoBehaviour
         {
             ShowOutput("Starting...");
             connectButton.gameObject.SetActive(false);
-            userCodeText.gameObject.SetActive(false);
-            proceedLoginButton.gameObject.SetActive(false);
-            logoutButton.gameObject.SetActive(false);
             tryAgainButton.gameObject.SetActive(false);
 
             passport = await Passport.Init("ZJL7JvetcDFBNDlgRs5oJoxuAUUl6uQj", "imxsample://callback");
@@ -84,29 +78,15 @@ public class UnauthenticatedScript : MonoBehaviour
         try
         {
             ShowOutput("Called Connect()...");
-            userCodeText.gameObject.SetActive(false);
-            proceedLoginButton.gameObject.SetActive(false);
+            connectButton.gameObject.SetActive(false);
 
 #if UNITY_ANDROID
-            connectButton.gameObject.SetActive(false);
             await passport.ConnectPKCE();
-            NavigateToAuthenticatedScene();
 #else
-            ConnectResponse? response = await passport.Connect();
-            if (response != null)
-            {
-                // Code confirmation required
-                ShowOutput($"Code to verify: {response.code}");
-                userCodeText.gameObject.SetActive(true);
-                userCodeText.text = response.code;
-                proceedLoginButton.gameObject.SetActive(true);
-            }
-            else
-            {
-                // No need to confirm code, log user straight in
-                NavigateToAuthenticatedScene();
-            }
+            await passport.Connect();
 #endif
+
+            NavigateToAuthenticatedScene();
         }
         catch (Exception ex)
         {
@@ -128,36 +108,6 @@ public class UnauthenticatedScript : MonoBehaviour
             Debug.Log(error);
             ShowOutput(error);
         }
-    }
-
-    public async void ConfirmCode()
-    {
-        try
-        {
-            ShowOutput("Called ConfirmCode()...");
-            await passport.ConfirmCode();
-            ShowOutput("Confirmed code");
-            NavigateToAuthenticatedScene();
-        }
-        catch (Exception ex)
-        {
-            ShowOutput($"ConfirmCode() error: {ex.Message}");
-        }
-    }
-
-    public void CancelLogin()
-    {
-        ShowOutput("Login cancelled...");
-        connectButton.gameObject.SetActive(true);
-        userCodeText.gameObject.SetActive(false);
-        proceedLoginButton.gameObject.SetActive(false);
-        logoutButton.gameObject.SetActive(false);
-    }
-
-    public async void Logout()
-    {
-        await passport.Logout();
-        logoutButton.gameObject.SetActive(false);
     }
 
     private void NavigateToAuthenticatedScene()

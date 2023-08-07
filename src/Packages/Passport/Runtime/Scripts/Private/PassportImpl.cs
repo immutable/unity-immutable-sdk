@@ -64,14 +64,14 @@ namespace Immutable.Passport
             }
         }
 
-        public async UniTask<ConnectResponse?> Connect()
+        public async UniTask Connect(long? timeoutMs = null)
         {
             try
             {
                 bool connected = await ConnectSilent();
                 if (connected)
                 {
-                    return null;
+                    return;
                 }
             }
             catch (Exception e)
@@ -82,7 +82,18 @@ namespace Immutable.Passport
             // Fallback to device code auth flow
             Debug.Log($"{TAG} Fallback to device code auth");
             ConnectResponse? connectResponse = await InitialiseDeviceCodeAuth();
-            return connectResponse;
+
+            if (connectResponse != null)
+            {
+                await ConfirmCode(timeoutMs);
+            }
+            else
+            {
+                throw new PassportException(
+                    "Failed to retrieve auth url, please try again",
+                    PassportErrorType.AUTHENTICATION_ERROR
+                    );
+            }
         }
 
         private async void OnDeepLinkActivated(string url)
@@ -201,7 +212,7 @@ namespace Immutable.Passport
             return false;
         }
 
-        public async UniTask ConfirmCode(long? timeoutMs = null)
+        private async UniTask ConfirmCode(long? timeoutMs = null)
         {
             if (deviceConnectResponse != null)
             {
