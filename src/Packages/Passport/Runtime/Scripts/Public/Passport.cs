@@ -24,6 +24,8 @@ namespace Immutable.Passport
         private readonly IWebBrowserClient webBrowserClient = new GreeBrowserClient();
 #endif
 
+        // Keeps track of the latest received deeplink
+        private static string? deeplink = null;
         private static bool? readySignalReceived = null;
         private PassportImpl? passportImpl = null;
 
@@ -31,6 +33,13 @@ namespace Immutable.Passport
         {
 #if UNITY_EDITOR_WIN
             Application.quitting += OnQuit;
+#elif UNITY_IPHONE
+            Application.deepLinkActivated += onDeepLinkActivated;
+            if (!string.IsNullOrEmpty(Application.absoluteURL))
+            {
+                // Cold start and Application.absoluteURL not null so process Deep Link.
+                onDeepLinkActivated(Application.absoluteURL);
+            }
 #endif
         }
 
@@ -49,7 +58,7 @@ namespace Immutable.Passport
                     {
                         if (readySignalReceived == true)
                         {
-                            await Instance.GetPassportImpl().Init(clientId, redirectUri);
+                            await Instance.GetPassportImpl().Init(clientId, redirectUri, deeplink);
                             return Instance;
                         }
                         else
@@ -117,7 +126,7 @@ namespace Immutable.Passport
             await GetPassportImpl().Connect(timeoutMs);
         }
 
-#if UNITY_ANDROID
+#if UNITY_ANDROID || UNITY_IPHONE
         /// <summary>
         /// Connects the user into Passport via PKCE auth and sets up the IMX provider.
         ///
@@ -213,6 +222,16 @@ namespace Immutable.Passport
                 return passportImpl;
             }
             throw new PassportException("Passport not initialised");
+        }
+
+        private async void onDeepLinkActivated(string url)
+        {
+            deeplink = url;
+
+            if (passportImpl != null)
+            {
+                GetPassportImpl().OnDeepLinkActivated(url);
+            }
         }
     }
 }

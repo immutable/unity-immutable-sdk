@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Networking;
 using Newtonsoft.Json;
 using Immutable.Passport.Json;
 using Immutable.Passport.Model;
@@ -49,7 +50,7 @@ namespace Immutable.Passport
 #endif
         }
 
-        public async UniTask Init(string clientId, string? redirectUri = null)
+        public async UniTask Init(string clientId, string? redirectUri = null, string? deeplink = null)
         {
             this.redirectUri = redirectUri;
             InitRequest request = new() { clientId = clientId, redirectUri = redirectUri };
@@ -58,9 +59,14 @@ namespace Immutable.Passport
                 PassportFunction.INIT,
                 JsonConvert.SerializeObject(request));
             Response? initResponse = JsonConvert.DeserializeObject<Response>(response);
+
             if (initResponse?.success == false)
             {
                 throw new PassportException(initResponse?.error ?? "Unable to initialise Passport");
+            }
+            else if (deeplink != null)
+            {
+                OnDeepLinkActivated(deeplink);
             }
         }
 
@@ -96,7 +102,7 @@ namespace Immutable.Passport
             }
         }
 
-        private async void OnDeepLinkActivated(string url)
+        public async void OnDeepLinkActivated(string url)
         {
             if (url.StartsWith(redirectUri))
                 await CompletePKCEFlow(url);
@@ -113,9 +119,10 @@ namespace Immutable.Passport
         {
             string callResponse = await communicationsManager.Call(PassportFunction.GET_PKCE_AUTH_URL);
             StringResponse? response = callResponse.OptDeserializeObject<StringResponse>();
+
             if (response?.success == true && response?.result != null)
             {
-                Application.OpenURL(response.result);
+                Application.OpenURL(response.result.Replace(" ", "+"));
             }
             else
             {
