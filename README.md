@@ -115,18 +115,21 @@ Passport passport = await Passport.Init("YOUR_IMMUTABLE_CLIENT_ID", "mygame://ca
 
 #### Android setup
 
-1. In Unity go to Build Settings -> Player Settings -> Android -> Publishing Settings -> Check "Custom Launcher Gradle Template" under the Build section
-2. Open the newly generated `Assets/Plugins/Android/launcherTemplate.gradle` file
-3. At the bottom of the `android defaultConfig` block add the following line: `manifestPlaceholders = [deepLinkScheme: 'imxsample', deepLinkDomain: 'callback']`
+1. In Unity go to **Build Settings** -> **Player Settings** -> **Android** -> **Publishing Settings** -> Enable **Custom Main Manifest** under the **Build** section
+2. Open the newly generated `Assets/Plugins/Android/AndroidManifest.xml` file
+3. Add the following code inside the `<Activity>` element:
 
 ```XML
-android {
-    defaultConfig {
-        ...
-        manifestPlaceholders = [deepLinkScheme: 'mygame', deepLinkDomain: 'callback']
-    }
-}
+<intent-filter>
+  <action android:name="android.intent.action.VIEW" />
+  <category android:name="android.intent.category.DEFAULT" />
+  <category android:name="android.intent.category.BROWSABLE" />
+  <data android:scheme="mygame" android:host="callback" />
+</intent-filter>
 ```
+The application will now open when the device processes any link that starts with `mygame://callback`.
+
+See `sample/Assets/Plugins/Android/AndroidManifest.xml` for an example.
 
 #### iOS setup
 
