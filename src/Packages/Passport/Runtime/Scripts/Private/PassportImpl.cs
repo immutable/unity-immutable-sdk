@@ -44,10 +44,6 @@ namespace Immutable.Passport
         public PassportImpl(IBrowserCommunicationsManager communicationsManager)
         {
             this.communicationsManager = communicationsManager;
-#if UNITY_ANDROID
-            AndroidJavaClass deepLinkManager = new AndroidJavaClass("com.immutable.authredirect.DeepLinkManager");
-            deepLinkManager.CallStatic("setCallback", new DeepLinkCallback((uri) => OnDeepLinkActivated(uri)));
-#endif
         }
 
         public async UniTask Init(string clientId, string? redirectUri = null, string? deeplink = null)
