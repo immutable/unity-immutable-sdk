@@ -103,7 +103,7 @@ For Android and iOS you can use the PKCE login flow instead of Device Code. This
 To use this flow you will need to:
 
 1. Define a deep link scheme for your game (e.g. mygame://callback)
-2. Login to the Hub (https://hub.immutable.com/) and add the deeplink to your clients Callback URLs and Logout URLs
+2. Login to the [Hub](https://hub.immutable.com/) and add the deeplink to your clients Callback URLs and Logout URLs
 3. Set this deep link as your redirect URI in the Passport Init:
 
 ```C#
@@ -115,22 +115,25 @@ Passport passport = await Passport.Init("YOUR_IMMUTABLE_CLIENT_ID", "mygame://ca
 
 #### Android setup
 
-1. In Unity go to Build Settings -> Player Settings -> Android -> Publishing Settings -> Check "Custom Launcher Gradle Template" under the Build section
-2. Open the newly generated `Assets/Plugins/Android/launcherTemplate.gradle` file
-3. At the bottom of the `android defaultConfig` block add the following line: `manifestPlaceholders = [deepLinkScheme: 'imxsample', deepLinkDomain: 'callback']`
+1. In Unity go to **Build Settings** -> **Player Settings** -> **Android** -> **Publishing Settings** -> Enable **Custom Main Manifest** under the **Build** section
+2. Open the newly generated `Assets/Plugins/Android/AndroidManifest.xml` file
+3. Add the following code inside the `<Activity>` element:
 
 ```XML
-android {
-    defaultConfig {
-        ...
-        manifestPlaceholders = [deepLinkScheme: 'mygame', deepLinkDomain: 'callback']
-    }
-}
+<intent-filter>
+  <action android:name="android.intent.action.VIEW" />
+  <category android:name="android.intent.category.DEFAULT" />
+  <category android:name="android.intent.category.BROWSABLE" />
+  <data android:scheme="mygame" android:host="callback" />
+</intent-filter>
 ```
+The application will now open when the device processes any link that starts with `mygame://callback`.
+
+See sample's app [AndroidManifest.xml](https://github.com/immutable/unity-immutable-sdk/blob/main/sample/Assets/Plugins/Android/AndroidManifest.xml) for an example.
 
 #### iOS setup
 
-1. In Unity go to Build Settings -> Player Settings -> iOS -> Other Settings -> Supported URL schemes, increment the Size number and include your URL scheme in the Element field.
+1. In Unity go to **Build Settings** -> **Player Settings** -> **iOS** -> **Other Settings** -> **Supported URL schemes**, increment the **Size** number and include your URL scheme in the **Element** field.
 
 After this set up your game will be able to login using PKCE.
 
