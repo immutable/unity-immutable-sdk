@@ -12,5 +12,6 @@ namespace Immutable.Passport
         public const string GET_ADDRESS = "getAddress";
         public const string LOGOUT = "logout";
         public const string GET_EMAIL = "getEmail";
+        public const string IMX_TRANSFER = "imxTransfer";
     }
 }

@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.Networking;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using Immutable.Passport.Json;
 using Immutable.Passport.Model;
 using Immutable.Passport.Core;
@@ -284,6 +285,24 @@ namespace Immutable.Passport
         {
             TokenResponse? savedCredentials = await GetStoredCredentials();
             return savedCredentials?.idToken;
+        }
+
+        public async UniTask<CreateTransferResponseV1> ImxTransfer(UnsignedTransferRequest request)
+        {
+            try
+            {
+                string json = JsonConvert.SerializeObject(request);
+                string callResponse = await communicationsManager.Call(PassportFunction.IMX_TRANSFER, json);
+                return JsonConvert.DeserializeObject<CreateTransferResponseV1>(json);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"{TAG} Failed to transfer: {ex.Message}");
+                throw new PassportException(
+                    $"Something went wrong with ImxTransfer(): {ex.Message}",
+                    PassportErrorType.TRANSFER_ERROR
+                );
+            }
         }
     }
 }

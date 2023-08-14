@@ -90,7 +90,7 @@ public class UnauthenticatedScript : MonoBehaviour
         }
         catch (Exception ex)
         {
-#if UNITY_ANDROID
+#if UNITY_ANDROID || UNITY_IPHONE
             connectButton.gameObject.SetActive(true);
 #endif
             string error;
