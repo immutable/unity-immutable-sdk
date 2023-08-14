@@ -215,6 +215,19 @@ namespace Immutable.Passport
             return GetPassportImpl().GetIdToken();
         }
 
+
+        /// <summary>
+        /// Create a new transfer request with the given unsigned transfer request.
+        /// <returns>
+        /// The transfer response if successful
+        /// </returns>
+        /// </summary>
+        public async UniTask<CreateTransferResponseV1> ImxTransfer(UnsignedTransferRequest request)
+        {
+            CreateTransferResponseV1 response = await GetPassportImpl().ImxTransfer(request);
+            return response;
+        }
+
         private PassportImpl GetPassportImpl()
         {
             if (passportImpl != null)
