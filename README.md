@@ -19,14 +19,19 @@
 * Android
 * iOS
 
+## Registering your game
+
+Before using Passport, you must register your application as an OAuth 2.0 **Native** client in the [Immutable Developer Hub](https://hub.immutable.com/passport/add).
+
+See [here](https://docs.immutable.com/docs/x/passport/register-application) for more details.
+
 ## Installation
 
-### Compressed file
-1. Uncompress the zip file
+1. Clone the [unity-immutable-sdk](https://github.com/immutable/unity-immutable-sdk) repository or download the zip/tarball from one of the versions [here](https://github.com/immutable/unity-immutable-sdk/tags)
 2. Open the Package Manager
 3. Click the add + button and select "Add package from disk..."
-4. Navigate to the package root folder
-5. Double clik the `package.json` file
+4. Navigate to the Passport package root folder (`src/Packages/Passport`)
+5. Double-click the `package.json` file
 
 ## Quick Start
 
@@ -51,26 +56,13 @@ Passport is now accessible from anywhere via `Passport.Instance`.
 We use the [Device Code Authorisation](https://auth0.com/docs/get-started/authentication-and-authorization-flow/device-authorization-flow#:~:text=Your%20Auth0%20Authorization%20Server%20redirects,authorized%20to%20access%20the%20API.) flow to authenticate and authorise users.
 ```
 ConnectResponse? response = await passport.Connect();
-
-if (response != null)
-{
-    // Display the code to the user
-    userCodeText.text = response.code;
-    
-}
-else
-{
-    // Code confirmation is not required, proceed to authenticated flow
-}
 ```
 
-If the `response` is not null, display the code on the game UI so the user can use it to authenticate. To confirm the code, call `await passport.ConfirmCode(response.code)`
-
-This will open the user's default browser and take them through the auth flow. If this doesn't happen, you may use the returned URL to manually open the browser, e.g. ` Application.OpenURL(response.url)`
+This will open the user's default browser and take them through the auth flow.
 
 #### Credentials
 
-Once the user is connected to Passport, the SDK will store the credentials (access, ID, and refresh tokens) for you.
+Once the user is connected to Passport, the SDK will store your credentials (access, ID, and refresh tokens).
 
 You may use `await passport.ConnectSilent()` to connect to Passport using the saved credentials. This is similar to `Connect()`. However, if the saved access token is no longer valid and the refresh token cannot be used, it will not fall back to the Device Code Authorisation flow.
 
@@ -102,8 +94,8 @@ For Android and iOS you can use the PKCE login flow instead of Device Code. This
 
 To use this flow you will need to:
 
-1. Define a deep link scheme for your game (e.g. mygame://callback)
-2. Login to the [Hub](https://hub.immutable.com/) and add the deeplink to your clients Callback URLs and Logout URLs
+1. Define a deep link scheme for your game (e.g. `mygame://callback`)
+2. Login to the [Immutable Developer Hub](https://hub.immutable.com/) and add the deeplink to your clients **Callback URLs** and **Logout URLs**
 3. Set this deep link as your redirect URI in the Passport Init:
 
 ```C#
@@ -129,13 +121,13 @@ Passport passport = await Passport.Init("YOUR_IMMUTABLE_CLIENT_ID", "mygame://ca
 ```
 The application will now open when the device processes any link that starts with `mygame://callback`.
 
-See sample's app [AndroidManifest.xml](https://github.com/immutable/unity-immutable-sdk/blob/main/sample/Assets/Plugins/Android/AndroidManifest.xml) for an example.
+See the sample's app [AndroidManifest.xml](https://github.com/immutable/unity-immutable-sdk/blob/main/sample/Assets/Plugins/Android/AndroidManifest.xml) for an example.
 
 #### iOS setup
 
 1. In Unity go to **Build Settings** -> **Player Settings** -> **iOS** -> **Other Settings** -> **Supported URL schemes**, increment the **Size** number and include your URL scheme in the **Element** field.
 
-After this set up your game will be able to login using PKCE.
+After this set-up, your game can log in using PKCE.
 
 ## Supported Functions
 
@@ -147,11 +139,11 @@ After this set up your game will be able to login using PKCE.
 
 ## Examples
 
-* **Sample code** - see the [sample](https://github.com/immutable/unity-immutable-sdk/tree/main/sample) folder for examples of how to use the Immutable Unity SDK.
+* **Sample code** - see the [sample](https://github.com/immutable/unity-immutable-sdk/tree/main/sample) application for examples of how to use the Immutable Unity SDK.
 
 ## Changelog Management
 
-The following headings should be used as appropriate
+The following headings should be used as appropriate.
 
 - Added
 - Changed
