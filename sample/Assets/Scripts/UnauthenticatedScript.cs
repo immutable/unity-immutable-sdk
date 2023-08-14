@@ -80,7 +80,7 @@ public class UnauthenticatedScript : MonoBehaviour
             ShowOutput("Called Connect()...");
             connectButton.gameObject.SetActive(false);
 
-#if UNITY_ANDROID
+#if UNITY_ANDROID || UNITY_IPHONE
             await passport.ConnectPKCE();
 #else
             await passport.Connect();
