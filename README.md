@@ -15,9 +15,9 @@
 
 ## Supported Platforms
 
-* Windows
-* Android
-* iOS
+<li>Windows (64-bit)</li>
+<li>Android (minimum version 5.1)</li>
+<li>iOS (minimum version 13.0)</li>
 
 ## Registering your game
 
@@ -39,7 +39,7 @@ See [here](https://docs.immutable.com/docs/x/passport/register-application) for 
 
 Create a script with the following code and bind it to an object:
 
-```
+```csharp
 public class ImmutableUnity : MonoBehaviour
 {
     void Start()
@@ -53,20 +53,20 @@ Passport is now accessible from anywhere via `Passport.Instance`.
 
 ### Connect to Passport
 
-We use the [Device Code Authorisation](https://auth0.com/docs/get-started/authentication-and-authorization-flow/device-authorization-flow#:~:text=Your%20Auth0%20Authorization%20Server%20redirects,authorized%20to%20access%20the%20API.) flow to authenticate and authorise users.
-```
-ConnectResponse? response = await passport.Connect();
+We use the [Device Code Authorisation](https://auth0.com/docs/get-started/authentication-and-authorization-flow/device-authorization-flow#:~:text=Your%20Auth0%20Authorization%20Server%20redirects,authorized%20to%20access%20the%20API.) flow to authenticate and authorise gamers.
+```csharp
+await passport.Connect();
 ```
 
-This will open the user's default browser and take them through the auth flow.
+This will open the gamer's default browser and take them through the auth flow.
 
 #### Credentials
 
-Once the user is connected to Passport, the SDK will store your credentials (access, ID, and refresh tokens).
+Once the gamer is connected to Passport, the SDK will store your credentials (access, ID, and refresh tokens).
 
 You may use `await passport.ConnectSilent()` to connect to Passport using the saved credentials. This is similar to `Connect()`. However, if the saved access token is no longer valid and the refresh token cannot be used, it will not fall back to the Device Code Authorisation flow.
 
-```
+```csharp
 try 
 {
     bool hasCredsSaved = await passport.HasCredentialsSaved();
@@ -78,19 +78,21 @@ try
 }
 catch (Exception)
 {
-    // Attempted to connect to Passport silently but could not use saved credentials
+    // Attempted to connect to Passport silently but could not use saved credentials.
+    // You may prompt the gamer to connect again (e.g. await passport.Connect()) 
+    // or ignore this error and prompt the gamer to connect at another point.
 }
 ```
 
 ### Log out of Passport
 
-```
+```csharp
 await passport.Logout();
 ```
 
 ### Android and iOS PKCE login
 
-For Android and iOS you can use the PKCE login flow instead of Device Code. This means the user has one less step to complete and will be redirected back to the game after successfully authenticating.
+For Android and iOS you can use the PKCE login flow instead of Device Code. This means the gamer has one less step to complete and will be redirected back to the game after successfully authenticating.
 
 To use this flow you will need to:
 
@@ -131,7 +133,7 @@ After this set-up, your game can log in using PKCE.
 
 ## Supported Functions
 
-* Get address
+* Get wallet address
 * Get access token
 * Get ID token
 * Get email
