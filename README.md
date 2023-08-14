@@ -184,10 +184,10 @@ for any bug fixes.
 ...
 ```
 
-The version.yml will hold the value of the previous release
+The package's `package.json` will hold the value of the previous release (e.g. `src/Packages/Passport`)
 
-```yaml
-version: 0.1.0
+```json
+"version": "0.1.0",
 ```
 
 ## Contributing
