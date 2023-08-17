@@ -101,7 +101,7 @@ namespace Immutable.Passport
             {
                 string callResponse = await communicationsManager.Call(PassportFunction.GET_PKCE_AUTH_URL);
                 StringResponse? response = callResponse.OptDeserializeObject<StringResponse>();
-            
+
                 if (response?.success == true && response?.result != null)
                 {
                     Application.OpenURL(response.result.Replace(" ", "+"));
@@ -115,7 +115,6 @@ namespace Immutable.Passport
             catch (Exception e)
             {
                 Debug.Log($"{TAG} Get PKCE Auth URL error: {e.Message}");
-                
             }
             pkceCompletionSource.TrySetException(new PassportException(
                 "Something went wrong, please call ConnectPKCE() again",
