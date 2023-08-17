@@ -24,7 +24,7 @@ public class UnauthenticatedScript : MonoBehaviour
             connectButton.gameObject.SetActive(false);
             tryAgainButton.gameObject.SetActive(false);
 
-            passport = await Passport.Init("ZJL7JvetcDFBNDlgRs5oJoxuAUUl6uQj", "imxsample://callback");
+            passport = await Passport.Init("ZJL7JvetcDFBNDlgRs5oJoxuAUUl6uQj", Immutable.Passport.Model.Environment.SANDBOX, "imxsample://callback");
 
             // Check if user's logged in before
             bool hasCredsSaved = await passport.HasCredentialsSaved();

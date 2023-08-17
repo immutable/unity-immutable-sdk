@@ -43,7 +43,7 @@ namespace Immutable.Passport
 #endif
         }
 
-        public static UniTask<Passport> Init(string clientId, string? redirectUri = null)
+        public static UniTask<Passport> Init(string clientId, string environment, string? redirectUri = null)
         {
             if (Instance == null)
             {
@@ -58,7 +58,7 @@ namespace Immutable.Passport
                     {
                         if (readySignalReceived == true)
                         {
-                            await Instance.GetPassportImpl().Init(clientId, redirectUri, deeplink);
+                            await Instance.GetPassportImpl().Init(clientId, environment, redirectUri, deeplink);
                             return Instance;
                         }
                         else

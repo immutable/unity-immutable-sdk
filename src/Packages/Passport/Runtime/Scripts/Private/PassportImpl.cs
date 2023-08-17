@@ -46,10 +46,10 @@ namespace Immutable.Passport
             this.communicationsManager = communicationsManager;
         }
 
-        public async UniTask Init(string clientId, string? redirectUri = null, string? deeplink = null)
+        public async UniTask Init(string clientId, string environment, string? redirectUri = null, string? deeplink = null)
         {
             this.redirectUri = redirectUri;
-            InitRequest request = new() { clientId = clientId, redirectUri = redirectUri };
+            InitRequest request = new() { clientId = clientId, environment = environment, redirectUri = redirectUri };
 
             string response = await communicationsManager.Call(
                 PassportFunction.INIT,

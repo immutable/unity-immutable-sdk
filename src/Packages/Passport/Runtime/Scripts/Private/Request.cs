@@ -30,6 +30,7 @@ namespace Immutable.Passport
     internal class InitRequest
     {
         public string clientId;
+        public string environment;
         public string? redirectUri;
     }
 }
