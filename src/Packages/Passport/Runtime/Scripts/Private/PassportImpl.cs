@@ -97,20 +97,30 @@ namespace Immutable.Passport
 
         private async UniTask LaunchAuthUrl()
         {
-            string callResponse = await communicationsManager.Call(PassportFunction.GET_PKCE_AUTH_URL);
-            StringResponse? response = callResponse.OptDeserializeObject<StringResponse>();
-
-            if (response?.success == true && response?.result != null)
+            try
             {
-                Application.OpenURL(response.result.Replace(" ", "+"));
+                string callResponse = await communicationsManager.Call(PassportFunction.GET_PKCE_AUTH_URL);
+                StringResponse? response = callResponse.OptDeserializeObject<StringResponse>();
+            
+                if (response?.success == true && response?.result != null)
+                {
+                    Application.OpenURL(response.result.Replace(" ", "+"));
+                    return;
+                }
+                else
+                {
+                    Debug.Log($"{TAG} Failed to get PKCE Auth URL");
+                }
             }
-            else
+            catch (Exception e)
             {
-                pkceCompletionSource.TrySetException(new PassportException(
-                    "Something went wrong, please call ConnectPKCE() again",
-                    PassportErrorType.AUTHENTICATION_ERROR
-                ));
+                Debug.Log($"{TAG} Get PKCE Auth URL error: {e.Message}");
+                
             }
+            pkceCompletionSource.TrySetException(new PassportException(
+                "Something went wrong, please call ConnectPKCE() again",
+                PassportErrorType.AUTHENTICATION_ERROR
+            ));
         }
 
         public async UniTask CompletePKCEFlow(string uriString)
