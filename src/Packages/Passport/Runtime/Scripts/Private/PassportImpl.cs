@@ -17,22 +17,6 @@ namespace Immutable.Passport
         public Exception? exception;
     }
 
-#if UNITY_ANDROID
-    class DeepLinkCallback : AndroidJavaProxy
-    {
-        private Action<string> callback;
-
-        public DeepLinkCallback(Action<string> callback) : base("com.immutable.authredirect.DeepLinkCallback") 
-        {
-            this.callback = callback;
-        }
-
-        public void onDeepLink(String uri) {
-            callback(uri);
-        }
-    }
-#endif
-
     public class PassportImpl
     {
         private const string TAG = "[Passport Implementation]";
