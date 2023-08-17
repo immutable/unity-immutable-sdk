@@ -17,22 +17,6 @@ namespace Immutable.Passport
         public Exception? exception;
     }
 
-#if UNITY_ANDROID
-    class DeepLinkCallback : AndroidJavaProxy
-    {
-        private Action<string> callback;
-
-        public DeepLinkCallback(Action<string> callback) : base("com.immutable.authredirect.DeepLinkCallback") 
-        {
-            this.callback = callback;
-        }
-
-        public void onDeepLink(String uri) {
-            callback(uri);
-        }
-    }
-#endif
-
     public class PassportImpl
     {
         private const string TAG = "[Passport Implementation]";
@@ -46,10 +30,10 @@ namespace Immutable.Passport
             this.communicationsManager = communicationsManager;
         }
 
-        public async UniTask Init(string clientId, string? redirectUri = null, string? deeplink = null)
+        public async UniTask Init(string clientId, string environment, string? redirectUri = null, string? deeplink = null)
         {
             this.redirectUri = redirectUri;
-            InitRequest request = new() { clientId = clientId, redirectUri = redirectUri };
+            InitRequest request = new() { clientId = clientId, environment = environment, redirectUri = redirectUri };
 
             string response = await communicationsManager.Call(
                 PassportFunction.INIT,
@@ -113,20 +97,29 @@ namespace Immutable.Passport
 
         private async UniTask LaunchAuthUrl()
         {
-            string callResponse = await communicationsManager.Call(PassportFunction.GET_PKCE_AUTH_URL);
-            StringResponse? response = callResponse.OptDeserializeObject<StringResponse>();
+            try
+            {
+                string callResponse = await communicationsManager.Call(PassportFunction.GET_PKCE_AUTH_URL);
+                StringResponse? response = callResponse.OptDeserializeObject<StringResponse>();
 
-            if (response?.success == true && response?.result != null)
-            {
-                Application.OpenURL(response.result.Replace(" ", "+"));
+                if (response?.success == true && response?.result != null)
+                {
+                    Application.OpenURL(response.result.Replace(" ", "+"));
+                    return;
+                }
+                else
+                {
+                    Debug.Log($"{TAG} Failed to get PKCE Auth URL");
+                }
             }
-            else
+            catch (Exception e)
             {
-                pkceCompletionSource.TrySetException(new PassportException(
-                    "Something went wrong, please call ConnectPKCE() again",
-                    PassportErrorType.AUTHENTICATION_ERROR
-                ));
+                Debug.Log($"{TAG} Get PKCE Auth URL error: {e.Message}");
             }
+            pkceCompletionSource.TrySetException(new PassportException(
+                "Something went wrong, please call ConnectPKCE() again",
+                PassportErrorType.AUTHENTICATION_ERROR
+            ));
         }
 
         public async UniTask CompletePKCEFlow(string uriString)
