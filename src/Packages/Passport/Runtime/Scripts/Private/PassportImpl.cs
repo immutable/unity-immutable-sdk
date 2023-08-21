@@ -293,7 +293,7 @@ namespace Immutable.Passport
             {
                 string json = JsonConvert.SerializeObject(request);
                 string callResponse = await communicationsManager.Call(PassportFunction.IMX_TRANSFER, json);
-                return JsonConvert.DeserializeObject<CreateTransferResponseV1>(json);
+                return JsonConvert.DeserializeObject<CreateTransferResponseV1>(callResponse);
             }
             catch (Exception ex)
             {
