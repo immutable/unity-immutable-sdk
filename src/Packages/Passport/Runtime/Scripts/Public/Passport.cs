@@ -215,7 +215,6 @@ namespace Immutable.Passport
             return GetPassportImpl().GetIdToken();
         }
 
-
         /// <summary>
         /// Create a new transfer request with the given unsigned transfer request.
         /// <returns>
@@ -225,6 +224,18 @@ namespace Immutable.Passport
         public async UniTask<CreateTransferResponseV1> ImxTransfer(UnsignedTransferRequest request)
         {
             CreateTransferResponseV1 response = await GetPassportImpl().ImxTransfer(request);
+            return response;
+        }
+
+        /// <summary>
+        /// Create a new batch nft transfer request with the given transfer details.
+        /// <returns>
+        /// The transfer response if successful
+        /// </returns>
+        /// </summary>
+        public async UniTask<CreateBatchTransferResponse> ImxBatchNftTransfer(NftTransferDetails[] details)
+        {
+            CreateBatchTransferResponse response = await GetPassportImpl().ImxBatchNftTransfer(details);
             return response;
         }
 

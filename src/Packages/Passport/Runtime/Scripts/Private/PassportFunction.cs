@@ -13,5 +13,6 @@ namespace Immutable.Passport
         public const string LOGOUT = "logout";
         public const string GET_EMAIL = "getEmail";
         public const string IMX_TRANSFER = "imxTransfer";
+        public const string IMX_BATCH_NFT_TRANSFER = "imxBatchNftTransfer";
     }
 }
