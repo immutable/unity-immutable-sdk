@@ -11,6 +11,7 @@
 # Immutable Unity SDK
 
 ## Prerequisites
+
 - [git-lfs](https://git-lfs.github.com/): since `.dll` files are stored on Git Large File Storage, you must download and install git-lfs from [here](https://git-lfs.github.com/).
 
 ## Supported Platforms
@@ -21,7 +22,10 @@
 
 ## Registering your game
 
-Before using Passport, you must register your application as an OAuth 2.0 **Native** client in the [Immutable Developer Hub](https://hub.immutable.com/passport/add).
+Before using Passport, you must register your application as an OAuth 2.0 **Native** client in the [Immutable Developer Hub](https://hub.immutable.com). First, you'll need to create a project and a testnet environment.
+Then you can navigate to the Passport config screen and create a passport client for your created environment.
+When you're ready to launch your application on the mainnet,
+please ensure you configure a passport client under a mainnet environment.
 
 See [here](https://docs.immutable.com/docs/x/passport/register-application) for more details.
 
@@ -54,6 +58,7 @@ Passport is now accessible from anywhere via `Passport.Instance`.
 ### Connect to Passport
 
 We use the [Device Code Authorisation](https://auth0.com/docs/get-started/authentication-and-authorization-flow/device-authorization-flow#:~:text=Your%20Auth0%20Authorization%20Server%20redirects,authorized%20to%20access%20the%20API.) flow to authenticate and authorise gamers.
+
 ```csharp
 await passport.Connect();
 ```
@@ -67,7 +72,7 @@ Once the gamer is connected to Passport, the SDK will store your credentials (ac
 You may use `await passport.ConnectSilent()` to connect to Passport using the saved credentials. This is similar to `Connect()`. However, if the saved access token is no longer valid and the refresh token cannot be used, it will not fall back to the Device Code Authorisation flow.
 
 ```csharp
-try 
+try
 {
     bool hasCredsSaved = await passport.HasCredentialsSaved();
     if (hasCredsSaved)
@@ -79,7 +84,7 @@ try
 catch (Exception)
 {
     // Attempted to connect to Passport silently but could not use saved credentials.
-    // You may prompt the gamer to connect again (e.g. await passport.Connect()) 
+    // You may prompt the gamer to connect again (e.g. await passport.Connect())
     // or ignore this error and prompt the gamer to connect at another point.
 }
 ```
@@ -121,6 +126,7 @@ Passport passport = await Passport.Init("YOUR_IMMUTABLE_CLIENT_ID", "mygame://ca
   <data android:scheme="mygame" android:host="callback" />
 </intent-filter>
 ```
+
 The application will now open when the device processes any link that starts with `mygame://callback`.
 
 See the sample's app [AndroidManifest.xml](https://github.com/immutable/unity-immutable-sdk/blob/main/sample/Assets/Plugins/Android/AndroidManifest.xml) for an example.
@@ -133,15 +139,15 @@ After this set-up, your game can log in using PKCE.
 
 ## Supported Functions
 
-* Get wallet address
-* Get access token
-* Get ID token
-* Get email
-* Checks if there are any credentials saved
+- Get wallet address
+- Get access token
+- Get ID token
+- Get email
+- Checks if there are any credentials saved
 
 ## Examples
 
-* **Sample code** - see the [sample](https://github.com/immutable/unity-immutable-sdk/tree/main/sample) application for examples of how to use the Immutable Unity SDK.
+- **Sample code** - see the [sample](https://github.com/immutable/unity-immutable-sdk/tree/main/sample) application for examples of how to use the Immutable Unity SDK.
 
 ## Changelog Management
 
@@ -219,4 +225,5 @@ You can also apply for marketing support for your project. Or, if you need help 
 [Contact support](https://support.immutable.com/hc/en-us/requests/new)
 
 ## License
+
 Immutable Unity SDK repository is distributed under the terms of the [Apache License (Version 2.0)](LICENSE).
