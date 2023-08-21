@@ -304,5 +304,23 @@ namespace Immutable.Passport
                 );
             }
         }
+
+        public async UniTask<CreateBatchTransferResponse> ImxBatchNftTransfer(NftTransferDetails[] details)
+        {
+            try
+            {
+                string json = JsonConvert.SerializeObject(details);
+                string callResponse = await communicationsManager.Call(PassportFunction.IMX_BATCH_NFT_TRANSFER, json);
+                return JsonConvert.DeserializeObject<CreateBatchTransferResponse>(callResponse);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"{TAG} Failed to batch transfer: {ex.Message}");
+                throw new PassportException(
+                    $"Something went wrong with ImxBatchNftTransfer(): {ex.Message}",
+                    PassportErrorType.TRANSFER_ERROR
+                );
+            }
+        }
     }
 }
