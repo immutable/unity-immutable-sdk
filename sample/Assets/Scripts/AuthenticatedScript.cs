@@ -18,7 +18,7 @@ public class AuthenticatedScript : MonoBehaviour
     [SerializeField] private Button signMessageButton;
     [SerializeField] private Button showTransferButton;
     [SerializeField] private InputField signInput;
-    
+
     [SerializeField] private Canvas transferCanvas;
     [SerializeField] private InputField tokenIdInput;
     [SerializeField] private InputField tokenAddressInput;
@@ -108,8 +108,8 @@ public class AuthenticatedScript : MonoBehaviour
             try
             {
                 UnsignedTransferRequest request = UnsignedTransferRequest.ERC721(
-                    receiverInput.text, 
-                    tokenIdInput.text, 
+                    receiverInput.text,
+                    tokenIdInput.text,
                     tokenAddressInput.text
                     );
                 CreateTransferResponseV1 response = await passport.ImxTransfer(request);
