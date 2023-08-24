@@ -3,7 +3,7 @@ using Newtonsoft.Json.Serialization;
 
 namespace Immutable.Passport.Model
 {
-    [JsonObject(NamingStrategyType = typeof(CamelCaseNamingStrategy))]
+    [JsonObject(NamingStrategyType = typeof(SnakeCaseNamingStrategy))]
     public class CreateTransferResponseV1
     {
         public string SentSignature { get; }
