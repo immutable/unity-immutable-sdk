@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Immutable.Passport;
 using Immutable.Passport.Model;
+using System.Collections.Generic;
 
 public class AuthenticatedScript : MonoBehaviour
 {
@@ -20,9 +21,19 @@ public class AuthenticatedScript : MonoBehaviour
     [SerializeField] private InputField signInput;
 
     [SerializeField] private Canvas transferCanvas;
-    [SerializeField] private InputField tokenIdInput;
-    [SerializeField] private InputField tokenAddressInput;
-    [SerializeField] private InputField receiverInput;
+
+    [SerializeField] private InputField tokenIdInput1;
+    [SerializeField] private InputField tokenAddressInput1;
+    [SerializeField] private InputField receiverInput1;
+
+    [SerializeField] private InputField tokenIdInput2;
+    [SerializeField] private InputField tokenAddressInput2;
+    [SerializeField] private InputField receiverInput2;
+
+    [SerializeField] private InputField tokenIdInput3;
+    [SerializeField] private InputField tokenAddressInput3;
+    [SerializeField] private InputField receiverInput3;
+
     [SerializeField] private Button transferButton;
     [SerializeField] private Button cancelTransferButton;
 
@@ -93,30 +104,37 @@ public class AuthenticatedScript : MonoBehaviour
     {
         authenticatedCanvas.gameObject.SetActive(true);
         transferCanvas.gameObject.SetActive(false);
-        tokenIdInput.text = "";
-        tokenAddressInput.text = "";
-        receiverInput.text = "";
+        clearInputs();
     }
 
     public async void Transfer()
     {
-        if (tokenIdInput.text != "" && tokenAddressInput.text != "" && receiverInput.text != "")
+        if (tokenIdInput1.text != "" && tokenAddressInput1.text != "" && receiverInput1.text != "")
         {
             transferButton.gameObject.SetActive(false);
             cancelTransferButton.gameObject.SetActive(false);
 
             try
             {
-                UnsignedTransferRequest request = UnsignedTransferRequest.ERC721(
-                    receiverInput.text,
-                    tokenIdInput.text,
-                    tokenAddressInput.text
+                List<NftTransferDetails> details = getTransferDetails();
+
+                if (details.Count > 1)
+                {
+                    CreateBatchTransferResponse response = await passport.ImxBatchNftTransfer(details.ToArray());
+                    ShowOutput($"Transferred {response.TransferIds.Count} items successfully");
+                }
+                else
+                {
+                    UnsignedTransferRequest request = UnsignedTransferRequest.ERC721(
+                        details[0].Receiver,
+                        details[0].TokenId,
+                        details[0].TokenAddress
                     );
-                CreateTransferResponseV1 response = await passport.ImxTransfer(request);
-                ShowOutput($"Transferred successfully. Transfer id: {response.TransferId}");
-                tokenIdInput.text = "";
-                tokenAddressInput.text = "";
-                receiverInput.text = "";
+                    CreateTransferResponseV1 response = await passport.ImxTransfer(request);
+                    ShowOutput($"Transferred successfully. Transfer id: {response.TransferId}");
+                }
+
+                clearInputs();
             }
             catch (Exception e)
             {
@@ -128,11 +146,63 @@ public class AuthenticatedScript : MonoBehaviour
         }
     }
 
+    private List<NftTransferDetails> getTransferDetails()
+    {
+        List<NftTransferDetails> details = new List<NftTransferDetails>();
+
+        details.Add(
+            new NftTransferDetails(
+                receiverInput1.text,
+                tokenIdInput1.text,
+                tokenAddressInput1.text
+            )
+        );
+
+        if (tokenIdInput2.text != "" && tokenAddressInput2.text != "" && receiverInput2.text != "")
+        {
+            details.Add(
+                new NftTransferDetails(
+                    receiverInput2.text,
+                    tokenIdInput2.text,
+                    tokenAddressInput2.text
+                )
+            );
+        }
+
+        if (tokenIdInput3.text != "" && tokenAddressInput3.text != "" && receiverInput3.text != "")
+        {
+            details.Add(
+                new NftTransferDetails(
+                    receiverInput3.text,
+                    tokenIdInput3.text,
+                    tokenAddressInput3.text
+                )
+            );
+        }
+
+        return details;
+    }
+
     private void ShowOutput(string message)
     {
         if (output != null)
         {
             output.text = message;
         }
+    }
+
+    private void clearInputs()
+    {
+        tokenIdInput1.text = "";
+        tokenAddressInput1.text = "";
+        receiverInput1.text = "";
+
+        tokenIdInput2.text = "";
+        tokenAddressInput2.text = "";
+        receiverInput2.text = "";
+
+        tokenIdInput3.text = "";
+        tokenAddressInput3.text = "";
+        receiverInput3.text = "";
     }
 }
