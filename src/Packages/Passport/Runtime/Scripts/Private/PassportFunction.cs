@@ -12,7 +12,19 @@ namespace Immutable.Passport
         public const string GET_ADDRESS = "getAddress";
         public const string LOGOUT = "logout";
         public const string GET_EMAIL = "getEmail";
-        public const string IMX_TRANSFER = "imxTransfer";
-        public const string IMX_BATCH_NFT_TRANSFER = "imxBatchNftTransfer";
+
+        public static class IMX
+        {
+            public const string TRANSFER = "imxTransfer";
+            public const string BATCH_NFT_TRANSFER = "imxBatchNftTransfer";
+        }
+
+        public static class ZK_EVM
+        {
+            public const string CONNECT_EVM = "connectEvm";
+            public const string SEND_TRANSACTION = "zkEvmSendTransaction";
+            public const string REQUEST_ACCOUNTS = "zkEvmRequestAccounts";
+            public const string GET_BALANCE = "zkEvmGetBalance";
+        }
     }
 }

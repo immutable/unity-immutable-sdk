@@ -50,7 +50,7 @@ namespace Immutable.Passport.Editor
                 Debug.Log($"Sucessfully copied Passport files");
             }
 
-            if (buildTarget == BuildTarget.iOS) 
+            if (buildTarget == BuildTarget.iOS)
             {
                 string projPath = $"{buildOutputPath}/{buildAppName}" + "/Unity-iPhone.xcodeproj/project.pbxproj";
                 var type = Type.GetType("UnityEditor.iOS.Xcode.PBXProject, UnityEditor.iOS.Extensions.Xcode");
@@ -65,7 +65,7 @@ namespace Immutable.Passport.Editor
                 var proj = type.GetConstructor(Type.EmptyTypes).Invoke(null);
                 {
                     var method = type.GetMethod("ReadFromString");
-                    method.Invoke(proj, new object[]{src});
+                    method.Invoke(proj, new object[] { src });
                 }
 
                 var target = "";
@@ -82,22 +82,23 @@ namespace Immutable.Passport.Editor
 #endif
                 {
                     var method = type.GetMethod("AddFrameworkToProject");
-                    method.Invoke(proj, new object[]{target, "WebKit.framework", false});
+                    method.Invoke(proj, new object[] { target, "WebKit.framework", false });
                 }
 
                 var cflags = "";
-                if (EditorUserBuildSettings.development) {
+                if (EditorUserBuildSettings.development)
+                {
                     cflags += " -DUNITYWEBVIEW_DEVELOPMENT";
                 }
 
                 cflags = cflags.Trim();
 
-                if (!string.IsNullOrEmpty(cflags)) 
+                if (!string.IsNullOrEmpty(cflags))
                 {
-                    var method = type.GetMethod("AddBuildProperty", new Type[]{typeof(string), typeof(string), typeof(string)});
-                    method.Invoke(proj, new object[]{target, "OTHER_CFLAGS", cflags});
+                    var method = type.GetMethod("AddBuildProperty", new Type[] { typeof(string), typeof(string), typeof(string) });
+                    method.Invoke(proj, new object[] { target, "OTHER_CFLAGS", cflags });
                 }
-                
+
                 var dst = "";
                 {
                     var method = type.GetMethod("WriteToString");
