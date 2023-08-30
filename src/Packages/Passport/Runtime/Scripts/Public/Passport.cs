@@ -44,13 +44,30 @@ namespace Immutable.Passport
 #endif
         }
 
-        public static UniTask<Passport> Init(string clientId, string environment, string? redirectUri = null)
+        /// <summary>
+        /// Initialises Passport
+        /// </summary>
+        /// <param name="clientId">The client ID</param>
+        /// <param name="environment">The environment to connect to</param>
+        /// <param name="redirectUri">(Currently, mobile only) The URL to which auth will redirect the browser after authorisation has been granted by the user</param>
+        /// <param name="engineStartupTimeoutMs">(Windows only) Timeout time for waiting for the engine to start (in milliseconds)</param>
+        public static UniTask<Passport> Init(
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+            string clientId, string environment, string? redirectUri = null, int engineStartupTimeoutMs = 4000
+#else
+            string clientId, string environment, string? redirectUri = null
+#endif
+        )
         {
             if (Instance == null)
             {
                 Instance = new Passport();
                 // Wait until we get a ready signal
-                return Instance.Initialise()
+                return Instance.Initialise(
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+                        engineStartupTimeoutMs
+#endif
+                    )
                     .ContinueWith(async () =>
                     {
                         await UniTask.WaitUntil(() => readySignalReceived != null);
@@ -75,14 +92,18 @@ namespace Immutable.Passport
             }
         }
 
-        private async UniTask Initialise()
+        private async UniTask Initialise(
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+            int engineStartupTimeoutMs
+#endif
+        )
         {
             try
             {
                 BrowserCommunicationsManager communicationsManager = new(webBrowserClient);
                 communicationsManager.OnReady += () => readySignalReceived = true;
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-                await ((WebBrowserClient)webBrowserClient).Init();
+                await ((WebBrowserClient)webBrowserClient).Init(engineStartupTimeoutMs);
 #endif
                 passportImpl = new PassportImpl(communicationsManager);
             }
@@ -105,7 +126,7 @@ namespace Immutable.Passport
 #endif
 
         /// <summary>
-        /// Sets the timeout time for` waiting for each call to respond (in milliseconds).
+        /// Sets the timeout time for waiting for each call to respond (in milliseconds).
         /// This only applies to functions that use the browser communications manager.
         /// </summary>
         public void SetCallTimeout(int ms)
@@ -271,12 +292,12 @@ namespace Immutable.Passport
 
         /// <summary>
         /// Returns the balance of the account of given address.
+        /// </summary>
         /// <param name="address">Address to check for balance</param>
         /// <param name="blockNumberOrTag">Integer block number, or the string "latest", "earliest" or "pending"</param>
         /// <returns>
         /// The balance in wei
         /// </returns>
-        /// </summary>
         public async UniTask<string> ZkEvmGetBalance(string address, string blockNumberOrTag = "latest")
         {
             return await GetPassportImpl().ZkEvmGetBalance(address, blockNumberOrTag);

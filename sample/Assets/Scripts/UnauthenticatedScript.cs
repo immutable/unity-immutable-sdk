@@ -24,12 +24,20 @@ public class UnauthenticatedScript : MonoBehaviour
             connectButton.gameObject.SetActive(false);
             tryAgainButton.gameObject.SetActive(false);
 
+            string clientId = "ZJL7JvetcDFBNDlgRs5oJoxuAUUl6uQj";
+            string environment = Immutable.Passport.Model.Environment.SANDBOX;
             string? redirectUri = null;
-#if UNITY_ANDROID || UNITY_IPHONE
+#if UNITY_IPHONE || UNITY_ANDROID
             redirectUri = "imxsample://callback";
 #endif
 
-            passport = await Passport.Init("ZJL7JvetcDFBNDlgRs5oJoxuAUUl6uQj", Immutable.Passport.Model.Environment.SANDBOX, redirectUri);
+            passport = await Passport.Init(
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+                clientId, environment, redirectUri, 10000
+#else
+                clientId, environment, redirectUri
+#endif
+                );
 
             // Check if user's logged in before
             bool hasCredsSaved = await passport.HasCredentialsSaved();
