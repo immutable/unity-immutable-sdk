@@ -250,8 +250,11 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         ///     Inits the browser client
         /// </summary>
         /// <exception cref="FileNotFoundException"></exception>
-        public async UniTask Init()
+        public async UniTask Init(int engineStartupTimeout = 4000)
         {
+            this.engineStartupTimeout = engineStartupTimeout;
+            UnityEngine.Debug.Log($"Engine startup timeout: {engineStartupTimeout}");
+
             // Get the path to the Windows UWB process
             EngineConfiguration engineConfiguration = new EngineConfiguration();
             engineConfiguration.engineAppName = ENGINE_APP_NAME;
