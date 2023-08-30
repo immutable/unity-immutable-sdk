@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System;
 using UnityEngine;
 using UnityEngine.UI;
@@ -16,9 +17,7 @@ public class AuthenticatedScript : MonoBehaviour
     [SerializeField] private Button idTokenButton;
     [SerializeField] private Button getAddressButton;
     [SerializeField] private Button logoutButton;
-    [SerializeField] private Button signMessageButton;
     [SerializeField] private Button showTransferButton;
-    [SerializeField] private InputField signInput;
 
     [SerializeField] private Canvas transferCanvas;
 
@@ -36,6 +35,12 @@ public class AuthenticatedScript : MonoBehaviour
 
     [SerializeField] private Button transferButton;
     [SerializeField] private Button cancelTransferButton;
+
+    // ZkEvm
+    [SerializeField] private Button connectEvmButton;
+    [SerializeField] private Button sendTransactionButton;
+    [SerializeField] private Button requestAccountsButton;
+    [SerializeField] private Button getBalanceButton;
 
     private Passport passport;
 #pragma warning restore CS8618
@@ -121,7 +126,7 @@ public class AuthenticatedScript : MonoBehaviour
                 if (details.Count > 1)
                 {
                     CreateBatchTransferResponse response = await passport.ImxBatchNftTransfer(details.ToArray());
-                    ShowOutput($"Transferred {response.TransferIds.Count} items successfully");
+                    ShowOutput($"Transferred {response.TransferIds.Length} items successfully");
                 }
                 else
                 {
@@ -181,6 +186,58 @@ public class AuthenticatedScript : MonoBehaviour
         }
 
         return details;
+    }
+
+    // ZKEvm
+    public async void ConnectEvm()
+    {
+        try
+        {
+            await passport.ConnectEvm();
+            ShowOutput("Connected to EVM");
+            connectEvmButton.gameObject.SetActive(false);
+            sendTransactionButton.gameObject.SetActive(true);
+            requestAccountsButton.gameObject.SetActive(true);
+            getBalanceButton.gameObject.SetActive(true);
+        }
+        catch (Exception ex)
+        {
+            ShowOutput($"Failed to connect to EVM: {ex.Message}");
+        }
+    }
+
+    public async void SendTransaction()
+    {
+        ShowOutput($"Not implemented");
+    }
+
+    public async void RequestAccounts()
+    {
+        try
+        {
+            ShowOutput($"Called RequestAccounts()...");
+            List<string> accounts = await passport.ZkEvmRequestAccounts();
+            ShowOutput(String.Join(", ", accounts));
+        }
+        catch (Exception ex)
+        {
+            ShowOutput($"Failed to request accounts: {ex.Message}");
+        }
+    }
+
+    public async void GetBalance()
+    {
+        try
+        {
+            ShowOutput($"Called GetBalance()...");
+            List<string> accounts = await passport.ZkEvmRequestAccounts();
+            string balance = await passport.ZkEvmGetBalance(accounts[0]);
+            ShowOutput(balance);
+        }
+        catch (Exception ex)
+        {
+            ShowOutput($"Failed to get balance: {ex.Message}");
+        }
     }
 
     private void ShowOutput(string message)

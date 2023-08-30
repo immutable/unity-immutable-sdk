@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 using Newtonsoft.Json;
@@ -287,40 +289,50 @@ namespace Immutable.Passport
             return savedCredentials?.idToken;
         }
 
+        // Imx
         public async UniTask<CreateTransferResponseV1> ImxTransfer(UnsignedTransferRequest request)
         {
-            try
-            {
-                string json = JsonConvert.SerializeObject(request);
-                string callResponse = await communicationsManager.Call(PassportFunction.IMX_TRANSFER, json);
-                return JsonConvert.DeserializeObject<CreateTransferResponseV1>(callResponse);
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"{TAG} Failed to transfer: {ex.Message}");
-                throw new PassportException(
-                    $"Something went wrong with ImxTransfer(): {ex.Message}",
-                    PassportErrorType.TRANSFER_ERROR
-                );
-            }
+            string json = JsonConvert.SerializeObject(request);
+            string callResponse = await communicationsManager.Call(PassportFunction.IMX.TRANSFER, json);
+            return JsonConvert.DeserializeObject<CreateTransferResponseV1>(callResponse);
         }
 
         public async UniTask<CreateBatchTransferResponse> ImxBatchNftTransfer(NftTransferDetails[] details)
         {
-            try
+            string json = JsonConvert.SerializeObject(details);
+            string callResponse = await communicationsManager.Call(PassportFunction.IMX.BATCH_NFT_TRANSFER, json);
+            return JsonConvert.DeserializeObject<CreateBatchTransferResponse>(callResponse);
+        }
+
+        // ZkEvm
+        public async UniTask ConnectEvm()
+        {
+            await communicationsManager.Call(PassportFunction.ZK_EVM.CONNECT_EVM);
+        }
+
+        public async UniTask<string?> ZkEvmSendTransaction(TransactionRequest request)
+        {
+            string json = JsonConvert.SerializeObject(request);
+            string callResponse = await communicationsManager.Call(PassportFunction.ZK_EVM.SEND_TRANSACTION, json);
+            return JsonConvert.DeserializeObject<StringResponse>(callResponse).result;
+        }
+
+        public async UniTask<List<string>> ZkEvmRequestAccounts()
+        {
+            string callResponse = await communicationsManager.Call(PassportFunction.ZK_EVM.REQUEST_ACCOUNTS);
+            string[] accounts = JsonConvert.DeserializeObject<RequestAccountsResponse>(callResponse).Accounts;
+            return accounts.ToList();
+        }
+
+        public async UniTask<string> ZkEvmGetBalance(string address, string blockNumberOrTag)
+        {
+            string json = JsonConvert.SerializeObject(new GetBalanceRequest()
             {
-                string json = JsonConvert.SerializeObject(details);
-                string callResponse = await communicationsManager.Call(PassportFunction.IMX_BATCH_NFT_TRANSFER, json);
-                return JsonConvert.DeserializeObject<CreateBatchTransferResponse>(callResponse);
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"{TAG} Failed to batch transfer: {ex.Message}");
-                throw new PassportException(
-                    $"Something went wrong with ImxBatchNftTransfer(): {ex.Message}",
-                    PassportErrorType.TRANSFER_ERROR
-                );
-            }
+                Address = address,
+                BlockNumberOrTag = blockNumberOrTag
+            });
+            string callResponse = await communicationsManager.Call(PassportFunction.ZK_EVM.GET_BALANCE, json);
+            return JsonConvert.DeserializeObject<StringResponse>(callResponse).result ?? "0x0";
         }
     }
 }

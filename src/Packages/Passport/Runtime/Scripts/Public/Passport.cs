@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System;
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
 using VoltstroStudios.UnityWebBrowser.Core;
@@ -237,6 +238,48 @@ namespace Immutable.Passport
         {
             CreateBatchTransferResponse response = await GetPassportImpl().ImxBatchNftTransfer(details);
             return response;
+        }
+
+        // ZkEvm
+        public async UniTask ConnectEvm()
+        {
+            await GetPassportImpl().ConnectEvm();
+        }
+
+        /// <summary>
+        /// Creates new message call transaction or a contract creation, if the data field contains code, 
+        /// and signs it using the account specified in from.
+        /// <returns>
+        /// The transaction hash, or the zero hash if the transaction is not yet available.
+        /// </returns>
+        /// </summary>
+        public async UniTask<string?> ZkEvmSendTransaction(TransactionRequest request)
+        {
+            return await GetPassportImpl().ZkEvmSendTransaction(request);
+        }
+
+        /// <summary>
+        /// Returns a list of addresses owned by the user
+        /// <returns>
+        /// Addresses owned by the user
+        /// </returns>
+        /// </summary>
+        public async UniTask<List<string>> ZkEvmRequestAccounts()
+        {
+            return await GetPassportImpl().ZkEvmRequestAccounts();
+        }
+
+        /// <summary>
+        /// Returns the balance of the account of given address.
+        /// <param name="address">Address to check for balance</param>
+        /// <param name="blockNumberOrTag">Integer block number, or the string "latest", "earliest" or "pending"</param>
+        /// <returns>
+        /// The balance in wei
+        /// </returns>
+        /// </summary>
+        public async UniTask<string> ZkEvmGetBalance(string address, string blockNumberOrTag = "latest")
+        {
+            return await GetPassportImpl().ZkEvmGetBalance(address, blockNumberOrTag);
         }
 
         private PassportImpl GetPassportImpl()
