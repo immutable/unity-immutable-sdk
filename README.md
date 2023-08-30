@@ -95,6 +95,41 @@ catch (Exception)
 await passport.Logout();
 ```
 
+### Immutable X Transfer
+
+> Note: The transfers feature require pre-approval from Immutable. Please reach out to us before making use of it.
+
+An unsigned transfer request for ETH, ERC20 or ERC721 is expected for the ImxTransfer method.
+
+```csharp
+UnsignedTransferRequest request = UnsignedTransferRequest.ERC721(
+    receiver,
+    tokenId,
+    tokenAddress
+);
+
+CreateTransferResponseV1 response = await passport.ImxTransfer(request);
+```
+
+Batch NFT transfers are also supported:
+
+```csharp
+NftTransferDetails[] details = {
+    new NftTransferDetails(
+        receiver1,
+        tokenId1,
+        tokenAddress1
+    ),
+    new NftTransferDetails(
+        receiver2,
+        tokenId2,
+        tokenAddress2
+    )
+};
+
+CreateBatchTransferResponse response = await passport.ImxBatchNftTransfer(details);
+```
+
 ### Android and iOS PKCE login
 
 For Android and iOS you can use the PKCE login flow instead of Device Code. This means the gamer has one less step to complete and will be redirected back to the game after successfully authenticating.
@@ -144,6 +179,8 @@ After this set-up, your game can log in using PKCE.
 - Get ID token
 - Get email
 - Checks if there are any credentials saved
+- Immutable X Transfer (ERC20, ETH and ERC721)
+- Immutable X NFT Batch Transfer
 
 ## Examples
 
