@@ -71,7 +71,11 @@ namespace Immutable.Passport.Core
         {
             Debug.Log($"{TAG} Call {fxName} (request ID: {requestId})");
 
-            Request request = new(fxName, requestId, data);
+            BrowserRequest request = new(){
+                FxName = fxName,
+                RequestId = requestId,
+                Data = data
+            };
             string requestJson = JsonConvert.SerializeObject(request).Replace("\\", "\\\\").Replace("\"", "\\\"");
 
             // Call the function on the JS side
@@ -92,24 +96,23 @@ namespace Immutable.Passport.Core
         private void HandleResponse(string message)
         {
             Debug.Log($"{TAG} HandleResponse message: " + message);
-            Response? response = JsonUtility.FromJson<Response>(message);
+            BrowserResponse? response = JsonConvert.DeserializeObject<BrowserResponse?>(message);
 
             // Check if the reponse returned is valid and the task to return the reponse exists
-            if (response == null || response.responseFor == null || response.requestId == null)
+            if (response == null || response.ResponseFor == null || response.RequestId == null)
             {
-                Debug.LogError($"{TAG} Response from browser is incorrect. Check HTML/JS files.");
-                return;
+                throw new PassportException($"Response from browser is incorrect. Check HTML/JS files.");
             }
 
             // Special case to detect if index.js is loaded
-            if (response.responseFor == INIT && response.requestId == INIT_REQUEST_ID)
+            if (response.ResponseFor == INIT && response.RequestId == INIT_REQUEST_ID)
             {
                 Debug.Log($"{TAG} Browser is ready");
                 OnReady?.Invoke();
                 return;
             }
 
-            string requestId = response.requestId;
+            string requestId = response.RequestId;
             PassportException? exception = ParseError(response);
 
             if (requestTaskMap.ContainsKey(requestId))
@@ -122,24 +125,24 @@ namespace Immutable.Passport.Core
             }
         }
 
-        private PassportException? ParseError(Response response)
+        private PassportException? ParseError(BrowserResponse response)
         {
-            if (response.success == false || !String.IsNullOrEmpty(response.error))
+            if (response.Success == false || !String.IsNullOrEmpty(response.Error))
             {
                 // Failed or error occured
                 try
                 {
-                    if (response.error != null && response.errorType != null)
+                    if (response.Error != null && response.ErrorType != null)
                     {
-                        PassportErrorType type = (PassportErrorType)System.Enum.Parse(typeof(PassportErrorType), response.errorType);
-                        return new PassportException(response.error, type);
+                        PassportErrorType type = (PassportErrorType)System.Enum.Parse(typeof(PassportErrorType), response.ErrorType);
+                        return new PassportException(response.Error, type);
                     }
                 }
                 catch (Exception ex)
                 {
                     Debug.LogError($"{TAG} Parse passport type error: {ex.Message}");
                 }
-                return new PassportException(response.error ?? "Failed to parse error");
+                return new PassportException(response.Error ?? "Failed to parse error");
             }
             else
             {

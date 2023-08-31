@@ -36,16 +36,16 @@ namespace Immutable.Passport
         public async UniTask Init(string clientId, string environment, string? redirectUri = null, string? deeplink = null)
         {
             this.redirectUri = redirectUri;
-            InitRequest request = new() { clientId = clientId, environment = environment, redirectUri = redirectUri };
+            InitRequest request = new() { ClientId = clientId, Environment = environment, RedirectUri = redirectUri };
 
             string response = await communicationsManager.Call(
                 PassportFunction.INIT,
                 JsonConvert.SerializeObject(request));
-            Response? initResponse = JsonConvert.DeserializeObject<Response>(response);
+            BrowserResponse? initResponse = JsonConvert.DeserializeObject<BrowserResponse>(response);
 
-            if (initResponse?.success == false)
+            if (initResponse?.Success == false)
             {
-                throw new PassportException(initResponse?.error ?? "Unable to initialise Passport");
+                throw new PassportException(initResponse?.Error ?? "Unable to initialise Passport");
             }
             else if (deeplink != null)
             {
@@ -105,9 +105,9 @@ namespace Immutable.Passport
                 string callResponse = await communicationsManager.Call(PassportFunction.GET_PKCE_AUTH_URL);
                 StringResponse? response = callResponse.OptDeserializeObject<StringResponse>();
 
-                if (response?.success == true && response?.result != null)
+                if (response?.Success == true && response?.Result != null)
                 {
-                    Application.OpenURL(response.result.Replace(" ", "+"));
+                    Application.OpenURL(response.Result.Replace(" ", "+"));
                     return;
                 }
                 else
@@ -142,19 +142,19 @@ namespace Immutable.Passport
 
             ConnectPKCERequest request = new()
             {
-                authorizationCode = authCode,
-                state = state
+                AuthorizationCode = authCode,
+                State = state
             };
 
             string callResponse = await communicationsManager.Call(
                     PassportFunction.CONNECT_PKCE,
                     JsonConvert.SerializeObject(request)
                 );
-            Response? response = callResponse.OptDeserializeObject<Response>();
-            if (response?.success != true)
+            BrowserResponse? response = callResponse.OptDeserializeObject<BrowserResponse>();
+            if (response?.Success != true)
             {
                 pkceCompletionSource.TrySetException(new PassportException(
-                    response?.error ?? "Something went wrong, please call ConnectPKCE() again",
+                    response?.Error ?? "Something went wrong, please call ConnectPKCE() again",
                     PassportErrorType.AUTHENTICATION_ERROR
                 ));
                 return;
@@ -166,22 +166,22 @@ namespace Immutable.Passport
         private async UniTask<ConnectResponse?> InitialiseDeviceCodeAuth()
         {
             string callResponse = await communicationsManager.Call(PassportFunction.CONNECT);
-            Response? response = JsonConvert.DeserializeObject<Response>(callResponse);
-            if (response?.success == true)
+            BrowserResponse? response = JsonConvert.DeserializeObject<BrowserResponse>(callResponse);
+            if (response?.Success == true)
             {
                 deviceConnectResponse = JsonConvert.DeserializeObject<DeviceConnectResponse>(callResponse);
                 if (deviceConnectResponse != null)
                 {
                     return new ConnectResponse()
                     {
-                        url = deviceConnectResponse.url,
-                        code = deviceConnectResponse.code
+                        Url = deviceConnectResponse.Url,
+                        Code = deviceConnectResponse.Code
                     };
                 }
             }
 
             throw new PassportException(
-                response?.error ?? "Something went wrong, please call Connect() again",
+                response?.Error ?? "Something went wrong, please call Connect() again",
                 PassportErrorType.AUTHENTICATION_ERROR
             );
         }
@@ -199,8 +199,8 @@ namespace Immutable.Passport
                         JsonConvert.SerializeObject(tokenResponse)
                     );
 
-                    Response? response = JsonConvert.DeserializeObject<Response>(callResponse);
-                    return response?.success == true;
+                    BrowserResponse? response = JsonConvert.DeserializeObject<BrowserResponse>(callResponse);
+                    return response?.Success == true;
                 }
             }
             catch (Exception ex)
@@ -216,14 +216,14 @@ namespace Immutable.Passport
             if (deviceConnectResponse != null)
             {
                 // Open URL for user to confirm
-                Application.OpenURL(deviceConnectResponse.url);
+                Application.OpenURL(deviceConnectResponse.Url);
 
                 // Start polling for token
                 ConfirmCodeRequest request = new()
                 {
-                    deviceCode = deviceConnectResponse.deviceCode,
-                    interval = deviceConnectResponse.interval,
-                    timeoutMs = timeoutMs
+                    DeviceCode = deviceConnectResponse.DeviceCode,
+                    Interval = deviceConnectResponse.Interval,
+                    TimeoutMs = timeoutMs
                 };
 
                 string callResponse = await communicationsManager.Call(
@@ -231,11 +231,11 @@ namespace Immutable.Passport
                     JsonConvert.SerializeObject(request),
                     true // Ignore timeout, this flow can take minutes to complete. 15 minute expiry from Auth0.
                 );
-                Response? response = JsonConvert.DeserializeObject<Response>(callResponse);
-                if (response?.success == false)
+                BrowserResponse? response = JsonConvert.DeserializeObject<BrowserResponse>(callResponse);
+                if (response?.Success == false)
                 {
                     throw new PassportException(
-                        response?.error ?? "Unable to confirm code, call Connect() again",
+                        response?.Error ?? "Unable to confirm code, call Connect() again",
                         PassportErrorType.AUTHENTICATION_ERROR
                     );
                 }
@@ -249,7 +249,7 @@ namespace Immutable.Passport
         public async UniTask<string?> GetAddress()
         {
             string response = await communicationsManager.Call(PassportFunction.GET_ADDRESS);
-            return JsonConvert.DeserializeObject<StringResponse>(response)?.result;
+            return JsonConvert.DeserializeObject<StringResponse>(response)?.Result;
         }
 
 
@@ -273,20 +273,20 @@ namespace Immutable.Passport
         public async UniTask<string?> GetEmail()
         {
             string response = await communicationsManager.Call(PassportFunction.GET_EMAIL);
-            return JsonConvert.DeserializeObject<StringResponse>(response)?.result;
+            return JsonConvert.DeserializeObject<StringResponse>(response)?.Result;
         }
 
         public async UniTask<string?> GetAccessToken()
         {
             TokenResponse? savedCredentials = await GetStoredCredentials();
-            return savedCredentials?.accessToken;
+            return savedCredentials?.AccessToken;
         }
 
 
         public async UniTask<string?> GetIdToken()
         {
             TokenResponse? savedCredentials = await GetStoredCredentials();
-            return savedCredentials?.idToken;
+            return savedCredentials?.IdToken;
         }
 
         // Imx
@@ -314,7 +314,7 @@ namespace Immutable.Passport
         {
             string json = JsonConvert.SerializeObject(request);
             string callResponse = await communicationsManager.Call(PassportFunction.ZK_EVM.SEND_TRANSACTION, json);
-            return JsonConvert.DeserializeObject<StringResponse>(callResponse).result;
+            return JsonConvert.DeserializeObject<StringResponse>(callResponse).Result;
         }
 
         public async UniTask<List<string>> ZkEvmRequestAccounts()
@@ -332,7 +332,7 @@ namespace Immutable.Passport
                 BlockNumberOrTag = blockNumberOrTag
             });
             string callResponse = await communicationsManager.Call(PassportFunction.ZK_EVM.GET_BALANCE, json);
-            return JsonConvert.DeserializeObject<StringResponse>(callResponse).result ?? "0x0";
+            return JsonConvert.DeserializeObject<StringResponse>(callResponse).Result ?? "0x0";
         }
     }
 }

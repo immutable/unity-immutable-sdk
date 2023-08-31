@@ -15,14 +15,5 @@ namespace Immutable.Passport.Model
         public long Time { get; }
 
         public long TransferId { get; }
-
-        public CreateTransferResponseV1(string sentSignature, string receiver, string status, long time, long transferId)
-        {
-            this.SentSignature = sentSignature;
-            this.Receiver = receiver;
-            this.Status = status;
-            this.Time = time;
-            this.TransferId = transferId;
-        }
     }
 }
