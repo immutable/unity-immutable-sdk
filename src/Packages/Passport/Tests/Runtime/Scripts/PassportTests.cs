@@ -40,8 +40,8 @@ namespace Immutable.Passport
         {
             var response = new StringResponse
             {
-                success = true,
-                result = ADDRESS
+                Success = true,
+                Result = ADDRESS
             };
             communicationsManager.response = JsonConvert.SerializeObject(response);
             var address = await passport.GetAddress();

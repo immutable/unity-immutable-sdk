@@ -7,10 +7,5 @@ namespace Immutable.Passport.Model
     public class CreateBatchTransferResponse
     {
         public long[] TransferIds { get; }
-
-        public CreateBatchTransferResponse(long[] transferIds)
-        {
-            this.TransferIds = transferIds;
-        }
     }
 }

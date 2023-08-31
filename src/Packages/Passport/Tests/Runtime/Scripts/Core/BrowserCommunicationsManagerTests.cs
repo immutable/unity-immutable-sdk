@@ -32,38 +32,38 @@ namespace Immutable.Passport.Core
         [Test]
         public async Task CallAndResponse_Success_WithData()
         {
-            mockClient.browserResponse = new Response
+            mockClient.browserResponse = new BrowserResponse
             {
-                responseFor = FUNCTION_NAME,
-                success = true
+                ResponseFor = FUNCTION_NAME,
+                Success = true
             };
             _ = await manager.Call(FUNCTION_NAME, "{\"someKey\":\"someData\"}");
 
-            Assert.True(mockClient.request?.fxName == FUNCTION_NAME);
-            Assert.True(mockClient.request?.data == "{\"someKey\":\"someData\"}");
+            Assert.True(mockClient.request?.FxName == FUNCTION_NAME);
+            Assert.True(mockClient.request?.Data == "{\"someKey\":\"someData\"}");
         }
 
         [Test]
         public async Task CallAndResponse_Success_NoData()
         {
-            mockClient.browserResponse = new Response
+            mockClient.browserResponse = new BrowserResponse
             {
-                responseFor = FUNCTION_NAME,
-                success = true
+                ResponseFor = FUNCTION_NAME,
+                Success = true
             };
             _ = await manager.Call(FUNCTION_NAME);
 
-            Assert.True(mockClient.request?.fxName == FUNCTION_NAME);
-            Assert.True(String.IsNullOrEmpty(mockClient.request?.data));
+            Assert.True(mockClient.request?.FxName == FUNCTION_NAME);
+            Assert.True(String.IsNullOrEmpty(mockClient.request?.Data));
         }
 
         [Test]
         public async Task CallAndResponse_Failed_NoRequestId()
         {
-            mockClient.browserResponse = new Response
+            mockClient.browserResponse = new BrowserResponse
             {
-                responseFor = FUNCTION_NAME,
-                success = true
+                ResponseFor = FUNCTION_NAME,
+                Success = true
             };
             mockClient.setRequestId = false;
 
@@ -78,17 +78,18 @@ namespace Immutable.Passport.Core
             }
 
             Assert.NotNull(e);
+            Assert.IsTrue(e?.Message.Contains("Response from browser is incorrect") == true);
         }
 
         [Test]
         public async Task CallAndResponse_Failed_ClientError_WithType()
         {
-            mockClient.browserResponse = new Response
+            mockClient.browserResponse = new BrowserResponse
             {
-                responseFor = FUNCTION_NAME,
-                errorType = "WALLET_CONNECTION_ERROR",
-                error = ERROR,
-                success = false
+                ResponseFor = FUNCTION_NAME,
+                ErrorType = "WALLET_CONNECTION_ERROR",
+                Error = ERROR,
+                Success = false
             };
 
             PassportException? e = null;
@@ -107,11 +108,11 @@ namespace Immutable.Passport.Core
         [Test]
         public async Task CallAndResponse_Failed_ClientError_NoType()
         {
-            mockClient.browserResponse = new Response
+            mockClient.browserResponse = new BrowserResponse
             {
-                responseFor = FUNCTION_NAME,
-                error = ERROR,
-                success = false
+                ResponseFor = FUNCTION_NAME,
+                Error = ERROR,
+                Success = false
             };
 
             PassportException? e = null;
@@ -126,18 +127,17 @@ namespace Immutable.Passport.Core
 
             Assert.Null(e?.Type);
             Assert.AreEqual(ERROR, e?.Message);
-            UnityEngine.TestTools.LogAssert.Expect(LogType.Error, new Regex("Parse passport type error"));
         }
 
 
         [Test]
         public void CallAndResponse_Success_BrowserReady()
         {
-            Response browserResponse = new()
+            BrowserResponse browserResponse = new()
             {
-                responseFor = BrowserCommunicationsManager.INIT,
-                requestId = BrowserCommunicationsManager.INIT_REQUEST_ID,
-                success = true
+                ResponseFor = BrowserCommunicationsManager.INIT,
+                RequestId = BrowserCommunicationsManager.INIT_REQUEST_ID,
+                Success = true
             };
 
             bool onReadyCalled = false;
@@ -152,17 +152,17 @@ namespace Immutable.Passport.Core
     internal class MockBrowserClient : IWebBrowserClient
     {
         public event OnUnityPostMessageDelegate? OnUnityPostMessage;
-        public Request? request = null;
-        public Response? browserResponse = null;
+        public BrowserRequest? request = null;
+        public BrowserResponse? browserResponse = null;
         public bool setRequestId = true;
 
         public void ExecuteJs(string js)
         {
             var json = Between(js, "callFunction(\"", "\")").Replace("\\\\", "\\").Replace("\\\"", "\"");
-            request = JsonConvert.DeserializeObject<Request>(json);
+            request = JsonConvert.DeserializeObject<BrowserRequest>(json);
             if (setRequestId && browserResponse != null)
             {
-                browserResponse.requestId = request.requestId;
+                browserResponse.RequestId = request.RequestId;
             }
             InvokeUnityPostMessage(JsonConvert.SerializeObject(browserResponse));
         }
