@@ -56,6 +56,7 @@ public class UnauthenticatedScript : MonoBehaviour
                 {
                     // Could not connect to Passport, enable connect button
                     connectButton.gameObject.SetActive(true);
+                    ShowOutput("Failed to connect using saved credentials");
                 }
             }
             else
