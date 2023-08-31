@@ -71,7 +71,8 @@ namespace Immutable.Passport.Core
         {
             Debug.Log($"{TAG} Call {fxName} (request ID: {requestId})");
 
-            BrowserRequest request = new(){
+            BrowserRequest request = new()
+            {
                 FxName = fxName,
                 RequestId = requestId,
                 Data = data
