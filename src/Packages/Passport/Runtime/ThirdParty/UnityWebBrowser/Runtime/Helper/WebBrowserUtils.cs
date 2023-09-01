@@ -3,18 +3,6 @@
 // 
 // This project is under the MIT license. See the LICENSE.md file for more details.
 
-//Defines
-#if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX && !UWB_DOCS
-
-//We need the Unix support package installed on UNIX systems
-#if !UNIX_SUPPORT
-#error Need UNIX support package!
-#else
-#define UWB_NEED_UNIX
-#endif
-
-#endif
-
 using System;
 using System.Diagnostics;
 using System.IO;
