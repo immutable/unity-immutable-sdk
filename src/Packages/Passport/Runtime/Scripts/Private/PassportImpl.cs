@@ -206,8 +206,13 @@ namespace Immutable.Passport
             catch (Exception ex)
             {
                 Debug.LogError($"{TAG} Failed to connect to Passport using saved credentials: {ex.Message}");
+
+                if (!(ex is PassportException) || (ex is PassportException pEx && !pEx.IsNetworkError()))
+                {
+                    await Logout();
+                }
             }
-            await Logout();
+
             return false;
         }
 
