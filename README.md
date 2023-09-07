@@ -10,10 +10,6 @@
 
 # Immutable Unity SDK
 
-## Prerequisites
-
-- [git-lfs](https://git-lfs.github.com/): since `.dll` files are stored on Git Large File Storage, you must download and install git-lfs from [here](https://git-lfs.github.com/).
-
 ## Supported Platforms
 
 <li>Windows (64-bit)</li>
@@ -31,6 +27,10 @@ See [here](https://docs.immutable.com/docs/x/passport/register-application) for 
 
 ## Installation
 
+> :clipboard: Prerequisites
+>
+>[git-lfs](https://git-lfs.github.com/): since `.dll` files are stored on Git Large File Storage, you must download and install git-lfs from [here](https://git-lfs.github.com/).
+
 1. Clone the [unity-immutable-sdk](https://github.com/immutable/unity-immutable-sdk) repository or download the zip/tarball from one of the versions [here](https://github.com/immutable/unity-immutable-sdk/tags)
 2. Open the Package Manager
 3. Click the add + button and select "Add package from disk..."
@@ -44,11 +44,20 @@ See [here](https://docs.immutable.com/docs/x/passport/register-application) for 
 Create a script with the following code and bind it to an object:
 
 ```csharp
-public class ImmutableUnity : MonoBehaviour
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using Immutable.Passport;
+
+public class InitPassport : MonoBehaviour
 {
-    void Start()
+    private Passport passport;
+
+    async void Start()
     {
-        Passport passport = await Passport.Init("YOUR_IMMUTABLE_CLIENT_ID");
+        string clientId = "YOUR_IMMUTABLE_CLIENT_ID";
+        string environment = Immutable.Passport.Model.Environment.SANDBOX;
+        passport = await Passport.Init(clientId, environment);
     }
 }
 ```
