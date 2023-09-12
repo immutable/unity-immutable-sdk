@@ -116,6 +116,7 @@ public class AuthenticatedScript : MonoBehaviour
     {
         if (tokenIdInput1.text != "" && tokenAddressInput1.text != "" && receiverInput1.text != "")
         {
+            ShowOutput("Transferring...");
             transferButton.gameObject.SetActive(false);
             cancelTransferButton.gameObject.SetActive(false);
 

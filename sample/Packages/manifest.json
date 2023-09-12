@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "com.immutable.passport": "file:../../src/Packages/Passport",
-    "com.unity.ide.visualstudio": "2.0.18",
+    "com.unity.ide.visualstudio": "2.0.21",
     "com.unity.ide.vscode": "1.2.5",
     "com.unity.test-framework": "2.0.1-exp.1",
     "com.unity.visualscripting": "1.8.0",

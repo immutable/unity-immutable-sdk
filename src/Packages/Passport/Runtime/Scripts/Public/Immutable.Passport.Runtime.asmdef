@@ -12,6 +12,7 @@
         "Android",
         "Editor",
         "iOS",
+        "macOSStandalone",
         "WindowsStandalone64"
     ],
     "excludePlatforms": [],

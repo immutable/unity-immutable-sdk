@@ -15,6 +15,7 @@
 <li>Windows (64-bit)</li>
 <li>Android (minimum version 5.1)</li>
 <li>iOS (minimum version 13.0)</li>
+<li>macOS (minimum version 13.0)</li>
 
 ## Registering your game
 
@@ -139,7 +140,7 @@ NftTransferDetails[] details = {
 CreateBatchTransferResponse response = await passport.ImxBatchNftTransfer(details);
 ```
 
-### Android and iOS PKCE login
+### Android, iOS and macOS PKCE login
 
 For Android and iOS you can use the PKCE login flow instead of Device Code. This means the gamer has one less step to complete and will be redirected back to the game after successfully authenticating.
 
@@ -178,6 +179,12 @@ See the sample's app [AndroidManifest.xml](https://github.com/immutable/unity-im
 #### iOS setup
 
 1. In Unity go to **Build Settings** -> **Player Settings** -> **iOS** -> **Other Settings** -> **Supported URL schemes**, increment the **Size** number and include your URL scheme in the **Element** field.
+
+After this set-up, your game can log in using PKCE.
+
+#### macOS setup
+
+1. In Unity go to **Build Settings** -> **Player Settings** -> **Mac** -> **Other Settings** -> **Supported URL schemes**, increment the **Size** number and include your URL scheme in the **Element** field.
 
 After this set-up, your game can log in using PKCE.
 

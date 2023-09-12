@@ -34,7 +34,7 @@ namespace Immutable.Passport
         {
 #if UNITY_EDITOR_WIN
             Application.quitting += OnQuit;
-#elif UNITY_IPHONE || UNITY_ANDROID
+#elif UNITY_IPHONE || UNITY_ANDROID || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
             Application.deepLinkActivated += onDeepLinkActivated;
             if (!string.IsNullOrEmpty(Application.absoluteURL))
             {
@@ -52,7 +52,7 @@ namespace Immutable.Passport
         /// <param name="redirectUri">(Currently, mobile only) The URL to which auth will redirect the browser after authorisation has been granted by the user</param>
         /// <param name="engineStartupTimeoutMs">(Windows only) Timeout time for waiting for the engine to start (in milliseconds)</param>
         public static UniTask<Passport> Init(
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
             string clientId, string environment, string? redirectUri = null, int engineStartupTimeoutMs = 4000
 #else
             string clientId, string environment, string? redirectUri = null
@@ -64,7 +64,7 @@ namespace Immutable.Passport
                 Instance = new Passport();
                 // Wait until we get a ready signal
                 return Instance.Initialise(
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
                         engineStartupTimeoutMs
 #endif
                     )
@@ -81,6 +81,7 @@ namespace Immutable.Passport
                         }
                         else
                         {
+                            Debug.Log($"{TAG} Failed to initialise Passport");
                             throw new PassportException("Failed to initiliase Passport", PassportErrorType.INITALISATION_ERROR);
                         }
                     });
@@ -93,7 +94,7 @@ namespace Immutable.Passport
         }
 
         private async UniTask Initialise(
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
             int engineStartupTimeoutMs
 #endif
         )
@@ -107,11 +108,12 @@ namespace Immutable.Passport
 #endif
                 passportImpl = new PassportImpl(communicationsManager);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 // Reset values
                 readySignalReceived = false;
                 Instance = null;
+                throw ex;
             }
         }
 
@@ -148,7 +150,7 @@ namespace Immutable.Passport
             await GetPassportImpl().Connect(timeoutMs);
         }
 
-#if UNITY_ANDROID || UNITY_IPHONE
+#if UNITY_ANDROID || UNITY_IPHONE || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
         /// <summary>
         /// Connects the user into Passport via PKCE auth and sets up the IMX provider.
         ///
