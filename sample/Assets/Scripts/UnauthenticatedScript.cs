@@ -27,12 +27,12 @@ public class UnauthenticatedScript : MonoBehaviour
             string clientId = "ZJL7JvetcDFBNDlgRs5oJoxuAUUl6uQj";
             string environment = Immutable.Passport.Model.Environment.SANDBOX;
             string? redirectUri = null;
-#if UNITY_IPHONE || UNITY_ANDROID
+#if UNITY_IPHONE || UNITY_ANDROID || UNITY_STANDALONE_OSX
             redirectUri = "imxsample://callback";
 #endif
 
             passport = await Passport.Init(
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
                 clientId, environment, redirectUri, 10000
 #else
                 clientId, environment, redirectUri
@@ -94,7 +94,7 @@ public class UnauthenticatedScript : MonoBehaviour
             ShowOutput("Called Connect()...");
             connectButton.gameObject.SetActive(false);
 
-#if UNITY_ANDROID || UNITY_IPHONE
+#if UNITY_ANDROID || UNITY_IPHONE || UNITY_STANDALONE_OSX
             await passport.ConnectPKCE();
 #else
             await passport.Connect();
@@ -104,7 +104,7 @@ public class UnauthenticatedScript : MonoBehaviour
         }
         catch (Exception ex)
         {
-#if UNITY_ANDROID || UNITY_IPHONE
+#if UNITY_ANDROID || UNITY_IPHONE || UNITY_STANDALONE_OSX
             connectButton.gameObject.SetActive(true);
 #endif
             string error;

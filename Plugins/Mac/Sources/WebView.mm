@@ -19,12 +19,9 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-#import <UIKit/UIKit.h>
+#import <AppKit/AppKit.h>
 #import <WebKit/WebKit.h>
 
-// NOTE: we need extern without "C" before unity 4.5
-extern "C" UIViewController *UnityGetGLViewController();
-extern "C" void UnitySendMessage(const char *, const char *, const char *);
 extern "C" typedef void (*DelegateCallbackFunction)(const char * key, const char * message);
 
 DelegateCallbackFunction delegateCallback = NULL;
@@ -75,9 +72,6 @@ DelegateCallbackFunction delegateCallback = NULL;
     WKWebView *webView = (WKWebView *)self;
     NSURL *url = [request URL];
     if ([url.absoluteString hasPrefix:@"file:"]) {
-        // LoadFileURL is not loading the JS content due to thinking it's out of the sandbox
-        // NSURL *top = [NSURL URLWithString:[[url absoluteString] stringByDeletingLastPathComponent]];
-        // [webView loadFileURL:url allowingReadAccessToURL:top];
         NSString *htmlContent = [NSString stringWithContentsOfFile:url.path encoding:NSUTF8StringEncoding error:nil];
         [webView loadHTMLString:htmlContent baseURL:url];
     } else {
@@ -89,7 +83,8 @@ DelegateCallbackFunction delegateCallback = NULL;
 @interface CWebViewPlugin : NSObject<WKUIDelegate, WKNavigationDelegate, WKScriptMessageHandler>
 {
     WKWebView *webView;
-}
+    NSWindow *window;
+    NSWindowController *windowController;}
 @end
 
 @implementation CWebViewPlugin
@@ -101,6 +96,8 @@ static CWebViewPlugin *__delegate = nil;
 - (id)initWithUa:(const char *)ua
 {
     self = [super init];
+
+    CGRect frame = CGRectMake(0, 0, 500, 400);
 
     if (_sharedProcessPool == NULL) {
         _sharedProcessPool = [[WKProcessPool alloc] init];
@@ -122,39 +119,31 @@ static CWebViewPlugin *__delegate = nil;
         ";
 
     WKUserScript *script
-        = [[WKUserScript alloc] initWithSource:str injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:YES];
+    = [[WKUserScript alloc] initWithSource:str injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:YES];
     [controller addUserScript:script];
     configuration.userContentController = controller;
     configuration.mediaTypesRequiringUserActionForPlayback = WKAudiovisualMediaTypeNone;
     configuration.websiteDataStore = [WKWebsiteDataStore defaultDataStore];
     configuration.processPool = _sharedProcessPool;
 
-    WKWebView *wkwebView = [[WKWebView alloc] initWithFrame:CGRectZero configuration:configuration];
+    WKWebView *wkwebView = [[WKWebView alloc] initWithFrame:frame configuration:configuration];
 #if UNITYWEBVIEW_DEVELOPMENT
+    [[[webView configuration] preferences] setValue:@YES forKey:@"developerExtrasEnabled"];
+    
     // enable Safari debugging if exists
     if ([wkwebView respondsToSelector:@selector(setInspectable:)]) {
         [wkwebView performSelector:@selector(setInspectable:) withObject:@true];
     }
 #endif
+
     webView = wkwebView;
     webView.UIDelegate = self;
     webView.navigationDelegate = self;
-
+    webView.hidden = YES;
+    
     if (ua != NULL && strcmp(ua, "") != 0) {
         ((WKWebView *)webView).customUserAgent = [[NSString alloc] initWithUTF8String:ua];
     }
-
-    webView.hidden = YES;
-
-    // cf. https://rick38yip.medium.com/wkwebview-weird-spacing-issue-in-ios-13-54a4fc686f72
-    // cf. https://stackoverflow.com/questions/44390971/automaticallyadjustsscrollviewinsets-was-deprecated-in-ios-11-0
-    ((WKWebView *)webView).scrollView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
-
-    webView.backgroundColor = [UIColor clearColor];
-    webView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-
-    UIView *view = UnityGetGLViewController().view;
-    [view addSubview:webView];
 
     return self;
 }
@@ -276,7 +265,7 @@ static CWebViewPlugin *__delegate = nil;
     NSString *url = [nsurl absoluteString];
 
     if ([url rangeOfString:@"//itunes.apple.com/"].location != NSNotFound) {
-        [[UIApplication sharedApplication] openURL:nsurl];
+        [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:url]];
         decisionHandler(WKNavigationActionPolicyCancel);
         return;
     } else if ([url hasPrefix:@"unity:"]) {
@@ -287,9 +276,8 @@ static CWebViewPlugin *__delegate = nil;
                && ![url hasPrefix:@"file:"]
                && ![url hasPrefix:@"http:"]
                && ![url hasPrefix:@"https:"]) {
-        if([[UIApplication sharedApplication] canOpenURL:nsurl]) {
-            [[UIApplication sharedApplication] openURL:nsurl];
-        }
+
+        [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:url]];
         decisionHandler(WKNavigationActionPolicyCancel);
         return;
     } else if (navigationAction.navigationType == WKNavigationTypeLinkActivated
@@ -328,7 +316,7 @@ static CWebViewPlugin *__delegate = nil;
 {
     if (webView == nil)
         return;
-        
+
     WKWebView *_webView = (WKWebView *)webView;
     NSString *urlStr = [NSString stringWithUTF8String:url];
     NSURL *nsurl = [NSURL URLWithString:urlStr];
@@ -346,11 +334,11 @@ static CWebViewPlugin *__delegate = nil;
 @end
 
 extern "C" {
-    void *_CWebViewPlugin_Init(const char *ua);
-    void _CWebViewPlugin_Destroy(void *instance);
-    void _CWebViewPlugin_LoadURL(void *instance, const char *url);
-    void _CWebViewPlugin_EvaluateJS(void *instance, const char *url);
-    void _CWebViewPlugin_SetDelegate(DelegateCallbackFunction callback);
+void *_CWebViewPlugin_Init(const char *ua);
+void _CWebViewPlugin_Destroy(void *instance);
+void _CWebViewPlugin_LoadURL(void *instance, const char *url);
+void _CWebViewPlugin_EvaluateJS(void *instance, const char *url);
+void _CWebViewPlugin_SetDelegate(DelegateCallbackFunction callback);
 }
 
 void _CWebViewPlugin_SetDelegate(DelegateCallbackFunction callback) {

@@ -8,6 +8,7 @@ namespace Immutable.Browser.Gree
     {
         private const string TAG = "[GreeBrowserClient]";
         private const string ANDROID_DATA_DIRECTORY = "android_asset";
+        private const string MAC_DATA_DIRECTORY = "/Resources/Data";
         private readonly WebViewObject webViewObject;
         public event OnUnityPostMessageDelegate OnUnityPostMessage;
 
@@ -27,6 +28,8 @@ namespace Immutable.Browser.Gree
             );
 #if UNITY_ANDROID
             string filePath = Constants.SCHEME_FILE + ANDROID_DATA_DIRECTORY + Constants.PASSPORT_DATA_DIRECTORY_NAME + Constants.PASSPORT_HTML_FILE_NAME;
+#elif UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
+            string filePath = Constants.SCHEME_FILE + Path.GetFullPath(Application.dataPath) + MAC_DATA_DIRECTORY + Constants.PASSPORT_DATA_DIRECTORY_NAME + Constants.PASSPORT_HTML_FILE_NAME;
 #else
             string filePath = Constants.SCHEME_FILE + Path.GetFullPath(Application.dataPath) + Constants.PASSPORT_DATA_DIRECTORY_NAME + Constants.PASSPORT_HTML_FILE_NAME;
 #endif
