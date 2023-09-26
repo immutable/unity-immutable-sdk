@@ -29,6 +29,7 @@ namespace Immutable.Passport
         private string? redirectUri = null;
         private string unityVersion = Application.unityVersion;
         private RuntimePlatform platform = Application.platform;
+        private string osVersion = SystemInfo.operatingSystem;
 
         public PassportImpl(IBrowserCommunicationsManager communicationsManager)
         {
@@ -38,7 +39,16 @@ namespace Immutable.Passport
         public async UniTask Init(string clientId, string environment, string? redirectUri = null, string? deeplink = null)
         {
             this.redirectUri = redirectUri;
-            var engineVersion = $"engine-unity-{unityVersion},platform-{platform}";
+            // var engineVersion = $"engine-unity-{unityVersion},platform-{platform}-{osVersion}";
+            var versionInfo = new Dictionary<string, string>
+            {
+                { "engine", "unity" },
+                { "engineVersion", unityVersion },
+                { "platform", $"{platform}" },
+                { "platformVersion", osVersion }
+            };
+            var engineVersion = JsonConvert.SerializeObject(versionInfo);
+
             InitRequest request = new() { ClientId = clientId, Environment = environment, RedirectUri = redirectUri, EngineVersion = engineVersion };
 
             string response = await communicationsManager.Call(
