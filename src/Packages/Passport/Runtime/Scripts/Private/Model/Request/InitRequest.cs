@@ -10,6 +10,7 @@ namespace Immutable.Passport.Model
         public string ClientId;
         public string Environment;
         public string? RedirectUri;
+        public string EngineVersion;
     }
 }
 
