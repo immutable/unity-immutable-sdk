@@ -79,14 +79,6 @@ public class UnauthenticatedScript : MonoBehaviour
         Start();
     }
 
-#pragma warning disable IDE0051
-    private void OnReady()
-    {
-        ShowOutput("Passport is ready");
-        connectButton.gameObject.SetActive(true);
-    }
-#pragma warning restore IDE0051
-
     public async void Connect()
     {
         try
