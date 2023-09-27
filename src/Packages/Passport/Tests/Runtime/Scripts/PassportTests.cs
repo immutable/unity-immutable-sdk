@@ -4,6 +4,7 @@ using Immutable.Passport.Core;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
+using Immutable.Browser.Core;
 
 namespace Immutable.Passport
 {
@@ -66,11 +67,19 @@ namespace Immutable.Passport
         public string response = "";
         public string fxName = "";
         public string? data = "";
+        public event OnUnityPostMessageDelegate? OnAuthPostMessage;
+        public event OnUnityPostMessageErrorDelegate? OnPostMessageError;
+
         public UniTask<string> Call(string fxName, string? data = null, bool ignoreTimeout = false)
         {
             this.fxName = fxName;
             this.data = data;
             return UniTask.FromResult(response);
+        }
+
+        public void LaunchAuthURL(string url)
+        {
+            throw new NotImplementedException();
         }
 
         public void SetCallTimeout(int ms)

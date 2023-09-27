@@ -19,7 +19,10 @@ namespace Immutable.Passport.Core
 
     public interface IBrowserCommunicationsManager
     {
+        public event OnUnityPostMessageDelegate? OnAuthPostMessage;
+        public event OnUnityPostMessageErrorDelegate? OnPostMessageError;
         public void SetCallTimeout(int ms);
+        public void LaunchAuthURL(string url);
         public UniTask<string> Call(string fxName, string? data = null, bool ignoreTimeout = false);
     }
 
@@ -36,6 +39,13 @@ namespace Immutable.Passport.Core
         public event OnBrowserReadyDelegate? OnReady;
 
         /// <summary>
+        ///  PKCE in some platforms such as iOS and macOS will not trigger a deeplink and a proper callback needs to be
+        ///  setup.
+        /// </summary>
+        public event OnUnityPostMessageDelegate? OnAuthPostMessage;
+        public event OnUnityPostMessageErrorDelegate? OnPostMessageError;
+
+        /// <summary>
         ///     Timeout time for waiting for each call to respond in milliseconds
         ///     Default value: 1 minute
         /// </summary>
@@ -44,7 +54,9 @@ namespace Immutable.Passport.Core
         public BrowserCommunicationsManager(IWebBrowserClient webBrowserClient)
         {
             this.webBrowserClient = webBrowserClient;
-            this.webBrowserClient.OnUnityPostMessage += OnUnityPostMessage;
+            this.webBrowserClient.OnUnityPostMessage += InvokeOnUnityPostMessage;
+            this.webBrowserClient.OnAuthPostMessage += InvokeOnAuthPostMessage;
+            this.webBrowserClient.OnPostMessageError += InvokeOnPostMessageError;
         }
 
         #region Unity to Browser
@@ -84,14 +96,32 @@ namespace Immutable.Passport.Core
             webBrowserClient.ExecuteJs(js);
         }
 
+        public void LaunchAuthURL(string url)
+        {
+            Debug.Log($"{TAG} LaunchAuthURL : {url}");
+            webBrowserClient.LaunchAuthURL(url);
+        }
+
+        private void InvokeOnUnityPostMessage(string message)
+        {
+            Debug.Log($"{TAG} InvokeOnUnityPostMessage: {message}");
+            HandleResponse(message);
+        }
+
         #endregion
 
         #region Browser to Unity
 
-        private void OnUnityPostMessage(string message)
+        private void InvokeOnAuthPostMessage(string message)
         {
-            Debug.Log($"{TAG} OnUnityPostMessage: {message}");
-            HandleResponse(message);
+            Debug.Log($"{TAG} InvokeOnAuthPostMessage: {message}");
+            OnAuthPostMessage?.Invoke(message);
+        }
+
+        private void InvokeOnPostMessageError(string id, string message)
+        {
+            Debug.Log($"{TAG} InvokeOnPostMessageError id: {id} message: {message}");
+            OnPostMessageError?.Invoke(id, message);
         }
 
         private void HandleResponse(string message)

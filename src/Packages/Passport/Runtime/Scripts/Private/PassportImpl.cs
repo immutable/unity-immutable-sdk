@@ -42,6 +42,8 @@ namespace Immutable.Passport
         public async UniTask Init(string clientId, string environment, string? redirectUri = null, string? deeplink = null)
         {
             this.redirectUri = redirectUri;
+            this.communicationsManager.OnAuthPostMessage += OnDeepLinkActivated;
+            this.communicationsManager.OnPostMessageError += OnPostMessageError;
 
             var versionInfo = new VersionInfo
             {
@@ -102,6 +104,7 @@ namespace Immutable.Passport
 
         public async void OnDeepLinkActivated(string url)
         {
+            Debug.Log($"{TAG} OnDeepLinkActivated: {url} starts with {redirectUri}");
             if (url.StartsWith(redirectUri))
                 await CompletePKCEFlow(url);
         }
@@ -129,7 +132,7 @@ namespace Immutable.Passport
                     AndroidJavaClass customTabLauncher = new AndroidJavaClass("com.immutable.unity.ImmutableAndroid");
                     customTabLauncher.CallStatic("launchUrl", activity, url);
 #else
-                    Application.OpenURL(url);
+                    communicationsManager.LaunchAuthURL(url);
 #endif
                     return;
                 }
@@ -361,6 +364,29 @@ namespace Immutable.Passport
             });
             string callResponse = await communicationsManager.Call(PassportFunction.ZK_EVM.GET_BALANCE, json);
             return JsonConvert.DeserializeObject<StringResponse>(callResponse).Result ?? "0x0";
+        }
+
+        private void OnPostMessageError(string id, string message)
+        {
+            if (id == "CallFromAuthCallbackError")
+            {
+                if (message == "")
+                {
+                    Debug.Log($"{TAG} Get PKCE Auth URL user cancelled");
+                    pkceCompletionSource.TrySetCanceled();
+                }
+                else
+                {
+                    Debug.Log($"{TAG} Get PKCE Auth URL error: {message}");
+                    pkceCompletionSource.TrySetException(new PassportException(
+                        "Something went wrong, please call ConnectPKCE() again",
+                        PassportErrorType.AUTHENTICATION_ERROR
+                    ));
+                }
+                return;
+            }
+
+            Debug.Log($"{TAG} Unhandled onPostMessageError. id: {id} message: {message}");
         }
     }
 }

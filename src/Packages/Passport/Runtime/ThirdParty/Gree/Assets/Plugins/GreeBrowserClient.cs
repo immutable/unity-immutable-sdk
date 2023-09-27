@@ -11,20 +11,17 @@ namespace Immutable.Browser.Gree
         private const string MAC_DATA_DIRECTORY = "/Resources/Data";
         private readonly WebViewObject webViewObject;
         public event OnUnityPostMessageDelegate OnUnityPostMessage;
+        public event OnUnityPostMessageDelegate OnAuthPostMessage;
+        public event OnUnityPostMessageErrorDelegate OnPostMessageError;
 
         public GreeBrowserClient()
         {
             webViewObject = new();
             webViewObject.Init(
-                cb: _cb,
-                httpErr: (msg) =>
-                {
-                    Debug.LogError($"{TAG} http err: {msg}");
-                },
-                err: (msg) =>
-                {
-                    Debug.LogError($"{TAG} err: {msg}");
-                }
+                cb: InvokeOnUnityPostMessage,
+                httpErr: InvokeOnPostMessageError,
+                err: InvokeOnPostMessageError,
+                auth: InvokeOnAuthPostMessage
             );
 #if UNITY_ANDROID
             string filePath = Constants.SCHEME_FILE + ANDROID_DATA_DIRECTORY + Constants.PASSPORT_DATA_DIRECTORY_NAME + Constants.PASSPORT_HTML_FILE_NAME;
@@ -36,10 +33,15 @@ namespace Immutable.Browser.Gree
             webViewObject.LoadURL(filePath);
         }
 
-        private void _cb(string msg)
+        private void InvokeOnPostMessageError(string id, string message)
         {
-            Debug.Log($"Received call from browser: {msg}");
-            InvokeOnUnityPostMessage(msg);
+            Debug.LogError($"{TAG} id: {id} err: {message}");
+            OnPostMessageError.Invoke(id, message);
+        }
+
+        internal void InvokeOnAuthPostMessage(string message)
+        {
+            OnAuthPostMessage.Invoke(message);
         }
 
         internal void InvokeOnUnityPostMessage(string message)
@@ -50,6 +52,11 @@ namespace Immutable.Browser.Gree
         public void ExecuteJs(string js)
         {
             webViewObject.EvaluateJS(js);
+        }
+
+        public void LaunchAuthURL(string url)
+        {
+            webViewObject.LaunchAuthURL(url);
         }
     }
 }
