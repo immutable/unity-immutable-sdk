@@ -191,15 +191,15 @@ public class WebViewObject
         onError = err;
         onHttpError = httpErr;
 #if UNITY_WEBGL
-    #if !UNITY_EDITOR
+#if !UNITY_EDITOR
         _gree_unity_webview_init();
-    #endif
+#endif
 #elif UNITY_WEBPLAYER
         Application.ExternalCall("unityWebView.init");
 #elif UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_LINUX
         //TODO: UNSUPPORTED
         Debug.LogError("Webview is not supported on this platform.");
-#elif UNITY_IPHONE || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
+#elif UNITY_IPHONE || UNITY_STANDALONE_OSX
         webView = _CWebViewPlugin_Init(ua);
         Singleton.Instance.onJS = ((message) => CallFromJS(message));
         Singleton.Instance.onError = ((message) => CallOnError(message));
@@ -226,7 +226,7 @@ public class WebViewObject
         Application.ExternalCall("unityWebView.loadURL", url);
 #elif UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_LINUX
         //TODO: UNSUPPORTED
-#elif UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX || UNITY_IPHONE
+#elif UNITY_STANDALONE_OSX || UNITY_IPHONE
         if (webView == IntPtr.Zero)
             return;
         _CWebViewPlugin_LoadURL(webView, url);
@@ -247,7 +247,7 @@ public class WebViewObject
         Application.ExternalCall("unityWebView.evaluateJS", js);
 #elif UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_LINUX
         //TODO: UNSUPPORTED
-#elif UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX || UNITY_IPHONE
+#elif UNITY_STANDALONE_OSX || UNITY_IPHONE
         if (webView == IntPtr.Zero)
             return;
         _CWebViewPlugin_EvaluateJS(webView, js);

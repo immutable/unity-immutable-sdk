@@ -11,6 +11,9 @@ using Immutable.Passport.Core;
 using Cysharp.Threading.Tasks;
 using System.Web;
 using System.Threading;
+#if UNITY_ANDROID
+using UnityEngine.Android;
+#endif
 
 namespace Immutable.Passport
 {
@@ -107,7 +110,15 @@ namespace Immutable.Passport
 
                 if (response?.Success == true && response?.Result != null)
                 {
-                    Application.OpenURL(response.Result.Replace(" ", "+"));
+                    string url = response.Result.Replace(" ", "+");
+#if UNITY_ANDROID
+                    AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+                    AndroidJavaObject activity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
+                    AndroidJavaClass customTabLauncher = new AndroidJavaClass("com.immutable.unity.ImmutableAndroid");
+                    customTabLauncher.CallStatic("launchUrl", activity, url);
+#else
+                    Application.OpenURL(url);
+#endif
                     return;
                 }
                 else

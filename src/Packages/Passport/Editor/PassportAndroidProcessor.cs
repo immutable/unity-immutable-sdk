@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 
+using System;
 using System.IO;
 using UnityEditor;
 using UnityEditor.Android;
@@ -24,6 +25,23 @@ namespace Immutable.Passport.Editor
 
             FileHelpers.CopyDirectory(passportWebFilesDir, $"{path}/src/main/assets/ImmutableSDK/Runtime/Passport");
             Debug.Log($"Sucessfully copied Passport files");
+
+            AddUseAndroidX(path);
+        }
+
+        private void AddUseAndroidX(string path)
+        {
+            var parentDir = Directory.GetParent(path).FullName;
+            var gradlePath = parentDir + "/gradle.properties";
+            
+            if(!File.Exists(gradlePath))
+                throw new Exception("gradle.properties does not exist");
+
+            var text = File.ReadAllText(gradlePath);
+
+            text += "\nandroid.useAndroidX=true\nandroid.enableJetifier=true";
+
+            File.WriteAllText(gradlePath, text);
         }
     }
 }
