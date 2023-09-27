@@ -40,14 +40,16 @@ using AOT;
 #endif
 
 using Callback = System.Action<string>;
+using ErrorCallback = System.Action<string, string>;
 
 #if UNITY_IPHONE || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
 public class Singleton 
 {
     private static Singleton _instance;
     public Callback onJS;
-    public Callback onError;
-    public Callback onHttpError;
+    public ErrorCallback onError;
+    public ErrorCallback onHttpError;
+    public Callback onAuth;
 
     public static Singleton Instance
     {
@@ -67,8 +69,9 @@ public class WebViewObject
 {
     private const string TAG = "[WebViewObject]";
     Callback onJS;
-    Callback onError;
-    Callback onHttpError;
+    ErrorCallback onError;
+    ErrorCallback onHttpError;
+    Callback onAuth;
 #if UNITY_ANDROID
     class AndroidCallback : AndroidJavaProxy
     {
@@ -100,6 +103,8 @@ public class WebViewObject
     [DllImport("__Internal")]
     private static extern void _CWebViewPlugin_EvaluateJS(
         IntPtr instance, string url);
+    [DllImport("__Internal")]
+    private static extern void _CWebViewPlugin_LaunchAuthURL(IntPtr instance, string url);
     [DllImport("__Internal")]
     private static extern void _CWebViewPlugin_SetDelegate(DelegateMessage callback);
 #elif UNITY_STANDALONE_OSX
@@ -139,10 +144,10 @@ public class WebViewObject
             return;
         }
 
-        if (key == "CallOnError") {
+        if (key == "CallOnError" || key == "CallFromAuthCallbackError") {
             if (Singleton.Instance.onError != null) {
                 Debug.Log($"{TAG} ==== onError callback running message: " + message);
-                Singleton.Instance.onError(message);
+                Singleton.Instance.onError(key, message);
             }
             return;
         }
@@ -150,7 +155,15 @@ public class WebViewObject
         if (key == "CallOnHttpError") {
             if (Singleton.Instance.onHttpError != null) {
                 Debug.Log($"{TAG} ==== onHttpError callback running message: " + message);
-                Singleton.Instance.onHttpError(message);
+                Singleton.Instance.onHttpError(key, message);
+            }
+            return;
+        }
+
+        if (key == "CallFromAuthCallback") {
+            if (Singleton.Instance.onAuth != null) {
+                Debug.Log($"{TAG} ==== CallFromAuthCallback callback running message: " + message);
+                Singleton.Instance.onAuth(message);
             }
             return;
         }
@@ -170,18 +183,19 @@ public class WebViewObject
                 CallFromJS(message.Substring(i + 1));
                 break;
             case "CallOnError":
-                CallOnError(message.Substring(i + 1));
+                CallOnError("CallOnError", message.Substring(i + 1));
                 break;
             case "CallOnHttpError":
-                CallOnHttpError(message.Substring(i + 1));
+                CallOnHttpError("CallOnHttpError", message.Substring(i + 1));
                 break;
         }
     }
 
     public void Init(
         Callback cb = null,
-        Callback err = null,
-        Callback httpErr = null,
+        ErrorCallback err = null,
+        ErrorCallback httpErr = null,
+        Callback auth = null,
         string ua = "",
         // android
         int androidForceDarkMode = 0  // 0: follow system setting, 1: force dark off, 2: force dark on
@@ -190,6 +204,7 @@ public class WebViewObject
         onJS = cb;
         onError = err;
         onHttpError = httpErr;
+        onAuth = auth;
 #if UNITY_WEBGL
 #if !UNITY_EDITOR
         _gree_unity_webview_init();
@@ -202,8 +217,9 @@ public class WebViewObject
 #elif UNITY_IPHONE || UNITY_STANDALONE_OSX
         webView = _CWebViewPlugin_Init(ua);
         Singleton.Instance.onJS = ((message) => CallFromJS(message));
-        Singleton.Instance.onError = ((message) => CallOnError(message));
-        Singleton.Instance.onHttpError = ((message) => CallOnHttpError(message));
+        Singleton.Instance.onError = ((id, message) => CallOnError(id, message));
+        Singleton.Instance.onHttpError = ((id, message) => CallOnHttpError(id, message));
+        Singleton.Instance.onAuth = ((message) => CallOnAuth(message));
         _CWebViewPlugin_SetDelegate(delegateMessageReceived);
 #elif UNITY_ANDROID
         webView = new AndroidJavaObject("net.gree.unitywebview.CWebViewPluginNoUi");
@@ -258,19 +274,38 @@ public class WebViewObject
 #endif
     }
 
-    public void CallOnError(string error)
+    public void LaunchAuthURL(string url)
+    {
+#if UNITY_IPHONE
+        if (webView == IntPtr.Zero)
+            return;
+        _CWebViewPlugin_LaunchAuthURL(webView, url);
+#else
+        Application.OpenURL(url);
+#endif
+    }
+
+    public void CallOnError(string id, string error)
     {
         if (onError != null)
         {
-            onError(error);
+            onError(id, error);
         }
     }
 
-    public void CallOnHttpError(string error)
+    public void CallOnHttpError(string id, string error)
     {
         if (onHttpError != null)
         {
-            onHttpError(error);
+            onHttpError(id, error);
+        }
+    }
+
+    public void CallOnAuth(string url)
+    {
+        if (onAuth != null)
+        {
+            onAuth(url);
         }
     }
 

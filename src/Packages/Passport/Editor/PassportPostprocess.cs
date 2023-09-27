@@ -84,7 +84,11 @@ namespace Immutable.Passport.Editor
                     var method = type.GetMethod("AddFrameworkToProject");
                     method.Invoke(proj, new object[] { target, "WebKit.framework", false });
                 }
-
+                {
+                    var method = type.GetMethod("AddFrameworkToProject");
+                    method.Invoke(proj, new object[] { target, "AuthenticationServices.framework", false });
+                }
+                
                 var cflags = "";
                 if (EditorUserBuildSettings.development)
                 {

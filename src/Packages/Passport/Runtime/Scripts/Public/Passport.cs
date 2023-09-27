@@ -35,11 +35,11 @@ namespace Immutable.Passport
 #if UNITY_EDITOR_WIN
             Application.quitting += OnQuit;
 #elif UNITY_IPHONE || UNITY_ANDROID || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
-            Application.deepLinkActivated += onDeepLinkActivated;
+            Application.deepLinkActivated += OnDeepLinkActivated;
             if (!string.IsNullOrEmpty(Application.absoluteURL))
             {
                 // Cold start and Application.absoluteURL not null so process Deep Link.
-                onDeepLinkActivated(Application.absoluteURL);
+                OnDeepLinkActivated(Application.absoluteURL);
             }
 #endif
         }
@@ -314,7 +314,7 @@ namespace Immutable.Passport
             throw new PassportException("Passport not initialised");
         }
 
-        private async void onDeepLinkActivated(string url)
+        private void OnDeepLinkActivated(string url)
         {
             deeplink = url;
 

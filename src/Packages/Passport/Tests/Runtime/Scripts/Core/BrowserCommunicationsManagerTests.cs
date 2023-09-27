@@ -152,6 +152,9 @@ namespace Immutable.Passport.Core
     internal class MockBrowserClient : IWebBrowserClient
     {
         public event OnUnityPostMessageDelegate? OnUnityPostMessage;
+        public event OnUnityPostMessageDelegate? OnAuthPostMessage;
+        public event OnUnityPostMessageErrorDelegate? OnPostMessageError;
+
         public BrowserRequest? request = null;
         public BrowserResponse? browserResponse = null;
         public bool setRequestId = true;
@@ -190,6 +193,11 @@ namespace Immutable.Passport.Core
                 return "";
             }
             return value[adjustedPosA..posB];
+        }
+
+        public void LaunchAuthURL(string url)
+        {
+            throw new NotImplementedException();
         }
     }
 }
