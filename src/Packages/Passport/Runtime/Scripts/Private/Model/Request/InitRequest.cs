@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using Immutable.Passport.Model;
 
 namespace Immutable.Passport.Model
 {
@@ -10,7 +11,6 @@ namespace Immutable.Passport.Model
         public string ClientId;
         public string Environment;
         public string? RedirectUri;
-        public string EngineVersion;
+        public VersionInfo EngineVersion;
     }
 }
-

@@ -39,17 +39,16 @@ namespace Immutable.Passport
         public async UniTask Init(string clientId, string environment, string? redirectUri = null, string? deeplink = null)
         {
             this.redirectUri = redirectUri;
-            // var engineVersion = $"engine-unity-{unityVersion},platform-{platform}-{osVersion}";
-            var versionInfo = new Dictionary<string, string>
-            {
-                { "engine", "unity" },
-                { "engineVersion", unityVersion },
-                { "platform", $"{platform}" },
-                { "platformVersion", osVersion }
-            };
-            var engineVersion = JsonConvert.SerializeObject(versionInfo);
 
-            InitRequest request = new() { ClientId = clientId, Environment = environment, RedirectUri = redirectUri, EngineVersion = engineVersion };
+            var versionInfo = new VersionInfo
+            {
+                Engine = "unity",
+                EngineVersion = unityVersion,
+                Platform = platform.ToString(),
+                PlatformVersion = osVersion
+            };
+
+            InitRequest request = new() { ClientId = clientId, Environment = environment, RedirectUri = redirectUri, EngineVersion = versionInfo };
 
             string response = await communicationsManager.Call(
                 PassportFunction.INIT,
