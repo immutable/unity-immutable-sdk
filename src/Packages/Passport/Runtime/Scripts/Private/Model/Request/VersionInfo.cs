@@ -1,7 +1,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace Immutable.Passport.Model 
+namespace Immutable.Passport.Model
 {
     [JsonObject(NamingStrategyType = typeof(CamelCaseNamingStrategy))]
     public class VersionInfo
