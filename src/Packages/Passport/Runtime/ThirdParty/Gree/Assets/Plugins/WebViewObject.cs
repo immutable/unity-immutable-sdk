@@ -102,7 +102,7 @@ public class WebViewObject
         IntPtr instance, string url);
     [DllImport("__Internal")]
     private static extern void _CWebViewPlugin_SetDelegate(DelegateMessage callback);
-#elif UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
+#elif UNITY_STANDALONE_OSX
     [DllImport("WebView")]
     private static extern IntPtr _CWebViewPlugin_Init(string ua);
     [DllImport("WebView")]
