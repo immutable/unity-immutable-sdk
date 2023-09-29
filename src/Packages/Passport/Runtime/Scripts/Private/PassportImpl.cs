@@ -30,6 +30,9 @@ namespace Immutable.Passport
         private DeviceConnectResponse? deviceConnectResponse;
         private UniTaskCompletionSource<bool> pkceCompletionSource = new UniTaskCompletionSource<bool>();
         private string? redirectUri = null;
+        private string unityVersion = Application.unityVersion;
+        private RuntimePlatform platform = Application.platform;
+        private string osVersion = SystemInfo.operatingSystem;
 
         public PassportImpl(IBrowserCommunicationsManager communicationsManager)
         {
@@ -39,7 +42,16 @@ namespace Immutable.Passport
         public async UniTask Init(string clientId, string environment, string? redirectUri = null, string? deeplink = null)
         {
             this.redirectUri = redirectUri;
-            InitRequest request = new() { ClientId = clientId, Environment = environment, RedirectUri = redirectUri };
+
+            var versionInfo = new VersionInfo
+            {
+                Engine = "unity",
+                EngineVersion = unityVersion,
+                Platform = platform.ToString(),
+                PlatformVersion = osVersion
+            };
+
+            InitRequest request = new() { ClientId = clientId, Environment = environment, RedirectUri = redirectUri, EngineVersion = versionInfo };
 
             string response = await communicationsManager.Call(
                 PassportFunction.INIT,
