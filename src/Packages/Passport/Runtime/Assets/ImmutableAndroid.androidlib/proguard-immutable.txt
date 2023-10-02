@@ -1,0 +1,8 @@
+-dontwarn com.immutable.unity
+-keep class com.immutable.** { *; }
+-keep interface com.immutable.** { *; }
+-keep public class com.immutable.unity.ImmutableAndroid { public protected *; }
+
+-dontwarn androidx.**
+-keep class androidx.** { *; }
+-keep interface androidx.** { *; }

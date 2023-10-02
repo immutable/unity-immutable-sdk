@@ -18,5 +18,6 @@ android {
         targetSdkVersion 33
         versionCode 1
         versionName '1.0'
+        consumerProguardFiles 'proguard-immutable.txt'
     }
 }
