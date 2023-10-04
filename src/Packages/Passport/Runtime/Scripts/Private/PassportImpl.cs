@@ -385,8 +385,6 @@ namespace Immutable.Passport
                 }
                 return;
             }
-
-            Debug.Log($"{TAG} Unhandled onPostMessageError. id: {id} message: {message}");
         }
     }
 }

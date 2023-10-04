@@ -167,8 +167,6 @@ public class WebViewObject
             }
             return;
         }
-
-        Debug.Log($"{TAG} delegateMessageReceived unsupported key " + key);
     }
 #endif
 
