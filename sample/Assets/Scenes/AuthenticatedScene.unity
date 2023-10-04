@@ -1981,7 +1981,7 @@ GameObject:
   - component: {fileID: 455311494}
   - component: {fileID: 455311493}
   m_Layer: 5
-  m_Name: Amount
+  m_Name: Value
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2004,8 +2004,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 116, y: -123}
-  m_SizeDelta: {x: 200, y: 30}
+  m_AnchoredPosition: {x: 66, y: -123}
+  m_SizeDelta: {x: 100, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &455311493
 MonoBehaviour:
@@ -2418,7 +2418,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Amount...
+  m_Text: Value...
 --- !u!222 &548681578
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2622,8 +2622,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 116, y: -77}
-  m_SizeDelta: {x: 200, y: 30}
+  m_AnchoredPosition: {x: 66, y: -77}
+  m_SizeDelta: {x: 100, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &563057549
 MonoBehaviour:
@@ -2919,7 +2919,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 332, y: -77}
+  m_AnchoredPosition: {x: 232, y: -77}
   m_SizeDelta: {x: 200, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &649013319
@@ -6331,8 +6331,8 @@ MonoBehaviour:
   zkGetBalanceAccount: {fileID: 885231615}
   zkSendTransactionCanvas: {fileID: 1343113126}
   zkSendTransactionTo: {fileID: 649013321}
-  zkSendTransactionAmount: {fileID: 1901422923}
-  zkSendTransactionFunctionSignature: {fileID: 1391622483}
+  zkSendTransactionValue: {fileID: 1901422923}
+  zkSendTransactionData: {fileID: 1391622483}
 --- !u!1 &1216631573
 GameObject:
   m_ObjectHideFlags: 0
@@ -6345,7 +6345,7 @@ GameObject:
   - component: {fileID: 1216631576}
   - component: {fileID: 1216631575}
   m_Layer: 5
-  m_Name: Function signature
+  m_Name: Data
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6368,8 +6368,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 116, y: -169}
-  m_SizeDelta: {x: 200, y: 30}
+  m_AnchoredPosition: {x: 66, y: -169}
+  m_SizeDelta: {x: 100, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1216631575
 MonoBehaviour:
@@ -6404,7 +6404,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'Function signature:'
+  m_Text: 'Data:'
 --- !u!222 &1216631576
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -7071,7 +7071,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 0x...
+  m_Text: Data...
 --- !u!222 &1349875448
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -7280,7 +7280,7 @@ GameObject:
   - component: {fileID: 1391622485}
   - component: {fileID: 1391622483}
   m_Layer: 5
-  m_Name: Function signature Input
+  m_Name: Data Input
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7373,7 +7373,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 332, y: -168.10004}
+  m_AnchoredPosition: {x: 232, y: -168.10004}
   m_SizeDelta: {x: 200, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1391622485
@@ -9717,7 +9717,7 @@ GameObject:
   - component: {fileID: 1901422921}
   - component: {fileID: 1901422923}
   m_Layer: 5
-  m_Name: Amount Input
+  m_Name: Value Input
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9742,7 +9742,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 332, y: -123}
+  m_AnchoredPosition: {x: 232, y: -123}
   m_SizeDelta: {x: 200, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1901422921
@@ -11203,7 +11203,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1335469792}
   m_HandleRect: {fileID: 1335469791}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:

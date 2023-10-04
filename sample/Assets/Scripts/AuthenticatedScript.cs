@@ -51,8 +51,8 @@ public class AuthenticatedScript : MonoBehaviour
     // ZkEVM Send Transaction
     [SerializeField] private Canvas zkSendTransactionCanvas;
     [SerializeField] private InputField zkSendTransactionTo;
-    [SerializeField] private InputField zkSendTransactionAmount;
-    [SerializeField] private InputField zkSendTransactionFunctionSignature;
+    [SerializeField] private InputField zkSendTransactionValue;
+    [SerializeField] private InputField zkSendTransactionData;
 
     private Passport passport;
 #pragma warning restore CS8618
@@ -227,8 +227,8 @@ public class AuthenticatedScript : MonoBehaviour
             string? response = await passport.ZkEvmSendTransaction(new TransactionRequest()
             {
                 To = zkSendTransactionTo.text,
-                Value = zkSendTransactionAmount.text,
-                Data = zkSendTransactionFunctionSignature.text
+                Value = zkSendTransactionValue.text,
+                Data = zkSendTransactionData.text
 
             });
             ShowOutput($"Transaction hash: {response}");
@@ -244,8 +244,8 @@ public class AuthenticatedScript : MonoBehaviour
         authenticatedCanvas.gameObject.SetActive(false);
         zkSendTransactionCanvas.gameObject.SetActive(true);
         zkSendTransactionTo.text = "";
-        zkSendTransactionAmount.text = "";
-        zkSendTransactionFunctionSignature.text = "";
+        zkSendTransactionValue.text = "";
+        zkSendTransactionData.text = "";
     }
 
     public void CancelZkSendTransaction()
