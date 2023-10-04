@@ -224,11 +224,9 @@ public class AuthenticatedScript : MonoBehaviour
         try
         {
             ShowOutput($"Called sendTransaction()...");
-            List<string> accounts = await passport.ZkEvmRequestAccounts();
             string? response = await passport.ZkEvmSendTransaction(new TransactionRequest()
             {
                 To = zkSendTransactionTo.text,
-                From = accounts[0],
                 Value = zkSendTransactionAmount.text,
                 Data = zkSendTransactionFunctionSignature.text
 
