@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Numerics;
 using System.Collections.Generic;
 using System;
 using UnityEngine;
@@ -41,6 +43,16 @@ public class AuthenticatedScript : MonoBehaviour
     [SerializeField] private Button sendTransactionButton;
     [SerializeField] private Button requestAccountsButton;
     [SerializeField] private Button getBalanceButton;
+
+    // ZkEVM Get Balance Transaction
+    [SerializeField] private Canvas zkGetBalanceCanvas;
+    [SerializeField] private InputField zkGetBalanceAccount;
+
+    // ZkEVM Send Transaction
+    [SerializeField] private Canvas zkSendTransactionCanvas;
+    [SerializeField] private InputField zkSendTransactionTo;
+    [SerializeField] private InputField zkSendTransactionAmount;
+    [SerializeField] private InputField zkSendTransactionFunctionSignature;
 
     private Passport passport;
 #pragma warning restore CS8618
@@ -207,9 +219,41 @@ public class AuthenticatedScript : MonoBehaviour
         }
     }
 
-    public async void SendTransaction()
+    public async void SendZkTransaction()
     {
-        ShowOutput($"Not implemented");
+        try
+        {
+            ShowOutput($"Called sendTransaction()...");
+            List<string> accounts = await passport.ZkEvmRequestAccounts();
+            string? response = await passport.ZkEvmSendTransaction(new TransactionRequest()
+            {
+                To = zkSendTransactionTo.text,
+                From = accounts[0],
+                Value = zkSendTransactionAmount.text,
+                Data = zkSendTransactionFunctionSignature.text
+
+            });
+            ShowOutput($"Transaction hash: {response}");
+        }
+        catch (Exception ex)
+        {
+            ShowOutput($"Failed to request accounts: {ex.Message}");
+        }
+    }
+
+    public void ShowZkSendTransaction()
+    {
+        authenticatedCanvas.gameObject.SetActive(false);
+        zkSendTransactionCanvas.gameObject.SetActive(true);
+        zkSendTransactionTo.text = "";
+        zkSendTransactionAmount.text = "";
+        zkSendTransactionFunctionSignature.text = "";
+    }
+
+    public void CancelZkSendTransaction()
+    {
+        authenticatedCanvas.gameObject.SetActive(true);
+        zkSendTransactionCanvas.gameObject.SetActive(false);
     }
 
     public async void RequestAccounts()
@@ -231,14 +275,27 @@ public class AuthenticatedScript : MonoBehaviour
         try
         {
             ShowOutput($"Called GetBalance()...");
-            List<string> accounts = await passport.ZkEvmRequestAccounts();
-            string balance = await passport.ZkEvmGetBalance(accounts[0]);
-            ShowOutput(balance);
+            string balance = await passport.ZkEvmGetBalance(zkGetBalanceAccount.text);
+            var balanceBI = BigInteger.Parse(balance.Replace("0x", "0"), NumberStyles.HexNumber);
+            ShowOutput($"Hex: {balance}\nDec: {balanceBI.ToString()}");
         }
         catch (Exception ex)
         {
             ShowOutput($"Failed to get balance: {ex.Message}");
         }
+    }
+
+    public void ShowZkGetBalance()
+    {
+        authenticatedCanvas.gameObject.SetActive(false);
+        zkGetBalanceCanvas.gameObject.SetActive(true);
+        zkGetBalanceAccount.text = "";
+    }
+
+    public void CancelZkGetBalance()
+    {
+        authenticatedCanvas.gameObject.SetActive(true);
+        zkGetBalanceCanvas.gameObject.SetActive(false);
     }
 
     private void ShowOutput(string message)

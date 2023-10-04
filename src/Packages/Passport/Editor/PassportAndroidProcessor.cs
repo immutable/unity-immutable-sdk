@@ -33,8 +33,8 @@ namespace Immutable.Passport.Editor
         {
             var parentDir = Directory.GetParent(path).FullName;
             var gradlePath = parentDir + "/gradle.properties";
-            
-            if(!File.Exists(gradlePath))
+
+            if (!File.Exists(gradlePath))
                 throw new Exception("gradle.properties does not exist");
 
             var text = File.ReadAllText(gradlePath);
