@@ -340,7 +340,9 @@ namespace Immutable.Passport
 
         public async UniTask<string?> ZkEvmSendTransaction(TransactionRequest request)
         {
-            string json = JsonConvert.SerializeObject(request);
+            string json = JsonConvert.SerializeObject(
+                request, Formatting.None, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }
+                );
             string callResponse = await communicationsManager.Call(PassportFunction.ZK_EVM.SEND_TRANSACTION, json);
             return JsonConvert.DeserializeObject<StringResponse>(callResponse).Result;
         }
