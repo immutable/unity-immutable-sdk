@@ -32,7 +32,7 @@ public class UnauthenticatedScript : MonoBehaviour
 #endif
 
             passport = await Passport.Init(
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
                 clientId, environment, redirectUri, 10000
 #else
                 clientId, environment, redirectUri
@@ -86,7 +86,8 @@ public class UnauthenticatedScript : MonoBehaviour
             ShowOutput("Called Connect()...");
             connectButton.gameObject.SetActive(false);
 
-#if UNITY_ANDROID || UNITY_IPHONE || UNITY_STANDALONE_OSX
+            // macOS editor (play scene) does not support deeplinking
+#if UNITY_ANDROID || UNITY_IPHONE || (UNITY_STANDALONE_OSX && !UNITY_EDITOR_OSX)
             await passport.ConnectPKCE();
 #else
             await passport.Connect();

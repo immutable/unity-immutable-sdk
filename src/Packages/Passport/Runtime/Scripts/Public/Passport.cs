@@ -52,7 +52,7 @@ namespace Immutable.Passport
         /// <param name="redirectUri">(Currently, mobile only) The URL to which auth will redirect the browser after authorisation has been granted by the user</param>
         /// <param name="engineStartupTimeoutMs">(Windows only) Timeout time for waiting for the engine to start (in milliseconds)</param>
         public static UniTask<Passport> Init(
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
             string clientId, string environment, string? redirectUri = null, int engineStartupTimeoutMs = 4000
 #else
             string clientId, string environment, string? redirectUri = null
@@ -61,10 +61,11 @@ namespace Immutable.Passport
         {
             if (Instance == null)
             {
+                Debug.Log($"{TAG} Initialising Passport...");
                 Instance = new Passport();
                 // Wait until we get a ready signal
                 return Instance.Initialise(
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
                         engineStartupTimeoutMs
 #endif
                     )
@@ -94,7 +95,7 @@ namespace Immutable.Passport
         }
 
         private async UniTask Initialise(
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
             int engineStartupTimeoutMs
 #endif
         )
