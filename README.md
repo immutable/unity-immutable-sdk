@@ -105,41 +105,6 @@ catch (Exception)
 await passport.Logout();
 ```
 
-### Immutable X Transfer
-
-> Note: The transfers feature require pre-approval from Immutable. Please reach out to us before making use of it.
-
-An unsigned transfer request for ETH, ERC20 or ERC721 is expected for the ImxTransfer method.
-
-```csharp
-UnsignedTransferRequest request = UnsignedTransferRequest.ERC721(
-    receiver,
-    tokenId,
-    tokenAddress
-);
-
-CreateTransferResponseV1 response = await passport.ImxTransfer(request);
-```
-
-Batch NFT transfers are also supported:
-
-```csharp
-NftTransferDetails[] details = {
-    new NftTransferDetails(
-        receiver1,
-        tokenId1,
-        tokenAddress1
-    ),
-    new NftTransferDetails(
-        receiver2,
-        tokenId2,
-        tokenAddress2
-    )
-};
-
-CreateBatchTransferResponse response = await passport.ImxBatchNftTransfer(details);
-```
-
 ### Android, iOS and macOS PKCE login
 
 For Android and iOS you can use the PKCE login flow instead of Device Code. This means the gamer has one less step to complete and will be redirected back to the game after successfully authenticating.
@@ -188,6 +153,62 @@ After this set-up, your game can log in using PKCE.
 
 After this set-up, your game can log in using PKCE.
 
+### Immutable X Transfer
+
+> Note: The transfers features require pre-approval from Immutable. Please reach out to us before making use of it.
+
+An unsigned transfer request for ETH, ERC20 or ERC721 is expected for the ImxTransfer method.
+
+```csharp
+UnsignedTransferRequest request = UnsignedTransferRequest.ERC721(
+    receiver,
+    tokenId,
+    tokenAddress
+);
+
+CreateTransferResponseV1 response = await passport.ImxTransfer(request);
+```
+
+Batch NFT transfers are also supported:
+
+```csharp
+NftTransferDetails[] details = {
+    new NftTransferDetails(
+        receiver1,
+        tokenId1,
+        tokenAddress1
+    ),
+    new NftTransferDetails(
+        receiver2,
+        tokenId2,
+        tokenAddress2
+    )
+};
+
+CreateBatchTransferResponse response = await passport.ImxBatchNftTransfer(details);
+```
+
+### zkEVM Send Transaction
+
+> Note: The zkEVM send transaction feature requires pre-approval from Immutable. Please reach out to us before making use of it.
+
+- `To`: The destination address
+- `Value`: The value to transfer for the transaction in wei
+- `Data`: Byte string containing the associated data of the message
+
+```csharp
+TransactionRequest request = new TransactionRequest()
+{
+    To = address,
+    Value = amount,
+    Data = data
+}
+
+string? transactionHash = await passport.ZkEvmSendTransaction(request);
+```
+
+See [here](https://docs.immutable.com/docs/zkEVM/products/passport/wallet/rpc-methods/eth_sendTransaction) for more details.
+
 ## Supported Functions
 
 - Get wallet address
@@ -197,6 +218,9 @@ After this set-up, your game can log in using PKCE.
 - Checks if there are any credentials saved
 - Immutable X Transfer (ERC20, ETH and ERC721)
 - Immutable X NFT Batch Transfer
+- zkEVM Request Accounts
+- zkEVM Get balance
+- zkEVM Send transaction
 
 ## Examples
 
