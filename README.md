@@ -224,7 +224,8 @@ See [here](https://docs.immutable.com/docs/zkEVM/products/passport/wallet/rpc-me
 
 ## Examples
 
-- **Sample code** - see the [sample](https://github.com/immutable/unity-immutable-sdk/tree/main/sample) application for examples of how to use the Immutable Unity SDK.
+- **Sample App** - see the [sample application](https://github.com/immutable/unity-immutable-sdk/tree/main/sample) for examples of how to use the Immutable Unity SDK.
+- **Sample Game** - see the [sample game](https://github.com/immutable/sample-passport-unity-game) for examples of how to use use the Immutable Unity SDK.
 
 ## Changelog Management
 
