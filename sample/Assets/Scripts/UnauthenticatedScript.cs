@@ -97,9 +97,6 @@ public class UnauthenticatedScript : MonoBehaviour
         }
         catch (Exception ex)
         {
-#if UNITY_ANDROID || UNITY_IPHONE || UNITY_STANDALONE_OSX
-            connectButton.gameObject.SetActive(true);
-#endif
             string error;
             if (ex is PassportException passportException && passportException.IsNetworkError())
             {
@@ -114,6 +111,9 @@ public class UnauthenticatedScript : MonoBehaviour
 
             Debug.Log(error);
             ShowOutput(error);
+#if UNITY_ANDROID || UNITY_IPHONE || UNITY_STANDALONE_OSX
+            connectButton.gameObject.SetActive(true);
+#endif
         }
     }
 

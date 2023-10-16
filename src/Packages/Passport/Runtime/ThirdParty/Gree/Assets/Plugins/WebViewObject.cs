@@ -119,6 +119,8 @@ public class WebViewObject
     private static extern void _CWebViewPlugin_EvaluateJS(
         IntPtr instance, string url);
     [DllImport("WebView")]
+    private static extern void _CWebViewPlugin_LaunchAuthURL(IntPtr instance, string url);
+    [DllImport("WebView")]
     private static extern void _CWebViewPlugin_SetDelegate(DelegateMessage callback);
 #elif UNITY_WEBGL
     [DllImport("__Internal")]
@@ -274,7 +276,7 @@ public class WebViewObject
 
     public void LaunchAuthURL(string url)
     {
-#if UNITY_IPHONE
+#if UNITY_STANDALONE_OSX || UNITY_IPHONE
         if (webView == IntPtr.Zero)
             return;
         _CWebViewPlugin_LaunchAuthURL(webView, url);

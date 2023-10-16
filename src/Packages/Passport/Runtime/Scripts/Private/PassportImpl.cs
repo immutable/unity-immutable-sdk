@@ -28,7 +28,7 @@ namespace Immutable.Passport
         private const string TAG = "[Passport Implementation]";
         public readonly IBrowserCommunicationsManager communicationsManager;
         private DeviceConnectResponse? deviceConnectResponse;
-        private UniTaskCompletionSource<bool> pkceCompletionSource = new UniTaskCompletionSource<bool>();
+        private UniTaskCompletionSource<bool>? pkceCompletionSource;
         private string? redirectUri = null;
         private string unityVersion = Application.unityVersion;
         private RuntimePlatform platform = Application.platform;
@@ -111,9 +111,10 @@ namespace Immutable.Passport
 
         public UniTask<bool> ConnectPKCE()
         {
-            pkceCompletionSource = new UniTaskCompletionSource<bool>();
+            UniTaskCompletionSource<bool> task = new UniTaskCompletionSource<bool>();
+            pkceCompletionSource = task;
             LaunchAuthUrl();
-            return pkceCompletionSource.Task;
+            return task.Task;
         }
 
         private async UniTask LaunchAuthUrl()
@@ -145,7 +146,7 @@ namespace Immutable.Passport
             {
                 Debug.Log($"{TAG} Get PKCE Auth URL error: {e.Message}");
             }
-            pkceCompletionSource.TrySetException(new PassportException(
+            pkceCompletionSource?.TrySetException(new PassportException(
                 "Something went wrong, please call ConnectPKCE() again",
                 PassportErrorType.AUTHENTICATION_ERROR
             ));
@@ -160,7 +161,7 @@ namespace Immutable.Passport
 
             if (String.IsNullOrEmpty(state) || String.IsNullOrEmpty(authCode))
             {
-                pkceCompletionSource.TrySetException(new PassportException(
+                pkceCompletionSource?.TrySetException(new PassportException(
                     "Uri was missing state and/or code. Please call ConnectPKCE() again",
                     PassportErrorType.AUTHENTICATION_ERROR
                 ));
@@ -179,14 +180,14 @@ namespace Immutable.Passport
             BrowserResponse? response = callResponse.OptDeserializeObject<BrowserResponse>();
             if (response?.Success != true)
             {
-                pkceCompletionSource.TrySetException(new PassportException(
+                pkceCompletionSource?.TrySetException(new PassportException(
                     response?.Error ?? "Something went wrong, please call ConnectPKCE() again",
                     PassportErrorType.AUTHENTICATION_ERROR
                 ));
                 return;
             }
 
-            pkceCompletionSource.TrySetResult(true);
+            pkceCompletionSource?.TrySetResult(true);
         }
 
         private async UniTask<ConnectResponse?> InitialiseDeviceCodeAuth()
@@ -370,23 +371,27 @@ namespace Immutable.Passport
 
         private void OnPostMessageError(string id, string message)
         {
-            if (id == "CallFromAuthCallbackError")
+            if (id == "CallFromAuthCallbackError" && pkceCompletionSource != null)
             {
                 if (message == "")
                 {
                     Debug.Log($"{TAG} Get PKCE Auth URL user cancelled");
-                    pkceCompletionSource.TrySetCanceled();
+                    pkceCompletionSource?.TrySetCanceled();
                 }
                 else
                 {
                     Debug.Log($"{TAG} Get PKCE Auth URL error: {message}");
-                    pkceCompletionSource.TrySetException(new PassportException(
+                    pkceCompletionSource?.TrySetException(new PassportException(
                         "Something went wrong, please call ConnectPKCE() again",
                         PassportErrorType.AUTHENTICATION_ERROR
                     ));
                 }
+
+                pkceCompletionSource = null;
                 return;
             }
+
+            Debug.LogError($"{TAG} id: {id} err: {message}");
         }
     }
 }

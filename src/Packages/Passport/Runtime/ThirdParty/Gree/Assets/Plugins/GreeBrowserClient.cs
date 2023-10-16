@@ -38,7 +38,6 @@ namespace Immutable.Browser.Gree
 
         private void InvokeOnPostMessageError(string id, string message)
         {
-            Debug.LogError($"{TAG} id: {id} err: {message}");
             OnPostMessageError.Invoke(id, message);
         }
 
