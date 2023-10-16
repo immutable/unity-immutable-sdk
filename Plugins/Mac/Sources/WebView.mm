@@ -21,6 +21,7 @@
 
 #import <AppKit/AppKit.h>
 #import <WebKit/WebKit.h>
+#import <AuthenticationServices/AuthenticationServices.h>
 
 extern "C" typedef void (*DelegateCallbackFunction)(const char * key, const char * message);
 
@@ -80,11 +81,10 @@ DelegateCallbackFunction delegateCallback = NULL;
 }
 @end
 
-@interface CWebViewPlugin : NSObject<WKUIDelegate, WKNavigationDelegate, WKScriptMessageHandler>
+@interface CWebViewPlugin : NSObject<WKUIDelegate, WKNavigationDelegate, WKScriptMessageHandler, ASWebAuthenticationPresentationContextProviding>
 {
     WKWebView *webView;
-    NSWindow *window;
-    NSWindowController *windowController;}
+}
 @end
 
 @implementation CWebViewPlugin
@@ -92,6 +92,7 @@ DelegateCallbackFunction delegateCallback = NULL;
 static WKProcessPool *_sharedProcessPool;
 static NSMutableArray *_instances = [[NSMutableArray alloc] init];
 static CWebViewPlugin *__delegate = nil;
+static ASWebAuthenticationSession *_authSession;
 
 - (id)initWithUa:(const char *)ua
 {
@@ -324,6 +325,28 @@ static CWebViewPlugin *__delegate = nil;
     [_webView load:request];
 }
 
+- (void)launchAuthURL:(const char *)url
+{
+    NSURL *URL = [[NSURL alloc] initWithString: [NSString stringWithUTF8String:url]];
+    NSString *scheme = NSBundle.mainBundle.bundleIdentifier;
+
+    _authSession = [[ASWebAuthenticationSession alloc] initWithURL:URL callbackURLScheme:scheme completionHandler:^(NSURL * _Nullable callbackURL, NSError * _Nullable error) {
+        _authSession = nil;
+
+        if (error != nil && (error.code == 1 || error.code == ASWebAuthenticationSessionErrorCodeCanceledLogin)) {
+            // Cancelled
+            [self sendUnityCallback:"CallFromAuthCallbackError" message: ""];
+        } else if (error != nil) {
+            [self sendUnityCallback:"CallFromAuthCallbackError" message:error.localizedDescription.UTF8String];
+        } else {
+            [self sendUnityCallback:"CallFromAuthCallback" message: callbackURL.absoluteString.UTF8String];
+        }
+    }];
+
+    _authSession.presentationContextProvider = self;
+    [_authSession start];
+}
+
 - (void)evaluateJS:(const char *)js
 {
     if (webView == nil)
@@ -331,6 +354,15 @@ static CWebViewPlugin *__delegate = nil;
     NSString *jsStr = [NSString stringWithUTF8String:js];
     [webView evaluateJavaScript:jsStr completionHandler:^(NSString *result, NSError *error) {}];
 }
+
+- (nonnull ASPresentationAnchor)presentationAnchorForWebAuthenticationSession:(nonnull ASWebAuthenticationSession *)session {
+    if (webView.window != nil) {
+        return webView.window;
+    }
+
+    return NSApplication.sharedApplication.windows.firstObject;
+}
+
 @end
 
 extern "C" {
@@ -339,6 +371,7 @@ void _CWebViewPlugin_Destroy(void *instance);
 void _CWebViewPlugin_LoadURL(void *instance, const char *url);
 void _CWebViewPlugin_EvaluateJS(void *instance, const char *url);
 void _CWebViewPlugin_SetDelegate(DelegateCallbackFunction callback);
+void _CWebViewPlugin_LaunchAuthURL(void *instance, const char *url);
 }
 
 void _CWebViewPlugin_SetDelegate(DelegateCallbackFunction callback) {
@@ -376,4 +409,12 @@ void _CWebViewPlugin_EvaluateJS(void *instance, const char *js)
         return;
     CWebViewPlugin *webViewPlugin = (__bridge CWebViewPlugin *)instance;
     [webViewPlugin evaluateJS:js];
+}
+
+void _CWebViewPlugin_LaunchAuthURL(void *instance, const char *url)
+{
+    if (instance == NULL)
+        return;
+    CWebViewPlugin *webViewPlugin = (__bridge CWebViewPlugin *)instance;
+    [webViewPlugin launchAuthURL:url];
 }
