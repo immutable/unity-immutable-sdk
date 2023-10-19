@@ -133,7 +133,7 @@ namespace Immutable.Passport
                     AndroidJavaClass customTabLauncher = new AndroidJavaClass("com.immutable.unity.ImmutableAndroid");
                     customTabLauncher.CallStatic("launchUrl", activity, url);
 #else
-                    communicationsManager.LaunchAuthURL(url);
+                    communicationsManager.LaunchAuthURL(url, redirectUri);
 #endif
                     return;
                 }

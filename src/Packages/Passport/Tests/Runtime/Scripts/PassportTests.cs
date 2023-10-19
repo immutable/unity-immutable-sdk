@@ -77,7 +77,7 @@ namespace Immutable.Passport
             return UniTask.FromResult(response);
         }
 
-        public void LaunchAuthURL(string url)
+        public void LaunchAuthURL(string url, string? redirectUri)
         {
             throw new NotImplementedException();
         }
