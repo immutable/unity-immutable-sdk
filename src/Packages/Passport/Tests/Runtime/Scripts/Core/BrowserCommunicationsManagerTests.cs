@@ -195,7 +195,7 @@ namespace Immutable.Passport.Core
             return value[adjustedPosA..posB];
         }
 
-        public void LaunchAuthURL(string url)
+        public void LaunchAuthURL(string url, string? redirectUri)
         {
             throw new NotImplementedException();
         }

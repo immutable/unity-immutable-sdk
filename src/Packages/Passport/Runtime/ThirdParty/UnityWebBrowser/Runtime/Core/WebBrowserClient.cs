@@ -739,7 +739,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             communicationsManager.ExecuteJs(js);
         }
 
-        public void LaunchAuthURL(string url)
+        public void LaunchAuthURL(string url, string? redirectUri)
         {
             Application.OpenURL(url);
         }

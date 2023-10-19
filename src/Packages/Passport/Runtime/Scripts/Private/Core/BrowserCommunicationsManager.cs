@@ -22,7 +22,7 @@ namespace Immutable.Passport.Core
         public event OnUnityPostMessageDelegate? OnAuthPostMessage;
         public event OnUnityPostMessageErrorDelegate? OnPostMessageError;
         public void SetCallTimeout(int ms);
-        public void LaunchAuthURL(string url);
+        public void LaunchAuthURL(string url, string? redirectUri);
         public UniTask<string> Call(string fxName, string? data = null, bool ignoreTimeout = false);
     }
 
@@ -96,10 +96,10 @@ namespace Immutable.Passport.Core
             webBrowserClient.ExecuteJs(js);
         }
 
-        public void LaunchAuthURL(string url)
+        public void LaunchAuthURL(string url, string? redirectUri)
         {
             Debug.Log($"{TAG} LaunchAuthURL : {url}");
-            webBrowserClient.LaunchAuthURL(url);
+            webBrowserClient.LaunchAuthURL(url, redirectUri);
         }
 
         private void InvokeOnUnityPostMessage(string message)

@@ -56,9 +56,9 @@ namespace Immutable.Browser.Gree
             webViewObject.EvaluateJS(js);
         }
 
-        public void LaunchAuthURL(string url)
+        public void LaunchAuthURL(string url, string? redirectUri)
         {
-            webViewObject.LaunchAuthURL(url);
+            webViewObject.LaunchAuthURL(url, redirectUri);
         }
     }
 }
