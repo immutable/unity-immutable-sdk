@@ -13,7 +13,7 @@ jobs:
           lfs: true
       - run: git lfs pull
 
-      - uses: game-ci/unity-test-runner@v2
+      - uses: game-ci/unity-test-runner@v3
         id: passportTest
         env:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
