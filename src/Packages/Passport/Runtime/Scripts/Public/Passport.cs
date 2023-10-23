@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System;
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+#if UNITY_EDITOR_WIN && UNITY_STANDALONE_WIN
 using VoltstroStudios.UnityWebBrowser.Core;
 #else
 using Immutable.Browser.Gree;
@@ -19,7 +19,7 @@ namespace Immutable.Passport
 
         public static Passport? Instance { get; private set; }
 
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+#if UNITY_EDITOR_WIN && UNITY_STANDALONE_WIN
         private readonly IWebBrowserClient webBrowserClient = new WebBrowserClient();
 #else
         private readonly IWebBrowserClient webBrowserClient = new GreeBrowserClient();
@@ -32,7 +32,7 @@ namespace Immutable.Passport
 
         private Passport()
         {
-#if UNITY_EDITOR_WIN
+#if UNITY_EDITOR_WIN && UNITY_STANDALONE_WIN
             Application.quitting += OnQuit;
 #elif UNITY_IPHONE || UNITY_ANDROID || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
             Application.deepLinkActivated += OnDeepLinkActivated;
@@ -104,7 +104,7 @@ namespace Immutable.Passport
             {
                 BrowserCommunicationsManager communicationsManager = new(webBrowserClient);
                 communicationsManager.OnReady += () => readySignalReceived = true;
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+#if UNITY_EDITOR_WIN && UNITY_STANDALONE_WIN
                 await ((WebBrowserClient)webBrowserClient).Init(engineStartupTimeoutMs);
 #endif
                 passportImpl = new PassportImpl(communicationsManager);
@@ -118,7 +118,7 @@ namespace Immutable.Passport
             }
         }
 
-#if UNITY_EDITOR_WIN
+#if UNITY_EDITOR_WIN && UNITY_STANDALONE_WIN
         private void OnQuit()
         {
             // Need to clean up UWB resources when quitting the game in the editor
