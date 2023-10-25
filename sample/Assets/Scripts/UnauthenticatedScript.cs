@@ -1,4 +1,5 @@
 using System;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
@@ -102,6 +103,10 @@ public class UnauthenticatedScript : MonoBehaviour
             {
                 error = $"Connect() error: Check your internet connection and try again";
             }
+            else if (ex is OperationCanceledException)
+            {
+                error = "Connect() cancelled";
+            }
             else
             {
                 error = $"Connect() error: {ex.Message}";
@@ -124,6 +129,7 @@ public class UnauthenticatedScript : MonoBehaviour
 
     private void ShowOutput(string message)
     {
+        Debug.Log($"Output: {message}");
         if (output != null)
         {
             output.text = message;

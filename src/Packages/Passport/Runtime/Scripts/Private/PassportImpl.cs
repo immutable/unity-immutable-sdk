@@ -17,13 +17,11 @@ using UnityEngine.Android;
 
 namespace Immutable.Passport
 {
-    class PKCEResult
-    {
-        public bool success;
-        public Exception? exception;
-    }
-
+#if UNITY_ANDROID
+    public class PassportImpl : PKCECallback
+#else
     public class PassportImpl
+#endif
     {
         private const string TAG = "[Passport Implementation]";
         public readonly IBrowserCommunicationsManager communicationsManager;
@@ -33,6 +31,10 @@ namespace Immutable.Passport
         private string unityVersion = Application.unityVersion;
         private RuntimePlatform platform = Application.platform;
         private string osVersion = SystemInfo.operatingSystem;
+
+#if UNITY_ANDROID
+        internal static bool completingPKCE = false; // Used for the PKCE callback
+#endif
 
         public PassportImpl(IBrowserCommunicationsManager communicationsManager)
         {
@@ -131,7 +133,7 @@ namespace Immutable.Passport
                     AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
                     AndroidJavaObject activity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
                     AndroidJavaClass customTabLauncher = new AndroidJavaClass("com.immutable.unity.ImmutableAndroid");
-                    customTabLauncher.CallStatic("launchUrl", activity, url);
+                    customTabLauncher.CallStatic("launchUrl", activity, url, new AndroidPKCECallback(this));
 #else
                     communicationsManager.LaunchAuthURL(url, redirectUri);
 #endif
@@ -154,6 +156,9 @@ namespace Immutable.Passport
 
         public async UniTask CompletePKCEFlow(string uriString)
         {
+#if UNITY_ANDROID
+            completingPKCE = true;
+#endif
             var uri = new Uri(uriString);
             var query = HttpUtility.ParseQueryString(uri.Query);
             var state = query.Get("state");
@@ -184,11 +189,32 @@ namespace Immutable.Passport
                     response?.Error ?? "Something went wrong, please call ConnectPKCE() again",
                     PassportErrorType.AUTHENTICATION_ERROR
                 ));
-                return;
             }
-
-            pkceCompletionSource?.TrySetResult(true);
+            else
+            {
+                pkceCompletionSource.TrySetResult(true);
+            }
+#if UNITY_ANDROID
+            completingPKCE = false;
+#endif
         }
+
+#if UNITY_ANDROID
+        public void OnPKCEDismissed(bool completing)
+        {
+            Debug.Log($"{TAG} On PKCE Dismissed");
+            if (!completing)
+            {
+                // User hasn't entered all required details (e.g. email address) into Passport yet
+                Debug.Log($"{TAG} PKCE dismissed before completing the flow");
+                pkceCompletionSource.TrySetCanceled();
+            }
+            else
+            {
+                Debug.Log($"{TAG} PKCE dismissed by user or SDK");
+            }
+        }
+#endif
 
         private async UniTask<ConnectResponse?> InitialiseDeviceCodeAuth()
         {
@@ -394,4 +420,34 @@ namespace Immutable.Passport
             Debug.LogError($"{TAG} id: {id} err: {message}");
         }
     }
+
+#if UNITY_ANDROID
+    public interface PKCECallback
+    {
+
+        /// <summary>
+        /// Called when the Android Chrome Custom Tabs is hidden. 
+        /// Note that you won't be able to tell whether it was closed by the user or the SDK.
+        /// <param name="completing">True if the user has entered everything required (e.g. email address),
+        /// Chrome Custom Tabs have closed, and the SDK is trying to complete the PKCE flow.
+        /// See <see cref="PassportImpl.CompletePKCEFlow"></param>
+        /// </summary>
+        public void OnPKCEDismissed(bool completing);
+    }
+
+    class AndroidPKCECallback : AndroidJavaProxy
+    {
+        private PKCECallback callback;
+
+        public AndroidPKCECallback(PKCECallback callback) : base("com.immutable.unity.ImmutableAndroid$Callback") {
+            this.callback = callback;
+        }
+
+        async void onCustomTabsDismissed()
+        {
+            await UniTask.SwitchToMainThread();
+            callback.OnPKCEDismissed(PassportImpl.completingPKCE);
+        }
+    }
+#endif
 }
