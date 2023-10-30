@@ -148,6 +148,8 @@ namespace Immutable.Passport
             {
                 Debug.Log($"{TAG} Get PKCE Auth URL error: {e.Message}");
             }
+
+            await UniTask.SwitchToMainThread();
             pkceCompletionSource?.TrySetException(new PassportException(
                 "Something went wrong, please call ConnectPKCE() again",
                 PassportErrorType.AUTHENTICATION_ERROR
@@ -166,6 +168,7 @@ namespace Immutable.Passport
 
             if (String.IsNullOrEmpty(state) || String.IsNullOrEmpty(authCode))
             {
+                await UniTask.SwitchToMainThread();
                 pkceCompletionSource?.TrySetException(new PassportException(
                     "Uri was missing state and/or code. Please call ConnectPKCE() again",
                     PassportErrorType.AUTHENTICATION_ERROR
@@ -183,6 +186,8 @@ namespace Immutable.Passport
                     JsonConvert.SerializeObject(request)
                 );
             BrowserResponse? response = callResponse.OptDeserializeObject<BrowserResponse>();
+            await UniTask.SwitchToMainThread();
+
             if (response?.Success != true)
             {
                 pkceCompletionSource?.TrySetException(new PassportException(
@@ -192,8 +197,10 @@ namespace Immutable.Passport
             }
             else
             {
-                pkceCompletionSource.TrySetResult(true);
+                pkceCompletionSource?.TrySetResult(true);
             }
+
+            pkceCompletionSource = null;
 #if UNITY_ANDROID
             completingPKCE = false;
 #endif
@@ -207,7 +214,7 @@ namespace Immutable.Passport
             {
                 // User hasn't entered all required details (e.g. email address) into Passport yet
                 Debug.Log($"{TAG} PKCE dismissed before completing the flow");
-                pkceCompletionSource.TrySetCanceled();
+                pkceCompletionSource?.TrySetCanceled();
             }
             else
             {
@@ -399,25 +406,33 @@ namespace Immutable.Passport
         {
             if (id == "CallFromAuthCallbackError" && pkceCompletionSource != null)
             {
-                if (message == "")
-                {
-                    Debug.Log($"{TAG} Get PKCE Auth URL user cancelled");
-                    pkceCompletionSource?.TrySetCanceled();
-                }
-                else
-                {
-                    Debug.Log($"{TAG} Get PKCE Auth URL error: {message}");
-                    pkceCompletionSource?.TrySetException(new PassportException(
-                        "Something went wrong, please call ConnectPKCE() again",
-                        PassportErrorType.AUTHENTICATION_ERROR
-                    ));
-                }
+                CallFromAuthCallbackError(id, message);
+            }
+            else
+            {
+                Debug.LogError($"{TAG} id: {id} err: {message}");
+            }
+        }
 
-                pkceCompletionSource = null;
-                return;
+        private async UniTask CallFromAuthCallbackError(string id, string message)
+        {
+            await UniTask.SwitchToMainThread();
+
+            if (message == "")
+            {
+                Debug.Log($"{TAG} Get PKCE Auth URL user cancelled");
+                pkceCompletionSource?.TrySetCanceled();
+            }
+            else
+            {
+                Debug.Log($"{TAG} Get PKCE Auth URL error: {message}");
+                pkceCompletionSource?.TrySetException(new PassportException(
+                    "Something went wrong, please call ConnectPKCE() again",
+                    PassportErrorType.AUTHENTICATION_ERROR
+                ));
             }
 
-            Debug.LogError($"{TAG} id: {id} err: {message}");
+            pkceCompletionSource = null;
         }
     }
 
