@@ -161,43 +161,54 @@ namespace Immutable.Passport
 #if UNITY_ANDROID
             completingPKCE = true;
 #endif
-            var uri = new Uri(uriString);
-            var query = HttpUtility.ParseQueryString(uri.Query);
-            var state = query.Get("state");
-            var authCode = query.Get("code");
-
-            if (String.IsNullOrEmpty(state) || String.IsNullOrEmpty(authCode))
+            try
             {
-                await UniTask.SwitchToMainThread();
-                pkceCompletionSource?.TrySetException(new PassportException(
-                    "Uri was missing state and/or code. Please call ConnectPKCE() again",
-                    PassportErrorType.AUTHENTICATION_ERROR
-                ));
+                var uri = new Uri(uriString);
+                var query = HttpUtility.ParseQueryString(uri.Query);
+                var state = query.Get("state");
+                var authCode = query.Get("code");
+
+                if (String.IsNullOrEmpty(state) || String.IsNullOrEmpty(authCode))
+                {
+                    await UniTask.SwitchToMainThread();
+                    pkceCompletionSource?.TrySetException(new PassportException(
+                        "Uri was missing state and/or code. Please call ConnectPKCE() again",
+                        PassportErrorType.AUTHENTICATION_ERROR
+                    ));
+                }
+                else
+                {
+                    ConnectPKCERequest request = new()
+                    {
+                        AuthorizationCode = authCode,
+                        State = state
+                    };
+
+                    string callResponse = await communicationsManager.Call(
+                            PassportFunction.CONNECT_PKCE,
+                            JsonConvert.SerializeObject(request)
+                        );
+
+                    BrowserResponse? response = callResponse.OptDeserializeObject<BrowserResponse>();
+                    await UniTask.SwitchToMainThread();
+
+                    if (response?.Success != true)
+                    {
+                        pkceCompletionSource?.TrySetException(new PassportException(
+                            response?.Error ?? "Something went wrong, please call ConnectPKCE() again",
+                            PassportErrorType.AUTHENTICATION_ERROR
+                        ));
+                    }
+                    else
+                    {
+                        pkceCompletionSource?.TrySetResult(true);
+                    }
+                }
             }
-
-            ConnectPKCERequest request = new()
+            catch (Exception ex)
             {
-                AuthorizationCode = authCode,
-                State = state
-            };
-
-            string callResponse = await communicationsManager.Call(
-                    PassportFunction.CONNECT_PKCE,
-                    JsonConvert.SerializeObject(request)
-                );
-            BrowserResponse? response = callResponse.OptDeserializeObject<BrowserResponse>();
-            await UniTask.SwitchToMainThread();
-
-            if (response?.Success != true)
-            {
-                pkceCompletionSource?.TrySetException(new PassportException(
-                    response?.Error ?? "Something went wrong, please call ConnectPKCE() again",
-                    PassportErrorType.AUTHENTICATION_ERROR
-                ));
-            }
-            else
-            {
-                pkceCompletionSource?.TrySetResult(true);
+                // Ensure any failure results in completing the flow regardless.
+                pkceCompletionSource?.TrySetException(ex);
             }
 
             pkceCompletionSource = null;
