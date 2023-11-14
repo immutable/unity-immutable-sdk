@@ -1,3 +1,5 @@
+#if UNITY_EDITOR_WIN && UNITY_STANDALONE_WIN
+
 ﻿// UnityWebBrowser (UWB)
 // Copyright (c) 2021-2022 Voltstro-Studios
 // 
@@ -40,3 +42,5 @@ using System.Runtime.InteropServices;
 [assembly: InternalsVisibleTo("VoltstroStudios.UnityWebBrowser.Prj")]
 [assembly: InternalsVisibleTo("VoltstroStudios.UnityWebBrowser.Editor")]
 [assembly: InternalsVisibleTo("VoltstroStudios.UnityWebBrowser.Tests")]
+
+#endif

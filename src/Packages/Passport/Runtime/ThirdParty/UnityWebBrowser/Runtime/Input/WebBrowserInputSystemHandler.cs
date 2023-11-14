@@ -1,3 +1,5 @@
+#if UNITY_EDITOR_WIN && UNITY_STANDALONE_WIN
+
 // UnityWebBrowser (UWB)
 // Copyright (c) 2021-2022 Voltstro-Studios
 // 
@@ -126,5 +128,7 @@ namespace VoltstroStudios.UnityWebBrowser.Input
         }
     }
 }
+
+#endif
 
 #endif
