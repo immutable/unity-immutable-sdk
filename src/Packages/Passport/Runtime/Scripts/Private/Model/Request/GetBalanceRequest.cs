@@ -1,12 +1,11 @@
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+using System;
 
 namespace Immutable.Passport.Model
 {
-    [JsonObject(NamingStrategyType = typeof(CamelCaseNamingStrategy))]
+    [Serializable]
     public class GetBalanceRequest
     {
-        public string Address;
-        public string BlockNumberOrTag;
+        public string address;
+        public string blockNumberOrTag;
     }
 }

@@ -1,14 +1,10 @@
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-
 namespace Immutable.Passport.Model
 {
-    [JsonObject(NamingStrategyType = typeof(CamelCaseNamingStrategy))]
     public class DeviceConnectResponse
     {
-        public string Code;
-        public string DeviceCode;
-        public string Url;
-        public int Interval;
+        public string code;
+        public string deviceCode;
+        public string url;
+        public int interval;
     }
 }

@@ -21,7 +21,7 @@ namespace Immutable.Passport.Editor
         {
             Debug.Log("Passport post-processing...");
 
-            if (report.summary.result is BuildResult.Failed or BuildResult.Cancelled)
+            if (report.summary.result is BuildResult.Failed || report.summary.result is BuildResult.Cancelled)
                 return;
 
             BuildTarget buildTarget = report.summary.platform;
@@ -127,7 +127,7 @@ namespace Immutable.Passport.Editor
             string buildPassportPath = $"{buildDataPath}/ImmutableSDK/Runtime/Passport/";
 
             // Make sure it exists
-            DirectoryInfo buildPassportInfo = new(buildPassportPath);
+            DirectoryInfo buildPassportInfo = new DirectoryInfo(buildPassportPath);
             if (!buildPassportInfo.Exists)
             {
                 Directory.CreateDirectory(buildPassportPath);

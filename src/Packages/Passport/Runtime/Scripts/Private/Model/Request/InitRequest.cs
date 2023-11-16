@@ -1,16 +1,22 @@
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+using System;
 using Immutable.Passport.Model;
 
 namespace Immutable.Passport.Model
 {
-    [JsonObject(NamingStrategyType = typeof(CamelCaseNamingStrategy))]
+    [Serializable]
+    internal class InitRequestWithRedirectUri
+    {
+        public string clientId;
+        public string environment;
+        public string redirectUri;
+        public VersionInfo engineVersion;
+    }
 
+    [Serializable]
     internal class InitRequest
     {
-        public string ClientId;
-        public string Environment;
-        public string? RedirectUri;
-        public VersionInfo EngineVersion;
+        public string clientId;
+        public string environment;
+        public VersionInfo engineVersion;
     }
 }

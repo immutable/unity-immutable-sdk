@@ -1,19 +1,14 @@
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+using System;
 
 namespace Immutable.Passport.Model
 {
-    [JsonObject(NamingStrategyType = typeof(CamelCaseNamingStrategy))]
+    [Serializable]
     public class TokenResponse
     {
-        [JsonProperty(Required = Required.Always)]
-        public string AccessToken;
-        public string? RefreshToken;
-        [JsonProperty(Required = Required.Always)]
-        public string IdToken;
-        [JsonProperty(Required = Required.Always)]
-        public string TokenType;
-        [JsonProperty(Required = Required.Always)]
-        public int ExpiresIn;
+        public string accessToken;
+        public string refreshToken;
+        public string idToken;
+        public string tokenType;
+        public int expiresIn;
     }
 }

@@ -10,8 +10,9 @@ using Immutable.Browser.Gree;
 using Immutable.Browser.Core;
 using Immutable.Passport.Model;
 using UnityEngine;
-using Newtonsoft.Json;
 using Immutable.Passport;
+using UnityEngine.Scripting;
+using Immutable.Passport.Json;
 
 namespace Immutable.Passport.Core
 {
@@ -19,13 +20,14 @@ namespace Immutable.Passport.Core
 
     public interface IBrowserCommunicationsManager
     {
-        public event OnUnityPostMessageDelegate? OnAuthPostMessage;
-        public event OnUnityPostMessageErrorDelegate? OnPostMessageError;
-        public void SetCallTimeout(int ms);
-        public void LaunchAuthURL(string url, string? redirectUri);
-        public UniTask<string> Call(string fxName, string? data = null, bool ignoreTimeout = false);
+        event OnUnityPostMessageDelegate OnAuthPostMessage;
+        event OnUnityPostMessageErrorDelegate OnPostMessageError;
+        void SetCallTimeout(int ms);
+        void LaunchAuthURL(string url, string redirectUri);
+        UniTask<string> Call(string fxName, string data = null, bool ignoreTimeout = false);
     }
 
+    [Preserve]
     public class BrowserCommunicationsManager : IBrowserCommunicationsManager
     {
         private const string TAG = "[Browser Communications Manager]";
@@ -36,14 +38,14 @@ namespace Immutable.Passport.Core
 
         private readonly IDictionary<string, UniTaskCompletionSource<string>> requestTaskMap = new Dictionary<string, UniTaskCompletionSource<string>>();
         private readonly IWebBrowserClient webBrowserClient;
-        public event OnBrowserReadyDelegate? OnReady;
+        public event OnBrowserReadyDelegate OnReady;
 
         /// <summary>
         ///  PKCE in some platforms such as iOS and macOS will not trigger a deeplink and a proper callback needs to be
         ///  setup.
         /// </summary>
-        public event OnUnityPostMessageDelegate? OnAuthPostMessage;
-        public event OnUnityPostMessageErrorDelegate? OnPostMessageError;
+        public event OnUnityPostMessageDelegate OnAuthPostMessage;
+        public event OnUnityPostMessageErrorDelegate OnPostMessageError;
 
         /// <summary>
         ///     Timeout time for waiting for each call to respond in milliseconds
@@ -66,7 +68,7 @@ namespace Immutable.Passport.Core
             callTimeout = ms;
         }
 
-        public UniTask<string> Call(string fxName, string? data = null, bool ignoreTimeout = false)
+        public UniTask<string> Call(string fxName, string data = null, bool ignoreTimeout = false)
         {
             var t = new UniTaskCompletionSource<string>();
             string requestId = Guid.NewGuid().ToString();
@@ -79,24 +81,23 @@ namespace Immutable.Passport.Core
                 return t.Task.Timeout(TimeSpan.FromMilliseconds(callTimeout));
         }
 
-        private void CallFunction(string requestId, string fxName, string? data = null)
+        private void CallFunction(string requestId, string fxName, string data = null)
         {
-            Debug.Log($"{TAG} Call {fxName} (request ID: {requestId})");
-
-            BrowserRequest request = new()
+            BrowserRequest request = new BrowserRequest()
             {
-                FxName = fxName,
-                RequestId = requestId,
-                Data = data
+                fxName = fxName,
+                requestId = requestId,
+                data = data
             };
-            string requestJson = JsonConvert.SerializeObject(request).Replace("\\", "\\\\").Replace("\"", "\\\"");
+            string requestJson = JsonUtility.ToJson(request).Replace("\\", "\\\\").Replace("\"", "\\\"");
 
             // Call the function on the JS side
-            string js = @$"callFunction(""{requestJson}"")";
+            string js = $"callFunction(\"{requestJson}\")";
+            Debug.Log($"{TAG} Call {fxName} (request ID: {requestId}, js: {js})");
             webBrowserClient.ExecuteJs(js);
         }
 
-        public void LaunchAuthURL(string url, string? redirectUri)
+        public void LaunchAuthURL(string url, string redirectUri)
         {
             Debug.Log($"{TAG} LaunchAuthURL : {url}");
             webBrowserClient.LaunchAuthURL(url, redirectUri);
@@ -115,36 +116,45 @@ namespace Immutable.Passport.Core
         private void InvokeOnAuthPostMessage(string message)
         {
             Debug.Log($"{TAG} InvokeOnAuthPostMessage: {message}");
-            OnAuthPostMessage?.Invoke(message);
+            if (OnAuthPostMessage != null)
+            {
+                OnAuthPostMessage.Invoke(message);
+            }
         }
 
         private void InvokeOnPostMessageError(string id, string message)
         {
             Debug.Log($"{TAG} InvokeOnPostMessageError id: {id} message: {message}");
-            OnPostMessageError?.Invoke(id, message);
+            if (OnPostMessageError != null)
+            {
+                OnPostMessageError.Invoke(id, message);
+            }
         }
 
         private void HandleResponse(string message)
         {
             Debug.Log($"{TAG} HandleResponse message: " + message);
-            BrowserResponse? response = JsonConvert.DeserializeObject<BrowserResponse?>(message);
+            BrowserResponse response = message.OptDeserializeObject<BrowserResponse>();
 
             // Check if the reponse returned is valid and the task to return the reponse exists
-            if (response == null || response.ResponseFor == null || response.RequestId == null)
+            if (response == null || String.IsNullOrEmpty(response.responseFor) || String.IsNullOrEmpty(response.requestId))
             {
                 throw new PassportException($"Response from browser is incorrect. Check HTML/JS files.");
             }
 
             // Special case to detect if index.js is loaded
-            if (response.ResponseFor == INIT && response.RequestId == INIT_REQUEST_ID)
+            if (response.responseFor == INIT && response.requestId == INIT_REQUEST_ID)
             {
                 Debug.Log($"{TAG} Browser is ready");
-                OnReady?.Invoke();
+                if (OnReady != null)
+                {
+                    OnReady.Invoke();
+                }
                 return;
             }
 
-            string requestId = response.RequestId;
-            PassportException? exception = ParseError(response);
+            string requestId = response.requestId;
+            PassportException exception = ParseError(response);
 
             if (requestTaskMap.ContainsKey(requestId))
             {
@@ -156,24 +166,32 @@ namespace Immutable.Passport.Core
             }
         }
 
-        private PassportException? ParseError(BrowserResponse response)
+        private PassportException ParseError(BrowserResponse response)
         {
-            if (response.Success == false || !String.IsNullOrEmpty(response.Error))
+            if (response.success == false || !String.IsNullOrEmpty(response.error))
             {
                 // Failed or error occured
                 try
                 {
-                    if (response.Error != null && response.ErrorType != null)
+                    if (!String.IsNullOrEmpty(response.error) && !String.IsNullOrEmpty(response.errorType))
                     {
-                        PassportErrorType type = (PassportErrorType)System.Enum.Parse(typeof(PassportErrorType), response.ErrorType);
-                        return new PassportException(response.Error, type);
+                        PassportErrorType type = (PassportErrorType)System.Enum.Parse(typeof(PassportErrorType), response.errorType);
+                        return new PassportException(response.error, type);
+                    }
+                    else if (!String.IsNullOrEmpty(response.error))
+                    {
+                        return new PassportException(response.error);
+                    }
+                    else
+                    {
+                        return new PassportException("Unknown error");
                     }
                 }
                 catch (Exception ex)
                 {
                     Debug.LogError($"{TAG} Parse passport type error: {ex.Message}");
                 }
-                return new PassportException(response.Error ?? "Failed to parse error");
+                return new PassportException(response.error ?? "Failed to parse error");
             }
             else
             {
@@ -182,9 +200,9 @@ namespace Immutable.Passport.Core
             }
         }
 
-        private void NotifyRequestResult(string requestId, string result, PassportException? e)
+        private void NotifyRequestResult(string requestId, string result, PassportException e)
         {
-            UniTaskCompletionSource<string>? completion = requestTaskMap[requestId] as UniTaskCompletionSource<string>;
+            UniTaskCompletionSource<string> completion = requestTaskMap[requestId] as UniTaskCompletionSource<string>;
             try
             {
                 if (e != null)

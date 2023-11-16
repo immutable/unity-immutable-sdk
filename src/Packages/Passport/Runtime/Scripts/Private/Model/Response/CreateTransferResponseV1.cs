@@ -1,19 +1,15 @@
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-
 namespace Immutable.Passport.Model
 {
-    [JsonObject(NamingStrategyType = typeof(SnakeCaseNamingStrategy))]
     public class CreateTransferResponseV1
     {
-        public string SentSignature { get; }
+        public string sent_signature { get; }
 
-        public string Receiver { get; }
+        public string receiver { get; }
 
-        public string Status { get; }
+        public string status { get; }
 
-        public long Time { get; }
+        public long time { get; }
 
-        public long TransferId { get; }
+        public long transfer_id { get; }
     }
 }

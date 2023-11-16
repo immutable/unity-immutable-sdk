@@ -1,14 +1,13 @@
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+using System;
 
 namespace Immutable.Passport.Model
 {
-    [JsonObject(NamingStrategyType = typeof(CamelCaseNamingStrategy))]
+    [Serializable]
     public class VersionInfo
     {
-        public string? Engine;
-        public string? EngineVersion;
-        public string? Platform;
-        public string? PlatformVersion;
+        public string engine;
+        public string engineVersion;
+        public string platform;
+        public string platformVersion;
     }
 }

@@ -8,6 +8,6 @@ namespace Immutable.Browser.Core
 
         void ExecuteJs(string js);
 
-        void LaunchAuthURL(string url, string? redirectUri);
+        void LaunchAuthURL(string url, string redirectUri);
     }
 }

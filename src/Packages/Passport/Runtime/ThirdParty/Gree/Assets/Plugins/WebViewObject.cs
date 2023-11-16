@@ -274,12 +274,12 @@ public class WebViewObject
 #endif
     }
 
-    public void LaunchAuthURL(string url, string? redirectUri)
+    public void LaunchAuthURL(string url, string redirectUri)
     {
 #if UNITY_STANDALONE_OSX
         if (webView == IntPtr.Zero)
             return;
-        _CWebViewPlugin_LaunchAuthURL(webView, url, redirectUri ?? "");
+        _CWebViewPlugin_LaunchAuthURL(webView, url, redirectUri != null ? redirectUri : "");
 #elif UNITY_IPHONE
         if (webView == IntPtr.Zero)
             return;

@@ -1,25 +1,23 @@
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+using System;
 
 namespace Immutable.Passport.Model
 {
-    [JsonObject(NamingStrategyType = typeof(CamelCaseNamingStrategy))]
+    [Serializable]
     public class NftTransferDetails
     {
         /**
         * Ethereum address of the receiving user
         */
-        public string Receiver { get; }
-
+        public string receiver;
         /**
         * The token ID
         */
-        public string TokenId { get; }
+        public string tokenId;
 
         /**
         * The token contract address
         */
-        public string TokenAddress { get; }
+        public string tokenAddress;
 
         public NftTransferDetails(
             string receiver,
@@ -27,9 +25,9 @@ namespace Immutable.Passport.Model
             string tokenAddress
             )
         {
-            this.Receiver = receiver;
-            this.TokenId = tokenId;
-            this.TokenAddress = tokenAddress;
+            this.receiver = receiver;
+            this.tokenId = tokenId;
+            this.tokenAddress = tokenAddress;
         }
     }
 }

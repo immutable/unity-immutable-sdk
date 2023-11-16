@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using VoltstroStudios.UnityWebBrowser.Core;
 using VoltstroStudios.UnityWebBrowser.Events;
 #endif
-using Newtonsoft.Json;
+using Immutable.Passport.Json;
 
 namespace Immutable.Passport.Core
 {
@@ -36,13 +36,14 @@ namespace Immutable.Passport.Core
         {
             mockClient.browserResponse = new BrowserResponse
             {
-                ResponseFor = FUNCTION_NAME,
-                Success = true
+                responseFor = FUNCTION_NAME,
+                success = true
             };
             _ = await manager.Call(FUNCTION_NAME, "{\"someKey\":\"someData\"}");
 
-            Assert.True(mockClient.request?.FxName == FUNCTION_NAME);
-            Assert.True(mockClient.request?.Data == "{\"someKey\":\"someData\"}");
+            Assert.NotNull(mockClient.request);
+            Assert.True(mockClient.request.fxName == FUNCTION_NAME);
+            Assert.True(mockClient.request.data == "{\"someKey\":\"someData\"}");
         }
 
         [Test]
@@ -50,13 +51,14 @@ namespace Immutable.Passport.Core
         {
             mockClient.browserResponse = new BrowserResponse
             {
-                ResponseFor = FUNCTION_NAME,
-                Success = true
+                responseFor = FUNCTION_NAME,
+                success = true
             };
             _ = await manager.Call(FUNCTION_NAME);
 
-            Assert.True(mockClient.request?.FxName == FUNCTION_NAME);
-            Assert.True(String.IsNullOrEmpty(mockClient.request?.Data));
+            Assert.NotNull(mockClient.request);
+            Assert.True(mockClient.request.fxName == FUNCTION_NAME);
+            Assert.True(String.IsNullOrEmpty(mockClient.request.data));
         }
 
         [Test]
@@ -64,12 +66,12 @@ namespace Immutable.Passport.Core
         {
             mockClient.browserResponse = new BrowserResponse
             {
-                ResponseFor = FUNCTION_NAME,
-                Success = true
+                responseFor = FUNCTION_NAME,
+                success = true
             };
             mockClient.setRequestId = false;
 
-            Exception? e = null;
+            Exception e = null;
             try
             {
                 string response = await manager.Call(FUNCTION_NAME);
@@ -80,7 +82,7 @@ namespace Immutable.Passport.Core
             }
 
             Assert.NotNull(e);
-            Assert.IsTrue(e?.Message.Contains("Response from browser is incorrect") == true);
+            Assert.IsTrue(e.Message.Contains("Response from browser is incorrect") == true);
         }
 
         [Test]
@@ -88,13 +90,13 @@ namespace Immutable.Passport.Core
         {
             mockClient.browserResponse = new BrowserResponse
             {
-                ResponseFor = FUNCTION_NAME,
-                ErrorType = "WALLET_CONNECTION_ERROR",
-                Error = ERROR,
-                Success = false
+                responseFor = FUNCTION_NAME,
+                errorType = "WALLET_CONNECTION_ERROR",
+                error = ERROR,
+                success = false
             };
 
-            PassportException? e = null;
+            PassportException e = null;
             try
             {
                 string response = await manager.Call(FUNCTION_NAME);
@@ -104,7 +106,8 @@ namespace Immutable.Passport.Core
                 e = exception;
             }
 
-            Assert.AreEqual(PassportErrorType.WALLET_CONNECTION_ERROR, e?.Type);
+            Assert.NotNull(e);
+            Assert.AreEqual(PassportErrorType.WALLET_CONNECTION_ERROR, e.Type);
         }
 
         [Test]
@@ -112,12 +115,12 @@ namespace Immutable.Passport.Core
         {
             mockClient.browserResponse = new BrowserResponse
             {
-                ResponseFor = FUNCTION_NAME,
-                Error = ERROR,
-                Success = false
+                responseFor = FUNCTION_NAME,
+                error = ERROR,
+                success = false
             };
 
-            PassportException? e = null;
+            PassportException e = null;
             try
             {
                 string response = await manager.Call(FUNCTION_NAME);
@@ -127,25 +130,26 @@ namespace Immutable.Passport.Core
                 e = exception;
             }
 
-            Assert.Null(e?.Type);
-            Assert.AreEqual(ERROR, e?.Message);
+            Assert.NotNull(e);
+            Assert.Null(e.Type);
+            Assert.AreEqual(ERROR, e.Message);
         }
 
 
         [Test]
         public void CallAndResponse_Success_BrowserReady()
         {
-            BrowserResponse browserResponse = new()
+            BrowserResponse browserResponse = new BrowserResponse()
             {
-                ResponseFor = BrowserCommunicationsManager.INIT,
-                RequestId = BrowserCommunicationsManager.INIT_REQUEST_ID,
-                Success = true
+                responseFor = BrowserCommunicationsManager.INIT,
+                requestId = BrowserCommunicationsManager.INIT_REQUEST_ID,
+                success = true
             };
 
             bool onReadyCalled = false;
             manager.OnReady += () => onReadyCalled = true;
 
-            mockClient.InvokeUnityPostMessage(JsonConvert.SerializeObject(browserResponse));
+            mockClient.InvokeUnityPostMessage(JsonUtility.ToJson(browserResponse));
 
             Assert.True(onReadyCalled);
         }
@@ -153,28 +157,31 @@ namespace Immutable.Passport.Core
 
     internal class MockBrowserClient : IWebBrowserClient
     {
-        public event OnUnityPostMessageDelegate? OnUnityPostMessage;
-        public event OnUnityPostMessageDelegate? OnAuthPostMessage;
-        public event OnUnityPostMessageErrorDelegate? OnPostMessageError;
+        public event OnUnityPostMessageDelegate OnUnityPostMessage;
+        public event OnUnityPostMessageDelegate OnAuthPostMessage;
+        public event OnUnityPostMessageErrorDelegate OnPostMessageError;
 
-        public BrowserRequest? request = null;
-        public BrowserResponse? browserResponse = null;
+        public BrowserRequest request = null;
+        public BrowserResponse browserResponse = null;
         public bool setRequestId = true;
 
         public void ExecuteJs(string js)
         {
             var json = Between(js, "callFunction(\"", "\")").Replace("\\\\", "\\").Replace("\\\"", "\"");
-            request = JsonConvert.DeserializeObject<BrowserRequest>(json);
+            request = json.OptDeserializeObject<BrowserRequest>();
             if (setRequestId && browserResponse != null)
             {
-                browserResponse.RequestId = request.RequestId;
+                browserResponse.requestId = request.requestId;
             }
-            InvokeUnityPostMessage(JsonConvert.SerializeObject(browserResponse));
+            InvokeUnityPostMessage(JsonUtility.ToJson(browserResponse));
         }
 
         internal void InvokeUnityPostMessage(string message)
         {
-            OnUnityPostMessage?.Invoke(message);
+            if (OnUnityPostMessage != null)
+            {
+                OnUnityPostMessage.Invoke(message);
+            }
         }
 
         private string Between(string value, string a, string b)
@@ -194,10 +201,10 @@ namespace Immutable.Passport.Core
             {
                 return "";
             }
-            return value[adjustedPosA..posB];
+            return value.Substring(adjustedPosA, posB - adjustedPosA);
         }
 
-        public void LaunchAuthURL(string url, string? redirectUri)
+        public void LaunchAuthURL(string url, string redirectUri)
         {
             throw new NotImplementedException();
         }

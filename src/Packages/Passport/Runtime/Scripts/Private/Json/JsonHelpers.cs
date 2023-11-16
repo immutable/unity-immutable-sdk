@@ -1,22 +1,22 @@
-using Newtonsoft.Json;
+using System;
+using UnityEngine;
 
 namespace Immutable.Passport.Json
 {
     public static class JsonExtensions
     {
         /// <summary>
-        /// Return null if the deserialization fails. 
-        /// To require non-null values apply [JsonProperty(Required = Required.Always)] 
-        /// above member declarations.
+        /// Return null if the deserialisation fails.
         /// </summary> 
-        public static T? OptDeserializeObject<T>(this string json) where T : class
+        public static T OptDeserializeObject<T>(this string json) where T : class
         {
             try
             {
-                return JsonConvert.DeserializeObject<T>(json);
+                return JsonUtility.FromJson<T>(json);
             }
-            catch (JsonSerializationException)
+            catch (Exception e)
             {
+                Debug.Log($"Failed to deserialise {json}: {e.Message}");
                 return null;
             }
         }

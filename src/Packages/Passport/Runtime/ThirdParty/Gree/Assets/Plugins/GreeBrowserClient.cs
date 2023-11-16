@@ -17,7 +17,7 @@ namespace Immutable.Browser.Gree
 
         public GreeBrowserClient()
         {
-            webViewObject = new();
+            webViewObject = new WebViewObject();
             webViewObject.Init(
                 cb: InvokeOnUnityPostMessage,
                 httpErr: InvokeOnPostMessageError,
@@ -48,7 +48,10 @@ namespace Immutable.Browser.Gree
 
         internal void InvokeOnUnityPostMessage(string message)
         {
-            OnUnityPostMessage?.Invoke(message);
+            if (OnUnityPostMessage != null)
+            {
+                OnUnityPostMessage.Invoke(message);
+            }
         }
 
         public void ExecuteJs(string js)
@@ -56,7 +59,7 @@ namespace Immutable.Browser.Gree
             webViewObject.EvaluateJS(js);
         }
 
-        public void LaunchAuthURL(string url, string? redirectUri)
+        public void LaunchAuthURL(string url, string redirectUri)
         {
             webViewObject.LaunchAuthURL(url, redirectUri);
         }

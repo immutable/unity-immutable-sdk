@@ -1,22 +1,39 @@
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+using UnityEngine;
+using Immutable.Passport.Json;
 
 namespace Immutable.Passport.Core
 {
-    [JsonObject(NamingStrategyType = typeof(CamelCaseNamingStrategy))]
     public class BrowserResponse
     {
-        public string? ResponseFor;
-        public string? RequestId;
-        [JsonProperty(Required = Required.Always)]
-        public bool Success;
-        public string? ErrorType;
-        public string? Error;
+        public string responseFor;
+        public string requestId;
+        public bool success;
+        public string errorType;
+        public string error;
     }
 
-    [JsonObject(NamingStrategyType = typeof(CamelCaseNamingStrategy))]
     public class StringResponse : BrowserResponse
     {
-        public string? Result;
+        public string result;
+    }
+
+    public static class BrowserResponseExtensions
+    {
+        /// <summary>
+        /// Deserialises the json to StringResponse and returns the Result
+        /// See <see cref="Immutable.Passport.Core.BrowserResponse.StringResponse"></param>
+        /// </summary>
+        public static string GetStringResult(this string json)
+        {
+            StringResponse stringResponse = json.OptDeserializeObject<StringResponse>();
+            if (stringResponse != null)
+            {
+                return stringResponse.result;
+            }
+            else
+            {
+                return null;
+            }
+        }
     }
 }
