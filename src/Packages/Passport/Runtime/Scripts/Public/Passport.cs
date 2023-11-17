@@ -49,10 +49,10 @@ namespace Immutable.Passport
         /// </summary>
         /// <param name="clientId">The client ID</param>
         /// <param name="environment">The environment to connect to</param>
-        /// <param name="redirectUri">(Currently, mobile only) The URL to which auth will redirect the browser after authorisation has been granted by the user</param>
+        /// <param name="redirectUri">(Android, iOS and macOS only) The URL to which auth will redirect the browser after authorisation has been granted by the user</param>
         /// <param name="engineStartupTimeoutMs">(Windows only) Timeout time for waiting for the engine to start (in milliseconds)</param>
         public static UniTask<Passport> Init(
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+#if UNITY_EDITOR_WIN && UNITY_STANDALONE_WIN
             string clientId, string environment, string redirectUri = null, int engineStartupTimeoutMs = 4000
 #else
             string clientId, string environment, string redirectUri = null
