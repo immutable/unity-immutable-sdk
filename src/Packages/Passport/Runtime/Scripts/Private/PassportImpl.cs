@@ -3,8 +3,6 @@ using System;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using Immutable.Passport.Json;
 using Immutable.Passport.Model;
 using Immutable.Passport.Core;
@@ -25,9 +23,9 @@ namespace Immutable.Passport
     {
         private const string TAG = "[Passport Implementation]";
         public readonly IBrowserCommunicationsManager communicationsManager;
-        private DeviceConnectResponse? deviceConnectResponse;
-        private UniTaskCompletionSource<bool>? pkceCompletionSource;
-        private string? redirectUri = null;
+        private DeviceConnectResponse deviceConnectResponse;
+        private UniTaskCompletionSource<bool> pkceCompletionSource;
+        private string redirectUri = null;
         private string unityVersion = Application.unityVersion;
         private RuntimePlatform platform = Application.platform;
         private string osVersion = SystemInfo.operatingSystem;
@@ -41,7 +39,7 @@ namespace Immutable.Passport
             this.communicationsManager = communicationsManager;
         }
 
-        public async UniTask Init(string clientId, string environment, string? redirectUri = null, string? deeplink = null)
+        public async UniTask Init(string clientId, string environment, string redirectUri = null, string deeplink = null)
         {
             this.redirectUri = redirectUri;
             this.communicationsManager.OnAuthPostMessage += OnDeepLinkActivated;
@@ -49,22 +47,41 @@ namespace Immutable.Passport
 
             var versionInfo = new VersionInfo
             {
-                Engine = "unity",
-                EngineVersion = unityVersion,
-                Platform = platform.ToString(),
-                PlatformVersion = osVersion
+                engine = "unity",
+                engineVersion = unityVersion,
+                platform = platform.ToString(),
+                platformVersion = osVersion
             };
 
-            InitRequest request = new() { ClientId = clientId, Environment = environment, RedirectUri = redirectUri, EngineVersion = versionInfo };
-
-            string response = await communicationsManager.Call(
-                PassportFunction.INIT,
-                JsonConvert.SerializeObject(request));
-            BrowserResponse? initResponse = JsonConvert.DeserializeObject<BrowserResponse>(response);
-
-            if (initResponse?.Success == false)
+            string initRequest;
+            if (redirectUri != null)
             {
-                throw new PassportException(initResponse?.Error ?? "Unable to initialise Passport");
+                InitRequestWithRedirectUri requestWithRedirectUri = new InitRequestWithRedirectUri()
+                {
+                    clientId = clientId,
+                    environment = environment,
+                    redirectUri = redirectUri,
+                    engineVersion = versionInfo
+                };
+                initRequest = JsonUtility.ToJson(requestWithRedirectUri);
+            }
+            else
+            {
+                InitRequest request = new InitRequest()
+                {
+                    clientId = clientId,
+                    environment = environment,
+                    engineVersion = versionInfo
+                };
+                initRequest = JsonUtility.ToJson(request);
+            }
+
+            string response = await communicationsManager.Call(PassportFunction.INIT, initRequest);
+            BrowserResponse initResponse = response.OptDeserializeObject<BrowserResponse>();
+
+            if (initResponse.success == false)
+            {
+                throw new PassportException(initResponse.error ?? "Unable to initialise Passport");
             }
             else if (deeplink != null)
             {
@@ -72,7 +89,7 @@ namespace Immutable.Passport
             }
         }
 
-        public async UniTask Connect(long? timeoutMs = null)
+        public async UniTask Connect(Nullable<long> timeoutMs = null)
         {
             try
             {
@@ -89,7 +106,7 @@ namespace Immutable.Passport
 
             // Fallback to device code auth flow
             Debug.Log($"{TAG} Fallback to device code auth");
-            ConnectResponse? connectResponse = await InitialiseDeviceCodeAuth();
+            ConnectResponse connectResponse = await InitialiseDeviceCodeAuth();
 
             if (connectResponse != null)
             {
@@ -124,11 +141,11 @@ namespace Immutable.Passport
             try
             {
                 string callResponse = await communicationsManager.Call(PassportFunction.GET_PKCE_AUTH_URL);
-                StringResponse? response = callResponse.OptDeserializeObject<StringResponse>();
+                StringResponse response = callResponse.OptDeserializeObject<StringResponse>();
 
-                if (response?.Success == true && response?.Result != null)
+                if (response != null && response.success == true && response.result != null)
                 {
-                    string url = response.Result.Replace(" ", "+");
+                    string url = response.result.Replace(" ", "+");
 #if UNITY_ANDROID
                     AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
                     AndroidJavaObject activity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
@@ -150,7 +167,7 @@ namespace Immutable.Passport
             }
 
             await UniTask.SwitchToMainThread();
-            pkceCompletionSource?.TrySetException(new PassportException(
+            TrySetPKCEException(new PassportException(
                 "Something went wrong, please call ConnectPKCE() again",
                 PassportErrorType.AUTHENTICATION_ERROR
             ));
@@ -171,44 +188,44 @@ namespace Immutable.Passport
                 if (String.IsNullOrEmpty(state) || String.IsNullOrEmpty(authCode))
                 {
                     await UniTask.SwitchToMainThread();
-                    pkceCompletionSource?.TrySetException(new PassportException(
+                    TrySetPKCEException(new PassportException(
                         "Uri was missing state and/or code. Please call ConnectPKCE() again",
                         PassportErrorType.AUTHENTICATION_ERROR
                     ));
                 }
                 else
                 {
-                    ConnectPKCERequest request = new()
+                    ConnectPKCERequest request = new ConnectPKCERequest()
                     {
-                        AuthorizationCode = authCode,
-                        State = state
+                        authorizationCode = authCode,
+                        state = state
                     };
 
                     string callResponse = await communicationsManager.Call(
                             PassportFunction.CONNECT_PKCE,
-                            JsonConvert.SerializeObject(request)
+                            JsonUtility.ToJson(request)
                         );
 
-                    BrowserResponse? response = callResponse.OptDeserializeObject<BrowserResponse>();
+                    BrowserResponse response = callResponse.OptDeserializeObject<BrowserResponse>();
                     await UniTask.SwitchToMainThread();
 
-                    if (response?.Success != true)
+                    if (response != null && response.success != true)
                     {
-                        pkceCompletionSource?.TrySetException(new PassportException(
-                            response?.Error ?? "Something went wrong, please call ConnectPKCE() again",
+                        TrySetPKCEException(new PassportException(
+                            response.error ?? "Something went wrong, please call ConnectPKCE() again",
                             PassportErrorType.AUTHENTICATION_ERROR
                         ));
                     }
                     else
                     {
-                        pkceCompletionSource?.TrySetResult(true);
+                        TrySetPKCEResult(true);
                     }
                 }
             }
             catch (Exception ex)
             {
                 // Ensure any failure results in completing the flow regardless.
-                pkceCompletionSource?.TrySetException(ex);
+                TrySetPKCEException(ex);
             }
 
             pkceCompletionSource = null;
@@ -225,7 +242,7 @@ namespace Immutable.Passport
             {
                 // User hasn't entered all required details (e.g. email address) into Passport yet
                 Debug.Log($"{TAG} PKCE dismissed before completing the flow");
-                pkceCompletionSource?.TrySetCanceled();
+                TrySetPKCECanceled();
             }
             else
             {
@@ -234,25 +251,25 @@ namespace Immutable.Passport
         }
 #endif
 
-        private async UniTask<ConnectResponse?> InitialiseDeviceCodeAuth()
+        private async UniTask<ConnectResponse> InitialiseDeviceCodeAuth()
         {
             string callResponse = await communicationsManager.Call(PassportFunction.CONNECT);
-            BrowserResponse? response = JsonConvert.DeserializeObject<BrowserResponse>(callResponse);
-            if (response?.Success == true)
+            BrowserResponse response = callResponse.OptDeserializeObject<BrowserResponse>();
+            if (response.success == true)
             {
-                deviceConnectResponse = JsonConvert.DeserializeObject<DeviceConnectResponse>(callResponse);
+                deviceConnectResponse = callResponse.OptDeserializeObject<DeviceConnectResponse>();
                 if (deviceConnectResponse != null)
                 {
                     return new ConnectResponse()
                     {
-                        Url = deviceConnectResponse.Url,
-                        Code = deviceConnectResponse.Code
+                        url = deviceConnectResponse.url,
+                        code = deviceConnectResponse.code
                     };
                 }
             }
 
             throw new PassportException(
-                response?.Error ?? "Something went wrong, please call Connect() again",
+                response.error ?? "Something went wrong, please call Connect() again",
                 PassportErrorType.AUTHENTICATION_ERROR
             );
         }
@@ -261,22 +278,22 @@ namespace Immutable.Passport
         {
             try
             {
-                TokenResponse? tokenResponse = await GetStoredCredentials();
+                TokenResponse tokenResponse = await GetStoredCredentials();
                 if (tokenResponse != null)
                 {
                     // Credentials exist in storage, try and connect with it
                     string callResponse = await communicationsManager.Call(
                         PassportFunction.CONNECT_WITH_CREDENTIALS,
-                        JsonConvert.SerializeObject(tokenResponse)
+                        JsonUtility.ToJson(tokenResponse)
                     );
 
-                    BrowserResponse? response = JsonConvert.DeserializeObject<BrowserResponse>(callResponse);
-                    return response?.Success == true;
+                    BrowserResponse response = callResponse.OptDeserializeObject<BrowserResponse>();
+                    return response != null ? response.success == true : false;
                 }
             }
             catch (Exception ex)
             {
-                Debug.LogError($"{TAG} Failed to connect to Passport using saved credentials: {ex.Message}");
+                Debug.Log($"{TAG} Failed to connect to Passport using saved credentials: {ex.Message}");
 
                 if (!(ex is PassportException) || (ex is PassportException pEx && !pEx.IsNetworkError()))
                 {
@@ -287,31 +304,31 @@ namespace Immutable.Passport
             return false;
         }
 
-        private async UniTask ConfirmCode(long? timeoutMs = null)
+        private async UniTask ConfirmCode(Nullable<long> timeoutMs = null)
         {
             if (deviceConnectResponse != null)
             {
                 // Open URL for user to confirm
-                Application.OpenURL(deviceConnectResponse.Url);
+                Application.OpenURL(deviceConnectResponse.url);
 
                 // Start polling for token
-                ConfirmCodeRequest request = new()
+                ConfirmCodeRequest request = new ConfirmCodeRequest()
                 {
-                    DeviceCode = deviceConnectResponse.DeviceCode,
-                    Interval = deviceConnectResponse.Interval,
-                    TimeoutMs = timeoutMs
+                    deviceCode = deviceConnectResponse.deviceCode,
+                    interval = deviceConnectResponse.interval,
+                    timeoutMs = timeoutMs
                 };
 
                 string callResponse = await communicationsManager.Call(
                     PassportFunction.CONFIRM_CODE,
-                    JsonConvert.SerializeObject(request),
+                    JsonUtility.ToJson(request),
                     true // Ignore timeout, this flow can take minutes to complete. 15 minute expiry from Auth0.
                 );
-                BrowserResponse? response = JsonConvert.DeserializeObject<BrowserResponse>(callResponse);
-                if (response?.Success == false)
+                BrowserResponse response = callResponse.OptDeserializeObject<BrowserResponse>();
+                if (response.success == false)
                 {
                     throw new PassportException(
-                        response?.Error ?? "Unable to confirm code, call Connect() again",
+                        response.error ?? "Unable to confirm code, call Connect() again",
                         PassportErrorType.AUTHENTICATION_ERROR
                     );
                 }
@@ -322,10 +339,10 @@ namespace Immutable.Passport
             }
         }
 
-        public async UniTask<string?> GetAddress()
+        public async UniTask<string> GetAddress()
         {
             string response = await communicationsManager.Call(PassportFunction.GET_ADDRESS);
-            return JsonConvert.DeserializeObject<StringResponse>(response)?.Result;
+            return response.GetStringResult();
         }
 
 
@@ -334,7 +351,7 @@ namespace Immutable.Passport
             await communicationsManager.Call(PassportFunction.LOGOUT);
         }
 
-        private async UniTask<TokenResponse?> GetStoredCredentials()
+        private async UniTask<TokenResponse> GetStoredCredentials()
         {
             string callResponse = await communicationsManager.Call(PassportFunction.CHECK_STORED_CREDENTIALS);
             return callResponse.OptDeserializeObject<TokenResponse>();
@@ -342,42 +359,44 @@ namespace Immutable.Passport
 
         public async UniTask<bool> HasCredentialsSaved()
         {
-            TokenResponse? savedCredentials = await GetStoredCredentials();
+            TokenResponse savedCredentials = await GetStoredCredentials();
             return savedCredentials != null;
         }
 
-        public async UniTask<string?> GetEmail()
+        public async UniTask<string> GetEmail()
         {
             string response = await communicationsManager.Call(PassportFunction.GET_EMAIL);
-            return JsonConvert.DeserializeObject<StringResponse>(response)?.Result;
+            return response.GetStringResult();
         }
 
-        public async UniTask<string?> GetAccessToken()
+        public async UniTask<string> GetAccessToken()
         {
-            TokenResponse? savedCredentials = await GetStoredCredentials();
-            return savedCredentials?.AccessToken;
+            TokenResponse savedCredentials = await GetStoredCredentials();
+            return savedCredentials != null ? savedCredentials.accessToken : null;
         }
 
 
-        public async UniTask<string?> GetIdToken()
+        public async UniTask<string> GetIdToken()
         {
-            TokenResponse? savedCredentials = await GetStoredCredentials();
-            return savedCredentials?.IdToken;
+            TokenResponse savedCredentials = await GetStoredCredentials();
+            return savedCredentials != null ? savedCredentials.idToken : null;
         }
 
         // Imx
         public async UniTask<CreateTransferResponseV1> ImxTransfer(UnsignedTransferRequest request)
         {
-            string json = JsonConvert.SerializeObject(request);
+            string json = JsonUtility.ToJson(request);
+            Debug.Log($"{TAG} ImxTransfer json: {json}");
             string callResponse = await communicationsManager.Call(PassportFunction.IMX.TRANSFER, json);
-            return JsonConvert.DeserializeObject<CreateTransferResponseV1>(callResponse);
+            return callResponse.OptDeserializeObject<CreateTransferResponseV1>();
         }
 
         public async UniTask<CreateBatchTransferResponse> ImxBatchNftTransfer(NftTransferDetails[] details)
         {
-            string json = JsonConvert.SerializeObject(details);
+            string json = JsonUtility.ToJson(details);
+            Debug.Log($"{TAG} ImxBatchNftTransfer json: {json}");
             string callResponse = await communicationsManager.Call(PassportFunction.IMX.BATCH_NFT_TRANSFER, json);
-            return JsonConvert.DeserializeObject<CreateBatchTransferResponse>(callResponse);
+            return callResponse.OptDeserializeObject<CreateBatchTransferResponse>();
         }
 
         // ZkEvm
@@ -386,31 +405,43 @@ namespace Immutable.Passport
             await communicationsManager.Call(PassportFunction.ZK_EVM.CONNECT_EVM);
         }
 
-        public async UniTask<string?> ZkEvmSendTransaction(TransactionRequest request)
+        public async UniTask<string> ZkEvmSendTransaction(TransactionRequest request)
         {
-            string json = JsonConvert.SerializeObject(
-                request, Formatting.None, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }
-                );
+            string json;
+            // Nulls are serialised as empty strings when using JsonUtility
+            // so we need to use another model that doesn't have the 'data' field instead
+            if (String.IsNullOrEmpty(request.data))
+            {
+                json = JsonUtility.ToJson(new TransactionRequestNoData()
+                {
+                    to = request.to,
+                    value = request.value
+                });
+            }
+            else
+            {
+                json = JsonUtility.ToJson(request);
+            }
             string callResponse = await communicationsManager.Call(PassportFunction.ZK_EVM.SEND_TRANSACTION, json);
-            return JsonConvert.DeserializeObject<StringResponse>(callResponse).Result;
+            return callResponse.GetStringResult();
         }
 
         public async UniTask<List<string>> ZkEvmRequestAccounts()
         {
             string callResponse = await communicationsManager.Call(PassportFunction.ZK_EVM.REQUEST_ACCOUNTS);
-            string[] accounts = JsonConvert.DeserializeObject<RequestAccountsResponse>(callResponse).Accounts;
-            return accounts.ToList();
+            RequestAccountsResponse accountsResponse = callResponse.OptDeserializeObject<RequestAccountsResponse>();
+            return accountsResponse != null ? accountsResponse.accounts.ToList() : new List<string>();
         }
 
         public async UniTask<string> ZkEvmGetBalance(string address, string blockNumberOrTag)
         {
-            string json = JsonConvert.SerializeObject(new GetBalanceRequest()
+            string json = JsonUtility.ToJson(new GetBalanceRequest()
             {
-                Address = address,
-                BlockNumberOrTag = blockNumberOrTag
+                address = address,
+                blockNumberOrTag = blockNumberOrTag
             });
             string callResponse = await communicationsManager.Call(PassportFunction.ZK_EVM.GET_BALANCE, json);
-            return JsonConvert.DeserializeObject<StringResponse>(callResponse).Result ?? "0x0";
+            return callResponse.GetStringResult() ?? "0x0";
         }
 
         private void OnPostMessageError(string id, string message)
@@ -432,18 +463,54 @@ namespace Immutable.Passport
             if (message == "")
             {
                 Debug.Log($"{TAG} Get PKCE Auth URL user cancelled");
-                pkceCompletionSource?.TrySetCanceled();
+                TrySetPKCECanceled();
             }
             else
             {
                 Debug.Log($"{TAG} Get PKCE Auth URL error: {message}");
-                pkceCompletionSource?.TrySetException(new PassportException(
+                TrySetPKCEException(new PassportException(
                     "Something went wrong, please call ConnectPKCE() again",
                     PassportErrorType.AUTHENTICATION_ERROR
                 ));
             }
 
             pkceCompletionSource = null;
+        }
+
+        private void TrySetPKCEResult(bool result)
+        {
+            if (pkceCompletionSource != null)
+            {
+                pkceCompletionSource.TrySetResult(result);
+            }
+            else
+            {
+                Debug.LogError($"{TAG} PKCE completed with {result} but unable to bind result");
+            }
+        }
+
+        private void TrySetPKCEException(Exception exception)
+        {
+            if (pkceCompletionSource != null)
+            {
+                pkceCompletionSource.TrySetException(exception);
+            }
+            else
+            {
+                Debug.LogError($"{TAG} {exception.Message}");
+            }
+        }
+
+        private void TrySetPKCECanceled()
+        {
+            if (pkceCompletionSource != null)
+            {
+                pkceCompletionSource.TrySetCanceled();
+            }
+            else
+            {
+                Debug.LogError($"{TAG} PKCE canceled");
+            }
         }
     }
 
@@ -458,14 +525,15 @@ namespace Immutable.Passport
         /// Chrome Custom Tabs have closed, and the SDK is trying to complete the PKCE flow.
         /// See <see cref="PassportImpl.CompletePKCEFlow"></param>
         /// </summary>
-        public void OnPKCEDismissed(bool completing);
+        void OnPKCEDismissed(bool completing);
     }
 
     class AndroidPKCECallback : AndroidJavaProxy
     {
         private PKCECallback callback;
 
-        public AndroidPKCECallback(PKCECallback callback) : base("com.immutable.unity.ImmutableAndroid$Callback") {
+        public AndroidPKCECallback(PKCECallback callback) : base("com.immutable.unity.ImmutableAndroid$Callback")
+        {
             this.callback = callback;
         }
 

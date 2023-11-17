@@ -1,14 +1,13 @@
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+using System;
 
 namespace Immutable.Passport.Core
 {
-    [JsonObject(NamingStrategyType = typeof(CamelCaseNamingStrategy))]
+    [Serializable]
     public class BrowserRequest
     {
-        public string FxName;
-        public string RequestId;
-        public string? Data;
+        public string fxName;
+        public string requestId;
+        public string data;
     }
 }
 

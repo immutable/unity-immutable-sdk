@@ -1,7 +1,7 @@
 apply plugin: 'com.android.library'
 
 dependencies {
-    implementation('androidx.browser:browser:1.6.0')
+    implementation('androidx.browser:browser:1.7.0')
 }
 
 android {

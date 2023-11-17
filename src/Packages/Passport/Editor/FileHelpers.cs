@@ -10,7 +10,7 @@ namespace Immutable.Passport.Editor
         public static void CopyDirectory(string sourcePath, string destinationPath)
         {
             // Checks if the destination directory exists
-            DirectoryInfo destinationDir = new(destinationPath);
+            DirectoryInfo destinationDir = new DirectoryInfo(destinationPath);
             if (!destinationDir.Exists)
             {
                 Directory.CreateDirectory(destinationPath);
@@ -44,7 +44,7 @@ namespace Immutable.Passport.Editor
         /// </summary> 
         public static void ClearDirectory(string directoryPath)
         {
-            DirectoryInfo directory = new(directoryPath);
+            DirectoryInfo directory = new DirectoryInfo(directoryPath);
             foreach (FileInfo fileInfo in directory.EnumerateFiles())
             {
                 fileInfo.Delete();

@@ -27,7 +27,7 @@ public class UnauthenticatedScript : MonoBehaviour
 
             string clientId = "ZJL7JvetcDFBNDlgRs5oJoxuAUUl6uQj";
             string environment = Immutable.Passport.Model.Environment.SANDBOX;
-            string? redirectUri = null;
+            string redirectUri = null;
 #if UNITY_IPHONE || UNITY_ANDROID || UNITY_STANDALONE_OSX
             redirectUri = "imxsample://callback";
 #endif

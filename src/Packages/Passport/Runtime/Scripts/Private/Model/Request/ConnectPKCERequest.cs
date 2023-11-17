@@ -1,14 +1,13 @@
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+using System;
 
 namespace Immutable.Passport.Model
 {
-    [JsonObject(NamingStrategyType = typeof(CamelCaseNamingStrategy))]
 
+    [Serializable]
     internal class ConnectPKCERequest
     {
-        public string AuthorizationCode;
-        public string State;
+        public string authorizationCode;
+        public string state;
     }
 }
 

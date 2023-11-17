@@ -139,17 +139,17 @@ public class AuthenticatedScript : MonoBehaviour
                 if (details.Count > 1)
                 {
                     CreateBatchTransferResponse response = await passport.ImxBatchNftTransfer(details.ToArray());
-                    ShowOutput($"Transferred {response.TransferIds.Length} items successfully");
+                    ShowOutput($"Transferred {response.transfer_ids.Length} items successfully");
                 }
                 else
                 {
                     UnsignedTransferRequest request = UnsignedTransferRequest.ERC721(
-                        details[0].Receiver,
-                        details[0].TokenId,
-                        details[0].TokenAddress
+                        details[0].receiver,
+                        details[0].tokenId,
+                        details[0].tokenAddress
                     );
                     CreateTransferResponseV1 response = await passport.ImxTransfer(request);
-                    ShowOutput($"Transferred successfully. Transfer id: {response.TransferId}");
+                    ShowOutput($"Transferred successfully. Transfer id: {response.transfer_id}");
                 }
 
                 clearInputs();
@@ -226,9 +226,9 @@ public class AuthenticatedScript : MonoBehaviour
             ShowOutput($"Called sendTransaction()...");
             string? response = await passport.ZkEvmSendTransaction(new TransactionRequest()
             {
-                To = zkSendTransactionTo.text,
-                Value = zkSendTransactionValue.text,
-                Data = zkSendTransactionData.text
+                to = zkSendTransactionTo.text,
+                value = zkSendTransactionValue.text,
+                data = zkSendTransactionData.text
 
             });
             ShowOutput($"Transaction hash: {response}");

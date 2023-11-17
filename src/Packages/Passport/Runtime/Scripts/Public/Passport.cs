@@ -17,7 +17,7 @@ namespace Immutable.Passport
     {
         private const string TAG = "[Passport]";
 
-        public static Passport? Instance { get; private set; }
+        public static Passport Instance { get; private set; }
 
 #if UNITY_EDITOR_WIN && UNITY_STANDALONE_WIN
         private readonly IWebBrowserClient webBrowserClient = new WebBrowserClient();
@@ -26,9 +26,9 @@ namespace Immutable.Passport
 #endif
 
         // Keeps track of the latest received deeplink
-        private static string? deeplink = null;
-        private static bool? readySignalReceived = null;
-        private PassportImpl? passportImpl = null;
+        private static string deeplink = null;
+        private static bool readySignalReceived = false;
+        private PassportImpl passportImpl = null;
 
         private Passport()
         {
@@ -53,9 +53,9 @@ namespace Immutable.Passport
         /// <param name="engineStartupTimeoutMs">(Windows only) Timeout time for waiting for the engine to start (in milliseconds)</param>
         public static UniTask<Passport> Init(
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-            string clientId, string environment, string? redirectUri = null, int engineStartupTimeoutMs = 4000
+            string clientId, string environment, string redirectUri = null, int engineStartupTimeoutMs = 4000
 #else
-            string clientId, string environment, string? redirectUri = null
+            string clientId, string environment, string redirectUri = null
 #endif
         )
         {
@@ -71,7 +71,7 @@ namespace Immutable.Passport
                     )
                     .ContinueWith(async () =>
                     {
-                        await UniTask.WaitUntil(() => readySignalReceived != null);
+                        await UniTask.WaitUntil(() => readySignalReceived == true);
                     })
                     .ContinueWith(async () =>
                     {
@@ -102,7 +102,7 @@ namespace Immutable.Passport
         {
             try
             {
-                BrowserCommunicationsManager communicationsManager = new(webBrowserClient);
+                BrowserCommunicationsManager communicationsManager = new BrowserCommunicationsManager(webBrowserClient);
                 communicationsManager.OnReady += () => readySignalReceived = true;
 #if UNITY_EDITOR_WIN && UNITY_STANDALONE_WIN
                 await ((WebBrowserClient)webBrowserClient).Init(engineStartupTimeoutMs);
@@ -146,7 +146,7 @@ namespace Immutable.Passport
         /// The user does not need to go through the device code auth flow if the saved access token is still valid or
         /// the refresh token can be used to get a new access token.
         /// </summary>
-        public async UniTask Connect(long? timeoutMs = null)
+        public async UniTask Connect(Nullable<long> timeoutMs = null)
         {
             await GetPassportImpl().Connect(timeoutMs);
         }
@@ -182,7 +182,7 @@ namespace Immutable.Passport
         /// The wallet address, otherwise null
         /// </returns>
         /// </summary>
-        public async UniTask<string?> GetAddress()
+        public async UniTask<string> GetAddress()
         {
             return await GetPassportImpl().GetAddress();
         }
@@ -212,9 +212,9 @@ namespace Immutable.Passport
         /// The email address, otherwise null
         /// </returns>
         /// </summary>
-        public async UniTask<string?> GetEmail()
+        public async UniTask<string> GetEmail()
         {
-            string? email = await GetPassportImpl().GetEmail();
+            string email = await GetPassportImpl().GetEmail();
             return email;
         }
 
@@ -224,7 +224,7 @@ namespace Immutable.Passport
         /// The access token, otherwise null
         /// </returns>
         /// </summary>
-        public UniTask<string?> GetAccessToken()
+        public UniTask<string> GetAccessToken()
         {
             return GetPassportImpl().GetAccessToken();
         }
@@ -235,7 +235,7 @@ namespace Immutable.Passport
         /// The ID token, otherwise null
         /// </returns>
         /// </summary>
-        public UniTask<string?> GetIdToken()
+        public UniTask<string> GetIdToken()
         {
             return GetPassportImpl().GetIdToken();
         }
@@ -277,7 +277,7 @@ namespace Immutable.Passport
         /// The transaction hash, or the zero hash if the transaction is not yet available.
         /// </returns>
         /// </summary>
-        public async UniTask<string?> ZkEvmSendTransaction(TransactionRequest request)
+        public async UniTask<string> ZkEvmSendTransaction(TransactionRequest request)
         {
             return await GetPassportImpl().ZkEvmSendTransaction(request);
         }

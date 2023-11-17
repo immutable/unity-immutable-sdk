@@ -1,10 +1,11 @@
 using System;
 using NUnit.Framework;
+using Immutable.Passport;
 using Immutable.Passport.Core;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
-using Newtonsoft.Json;
 using Immutable.Browser.Core;
+using UnityEngine;
 
 namespace Immutable.Passport
 {
@@ -20,9 +21,10 @@ namespace Immutable.Passport
         internal static string ID_TOKEN = "idToken";
         internal static string ID_TOKEN_KEY = "idToken";
         internal static string ADDRESS = "0xaddress";
+        internal static string EMAIL = "unity@immutable.com";
         internal static string SIGNATURE = "0xsignature";
         internal static string MESSAGE = "message";
-        internal static string EMAIL = "reuben@immutable.com";
+        private const string REQUEST_ID = "50";
 
 #pragma warning disable CS8618
         private MockBrowserCommsManager communicationsManager;
@@ -41,10 +43,10 @@ namespace Immutable.Passport
         {
             var response = new StringResponse
             {
-                Success = true,
-                Result = ADDRESS
+                success = true,
+                result = ADDRESS
             };
-            communicationsManager.response = JsonConvert.SerializeObject(response);
+            communicationsManager.response = JsonUtility.ToJson(response);
             var address = await passport.GetAddress();
             Assert.AreEqual(ADDRESS, address);
             Assert.AreEqual(PassportFunction.GET_ADDRESS, communicationsManager.fxName);
@@ -60,24 +62,49 @@ namespace Immutable.Passport
             Assert.AreEqual(PassportFunction.GET_ADDRESS, communicationsManager.fxName);
             Assert.True(String.IsNullOrEmpty(communicationsManager.data));
         }
+
+        [Test]
+        public async Task GetEmail_Success()
+        {
+            var response = new StringResponse
+            {
+                success = true,
+                result = EMAIL
+            };
+            communicationsManager.response = JsonUtility.ToJson(response);
+            var email = await passport.GetEmail();
+            Assert.AreEqual(EMAIL, email);
+            Assert.AreEqual(PassportFunction.GET_EMAIL, communicationsManager.fxName);
+            Assert.True(String.IsNullOrEmpty(communicationsManager.data));
+        }
+
+        [Test]
+        public async Task GetEmail_Failed()
+        {
+            communicationsManager.response = "";
+            var email = await passport.GetEmail();
+            Assert.Null(email);
+            Assert.AreEqual(PassportFunction.GET_EMAIL, communicationsManager.fxName);
+            Assert.True(String.IsNullOrEmpty(communicationsManager.data));
+        }
     }
 
     internal class MockBrowserCommsManager : IBrowserCommunicationsManager
     {
         public string response = "";
         public string fxName = "";
-        public string? data = "";
-        public event OnUnityPostMessageDelegate? OnAuthPostMessage;
-        public event OnUnityPostMessageErrorDelegate? OnPostMessageError;
+        public string data = "";
+        public event OnUnityPostMessageDelegate OnAuthPostMessage;
+        public event OnUnityPostMessageErrorDelegate OnPostMessageError;
 
-        public UniTask<string> Call(string fxName, string? data = null, bool ignoreTimeout = false)
+        public UniTask<string> Call(string fxName, string data = null, bool ignoreTimeout = false)
         {
             this.fxName = fxName;
             this.data = data;
             return UniTask.FromResult(response);
         }
 
-        public void LaunchAuthURL(string url, string? redirectUri)
+        public void LaunchAuthURL(string url, string redirectUri)
         {
             throw new NotImplementedException();
         }

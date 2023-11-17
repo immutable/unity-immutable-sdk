@@ -1,13 +1,19 @@
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+using System;
 
 namespace Immutable.Passport.Model
 {
-    [JsonObject(NamingStrategyType = typeof(CamelCaseNamingStrategy))]
+    [Serializable]
     public class TransactionRequest
     {
-        public string To;
-        public string? Data;
-        public string? Value;
+        public string to;
+        public string data;
+        public string value;
+    }
+
+    [Serializable]
+    internal class TransactionRequestNoData
+    {
+        public string to;
+        public string value;
     }
 }

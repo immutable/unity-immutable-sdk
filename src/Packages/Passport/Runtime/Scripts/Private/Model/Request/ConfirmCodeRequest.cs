@@ -1,14 +1,13 @@
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+using System;
 
 namespace Immutable.Passport.Model
 {
-    [JsonObject(NamingStrategyType = typeof(CamelCaseNamingStrategy))]
+    [Serializable]
     internal class ConfirmCodeRequest
     {
-        public string DeviceCode;
-        public int Interval;
-        public long? TimeoutMs;
+        public string deviceCode;
+        public int interval;
+        public long? timeoutMs;
     }
 }
 

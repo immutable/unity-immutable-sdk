@@ -20,9 +20,9 @@ namespace Immutable.Passport.Model
 
     public class PassportException : Exception
     {
-        public PassportErrorType? Type;
+        public Nullable<PassportErrorType> Type;
 
-        public PassportException(string message, PassportErrorType? type = null) : base(message)
+        public PassportException(string message, Nullable<PassportErrorType> type = null) : base(message)
         {
             this.Type = type;
         }
