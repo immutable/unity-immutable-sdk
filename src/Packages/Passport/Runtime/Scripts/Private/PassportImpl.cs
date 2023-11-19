@@ -393,7 +393,7 @@ namespace Immutable.Passport
 
         public async UniTask<CreateBatchTransferResponse> ImxBatchNftTransfer(NftTransferDetails[] details)
         {
-            string json = JsonUtility.ToJson(details);
+            string json = details.ToJson();
             Debug.Log($"{TAG} ImxBatchNftTransfer json: {json}");
             string callResponse = await communicationsManager.Call(PassportFunction.IMX.BATCH_NFT_TRANSFER, json);
             return callResponse.OptDeserializeObject<CreateBatchTransferResponse>();
