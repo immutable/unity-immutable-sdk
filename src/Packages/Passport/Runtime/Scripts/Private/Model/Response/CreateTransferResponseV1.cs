@@ -2,14 +2,14 @@ namespace Immutable.Passport.Model
 {
     public class CreateTransferResponseV1
     {
-        public string sent_signature { get; }
+        public string sent_signature;
 
-        public string receiver { get; }
+        public string receiver;
 
-        public string status { get; }
+        public string status;
 
-        public long time { get; }
+        public long time;
 
-        public long transfer_id { get; }
+        public long transfer_id;
     }
 }
