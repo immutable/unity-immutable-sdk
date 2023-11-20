@@ -3,7 +3,5 @@
 This is the library for the `WebViewPlugin.aar` that is used for Gree in Unity.
 
 To build and use a new version: 
-1. Run the `assemble` gradle command. 
-2. Rename the generated aar to `WebViewPlugin.aar` 
-3. Replace the old version in `src/packages/Passport/Runtime/ThirdParty/Gree/Assets/Plugins/Android`
-4. Update `src/packages/Passport/Runtime/ThirdParty/Gree/Assets/PluginsWebViewObject.cs` if any references were changed
+1. Run the `assemble` gradle command (A custom task will copy the generated aar to `src/Packages/Passport/Runtime/ThirdParty/Gree/Assets/Plugins/Android` and rename it to `WebViewPlugin.aar`)
+2. Update `src/packages/Passport/Runtime/ThirdParty/Gree/Assets/PluginsWebViewObject.cs` if any references were changed
