@@ -65,12 +65,13 @@ namespace Immutable.Passport
                 Instance = new Passport();
                 // Wait until we get a ready signal
                 return Instance.Initialise(
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+#if UNITY_EDITOR_WIN && UNITY_STANDALONE_WIN
                         engineStartupTimeoutMs
 #endif
                     )
                     .ContinueWith(async () =>
                     {
+                        Debug.Log($"{TAG} Waiting for ready signal...");
                         await UniTask.WaitUntil(() => readySignalReceived == true);
                     })
                     .ContinueWith(async () =>
@@ -95,7 +96,7 @@ namespace Immutable.Passport
         }
 
         private async UniTask Initialise(
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+#if UNITY_EDITOR_WIN && UNITY_STANDALONE_WIN
             int engineStartupTimeoutMs
 #endif
         )

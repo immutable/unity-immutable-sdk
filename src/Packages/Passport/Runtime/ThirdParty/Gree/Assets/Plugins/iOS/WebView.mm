@@ -333,7 +333,7 @@ static ASWebAuthenticationSession *_authSession;
         
     WKWebView *_webView = (WKWebView *)webView;
     NSString *urlStr = [NSString stringWithUTF8String:url];
-    NSURL *nsurl = [NSURL URLWithString:urlStr];
+    NSURL *nsurl = [[NSURL alloc] initFileURLWithPath:urlStr];
     NSURLRequest *request = [NSURLRequest requestWithURL:nsurl];
     [_webView load:request];
 }
