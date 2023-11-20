@@ -22,3 +22,15 @@ android {
 dependencies {
     compileOnly fileTree(dir: 'libs', include: ['*.jar'])
 }
+
+assemble.doLast {
+    copy {
+        def aarName = 'webview-nofragment-release.aar'
+        println "Copying aar to Unity SDK..."
+        from("$projectDir/build/outputs/aar") {
+            include aarName
+        }
+        into "$projectDir/../../../../src/Packages/Passport/Runtime/ThirdParty/Gree/Assets/Plugins/Android"
+        rename aarName, 'WebViewPlugin.aar'
+    }
+}
