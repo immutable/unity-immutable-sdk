@@ -1,11 +1,9 @@
-#if UNITY_EDITOR_WIN && UNITY_STANDALONE_WIN
-
 // UnityWebBrowser (UWB)
 // Copyright (c) 2021-2022 Voltstro-Studios
 // 
 // This project is under the MIT license. See the LICENSE.md file for more details.
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR && UNITY_STANDALONE_WIN
 
 using System.IO;
 using System.Linq;
@@ -65,7 +63,5 @@ namespace VoltstroStudios.UnityWebBrowser.Editor.EngineManagement
         }
     }
 }
-
-#endif
 
 #endif

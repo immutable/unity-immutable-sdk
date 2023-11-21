@@ -33,7 +33,7 @@ public class UnauthenticatedScript : MonoBehaviour
 #endif
 
             passport = await Passport.Init(
-#if UNITY_EDITOR_WIN && UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE_WIN
                 clientId, environment, engineStartupTimeoutMs: 10000
 #else
                 clientId, environment, redirectUri

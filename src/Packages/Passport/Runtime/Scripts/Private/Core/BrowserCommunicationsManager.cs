@@ -2,7 +2,7 @@ using System.Net;
 using System;
 using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
-#if UNITY_EDITOR_WIN && UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE_WIN
 using VoltstroStudios.UnityWebBrowser.Core;
 #else
 using Immutable.Browser.Gree;

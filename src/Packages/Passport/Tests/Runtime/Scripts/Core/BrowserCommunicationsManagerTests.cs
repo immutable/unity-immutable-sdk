@@ -5,7 +5,7 @@ using Immutable.Passport.Model;
 using UnityEngine;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-#if UNITY_EDITOR_WIN && UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE_WIN
 using VoltstroStudios.UnityWebBrowser.Core;
 using VoltstroStudios.UnityWebBrowser.Events;
 #endif
