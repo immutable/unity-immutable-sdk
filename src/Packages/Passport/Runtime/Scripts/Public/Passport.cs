@@ -147,9 +147,9 @@ namespace Immutable.Passport
         /// The user does not need to go through the device code auth flow if the saved access token is still valid or
         /// the refresh token can be used to get a new access token.
         /// </summary>
-        public async UniTask Connect(Nullable<long> timeoutMs = null)
+        public async UniTask ConnectImx(Nullable<long> timeoutMs = null)
         {
-            await GetPassportImpl().Connect(timeoutMs);
+            await GetPassportImpl().ConnectImx(timeoutMs);
         }
 
 #if UNITY_ANDROID || UNITY_IPHONE || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
@@ -159,9 +159,9 @@ namespace Immutable.Passport
         /// The user does not need to go through this flow if the saved access token is still valid or
         /// the refresh token can be used to get a new access token.
         /// </summary>
-        public async UniTask ConnectPKCE()
+        public async UniTask ConnectImxPKCE()
         {
-            await GetPassportImpl().ConnectPKCE();
+            await GetPassportImpl().ConnectImxPKCE();
         }
 #endif
 
@@ -172,9 +172,9 @@ namespace Immutable.Passport
         /// True if the user is connected to Passport
         /// </returns>
         /// </summary>
-        public async UniTask<bool> ConnectSilent()
+        public async UniTask<bool> ConnectImxSilent()
         {
-            return await GetPassportImpl().ConnectSilent();
+            return await GetPassportImpl().ConnectImxSilent();
         }
 
         /// <summary>
@@ -205,6 +205,25 @@ namespace Immutable.Passport
         public UniTask<bool> HasCredentialsSaved()
         {
             return GetPassportImpl().HasCredentialsSaved();
+        }
+
+        /// <summary>
+        /// Checks if the user is registered off-chain
+        /// <returns>
+        /// True if the user is registered with Immutable X, false otherwise
+        /// </returns>
+        /// </summary>
+        public async UniTask<bool> IsRegisteredOffchain()
+        {
+            return await GetPassportImpl().IsRegisteredOffchain();
+        }
+
+        /// <summary>
+        /// Register a User to Immutable X if they are not already registered
+        /// </summary>
+        public async UniTask<RegisterUserResponse> RegisterOffchain()
+        {
+            return await GetPassportImpl().RegisterOffchain();
         }
 
         /// <summary>

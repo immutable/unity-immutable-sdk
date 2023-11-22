@@ -7,52 +7,52 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Immutable.Passport;
 using Immutable.Passport.Model;
-using System.Collections.Generic;
-
 public class AuthenticatedScript : MonoBehaviour
 {
 #pragma warning disable CS8618
-    [SerializeField] private Text output;
+    [SerializeField] private Text Output;
 
-    [SerializeField] private Canvas authenticatedCanvas;
-    [SerializeField] private Button accessTokenButton;
-    [SerializeField] private Button idTokenButton;
-    [SerializeField] private Button getAddressButton;
-    [SerializeField] private Button logoutButton;
-    [SerializeField] private Button showTransferButton;
+    [SerializeField] private Canvas AuthenticatedCanvas;
+    [SerializeField] private Button AccessTokenButton;
+    [SerializeField] private Button IdTokenButton;
+    [SerializeField] private Button IsRegisteredOffchainButton;
+    [SerializeField] private Button RegisterOffchainButton;
+    [SerializeField] private Button GetAddressButton;
+    [SerializeField] private Button LogoutButton;
+    [SerializeField] private Button ShowTransferButton;
 
-    [SerializeField] private Canvas transferCanvas;
+    [SerializeField] private Canvas TransferCanvas;
 
-    [SerializeField] private InputField tokenIdInput1;
-    [SerializeField] private InputField tokenAddressInput1;
-    [SerializeField] private InputField receiverInput1;
+    [SerializeField] private InputField TokenIdInput1;
+    [SerializeField] private InputField TokenAddressInput1;
+    [SerializeField] private InputField ReceiverInput1;
 
-    [SerializeField] private InputField tokenIdInput2;
-    [SerializeField] private InputField tokenAddressInput2;
-    [SerializeField] private InputField receiverInput2;
+    [SerializeField] private InputField TokenIdInput2;
+    [SerializeField] private InputField TokenAddressInput2;
+    [SerializeField] private InputField ReceiverInput2;
 
-    [SerializeField] private InputField tokenIdInput3;
-    [SerializeField] private InputField tokenAddressInput3;
-    [SerializeField] private InputField receiverInput3;
+    [SerializeField] private InputField TokenIdInput3;
+    [SerializeField] private InputField TokenAddressInput3;
+    [SerializeField] private InputField ReceiverInput3;
 
-    [SerializeField] private Button transferButton;
-    [SerializeField] private Button cancelTransferButton;
+    [SerializeField] private Button TransferButton;
+    [SerializeField] private Button CancelTransferButton;
 
     // ZkEvm
-    [SerializeField] private Button connectEvmButton;
-    [SerializeField] private Button sendTransactionButton;
-    [SerializeField] private Button requestAccountsButton;
-    [SerializeField] private Button getBalanceButton;
+    [SerializeField] private Button ConnectEvmButton;
+    [SerializeField] private Button SendTransactionButton;
+    [SerializeField] private Button RequestAccountsButton;
+    [SerializeField] private Button GetBalanceButton;
 
     // ZkEVM Get Balance Transaction
-    [SerializeField] private Canvas zkGetBalanceCanvas;
-    [SerializeField] private InputField zkGetBalanceAccount;
+    [SerializeField] private Canvas ZkGetBalanceCanvas;
+    [SerializeField] private InputField ZkGetBalanceAccount;
 
     // ZkEVM Send Transaction
-    [SerializeField] private Canvas zkSendTransactionCanvas;
-    [SerializeField] private InputField zkSendTransactionTo;
-    [SerializeField] private InputField zkSendTransactionValue;
-    [SerializeField] private InputField zkSendTransactionData;
+    [SerializeField] private Canvas ZkSendTransactionCanvas;
+    [SerializeField] private InputField ZkSendTransactionTo;
+    [SerializeField] private InputField ZkSendTransactionValue;
+    [SerializeField] private InputField ZkSendTransactionData;
 
     private Passport passport;
 #pragma warning restore CS8618
@@ -69,17 +69,53 @@ public class AuthenticatedScript : MonoBehaviour
         }
     }
 
+    public async void IsRegisteredOffchain()
+    {
+        ShowOutput($"Called IsRegisteredOffchain()...");
+        try
+        {
+            bool isRegistered = await passport.IsRegisteredOffchain();
+            ShowOutput(isRegistered ? "Registered" : "Not registered");
+        }
+        catch (PassportException e)
+        {
+            ShowOutput($"Unable to check if user is registered off chain: {e.Message} ({e.Type})");
+        }
+        catch (Exception)
+        {
+            ShowOutput("Unable to check if user is registered off chain");
+        }
+    }
+
+    public async void RegisterOffchain()
+    {
+        ShowOutput($"Called RegisterOffchain()...");
+        try
+        {
+            RegisterUserResponse response = await passport.RegisterOffchain();
+            ShowOutput($"Registered {response.tx_hash}");
+        }
+        catch (PassportException e)
+        {
+            ShowOutput($"Unable to register off chain: {e.Message} ({e.Type})");
+        }
+        catch (Exception)
+        {
+            ShowOutput("Unable to register off chain");
+        }
+    }
+
     public async void GetAddress()
     {
         ShowOutput($"Called GetAddress()...");
         try
         {
-            string? address = await passport.GetAddress();
+            string address = await passport.GetAddress();
             ShowOutput(address ?? "No address");
         }
         catch (PassportException e)
         {
-            ShowOutput($"Unable to get address: {e.Type}");
+            ShowOutput($"Unable to get address: {e.Message} ({e.Type})");
         }
         catch (Exception)
         {
@@ -95,42 +131,42 @@ public class AuthenticatedScript : MonoBehaviour
 
     public async void GetAccessToken()
     {
-        string? accessToken = await passport.GetAccessToken();
+        string accessToken = await passport.GetAccessToken();
         ShowOutput(accessToken ?? "No access token");
     }
 
     public async void GetIdToken()
     {
-        string? idToken = await passport.GetIdToken();
+        string idToken = await passport.GetIdToken();
         ShowOutput(idToken ?? "No ID token");
     }
 
     public async void GetEmail()
     {
-        string? email = await passport.GetEmail();
+        string email = await passport.GetEmail();
         ShowOutput(email ?? "No email");
     }
 
-    public async void ShowTransfer()
+    public void ShowTransfer()
     {
-        authenticatedCanvas.gameObject.SetActive(false);
-        transferCanvas.gameObject.SetActive(true);
+        AuthenticatedCanvas.gameObject.SetActive(false);
+        TransferCanvas.gameObject.SetActive(true);
     }
 
-    public async void CancelTransfer()
+    public void CancelTransfer()
     {
-        authenticatedCanvas.gameObject.SetActive(true);
-        transferCanvas.gameObject.SetActive(false);
-        clearInputs();
+        AuthenticatedCanvas.gameObject.SetActive(true);
+        TransferCanvas.gameObject.SetActive(false);
+        ClearInputs();
     }
 
     public async void Transfer()
     {
-        if (tokenIdInput1.text != "" && tokenAddressInput1.text != "" && receiverInput1.text != "")
+        if (TokenIdInput1.text != "" && TokenAddressInput1.text != "" && ReceiverInput1.text != "")
         {
             ShowOutput("Transferring...");
-            transferButton.gameObject.SetActive(false);
-            cancelTransferButton.gameObject.SetActive(false);
+            TransferButton.gameObject.SetActive(false);
+            CancelTransferButton.gameObject.SetActive(false);
 
             try
             {
@@ -152,15 +188,15 @@ public class AuthenticatedScript : MonoBehaviour
                     ShowOutput($"Transferred successfully. Transfer id: {response.transfer_id}");
                 }
 
-                clearInputs();
+                ClearInputs();
             }
             catch (Exception e)
             {
                 ShowOutput($"Unable to transfer: {e.Message}");
             }
 
-            transferButton.gameObject.SetActive(true);
-            cancelTransferButton.gameObject.SetActive(true);
+            TransferButton.gameObject.SetActive(true);
+            CancelTransferButton.gameObject.SetActive(true);
         }
     }
 
@@ -170,30 +206,30 @@ public class AuthenticatedScript : MonoBehaviour
 
         details.Add(
             new NftTransferDetails(
-                receiverInput1.text,
-                tokenIdInput1.text,
-                tokenAddressInput1.text
+                ReceiverInput1.text,
+                TokenIdInput1.text,
+                TokenAddressInput1.text
             )
         );
 
-        if (tokenIdInput2.text != "" && tokenAddressInput2.text != "" && receiverInput2.text != "")
+        if (TokenIdInput2.text != "" && TokenAddressInput2.text != "" && ReceiverInput2.text != "")
         {
             details.Add(
                 new NftTransferDetails(
-                    receiverInput2.text,
-                    tokenIdInput2.text,
-                    tokenAddressInput2.text
+                    ReceiverInput2.text,
+                    TokenIdInput2.text,
+                    TokenAddressInput2.text
                 )
             );
         }
 
-        if (tokenIdInput3.text != "" && tokenAddressInput3.text != "" && receiverInput3.text != "")
+        if (TokenIdInput3.text != "" && TokenAddressInput3.text != "" && ReceiverInput3.text != "")
         {
             details.Add(
                 new NftTransferDetails(
-                    receiverInput3.text,
-                    tokenIdInput3.text,
-                    tokenAddressInput3.text
+                    ReceiverInput3.text,
+                    TokenIdInput3.text,
+                    TokenAddressInput3.text
                 )
             );
         }
@@ -208,10 +244,10 @@ public class AuthenticatedScript : MonoBehaviour
         {
             await passport.ConnectEvm();
             ShowOutput("Connected to EVM");
-            connectEvmButton.gameObject.SetActive(false);
-            sendTransactionButton.gameObject.SetActive(true);
-            requestAccountsButton.gameObject.SetActive(true);
-            getBalanceButton.gameObject.SetActive(true);
+            ConnectEvmButton.gameObject.SetActive(false);
+            SendTransactionButton.gameObject.SetActive(true);
+            RequestAccountsButton.gameObject.SetActive(true);
+            GetBalanceButton.gameObject.SetActive(true);
         }
         catch (Exception ex)
         {
@@ -224,11 +260,11 @@ public class AuthenticatedScript : MonoBehaviour
         try
         {
             ShowOutput($"Called sendTransaction()...");
-            string? response = await passport.ZkEvmSendTransaction(new TransactionRequest()
+            string response = await passport.ZkEvmSendTransaction(new TransactionRequest()
             {
-                to = zkSendTransactionTo.text,
-                value = zkSendTransactionValue.text,
-                data = zkSendTransactionData.text
+                to = ZkSendTransactionTo.text,
+                value = ZkSendTransactionValue.text,
+                data = ZkSendTransactionData.text
 
             });
             ShowOutput($"Transaction hash: {response}");
@@ -241,17 +277,17 @@ public class AuthenticatedScript : MonoBehaviour
 
     public void ShowZkSendTransaction()
     {
-        authenticatedCanvas.gameObject.SetActive(false);
-        zkSendTransactionCanvas.gameObject.SetActive(true);
-        zkSendTransactionTo.text = "";
-        zkSendTransactionValue.text = "";
-        zkSendTransactionData.text = "";
+        AuthenticatedCanvas.gameObject.SetActive(false);
+        ZkSendTransactionCanvas.gameObject.SetActive(true);
+        ZkSendTransactionTo.text = "";
+        ZkSendTransactionValue.text = "";
+        ZkSendTransactionData.text = "";
     }
 
     public void CancelZkSendTransaction()
     {
-        authenticatedCanvas.gameObject.SetActive(true);
-        zkSendTransactionCanvas.gameObject.SetActive(false);
+        AuthenticatedCanvas.gameObject.SetActive(true);
+        ZkSendTransactionCanvas.gameObject.SetActive(false);
     }
 
     public async void RequestAccounts()
@@ -273,7 +309,7 @@ public class AuthenticatedScript : MonoBehaviour
         try
         {
             ShowOutput($"Called GetBalance()...");
-            string balance = await passport.ZkEvmGetBalance(zkGetBalanceAccount.text);
+            string balance = await passport.ZkEvmGetBalance(ZkGetBalanceAccount.text);
             var balanceBI = BigInteger.Parse(balance.Replace("0x", "0"), NumberStyles.HexNumber);
             ShowOutput($"Hex: {balance}\nDec: {balanceBI.ToString()}");
         }
@@ -285,37 +321,37 @@ public class AuthenticatedScript : MonoBehaviour
 
     public void ShowZkGetBalance()
     {
-        authenticatedCanvas.gameObject.SetActive(false);
-        zkGetBalanceCanvas.gameObject.SetActive(true);
-        zkGetBalanceAccount.text = "";
+        AuthenticatedCanvas.gameObject.SetActive(false);
+        ZkGetBalanceCanvas.gameObject.SetActive(true);
+        ZkGetBalanceAccount.text = "";
     }
 
     public void CancelZkGetBalance()
     {
-        authenticatedCanvas.gameObject.SetActive(true);
-        zkGetBalanceCanvas.gameObject.SetActive(false);
+        AuthenticatedCanvas.gameObject.SetActive(true);
+        ZkGetBalanceCanvas.gameObject.SetActive(false);
     }
 
     private void ShowOutput(string message)
     {
-        if (output != null)
+        if (Output != null)
         {
-            output.text = message;
+            Output.text = message;
         }
     }
 
-    private void clearInputs()
+    private void ClearInputs()
     {
-        tokenIdInput1.text = "";
-        tokenAddressInput1.text = "";
-        receiverInput1.text = "";
+        TokenIdInput1.text = "";
+        TokenAddressInput1.text = "";
+        ReceiverInput1.text = "";
 
-        tokenIdInput2.text = "";
-        tokenAddressInput2.text = "";
-        receiverInput2.text = "";
+        TokenIdInput2.text = "";
+        TokenAddressInput2.text = "";
+        ReceiverInput2.text = "";
 
-        tokenIdInput3.text = "";
-        tokenAddressInput3.text = "";
-        receiverInput3.text = "";
+        TokenIdInput3.text = "";
+        TokenAddressInput3.text = "";
+        ReceiverInput3.text = "";
     }
 }
