@@ -967,9 +967,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bbb60a65f73bdef4eaf4b2a86f7e695a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  output: {fileID: 1690937182}
-  connectButton: {fileID: 291915222}
-  tryAgainButton: {fileID: 1712352492}
+  Output: {fileID: 1690937182}
+  ConnectButton: {fileID: 291915222}
+  TryAgainButton: {fileID: 1712352492}
 --- !u!4 &1192763473
 Transform:
   m_ObjectHideFlags: 0
@@ -1106,7 +1106,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 167431871}
   m_Direction: 2
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.99999994
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:

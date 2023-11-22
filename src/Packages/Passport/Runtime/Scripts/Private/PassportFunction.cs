@@ -15,6 +15,8 @@ namespace Immutable.Passport
 
         public static class IMX
         {
+            public const string IS_REGISTERED_OFFCHAIN = "isRegisteredOffchain";
+            public const string REGISTER_OFFCHAIN = "registerOffchain";
             public const string TRANSFER = "imxTransfer";
             public const string BATCH_NFT_TRANSFER = "imxBatchNftTransfer";
         }

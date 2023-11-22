@@ -9,10 +9,10 @@ using Immutable.Passport.Model;
 public class UnauthenticatedScript : MonoBehaviour
 {
 #pragma warning disable CS8618
-    [SerializeField] private Text output;
+    [SerializeField] private Text Output;
 
-    [SerializeField] private Button connectButton;
-    [SerializeField] private Button tryAgainButton;
+    [SerializeField] private Button ConnectButton;
+    [SerializeField] private Button TryAgainButton;
 
     private Passport passport;
 #pragma warning restore CS8618
@@ -22,8 +22,8 @@ public class UnauthenticatedScript : MonoBehaviour
         try
         {
             ShowOutput("Starting...");
-            connectButton.gameObject.SetActive(false);
-            tryAgainButton.gameObject.SetActive(false);
+            ConnectButton.gameObject.SetActive(false);
+            TryAgainButton.gameObject.SetActive(false);
 
             string clientId = "ZJL7JvetcDFBNDlgRs5oJoxuAUUl6uQj";
             string environment = Immutable.Passport.Model.Environment.SANDBOX;
@@ -34,7 +34,7 @@ public class UnauthenticatedScript : MonoBehaviour
 
             passport = await Passport.Init(
 #if UNITY_STANDALONE_WIN
-                clientId, environment, engineStartupTimeoutMs: 10000
+                clientId, environment, redirectUri, 10000
 #else
                 clientId, environment, redirectUri
 #endif
@@ -47,7 +47,7 @@ public class UnauthenticatedScript : MonoBehaviour
                 // Use existing credentials to connect to Passport
                 ShowOutput("Connecting to Passport using saved credentials...");
 
-                bool connected = await passport.ConnectSilent();
+                bool connected = await passport.ConnectImxSilent();
                 if (connected)
                 {
                     // Successfully connected to Passport
@@ -56,7 +56,7 @@ public class UnauthenticatedScript : MonoBehaviour
                 else
                 {
                     // Could not connect to Passport, enable connect button
-                    connectButton.gameObject.SetActive(true);
+                    ConnectButton.gameObject.SetActive(true);
                     ShowOutput("Failed to connect using saved credentials");
                 }
             }
@@ -65,13 +65,13 @@ public class UnauthenticatedScript : MonoBehaviour
                 // No existing credentials to use to connect
                 ShowOutput("Ready");
                 // Enable connect button
-                connectButton.gameObject.SetActive(true);
+                ConnectButton.gameObject.SetActive(true);
             }
         }
         catch (Exception ex)
         {
             ShowOutput($"Start() error: {ex.Message}");
-            tryAgainButton.gameObject.SetActive(true);
+            TryAgainButton.gameObject.SetActive(true);
         }
     }
 
@@ -85,13 +85,13 @@ public class UnauthenticatedScript : MonoBehaviour
         try
         {
             ShowOutput("Called Connect()...");
-            connectButton.gameObject.SetActive(false);
+            ConnectButton.gameObject.SetActive(false);
 
             // macOS editor (play scene) does not support deeplinking
 #if UNITY_ANDROID || UNITY_IPHONE || (UNITY_STANDALONE_OSX && !UNITY_EDITOR_OSX)
-            await passport.ConnectPKCE();
+            await passport.ConnectImxPKCE();
 #else
-            await passport.Connect();
+            await passport.ConnectImx();
 #endif
 
             NavigateToAuthenticatedScene();
@@ -117,7 +117,7 @@ public class UnauthenticatedScript : MonoBehaviour
             Debug.Log(error);
             ShowOutput(error);
 #if UNITY_ANDROID || UNITY_IPHONE || UNITY_STANDALONE_OSX
-            connectButton.gameObject.SetActive(true);
+            ConnectButton.gameObject.SetActive(true);
 #endif
         }
     }
@@ -130,9 +130,9 @@ public class UnauthenticatedScript : MonoBehaviour
     private void ShowOutput(string message)
     {
         Debug.Log($"Output: {message}");
-        if (output != null)
+        if (Output != null)
         {
-            output.text = message;
+            Output.text = message;
         }
     }
 }

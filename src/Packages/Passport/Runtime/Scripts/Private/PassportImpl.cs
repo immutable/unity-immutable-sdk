@@ -89,11 +89,11 @@ namespace Immutable.Passport
             }
         }
 
-        public async UniTask Connect(Nullable<long> timeoutMs = null)
+        public async UniTask ConnectImx(Nullable<long> timeoutMs = null)
         {
             try
             {
-                bool connected = await ConnectSilent();
+                bool connected = await ConnectImxSilent();
                 if (connected)
                 {
                     return;
@@ -128,7 +128,7 @@ namespace Immutable.Passport
                 await CompletePKCEFlow(url);
         }
 
-        public UniTask<bool> ConnectPKCE()
+        public UniTask<bool> ConnectImxPKCE()
         {
             UniTaskCompletionSource<bool> task = new UniTaskCompletionSource<bool>();
             pkceCompletionSource = task;
@@ -274,7 +274,7 @@ namespace Immutable.Passport
             );
         }
 
-        public async UniTask<bool> ConnectSilent()
+        public async UniTask<bool> ConnectImxSilent()
         {
             try
             {
@@ -293,11 +293,14 @@ namespace Immutable.Passport
             }
             catch (Exception ex)
             {
-                Debug.Log($"{TAG} Failed to connect to Passport using saved credentials: {ex.Message}");
-
                 if (!(ex is PassportException) || (ex is PassportException pEx && !pEx.IsNetworkError()))
                 {
+                    Debug.Log($"{TAG} Failed to connect to Passport using saved credentials, so logging out: {ex.Message}");
                     await Logout();
+                }
+                else
+                {
+                    Debug.Log($"{TAG} Failed to connect to Passport using saved credentials: {ex.Message}");
                 }
             }
 
@@ -360,7 +363,19 @@ namespace Immutable.Passport
         public async UniTask<bool> HasCredentialsSaved()
         {
             TokenResponse savedCredentials = await GetStoredCredentials();
-            return savedCredentials != null;
+            return savedCredentials != null && savedCredentials.accessToken != null && savedCredentials.idToken != null;
+        }
+
+        public async UniTask<bool> IsRegisteredOffchain()
+        {
+            string response = await communicationsManager.Call(PassportFunction.IMX.IS_REGISTERED_OFFCHAIN);
+            return response.GetBoolResponse() ?? false;
+        }
+
+        public async UniTask<RegisterUserResponse> RegisterOffchain()
+        {
+            string callResponse = await communicationsManager.Call(PassportFunction.IMX.REGISTER_OFFCHAIN);
+            return callResponse.OptDeserializeObject<RegisterUserResponse>();
         }
 
         public async UniTask<string> GetEmail()

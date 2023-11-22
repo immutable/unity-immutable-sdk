@@ -45,6 +45,8 @@ namespace VoltstroStudios.UnityWebBrowser.Core
     [Serializable]
     public class WebBrowserClient : IWebBrowserClient, IDisposable
     {
+        private const string TAG = "[Web Browser Client]";
+
         #region Profile Markers
 
         internal static ProfilerMarker markerGetPixels = new("UWB.GetPixels");
@@ -255,7 +257,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         public async UniTask Init(int engineStartupTimeout = 4000)
         {
             this.engineStartupTimeout = engineStartupTimeout;
-            UnityEngine.Debug.Log($"Engine startup timeout: {engineStartupTimeout}");
+            UnityEngine.Debug.Log($"{TAG} Engine startup timeout: {engineStartupTimeout}");
 
             // Get the path to the Windows UWB process
             EngineConfiguration engineConfiguration = new EngineConfiguration();
