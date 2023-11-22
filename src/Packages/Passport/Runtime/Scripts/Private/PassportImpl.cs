@@ -293,11 +293,14 @@ namespace Immutable.Passport
             }
             catch (Exception ex)
             {
-                Debug.Log($"{TAG} Failed to connect to Passport using saved credentials: {ex.Message}");
-
                 if (!(ex is PassportException) || (ex is PassportException pEx && !pEx.IsNetworkError()))
                 {
+                    Debug.Log($"{TAG} Failed to connect to Passport using saved credentials, so logging out: {ex.Message}");
                     await Logout();
+                }
+                else
+                {
+                    Debug.Log($"{TAG} Failed to connect to Passport using saved credentials: {ex.Message}");
                 }
             }
 
@@ -360,7 +363,7 @@ namespace Immutable.Passport
         public async UniTask<bool> HasCredentialsSaved()
         {
             TokenResponse savedCredentials = await GetStoredCredentials();
-            return savedCredentials != null;
+            return savedCredentials != null && savedCredentials.accessToken != null && savedCredentials.idToken != null;
         }
 
         public async UniTask<bool> IsRegisteredOffchain()
