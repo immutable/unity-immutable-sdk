@@ -319,9 +319,9 @@ public class WebViewObject
         {
 #if !UNITY_ANDROID
 #if UNITY_2018_4_OR_NEWER
-            message = UnityWebRequest.UnEscapeURL(message);
+            message = UnityWebRequest.UnEscapeURL(message.Replace("+", "%2B"));
 #else // UNITY_2018_4_OR_NEWER
-            message = WWW.UnEscapeURL(message);
+            message = WWW.UnEscapeURL(message.Replace("+", "%2B"));
 #endif // UNITY_2018_4_OR_NEWER
 #endif // !UNITY_ANDROID
             onJS(message);
