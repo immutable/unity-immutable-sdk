@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 48;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -108,7 +108,6 @@
 				81E2C20414C5684A004CE5C2 /* Sources */,
 				81E2C20514C5684A004CE5C2 /* Frameworks */,
 				81E2C20614C5684A004CE5C2 /* Resources */,
-				81F4B4F514C696C4001B4465 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -125,6 +124,7 @@
 		81E2C1FF14C5684A004CE5C2 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1200;
 			};
 			buildConfigurationList = 81E2C20214C5684A004CE5C2 /* Build configuration list for PBXProject "WebView" */;
@@ -155,22 +155,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		81F4B4F514C696C4001B4465 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		81E2C20414C5684A004CE5C2 /* Sources */ = {

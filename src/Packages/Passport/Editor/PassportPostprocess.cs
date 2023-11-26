@@ -36,6 +36,14 @@ namespace Immutable.Passport.Editor
             {
                 buildDataPath =
                     Path.GetFullPath($"{buildOutputPath}/{buildAppName}.app/Contents/Resources/Data/");
+                Debug.Log($"StandaloneOSX buildDataPath: {buildDataPath}");
+                // For OSX, checking to see if the path exists because the user might have exported the project to XCode
+                // but there is no way to check that so try another path
+                if (!Directory.Exists(buildDataPath))
+                {
+                    buildDataPath = Path.GetFullPath($"{buildFullOutputPath}/{Application.productName}/Resources/Data/");
+                    Debug.Log($"StandaloneOSX buildDataPath 2: {buildDataPath}");
+                }
             }
             else if (buildTarget == BuildTarget.iOS)
             {

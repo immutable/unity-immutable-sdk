@@ -103,15 +103,15 @@ namespace Immutable.Passport.Core
             webBrowserClient.LaunchAuthURL(url, redirectUri);
         }
 
+        #endregion
+
+        #region Browser to Unity
+
         private void InvokeOnUnityPostMessage(string message)
         {
             Debug.Log($"{TAG} InvokeOnUnityPostMessage: {message}");
             HandleResponse(message);
         }
-
-        #endregion
-
-        #region Browser to Unity
 
         private void InvokeOnAuthPostMessage(string message)
         {
