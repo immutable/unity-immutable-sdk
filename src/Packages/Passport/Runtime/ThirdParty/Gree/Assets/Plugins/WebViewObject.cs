@@ -50,6 +50,7 @@ public class Singleton
     public ErrorCallback onError;
     public ErrorCallback onHttpError;
     public Callback onAuth;
+    public Callback onLog;
 
     public static Singleton Instance
     {
@@ -72,6 +73,7 @@ public class WebViewObject
     ErrorCallback onError;
     ErrorCallback onHttpError;
     Callback onAuth;
+    Callback onLog;
 #if UNITY_ANDROID
     class AndroidCallback : AndroidJavaProxy
     {
@@ -138,6 +140,12 @@ public class WebViewObject
  
     [MonoPInvokeCallback(typeof(DelegateMessage))] 
     private static void delegateMessageReceived(string key, string message) {
+        if (key == "CallOnLog") {
+            if (Singleton.Instance.onLog != null) {
+                Singleton.Instance.onLog(message);
+            }
+        }
+
         if (key == "CallFromJS") {
             if (Singleton.Instance.onJS != null) {
                 Debug.Log($"{TAG} ==== onJS callback running message: " + message);
@@ -196,6 +204,7 @@ public class WebViewObject
         ErrorCallback err = null,
         ErrorCallback httpErr = null,
         Callback auth = null,
+        Callback log = null,
         string ua = "",
         // android
         int androidForceDarkMode = 0  // 0: follow system setting, 1: force dark off, 2: force dark on
@@ -205,6 +214,7 @@ public class WebViewObject
         onError = err;
         onHttpError = httpErr;
         onAuth = auth;
+        onLog = log;
 #if UNITY_WEBGL
 #if !UNITY_EDITOR
         _gree_unity_webview_init();
@@ -220,6 +230,7 @@ public class WebViewObject
         Singleton.Instance.onError = ((id, message) => CallOnError(id, message));
         Singleton.Instance.onHttpError = ((id, message) => CallOnHttpError(id, message));
         Singleton.Instance.onAuth = ((message) => CallOnAuth(message));
+        Singleton.Instance.onLog = ((message) => CallOnLog(message));
         _CWebViewPlugin_SetDelegate(delegateMessageReceived);
 #elif UNITY_ANDROID
         webView = new AndroidJavaObject("net.gree.unitywebview.CWebViewPluginNoUi");
@@ -325,6 +336,15 @@ public class WebViewObject
 #endif // UNITY_2018_4_OR_NEWER
 #endif // !UNITY_ANDROID
             onJS(message);
+        }
+    }
+
+    public void CallOnLog(string message)
+    {
+        Debug.Log($"{TAG} CallOnLog {message}");
+        if (onLog != null)
+        {
+            onLog(message);
         }
     }
 }

@@ -108,6 +108,7 @@ static ASWebAuthenticationSession *_authSession;
     WKUserContentController *controller = [[WKUserContentController alloc] init];
     [controller addScriptMessageHandler:[[WeakScriptMessageDelegate alloc] initWithDelegate:self] name:@"unityControl"];
     [controller addScriptMessageHandler:[[WeakScriptMessageDelegate alloc] initWithDelegate:self] name:@"saveDataURL"];
+    [controller addScriptMessageHandler:[[WeakScriptMessageDelegate alloc] initWithDelegate:self] name:@"logHandler"];
     NSString *str = @"\
         window.Unity = { \
         call: function(msg) { \
@@ -117,6 +118,7 @@ static ASWebAuthenticationSession *_authSession;
             window.webkit.messageHandlers.saveDataURL.postMessage(fileName + '\t' + dataURL); \
         } \
         }; \
+        function captureLog(msg) { window.webkit.messageHandlers.logHandler.postMessage(msg); } window.console.log = captureLog; \
         ";
 
     WKUserScript *script
@@ -159,6 +161,7 @@ static ASWebAuthenticationSession *_authSession;
             webView0.navigationDelegate = nil;
             [((WKWebView *)webView0).configuration.userContentController removeScriptMessageHandlerForName:@"saveDataURL"];
             [((WKWebView *)webView0).configuration.userContentController removeScriptMessageHandlerForName:@"unityControl"];
+            [((WKWebView *)webView0).configuration.userContentController removeScriptMessageHandlerForName:@"logHandler"];
         }
         [webView0 stopLoading];
         [webView0 removeFromSuperview];
@@ -181,7 +184,9 @@ static ASWebAuthenticationSession *_authSession;
 - (void)userContentController:(WKUserContentController *)userContentController
       didReceiveScriptMessage:(WKScriptMessage *)message
 {
-    if ([message.name isEqualToString:@"unityControl"]) {
+    if ([message.name isEqualToString:@"logHandler"]) {
+        [self sendUnityCallback:"CallOnLog" message:[[NSString stringWithFormat:@"%@", message.body] UTF8String]];
+    } else if ([message.name isEqualToString:@"unityControl"]) {
         [self sendUnityCallback:"CallFromJS" message:[[NSString stringWithFormat:@"%@", message.body] UTF8String]];
     } else if ([message.name isEqualToString:@"saveDataURL"]) {
         NSRange range = [message.body rangeOfString:@"\t"];

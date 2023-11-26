@@ -22,7 +22,8 @@ namespace Immutable.Browser.Gree
                 cb: InvokeOnUnityPostMessage,
                 httpErr: InvokeOnPostMessageError,
                 err: InvokeOnPostMessageError,
-                auth: InvokeOnAuthPostMessage
+                auth: InvokeOnAuthPostMessage,
+                log: InvokeOnLogMessage
             );
 #if UNITY_ANDROID
             string filePath = Constants.SCHEME_FILE + ANDROID_DATA_DIRECTORY + Constants.PASSPORT_DATA_DIRECTORY_NAME + Constants.PASSPORT_HTML_FILE_NAME;
@@ -40,12 +41,18 @@ namespace Immutable.Browser.Gree
 
         private void InvokeOnPostMessageError(string id, string message)
         {
-            OnPostMessageError.Invoke(id, message);
+            if (OnPostMessageError != null)
+            {
+                OnPostMessageError.Invoke(id, message);
+            }
         }
 
         internal void InvokeOnAuthPostMessage(string message)
         {
-            OnAuthPostMessage.Invoke(message);
+            if (OnAuthPostMessage != null)
+            {
+                OnAuthPostMessage.Invoke(message);
+            }
         }
 
         internal void InvokeOnUnityPostMessage(string message)
@@ -54,6 +61,11 @@ namespace Immutable.Browser.Gree
             {
                 OnUnityPostMessage.Invoke(message);
             }
+        }
+
+        internal void InvokeOnLogMessage(string message)
+        {
+            Debug.Log($"{TAG} InvokeOnLogMessage {message}");
         }
 
         public void ExecuteJs(string js)
