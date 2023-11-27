@@ -278,18 +278,9 @@ namespace Immutable.Passport
         {
             try
             {
-                TokenResponse tokenResponse = await GetStoredCredentials();
-                if (tokenResponse != null)
-                {
-                    // Credentials exist in storage, try and connect with it
-                    string callResponse = await communicationsManager.Call(
-                        PassportFunction.CONNECT_WITH_CREDENTIALS,
-                        JsonUtility.ToJson(tokenResponse)
-                    );
-
-                    BrowserResponse response = callResponse.OptDeserializeObject<BrowserResponse>();
-                    return response != null ? response.success == true : false;
-                }
+                string callResponse = await communicationsManager.Call(PassportFunction.RECONNECT);
+                BrowserResponse response = callResponse.OptDeserializeObject<BrowserResponse>();
+                return response != null ? response.success == true : false;
             }
             catch (Exception ex)
             {
@@ -354,16 +345,11 @@ namespace Immutable.Passport
             await communicationsManager.Call(PassportFunction.LOGOUT);
         }
 
-        private async UniTask<TokenResponse> GetStoredCredentials()
-        {
-            string callResponse = await communicationsManager.Call(PassportFunction.CHECK_STORED_CREDENTIALS);
-            return callResponse.OptDeserializeObject<TokenResponse>();
-        }
-
         public async UniTask<bool> HasCredentialsSaved()
         {
-            TokenResponse savedCredentials = await GetStoredCredentials();
-            return savedCredentials != null && savedCredentials.accessToken != null && savedCredentials.idToken != null;
+            string accessToken = await GetAccessToken();
+            string idToken = await GetIdToken();
+            return accessToken != null && idToken != null;
         }
 
         public async UniTask<bool> IsRegisteredOffchain()
@@ -386,15 +372,15 @@ namespace Immutable.Passport
 
         public async UniTask<string> GetAccessToken()
         {
-            TokenResponse savedCredentials = await GetStoredCredentials();
-            return savedCredentials != null ? savedCredentials.accessToken : null;
+            string response = await communicationsManager.Call(PassportFunction.GET_ACCESS_TOKEN);
+            return response.GetStringResult();
         }
 
 
         public async UniTask<string> GetIdToken()
         {
-            TokenResponse savedCredentials = await GetStoredCredentials();
-            return savedCredentials != null ? savedCredentials.idToken : null;
+            string response = await communicationsManager.Call(PassportFunction.GET_ID_TOKEN);
+            return response.GetStringResult();
         }
 
         // Imx

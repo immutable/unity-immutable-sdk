@@ -7,8 +7,9 @@ namespace Immutable.Passport
         public const string CONNECT_PKCE = "connectPKCE";
         public const string GET_PKCE_AUTH_URL = "getPKCEAuthUrl";
         public const string CONFIRM_CODE = "confirmCode";
-        public const string CONNECT_WITH_CREDENTIALS = "connectWithCredentials";
-        public const string CHECK_STORED_CREDENTIALS = "checkStoredCredentials";
+        public const string RECONNECT = "reconnect";
+        public const string GET_ACCESS_TOKEN = "getAccessToken";
+        public const string GET_ID_TOKEN = "getIdToken";
         public const string GET_ADDRESS = "getAddress";
         public const string LOGOUT = "logout";
         public const string GET_EMAIL = "getEmail";
