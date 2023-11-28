@@ -7,6 +7,19 @@
     "name": "Immutable",
     "url": "https://immutable.com"
   },
+  "scopedRegistries": [
+    {
+      "name": "Open UPM Packages",
+      "url": "https://package.openupm.com",
+      "scopes": [
+        "com.cysharp.unitask"
+      ]
+    }
+  ],
+  "dependencies": {
+    "com.unity.nuget.newtonsoft-json": "3.2.0",
+    "com.cysharp.unitask": "2.3.3"
+  },
   "keywords": [
     "unity",
     "immutable",
