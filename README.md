@@ -91,7 +91,3 @@ You can also join the conversation, connect with other projects, and ask questio
 You can also apply for marketing support for your project. Or, if you need help with an issue related to what you're building with Immutable X, click below to submit an issue. Select _I have a question_ or _issue related to building on Immutable X_ as your issue type.
 
 [Contact support](https://support.immutable.com/hc/en-us/requests/new)
-
-## License
-
-Immutable Unity SDK repository is distributed under the terms of the [Apache License (Version 2.0)](LICENSE).
