@@ -25,18 +25,24 @@ public class UnauthenticatedScript : MonoBehaviour
             ConnectButton.gameObject.SetActive(false);
             TryAgainButton.gameObject.SetActive(false);
 
-            string clientId = "ZJL7JvetcDFBNDlgRs5oJoxuAUUl6uQj";
             string environment = Immutable.Passport.Model.Environment.SANDBOX;
             string redirectUri = null;
-#if UNITY_IPHONE || UNITY_ANDROID || UNITY_STANDALONE_OSX
+            string logoutRedirectUri = null;
+
+            // Different client ID is required for device and PKCE flow
+#if UNITY_ANDROID || UNITY_IPHONE || (UNITY_STANDALONE_OSX && !UNITY_EDITOR_OSX)
+            string clientId = "WiuxIUEYUyF67ANAbfbipX9mSbg9lb2P";
             redirectUri = "imxsample://callback";
+            logoutRedirectUri = "imxsample://callback/logout";
+#else
+            string clientId = "GbuQTnIdQmd2lnzkeWeeKlSHtqSAD5sQ";
 #endif
 
             passport = await Passport.Init(
 #if UNITY_STANDALONE_WIN
-                clientId, environment, redirectUri, 10000
+                clientId, environment, redirectUri, logoutRedirectUri, 10000
 #else
-                clientId, environment, redirectUri
+                clientId, environment, redirectUri, logoutRedirectUri
 #endif
                 );
 
