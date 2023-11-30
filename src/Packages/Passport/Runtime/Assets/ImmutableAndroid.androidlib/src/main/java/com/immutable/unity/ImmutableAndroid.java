@@ -73,8 +73,8 @@ public class ImmutableAndroid {
                         CustomTabsSession session = client.newSession(new CustomTabsCallback() {
                             @Override
                             public void onNavigationEvent(int navigationEvent, @Nullable Bundle extras) {
-                                if (navigationEvent == CustomTabsCallback.TAB_HIDDEN) {
-                                    callback.onCustomTabsDismissed();
+                                if (navigationEvent == CustomTabsCallback.TAB_HIDDEN && callback != null) {
+                                    callback.onCustomTabsDismissed(url);
                                 }
                             }
                         });
@@ -95,6 +95,6 @@ public class ImmutableAndroid {
     }
 
     interface Callback {
-        void onCustomTabsDismissed();
+        void onCustomTabsDismissed(String url);
     }
 }

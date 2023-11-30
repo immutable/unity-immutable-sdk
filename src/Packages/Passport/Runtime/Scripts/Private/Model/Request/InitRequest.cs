@@ -9,6 +9,7 @@ namespace Immutable.Passport.Model
         public string clientId;
         public string environment;
         public string redirectUri;
+        public string logoutRedirectUri;
         public VersionInfo engineVersion;
     }
 

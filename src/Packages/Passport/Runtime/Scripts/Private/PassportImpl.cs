@@ -26,12 +26,15 @@ namespace Immutable.Passport
         private DeviceConnectResponse deviceConnectResponse;
         private UniTaskCompletionSource<bool> pkceCompletionSource;
         private string redirectUri = null;
+        private string logoutRedirectUri = null;
         private string unityVersion = Application.unityVersion;
         private RuntimePlatform platform = Application.platform;
         private string osVersion = SystemInfo.operatingSystem;
 
 #if UNITY_ANDROID
-        internal static bool completingPKCE = false; // Used for the PKCE callback
+        // Used for the PKCE callback
+        internal static bool completingPKCE = false;
+        internal static string loginPKCEUrl;
 #endif
 
         public PassportImpl(IBrowserCommunicationsManager communicationsManager)
@@ -39,9 +42,10 @@ namespace Immutable.Passport
             this.communicationsManager = communicationsManager;
         }
 
-        public async UniTask Init(string clientId, string environment, string redirectUri = null, string deeplink = null)
+        public async UniTask Init(string clientId, string environment, string redirectUri = null, string logoutRedirectUri = null, string deeplink = null)
         {
             this.redirectUri = redirectUri;
+            this.logoutRedirectUri = logoutRedirectUri;
             this.communicationsManager.OnAuthPostMessage += OnDeepLinkActivated;
             this.communicationsManager.OnPostMessageError += OnPostMessageError;
 
@@ -54,13 +58,14 @@ namespace Immutable.Passport
             };
 
             string initRequest;
-            if (redirectUri != null)
+            if (redirectUri != null && logoutRedirectUri != null)
             {
                 InitRequestWithRedirectUri requestWithRedirectUri = new InitRequestWithRedirectUri()
                 {
                     clientId = clientId,
                     environment = environment,
                     redirectUri = redirectUri,
+                    logoutRedirectUri = logoutRedirectUri,
                     engineVersion = versionInfo
                 };
                 initRequest = JsonUtility.ToJson(requestWithRedirectUri);
@@ -123,9 +128,32 @@ namespace Immutable.Passport
 
         public async void OnDeepLinkActivated(string url)
         {
-            Debug.Log($"{TAG} OnDeepLinkActivated: {url} starts with {redirectUri}");
-            if (url.StartsWith(redirectUri))
-                await CompletePKCEFlow(url);
+            try
+            {
+                Debug.Log($"{TAG} OnDeepLinkActivated URL: {url}");
+
+                Uri uri = new Uri(url);
+                string domain = $"{uri.Scheme}://{uri.Host}{uri.AbsolutePath}";
+                if (domain.EndsWith("/"))
+                {
+                    domain = domain.Remove(domain.Length - 1);
+                }
+
+                if (domain.Equals(logoutRedirectUri))
+                {
+                    await UniTask.SwitchToMainThread();
+                    TrySetPKCEResult(true);
+                    pkceCompletionSource = null;
+                }
+                else if (domain.Equals(redirectUri))
+                {
+                    await CompleteLoginPKCEFlow(url);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"{TAG} OnDeepLinkActivated error {url}: {e.Message}");
+            }
         }
 
         public UniTask<bool> ConnectImxPKCE()
@@ -147,10 +175,8 @@ namespace Immutable.Passport
                 {
                     string url = response.result.Replace(" ", "+");
 #if UNITY_ANDROID
-                    AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
-                    AndroidJavaObject activity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
-                    AndroidJavaClass customTabLauncher = new AndroidJavaClass("com.immutable.unity.ImmutableAndroid");
-                    customTabLauncher.CallStatic("launchUrl", activity, url, new AndroidPKCECallback(this));
+                    loginPKCEUrl = url;
+                    LaunchAndroidUrl(url);
 #else
                     communicationsManager.LaunchAuthURL(url, redirectUri);
 #endif
@@ -173,7 +199,7 @@ namespace Immutable.Passport
             ));
         }
 
-        public async UniTask CompletePKCEFlow(string uriString)
+        public async UniTask CompleteLoginPKCEFlow(string uriString)
         {
 #if UNITY_ANDROID
             completingPKCE = true;
@@ -235,19 +261,20 @@ namespace Immutable.Passport
         }
 
 #if UNITY_ANDROID
-        public void OnPKCEDismissed(bool completing)
+        public void OnLoginPKCEDismissed(bool completing)
         {
-            Debug.Log($"{TAG} On PKCE Dismissed");
+            Debug.Log($"{TAG} On Login PKCE Dismissed");
             if (!completing)
             {
                 // User hasn't entered all required details (e.g. email address) into Passport yet
-                Debug.Log($"{TAG} PKCE dismissed before completing the flow");
+                Debug.Log($"{TAG} Login PKCE dismissed before completing the flow");
                 TrySetPKCECanceled();
             }
             else
             {
-                Debug.Log($"{TAG} PKCE dismissed by user or SDK");
+                Debug.Log($"{TAG} Login PKCE dismissed by user or SDK");
             }
+            loginPKCEUrl = null;
         }
 #endif
 
@@ -287,7 +314,6 @@ namespace Immutable.Passport
                 if (!(ex is PassportException) || (ex is PassportException pEx && !pEx.IsNetworkError()))
                 {
                     Debug.Log($"{TAG} Failed to connect to Passport using saved credentials, so logging out: {ex.Message}");
-                    await Logout();
                 }
                 else
                 {
@@ -339,10 +365,35 @@ namespace Immutable.Passport
             return response.GetStringResult();
         }
 
+        public async UniTask<string> GetLogoutUrl()
+        {
+            string response = await communicationsManager.Call(PassportFunction.LOGOUT);
+            return response.GetStringResult();
+        }
 
         public async UniTask Logout()
         {
-            await communicationsManager.Call(PassportFunction.LOGOUT);
+            string logoutUrl = await GetLogoutUrl();
+            Application.OpenURL(logoutUrl);
+        }
+
+        public UniTask LogoutPKCE()
+        {
+            UniTaskCompletionSource<bool> task = new UniTaskCompletionSource<bool>();
+            pkceCompletionSource = task;
+            LaunchLogoutPKCEUrl();
+            return task.Task;
+        }
+
+        private async void LaunchLogoutPKCEUrl()
+        {
+            string logoutUrl = await GetLogoutUrl();
+
+#if UNITY_ANDROID
+            LaunchAndroidUrl(logoutUrl);
+#else
+            communicationsManager.LaunchAuthURL(logoutUrl, logoutRedirectUri);
+#endif
         }
 
         public async UniTask<bool> HasCredentialsSaved()
@@ -513,6 +564,16 @@ namespace Immutable.Passport
                 Debug.LogError($"{TAG} PKCE canceled");
             }
         }
+
+#if UNITY_ANDROID
+        private void LaunchAndroidUrl(string url)
+        {
+            AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+            AndroidJavaObject activity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
+            AndroidJavaClass customTabLauncher = new AndroidJavaClass("com.immutable.unity.ImmutableAndroid");
+            customTabLauncher.CallStatic("launchUrl", activity, url, new AndroidPKCECallback(this));
+        }
+#endif
     }
 
 #if UNITY_ANDROID
@@ -524,9 +585,9 @@ namespace Immutable.Passport
         /// Note that you won't be able to tell whether it was closed by the user or the SDK.
         /// <param name="completing">True if the user has entered everything required (e.g. email address),
         /// Chrome Custom Tabs have closed, and the SDK is trying to complete the PKCE flow.
-        /// See <see cref="PassportImpl.CompletePKCEFlow"></param>
+        /// See <see cref="PassportImpl.CompleteLoginPKCEFlow"></param>
         /// </summary>
-        void OnPKCEDismissed(bool completing);
+        void OnLoginPKCEDismissed(bool completing);
     }
 
     class AndroidPKCECallback : AndroidJavaProxy
@@ -538,10 +599,16 @@ namespace Immutable.Passport
             this.callback = callback;
         }
 
-        async void onCustomTabsDismissed()
+        async void onCustomTabsDismissed(string url)
         {
             await UniTask.SwitchToMainThread();
-            callback.OnPKCEDismissed(PassportImpl.completingPKCE);
+
+            // To differentiate what triggered this
+            if (url == PassportImpl.loginPKCEUrl)
+            {
+                // Custom tabs dismissed for login flow
+                callback.OnLoginPKCEDismissed(PassportImpl.completingPKCE);
+            }
         }
     }
 #endif

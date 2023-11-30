@@ -50,12 +50,13 @@ namespace Immutable.Passport
         /// <param name="clientId">The client ID</param>
         /// <param name="environment">The environment to connect to</param>
         /// <param name="redirectUri">(Android, iOS and macOS only) The URL to which auth will redirect the browser after authorisation has been granted by the user</param>
+        /// <param name="logoutRedirectUri">(Android, iOS and macOS only) The URL to which auth will redirect the browser after log out is complete</param>
         /// <param name="engineStartupTimeoutMs">(Windows only) Timeout time for waiting for the engine to start (in milliseconds)</param>
         public static UniTask<Passport> Init(
 #if UNITY_STANDALONE_WIN
-            string clientId, string environment, string redirectUri = null, int engineStartupTimeoutMs = 4000
+            string clientId, string environment, string redirectUri = null, string logoutRedirectUri = null, int engineStartupTimeoutMs = 4000
 #else
-            string clientId, string environment, string redirectUri = null
+            string clientId, string environment, string redirectUri = null, string logoutRedirectUri = null
 #endif
         )
         {
@@ -78,7 +79,7 @@ namespace Immutable.Passport
                     {
                         if (readySignalReceived == true)
                         {
-                            await Instance.GetPassportImpl().Init(clientId, environment, redirectUri, deeplink);
+                            await Instance.GetPassportImpl().Init(clientId, environment, redirectUri, logoutRedirectUri, deeplink);
                             return Instance;
                         }
                         else
@@ -189,11 +190,21 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Logs the user out of Passport and removes any stored credentials
+        /// Logs the user out of Passport and removes any stored credentials.
+        /// Recommended to use when logging in using device auth flow - ConnectImx()
         /// </summary>
         public async UniTask Logout()
         {
             await GetPassportImpl().Logout();
+        }
+
+        /// <summary>
+        /// Logs the user out of Passport and removes any stored credentials.
+        /// Recommended to use when logging in using PKCE flow - ConnectImxPKCE()
+        /// </summary>
+        public async UniTask LogoutPKCE()
+        {
+            await GetPassportImpl().LogoutPKCE();
         }
 
         /// <summary>
