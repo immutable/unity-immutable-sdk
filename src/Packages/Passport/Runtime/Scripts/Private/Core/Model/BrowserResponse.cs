@@ -1,6 +1,6 @@
 using System;
 using UnityEngine;
-using Immutable.Passport.Json;
+using Immutable.Passport.Helpers;
 
 namespace Immutable.Passport.Core
 {

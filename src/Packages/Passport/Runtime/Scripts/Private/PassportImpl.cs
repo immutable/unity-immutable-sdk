@@ -3,11 +3,10 @@ using System;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
-using Immutable.Passport.Json;
 using Immutable.Passport.Model;
 using Immutable.Passport.Core;
+using Immutable.Passport.Helpers;
 using Cysharp.Threading.Tasks;
-using System.Web;
 using System.Threading;
 #if UNITY_ANDROID
 using UnityEngine.Android;
@@ -206,10 +205,9 @@ namespace Immutable.Passport
 #endif
             try
             {
-                var uri = new Uri(uriString);
-                var query = HttpUtility.ParseQueryString(uri.Query);
-                var state = query.Get("state");
-                var authCode = query.Get("code");
+                Uri uri = new Uri(uriString);
+                string state = uri.GetQueryParameter("state");
+                string authCode = uri.GetQueryParameter("code");
 
                 if (String.IsNullOrEmpty(state) || String.IsNullOrEmpty(authCode))
                 {

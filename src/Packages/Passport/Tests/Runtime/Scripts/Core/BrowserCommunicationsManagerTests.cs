@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using VoltstroStudios.UnityWebBrowser.Core;
 using VoltstroStudios.UnityWebBrowser.Events;
 #endif
-using Immutable.Passport.Json;
+using Immutable.Passport.Helpers;
 
 namespace Immutable.Passport.Core
 {
