@@ -12,7 +12,7 @@ using Immutable.Passport.Model;
 using UnityEngine;
 using Immutable.Passport;
 using UnityEngine.Scripting;
-using Immutable.Passport.Json;
+using Immutable.Passport.Helpers;
 
 namespace Immutable.Passport.Core
 {

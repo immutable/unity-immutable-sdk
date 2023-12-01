@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Immutable.Passport.Json
+namespace Immutable.Passport.Helpers
 {
     public static class JsonExtensions
     {
