@@ -77,5 +77,18 @@ namespace Immutable.Browser.Gree
         {
             webViewObject.LaunchAuthURL(url, redirectUri);
         }
+
+#if (UNITY_IPHONE && !UNITY_EDITOR) || (UNITY_ANDROID && !UNITY_EDITOR)
+        public void ClearCache(bool includeDiskFiles)
+        {
+            webViewObject.ClearCache(includeDiskFiles);
+        }
+
+        public void ClearStorage()
+        {
+            webViewObject.ClearStorage();
+        }
+#endif
+
     }
 }

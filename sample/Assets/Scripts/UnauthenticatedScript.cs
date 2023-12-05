@@ -126,6 +126,17 @@ public class UnauthenticatedScript : MonoBehaviour
         }
     }
 
+    public void ClearStorageAndCache()
+    {
+#if (UNITY_IPHONE && !UNITY_EDITOR) || (UNITY_ANDROID && !UNITY_EDITOR)
+        passport.ClearStorage();
+        passport.ClearCache(true);
+        ShowOutput("Cleared storage and cache");
+#else
+        ShowOutput("Support on Android and iOS devices only");
+#endif
+    }
+
     private void NavigateToAuthenticatedScene()
     {
         SceneManager.LoadScene(sceneName: "AuthenticatedScene");

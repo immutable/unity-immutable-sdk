@@ -572,6 +572,18 @@ namespace Immutable.Passport
             customTabLauncher.CallStatic("launchUrl", activity, url, new AndroidPKCECallback(this));
         }
 #endif
+
+#if (UNITY_IPHONE && !UNITY_EDITOR) || (UNITY_ANDROID && !UNITY_EDITOR)
+        public void ClearCache(bool includeDiskFiles)
+        {
+            communicationsManager.ClearCache(includeDiskFiles);
+        }
+
+        public void ClearStorage()
+        {
+            communicationsManager.ClearStorage();
+        }
+#endif
     }
 
 #if UNITY_ANDROID
