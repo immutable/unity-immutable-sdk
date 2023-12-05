@@ -55,7 +55,7 @@ namespace Immutable.Passport.Editor
             if (buildTarget == BuildTarget.StandaloneWindows64 || buildTarget == BuildTarget.StandaloneOSX || buildTarget == BuildTarget.iOS)
             {
                 CopyIntoDataDir(buildDataPath);
-                Debug.Log($"Sucessfully copied Passport files");
+                Debug.Log($"Successfully copied Passport files");
             }
 
             if (buildTarget == BuildTarget.iOS)
@@ -126,9 +126,9 @@ namespace Immutable.Passport.Editor
             // Check that the data folder exists
             if (!Directory.Exists(buildDataPath))
             {
-                Debug.LogError(
-                    "Failed to get the build's data folder. Make sure your build is the same name as your product name (In your project settings).");
-                return;
+                string errorMessage = "Failed to get the build's data folder. Make sure your build is the same name as your product name (In your project settings).";
+                Debug.LogError(errorMessage);
+                throw new Exception(errorMessage);
             }
 
             // Passport folder in the data folder

@@ -25,6 +25,10 @@ namespace Immutable.Passport.Core
         void SetCallTimeout(int ms);
         void LaunchAuthURL(string url, string redirectUri);
         UniTask<string> Call(string fxName, string data = null, bool ignoreTimeout = false);
+#if (UNITY_IPHONE && !UNITY_EDITOR) || (UNITY_ANDROID && !UNITY_EDITOR)
+        void ClearCache(bool includeDiskFiles);
+        void ClearStorage();
+#endif
     }
 
     [Preserve]
@@ -102,6 +106,18 @@ namespace Immutable.Passport.Core
             Debug.Log($"{TAG} LaunchAuthURL : {url}");
             webBrowserClient.LaunchAuthURL(url, redirectUri);
         }
+
+#if (UNITY_IPHONE && !UNITY_EDITOR) || (UNITY_ANDROID && !UNITY_EDITOR)
+        public void ClearCache(bool includeDiskFiles)
+        {
+            webBrowserClient.ClearCache(includeDiskFiles);
+        }
+
+        public void ClearStorage()
+        {
+            webBrowserClient.ClearStorage();
+        }
+#endif
 
         #endregion
 

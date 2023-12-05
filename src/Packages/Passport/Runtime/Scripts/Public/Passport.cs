@@ -337,6 +337,29 @@ namespace Immutable.Passport
             return await GetPassportImpl().ZkEvmGetBalance(address, blockNumberOrTag);
         }
 
+#if (UNITY_IPHONE && !UNITY_EDITOR) || (UNITY_ANDROID && !UNITY_EDITOR)
+        /// <summary>
+        /// Clears the underlying WebView resource cache
+        /// Android: Note that the cache is per-application, so this will clear the cache for all WebViews used.
+        /// <param name="includeDiskFiles">if false, only the RAM/in-memory cache is cleared</param>
+        /// </summary>
+        /// <returns></returns>
+        public void ClearCache(bool includeDiskFiles)
+        {
+            GetPassportImpl().ClearCache(includeDiskFiles);
+        }
+
+        /// <summary>
+        /// Clears all the underlying WebView storage currently being used by the JavaScript storage APIs. 
+        /// This includes Web SQL Database and the HTML5 Web Storage APIs.
+        /// </summary>
+        /// <returns></returns>
+        public void ClearStorage()
+        {
+            GetPassportImpl().ClearStorage();
+        }
+#endif
+
         private PassportImpl GetPassportImpl()
         {
             if (passportImpl != null)

@@ -377,6 +377,27 @@ static ASWebAuthenticationSession *_authSession;
 {
     return UIApplication.sharedApplication.windows.firstObject;
 }
+
+- (void)clearCache:(BOOL)includeDiskFiles
+{
+    if (webView == nil)
+        return;
+    NSMutableSet *types = [NSMutableSet setWithArray:@[WKWebsiteDataTypeMemoryCache]];
+    if (includeDiskFiles) {
+        [types addObject:WKWebsiteDataTypeDiskCache];
+    }
+    NSDate *date = [NSDate dateWithTimeIntervalSince1970:0];
+    [[WKWebsiteDataStore defaultDataStore] removeDataOfTypes:types modifiedSince:date completionHandler:^{}];
+}
+
+- (void)clearStorage
+{
+    if (webView == nil)
+        return;
+    NSMutableSet *types = [NSMutableSet setWithArray:@[WKWebsiteDataTypeLocalStorage, WKWebsiteDataTypeSessionStorage, WKWebsiteDataTypeWebSQLDatabases, WKWebsiteDataTypeIndexedDBDatabases]];
+    NSDate *date = [NSDate dateWithTimeIntervalSince1970:0];
+    [[WKWebsiteDataStore defaultDataStore] removeDataOfTypes:types modifiedSince:date completionHandler:^{}];
+}
 @end
 
 extern "C" {
@@ -386,6 +407,8 @@ extern "C" {
     void _CWebViewPlugin_EvaluateJS(void *instance, const char *url);
     void _CWebViewPlugin_SetDelegate(DelegateCallbackFunction callback);
     void _CWebViewPlugin_LaunchAuthURL(void *instance, const char *url);
+    void _CWebViewPlugin_ClearCache(void *instance, BOOL includeDiskFiles);
+    void _CWebViewPlugin_ClearStorage(void *instance);
 }
 
 void _CWebViewPlugin_SetDelegate(DelegateCallbackFunction callback) {
@@ -431,4 +454,20 @@ void _CWebViewPlugin_LaunchAuthURL(void *instance, const char *url)
         return;
     CWebViewPlugin *webViewPlugin = (__bridge CWebViewPlugin *)instance;
     [webViewPlugin launchAuthURL:url];
+}
+
+void _CWebViewPlugin_ClearCache(void *instance, BOOL includeDiskFiles)
+{
+    if (instance == NULL)
+        return;
+    CWebViewPlugin *webViewPlugin = (__bridge CWebViewPlugin *)instance;
+    [webViewPlugin clearCache:includeDiskFiles];
+}
+
+void _CWebViewPlugin_ClearStorage(void *instance)
+{
+    if (instance == NULL)
+        return;
+    CWebViewPlugin *webViewPlugin = (__bridge CWebViewPlugin *)instance;
+    [webViewPlugin clearStorage];
 }

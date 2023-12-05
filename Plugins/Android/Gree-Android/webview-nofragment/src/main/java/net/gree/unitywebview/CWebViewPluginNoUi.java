@@ -42,6 +42,7 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
+import android.webkit.WebStorage;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -287,5 +288,33 @@ public class CWebViewPluginNoUi {
                 mWebView.setNetworkAvailable(networkUp);
             }
         });
+    }
+
+    public void ClearCache(final boolean includeDiskFiles)
+    {
+        final Activity a = UnityPlayer.currentActivity;
+        if (CWebViewPluginNoUi.isDestroyed(a)) {
+            return;
+        }
+        a.runOnUiThread(new Runnable() {public void run() {
+            if (mWebView == null) {
+                return;
+            }
+            mWebView.clearCache(includeDiskFiles);
+        }});
+    }
+
+    public void ClearStorage()
+    {
+        final Activity a = UnityPlayer.currentActivity;
+        if (CWebViewPluginNoUi.isDestroyed(a)) {
+            return;
+        }
+        a.runOnUiThread(new Runnable() {public void run() {
+            if (mWebView == null) {
+                return;
+            }
+            WebStorage.getInstance().deleteAllData();
+        }});
     }
 }
