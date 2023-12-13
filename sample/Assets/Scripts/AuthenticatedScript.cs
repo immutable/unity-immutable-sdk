@@ -84,7 +84,7 @@ public class AuthenticatedScript : MonoBehaviour
             // Use existing credentials to connect to Passport
             ShowOutput("Connecting into Passport using saved credentials...");
             ConnectButton.gameObject.SetActive(false);
-            bool connected = await passport.ConnectImx(useCachedSession: true);
+            bool connected = await passport.ConnectImx();
             if (connected)
             {
                 IsRegisteredOffchainButton.gameObject.SetActive(true);
