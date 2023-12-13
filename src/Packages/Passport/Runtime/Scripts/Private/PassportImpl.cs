@@ -22,10 +22,16 @@ namespace Immutable.Passport
     {
         private const string TAG = "[Passport Implementation]";
         public readonly IBrowserCommunicationsManager communicationsManager;
+
+        // Used for device code auth
         private DeviceConnectResponse deviceConnectResponse;
+
+        // Used for PKCE
+        private bool pkceLoginOnly = false; // Used to differentiate between a login and connect
         private UniTaskCompletionSource<bool> pkceCompletionSource;
         private string redirectUri = null;
         private string logoutRedirectUri = null;
+
         private string unityVersion = Application.unityVersion;
         private RuntimePlatform platform = Application.platform;
         private string osVersion = SystemInfo.operatingSystem;
@@ -93,35 +99,130 @@ namespace Immutable.Passport
             }
         }
 
-        public async UniTask ConnectImx(Nullable<long> timeoutMs = null)
+        public async UniTask<bool> Login(bool useCachedSession = false, Nullable<long> timeoutMs = null)
         {
-            try
+            string functionName = "Login";
+            if (useCachedSession)
             {
-                bool connected = await ConnectImxSilent();
-                if (connected)
-                {
-                    return;
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"{TAG} Unable to connect with stored credentials");
-            }
-
-            // Fallback to device code auth flow
-            Debug.Log($"{TAG} Fallback to device code auth");
-            ConnectResponse connectResponse = await InitialiseDeviceCodeAuth();
-
-            if (connectResponse != null)
-            {
-                await ConfirmCode(timeoutMs);
+                return await Relogin();
             }
             else
             {
-                throw new PassportException(
-                    "Failed to retrieve auth url, please try again",
-                    PassportErrorType.AUTHENTICATION_ERROR
+                ConnectResponse connectResponse = await InitialiseDeviceCodeAuth(functionName);
+                if (connectResponse != null)
+                {
+                    await ConfirmCode(functionName, PassportFunction.LOGIN_CONFIRM_CODE, timeoutMs);
+                    return true;
+                }
+                else
+                {
+                    throw new PassportException("Failed to login, please try again", PassportErrorType.AUTHENTICATION_ERROR);
+                }
+            }
+        }
+
+        private async UniTask<bool> Relogin()
+        {
+            try
+            {
+                string callResponse = await communicationsManager.Call(PassportFunction.RELOGIN);
+                return callResponse.GetBoolResponse() ?? false;
+            }
+            catch (Exception ex)
+            {
+                Debug.Log($"{TAG} Failed to login to Passport using saved credentials: {ex.Message}");
+            }
+            return false;
+        }
+
+        public async UniTask<bool> ConnectImx(bool useCachedSession = false, Nullable<long> timeoutMs = null)
+        {
+            string functionName = "ConnectImx";
+            if (useCachedSession)
+            {
+                return await Reconnect();
+            }
+            else
+            {
+                ConnectResponse connectResponse = await InitialiseDeviceCodeAuth(functionName);
+                if (connectResponse != null)
+                {
+                    await ConfirmCode(functionName, PassportFunction.CONNECT_CONFIRM_CODE, timeoutMs);
+                    return true;
+                }
+                else
+                {
+                    throw new PassportException("Failed to connect, please try again", PassportErrorType.AUTHENTICATION_ERROR);
+                }
+            }
+        }
+
+        private async UniTask<bool> Reconnect()
+        {
+            try
+            {
+                string callResponse = await communicationsManager.Call(PassportFunction.RECONNECT);
+                return callResponse.GetBoolResponse() ?? false;
+            }
+            catch (Exception ex)
+            {
+                Debug.Log($"{TAG} Failed to connect to Passport using saved credentials: {ex.Message}");
+            }
+            return false;
+        }
+
+        private async UniTask<ConnectResponse> InitialiseDeviceCodeAuth(string callingFunction)
+        {
+            string callResponse = await communicationsManager.Call(PassportFunction.INIT_DEVICE_FLOW);
+            BrowserResponse response = callResponse.OptDeserializeObject<BrowserResponse>();
+            if (response.success == true)
+            {
+                deviceConnectResponse = callResponse.OptDeserializeObject<DeviceConnectResponse>();
+                if (deviceConnectResponse != null)
+                {
+                    return new ConnectResponse()
+                    {
+                        url = deviceConnectResponse.url,
+                        code = deviceConnectResponse.code
+                    };
+                }
+            }
+
+            throw new PassportException(response.error ?? $"Something went wrong, please call {callingFunction} again", PassportErrorType.AUTHENTICATION_ERROR);
+        }
+
+        private async UniTask ConfirmCode(string callingFunction, string functionToCall, Nullable<long> timeoutMs = null)
+        {
+            if (deviceConnectResponse != null)
+            {
+                // Open URL for user to confirm
+                Application.OpenURL(deviceConnectResponse.url);
+
+                // Start polling for token
+                ConfirmCodeRequest request = new ConfirmCodeRequest()
+                {
+                    deviceCode = deviceConnectResponse.deviceCode,
+                    interval = deviceConnectResponse.interval,
+                    timeoutMs = timeoutMs
+                };
+
+                string callResponse = await communicationsManager.Call(
+                    functionToCall,
+                    JsonUtility.ToJson(request),
+                    true // Ignore timeout, this flow can take minutes to complete. 15 minute expiry from Auth0.
+                );
+                BrowserResponse response = callResponse.OptDeserializeObject<BrowserResponse>();
+                if (response.success == false)
+                {
+                    throw new PassportException(
+                        response.error ?? $"Unable to confirm code, call {callingFunction} again",
+                        PassportErrorType.AUTHENTICATION_ERROR
                     );
+                }
+            }
+            else
+            {
+                throw new PassportException($"Call {callingFunction} first", PassportErrorType.AUTHENTICATION_ERROR);
             }
         }
 
@@ -155,10 +256,20 @@ namespace Immutable.Passport
             }
         }
 
+        public UniTask<bool> LoginPKCE()
+        {
+            UniTaskCompletionSource<bool> task = new UniTaskCompletionSource<bool>();
+            pkceCompletionSource = task;
+            pkceLoginOnly = true;
+            LaunchAuthUrl();
+            return task.Task;
+        }
+
         public UniTask<bool> ConnectImxPKCE()
         {
             UniTaskCompletionSource<bool> task = new UniTaskCompletionSource<bool>();
             pkceCompletionSource = task;
+            pkceLoginOnly = false;
             LaunchAuthUrl();
             return task.Task;
         }
@@ -226,7 +337,7 @@ namespace Immutable.Passport
                     };
 
                     string callResponse = await communicationsManager.Call(
-                            PassportFunction.CONNECT_PKCE,
+                            pkceLoginOnly ? PassportFunction.LOGIN_PKCE : PassportFunction.CONNECT_PKCE,
                             JsonUtility.ToJson(request)
                         );
 
@@ -275,87 +386,6 @@ namespace Immutable.Passport
             loginPKCEUrl = null;
         }
 #endif
-
-        private async UniTask<ConnectResponse> InitialiseDeviceCodeAuth()
-        {
-            string callResponse = await communicationsManager.Call(PassportFunction.CONNECT);
-            BrowserResponse response = callResponse.OptDeserializeObject<BrowserResponse>();
-            if (response.success == true)
-            {
-                deviceConnectResponse = callResponse.OptDeserializeObject<DeviceConnectResponse>();
-                if (deviceConnectResponse != null)
-                {
-                    return new ConnectResponse()
-                    {
-                        url = deviceConnectResponse.url,
-                        code = deviceConnectResponse.code
-                    };
-                }
-            }
-
-            throw new PassportException(
-                response.error ?? "Something went wrong, please call Connect() again",
-                PassportErrorType.AUTHENTICATION_ERROR
-            );
-        }
-
-        public async UniTask<bool> ConnectImxSilent()
-        {
-            try
-            {
-                string callResponse = await communicationsManager.Call(PassportFunction.RECONNECT);
-                BrowserResponse response = callResponse.OptDeserializeObject<BrowserResponse>();
-                return response != null ? response.success == true : false;
-            }
-            catch (Exception ex)
-            {
-                if (!(ex is PassportException) || (ex is PassportException pEx && !pEx.IsNetworkError()))
-                {
-                    Debug.Log($"{TAG} Failed to connect to Passport using saved credentials, so logging out: {ex.Message}");
-                }
-                else
-                {
-                    Debug.Log($"{TAG} Failed to connect to Passport using saved credentials: {ex.Message}");
-                }
-            }
-
-            return false;
-        }
-
-        private async UniTask ConfirmCode(Nullable<long> timeoutMs = null)
-        {
-            if (deviceConnectResponse != null)
-            {
-                // Open URL for user to confirm
-                Application.OpenURL(deviceConnectResponse.url);
-
-                // Start polling for token
-                ConfirmCodeRequest request = new ConfirmCodeRequest()
-                {
-                    deviceCode = deviceConnectResponse.deviceCode,
-                    interval = deviceConnectResponse.interval,
-                    timeoutMs = timeoutMs
-                };
-
-                string callResponse = await communicationsManager.Call(
-                    PassportFunction.CONFIRM_CODE,
-                    JsonUtility.ToJson(request),
-                    true // Ignore timeout, this flow can take minutes to complete. 15 minute expiry from Auth0.
-                );
-                BrowserResponse response = callResponse.OptDeserializeObject<BrowserResponse>();
-                if (response.success == false)
-                {
-                    throw new PassportException(
-                        response.error ?? "Unable to confirm code, call Connect() again",
-                        PassportErrorType.AUTHENTICATION_ERROR
-                    );
-                }
-            }
-            else
-            {
-                throw new PassportException("Call Connect() first", PassportErrorType.AUTHENTICATION_ERROR);
-            }
-        }
 
         public async UniTask<string> GetAddress()
         {

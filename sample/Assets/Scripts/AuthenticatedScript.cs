@@ -15,10 +15,13 @@ public class AuthenticatedScript : MonoBehaviour
     [SerializeField] private Canvas AuthenticatedCanvas;
     [SerializeField] private Button AccessTokenButton;
     [SerializeField] private Button IdTokenButton;
+    [SerializeField] private Button LogoutButton;
+
+    // IMX
+    [SerializeField] private Button ConnectButton;
     [SerializeField] private Button IsRegisteredOffchainButton;
     [SerializeField] private Button RegisterOffchainButton;
     [SerializeField] private Button GetAddressButton;
-    [SerializeField] private Button LogoutButton;
     [SerializeField] private Button ShowTransferButton;
 
     [SerializeField] private Canvas TransferCanvas;
@@ -62,10 +65,44 @@ public class AuthenticatedScript : MonoBehaviour
         if (Passport.Instance != null)
         {
             passport = Passport.Instance;
+            ConnectButton.gameObject.SetActive(!SampleAppManager.IsConnected);
+            IsRegisteredOffchainButton.gameObject.SetActive(SampleAppManager.IsConnected);
+            RegisterOffchainButton.gameObject.SetActive(SampleAppManager.IsConnected);
+            GetAddressButton.gameObject.SetActive(SampleAppManager.IsConnected);
+            ShowTransferButton.gameObject.SetActive(SampleAppManager.IsConnected);
         }
         else
         {
             ShowOutput("Passport Instance is null");
+        }
+    }
+
+    public async void Connect()
+    {
+        try
+        {
+            // Use existing credentials to connect to Passport
+            ShowOutput("Connecting into Passport using saved credentials...");
+            ConnectButton.gameObject.SetActive(false);
+            bool connected = await passport.ConnectImx(useCachedSession: true);
+            if (connected)
+            {
+                IsRegisteredOffchainButton.gameObject.SetActive(true);
+                RegisterOffchainButton.gameObject.SetActive(true);
+                GetAddressButton.gameObject.SetActive(true);
+                ShowTransferButton.gameObject.SetActive(true);
+                ShowOutput($"Connected");
+            }
+            else
+            {
+                ShowOutput($"Could not connect using saved credentials");
+                ConnectButton.gameObject.SetActive(true);
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowOutput($"Connect() error: {ex.Message}");
+            ConnectButton.gameObject.SetActive(true);
         }
     }
 
@@ -93,7 +130,14 @@ public class AuthenticatedScript : MonoBehaviour
         try
         {
             RegisterUserResponse response = await passport.RegisterOffchain();
-            ShowOutput($"Registered {response.tx_hash}");
+            if (response != null)
+            {
+                ShowOutput($"Registered {response.tx_hash}");
+            }
+            else
+            {
+                ShowOutput($"Not registered");
+            }
         }
         catch (PassportException e)
         {
@@ -130,6 +174,7 @@ public class AuthenticatedScript : MonoBehaviour
 #else
         await passport.Logout();
 #endif
+        SampleAppManager.IsConnected = false;
         SceneManager.LoadScene(sceneName: "UnauthenticatedScene");
     }
 
