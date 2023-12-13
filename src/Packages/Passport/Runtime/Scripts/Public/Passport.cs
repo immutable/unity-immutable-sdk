@@ -140,20 +140,33 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Connects the user into Passport via device code auth and sets up the IMX provider. This will open the user's
-        /// default browser and take them through Passport login.
-        /// 
-        /// Once authenticated, this function will set up the IMX provider.
-        ///
-        /// The user does not need to go through the device code auth flow if the saved access token is still valid or
-        /// the refresh token can be used to get a new access token.
+        /// Logs the user into Passport via device code auth. This will open the user's default browser and take them through Passport login.
+        /// <param name="useCachedSession">If true, the saved access token or refresh token will be used to log the user in. If this fails, it will not fallback to device code auth.</param>
         /// </summary>
-        public async UniTask ConnectImx(Nullable<long> timeoutMs = null)
+        public async UniTask<bool> Login(bool useCachedSession = false, Nullable<long> timeoutMs = null)
         {
-            await GetPassportImpl().ConnectImx(timeoutMs);
+            return await GetPassportImpl().Login(useCachedSession, timeoutMs);
+        }
+
+        /// <summary>
+        /// Logs the user into Passport via device code auth and sets up the IMX provider. This will open the user's
+        /// default browser and take them through Passport login.
+        /// <param name="useCachedSession">If true, the saved access token or refresh token will be used to connect the user. If this fails, it will not fallback to device code auth.</param>
+        /// </summary>
+        public async UniTask<bool> ConnectImx(bool useCachedSession = false, Nullable<long> timeoutMs = null)
+        {
+            return await GetPassportImpl().ConnectImx(useCachedSession, timeoutMs);
         }
 
 #if UNITY_ANDROID || UNITY_IPHONE || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
+        /// <summary>
+        /// Connects the user into Passport via PKCE auth.
+        /// </summary>
+        public async UniTask LoginPKCE()
+        {
+            await GetPassportImpl().LoginPKCE();
+        }
+
         /// <summary>
         /// Connects the user into Passport via PKCE auth and sets up the IMX provider.
         ///
@@ -165,18 +178,6 @@ namespace Immutable.Passport
             await GetPassportImpl().ConnectImxPKCE();
         }
 #endif
-
-        /// <summary>
-        /// Similar to Connect, however if the saved access token is no longer valid and the refresh token cannot be used,
-        /// it will not fallback to device code.
-        /// <returns>
-        /// True if the user is connected to Passport
-        /// </returns>
-        /// </summary>
-        public async UniTask<bool> ConnectImxSilent()
-        {
-            return await GetPassportImpl().ConnectImxSilent();
-        }
 
         /// <summary>
         /// Gets the wallet address of the logged in user.
