@@ -144,6 +144,19 @@ namespace Immutable.Passport
             }
             else
             {
+                // If the user called Login before and then ConnectImx, there is no point triggering device flow again
+                bool hasCredsSaved = await HasCredentialsSaved();
+                if (hasCredsSaved)
+                {
+                    bool reconnected = await Reconnect();
+                    if (reconnected)
+                    {
+                        // Successfully reconnected
+                        return reconnected;
+                    }
+                    // Otherwise fallback to device code flow
+                }
+
                 ConnectResponse connectResponse = await InitialiseDeviceCodeAuth(functionName);
                 if (connectResponse != null)
                 {
