@@ -48,6 +48,12 @@ namespace Immutable.Passport.Editor
             else if (buildTarget == BuildTarget.iOS)
             {
                 buildDataPath = Path.GetFullPath($"{buildOutputPath}/{buildAppName}/Data/");
+                Debug.Log($"iOS buildDataPath: {buildDataPath}");
+                if (!Directory.Exists(buildDataPath))
+                {
+                    buildDataPath = Path.GetFullPath($"{buildFullOutputPath}/Data/");
+                    Debug.Log($"iOS buildDataPath 2: {buildDataPath}");
+                }
             }
 
             // Copy passport files to data directory for these target
