@@ -17,53 +17,6 @@ The Immutable SDK for Unity helps you integrate your game with Immutable Passpor
 * [Immutable X](https://docs.immutable.com/docs/x/sdks/unity)
 * [Immutable zkEVM](https://docs.immutable.com/docs/zkEVM/sdks/unity)
 
-## Changelog Management
-
-The following headings should be used as appropriate.
-
-- Added
-- Changed
-- Deprecated
-- Removed
-- Fixed
-
-What follows is an example with all the change headings, for real world use only use headings when appropriate.
-This goes at the top of the CHANGELOG.md above the most recent release.
-
-```markdown
-...
-
-## [Unreleased]
-
-### Added
-
-for new features.
-
-### Changed
-
-for changes in existing functionality.
-
-### Deprecated
-
-for soon-to-be removed features.
-
-### Removed
-
-for now removed features.
-
-### Fixed
-
-for any bug fixes.
-
-...
-```
-
-The package's `package.json` will hold the value of the previous release (e.g. `src/Packages/Passport`)
-
-```json
-"version": "0.1.0",
-```
-
 ## Contributing
 
 If you would like to contribute, please read the following:
