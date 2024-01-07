@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Immutable.Passport;
 using Immutable.Passport.Model;
+using Immutable.Passport.Event;
 
 public class UnauthenticatedScript : MonoBehaviour
 {
@@ -47,6 +48,9 @@ public class UnauthenticatedScript : MonoBehaviour
 #endif
                 );
 
+            // Listen to Passport Auth events
+            passport.OnAuthEvent += OnPassportAuthEvent;
+
             // Check if user's logged in before
             bool hasCredsSaved = await passport.HasCredentialsSaved();
             Debug.Log(hasCredsSaved ? "Has credentials saved" : "Does not have credentials saved");
@@ -61,6 +65,11 @@ public class UnauthenticatedScript : MonoBehaviour
         {
             ShowOutput($"Start() error: {ex.Message}");
         }
+    }
+
+    private void OnPassportAuthEvent(PassportAuthEvent authEvent)
+    {
+        Debug.Log($"OnPassportAuthEvent {authEvent.ToString()}");
     }
 
     public async void Login()
@@ -216,6 +225,7 @@ public class UnauthenticatedScript : MonoBehaviour
 
     private void NavigateToAuthenticatedScene()
     {
+        passport.OnAuthEvent -= OnPassportAuthEvent;
         SceneManager.LoadScene(sceneName: "AuthenticatedScene");
     }
 

@@ -5,6 +5,7 @@ using VoltstroStudios.UnityWebBrowser.Core;
 #else
 using Immutable.Browser.Gree;
 #endif
+using Immutable.Passport.Event;
 using Immutable.Browser.Core;
 using Immutable.Passport.Model;
 using Immutable.Passport.Core;
@@ -13,6 +14,7 @@ using UnityEngine;
 
 namespace Immutable.Passport
 {
+
     public class Passport
     {
         private const string TAG = "[Passport]";
@@ -29,6 +31,8 @@ namespace Immutable.Passport
         private static string deeplink = null;
         private static bool readySignalReceived = false;
         private PassportImpl passportImpl = null;
+
+        public event OnAuthEventDelegate OnAuthEvent;
 
         private Passport()
         {
@@ -110,6 +114,7 @@ namespace Immutable.Passport
                 await ((WebBrowserClient)webBrowserClient).Init(engineStartupTimeoutMs);
 #endif
                 passportImpl = new PassportImpl(communicationsManager);
+                passportImpl.OnAuthEvent += OnPassportAuthEvent;
             }
             catch (Exception ex)
             {
@@ -377,6 +382,14 @@ namespace Immutable.Passport
             if (passportImpl != null)
             {
                 GetPassportImpl().OnDeepLinkActivated(url);
+            }
+        }
+
+        private void OnPassportAuthEvent(PassportAuthEvent authEvent)
+        {
+            if (OnAuthEvent != null)
+            {
+                OnAuthEvent.Invoke(authEvent);
             }
         }
     }

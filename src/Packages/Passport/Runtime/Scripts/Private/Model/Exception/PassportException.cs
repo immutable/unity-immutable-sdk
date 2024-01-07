@@ -15,7 +15,8 @@ namespace Immutable.Passport.Model
         CREATE_TRADE_ERROR,
         BATCH_TRANSFER_ERROR,
         EXCHANGE_TRANSFER_ERROR,
-        OPERATION_NOT_SUPPORTED_ERROR
+        OPERATION_NOT_SUPPORTED_ERROR,
+        NOT_LOGGED_IN_ERROR
     }
 
     public class PassportException : Exception

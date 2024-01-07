@@ -7,6 +7,8 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Immutable.Passport;
 using Immutable.Passport.Model;
+using Immutable.Passport.Event;
+
 public class AuthenticatedScript : MonoBehaviour
 {
 #pragma warning disable CS8618
@@ -70,11 +72,19 @@ public class AuthenticatedScript : MonoBehaviour
             RegisterOffchainButton.gameObject.SetActive(SampleAppManager.IsConnected);
             GetAddressButton.gameObject.SetActive(SampleAppManager.IsConnected);
             ShowTransferButton.gameObject.SetActive(SampleAppManager.IsConnected);
+
+            // Listen to Passport Auth events
+            passport.OnAuthEvent += OnPassportAuthEvent;
         }
         else
         {
             ShowOutput("Passport Instance is null");
         }
+    }
+
+    private void OnPassportAuthEvent(PassportAuthEvent authEvent)
+    {
+        Debug.Log($"OnPassportAuthEvent {authEvent.ToString()}");
     }
 
     public async void Connect()
@@ -175,6 +185,7 @@ public class AuthenticatedScript : MonoBehaviour
         await passport.Logout();
 #endif
         SampleAppManager.IsConnected = false;
+        passport.OnAuthEvent -= OnPassportAuthEvent;
         SceneManager.LoadScene(sceneName: "UnauthenticatedScene");
     }
 
