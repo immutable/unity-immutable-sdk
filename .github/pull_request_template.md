@@ -42,4 +42,4 @@
 
 - [ ] Sample app is updated with new SDK changes
 - [ ] Sample game is updated with new SDK changes
-- [ ] Replied to Github issues
+- [ ] Replied to GitHub issues
