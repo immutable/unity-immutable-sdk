@@ -150,7 +150,7 @@ namespace Immutable.Passport.Event
         /// <summary>
         /// Started the reconnect (login and set up IMX provider) process using saved credentials
         /// </summary>
-        Reconecting,
+        Reconnecting,
         /// <summary>
         /// Failed to reconnect (login and set up IMX provider) using saved credentials
         /// </summary>
