@@ -1,7 +1,7 @@
 {
-    "threshold": 0,
-    "reporters": ["html", "markdown"],
-    "ignore": [
-      "**/src/Packages/Passport/Tests/**"
-    ]
-  }
+  "threshold": 0,
+  "reporters": ["html", "markdown"],
+  "ignore": [
+    "**/src/Packages/Passport/Tests/**"
+  ]
+}
