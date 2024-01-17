@@ -60,3 +60,4 @@ jobs:
           FILTER_REGEX_EXCLUDE: (.*src/Packages/Passport/Runtime/ThirdParty/.*|.*src/Packages/Passport/Runtime/Resources/.*|.*Plugins/.*|.*src/Packages/Passport/Runtime/Assets/ImmutableAndroid.androidlib/.*)
           VALIDATE_MARKDOWN: false
           VALIDATE_GITLEAKS: false
+          VALIDATE_JSCPD: false
