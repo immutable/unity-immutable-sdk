@@ -114,20 +114,12 @@ namespace Immutable.Passport
                 try
                 {
                     SendAuthEvent(PassportAuthEvent.LoggingIn);
-                    ConnectResponse connectResponse = await InitialiseDeviceCodeAuth(functionName);
-                    if (connectResponse != null)
-                    {
-                        await ConfirmCode(
-                            PassportAuthEvent.LoginOpeningBrowser, PassportAuthEvent.PendingBrowserLogin, functionName,
-                            PassportFunction.LOGIN_CONFIRM_CODE, timeoutMs);
-                        SendAuthEvent(PassportAuthEvent.LoginSuccess);
-                        return true;
-                    }
-                    else
-                    {
-                        SendAuthEvent(PassportAuthEvent.LoginFailed);
-                        throw new PassportException("Failed to login, please try again", PassportErrorType.AUTHENTICATION_ERROR);
-                    }
+                    await InitialiseDeviceCodeAuth(functionName);
+                    await ConfirmCode(
+                        PassportAuthEvent.LoginOpeningBrowser, PassportAuthEvent.PendingBrowserLogin, functionName,
+                        PassportFunction.LOGIN_CONFIRM_CODE, timeoutMs);
+                    SendAuthEvent(PassportAuthEvent.LoginSuccess);
+                    return true;
                 }
                 catch (Exception ex)
                 {
@@ -180,20 +172,12 @@ namespace Immutable.Passport
                 try
                 {
                     SendAuthEvent(PassportAuthEvent.ConnectingImx);
-                    ConnectResponse connectResponse = await InitialiseDeviceCodeAuth(functionName);
-                    if (connectResponse != null)
-                    {
-                        await ConfirmCode(
-                            PassportAuthEvent.ConnectImxOpeningBrowser, PassportAuthEvent.PendingBrowserLoginAndProviderSetup,
-                            functionName, PassportFunction.CONNECT_CONFIRM_CODE, timeoutMs);
-                        SendAuthEvent(PassportAuthEvent.ConnectImxSuccess);
-                        return true;
-                    }
-                    else
-                    {
-                        SendAuthEvent(PassportAuthEvent.ConnectImxFailed);
-                        throw new PassportException("Failed to connect, please try again", PassportErrorType.AUTHENTICATION_ERROR);
-                    }
+                    await InitialiseDeviceCodeAuth(functionName);
+                    await ConfirmCode(
+                        PassportAuthEvent.ConnectImxOpeningBrowser, PassportAuthEvent.PendingBrowserLoginAndProviderSetup,
+                        functionName, PassportFunction.CONNECT_CONFIRM_CODE, timeoutMs);
+                    SendAuthEvent(PassportAuthEvent.ConnectImxSuccess);
+                    return true;
                 }
                 catch (Exception ex)
                 {
@@ -207,7 +191,7 @@ namespace Immutable.Passport
         {
             try
             {
-                SendAuthEvent(PassportAuthEvent.Reconecting);
+                SendAuthEvent(PassportAuthEvent.Reconnecting);
                 string callResponse = await communicationsManager.Call(PassportFunction.RECONNECT);
                 bool success = callResponse.GetBoolResponse() ?? false;
                 SendAuthEvent(success ? PassportAuthEvent.ReconnectSuccess : PassportAuthEvent.ReconnectFailed);
@@ -224,21 +208,17 @@ namespace Immutable.Passport
         private async UniTask<ConnectResponse> InitialiseDeviceCodeAuth(string callingFunction)
         {
             string callResponse = await communicationsManager.Call(PassportFunction.INIT_DEVICE_FLOW);
-            BrowserResponse response = callResponse.OptDeserializeObject<BrowserResponse>();
-            if (response.success == true)
+            deviceConnectResponse = callResponse.OptDeserializeObject<DeviceConnectResponse>();
+            if (deviceConnectResponse != null && deviceConnectResponse.success == true)
             {
-                deviceConnectResponse = callResponse.OptDeserializeObject<DeviceConnectResponse>();
-                if (deviceConnectResponse != null)
+                return new ConnectResponse()
                 {
-                    return new ConnectResponse()
-                    {
-                        url = deviceConnectResponse.url,
-                        code = deviceConnectResponse.code
-                    };
-                }
+                    url = deviceConnectResponse.url,
+                    code = deviceConnectResponse.code
+                };
             }
 
-            throw new PassportException(response.error ?? $"Something went wrong, please call {callingFunction} again", PassportErrorType.AUTHENTICATION_ERROR);
+            throw new PassportException(deviceConnectResponse?.error ?? $"Something went wrong, please call {callingFunction} again", PassportErrorType.AUTHENTICATION_ERROR);
         }
 
         private async UniTask ConfirmCode(
@@ -249,7 +229,7 @@ namespace Immutable.Passport
             {
                 // Open URL for user to confirm
                 SendAuthEvent(openingBrowserAuthEvent);
-                Application.OpenURL(deviceConnectResponse.url);
+                OpenUrl(deviceConnectResponse.url);
 
                 // Start polling for token
                 SendAuthEvent(pendingAuthEvent);
@@ -266,17 +246,17 @@ namespace Immutable.Passport
                     true // Ignore timeout, this flow can take minutes to complete. 15 minute expiry from Auth0.
                 );
                 BrowserResponse response = callResponse.OptDeserializeObject<BrowserResponse>();
-                if (response.success == false)
+                if (response == null || response?.success == false)
                 {
                     throw new PassportException(
-                        response.error ?? $"Unable to confirm code, call {callingFunction} again",
+                        response?.error ?? $"Unable to confirm code, call {callingFunction} again",
                         PassportErrorType.AUTHENTICATION_ERROR
                     );
                 }
             }
             else
             {
-                throw new PassportException($"Call {callingFunction} first", PassportErrorType.AUTHENTICATION_ERROR);
+                throw new PassportException($"Unable to confirm code, call {callingFunction} again", PassportErrorType.AUTHENTICATION_ERROR);
             }
         }
 
@@ -497,7 +477,7 @@ namespace Immutable.Passport
             {
                 SendAuthEvent(PassportAuthEvent.LoggingOut);
                 string logoutUrl = await GetLogoutUrl();
-                Application.OpenURL(logoutUrl);
+                OpenUrl(logoutUrl);
                 SendAuthEvent(PassportAuthEvent.LogoutSuccess);
             }
             catch (Exception ex)
@@ -726,6 +706,11 @@ namespace Immutable.Passport
             {
                 OnAuthEvent.Invoke(authEvent);
             }
+        }
+
+        protected virtual void OpenUrl(string url)
+        {
+            Application.OpenURL(url);
         }
 
 #if UNITY_ANDROID
