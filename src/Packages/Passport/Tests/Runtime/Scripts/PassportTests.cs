@@ -88,18 +88,18 @@ namespace Immutable.Passport
                 deviceCode = DEVICE_CODE,
                 url = URL
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(deviceConnectResponse));
+            communicationsManager.AddMockResponse(deviceConnectResponse);
             var confirmCodeResponse = new BrowserResponse
             {
                 success = true
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(confirmCodeResponse));
+            communicationsManager.AddMockResponse(confirmCodeResponse);
             var logoutResponse = new StringResponse
             {
                 success = true,
                 result = LOGOUT_URL
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(logoutResponse));
+            communicationsManager.AddMockResponse(logoutResponse);
 
             // Login
             bool success = await passport.Login();
@@ -130,7 +130,7 @@ namespace Immutable.Passport
             {
                 success = false
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(deviceConnectResponse));
+            communicationsManager.AddMockResponse(deviceConnectResponse);
 
             PassportException e = null;
             try
@@ -189,12 +189,12 @@ namespace Immutable.Passport
                 deviceCode = DEVICE_CODE,
                 url = URL
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(deviceConnectResponse));
+            communicationsManager.AddMockResponse(deviceConnectResponse);
             var confirmCodeResponse = new BrowserResponse
             {
                 success = false
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(confirmCodeResponse));
+            communicationsManager.AddMockResponse(confirmCodeResponse);
 
             PassportException e = null;
             try
@@ -231,7 +231,7 @@ namespace Immutable.Passport
                 deviceCode = DEVICE_CODE,
                 url = URL
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(deviceConnectResponse));
+            communicationsManager.AddMockResponse(deviceConnectResponse);
 
             PassportException e = null;
             try
@@ -266,13 +266,13 @@ namespace Immutable.Passport
                 success = true,
                 result = true
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(reloginResponse));
+            communicationsManager.AddMockResponse(reloginResponse);
             var logoutResponse = new StringResponse
             {
                 success = true,
                 result = LOGOUT_URL
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(logoutResponse));
+            communicationsManager.AddMockResponse(logoutResponse);
 
             // Relogin
             bool success = await passport.Login(useCachedSession: true);
@@ -300,7 +300,7 @@ namespace Immutable.Passport
             {
                 success = false
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(reloginResponse));
+            communicationsManager.AddMockResponse(reloginResponse);
 
             bool success = await passport.Login(useCachedSession: true);
             Assert.False(success);
@@ -362,7 +362,7 @@ namespace Immutable.Passport
                 success = true,
                 result = false
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(reconnectResponse));
+            communicationsManager.AddMockResponse(reconnectResponse);
             var deviceConnectResponse = new DeviceConnectResponse
             {
                 success = true,
@@ -370,18 +370,18 @@ namespace Immutable.Passport
                 deviceCode = DEVICE_CODE,
                 url = URL
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(deviceConnectResponse));
+            communicationsManager.AddMockResponse(deviceConnectResponse);
             var confirmCodeResponse = new BrowserResponse
             {
                 success = true
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(confirmCodeResponse));
+            communicationsManager.AddMockResponse(confirmCodeResponse);
             var logoutResponse = new StringResponse
             {
                 success = true,
                 result = LOGOUT_URL
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(logoutResponse));
+            communicationsManager.AddMockResponse(logoutResponse);
 
             // Connect
             bool success = await passport.ConnectImx();
@@ -425,12 +425,12 @@ namespace Immutable.Passport
                 success = true,
                 result = false
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(reconnectResponse));
+            communicationsManager.AddMockResponse(reconnectResponse);
             var deviceConnectResponse = new DeviceConnectResponse
             {
                 success = false
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(deviceConnectResponse));
+            communicationsManager.AddMockResponse(deviceConnectResponse);
 
             PassportException e = null;
             try
@@ -474,7 +474,7 @@ namespace Immutable.Passport
                 success = true,
                 result = false
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(reconnectResponse));
+            communicationsManager.AddMockResponse(reconnectResponse);
 
             PassportException e = null;
             try
@@ -518,7 +518,7 @@ namespace Immutable.Passport
                 success = true,
                 result = false
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(reconnectResponse));
+            communicationsManager.AddMockResponse(reconnectResponse);
             var deviceConnectResponse = new DeviceConnectResponse
             {
                 success = true,
@@ -526,12 +526,12 @@ namespace Immutable.Passport
                 deviceCode = DEVICE_CODE,
                 url = URL
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(deviceConnectResponse));
+            communicationsManager.AddMockResponse(deviceConnectResponse);
             var confirmCodeResponse = new BrowserResponse
             {
                 success = false
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(confirmCodeResponse));
+            communicationsManager.AddMockResponse(confirmCodeResponse);
 
             PassportException e = null;
             try
@@ -578,7 +578,7 @@ namespace Immutable.Passport
                 success = true,
                 result = false
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(reconnectResponse));
+            communicationsManager.AddMockResponse(reconnectResponse);
             var deviceConnectResponse = new DeviceConnectResponse
             {
                 success = true,
@@ -586,7 +586,7 @@ namespace Immutable.Passport
                 deviceCode = DEVICE_CODE,
                 url = URL
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(deviceConnectResponse));
+            communicationsManager.AddMockResponse(deviceConnectResponse);
 
             PassportException e = null;
             try
@@ -635,7 +635,7 @@ namespace Immutable.Passport
                 success = true,
                 result = false
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(reconnectResponse));
+            communicationsManager.AddMockResponse(reconnectResponse);
             var deviceConnectResponse = new DeviceConnectResponse
             {
                 success = true,
@@ -643,18 +643,18 @@ namespace Immutable.Passport
                 deviceCode = DEVICE_CODE,
                 url = URL
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(deviceConnectResponse));
+            communicationsManager.AddMockResponse(deviceConnectResponse);
             var confirmCodeResponse = new BrowserResponse
             {
                 success = true
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(confirmCodeResponse));
+            communicationsManager.AddMockResponse(confirmCodeResponse);
             var logoutResponse = new StringResponse
             {
                 success = true,
                 result = LOGOUT_URL
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(logoutResponse));
+            communicationsManager.AddMockResponse(logoutResponse);
 
             // Connect
             bool success = await passport.ConnectImx();
@@ -700,13 +700,13 @@ namespace Immutable.Passport
                 success = true,
                 result = true
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(reconnectResponse));
+            communicationsManager.AddMockResponse(reconnectResponse);
             var logoutResponse = new StringResponse
             {
                 success = true,
                 result = LOGOUT_URL
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(logoutResponse));
+            communicationsManager.AddMockResponse(logoutResponse);
 
             // Login
             bool success = await passport.ConnectImx();
@@ -737,13 +737,13 @@ namespace Immutable.Passport
                 success = true,
                 result = true
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(reconnectResponse));
+            communicationsManager.AddMockResponse(reconnectResponse);
             var logoutResponse = new StringResponse
             {
                 success = true,
                 result = LOGOUT_URL
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(logoutResponse));
+            communicationsManager.AddMockResponse(logoutResponse);
 
             // Reconnect
             bool success = await passport.ConnectImx(useCachedSession: true);
@@ -772,7 +772,7 @@ namespace Immutable.Passport
                 success = true,
                 result = false
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(reconnectResponse));
+            communicationsManager.AddMockResponse(reconnectResponse);
 
             bool success = await passport.ConnectImx(useCachedSession: true);
             Assert.False(success);
@@ -826,7 +826,7 @@ namespace Immutable.Passport
                 success = true,
                 result = ADDRESS
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(response));
+            communicationsManager.AddMockResponse(response);
 
             var address = await passport.GetAddress();
 
@@ -853,7 +853,7 @@ namespace Immutable.Passport
                 success = true,
                 result = EMAIL
             };
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(response));
+            communicationsManager.AddMockResponse(response);
 
             var email = await passport.GetEmail();
 
@@ -881,6 +881,11 @@ namespace Immutable.Passport
         public string data = "";
         public event OnUnityPostMessageDelegate OnAuthPostMessage;
         public event OnUnityPostMessageErrorDelegate OnPostMessageError;
+
+        public void AddMockResponse(object response)
+        {
+            responses.Enqueue(JsonUtility.ToJson(response));
+        }
 
         public UniTask<string> Call(string fxName, string data = null, bool ignoreTimeout = false)
         {
