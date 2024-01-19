@@ -449,6 +449,11 @@ namespace Immutable.Passport
             }
             loginPKCEUrl = null;
         }
+
+        public void OnDeeplinkResult(string url)
+        {
+            OnDeepLinkActivated(url);
+        }
 #endif
 
         public async UniTask<string> GetAddress()
@@ -718,8 +723,8 @@ namespace Immutable.Passport
         {
             AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
             AndroidJavaObject activity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
-            AndroidJavaClass customTabLauncher = new AndroidJavaClass("com.immutable.unity.ImmutableAndroid");
-            customTabLauncher.CallStatic("launchUrl", activity, url, new AndroidPKCECallback(this));
+            AndroidJavaClass customTabLauncher = new AndroidJavaClass("com.immutable.unity.ImmutableActivity");
+            customTabLauncher.CallStatic("startActivity", activity, url, new AndroidPKCECallback(this));
         }
 #endif
 
@@ -748,13 +753,15 @@ namespace Immutable.Passport
         /// See <see cref="PassportImpl.CompleteLoginPKCEFlow"></param>
         /// </summary>
         void OnLoginPKCEDismissed(bool completing);
+
+        void OnDeeplinkResult(string url);
     }
 
     class AndroidPKCECallback : AndroidJavaProxy
     {
         private PKCECallback callback;
 
-        public AndroidPKCECallback(PKCECallback callback) : base("com.immutable.unity.ImmutableAndroid$Callback")
+        public AndroidPKCECallback(PKCECallback callback) : base("com.immutable.unity.ImmutableActivity$Callback")
         {
             this.callback = callback;
         }
@@ -769,6 +776,12 @@ namespace Immutable.Passport
                 // Custom tabs dismissed for login flow
                 callback.OnLoginPKCEDismissed(PassportImpl.completingPKCE);
             }
+        }
+
+        async void onDeeplinkResult(string url)
+        {
+            await UniTask.SwitchToMainThread();
+            callback.OnDeeplinkResult(url);
         }
     }
 #endif

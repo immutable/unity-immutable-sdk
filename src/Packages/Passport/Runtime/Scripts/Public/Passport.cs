@@ -38,7 +38,7 @@ namespace Immutable.Passport
         {
 #if UNITY_STANDALONE_WIN
             Application.quitting += OnQuit;
-#elif UNITY_IPHONE || UNITY_ANDROID || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
+#elif UNITY_IPHONE || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
             Application.deepLinkActivated += OnDeepLinkActivated;
             if (!string.IsNullOrEmpty(Application.absoluteURL))
             {
