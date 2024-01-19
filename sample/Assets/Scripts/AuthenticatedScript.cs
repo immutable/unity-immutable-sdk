@@ -179,6 +179,7 @@ public class AuthenticatedScript : MonoBehaviour
 
     public async void Logout()
     {
+        ShowOutput("Logging out...");
 #if UNITY_ANDROID || UNITY_IPHONE || (UNITY_STANDALONE_OSX && !UNITY_EDITOR_OSX)
         await passport.LogoutPKCE();
 #else
