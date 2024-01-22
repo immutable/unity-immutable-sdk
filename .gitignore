@@ -87,3 +87,5 @@ src/Packages/Passport/Runtime/Assets/ImmutableAndroid.androidlib/**/*.meta
 
 # WebView.bundle
 src/Packages/Passport/Runtime/ThirdParty/Gree/Assets/Plugins/WebView.bundle/**/*.meta
+
+*.idea

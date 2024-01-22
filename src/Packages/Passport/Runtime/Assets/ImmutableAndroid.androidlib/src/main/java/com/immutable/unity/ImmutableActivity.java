@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -95,7 +97,17 @@ public class ImmutableActivity extends Activity {
             @Override
             public void onNavigationEvent(int navigationEvent, @Nullable Bundle extras) {
                 if (navigationEvent == CustomTabsCallback.TAB_HIDDEN && callbackInstance != null) {
-                    callbackInstance.onCustomTabsDismissed(uri.toString());
+                    // Adding some delay before calling onCustomTabsDismissed as sometimes this gets called
+                    // before the PKCE deeplink is triggered (by 100ms). This means pkceCompletionSource will be
+                    // set to null before the SDK can use it to notify the consumer of the PKCE result.
+                    // See PassportImpl.OnLoginPKCEDismissed and PassportImpl.OnDeepLinkActivated
+                    final Handler handler = new Handler(Looper.getMainLooper());
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            callbackInstance.onCustomTabsDismissed(uri.toString());
+                        }
+                    }, 1000);
                 }
             }
         });
