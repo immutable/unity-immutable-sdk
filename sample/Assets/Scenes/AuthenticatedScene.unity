@@ -2199,7 +2199,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Is Register Offchain
+  m_Text: Is Registered Offchain
 --- !u!222 &507797919
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -7038,8 +7038,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1375070108}
   m_HandleRect: {fileID: 1375070107}
   m_Direction: 0
-  m_Value: 0
-  m_Size: 1
+  m_Value: 1
+  m_Size: 0.99999994
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -7667,7 +7667,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1386490132
 RectTransform:
   m_ObjectHideFlags: 0
