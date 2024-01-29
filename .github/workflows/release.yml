@@ -7,8 +7,9 @@ on:
 
 jobs:
   release:
-    if: startsWith(github.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/tags/') && contains('["nattb8"]', github.actor)
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
         with:
