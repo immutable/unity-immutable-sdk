@@ -36,7 +36,8 @@ namespace Immutable.Browser.Gree
 #else
             string filePath = Constants.SCHEME_FILE + Path.GetFullPath(Application.dataPath) + Constants.PASSPORT_DATA_DIRECTORY_NAME + Constants.PASSPORT_HTML_FILE_NAME;
 #endif
-            webViewObject.LoadURL(filePath);
+            string escapedPath = filePath.Replace(" ", "%20");
+            webViewObject.LoadURL(escapedPath);
         }
 
         private void InvokeOnPostMessageError(string id, string message)
