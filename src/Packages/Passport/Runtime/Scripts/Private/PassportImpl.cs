@@ -43,6 +43,9 @@ namespace Immutable.Passport
         internal static string loginPKCEUrl;
 #endif
 
+        // Used to prevent calling login/connect functions multiple times
+        private bool isLoggedIn = false;
+
         public event OnAuthEventDelegate OnAuthEvent;
 
         public PassportImpl(IBrowserCommunicationsManager communicationsManager)
@@ -119,6 +122,7 @@ namespace Immutable.Passport
                         PassportAuthEvent.LoginOpeningBrowser, PassportAuthEvent.PendingBrowserLogin, functionName,
                         PassportFunction.LOGIN_CONFIRM_CODE, timeoutMs);
                     SendAuthEvent(PassportAuthEvent.LoginSuccess);
+                    isLoggedIn = true;
                     return true;
                 }
                 catch (Exception ex)
@@ -137,6 +141,7 @@ namespace Immutable.Passport
                 string callResponse = await communicationsManager.Call(PassportFunction.RELOGIN);
                 bool success = callResponse.GetBoolResponse() ?? false;
                 SendAuthEvent(success ? PassportAuthEvent.ReloginSuccess : PassportAuthEvent.ReloginFailed);
+                isLoggedIn = success;
                 return success;
             }
             catch (Exception ex)
@@ -177,6 +182,7 @@ namespace Immutable.Passport
                         PassportAuthEvent.ConnectImxOpeningBrowser, PassportAuthEvent.PendingBrowserLoginAndProviderSetup,
                         functionName, PassportFunction.CONNECT_CONFIRM_CODE, timeoutMs);
                     SendAuthEvent(PassportAuthEvent.ConnectImxSuccess);
+                    isLoggedIn = true;
                     return true;
                 }
                 catch (Exception ex)
@@ -195,6 +201,7 @@ namespace Immutable.Passport
                 string callResponse = await communicationsManager.Call(PassportFunction.RECONNECT);
                 bool success = callResponse.GetBoolResponse() ?? false;
                 SendAuthEvent(success ? PassportAuthEvent.ReconnectSuccess : PassportAuthEvent.ReconnectFailed);
+                isLoggedIn = success;
                 return success;
             }
             catch (Exception ex)
@@ -276,8 +283,12 @@ namespace Immutable.Passport
                 if (domain.Equals(logoutRedirectUri))
                 {
                     await UniTask.SwitchToMainThread();
+                    if (isLoggedIn)
+                    {
+                        TrySetPKCEResult(true);
+                    }
                     SendAuthEvent(PassportAuthEvent.LogoutPKCESuccess);
-                    TrySetPKCEResult(true);
+                    isLoggedIn = false;
                     pkceCompletionSource = null;
                 }
                 else if (domain.Equals(redirectUri))
@@ -415,8 +426,12 @@ namespace Immutable.Passport
                     }
                     else
                     {
+                        if (!isLoggedIn)
+                        {
+                            TrySetPKCEResult(true);
+                        }
                         SendAuthEvent(pkceLoginOnly ? PassportAuthEvent.LoginPKCESuccess : PassportAuthEvent.ConnectImxPKCESuccess);
-                        TrySetPKCEResult(true);
+                        isLoggedIn = true;
                     }
                 }
             }
@@ -437,7 +452,7 @@ namespace Immutable.Passport
         public void OnLoginPKCEDismissed(bool completing)
         {
             Debug.Log($"{TAG} On Login PKCE Dismissed");
-            if (!completing)
+            if (!completing && !isLoggedIn)
             {
                 // User hasn't entered all required details (e.g. email address) into Passport yet
                 Debug.Log($"{TAG} Login PKCE dismissed before completing the flow");
@@ -484,6 +499,7 @@ namespace Immutable.Passport
                 string logoutUrl = await GetLogoutUrl();
                 OpenUrl(logoutUrl);
                 SendAuthEvent(PassportAuthEvent.LogoutSuccess);
+                isLoggedIn = false;
             }
             catch (Exception ex)
             {
@@ -671,6 +687,7 @@ namespace Immutable.Passport
 
         private void TrySetPKCEResult(bool result)
         {
+            Debug.Log($"{TAG} Trying to set PKCE result to {result}...");
             if (pkceCompletionSource != null)
             {
                 pkceCompletionSource.TrySetResult(result);
@@ -683,6 +700,7 @@ namespace Immutable.Passport
 
         private void TrySetPKCEException(Exception exception)
         {
+            Debug.Log($"{TAG} Trying to set PKCE exception...");
             if (pkceCompletionSource != null)
             {
                 pkceCompletionSource.TrySetException(exception);
@@ -695,18 +713,20 @@ namespace Immutable.Passport
 
         private void TrySetPKCECanceled()
         {
+            Debug.Log($"{TAG} Trying to set PKCE canceled...");
             if (pkceCompletionSource != null)
             {
                 pkceCompletionSource.TrySetCanceled();
             }
             else
             {
-                Debug.LogError($"{TAG} PKCE canceled");
+                Debug.LogWarning($"{TAG} PKCE canceled");
             }
         }
 
         private void SendAuthEvent(PassportAuthEvent authEvent)
         {
+            Debug.Log($"{TAG} Send auth event: {authEvent}");
             if (OnAuthEvent != null)
             {
                 OnAuthEvent.Invoke(authEvent);
