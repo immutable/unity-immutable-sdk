@@ -55,6 +55,8 @@ namespace Immutable.Passport
 
         public async UniTask Init(string clientId, string environment, string redirectUri = null, string logoutRedirectUri = null, string deeplink = null)
         {
+            Track(PassportAnalytics.EventName.START_INIT_PASSPORT);
+
             this.redirectUri = redirectUri;
             this.logoutRedirectUri = logoutRedirectUri;
             this.communicationsManager.OnAuthPostMessage += OnDeepLinkActivated;
@@ -97,12 +99,19 @@ namespace Immutable.Passport
 
             if (initResponse.success == false)
             {
+                Track(PassportAnalytics.EventName.INIT_PASSPORT, new Dictionary<string, object>(){
+                    {PassportAnalytics.Properties.SUCCESS, false}
+                });
                 throw new PassportException(initResponse.error ?? "Unable to initialise Passport");
             }
             else if (deeplink != null)
             {
                 OnDeepLinkActivated(deeplink);
             }
+
+            Track(PassportAnalytics.EventName.INIT_PASSPORT, new Dictionary<string, object>(){
+                    {PassportAnalytics.Properties.SUCCESS, true}
+                });
         }
 
         public async UniTask<bool> Login(bool useCachedSession = false, Nullable<long> timeoutMs = null)
@@ -473,7 +482,7 @@ namespace Immutable.Passport
 
         public async UniTask<string> GetAddress()
         {
-            string response = await communicationsManager.Call(PassportFunction.GET_ADDRESS);
+            string response = await communicationsManager.Call(PassportFunction.IMX.GET_ADDRESS);
             return response.GetStringResult();
         }
 
@@ -759,6 +768,24 @@ namespace Immutable.Passport
             communicationsManager.ClearStorage();
         }
 #endif
+
+        private async void Track(string eventName, IDictionary<string, object>? properties = null)
+        {
+            try
+            {
+                string json = JsonUtility.ToJson(new TrackData()
+                {
+                    moduleName = PassportAnalytics.MODULE_NAME,
+                    eventName = eventName,
+                    properties = properties != null ? properties.ToJson() : null
+                });
+                await communicationsManager.Call(PassportAnalytics.TRACK, json);
+            }
+            catch (Exception ex)
+            {
+                // Ignore tracking errors
+            }
+        }
     }
 
 #if UNITY_ANDROID

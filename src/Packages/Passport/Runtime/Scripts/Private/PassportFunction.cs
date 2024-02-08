@@ -14,12 +14,12 @@ namespace Immutable.Passport
         public const string CONNECT_CONFIRM_CODE = "connectConfirmCode";
         public const string GET_ACCESS_TOKEN = "getAccessToken";
         public const string GET_ID_TOKEN = "getIdToken";
-        public const string GET_ADDRESS = "getAddress";
         public const string LOGOUT = "logout";
         public const string GET_EMAIL = "getEmail";
 
         public static class IMX
         {
+            public const string GET_ADDRESS = "getAddress";
             public const string IS_REGISTERED_OFFCHAIN = "isRegisteredOffchain";
             public const string REGISTER_OFFCHAIN = "registerOffchain";
             public const string TRANSFER = "imxTransfer";

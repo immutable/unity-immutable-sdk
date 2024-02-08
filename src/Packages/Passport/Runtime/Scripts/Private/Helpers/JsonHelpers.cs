@@ -1,4 +1,7 @@
+using System.Collections.Generic;
 using System;
+using System.Linq;
+using System.Text;
 using UnityEngine;
 
 namespace Immutable.Passport.Helpers
@@ -49,6 +52,40 @@ namespace Immutable.Passport.Helpers
                 return source;
             }
             return source.Remove(place, search.Length).Insert(place, replace);
+        }
+
+        public static string ToJson(this IDictionary<string, object> dictionary)
+        {
+            // JsonUtility cannot serialise dictionary, but not using newtonsoft json as it doesn't
+            // work properly with older unity versions so doing it manually
+            StringBuilder sb = new StringBuilder("{");
+            for (int i = 0; i < dictionary.Count; i++)
+            {
+                object value = dictionary.ElementAt(i).Value;
+                if (value is string || value is int || value is long || value is double || value is bool)
+                {
+                    string key = dictionary.ElementAt(i).Key;
+                    sb = sb.Append("\"").Append(key).Append("\":");
+                    if (value is string)
+                    {
+                        sb = sb.Append($"\"{value}\"");
+                    }
+                    else if (value is int || value is long || value is double)
+                    {
+                        sb = sb.Append(value);
+                    }
+                    else if (value is bool)
+                    {
+                        sb = sb.Append(value.ToString().ToLower());
+                    }
+                }
+                if (i < dictionary.Count - 1)
+                {
+                    sb = sb.Append(",");
+                }
+            }
+            sb = sb.Append("}");
+            return sb.ToString();
         }
 
         [Serializable]
