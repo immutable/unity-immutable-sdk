@@ -831,7 +831,7 @@ namespace Immutable.Passport
             var address = await passport.GetAddress();
 
             Assert.AreEqual(ADDRESS, address);
-            Assert.AreEqual(PassportFunction.GET_ADDRESS, communicationsManager.fxName);
+            Assert.AreEqual(PassportFunction.IMX.GET_ADDRESS, communicationsManager.fxName);
             Assert.True(String.IsNullOrEmpty(communicationsManager.data));
         }
 
@@ -841,7 +841,7 @@ namespace Immutable.Passport
             var address = await passport.GetAddress();
 
             Assert.Null(address);
-            Assert.AreEqual(PassportFunction.GET_ADDRESS, communicationsManager.fxName);
+            Assert.AreEqual(PassportFunction.IMX.GET_ADDRESS, communicationsManager.fxName);
             Assert.True(String.IsNullOrEmpty(communicationsManager.data));
         }
 
