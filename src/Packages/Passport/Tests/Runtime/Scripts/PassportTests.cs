@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
-using Immutable.Passport;
 using Immutable.Passport.Core;
 using Immutable.Passport.Model;
 using Immutable.Passport.Event;
@@ -23,6 +22,10 @@ namespace Immutable.Passport
         protected override void OpenUrl(string url)
         {
             urlsOpened.Add(url);
+        }
+
+        protected override void Track(string eventName, bool? success = null, Dictionary<string, object>? properties = null)
+        {
         }
     }
 
@@ -505,14 +508,14 @@ namespace Immutable.Passport
         [Test]
         public async Task ConnectImx_ConfirmCode_Failed()
         {
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(new StringResponse
+            communicationsManager.AddMockResponse(new StringResponse
             {
                 success = true
-            }));
-            communicationsManager.responses.Enqueue(JsonUtility.ToJson(new StringResponse
+            });
+            communicationsManager.AddMockResponse(new StringResponse
             {
                 success = true
-            }));
+            });
             var reconnectResponse = new BoolResponse
             {
                 success = true,

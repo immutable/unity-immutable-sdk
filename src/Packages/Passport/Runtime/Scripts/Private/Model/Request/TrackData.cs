@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System;
 
 namespace Immutable.Passport.Model
@@ -8,7 +7,6 @@ namespace Immutable.Passport.Model
     {
         public string moduleName;
         public string eventName;
-        public string? properties;
+        public string properties;
     }
 }
-

@@ -9,5 +9,6 @@ namespace Immutable.Passport.Model
         public string engineVersion;
         public string platform;
         public string platformVersion;
+        public string deviceModel;
     }
 }
