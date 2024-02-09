@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System;
 using NUnit.Framework;
 using Immutable.Passport.Helpers;
 

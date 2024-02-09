@@ -10,7 +10,6 @@ using Immutable.Browser.Gree;
 using Immutable.Browser.Core;
 using Immutable.Passport.Model;
 using UnityEngine;
-using Immutable.Passport;
 using UnityEngine.Scripting;
 using Immutable.Passport.Helpers;
 

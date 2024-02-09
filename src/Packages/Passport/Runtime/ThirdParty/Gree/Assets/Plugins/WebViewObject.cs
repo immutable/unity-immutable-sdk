@@ -345,7 +345,6 @@ public class WebViewObject
 
     public void CallOnLog(string message)
     {
-        Debug.Log($"{TAG} CallOnLog {message}");
         if (onLog != null)
         {
             onLog(message);
