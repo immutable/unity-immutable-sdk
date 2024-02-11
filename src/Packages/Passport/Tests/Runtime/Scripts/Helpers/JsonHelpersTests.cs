@@ -24,6 +24,9 @@ namespace Immutable.Passport.Core
 
             properties = new Dictionary<string, object>();
             Assert.AreEqual("{}", properties.ToJson());
+
+            properties = new Dictionary<string, object>() { { "null", null } };
+            Assert.AreEqual("{}", properties.ToJson());
         }
     }
 }
