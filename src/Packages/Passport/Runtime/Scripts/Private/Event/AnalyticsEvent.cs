@@ -20,20 +20,20 @@ namespace Immutable.Passport.Event
             // Login
             public const string START_LOGIN = "startedLogin";
             public const string COMPLETE_LOGIN = "performedLogin";
-            public const string START_LOGIN_PKCE = "startedLoginPKCE";
-            public const string COMPLETE_LOGIN_PKCE = "performedLoginPKCE";
+            public const string START_LOGIN_PKCE = "startedLoginPkce";
+            public const string COMPLETE_LOGIN_PKCE = "performedLoginPkce";
             public const string COMPLETE_RELOGIN = "performedRelogin";
 
             // Connect
             public const string START_CONNECT_IMX = "startedConnectImx";
             public const string COMPLETE_CONNECT_IMX = "performedConnectImx";
-            public const string START_CONNECT_IMX_PKCE = "startedConnectImxPKCE";
-            public const string COMPLETE_CONNECT_IMX_PKCE = "performedConnectImxPKCE";
+            public const string START_CONNECT_IMX_PKCE = "startedConnectImxPkce";
+            public const string COMPLETE_CONNECT_IMX_PKCE = "performedConnectImxPkce";
             public const string COMPLETE_RECONNECT = "performedReconnect";
 
             // Logout
             public const string COMPLETE_LOGOUT = "performedLogout";
-            public const string COMPLETE_LOGOUT_PKCE = "performedLogoutPKCE";
+            public const string COMPLETE_LOGOUT_PKCE = "performedLogoutPkce";
         }
 
         public static class Properties
