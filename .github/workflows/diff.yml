@@ -1,0 +1,33 @@
+---
+name: "Check LICENSE/README/CHANGELOG diff"
+on: [pull_request]
+
+jobs:
+  diff:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Check that the LICENSE files are the exact same
+      uses: LouisBrunner/diff-action@v2.0.0
+      with:
+        old: LICENSE.md
+        new: src/Packages/Passport/LICENSE.md
+        mode: strict
+        tolerance: same
+        output: LICENSE-diff.txt
+    - name: Check that the README files are the exact same
+      uses: LouisBrunner/diff-action@v2.0.0
+      with:
+        old: README.md
+        new: src/Packages/Passport/README.md
+        mode: strict
+        tolerance: same
+        output: README-diff.txt
+    - name: Check that the CHANGELOG files are the exact same
+      uses: LouisBrunner/diff-action@v2.0.0
+      with:
+        old: CHANGELOG.md
+        new: src/Packages/Passport/CHANGELOG.md
+        mode: strict
+        tolerance: same
+        output: changelog-diff.txt
