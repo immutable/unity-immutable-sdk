@@ -370,7 +370,7 @@ namespace Immutable.Passport
                 if (response != null && response.success == true && response.result != null)
                 {
                     string url = response.result.Replace(" ", "+");
-#if UNITY_ANDROID
+#if UNITY_ANDROID && !UNITY_EDITOR
                     loginPKCEUrl = url;
                     SendAuthEvent(pkceLoginOnly ? PassportAuthEvent.LoginPKCELaunchingCustomTabs : PassportAuthEvent.ConnectImxPKCELaunchingCustomTabs);
                     LaunchAndroidUrl(url);
@@ -583,7 +583,7 @@ namespace Immutable.Passport
         {
             string logoutUrl = await GetLogoutUrl();
 
-#if UNITY_ANDROID
+#if UNITY_ANDROID && !UNITY_EDITOR
             LaunchAndroidUrl(logoutUrl);
 #else
             communicationsManager.LaunchAuthURL(logoutUrl, logoutRedirectUri);

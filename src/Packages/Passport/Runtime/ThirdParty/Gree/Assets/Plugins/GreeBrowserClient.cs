@@ -17,6 +17,10 @@ namespace Immutable.Browser.Gree
 
         public GreeBrowserClient()
         {
+#if (UNITY_ANDROID && UNITY_EDITOR_OSX) || (UNITY_IPHONE && UNITY_EDITOR_OSX)
+            Debug.LogWarning("Native Android and iOS WebViews cannot run in the Editor, so the macOS WebView is currently used to save your development time." + 
+                " Testing your game on an actual device or emulator is recommended to ensure proper functionality.");
+#endif
             webViewObject = new WebViewObject();
             webViewObject.Init(
                 cb: InvokeOnUnityPostMessage,
@@ -25,7 +29,7 @@ namespace Immutable.Browser.Gree
                 auth: InvokeOnAuthPostMessage,
                 log: InvokeOnLogMessage
             );
-#if UNITY_ANDROID
+#if UNITY_ANDROID && !UNITY_EDITOR
             string filePath = Constants.SCHEME_FILE + ANDROID_DATA_DIRECTORY + Constants.PASSPORT_DATA_DIRECTORY_NAME + Constants.PASSPORT_HTML_FILE_NAME;
 #elif UNITY_EDITOR_OSX
             string filePath = Constants.SCHEME_FILE + Path.GetFullPath(MAC_EDITOR_RESOURCES_DIRECTORY) + Constants.PASSPORT_HTML_FILE_NAME;

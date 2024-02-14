@@ -74,7 +74,7 @@ public class WebViewObject
     ErrorCallback onHttpError;
     Callback onAuth;
     Callback onLog;
-#if UNITY_ANDROID
+#if UNITY_ANDROID && !UNITY_EDITOR
     class AndroidCallback : AndroidJavaProxy
     {
         private Action<string> callback;
@@ -94,7 +94,7 @@ public class WebViewObject
     IntPtr webView;
 #endif
 
-#if UNITY_IPHONE
+#if UNITY_IPHONE && !UNITY_EDITOR
     [DllImport("__Internal")]
     private static extern IntPtr _CWebViewPlugin_Init(string ua);
     [DllImport("__Internal")]
@@ -113,7 +113,7 @@ public class WebViewObject
     private static extern void _CWebViewPlugin_ClearCache(IntPtr instance, bool includeDiskFiles);
     [DllImport("__Internal")]
     private static extern void _CWebViewPlugin_ClearStorage(IntPtr instance);
-#elif UNITY_STANDALONE_OSX
+#elif UNITY_STANDALONE_OSX || (UNITY_ANDROID && UNITY_EDITOR_OSX) || (UNITY_IPHONE && UNITY_EDITOR_OSX)
     [DllImport("WebView")]
     private static extern IntPtr _CWebViewPlugin_Init(string ua);
     [DllImport("WebView")]
@@ -228,7 +228,7 @@ public class WebViewObject
 #elif UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_LINUX
         //TODO: UNSUPPORTED
         Debug.LogError("Webview is not supported on this platform.");
-#elif UNITY_IPHONE || UNITY_STANDALONE_OSX
+#elif UNITY_IPHONE || UNITY_STANDALONE_OSX || (UNITY_ANDROID && UNITY_EDITOR_OSX)
         webView = _CWebViewPlugin_Init(ua);
         Singleton.Instance.onJS = ((message) => CallFromJS(message));
         Singleton.Instance.onError = ((id, message) => CallOnError(id, message));
@@ -257,7 +257,7 @@ public class WebViewObject
         Application.ExternalCall("unityWebView.loadURL", url);
 #elif UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_LINUX
         //TODO: UNSUPPORTED
-#elif UNITY_STANDALONE_OSX || UNITY_IPHONE
+#elif UNITY_STANDALONE_OSX || UNITY_IPHONE || (UNITY_ANDROID && UNITY_EDITOR_OSX)
         if (webView == IntPtr.Zero)
             return;
         _CWebViewPlugin_LoadURL(webView, url);
@@ -278,7 +278,7 @@ public class WebViewObject
         Application.ExternalCall("unityWebView.evaluateJS", js);
 #elif UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_LINUX
         //TODO: UNSUPPORTED
-#elif UNITY_STANDALONE_OSX || UNITY_IPHONE
+#elif UNITY_STANDALONE_OSX || UNITY_IPHONE || (UNITY_ANDROID && UNITY_EDITOR_OSX)
         if (webView == IntPtr.Zero)
             return;
         _CWebViewPlugin_EvaluateJS(webView, js);
@@ -291,7 +291,7 @@ public class WebViewObject
 
     public void LaunchAuthURL(string url, string redirectUri)
     {
-#if UNITY_STANDALONE_OSX
+#if UNITY_STANDALONE_OSX || (UNITY_ANDROID && UNITY_EDITOR_OSX) || (UNITY_IPHONE && UNITY_EDITOR_OSX)
         if (webView == IntPtr.Zero)
             return;
         _CWebViewPlugin_LaunchAuthURL(webView, url, redirectUri != null ? redirectUri : "");
@@ -332,7 +332,7 @@ public class WebViewObject
     {
         if (onJS != null)
         {
-#if !UNITY_ANDROID
+#if !(UNITY_ANDROID && !UNITY_EDITOR)
 #if UNITY_2018_4_OR_NEWER
             message = UnityWebRequest.UnEscapeURL(message.Replace("+", "%2B"));
 #else // UNITY_2018_4_OR_NEWER

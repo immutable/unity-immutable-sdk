@@ -34,8 +34,7 @@ public class UnauthenticatedScript : MonoBehaviour
             string redirectUri = null;
             string logoutRedirectUri = null;
 
-            // macOS editor (play scene) does not support deeplinking
-#if UNITY_ANDROID || UNITY_IPHONE || (UNITY_STANDALONE_OSX && !UNITY_EDITOR_OSX)
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
             redirectUri = "imxsample://callback";
             logoutRedirectUri = "imxsample://callback/logout";
 #endif
@@ -79,8 +78,7 @@ public class UnauthenticatedScript : MonoBehaviour
             ShowOutput("Called Login()...");
             LoginButton.gameObject.SetActive(false);
 
-            // macOS editor (play scene) does not support deeplinking
-#if UNITY_ANDROID || UNITY_IPHONE || (UNITY_STANDALONE_OSX && !UNITY_EDITOR_OSX)
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
             await passport.LoginPKCE();
 #else
             await passport.Login();
@@ -109,9 +107,7 @@ public class UnauthenticatedScript : MonoBehaviour
 
             Debug.Log(error);
             ShowOutput(error);
-#if UNITY_ANDROID || UNITY_IPHONE || UNITY_STANDALONE_OSX
             LoginButton.gameObject.SetActive(true);
-#endif
         }
     }
 
@@ -149,8 +145,7 @@ public class UnauthenticatedScript : MonoBehaviour
             ShowOutput("Called Connect()...");
             ConnectButton.gameObject.SetActive(false);
 
-            // macOS editor (play scene) does not support deeplinking
-#if UNITY_ANDROID || UNITY_IPHONE || (UNITY_STANDALONE_OSX && !UNITY_EDITOR_OSX)
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
             await passport.ConnectImxPKCE();
 #else
             await passport.ConnectImx();
@@ -179,9 +174,7 @@ public class UnauthenticatedScript : MonoBehaviour
 
             Debug.Log(error);
             ShowOutput(error);
-#if UNITY_ANDROID || UNITY_IPHONE || UNITY_STANDALONE_OSX
             ConnectButton.gameObject.SetActive(true);
-#endif
         }
     }
 
