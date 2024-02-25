@@ -102,7 +102,11 @@ public class UnauthenticatedScript : MonoBehaviour
             {
                 error = $"Login() error: {ex.Message}";
                 // Restart everything
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
                 await passport.Logout();
+#else
+                await passport.LogoutPKCE();
+#endif
             }
 
             Debug.Log(error);
@@ -169,7 +173,11 @@ public class UnauthenticatedScript : MonoBehaviour
             {
                 error = $"Connect() error: {ex.Message}";
                 // Restart everything
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
                 await passport.Logout();
+#else
+                await passport.LogoutPKCE();
+#endif
             }
 
             Debug.Log(error);
