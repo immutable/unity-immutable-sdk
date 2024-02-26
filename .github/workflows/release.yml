@@ -39,6 +39,14 @@ jobs:
                 {
                     "title": "## Fixes",
                     "labels": ["fix"]
+                },
+                {
+                    "title": "## Performance",
+                    "labels": ["performance"]
+                },
+                {
+                    "title": "## Chores",
+                    "labels": ["chore"]
                 }
               ]
             }
