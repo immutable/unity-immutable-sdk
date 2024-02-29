@@ -199,18 +199,20 @@ namespace Immutable.Passport
         /// Logs the user out of Passport and removes any stored credentials.
         /// Recommended to use when logging in using device auth flow - ConnectImx()
         /// </summary>
-        public async UniTask Logout()
+        /// <param name="hardLogout">If false, the user will not be logged out of Passport in the browser. The default is true.</param>
+        public async UniTask Logout(bool hardLogout = true)
         {
-            await GetPassportImpl().Logout();
+            await GetPassportImpl().Logout(hardLogout);
         }
 
         /// <summary>
         /// Logs the user out of Passport and removes any stored credentials.
         /// Recommended to use when logging in using PKCE flow - ConnectImxPKCE()
         /// </summary>
-        public async UniTask LogoutPKCE()
+        /// <param name="hardLogout">If false, the user will not be logged out of Passport in the browser. The default is true.</param>
+        public async UniTask LogoutPKCE(bool hardLogout = true)
         {
-            await GetPassportImpl().LogoutPKCE();
+            await GetPassportImpl().LogoutPKCE(hardLogout);
         }
 
         /// <summary>

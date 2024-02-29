@@ -127,6 +127,50 @@ namespace Immutable.Passport
         }
 
         [Test]
+        public async Task Login_Soft_Logout_Success()
+        {
+            var deviceConnectResponse = new DeviceConnectResponse
+            {
+                success = true,
+                code = CODE,
+                deviceCode = DEVICE_CODE,
+                url = URL
+            };
+            communicationsManager.AddMockResponse(deviceConnectResponse);
+            var confirmCodeResponse = new BrowserResponse
+            {
+                success = true
+            };
+            communicationsManager.AddMockResponse(confirmCodeResponse);
+            var logoutResponse = new StringResponse
+            {
+                success = true,
+                result = LOGOUT_URL
+            };
+            communicationsManager.AddMockResponse(logoutResponse);
+
+            // Login
+            bool success = await passport.Login();
+            Assert.True(success);
+
+            // Logout
+            await passport.Logout(hardLogout: false);
+
+            Assert.AreEqual(1, urlsOpened.Count);
+            Assert.AreEqual(URL, urlsOpened[0]);
+            List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
+                    PassportAuthEvent.LoggingIn,
+                    PassportAuthEvent.LoginOpeningBrowser,
+                    PassportAuthEvent.PendingBrowserLogin,
+                    PassportAuthEvent.LoginSuccess,
+                    PassportAuthEvent.LoggingOut,
+                    PassportAuthEvent.LogoutSuccess
+                };
+            Assert.AreEqual(expectedEvents.Count, authEvents.Count);
+            Assert.AreEqual(expectedEvents, authEvents);
+        }
+
+        [Test]
         public async Task Login_InitialiseDeviceCodeAuth_Failed()
         {
             var deviceConnectResponse = new DeviceConnectResponse

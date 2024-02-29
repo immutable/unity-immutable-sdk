@@ -520,14 +520,17 @@ namespace Immutable.Passport
             }
         }
 
-        public async UniTask Logout()
+        public async UniTask Logout(bool hardLogout = true)
         {
             try
             {
                 SendAuthEvent(PassportAuthEvent.LoggingOut);
 
                 string logoutUrl = await GetLogoutUrl();
-                OpenUrl(logoutUrl);
+                if (hardLogout)
+                {
+                    OpenUrl(logoutUrl);
+                }
 
                 Track(PassportAnalytics.EventName.COMPLETE_LOGOUT, success: true);
                 SendAuthEvent(PassportAuthEvent.LogoutSuccess);
@@ -544,7 +547,7 @@ namespace Immutable.Passport
             }
         }
 
-        public UniTask LogoutPKCE()
+        public UniTask LogoutPKCE(bool hardLogout = true)
         {
             try
             {
@@ -552,7 +555,7 @@ namespace Immutable.Passport
 
                 UniTaskCompletionSource<bool> task = new UniTaskCompletionSource<bool>();
                 pkceCompletionSource = task;
-                LaunchLogoutPKCEUrl();
+                LaunchLogoutPKCEUrl(hardLogout);
                 return task.Task;
             }
             catch (Exception ex)
@@ -579,15 +582,21 @@ namespace Immutable.Passport
             pkceCompletionSource = null;
         }
 
-        private async void LaunchLogoutPKCEUrl()
+        private async void LaunchLogoutPKCEUrl(bool hardLogout)
         {
             string logoutUrl = await GetLogoutUrl();
-
+            if (hardLogout)
+            {
 #if UNITY_ANDROID && !UNITY_EDITOR
-            LaunchAndroidUrl(logoutUrl);
+                LaunchAndroidUrl(logoutUrl);
 #else
-            communicationsManager.LaunchAuthURL(logoutUrl, logoutRedirectUri);
+                communicationsManager.LaunchAuthURL(logoutUrl, logoutRedirectUri);
 #endif
+            }
+            else
+            {
+                HandleLogoutPKCESuccess();
+            }
         }
 
         public async UniTask<bool> HasCredentialsSaved()
