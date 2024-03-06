@@ -295,7 +295,7 @@ public class WebViewObject
         if (webView == IntPtr.Zero)
             return;
         _CWebViewPlugin_LaunchAuthURL(webView, url, redirectUri != null ? redirectUri : "");
-#elif UNITY_IPHONE
+#elif UNITY_IPHONE && !UNITY_EDITOR_WIN
         if (webView == IntPtr.Zero)
             return;
         _CWebViewPlugin_LaunchAuthURL(webView, url);

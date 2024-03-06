@@ -19,7 +19,7 @@ namespace Immutable.Passport.Editor
 
         public void OnPostprocessBuild(BuildReport report)
         {
-            Debug.Log("Passport post-processing...");
+            Debug.Log($"Passport post-processing...");
 
             if (report.summary.result is BuildResult.Failed || report.summary.result is BuildResult.Cancelled)
                 return;

@@ -1,4 +1,4 @@
-#if UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
 
 // UnityWebBrowser (UWB)
 // Copyright (c) 2021-2022 Voltstro-Studios
@@ -248,6 +248,10 @@ namespace VoltstroStudios.UnityWebBrowser.Core
 
         public WebBrowserClient()
         {
+#if (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+            UnityEngine.Debug.LogWarning("Native Android and iOS WebViews cannot run in the Editor, so the Windows WebView is currently used to save your development time." + 
+                " Testing your game on an actual device or emulator is recommended to ensure proper functionality.");
+#endif
         }
 
         /// <summary>
@@ -312,7 +316,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
 #if UNITY_EDITOR
             filePath = Constants.SCHEME_FILE + Path.GetFullPath($"{PASSPORT_PACKAGE_RESOURCES_DIRECTORY}{Constants.PASSPORT_HTML_FILE_NAME}");
 #else
-#if UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
             filePath = Constants.SCHEME_FILE + Path.GetFullPath(Application.dataPath) + Constants.PASSPORT_DATA_DIRECTORY_NAME + Constants.PASSPORT_HTML_FILE_NAME;
 #endif     
 #endif
