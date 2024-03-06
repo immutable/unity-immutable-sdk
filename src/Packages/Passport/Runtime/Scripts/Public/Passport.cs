@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System;
-#if UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
 using VoltstroStudios.UnityWebBrowser.Core;
 #else
 using Immutable.Browser.Gree;
@@ -21,7 +21,7 @@ namespace Immutable.Passport
 
         public static Passport Instance { get; private set; }
 
-#if UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
         private readonly IWebBrowserClient webBrowserClient = new WebBrowserClient();
 #else
         private readonly IWebBrowserClient webBrowserClient = new GreeBrowserClient();
@@ -36,7 +36,7 @@ namespace Immutable.Passport
 
         private Passport()
         {
-#if UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
             Application.quitting += OnQuit;
 #elif UNITY_IPHONE || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
             Application.deepLinkActivated += OnDeepLinkActivated;
@@ -57,7 +57,7 @@ namespace Immutable.Passport
         /// <param name="logoutRedirectUri">(Android, iOS and macOS only) The URL to which auth will redirect the browser after log out is complete</param>
         /// <param name="engineStartupTimeoutMs">(Windows only) Timeout time for waiting for the engine to start (in milliseconds)</param>
         public static UniTask<Passport> Init(
-#if UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
             string clientId, string environment, string redirectUri = null, string logoutRedirectUri = null, int engineStartupTimeoutMs = 4000
 #else
             string clientId, string environment, string redirectUri = null, string logoutRedirectUri = null
@@ -70,7 +70,7 @@ namespace Immutable.Passport
                 Instance = new Passport();
                 // Wait until we get a ready signal
                 return Instance.Initialise(
-#if UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
                         engineStartupTimeoutMs
 #endif
                     )
@@ -101,7 +101,7 @@ namespace Immutable.Passport
         }
 
         private async UniTask Initialise(
-#if UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
             int engineStartupTimeoutMs
 #endif
         )
@@ -110,7 +110,7 @@ namespace Immutable.Passport
             {
                 BrowserCommunicationsManager communicationsManager = new BrowserCommunicationsManager(webBrowserClient);
                 communicationsManager.OnReady += () => readySignalReceived = true;
-#if UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
                 await ((WebBrowserClient)webBrowserClient).Init(engineStartupTimeoutMs);
 #endif
                 passportImpl = new PassportImpl(communicationsManager);
@@ -125,7 +125,7 @@ namespace Immutable.Passport
             }
         }
 
-#if UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
         private void OnQuit()
         {
             // Need to clean up UWB resources when quitting the game in the editor
