@@ -6,8 +6,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -61,6 +59,16 @@ public class ImmutableActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        Uri uri = getUri();
+        // Determine whether user returned to this activity from a redirect or because the user cancelled
+        // the auth flow. If there is no response data (from RedirectActivity), it's because the
+        // user dismissed custom tabs, pressed the back button, or the auth flow finished without invoking
+        // RedirectActivity.
+        if (customTabsLaunched && uri != null && getIntent().getData() == null && callbackInstance != null) {
+            // User cancelled auth flow
+            callbackInstance.onCustomTabsDismissed(uri.toString());
+        }
+
         Intent authenticationIntent = getIntent();
         if (!customTabsLaunched && authenticationIntent.getExtras() == null) {
             // This activity was launched in an unexpected way
@@ -85,34 +93,29 @@ public class ImmutableActivity extends Activity {
         }
     }
 
-    private void launchCustomTabs() {
+    @Nullable
+    private Uri getUri() {
         Bundle extras = getIntent().getExtras();
-        Uri uri;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            uri = extras.getParcelable(EXTRA_URI, Uri.class);
-        } else {
-            uri = extras.getParcelable(EXTRA_URI);
-        }
-        customTabsController = new CustomTabsController(this, new CustomTabsCallback() {
-            @Override
-            public void onNavigationEvent(int navigationEvent, @Nullable Bundle extras) {
-                if (navigationEvent == CustomTabsCallback.TAB_HIDDEN && callbackInstance != null) {
-                    // Adding some delay before calling onCustomTabsDismissed as sometimes this gets called
-                    // before the PKCE deeplink is triggered (by 100ms). This means pkceCompletionSource will be
-                    // set to null before the SDK can use it to notify the consumer of the PKCE result.
-                    // See PassportImpl.OnLoginPKCEDismissed and PassportImpl.OnDeepLinkActivated
-                    final Handler handler = new Handler(Looper.getMainLooper());
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            callbackInstance.onCustomTabsDismissed(uri.toString());
-                        }
-                    }, 1000);
-                }
+        if (extras != null) {
+            Uri uri;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                uri = extras.getParcelable(EXTRA_URI, Uri.class);
+            } else {
+                uri = extras.getParcelable(EXTRA_URI);
             }
-        });
-        customTabsController.bindService();
-        customTabsController.launch(uri);
+            return uri;
+        } else {
+            return null;
+        }
+    }
+
+    private void launchCustomTabs() {
+        Uri uri = getUri();
+        if (uri != null) {
+            customTabsController = new CustomTabsController(this, new CustomTabsCallback());
+            customTabsController.bindService();
+            customTabsController.launch(uri);
+        }
     }
 
     private void onDeeplinkResult(@Nullable Intent intent) {
