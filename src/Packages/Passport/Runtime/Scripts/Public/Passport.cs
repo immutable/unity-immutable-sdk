@@ -258,6 +258,18 @@ namespace Immutable.Passport
         }
 
         /// <summary>
+        /// Retrieves the Passport ID of the user whose credentials are currently stored.
+        /// <returns>
+        /// The Passport ID, otherwise null
+        /// </returns>
+        /// </summary>
+        public async UniTask<string> GetPassportId()
+        {
+            string passportId = await GetPassportImpl().GetPassportId();
+            return passportId;
+        }
+
+        /// <summary>
         /// Gets the currently saved access token without verifying its validity.
         /// <returns>
         /// The access token, otherwise null

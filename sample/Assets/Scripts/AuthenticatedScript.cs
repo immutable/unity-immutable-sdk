@@ -208,6 +208,12 @@ public class AuthenticatedScript : MonoBehaviour
         ShowOutput(email ?? "No email");
     }
 
+    public async void GetPassportId()
+    {
+        string passportId = await passport.GetPassportId();
+        ShowOutput(passportId ?? "No Passport ID");
+    }
+
     public void ShowTransfer()
     {
         AuthenticatedCanvas.gameObject.SetActive(false);
