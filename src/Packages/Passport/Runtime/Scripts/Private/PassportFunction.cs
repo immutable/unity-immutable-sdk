@@ -16,6 +16,7 @@ namespace Immutable.Passport
         public const string GET_ID_TOKEN = "getIdToken";
         public const string LOGOUT = "logout";
         public const string GET_EMAIL = "getEmail";
+        public const string GET_PASSPORT_ID = "getPassportId";
 
         public static class IMX
         {

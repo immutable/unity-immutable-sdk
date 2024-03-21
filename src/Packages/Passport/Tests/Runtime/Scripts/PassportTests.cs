@@ -42,6 +42,7 @@ namespace Immutable.Passport
         internal static string ID_TOKEN_KEY = "idToken";
         internal static string ADDRESS = "0xaddress";
         internal static string EMAIL = "unity@immutable.com";
+        internal static string PASSPORT_ID = "email|123457890";
         internal static string SIGNATURE = "0xsignature";
         internal static string MESSAGE = "message";
         internal static string CODE = "IMX";
@@ -916,6 +917,33 @@ namespace Immutable.Passport
 
             Assert.Null(email);
             Assert.AreEqual(PassportFunction.GET_EMAIL, communicationsManager.fxName);
+            Assert.True(String.IsNullOrEmpty(communicationsManager.data));
+        }
+
+        [Test]
+        public async Task GetPassportId_Success()
+        {
+            var response = new StringResponse
+            {
+                success = true,
+                result = PASSPORT_ID
+            };
+            communicationsManager.AddMockResponse(response);
+
+            var passportId = await passport.GetPassportId();
+
+            Assert.AreEqual(PASSPORT_ID, passportId);
+            Assert.AreEqual(PassportFunction.GET_PASSPORT_ID, communicationsManager.fxName);
+            Assert.True(String.IsNullOrEmpty(communicationsManager.data));
+        }
+
+        [Test]
+        public async Task GetPassportId_Failed()
+        {
+            var passportId = await passport.GetPassportId();
+
+            Assert.Null(passportId);
+            Assert.AreEqual(PassportFunction.GET_PASSPORT_ID, communicationsManager.fxName);
             Assert.True(String.IsNullOrEmpty(communicationsManager.data));
         }
     }

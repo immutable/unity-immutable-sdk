@@ -642,6 +642,12 @@ namespace Immutable.Passport
             return response.GetStringResult();
         }
 
+        public async UniTask<string> GetPassportId()
+        {
+            string response = await communicationsManager.Call(PassportFunction.GET_PASSPORT_ID);
+            return response.GetStringResult();
+        }
+
         public async UniTask<string> GetAccessToken()
         {
             string response = await communicationsManager.Call(PassportFunction.GET_ACCESS_TOKEN);
