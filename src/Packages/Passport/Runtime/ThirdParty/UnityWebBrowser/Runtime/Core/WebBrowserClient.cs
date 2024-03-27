@@ -138,7 +138,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         ///     Timeout time for waiting for the engine to start (in milliseconds)
         /// </summary>
         [Tooltip("Timeout time for waiting for the engine to start (in milliseconds)")]
-        public int engineStartupTimeout = 4000;
+        public int engineStartupTimeout = 30000;
 
         /// <summary>
         ///     The log severity. Only messages of this severity level or higher will be logged
@@ -263,7 +263,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         ///     Inits the browser client
         /// </summary>
         /// <exception cref="FileNotFoundException"></exception>
-        public async UniTask Init(int engineStartupTimeout = 4000)
+        public async UniTask Init(int engineStartupTimeout = 30000)
         {
             this.engineStartupTimeout = engineStartupTimeout;
             UnityEngine.Debug.Log($"{TAG} Engine startup timeout: {engineStartupTimeout}");
