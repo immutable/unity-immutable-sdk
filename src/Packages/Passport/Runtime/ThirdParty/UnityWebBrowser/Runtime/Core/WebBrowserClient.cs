@@ -162,6 +162,11 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         public bool ReadySignalReceived { get; internal set; }
 
         /// <summary>
+        ///     Has UWB initialized
+        /// </summary>
+        public bool HasInitialized { get; internal set; }
+
+        /// <summary>
         ///     Internal FPS of pixels communication between Unity and the Engine
         /// </summary>
         public int FPS { get; private set; }
@@ -239,7 +244,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
 
         #endregion
 
-        private Process engineProcess;
+        private EngineProcess engineProcess;
         private WebBrowserCommunicationsManager communicationsManager;
         private CancellationTokenSource cancellationSource;
 
@@ -390,10 +395,17 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             string arguments = argsBuilder.ToString();
 
             //Setup communication manager
-            communicationsManager = new WebBrowserCommunicationsManager(this);
+            cancellationSource = new CancellationTokenSource();
+            communicationsManager = new WebBrowserCommunicationsManager(this, cancellationSource);
             communicationsManager.Listen();
 
-            cancellationSource = new CancellationTokenSource();
+#if UNITY_EDITOR
+            //Install reload events handler
+            UnityEditor.AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
+#endif
+
+            //Mark has initialized and invoke event
+            HasInitialized = true;
 
             try
             {
@@ -417,8 +429,8 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             try
             {
                 processLogHandler = new ProcessLogHandler(this);
-                engineProcess = WebBrowserUtils.CreateEngineProcess(logger, engine, engineProcessArguments,
-                    processLogHandler.HandleOutputProcessLog, processLogHandler.HandleErrorProcessLog);
+                engineProcess = new EngineProcess(engine, logger);
+                engineProcess.StartProcess(engineProcessArguments, processLogHandler.HandleOutputProcessLog, processLogHandler.HandleErrorProcessLog);
             }
             catch (Exception ex)
             {
@@ -766,6 +778,17 @@ namespace VoltstroStudios.UnityWebBrowser.Core
 
         #region Destroying
 
+#if UNITY_EDITOR
+        private void OnBeforeAssemblyReload()
+        {
+            if (HasInitialized && !HasDisposed)
+            {
+                logger.Warn("UWB is shutting down due to incoming domain reload. UWB does not support domain reloading while running.");
+                Dispose();
+            }
+        }
+#endif
+
 #if !UNITY_EDITOR
         ~WebBrowserClient()
         {
@@ -832,11 +855,17 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             //Kill the process if we haven't already
             if (engineProcess != null)
             {
-                engineProcess.KillTree();
-
+                if (!engineProcess.HasExited)
+                    engineProcess.KillProcess();
+                    
                 engineProcess.Dispose();
                 engineProcess = null;
             }
+
+#if UNITY_EDITOR
+            //Install reload events handler
+            UnityEditor.AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
+#endif
 
             //Dispose of buffers
             if (nextTextureData.IsCreated)
