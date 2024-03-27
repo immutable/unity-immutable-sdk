@@ -39,12 +39,13 @@ namespace VoltstroStudios.UnityWebBrowser.Core
 
         private readonly object threadLock;
         private readonly SynchronizationContext unityThread;
+        private readonly CancellationTokenSource cancellationTokenSource;
 
         /// <summary>
         ///     Creates a new <see cref="WebBrowserCommunicationsManager" /> instance
         /// </summary>
         /// <param name="browserClient"></param>
-        public WebBrowserCommunicationsManager(WebBrowserClient browserClient)
+        public WebBrowserCommunicationsManager(WebBrowserClient browserClient, CancellationTokenSource cancellationTokenSource)
         {
             threadLock = new object();
             unityThread = SynchronizationContext.Current;
@@ -62,6 +63,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
 
             ipcClient.AddService<IEngineControls>();
             engineProxy = new EngineControls(ipcClient);
+            this.cancellationTokenSource = cancellationTokenSource;
         }
 
         /// <summary>
@@ -143,7 +145,21 @@ namespace VoltstroStudios.UnityWebBrowser.Core
 
         public void Listen()
         {
-            ipcHost.StartListeningAsync().ConfigureAwait(false);
+            UniTask.RunOnThreadPool(async () =>
+            {
+                try
+                {
+                    ipcHost.StartListening();
+                }
+                catch (Exception)
+                {
+                    await using (UniTask.ReturnToMainThread())
+                    {
+                        if(!cancellationTokenSource.IsCancellationRequested)
+                            throw;
+                    }
+                }
+            }, true, cancellationTokenSource.Token);
         }
 
         private void ExecuteOnUnity(Action action, [CallerMemberName] string memberName = "")
