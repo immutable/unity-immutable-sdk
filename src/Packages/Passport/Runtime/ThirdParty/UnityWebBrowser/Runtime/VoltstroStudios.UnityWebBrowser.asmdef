@@ -3,6 +3,7 @@
     "rootNamespace": "VoltstroStudios.UnityWebBrowser",
     "references": [
         "UniTask",
+        "Unity.InputSystem",
         "Immutable.Browser.Core"
     ],
     "includePlatforms": [
