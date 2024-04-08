@@ -178,10 +178,10 @@ namespace Immutable.Passport
         /// The user does not need to go through this flow if the saved access token is still valid or
         /// the refresh token can be used to get a new access token.
         /// </summary>
-        public async UniTask ConnectImxPKCE()
+        public async UniTask<bool> ConnectImxPKCE()
         {
-            await GetPassportImpl().ConnectImxPKCE();
-        }
+            return await GetPassportImpl().ConnectImxPKCE();
+        } 
 #endif
 
         /// <summary>
