@@ -33,6 +33,7 @@ namespace Immutable.Passport
             public const string SEND_TRANSACTION = "zkEvmSendTransaction";
             public const string REQUEST_ACCOUNTS = "zkEvmRequestAccounts";
             public const string GET_BALANCE = "zkEvmGetBalance";
+            public const string GET_TRANSACTION_REQUEST = "zkEvmGetTransactionReceipt";
         }
     }
 }

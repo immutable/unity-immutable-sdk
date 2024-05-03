@@ -357,6 +357,17 @@ namespace Immutable.Passport
             return await GetPassportImpl().ZkEvmGetBalance(address, blockNumberOrTag);
         }
 
+        /// <summary>
+        /// Get the final receipt (status) of a transaction by transaction hash.
+        /// <returns>
+        /// The transaction receipt object, or null if the transaction has not yet been mined.
+        /// </returns>
+        /// </summary>
+        public async UniTask<string> ZkEvmGetTransactionReceipt(string transactionHash)
+        {
+            return await GetPassportImpl().ZkEvmGetTransactionReceipt(transactionHash);
+        }
+
 #if (UNITY_IPHONE && !UNITY_EDITOR) || (UNITY_ANDROID && !UNITY_EDITOR)
         /// <summary>
         /// Clears the underlying WebView resource cache

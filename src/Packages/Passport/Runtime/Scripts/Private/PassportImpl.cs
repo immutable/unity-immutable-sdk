@@ -721,6 +721,16 @@ namespace Immutable.Passport
             return callResponse.GetStringResult() ?? "0x0";
         }
 
+        public async UniTask<TransactionReceiptResponse> ZkEvmGetTransactionReceipt(string transactionHash)
+        {
+            string json = JsonUtility.ToJson(new TransactionReceiptRequest()
+            {
+                txHash = transactionHash
+            });
+            string callResponse = await communicationsManager.Call(PassportFunction.ZK_EVM.GET_TRANSACTION_REQUEST, json);
+            return callResponse.OptDeserializeObject<TransactionReceiptResponse>();
+        }
+
         private async void OnPostMessageError(string id, string message)
         {
             if (id == "CallFromAuthCallbackError" && pkceCompletionSource != null)
