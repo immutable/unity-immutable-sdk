@@ -8,6 +8,7 @@ using UnityEngine.SceneManagement;
 using Immutable.Passport;
 using Immutable.Passport.Model;
 using Immutable.Passport.Event;
+using Unity.VisualScripting;
 
 public class AuthenticatedScript : MonoBehaviour
 {
@@ -48,6 +49,7 @@ public class AuthenticatedScript : MonoBehaviour
     [SerializeField] private Button SendTransactionButton;
     [SerializeField] private Button RequestAccountsButton;
     [SerializeField] private Button GetBalanceButton;
+    [SerializeField] private Button GetTransactionReceiptButton;
 
     // ZkEVM Get Balance Transaction
     [SerializeField] private Canvas ZkGetBalanceCanvas;
@@ -58,6 +60,10 @@ public class AuthenticatedScript : MonoBehaviour
     [SerializeField] private InputField ZkSendTransactionTo;
     [SerializeField] private InputField ZkSendTransactionValue;
     [SerializeField] private InputField ZkSendTransactionData;
+
+    // ZkEVM Get Transaction Receipt
+    [SerializeField] private Canvas ZkGetTransactionReceiptCanvas;
+    [SerializeField] private InputField ZkGetTransactionReceiptHash;
 
     private Passport passport;
 #pragma warning restore CS8618
@@ -315,6 +321,7 @@ public class AuthenticatedScript : MonoBehaviour
             SendTransactionButton.gameObject.SetActive(true);
             RequestAccountsButton.gameObject.SetActive(true);
             GetBalanceButton.gameObject.SetActive(true);
+            GetTransactionReceiptButton.gameObject.SetActive(true);
         }
         catch (Exception ex)
         {
@@ -397,6 +404,33 @@ public class AuthenticatedScript : MonoBehaviour
     {
         AuthenticatedCanvas.gameObject.SetActive(true);
         ZkGetBalanceCanvas.gameObject.SetActive(false);
+    }
+
+    public async void GetZkTransactionReceiptStatus()
+    {
+        try
+        {
+            ShowOutput($"Getting zkEVM transaction receipt...");
+            TransactionReceiptResponse response = await passport.ZkEvmGetTransactionReceipt(ZkGetTransactionReceiptHash.text);
+            ShowOutput($"Transaction receipt status: {response.status}");
+        }
+        catch (Exception ex)
+        {
+            ShowOutput($"Failed to get transaction receipt: {ex.Message}");
+        }
+    }
+
+    public void ShowZkTransactionReceiptStatus()
+    {
+        AuthenticatedCanvas.gameObject.SetActive(false);
+        ZkGetTransactionReceiptCanvas.gameObject.SetActive(true);
+        ZkGetTransactionReceiptHash.text = "";
+    }
+
+    public void CancelZkTransactionReceiptStatus()
+    {
+        AuthenticatedCanvas.gameObject.SetActive(true);
+        ZkGetTransactionReceiptCanvas.gameObject.SetActive(false);
     }
 
     public void ClearStorageAndCache()

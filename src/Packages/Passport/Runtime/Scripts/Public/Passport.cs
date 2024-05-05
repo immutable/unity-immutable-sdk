@@ -334,6 +334,17 @@ namespace Immutable.Passport
         }
 
         /// <summary>
+        /// Returns a sent/submitted transaction status information
+        /// <returns>
+        /// The receipt of transaction, or null if the transaction is still in process
+        /// </returns>
+        /// </summary>
+        public async UniTask<TransactionReceiptResponse> ZkEvmGetTransactionReceipt(string hash)
+        {
+            return await GetPassportImpl().ZkEvmGetTransactionReceipt(hash);
+        }
+
+        /// <summary>
         /// Returns a list of addresses owned by the user
         /// <returns>
         /// Addresses owned by the user
