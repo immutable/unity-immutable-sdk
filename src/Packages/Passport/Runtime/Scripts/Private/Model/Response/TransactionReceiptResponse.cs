@@ -20,6 +20,9 @@ namespace Immutable.Passport.Model
 
         public string logsBloom;
 
+        /// <summary>
+        ///     Either 1 (success) or 0 (failure) encoded as a hexadecimal.
+        /// </summary>
         public string status;
 
         public string to;

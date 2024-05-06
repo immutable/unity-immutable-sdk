@@ -703,7 +703,7 @@ namespace Immutable.Passport
             return callResponse.GetStringResult();
         }
 
-        public async UniTask<TransactionReceiptResponse?> ZkEvmGetTransactionReceipt(string hash)
+        public async UniTask<TransactionReceiptResponse> ZkEvmGetTransactionReceipt(string hash)
         {
             string json = JsonUtility.ToJson(new TransactionReceiptRequest()
             {
