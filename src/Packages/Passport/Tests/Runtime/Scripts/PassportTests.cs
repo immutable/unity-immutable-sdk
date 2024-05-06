@@ -24,7 +24,7 @@ namespace Immutable.Passport
             urlsOpened.Add(url);
         }
 
-        protected override void Track(string eventName, bool? success = null, Dictionary<string, object>? properties = null)
+        protected override void Track(string eventName, bool? success = null, Dictionary<string, object> properties = null)
         {
         }
     }
