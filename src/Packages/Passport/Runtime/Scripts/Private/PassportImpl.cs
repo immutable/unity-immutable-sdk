@@ -22,7 +22,7 @@ namespace Immutable.Passport
     {
         private const string TAG = "[Passport Implementation]";
         public readonly IBrowserCommunicationsManager communicationsManager;
-        private PassportAnalytics analytics = new();
+        private PassportAnalytics analytics = new PassportAnalytics();
 
         // Used for device code auth
         private DeviceConnectResponse deviceConnectResponse;
@@ -829,7 +829,7 @@ namespace Immutable.Passport
         }
 #endif
 
-        protected virtual async void Track(string eventName, bool? success = null, Dictionary<string, object>? properties = null)
+        protected virtual async void Track(string eventName, bool? success = null, Dictionary<string, object> properties = null)
         {
             await analytics.Track(communicationsManager, eventName, success, properties);
         }

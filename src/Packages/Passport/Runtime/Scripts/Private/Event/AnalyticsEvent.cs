@@ -42,7 +42,7 @@ namespace Immutable.Passport.Event
         }
 
         public async UniTask Track(IBrowserCommunicationsManager communicationsManager, string eventName,
-            bool? success = null, Dictionary<string, object>? properties = null)
+            bool? success = null, Dictionary<string, object> properties = null)
         {
             try
             {
