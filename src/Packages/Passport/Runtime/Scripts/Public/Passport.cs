@@ -337,7 +337,6 @@ namespace Immutable.Passport
         /// Retrieves the transaction information of a given transaction hash. This function uses the Ethereum JSON-RPC <c>eth_getTransactionReceipt</c> method.
         /// <returns>
         /// The receipt of the transaction or null if it is still processing.
-
         /// </returns>
         /// </summary>
         public async UniTask<TransactionReceiptResponse> ZkEvmGetTransactionReceipt(string hash)
