@@ -703,6 +703,16 @@ namespace Immutable.Passport
             return callResponse.GetStringResult();
         }
 
+        public async UniTask<TransactionReceiptResponse> ZkEvmGetTransactionReceipt(string hash)
+        {
+            string json = JsonUtility.ToJson(new TransactionReceiptRequest()
+            {
+                txHash = hash
+            });
+            string jsonResponse = await communicationsManager.Call(PassportFunction.ZK_EVM.GET_TRANSACTION_RECEIPT, json);
+            return jsonResponse.OptDeserializeObject<TransactionReceiptResponse>();
+        }
+
         public async UniTask<List<string>> ZkEvmRequestAccounts()
         {
             string callResponse = await communicationsManager.Call(PassportFunction.ZK_EVM.REQUEST_ACCOUNTS);
