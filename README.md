@@ -19,9 +19,10 @@ The Immutable SDK for Unity helps you integrate your game with Immutable Passpor
 
 ## Contributing
 
-If you would like to contribute, please read the following:
+Generally, to contribute, fork this repo, create a branch in the forked repo, make the changes with a reasonable description and create a PR against this repository. 
+See an example contribution [here](https://github.com/immutable/unity-immutable-sdk/pull/182).
 
-- We use the [Conventional Commits specification](https://www.conventionalcommits.org/en/v1.0.0/#specification) when writing our commit messages. Why use Conventional Commits? Read [here](https://www.conventionalcommits.org/en/v1.0.0/#why-use-conventional-commits).
+In addition, we use the [Conventional Commits specification](https://www.conventionalcommits.org/en/v1.0.0/#specification) when writing our commit messages. Why use Conventional Commits? Read [here](https://www.conventionalcommits.org/en/v1.0.0/#why-use-conventional-commits).
 
 ## Getting Help
 
