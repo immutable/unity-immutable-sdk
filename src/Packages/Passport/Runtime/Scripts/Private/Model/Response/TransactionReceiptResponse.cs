@@ -21,7 +21,18 @@ namespace Immutable.Passport.Model
         public string logsBloom;
 
         /// <summary>
-        ///     Either 1 (success) or 0 (failure) encoded as a hexadecimal.
+        /// Possible reponses:
+        /// <list type="bullet">
+        /// <item>
+        /// <description>Success: 0x0</description>
+        /// </item>
+        /// <item>
+        /// <description>Failure: 0x0</description>
+        /// </item>
+        /// <item>
+        /// <description>Null: Transaction is still processing</description>
+        /// </item>
+        /// </list>
         /// </summary>
         public string status;
 
