@@ -413,7 +413,21 @@ public class AuthenticatedScript : MonoBehaviour
             ShowOutput($"Getting zkEVM transaction receipt status...");
 
             TransactionReceiptResponse response = await passport.ZkEvmGetTransactionReceipt(ZkGetTransactionReceiptHash.text);
+            string status = "Transaction receipt status: ";
             ShowOutput($"Transaction receipt status: {(response.status == "0x1" ? "Success" : "Failed")}");
+            switch (response.status)
+            {
+                case "0x1":
+                    status += "Success";
+                    break;
+                case "0x0":
+                    status += "Failed";
+                    break;
+                case null:
+                    status += "Still processing";
+                    break;
+            }
+            ShowOutput(status);
         }
         catch (Exception ex)
         {
