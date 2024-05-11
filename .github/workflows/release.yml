@@ -45,6 +45,10 @@ jobs:
                     "labels": ["performance"]
                 },
                 {
+                    "title": "## Documentation",
+                    "labels": ["docs"]
+                },
+                {
                     "title": "## Chores",
                     "labels": ["chore"]
                 }
