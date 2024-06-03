@@ -334,6 +334,19 @@ namespace Immutable.Passport
         }
 
         /// <summary>
+        /// Similar to <code>ZkEvmSendTransaction</code>. Creates new message call transaction or a contract creation, if the data field contains code, 
+        /// and signs it using the account specified in from. Additionally, it also resolves to the TransactionReceiptResponse once the transaction has 
+        /// been included in the chain for confirms blocks. If confirms is 0, and the transaction has not been mined, null is returned.
+        /// <returns>
+        /// The receipt of the transaction or null if it is still processing.
+        /// </returns>
+        /// </summary>
+        public async UniTask<TransactionReceiptResponse> ZkEvmSendTransactionWithConfirmation(TransactionRequest request)
+        {
+            return await GetPassportImpl().ZkEvmSendTransactionWithConfirmation(request);
+        }
+
+        /// <summary>
         /// Retrieves the transaction information of a given transaction hash. This function uses the Ethereum JSON-RPC <c>eth_getTransactionReceipt</c> method.
         /// <returns>
         /// The receipt of the transaction or null if it is still processing.
