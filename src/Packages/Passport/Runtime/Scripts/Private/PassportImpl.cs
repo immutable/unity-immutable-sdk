@@ -682,7 +682,7 @@ namespace Immutable.Passport
             await communicationsManager.Call(PassportFunction.ZK_EVM.CONNECT_EVM);
         }
 
-        public async UniTask<string> ZkEvmSendTransaction(TransactionRequest request)
+        private string SerialiseTransactionRequest(TransactionRequest request)
         {
             string json;
             // Nulls are serialised as empty strings when using JsonUtility
@@ -699,8 +699,21 @@ namespace Immutable.Passport
             {
                 json = JsonUtility.ToJson(request);
             }
+            return json;
+        }
+
+        public async UniTask<string> ZkEvmSendTransaction(TransactionRequest request)
+        {
+            string json = SerialiseTransactionRequest(request);
             string callResponse = await communicationsManager.Call(PassportFunction.ZK_EVM.SEND_TRANSACTION, json);
             return callResponse.GetStringResult();
+        }
+
+        public async UniTask<TransactionReceiptResponse> ZkEvmSendTransactionWithConfirmation(TransactionRequest request)
+        {
+            string json = SerialiseTransactionRequest(request);
+            string callResponse = await communicationsManager.Call(PassportFunction.ZK_EVM.SEND_TRANSACTION_WITH_CONFIRMATION, json);
+            return callResponse.OptDeserializeObject<TransactionReceiptResponse>();
         }
 
         public async UniTask<TransactionReceiptResponse> ZkEvmGetTransactionReceipt(string hash)

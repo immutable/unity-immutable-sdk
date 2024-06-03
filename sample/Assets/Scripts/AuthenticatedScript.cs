@@ -56,6 +56,7 @@ public class AuthenticatedScript : MonoBehaviour
     [SerializeField] private InputField ZkGetBalanceAccount;
 
     // ZkEVM Send Transaction
+    [SerializeField] private Toggle ZkSendTransactionConfirm;
     [SerializeField] private Canvas ZkSendTransactionCanvas;
     [SerializeField] private InputField ZkSendTransactionTo;
     [SerializeField] private InputField ZkSendTransactionValue;
@@ -334,14 +335,23 @@ public class AuthenticatedScript : MonoBehaviour
         try
         {
             ShowOutput($"Called sendTransaction()...");
-            string response = await passport.ZkEvmSendTransaction(new TransactionRequest()
+            TransactionRequest request = new TransactionRequest()
             {
                 to = ZkSendTransactionTo.text,
                 value = ZkSendTransactionValue.text,
                 data = ZkSendTransactionData.text
 
-            });
-            ShowOutput($"Transaction hash: {response}");
+            };
+            if (ZkSendTransactionConfirm.isOn)
+            {
+                TransactionReceiptResponse response = await passport.ZkEvmSendTransactionWithConfirmation(request);
+                ShowOutput($"Transaction hash: {response.transactionHash}\nStatus: {GetTransactionStatusString(response.status)}");
+            }
+            else
+            {
+                string response = await passport.ZkEvmSendTransaction(request);
+                ShowOutput($"Transaction hash: {response}");
+            }
         }
         catch (Exception ex)
         {
@@ -413,24 +423,29 @@ public class AuthenticatedScript : MonoBehaviour
             ShowOutput($"Getting zkEVM transaction receipt status...");
 
             TransactionReceiptResponse response = await passport.ZkEvmGetTransactionReceipt(ZkGetTransactionReceiptHash.text);
-            string status = "Transaction receipt status: ";
-            switch (response.status)
-            {
-                case "0x1":
-                    status += "Success";
-                    break;
-                case "0x0":
-                    status += "Failed";
-                    break;
-                case null:
-                    status += "Still processing";
-                    break;
-            }
+            string status = $"Transaction receipt status: {GetTransactionStatusString(response.status)}";
             ShowOutput(status);
         }
         catch (Exception ex)
         {
             ShowOutput($"Failed to get transaction receipt: {ex.Message}");
+        }
+    }
+
+    private string GetTransactionStatusString(string status)
+    {
+        switch (status)
+        {
+            case "1":
+            case "0x1":
+                return "Success";
+            case "0":
+            case "0x0":
+                return "Failed";
+            case null:
+                return "Still processing";
+            default:
+                return "";
         }
     }
 

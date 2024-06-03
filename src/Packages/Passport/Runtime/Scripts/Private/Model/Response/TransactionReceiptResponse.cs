@@ -24,10 +24,10 @@ namespace Immutable.Passport.Model
         /// Possible reponses:
         /// <list type="bullet">
         /// <item>
-        /// <description>Success: 0x1</description>
+        /// <description>Success: 1 or 0x1</description>
         /// </item>
         /// <item>
-        /// <description>Failure: 0x0</description>
+        /// <description>Failure: 0 or 0x0</description>
         /// </item>
         /// </summary>
         public string status;
