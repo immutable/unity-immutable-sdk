@@ -322,8 +322,7 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Creates new message call transaction or a contract creation, if the data field contains code, 
-        /// and signs it using the account specified in from.
+        /// Sends a transaction to the network and signs it using the logged-in Passport account.
         /// <returns>
         /// The transaction hash, or the zero hash if the transaction is not yet available.
         /// </returns>
@@ -334,9 +333,7 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Similar to <code>ZkEvmSendTransaction</code>. Creates new message call transaction or a contract creation, if the data field contains code, 
-        /// and signs it using the account specified in from. Additionally, it also resolves to the TransactionReceiptResponse once the transaction has 
-        /// been included in the chain for confirms blocks. If confirms is 0, and the transaction has not been mined, null is returned.
+        /// Similar to <code>ZkEvmSendTransaction</code>. Sends a transaction to the network, signs it using the logged-in Passport account, and waits for the transaction to be included in a block.
         /// <returns>
         /// The receipt of the transaction or null if it is still processing.
         /// </returns>
