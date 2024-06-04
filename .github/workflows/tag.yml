@@ -1,5 +1,5 @@
 ---
-name: "Tag"
+name: "Tag Release"
 
 on:
   pull_request:
