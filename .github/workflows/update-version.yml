@@ -36,8 +36,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        title: "chore: update version"
+        title: "release: update version"
         body: "Update version in package.json"
-        branch: "chore/update-version"
-        commit-message: "chore: update version"
-        labels: version
+        branch: "release/update-version"
+        commit-message: "release: update version"
+        labels: release
