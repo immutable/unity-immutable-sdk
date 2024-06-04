@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to update'
+        description: 'Version to update to (e.g. 1.20.0)'
         required: true
 
 jobs:
