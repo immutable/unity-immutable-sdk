@@ -1,0 +1,43 @@
+---
+name: "Update version in package.json"
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to update'
+        required: true
+
+jobs:
+  update:
+    if: contains('["nattb8"]', github.actor)
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Install jq
+      run: sudo apt-get install -y jq
+
+    - name: Replace version string
+      id: replace_version
+      run: |
+        FILE=./src/Packages/Passport/package.json
+        VERSION=${{ github.event.inputs.version }}
+        jq --arg version "$VERSION" '.version = $version' "./src/Packages/Passport/package.json" > tmp.$$.json && mv tmp.$$.json "./src/Packages/Passport/package.json"
+
+    - uses: gr2m/create-or-update-pull-request-action@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        title: "chore: update version"
+        body: "Update version in package.json"
+        branch: "chore/update-version"
+        commit-message: "chore: update version"
+        labels: version

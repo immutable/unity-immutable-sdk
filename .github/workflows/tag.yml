@@ -1,0 +1,37 @@
+---
+name: "Tag on Version PR Merge"
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  create-tag:
+    if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'version')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Extract version from package.json
+        id: extract_version
+        run: |
+          VERSION=$(jq -r .version ./src/Packages/Passport/package.json)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Create Tag
+        run: |
+          TAG_NAME="v${{ env.VERSION }}"
+          TAG_MESSAGE="Version ${{ env.VERSION }}"
+          echo "Creating tag $TAG_NAME with message: $TAG_MESSAGE"
+          git tag -a "$TAG_NAME" -m "$TAG_MESSAGE"
+          git push origin "$TAG_NAME"
