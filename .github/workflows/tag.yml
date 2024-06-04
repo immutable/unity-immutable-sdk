@@ -29,9 +29,9 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Create Tag
-        run: |
-          TAG_NAME="v${{ env.VERSION }}"
-          TAG_MESSAGE="Version ${{ env.VERSION }}"
-          echo "Creating tag $TAG_NAME with message: $TAG_MESSAGE"
-          git tag -a "$TAG_NAME" -m "$TAG_MESSAGE"
-          git push origin "$TAG_NAME"
+        uses: mathieudutour/github-tag-action@v6
+        with:
+          tag_prefix: 'v'
+          tag_name: ${{ env.VERSION }}
+          tag_message: "Version ${{ env.VERSION }}"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
