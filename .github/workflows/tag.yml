@@ -32,7 +32,7 @@ jobs:
         uses: negz/create-tag@v1
         with:
           TAG_NAME="v${{ env.VERSION }}"
-          TAG_MESSAGE="Version $TAG_NAME"
+          TAG_MESSAGE="Version ${{ env.VERSION }}"
           version: ${{ TAG_NAME }}
           message: ${{ TAG_MESSAGE }}
           token: ${{ secrets.GITHUB_TOKEN }}
