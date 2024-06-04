@@ -40,13 +40,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Fetch all tags
+        run: git fetch --tags
+
+      - name: Get the latest tag
+        id: get-latest-tag
+        run: echo "LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)" >> $GITHUB_ENV
+
+      - name: Check out with latest tag
+        uses: actions/checkout@v3
         with:
           lfs: true
+          ref: ${{ env.LATEST_TAG }}
+
       - name: Pull LFS
         run: git lfs pull
-      - name: Get tags
-        run: git fetch --tags origin
+
       - name: Archive Release
         uses: thedoctor0/zip-release@0.7.5
         with:
@@ -54,6 +66,7 @@ jobs:
           filename: 'Immutable-Passport.zip'
           directory: './src/Packages'
           path: './Passport'
+
       - name: Build Changelog
         id: github_release
         uses: mikepenz/release-changelog-builder-action@v3
@@ -86,6 +99,7 @@ jobs:
                 }
               ]
             }
+
       - name: Create Release
         uses: mikepenz/action-gh-release@v0.2.0-a03
         with:
