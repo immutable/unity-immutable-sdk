@@ -1,5 +1,5 @@
 ---
-name: "Tag on Version PR Merge"
+name: "Create Release"
 
 on:
   pull_request:
@@ -34,3 +34,6 @@ jobs:
           version: "v${{ env.VERSION }}"
           message: "Version ${{ env.VERSION }}"
           token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Log github actor
+        run: echo "Github actor ${{ github.actor }}"
