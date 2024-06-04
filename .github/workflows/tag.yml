@@ -36,4 +36,4 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Log github actor
-        run: echo "Github actor ${{ github.actor }}"
+        run: echo "This action github actor ${{ github.actor }}"
