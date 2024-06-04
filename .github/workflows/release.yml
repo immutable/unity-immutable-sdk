@@ -36,6 +36,10 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
   release:
+    needs: create-tag
+    runs-on: ubuntu-latest
+
+    steps:
       - uses: actions/checkout@v3
         with:
           lfs: true
