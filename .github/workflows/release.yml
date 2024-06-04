@@ -1,16 +1,40 @@
 ---
-name: 'Create Release'
+name: "Create Release"
+
 on:
-  push:
-    tags:
-        - '*'
+  pull_request:
+    types: [closed]
 
 jobs:
-  release:
-    if: startsWith(github.ref, 'refs/tags/') && contains('["nattb8"]', github.actor)
+  create-tag:
+    if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'version')
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Extract version from package.json
+        id: extract_version
+        run: |
+          VERSION=$(jq -r .version ./src/Packages/Passport/package.json)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Create Tag
+        uses: negz/create-tag@v1
+        with:
+          version: "v${{ env.VERSION }}"
+          message: "Version ${{ env.VERSION }}"
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - uses: actions/checkout@v3
         with:
           lfs: true
@@ -59,6 +83,3 @@ jobs:
         with:
           body: ${{steps.github_release.outputs.changelog}}
           files: ./src/Packages/Immutable-Passport.zip
-
-            
-      
