@@ -37,7 +37,7 @@ jobs:
       run: |
         FILE=./src/Packages/Passport/Runtime/Scripts/Private/Helpers/SdkVersionInfoHelpers.cs
         VERSION=${{ github.event.inputs.version }}
-        sed -i "s/__ENGINE_SDK_VERSION__/$VERSION/g" $FILE
+        sed -i -E "s/[0-9]+\.[0-9]+\.[0-9]+/$VERSION/g" $FILE
 
     - uses: gr2m/create-or-update-pull-request-action@v1
       env:
