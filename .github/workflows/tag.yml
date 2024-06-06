@@ -26,7 +26,7 @@ jobs:
         id: extract_version
         run: |
           VERSION=$(jq -r .version ./src/Packages/Passport/package.json)
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 
       - name: Create Tag
         uses: negz/create-tag@v1
