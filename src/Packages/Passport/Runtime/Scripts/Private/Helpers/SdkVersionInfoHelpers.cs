@@ -4,7 +4,7 @@ namespace Immutable.Passport.Helpers
     {
         public static string GetSdkVersionInfo()
         {
-            return "__ENGINE_SDK_VERSION__";
+            return "1.16.6";
         }
     }
 }
