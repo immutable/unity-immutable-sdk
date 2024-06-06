@@ -30,7 +30,7 @@ jobs:
       run: |
         FILE=./src/Packages/Passport/package.json
         VERSION=${{ github.event.inputs.version }}
-        jq --arg version "$VERSION" '.version = $version' "./src/Packages/Passport/package.json" > tmp.$$.json && mv tmp.$$.json "./src/Packages/Passport/package.json"
+        jq --arg version "$VERSION" '.version = $version' $FILE > tmp.$$.json && mv tmp.$$.json $FILE
 
     - name: Replace engine sdk version string
       id: replace_engine_sdk_version
