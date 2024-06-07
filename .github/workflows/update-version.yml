@@ -25,34 +25,40 @@ jobs:
           exit 1
         fi
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.x'
+    - name: Echo team membership
+      run: echo "${{ steps.check_team.outputs.is_member }}"
 
-    - name: Install jq
-      run: sudo apt-get install -y jq
+    - name: Echo SdkVersionHelper
+      run: echo "$(cat ./src/Packages/Passport/Runtime/Scripts/Private/Helpers/SdkVersionInfoHelpers.cs)"
 
-    - name: Replace version string
-      id: replace_version
-      run: |
-        FILE=./src/Packages/Passport/package.json
-        VERSION=${{ github.event.inputs.version }}
-        jq --arg version "$VERSION" '.version = $version' $FILE > tmp.$$.json && mv tmp.$$.json $FILE
+    # - name: Set up Python
+    #   uses: actions/setup-python@v4
+    #   with:
+    #     python-version: '3.x'
 
-    - name: Replace engine sdk version string
-      id: replace_engine_sdk_version
-      run: |
-        FILE=./src/Packages/Passport/Runtime/Scripts/Private/Helpers/SdkVersionInfoHelpers.cs
-        VERSION=${{ github.event.inputs.version }}
-        sed -i -E "s/[0-9]+\.[0-9]+\.[0-9]+/$VERSION/g" $FILE
+    # - name: Install jq
+    #   run: sudo apt-get install -y jq
 
-    - uses: gr2m/create-or-update-pull-request-action@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        title: "release: update version"
-        body: "Update version in package.json"
-        branch: "release/update-version"
-        commit-message: "release: update version"
-        labels: release
+    # - name: Replace version string
+    #   id: replace_version
+    #   run: |
+    #     FILE=./src/Packages/Passport/package.json
+    #     VERSION=${{ github.event.inputs.version }}
+    #     jq --arg version "$VERSION" '.version = $version' $FILE > tmp.$$.json && mv tmp.$$.json $FILE
+
+    # - name: Replace engine sdk version string
+    #   id: replace_engine_sdk_version
+    #   run: |
+    #     FILE=./src/Packages/Passport/Runtime/Scripts/Private/Helpers/SdkVersionInfoHelpers.cs
+    #     VERSION=${{ github.event.inputs.version }}
+    #     sed -i -E "s/[0-9]+\.[0-9]+\.[0-9]+/$VERSION/g" $FILE
+
+    # - uses: gr2m/create-or-update-pull-request-action@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   with:
+    #     title: "release: update version"
+    #     body: "Update version in package.json"
+    #     branch: "release/update-version"
+    #     commit-message: "release: update version"
+    #     labels: release
