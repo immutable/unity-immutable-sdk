@@ -60,6 +60,7 @@ namespace Immutable.Passport
             {
                 engine = "unity",
                 engineVersion = Application.unityVersion,
+                engineSdkVersion = SdkVersionInfoHelpers.GetSdkVersionInfo(),
                 platform = Application.platform.ToString(),
                 platformVersion = SystemInfo.operatingSystem,
                 deviceModel = SystemInfo.deviceModel

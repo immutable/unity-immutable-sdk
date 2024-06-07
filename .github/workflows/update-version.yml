@@ -10,10 +10,17 @@ on:
 
 jobs:
   update:
-    if: contains('["nattb8"]', github.actor)
     runs-on: ubuntu-latest
-
     steps:
+    - name: Check team membership
+      id: check_team
+      run: |
+        IS_MEMBER=$(./.github/scripts/check_team_membership.sh "${{ github.actor }}" "${{ secrets.GITHUB_TOKEN }}")
+        if [[ "$IS_MEMBER" != "true" ]]; then
+          echo "Not a member of the SDK team, skipping update"
+          exit 1
+        fi
+
     - name: Checkout code
       uses: actions/checkout@v3
 
@@ -30,7 +37,14 @@ jobs:
       run: |
         FILE=./src/Packages/Passport/package.json
         VERSION=${{ github.event.inputs.version }}
-        jq --arg version "$VERSION" '.version = $version' "./src/Packages/Passport/package.json" > tmp.$$.json && mv tmp.$$.json "./src/Packages/Passport/package.json"
+        jq --arg version "$VERSION" '.version = $version' $FILE > tmp.$$.json && mv tmp.$$.json $FILE
+
+    - name: Replace engine sdk version string
+      id: replace_engine_sdk_version
+      run: |
+        FILE=./src/Packages/Passport/Runtime/Scripts/Private/Helpers/SdkVersionInfoHelpers.cs
+        VERSION=${{ github.event.inputs.version }}
+        sed -i -E "s/[0-9]+\.[0-9]+\.[0-9]+/$VERSION/g" $FILE
 
     - uses: gr2m/create-or-update-pull-request-action@v1
       env:
