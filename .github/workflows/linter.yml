@@ -61,3 +61,4 @@ jobs:
           VALIDATE_MARKDOWN: false
           VALIDATE_GITLEAKS: false
           VALIDATE_JSCPD: false
+          VALIDATE_SHELL_SHFMT: false
