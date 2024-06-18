@@ -35,9 +35,6 @@ jobs:
     - name: Echo SdkVersionHelper
       run: echo "$(cat ./src/Packages/Passport/Runtime/Scripts/Private/Helpers/SdkVersionInfoHelpers.cs)"
 
-    - name: Echo Github Event
-      run: echo "${{ toJson(github.event) }}"
-
     # - name: Set up Python
     #   uses: actions/setup-python@v4
     #   with:
