@@ -19,8 +19,6 @@ echo "$response"
 
 if echo "$response" | grep -q '"state":"active"'; then
   echo "true"
-  return "true"
 else
   echo "false"
-  return "false"
 fi
