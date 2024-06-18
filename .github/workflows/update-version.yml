@@ -26,22 +26,19 @@ jobs:
         echo "${{ github.actor }} is a member of the SDK team: $IS_MEMBER"
         if [[ "$IS_MEMBER" != "true" ]]; then
           echo "Not a member of the SDK team, skipping update"
-          # exit 1
+          exit 1
         fi
-
-    - name: Echo team membership
-      run: echo "${{ steps.check_team.outputs.is_member }}"
 
     - name: Echo SdkVersionHelper
       run: echo "$(cat ./src/Packages/Passport/Runtime/Scripts/Private/Helpers/SdkVersionInfoHelpers.cs)"
 
-    # - name: Set up Python
-    #   uses: actions/setup-python@v4
-    #   with:
-    #     python-version: '3.x'
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
 
-    # - name: Install jq
-    #   run: sudo apt-get install -y jq
+    - name: Install jq
+      run: sudo apt-get install -y jq
 
     # - name: Replace version string
     #   id: replace_version
