@@ -5,19 +5,20 @@ set -x
 USER=$1
 TOKEN=$2
 
-echo "$(curl -L \
+echo "$(gh api \
   -H "Accept: application/vnd.github+json" \
-  -H "Authorization: Bearer $TOKEN" \
   -H "X-GitHub-Api-Version: 2022-11-28" \
-  https://api.github.com/orgs/immutable/teams)"
+  /orgs/immutable/teams)"
 
-echo "$(curl -L \
+echo "$(gh api \
   -H "Accept: application/vnd.github+json" \
-  -H "Authorization: Bearer $TOKEN" \
   -H "X-GitHub-Api-Version: 2022-11-28" \
-  https://api.github.com/orgs/immutable/teams/sdk/members)"
+  /orgs/immutable/teams/sdk/members)"
 
-response=$(curl -L -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/orgs/immutable/teams/sdk/memberships/codeschwert")
+response=$(gh api \
+  -H "Accept: application/vnd.github+json" \
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+  /orgs/immutable/teams/sdk/memberships/codeschwert)
 
 echo "$response"
 

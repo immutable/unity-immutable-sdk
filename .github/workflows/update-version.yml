@@ -12,6 +12,8 @@ on:
 jobs:
   update:
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.UNITY_IMMUTABLE_SDK_GITHUB_TOKEN }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
