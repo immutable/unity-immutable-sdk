@@ -19,7 +19,7 @@ jobs:
     - name: Check team membership
       id: check_team
       run: |
-        IS_MEMBER=$(./.github/scripts/check_team_membership.sh "${{ github.actor }}" "${{ secrets.GITHUB_TOKEN }}")
+        IS_MEMBER=$(./.github/scripts/check_team_membership.sh "${{ github.actor }}" "${{ secrets.UNITY_IMMUTABLE_SDK_GITHUB_TOKEN }}")
         if [[ "$IS_MEMBER" != "true" ]]; then
           echo "Not a member of the SDK team, skipping update"
           exit 1
