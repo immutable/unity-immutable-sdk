@@ -18,7 +18,11 @@ response=$(gh api \
 echo "$response"
 
 if echo "$response" | grep -q '"state":"active"'; then
-  echo "true"
+  IS_MEMBER=true
 else
-  echo "false"
+  IS_MEMBER=false
 fi
+echo "$IS_MEMBER"
+
+# Set the environment variable for the GitHub workflow
+echo "IS_MEMBER=$IS_MEMBER" >> $GITHUB_ENV
