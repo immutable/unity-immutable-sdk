@@ -11,18 +11,23 @@ on:
 jobs:
   update:
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.UNITY_IMMUTABLE_SDK_GITHUB_TOKEN }}
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
     - name: Check team membership
       id: check_team
       run: |
-        IS_MEMBER=$(./.github/scripts/check_team_membership.sh "${{ github.actor }}" "${{ secrets.GITHUB_TOKEN }}")
+        ./.github/scripts/check_team_membership.sh "${{ github.actor }}" "${{ secrets.UNITY_IMMUTABLE_SDK_GITHUB_TOKEN }}"
+        # shellcheck disable=SC1090
+        source "$GITHUB_ENV"
+        echo "${{ github.actor }} is a member of the SDK team: $IS_MEMBER"
         if [[ "$IS_MEMBER" != "true" ]]; then
           echo "Not a member of the SDK team, skipping update"
           exit 1
         fi
-
-    - name: Checkout code
-      uses: actions/checkout@v3
 
     - name: Set up Python
       uses: actions/setup-python@v4
