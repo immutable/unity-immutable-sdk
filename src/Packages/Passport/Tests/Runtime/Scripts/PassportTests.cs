@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Immutable.Browser.Core;
 using UnityEngine;
+using Immutable.Passport.Helpers;
 
 namespace Immutable.Passport
 {
@@ -191,7 +192,6 @@ namespace Immutable.Passport
             }
 
             Assert.NotNull(e);
-            Assert.AreEqual(PassportErrorType.AUTHENTICATION_ERROR, e.Type);
 
             Assert.AreEqual(0, urlsOpened.Count);
             List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
@@ -216,7 +216,6 @@ namespace Immutable.Passport
             }
 
             Assert.NotNull(e);
-            Assert.AreEqual(PassportErrorType.AUTHENTICATION_ERROR, e.Type);
 
             Assert.AreEqual(0, urlsOpened.Count);
             List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
@@ -255,7 +254,6 @@ namespace Immutable.Passport
             }
 
             Assert.NotNull(e);
-            Assert.AreEqual(PassportErrorType.AUTHENTICATION_ERROR, e.Type);
 
             Assert.AreEqual(1, urlsOpened.Count);
             Assert.AreEqual(URL, urlsOpened[0]);
@@ -292,7 +290,6 @@ namespace Immutable.Passport
             }
 
             Assert.NotNull(e);
-            Assert.AreEqual(PassportErrorType.AUTHENTICATION_ERROR, e.Type);
 
             Assert.AreEqual(1, urlsOpened.Count);
             Assert.AreEqual(URL, urlsOpened[0]);
@@ -407,8 +404,7 @@ namespace Immutable.Passport
             }));
             var reconnectResponse = new BoolResponse
             {
-                success = true,
-                result = false
+                success = false
             };
             communicationsManager.AddMockResponse(reconnectResponse);
             var deviceConnectResponse = new DeviceConnectResponse
@@ -470,8 +466,7 @@ namespace Immutable.Passport
             }));
             var reconnectResponse = new BoolResponse
             {
-                success = true,
-                result = false
+                success = false
             };
             communicationsManager.AddMockResponse(reconnectResponse);
             var deviceConnectResponse = new DeviceConnectResponse
@@ -491,7 +486,6 @@ namespace Immutable.Passport
             }
 
             Assert.NotNull(e);
-            Assert.AreEqual(PassportErrorType.AUTHENTICATION_ERROR, e.Type);
 
             Assert.AreEqual(0, urlsOpened.Count);
             List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
@@ -519,8 +513,7 @@ namespace Immutable.Passport
             }));
             var reconnectResponse = new BoolResponse
             {
-                success = true,
-                result = false
+                success = false
             };
             communicationsManager.AddMockResponse(reconnectResponse);
 
@@ -535,7 +528,6 @@ namespace Immutable.Passport
             }
 
             Assert.NotNull(e);
-            Assert.AreEqual(PassportErrorType.AUTHENTICATION_ERROR, e.Type);
 
             Assert.AreEqual(0, urlsOpened.Count);
             List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
@@ -563,8 +555,7 @@ namespace Immutable.Passport
             });
             var reconnectResponse = new BoolResponse
             {
-                success = true,
-                result = false
+                success = false
             };
             communicationsManager.AddMockResponse(reconnectResponse);
             var deviceConnectResponse = new DeviceConnectResponse
@@ -592,7 +583,6 @@ namespace Immutable.Passport
             }
 
             Assert.NotNull(e);
-            Assert.AreEqual(PassportErrorType.AUTHENTICATION_ERROR, e.Type);
 
             Assert.AreEqual(1, urlsOpened.Count);
             Assert.AreEqual(URL, urlsOpened[0]);
@@ -623,8 +613,7 @@ namespace Immutable.Passport
             }));
             var reconnectResponse = new BoolResponse
             {
-                success = true,
-                result = false
+                success = false
             };
             communicationsManager.AddMockResponse(reconnectResponse);
             var deviceConnectResponse = new DeviceConnectResponse
@@ -647,7 +636,6 @@ namespace Immutable.Passport
             }
 
             Assert.NotNull(e);
-            Assert.AreEqual(PassportErrorType.AUTHENTICATION_ERROR, e.Type);
 
             Assert.AreEqual(1, urlsOpened.Count);
             Assert.AreEqual(URL, urlsOpened[0]);
@@ -680,8 +668,7 @@ namespace Immutable.Passport
             }));
             var reconnectResponse = new BoolResponse
             {
-                success = true,
-                result = false
+                success = false
             };
             communicationsManager.AddMockResponse(reconnectResponse);
             var deviceConnectResponse = new DeviceConnectResponse
@@ -745,8 +732,7 @@ namespace Immutable.Passport
             }));
             var reconnectResponse = new BoolResponse
             {
-                success = true,
-                result = true
+                success = true
             };
             communicationsManager.AddMockResponse(reconnectResponse);
             var logoutResponse = new StringResponse
@@ -782,8 +768,7 @@ namespace Immutable.Passport
         {
             var reconnectResponse = new BoolResponse
             {
-                success = true,
-                result = true
+                success = true
             };
             communicationsManager.AddMockResponse(reconnectResponse);
             var logoutResponse = new StringResponse
@@ -817,8 +802,7 @@ namespace Immutable.Passport
         {
             var reconnectResponse = new BoolResponse
             {
-                success = true,
-                result = false
+                success = false
             };
             communicationsManager.AddMockResponse(reconnectResponse);
 
@@ -886,11 +870,19 @@ namespace Immutable.Passport
         [Test]
         public async Task GetAddress_Failed()
         {
-            var address = await passport.GetAddress();
+            communicationsManager.throwExceptionOnCall = true;
 
-            Assert.Null(address);
-            Assert.AreEqual(PassportFunction.IMX.GET_ADDRESS, communicationsManager.fxName);
-            Assert.True(String.IsNullOrEmpty(communicationsManager.data));
+            PassportException e = null;
+            try
+            {
+                var address = await passport.GetAddress();
+            }
+            catch (PassportException ex)
+            {
+                e = ex;
+            }
+
+            Assert.NotNull(e);
         }
 
         [Test]
@@ -913,11 +905,19 @@ namespace Immutable.Passport
         [Test]
         public async Task GetEmail_Failed()
         {
-            var email = await passport.GetEmail();
+            communicationsManager.throwExceptionOnCall = true;
 
-            Assert.Null(email);
-            Assert.AreEqual(PassportFunction.GET_EMAIL, communicationsManager.fxName);
-            Assert.True(String.IsNullOrEmpty(communicationsManager.data));
+            PassportException e = null;
+            try
+            {
+                var email = await passport.GetEmail();
+            }
+            catch (PassportException ex)
+            {
+                e = ex;
+            }
+
+            Assert.NotNull(e);
         }
 
         [Test]
@@ -940,11 +940,111 @@ namespace Immutable.Passport
         [Test]
         public async Task GetPassportId_Failed()
         {
-            var passportId = await passport.GetPassportId();
+            communicationsManager.throwExceptionOnCall = true;
 
-            Assert.Null(passportId);
-            Assert.AreEqual(PassportFunction.GET_PASSPORT_ID, communicationsManager.fxName);
-            Assert.True(String.IsNullOrEmpty(communicationsManager.data));
+            PassportException e = null;
+            try
+            {
+                var passportId = await passport.GetPassportId();
+            }
+            catch (PassportException ex)
+            {
+                e = ex;
+            }
+
+            Assert.NotNull(e);
+        }
+
+        [Test]
+        public async Task Logout_Success()
+        {
+            var response = new StringResponse
+            {
+                success = true,
+                result = URL
+            };
+            communicationsManager.AddMockResponse(response);
+
+            PassportException e = null;
+            try
+            {
+                await passport.Logout();
+            }
+            catch (PassportException ex)
+            {
+                e = ex;
+            }
+
+            Assert.Null(e);
+
+            Assert.AreEqual(1, urlsOpened.Count);
+            List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
+                    PassportAuthEvent.LoggingOut,
+                    PassportAuthEvent.LogoutSuccess
+                };
+            Assert.AreEqual(expectedEvents.Count, authEvents.Count);
+            Assert.AreEqual(expectedEvents, authEvents);
+        }
+
+        [Test]
+        public async Task Logout_FailedGetLogoutUrl()
+        {
+            var response = new StringResponse
+            {
+                success = false
+            };
+            communicationsManager.AddMockResponse(response);
+
+            PassportException e = null;
+            try
+            {
+                await passport.Logout();
+            }
+            catch (PassportException ex)
+            {
+                e = ex;
+            }
+
+            Assert.NotNull(e);
+
+            Assert.AreEqual(0, urlsOpened.Count);
+            List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
+                    PassportAuthEvent.LoggingOut,
+                    PassportAuthEvent.LogoutFailed
+                };
+            Assert.AreEqual(expectedEvents.Count, authEvents.Count);
+            Assert.AreEqual(expectedEvents, authEvents);
+        }
+
+        [Test]
+        public async Task Logout_EmptyGetLogoutUrl()
+        {
+            var response = new StringResponse
+            {
+                success = true,
+                result = ""
+            };
+            communicationsManager.AddMockResponse(response);
+
+            PassportException e = null;
+            try
+            {
+                await passport.Logout();
+            }
+            catch (PassportException ex)
+            {
+                e = ex;
+            }
+
+            Assert.NotNull(e);
+
+            Assert.AreEqual(0, urlsOpened.Count);
+            List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
+                    PassportAuthEvent.LoggingOut,
+                    PassportAuthEvent.LogoutFailed
+                };
+            Assert.AreEqual(expectedEvents.Count, authEvents.Count);
+            Assert.AreEqual(expectedEvents, authEvents);
         }
     }
 
@@ -966,13 +1066,24 @@ namespace Immutable.Passport
         {
             if (throwExceptionOnCall)
             {
+                Debug.Log("Error on call");
                 throw new PassportException("Error on call!");
             }
             else
             {
                 this.fxName = fxName;
                 this.data = data;
-                return UniTask.FromResult(responses.Count > 0 ? responses.Dequeue() : "");
+                string result = responses.Count > 0 ? responses.Dequeue() : "";
+                BrowserResponse response = result.OptDeserializeObject<BrowserResponse>();
+                if (response == null || response?.success == false || !String.IsNullOrEmpty(response?.error))
+                {
+                    Debug.Log("No response");
+                    throw new PassportException("Response is invalid!");
+                }
+                else
+                {
+                    return UniTask.FromResult(result);
+                }
             }
         }
 

@@ -178,16 +178,16 @@ namespace Immutable.Passport
         /// The user does not need to go through this flow if the saved access token is still valid or
         /// the refresh token can be used to get a new access token.
         /// </summary>
-        public async UniTask ConnectImxPKCE()
+        public async UniTask<bool> ConnectImxPKCE()
         {
-            await GetPassportImpl().ConnectImxPKCE();
+            return await GetPassportImpl().ConnectImxPKCE();
         }
 #endif
 
         /// <summary>
         /// Gets the wallet address of the logged in user.
         /// <returns>
-        /// The wallet address, otherwise null
+        /// The wallet address
         /// </returns>
         /// </summary>
         public async UniTask<string> GetAddress()
@@ -248,7 +248,7 @@ namespace Immutable.Passport
         /// <summary>
         /// Retrieves the email address of the user whose credentials are currently stored.
         /// <returns>
-        /// The email address, otherwise null
+        /// The email address
         /// </returns>
         /// </summary>
         public async UniTask<string> GetEmail()
@@ -260,7 +260,7 @@ namespace Immutable.Passport
         /// <summary>
         /// Retrieves the Passport ID of the user whose credentials are currently stored.
         /// <returns>
-        /// The Passport ID, otherwise null
+        /// The Passport ID
         /// </returns>
         /// </summary>
         public async UniTask<string> GetPassportId()
@@ -272,7 +272,7 @@ namespace Immutable.Passport
         /// <summary>
         /// Gets the currently saved access token without verifying its validity.
         /// <returns>
-        /// The access token, otherwise null
+        /// The access token
         /// </returns>
         /// </summary>
         public UniTask<string> GetAccessToken()
@@ -283,7 +283,7 @@ namespace Immutable.Passport
         /// <summary>
         /// Gets the currently saved ID token without verifying its validity.
         /// <returns>
-        /// The ID token, otherwise null
+        /// The ID token
         /// </returns>
         /// </summary>
         public UniTask<string> GetIdToken()

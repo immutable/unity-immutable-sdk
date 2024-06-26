@@ -89,3 +89,6 @@ src/Packages/Passport/Runtime/Assets/ImmutableAndroid.androidlib/**/*.meta
 src/Packages/Passport/Runtime/ThirdParty/Gree/Assets/Plugins/WebView.bundle/**/*.meta
 
 *.idea
+
+# Code coverage
+sample/ProjectSettings/Packages/com.unity.testtools.codecoverage/Settings.json

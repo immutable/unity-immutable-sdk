@@ -169,11 +169,9 @@ namespace Immutable.Passport.Core
             }
 
             string requestId = response.requestId;
-            PassportException exception = ParseError(response);
-
             if (requestTaskMap.ContainsKey(requestId))
             {
-                NotifyRequestResult(requestId, message, exception);
+                NotifyRequestResult(requestId, message);
             }
             else
             {
@@ -183,46 +181,40 @@ namespace Immutable.Passport.Core
 
         private PassportException ParseError(BrowserResponse response)
         {
-            if (response.success == false || !String.IsNullOrEmpty(response.error))
+            // Failed or error occured
+            try
             {
-                // Failed or error occured
-                try
+                if (!String.IsNullOrEmpty(response.error) && !String.IsNullOrEmpty(response.errorType))
                 {
-                    if (!String.IsNullOrEmpty(response.error) && !String.IsNullOrEmpty(response.errorType))
-                    {
-                        PassportErrorType type = (PassportErrorType)System.Enum.Parse(typeof(PassportErrorType), response.errorType);
-                        return new PassportException(response.error, type);
-                    }
-                    else if (!String.IsNullOrEmpty(response.error))
-                    {
-                        return new PassportException(response.error);
-                    }
-                    else
-                    {
-                        return new PassportException("Unknown error");
-                    }
+                    PassportErrorType type = (PassportErrorType)System.Enum.Parse(typeof(PassportErrorType), response.errorType);
+                    return new PassportException(response.error, type);
                 }
-                catch (Exception ex)
+                else if (!String.IsNullOrEmpty(response.error))
                 {
-                    Debug.LogError($"{TAG} Parse passport type error: {ex.Message}");
+                    return new PassportException(response.error);
                 }
-                return new PassportException(response.error ?? "Failed to parse error");
+                else
+                {
+                    return new PassportException("Unknown error");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                // No error
-                return null;
+                Debug.LogError($"{TAG} Parse passport type error: {ex.Message}");
             }
+            return new PassportException(response.error ?? "Failed to parse error");
         }
 
-        private void NotifyRequestResult(string requestId, string result, PassportException e)
+        private void NotifyRequestResult(string requestId, string result)
         {
+            BrowserResponse response = result.OptDeserializeObject<BrowserResponse>();
             UniTaskCompletionSource<string> completion = requestTaskMap[requestId] as UniTaskCompletionSource<string>;
             try
             {
-                if (e != null)
+                if (response.success == false || !String.IsNullOrEmpty(response.error))
                 {
-                    if (!completion.TrySetException(e))
+                    PassportException exception = ParseError(response);
+                    if (!completion.TrySetException(exception))
                         throw new PassportException($"Unable to set exception for for request id {requestId}. Task has already been completed.");
                 }
                 else
