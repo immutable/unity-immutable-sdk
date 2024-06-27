@@ -132,7 +132,6 @@ namespace Immutable.Passport
                 }
                 catch (Exception ex)
                 {
-
                     Track(PassportAnalytics.EventName.COMPLETE_LOGIN, success: false);
                     SendAuthEvent(PassportAuthEvent.LoginFailed);
                     throw ex;
@@ -147,16 +146,15 @@ namespace Immutable.Passport
                 SendAuthEvent(PassportAuthEvent.ReloggingIn);
 
                 string callResponse = await communicationsManager.Call(PassportFunction.RELOGIN);
-                bool success = callResponse.GetBoolResponse() ?? false;
-
-                Track(PassportAnalytics.EventName.COMPLETE_RELOGIN, success: success);
-                SendAuthEvent(success ? PassportAuthEvent.ReloginSuccess : PassportAuthEvent.ReloginFailed);
-                isLoggedIn = success;
-                return success;
+                Track(PassportAnalytics.EventName.COMPLETE_RELOGIN, success: true);
+                SendAuthEvent(PassportAuthEvent.ReloginSuccess);
+                isLoggedIn = true;
+                return true;
             }
             catch (Exception ex)
             {
                 Debug.Log($"{TAG} Failed to login to Passport using saved credentials: {ex.Message}");
+                isLoggedIn = false;
             }
             Track(PassportAnalytics.EventName.COMPLETE_RELOGIN, success: false);
             SendAuthEvent(PassportAuthEvent.ReloginFailed);
@@ -215,16 +213,16 @@ namespace Immutable.Passport
             {
                 SendAuthEvent(PassportAuthEvent.Reconnecting);
                 string callResponse = await communicationsManager.Call(PassportFunction.RECONNECT);
-                bool success = callResponse.GetBoolResponse() ?? false;
 
-                Track(PassportAnalytics.EventName.COMPLETE_RECONNECT, success: success);
-                SendAuthEvent(success ? PassportAuthEvent.ReconnectSuccess : PassportAuthEvent.ReconnectFailed);
-                isLoggedIn = success;
-                return success;
+                Track(PassportAnalytics.EventName.COMPLETE_RECONNECT, success: true);
+                SendAuthEvent(PassportAuthEvent.ReconnectSuccess);
+                isLoggedIn = true;
+                return true;
             }
             catch (Exception ex)
             {
                 Debug.Log($"{TAG} Failed to connect to Passport using saved credentials: {ex.Message}");
+                isLoggedIn = false;
             }
             Track(PassportAnalytics.EventName.COMPLETE_RECONNECT, success: false);
             SendAuthEvent(PassportAuthEvent.ReconnectFailed);
@@ -271,14 +269,6 @@ namespace Immutable.Passport
                     JsonUtility.ToJson(request),
                     true // Ignore timeout, this flow can take minutes to complete. 15 minute expiry from Auth0.
                 );
-                BrowserResponse response = callResponse.OptDeserializeObject<BrowserResponse>();
-                if (response == null || response?.success == false)
-                {
-                    throw new PassportException(
-                        response?.error ?? $"Unable to confirm code, call {callingFunction} again",
-                        PassportErrorType.AUTHENTICATION_ERROR
-                    );
-                }
             }
             else
             {

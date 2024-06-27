@@ -101,7 +101,7 @@ public class AuthenticatedScript : MonoBehaviour
             // Use existing credentials to connect to Passport
             ShowOutput("Connecting into Passport using saved credentials...");
             ConnectButton.gameObject.SetActive(false);
-            bool connected = await passport.ConnectImx();
+            bool connected = await passport.ConnectImx(useCachedSession: true);
             if (connected)
             {
                 IsRegisteredOffchainButton.gameObject.SetActive(true);
@@ -186,39 +186,74 @@ public class AuthenticatedScript : MonoBehaviour
 
     public async void Logout()
     {
-        ShowOutput("Logging out...");
+        try
+        {
+            ShowOutput("Logging out...");
 #if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
-        await passport.LogoutPKCE();
+            await passport.LogoutPKCE();
 #else
-        await passport.Logout();
+            await passport.Logout();
 #endif
-        SampleAppManager.IsConnected = false;
-        passport.OnAuthEvent -= OnPassportAuthEvent;
-        SceneManager.LoadScene(sceneName: "UnauthenticatedScene");
+            SampleAppManager.IsConnected = false;
+            passport.OnAuthEvent -= OnPassportAuthEvent;
+            SceneManager.LoadScene(sceneName: "UnauthenticatedScene");
+        }
+        catch (Exception ex)
+        {
+            ShowOutput($"Failed to log out: {ex.Message}");
+        }
     }
 
     public async void GetAccessToken()
     {
-        string accessToken = await passport.GetAccessToken();
-        ShowOutput(accessToken ?? "No access token");
+        try
+        {
+            string accessToken = await passport.GetAccessToken();
+            ShowOutput(accessToken);
+        }
+        catch (Exception ex)
+        {
+            ShowOutput($"Failed to get ID token: {ex.Message}");
+        }
     }
 
     public async void GetIdToken()
     {
-        string idToken = await passport.GetIdToken();
-        ShowOutput(idToken ?? "No ID token");
+        try
+        {
+            string idToken = await passport.GetIdToken();
+            ShowOutput(idToken);
+        }
+        catch (Exception ex)
+        {
+            ShowOutput($"Failed to get ID token: {ex.Message}");
+        }
     }
 
     public async void GetEmail()
     {
-        string email = await passport.GetEmail();
-        ShowOutput(email ?? "No email");
+        try
+        {
+            string email = await passport.GetEmail();
+            ShowOutput(email);
+        }
+        catch (Exception ex)
+        {
+            ShowOutput($"Failed to get email: {ex.Message}");
+        }
     }
 
     public async void GetPassportId()
     {
-        string passportId = await passport.GetPassportId();
-        ShowOutput(passportId ?? "No Passport ID");
+        try
+        {
+            string passportId = await passport.GetPassportId();
+            ShowOutput(passportId);
+        }
+        catch (Exception ex)
+        {
+            ShowOutput($"Failed to get Passport ID: {ex.Message}");
+        }
     }
 
     public void ShowTransfer()

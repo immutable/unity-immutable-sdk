@@ -130,15 +130,14 @@ public class UnauthenticatedScript : MonoBehaviour
             }
             else
             {
-                ShowOutput($"Could not login using saved credentials");
                 ClearStorageAndCache();
-
+                ShowOutput($"Could not login using saved credentials");
             }
         }
         catch (Exception ex)
         {
-            ShowOutput($"Relogin() error: {ex.Message}");
             ClearStorageAndCache();
+            ShowOutput($"Relogin() error: {ex.Message}");
         }
     }
 
@@ -201,15 +200,14 @@ public class UnauthenticatedScript : MonoBehaviour
             }
             else
             {
-                ShowOutput($"Could not connect using saved credentials");
                 ClearStorageAndCache();
-
+                ShowOutput($"Could not connect using saved credentials");
             }
         }
         catch (Exception ex)
         {
-            ShowOutput($"Reconnect() error: {ex.Message}");
             ClearStorageAndCache();
+            ShowOutput($"Reconnect() error: {ex.Message}");
         }
     }
 
