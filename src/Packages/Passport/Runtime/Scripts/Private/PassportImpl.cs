@@ -652,6 +652,13 @@ namespace Immutable.Passport
             return response.GetStringResult();
         }
 
+        public async UniTask<List<string>> GetLinkedAddresses()
+        {
+            string response = await communicationsManager.Call(PassportFunction.GET_LINKED_ADDRESSES);
+            string[] addresses = response.GetStringListResult();
+            return addresses != null ? addresses.ToList() : new List<string>();
+        }
+
         // Imx
         public async UniTask<CreateTransferResponseV1> ImxTransfer(UnsignedTransferRequest request)
         {

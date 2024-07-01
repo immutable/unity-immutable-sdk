@@ -292,6 +292,18 @@ namespace Immutable.Passport
         }
 
         /// <summary>
+        /// Gets the list of external wallets the user has linked to their Passport account via the 
+        /// <see href="https://passport.immutable.com/">Dashboard</see>.
+        /// <returns>
+        /// Linked addresses
+        /// </returns>
+        /// </summary>
+        public async UniTask<List<string>> GetLinkedAddresses()
+        {
+            return await GetPassportImpl().GetLinkedAddresses();
+        }
+
+        /// <summary>
         /// Create a new transfer request with the given unsigned transfer request.
         /// <returns>
         /// The transfer response if successful

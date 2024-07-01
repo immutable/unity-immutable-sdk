@@ -18,6 +18,11 @@ namespace Immutable.Passport.Core
         public string result;
     }
 
+    public class StringListResponse : BrowserResponse
+    {
+        public string[] result;
+    }
+
     public class BoolResponse : BrowserResponse
     {
         public bool result;
@@ -32,6 +37,23 @@ namespace Immutable.Passport.Core
         public static string GetStringResult(this string json)
         {
             StringResponse stringResponse = json.OptDeserializeObject<StringResponse>();
+            if (stringResponse != null)
+            {
+                return stringResponse.result;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Deserialises the json to StringListResponse and returns the result
+        /// See <see cref="Immutable.Passport.Core.BrowserResponse.StringListResponse"></param>
+        /// </summary>
+        public static string[] GetStringListResult(this string json)
+        {
+            StringListResponse stringResponse = json.OptDeserializeObject<StringListResponse>();
             if (stringResponse != null)
             {
                 return stringResponse.result;

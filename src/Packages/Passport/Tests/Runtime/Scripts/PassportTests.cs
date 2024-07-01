@@ -42,6 +42,7 @@ namespace Immutable.Passport
         internal static string ID_TOKEN = "idToken";
         internal static string ID_TOKEN_KEY = "idToken";
         internal static string ADDRESS = "0xaddress";
+        internal static string ADDRESS2 = "0xaddress2";
         internal static string EMAIL = "unity@immutable.com";
         internal static string PASSPORT_ID = "email|123457890";
         internal static string SIGNATURE = "0xsignature";
@@ -1045,6 +1046,73 @@ namespace Immutable.Passport
                 };
             Assert.AreEqual(expectedEvents.Count, authEvents.Count);
             Assert.AreEqual(expectedEvents, authEvents);
+        }
+
+        [Test]
+        public async Task GetLinkedAddresses_Success()
+        {
+            string[] result = { ADDRESS, ADDRESS2 };
+            var response = new StringListResponse
+            {
+                success = true,
+                result = result
+            };
+            communicationsManager.AddMockResponse(response);
+
+            var linkedAddresses = await passport.GetLinkedAddresses();
+
+            Assert.AreEqual(2, linkedAddresses.Count);
+            Assert.AreEqual(ADDRESS, linkedAddresses[0]);
+            Assert.AreEqual(ADDRESS2, linkedAddresses[1]);
+        }
+
+        [Test]
+        public async Task GetLinkedAddresses_Failed()
+        {
+            communicationsManager.throwExceptionOnCall = true;
+
+            PassportException e = null;
+            try
+            {
+                var passportId = await passport.GetLinkedAddresses();
+            }
+            catch (PassportException ex)
+            {
+                e = ex;
+            }
+
+            Assert.NotNull(e);
+        }
+
+        [Test]
+        public async Task GetLinkedAddresses_NullResponse()
+        {
+            var response = new StringListResponse
+            {
+                success = true,
+                result = null
+            };
+            communicationsManager.AddMockResponse(response);
+
+            var linkedAddresses = await passport.GetLinkedAddresses();
+
+            Assert.AreEqual(0, linkedAddresses.Count);
+        }
+
+        [Test]
+        public async Task GetLinkedAddresses_EmptyResponse()
+        {
+            string[] result = { };
+            var response = new StringListResponse
+            {
+                success = true,
+                result = result
+            };
+            communicationsManager.AddMockResponse(response);
+
+            var linkedAddresses = await passport.GetLinkedAddresses();
+
+            Assert.AreEqual(0, linkedAddresses.Count);
         }
     }
 

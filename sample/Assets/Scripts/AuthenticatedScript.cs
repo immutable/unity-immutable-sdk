@@ -243,6 +243,19 @@ public class AuthenticatedScript : MonoBehaviour
         }
     }
 
+    public async void GetLinkedAddresses()
+    {
+        try
+        {
+            List<string> addresses = await passport.GetLinkedAddresses();
+            ShowOutput(addresses.Count > 0 ? String.Join(", ", addresses) : "No linked addresses");
+        }
+        catch (Exception ex)
+        {
+            ShowOutput($"Failed to get linked addresses: {ex.Message}");
+        }
+    }
+
     public async void GetPassportId()
     {
         try
