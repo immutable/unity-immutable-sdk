@@ -15,37 +15,79 @@ public class UnauthenticatedScript : MonoBehaviour
     [SerializeField] private Button ConnectButton;
     [SerializeField] private Button ReloginButton;
     [SerializeField] private Button ReconnectButton;
+    [SerializeField] private Text SelectLoginMethod;
+    [SerializeField] private Toggle UseDeviceCodeAuthToggle;
+    [SerializeField] private Toggle UsePKCEToggle;
 
     private Passport passport;
 #pragma warning restore CS8618
 
-    async void Start()
+    void Start()
+    {
+        Debug.Log("Starting...");
+        if (!SampleAppManager.InitialisedPassport)
+        {
+            // Set up login method toggles
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
+            // Allow users to select which login method
+            Debug.Log("");
+            ShowSelectLoginMethod(true);
+            UseDeviceCodeAuthToggle.onValueChanged.AddListener(delegate (bool on)
+            {
+                SampleAppManager.UsePKCE = !on;
+                ShowSelectLoginMethod(false);
+                InitialisePassport();
+            });
+            UsePKCEToggle.onValueChanged.AddListener(delegate (bool on)
+            {
+                SampleAppManager.UsePKCE = on;
+                ShowSelectLoginMethod(false);
+                InitialisePassport();
+            });
+#else
+            // Users cannot select which login method as only device code auth is supported
+            ShowSelectLoginMethod(false);
+            InitialisePassport();
+#endif
+        }
+        else
+        {
+            // This is called if user logged out from the Authenticated Scene
+            ShowSelectLoginMethod(false);
+            ReloginButton.gameObject.SetActive(false);
+            ReconnectButton.gameObject.SetActive(false);
+            LoginButton.gameObject.SetActive(true);
+            ConnectButton.gameObject.SetActive(true);
+            passport = Passport.Instance;
+        }
+    }
+
+    private void ShowSelectLoginMethod(bool show)
+    {
+        SelectLoginMethod.gameObject.SetActive(show);
+        UseDeviceCodeAuthToggle.gameObject.SetActive(show);
+        UsePKCEToggle.gameObject.SetActive(show);
+    }
+
+    private async void InitialisePassport()
     {
         try
         {
-            ShowOutput("Starting...");
-            LoginButton.gameObject.SetActive(false);
-            ConnectButton.gameObject.SetActive(false);
-            ReloginButton.gameObject.SetActive(false);
-            ReconnectButton.gameObject.SetActive(false);
+            ShowOutput("Initilising Passport");
 
+            // Initiliase Passport
             string clientId = "ZJL7JvetcDFBNDlgRs5oJoxuAUUl6uQj";
             string environment = Immutable.Passport.Model.Environment.SANDBOX;
-            string redirectUri = null;
-            string logoutRedirectUri = null;
-
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
-            redirectUri = "imxsample://callback";
-            logoutRedirectUri = "imxsample://callback/logout";
-#endif
+            string redirectUri = SampleAppManager.UsePKCE ? "imxsample://callback" : null;
+            string logoutRedirectUri = SampleAppManager.UsePKCE ? "imxsample://callback/logout" : null;
 
             passport = await Passport.Init(
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-                clientId, environment, redirectUri, logoutRedirectUri, 10000
+        clientId, environment, redirectUri, logoutRedirectUri, 10000
 #else
-                clientId, environment, redirectUri, logoutRedirectUri
+            clientId, environment, redirectUri, logoutRedirectUri
 #endif
-                );
+            );
 
             // Listen to Passport Auth events
             passport.OnAuthEvent += OnPassportAuthEvent;
@@ -58,11 +100,12 @@ public class UnauthenticatedScript : MonoBehaviour
             LoginButton.gameObject.SetActive(!hasCredsSaved);
             ConnectButton.gameObject.SetActive(!hasCredsSaved);
 
+            SampleAppManager.InitialisedPassport = true;
             ShowOutput("Ready");
         }
         catch (Exception ex)
         {
-            ShowOutput($"Start() error: {ex.Message}");
+            ShowOutput($"Initialise Passport error: {ex.Message}");
         }
     }
 
@@ -79,7 +122,14 @@ public class UnauthenticatedScript : MonoBehaviour
             LoginButton.gameObject.SetActive(false);
 
 #if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
-            await passport.LoginPKCE();
+            if (SampleAppManager.UsePKCE)
+            {
+                await passport.LoginPKCE();
+            }
+            else
+            {
+                await passport.Login();
+            }
 #else
             await passport.Login();
 #endif
@@ -101,12 +151,7 @@ public class UnauthenticatedScript : MonoBehaviour
             else
             {
                 error = $"Login() error: {ex.Message}";
-                // Restart everything
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
-                await passport.Logout();
-#else
-                await passport.LogoutPKCE();
-#endif
+                await Logout();
             }
 
             Debug.Log(error);
@@ -149,7 +194,14 @@ public class UnauthenticatedScript : MonoBehaviour
             ConnectButton.gameObject.SetActive(false);
 
 #if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
-            await passport.ConnectImxPKCE();
+            if (SampleAppManager.UsePKCE)
+            {
+                await passport.ConnectImxPKCE();
+            }
+            else
+            {
+                await passport.ConnectImx();
+            }
 #else
             await passport.ConnectImx();
 #endif
@@ -171,12 +223,7 @@ public class UnauthenticatedScript : MonoBehaviour
             else
             {
                 error = $"Connect() error: {ex.Message}";
-                // Restart everything
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
-                await passport.Logout();
-#else
-                await passport.LogoutPKCE();
-#endif
+                await Logout();
             }
 
             Debug.Log(error);
@@ -208,6 +255,29 @@ public class UnauthenticatedScript : MonoBehaviour
         {
             ClearStorageAndCache();
             ShowOutput($"Reconnect() error: {ex.Message}");
+        }
+    }
+
+    private async UniTask Logout()
+    {
+        try
+        {
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
+            if (SampleAppManager.UsePKCE)
+            {
+                await passport.LogoutPKCE();
+            }
+            else
+            {
+                await passport.Logout();
+            }
+#else
+            await passport.Logout();
+#endif
+        }
+        catch (Exception ex)
+        {
+            ShowOutput($"Logout() error: {ex.Message}");
         }
     }
 
