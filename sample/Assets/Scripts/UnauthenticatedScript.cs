@@ -121,6 +121,7 @@ public class UnauthenticatedScript : MonoBehaviour
             ShowOutput("Called Login()...");
             LoginButton.gameObject.SetActive(false);
 
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
             if (SampleAppManager.UsePKCE)
             {
                 await passport.LoginPKCE();
@@ -129,6 +130,9 @@ public class UnauthenticatedScript : MonoBehaviour
             {
                 await passport.Login();
             }
+#else
+            await passport.Login();
+#endif
 
             SampleAppManager.IsConnected = false;
             NavigateToAuthenticatedScene();
@@ -189,6 +193,7 @@ public class UnauthenticatedScript : MonoBehaviour
             ShowOutput("Called Connect()...");
             ConnectButton.gameObject.SetActive(false);
 
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
             if (SampleAppManager.UsePKCE)
             {
                 await passport.ConnectImxPKCE();
@@ -197,6 +202,9 @@ public class UnauthenticatedScript : MonoBehaviour
             {
                 await passport.ConnectImx();
             }
+#else
+            await passport.ConnectImx();
+#endif
 
             SampleAppManager.IsConnected = true;
             NavigateToAuthenticatedScene();
@@ -252,13 +260,24 @@ public class UnauthenticatedScript : MonoBehaviour
 
     private async UniTask Logout()
     {
-        if (SampleAppManager.UsePKCE)
+        try
         {
-            await passport.LogoutPKCE();
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
+            if (SampleAppManager.UsePKCE)
+            {
+                await passport.LogoutPKCE();
+            }
+            else
+            {
+                await passport.Logout();
+            }
+#else
+        await passport.Logout();
+#endif
         }
-        else
+        catch (Exception ex)
         {
-            await passport.Logout();
+            ShowOutput($"Logout() error: {ex.Message}");
         }
     }
 
