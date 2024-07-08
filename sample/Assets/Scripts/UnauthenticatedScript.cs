@@ -272,7 +272,7 @@ public class UnauthenticatedScript : MonoBehaviour
                 await passport.Logout();
             }
 #else
-        await passport.Logout();
+            await passport.Logout();
 #endif
         }
         catch (Exception ex)
