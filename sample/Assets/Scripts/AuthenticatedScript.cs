@@ -189,11 +189,14 @@ public class AuthenticatedScript : MonoBehaviour
         try
         {
             ShowOutput("Logging out...");
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
-            await passport.LogoutPKCE();
-#else
-            await passport.Logout();
-#endif
+            if (SampleAppManager.UsePKCE)
+            {
+                await passport.LogoutPKCE();
+            }
+            else
+            {
+                await passport.Logout();
+            }
             SampleAppManager.IsConnected = false;
             passport.OnAuthEvent -= OnPassportAuthEvent;
             SceneManager.LoadScene(sceneName: "UnauthenticatedScene");

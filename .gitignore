@@ -92,3 +92,9 @@ src/Packages/Passport/Runtime/ThirdParty/Gree/Assets/Plugins/WebView.bundle/**/*
 
 # Code coverage
 sample/ProjectSettings/Packages/com.unity.testtools.codecoverage/Settings.json
+
+# AltTester
+sample/AltTester.log
+
+# Crashes
+sample/mono_crash*
