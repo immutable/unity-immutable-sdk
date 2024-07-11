@@ -1,12 +1,9 @@
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-
 // UnityWebBrowser (UWB)
 // Copyright (c) 2021-2022 Voltstro-Studios
 // 
 // This project is under the MIT license. See the LICENSE.md file for more details.
 
 using System.Net;
-using System.Net.NetworkInformation;
 using UnityEngine;
 using VoltRpc.Communication;
 using VoltRpc.Communication.TCP;
@@ -16,6 +13,7 @@ namespace VoltstroStudios.UnityWebBrowser.Communication
     /// <summary>
     ///     In-Built TCP layer that uses VoltRpc's <see cref="TCPClient" /> and <see cref="TCPHost" />
     /// </summary>
+    [CreateAssetMenu(fileName = "TCP Communication Layer", menuName = "UWB/TCP Communication Layer")]
     public sealed class TCPCommunicationLayer : CommunicationLayer
     {
         /// <summary>
@@ -32,18 +30,6 @@ namespace VoltstroStudios.UnityWebBrowser.Communication
         [Range(1024, 65353)]
         [Tooltip("The out port to communicate on")]
         public int outPort = 5556;
-
-        public TCPCommunicationLayer()
-        {
-            // If ports are not available, use different ports
-            System.Random rnd = new System.Random();
-            while (!CheckAvailableServerPort(inPort) || !CheckAvailableServerPort(outPort))
-            {
-                int port = rnd.Next(1024, 65353);
-                inPort = port;
-                outPort = port + 1;
-            }
-        }
 
         public override Client CreateClient()
         {
@@ -63,26 +49,5 @@ namespace VoltstroStudios.UnityWebBrowser.Communication
             inLocation = inPort;
             assemblyLocation = null;
         }
-
-        private bool CheckAvailableServerPort(int port) {
-            Debug.Log($"Checking Port {port}");
-            bool isAvailable = true;
-
-            IPGlobalProperties ipGlobalProperties = IPGlobalProperties.GetIPGlobalProperties();
-            IPEndPoint[] tcpConnInfoArray = ipGlobalProperties.GetActiveTcpListeners();
-
-            foreach (IPEndPoint endpoint in tcpConnInfoArray) {
-                if (endpoint.Port == port) {
-                    isAvailable = false;
-                    break;
-                }
-            }
-
-            Debug.Log($"Port {port} available = {isAvailable}");
-
-            return isAvailable;
-        }
     }
 }
-
-#endif
