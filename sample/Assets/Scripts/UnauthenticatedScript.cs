@@ -18,6 +18,7 @@ public class UnauthenticatedScript : MonoBehaviour
     [SerializeField] private Text SelectLoginMethod;
     [SerializeField] private Toggle UseDeviceCodeAuthToggle;
     [SerializeField] private Toggle UsePKCEToggle;
+    [SerializeField] private InputField DeviceCodeTimeoutMs;
 
     private Passport passport;
 #pragma warning restore CS8618
@@ -58,6 +59,7 @@ public class UnauthenticatedScript : MonoBehaviour
             ReconnectButton.gameObject.SetActive(false);
             LoginButton.gameObject.SetActive(true);
             ConnectButton.gameObject.SetActive(true);
+            DeviceCodeTimeoutMs.gameObject.SetActive(!SampleAppManager.UsePKCE);
             passport = Passport.Instance;
         }
     }
@@ -99,6 +101,7 @@ public class UnauthenticatedScript : MonoBehaviour
             ReconnectButton.gameObject.SetActive(hasCredsSaved);
             LoginButton.gameObject.SetActive(!hasCredsSaved);
             ConnectButton.gameObject.SetActive(!hasCredsSaved);
+            DeviceCodeTimeoutMs.gameObject.SetActive(!hasCredsSaved && !SampleAppManager.UsePKCE);
 
             SampleAppManager.InitialisedPassport = true;
             ShowOutput("Ready");
@@ -118,8 +121,8 @@ public class UnauthenticatedScript : MonoBehaviour
     {
         try
         {
-            ShowOutput("Called Login()...");
-            LoginButton.gameObject.SetActive(false);
+            Nullable<long> timeoutMs = GetDeviceCodeTimeoutMs(); ;
+            ShowOutput($"Called Login() (timeout: {(timeoutMs != null ? timeoutMs.ToString() + "ms" : "none")})...");
 
 #if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
             if (SampleAppManager.UsePKCE)
@@ -128,10 +131,10 @@ public class UnauthenticatedScript : MonoBehaviour
             }
             else
             {
-                await passport.Login();
+                await passport.Login(timeoutMs: timeoutMs);
             }
 #else
-            await passport.Login();
+            await passport.Login(timeoutMs: timeoutMs);
 #endif
 
             SampleAppManager.IsConnected = false;
@@ -156,7 +159,6 @@ public class UnauthenticatedScript : MonoBehaviour
 
             Debug.Log(error);
             ShowOutput(error);
-            LoginButton.gameObject.SetActive(true);
         }
     }
 
@@ -190,8 +192,8 @@ public class UnauthenticatedScript : MonoBehaviour
     {
         try
         {
-            ShowOutput("Called Connect()...");
-            ConnectButton.gameObject.SetActive(false);
+            Nullable<long> timeoutMs = GetDeviceCodeTimeoutMs();
+            ShowOutput($"Called Connect() (timeout: {(timeoutMs != null ? timeoutMs.ToString() + "ms" : "none")})...");
 
 #if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
             if (SampleAppManager.UsePKCE)
@@ -200,10 +202,10 @@ public class UnauthenticatedScript : MonoBehaviour
             }
             else
             {
-                await passport.ConnectImx();
+                await passport.ConnectImx(timeoutMs: timeoutMs);
             }
 #else
-            await passport.ConnectImx();
+            await passport.ConnectImx(timeoutMs: timeoutMs);
 #endif
 
             SampleAppManager.IsConnected = true;
@@ -228,7 +230,6 @@ public class UnauthenticatedScript : MonoBehaviour
 
             Debug.Log(error);
             ShowOutput(error);
-            ConnectButton.gameObject.SetActive(true);
         }
     }
 
@@ -290,6 +291,11 @@ public class UnauthenticatedScript : MonoBehaviour
 #else
         ShowOutput("Support on Android and iOS devices only");
 #endif
+    }
+
+    private Nullable<long> GetDeviceCodeTimeoutMs()
+    {
+        return String.IsNullOrEmpty(DeviceCodeTimeoutMs.text) ? null : long.Parse(DeviceCodeTimeoutMs.text);
     }
 
     private void NavigateToAuthenticatedScene()

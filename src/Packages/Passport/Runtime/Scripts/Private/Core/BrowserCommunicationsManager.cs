@@ -23,7 +23,7 @@ namespace Immutable.Passport.Core
         event OnUnityPostMessageErrorDelegate OnPostMessageError;
         void SetCallTimeout(int ms);
         void LaunchAuthURL(string url, string redirectUri);
-        UniTask<string> Call(string fxName, string data = null, bool ignoreTimeout = false);
+        UniTask<string> Call(string fxName, string data = null, bool ignoreTimeout = false, Nullable<long> timeoutMs = null);
 #if (UNITY_IPHONE && !UNITY_EDITOR) || (UNITY_ANDROID && !UNITY_EDITOR)
         void ClearCache(bool includeDiskFiles);
         void ClearStorage();
@@ -71,7 +71,7 @@ namespace Immutable.Passport.Core
             callTimeout = ms;
         }
 
-        public UniTask<string> Call(string fxName, string data = null, bool ignoreTimeout = false)
+        public UniTask<string> Call(string fxName, string data = null, bool ignoreTimeout = false, Nullable<long> timeoutMs = null)
         {
             var t = new UniTaskCompletionSource<string>();
             string requestId = Guid.NewGuid().ToString();
@@ -81,7 +81,7 @@ namespace Immutable.Passport.Core
             if (ignoreTimeout)
                 return t.Task;
             else
-                return t.Task.Timeout(TimeSpan.FromMilliseconds(callTimeout));
+                return t.Task.Timeout(TimeSpan.FromMilliseconds(timeoutMs ?? callTimeout));
         }
 
         private void CallFunction(string requestId, string fxName, string data = null)

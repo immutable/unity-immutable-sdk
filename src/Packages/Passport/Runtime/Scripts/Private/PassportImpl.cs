@@ -49,7 +49,8 @@ namespace Immutable.Passport
             this.communicationsManager = communicationsManager;
         }
 
-        public async UniTask Init(string clientId, string environment, string redirectUri = null, string logoutRedirectUri = null, string deeplink = null)
+        public async UniTask Init(string clientId, string environment, string redirectUri = null,
+            string logoutRedirectUri = null, string deeplink = null)
         {
             this.redirectUri = redirectUri;
             this.logoutRedirectUri = logoutRedirectUri;
@@ -242,7 +243,10 @@ namespace Immutable.Passport
                 };
             }
 
-            throw new PassportException(deviceConnectResponse?.error ?? $"Something went wrong, please call {callingFunction} again", PassportErrorType.AUTHENTICATION_ERROR);
+            throw new PassportException(
+                    deviceConnectResponse?.error ?? $"Something went wrong, please call {callingFunction} again",
+                    PassportErrorType.AUTHENTICATION_ERROR
+                );
         }
 
         private async UniTask ConfirmCode(
@@ -267,12 +271,13 @@ namespace Immutable.Passport
                 string callResponse = await communicationsManager.Call(
                     functionToCall,
                     JsonUtility.ToJson(request),
-                    true // Ignore timeout, this flow can take minutes to complete. 15 minute expiry from Auth0.
-                );
+                    ignoreTimeout: timeoutMs == null,
+                    timeoutMs);
             }
             else
             {
-                throw new PassportException($"Unable to confirm code, call {callingFunction} again", PassportErrorType.AUTHENTICATION_ERROR);
+                throw new PassportException($"Unable to confirm code, call {callingFunction} again",
+                    PassportErrorType.AUTHENTICATION_ERROR);
             }
         }
 

@@ -147,6 +147,7 @@ namespace Immutable.Passport
         /// <summary>
         /// Logs the user into Passport via device code auth. This will open the user's default browser and take them through Passport login.
         /// <param name="useCachedSession">If true, the saved access token or refresh token will be used to log the user in. If this fails, it will not fallback to device code auth.</param>
+        /// <param name="timeoutMs">(Optional) The maximum time, in milliseconds, the function is allowed to take before a TimeoutException is thrown. If not set, the function will wait indefinitely.</param>
         /// </summary>
         public async UniTask<bool> Login(bool useCachedSession = false, Nullable<long> timeoutMs = null)
         {
@@ -157,6 +158,7 @@ namespace Immutable.Passport
         /// Logs the user into Passport via device code auth and sets up the IMX provider. This will open the user's
         /// default browser and take them through Passport login.
         /// <param name="useCachedSession">If true, the saved access token or refresh token will be used to connect the user. If this fails, it will not fallback to device code auth.</param>
+        /// <param name="timeoutMs">(Optional) The maximum time, in milliseconds, the function is allowed to take before a TimeoutException is thrown. If not set, the function will wait indefinitely.</param>
         /// </summary>
         public async UniTask<bool> ConnectImx(bool useCachedSession = false, Nullable<long> timeoutMs = null)
         {
