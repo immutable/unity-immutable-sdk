@@ -50,7 +50,7 @@ namespace Immutable.Passport
         internal static string CODE = "IMX";
         internal static string URL = "https://auth.immutable.com/device";
         internal static string LOGOUT_URL = "https://auth.immutable.com/logout";
-        internal static int INTERVAL = 5000;
+        internal static int INTERVAL = 5;
         private const string REQUEST_ID = "50";
 
 #pragma warning disable CS8618
@@ -92,7 +92,8 @@ namespace Immutable.Passport
                 success = true,
                 code = CODE,
                 deviceCode = DEVICE_CODE,
-                url = URL
+                url = URL,
+                interval = INTERVAL
             };
             communicationsManager.AddMockResponse(deviceConnectResponse);
             var confirmCodeResponse = new BrowserResponse
@@ -137,7 +138,8 @@ namespace Immutable.Passport
                 success = true,
                 code = CODE,
                 deviceCode = DEVICE_CODE,
-                url = URL
+                url = URL,
+                interval = INTERVAL
             };
             communicationsManager.AddMockResponse(deviceConnectResponse);
             var confirmCodeResponse = new BrowserResponse
@@ -305,6 +307,66 @@ namespace Immutable.Passport
         }
 
         [Test]
+        public async Task Login_ValidTimeout()
+        {
+            var deviceConnectResponse = new DeviceConnectResponse
+            {
+                success = true,
+                code = CODE,
+                deviceCode = DEVICE_CODE,
+                url = URL,
+                interval = INTERVAL
+            };
+            communicationsManager.AddMockResponse(deviceConnectResponse);
+            var confirmCodeResponse = new BrowserResponse
+            {
+                success = true
+            };
+            communicationsManager.AddMockResponse(confirmCodeResponse);
+
+            // Login
+            bool success = false;
+            ArgumentException e = null;
+            try
+            {
+                success = await passport.Login(timeoutMs: 6000);
+            }
+            catch (ArgumentException exception)
+            {
+                e = exception;
+            }
+
+            Assert.Null(e);
+            Assert.True(success);
+        }
+
+        [Test]
+        public async Task Login_InvalidTimeout()
+        {
+            var deviceConnectResponse = new DeviceConnectResponse
+            {
+                success = true,
+                code = CODE,
+                deviceCode = DEVICE_CODE,
+                url = URL,
+                interval = INTERVAL
+            };
+            communicationsManager.AddMockResponse(deviceConnectResponse);
+
+            ArgumentException e = null;
+            try
+            {
+                await passport.Login(timeoutMs: 1);
+            }
+            catch (ArgumentException exception)
+            {
+                e = exception;
+            }
+
+            Assert.NotNull(e);
+        }
+
+        [Test]
         public async Task Relogin_Success()
         {
             var reloginResponse = new BoolResponse
@@ -413,7 +475,8 @@ namespace Immutable.Passport
                 success = true,
                 code = CODE,
                 deviceCode = DEVICE_CODE,
-                url = URL
+                url = URL,
+                interval = INTERVAL
             };
             communicationsManager.AddMockResponse(deviceConnectResponse);
             var confirmCodeResponse = new BrowserResponse
@@ -564,7 +627,8 @@ namespace Immutable.Passport
                 success = true,
                 code = CODE,
                 deviceCode = DEVICE_CODE,
-                url = URL
+                url = URL,
+                interval = INTERVAL
             };
             communicationsManager.AddMockResponse(deviceConnectResponse);
             var confirmCodeResponse = new BrowserResponse
@@ -622,7 +686,8 @@ namespace Immutable.Passport
                 success = true,
                 code = CODE,
                 deviceCode = DEVICE_CODE,
-                url = URL
+                url = URL,
+                interval = INTERVAL
             };
             communicationsManager.AddMockResponse(deviceConnectResponse);
 
@@ -677,7 +742,8 @@ namespace Immutable.Passport
                 success = true,
                 code = CODE,
                 deviceCode = DEVICE_CODE,
-                url = URL
+                url = URL,
+                interval = INTERVAL
             };
             communicationsManager.AddMockResponse(deviceConnectResponse);
             var confirmCodeResponse = new BrowserResponse

@@ -255,6 +255,12 @@ namespace Immutable.Passport
         {
             if (deviceConnectResponse != null)
             {
+                long intervalMs = deviceConnectResponse.interval * 1000;
+                if (timeoutMs != null && timeoutMs < intervalMs)
+                {
+                    throw new ArgumentException($"timeoutMs should be longer than {intervalMs}ms");
+                }
+
                 // Open URL for user to confirm
                 SendAuthEvent(openingBrowserAuthEvent);
                 OpenUrl(deviceConnectResponse.url);
