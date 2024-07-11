@@ -1,5 +1,3 @@
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-
 // UnityWebBrowser (UWB)
 // Copyright (c) 2021-2022 Voltstro-Studios
 // 
@@ -14,6 +12,7 @@ using VoltstroStudios.UnityWebBrowser.Editor.EngineManagement;
 
 namespace VoltstroStudios.UnityWebBrowser.Core.Engines
 {
+    [CreateAssetMenu(menuName = "UWB/UWB Engine Configuration", fileName = "New UWB Engine Configuration")]
     public class EngineConfiguration : Engine
     {
         public string engineAppName;
@@ -36,6 +35,9 @@ namespace VoltstroStudios.UnityWebBrowser.Core.Engines
 #if UWB_ENGINE_PRJ
         public void OnValidate()
         {
+            if(Application.isBatchMode) //CI
+                return;
+            
             foreach (EnginePlatformFiles engineFile in engineFiles)
             {
                 string path = EngineManager.GetEngineProcessFullPath(this, engineFile.platform);
@@ -48,5 +50,3 @@ namespace VoltstroStudios.UnityWebBrowser.Core.Engines
 #endif
     }
 }
-
-#endif

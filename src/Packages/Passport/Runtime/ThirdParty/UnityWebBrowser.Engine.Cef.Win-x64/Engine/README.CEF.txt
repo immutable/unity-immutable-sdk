@@ -1,17 +1,17 @@
 Chromium Embedded Framework (CEF) Minimal Binary Distribution for Windows
 -------------------------------------------------------------------------------
 
-Date:             October 21, 2022
+Date:             March 15, 2024
 
-CEF Version:      106.1.1+g5891c70+chromium-106.0.5249.119
+CEF Version:      122.1.13+gde5b724+chromium-122.0.6261.130
 CEF URL:          https://bitbucket.org/chromiumembedded/cef.git
-                  @5891c702dae4647f09400db52f57ee38e04c7b4c
+                  @de5b72441ba5194c72e38628c85bfab7d7e4918e
 
-Chromium Version: 106.0.5249.119
+Chromium Version: 122.0.6261.130
 Chromium URL:     https://chromium.googlesource.com/chromium/src.git
-                  @33512c3fb17e231fa81198c09841892d0cef8c66
+                  @343fb4557ad7a3184e418e848bbf47966515ec3c
 
-This distribution contains the minimial components necessary to build and
+This distribution contains the minimal components necessary to build and
 distribute an application using CEF on the Windows platform. Please see
 the LICENSING section of this document for licensing terms and conditions.
 
@@ -104,6 +104,12 @@ run but any related functionality may become broken or disabled.
   acceleration is enabled (default in most cases). Use of this bundled version
   is recommended instead of relying on the possibly old and untested system
   installed version.
+
+* DirectX compiler support (x64 only).
+  * dxil.dll
+  * dxcompiler.dll
+  Support for DirectX rendering of WebGPU. Without these files the
+  aforementioned capabilities may fail.
 
 * ANGLE support.
   * libEGL.dll

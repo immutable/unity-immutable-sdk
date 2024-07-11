@@ -85,7 +85,7 @@ public class UnauthenticatedScript : MonoBehaviour
 
             passport = await Passport.Init(
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-        clientId, environment, redirectUri, logoutRedirectUri, 10000
+        clientId, environment, redirectUri, logoutRedirectUri, 30000
 #else
             clientId, environment, redirectUri, logoutRedirectUri
 #endif

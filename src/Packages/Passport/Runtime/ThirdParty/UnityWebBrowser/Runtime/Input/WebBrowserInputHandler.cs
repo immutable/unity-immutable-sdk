@@ -1,5 +1,3 @@
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-
 // UnityWebBrowser (UWB)
 // Copyright (c) 2021-2022 Voltstro-Studios
 // 
@@ -65,8 +63,16 @@ namespace VoltstroStudios.UnityWebBrowser.Input
         /// </summary>
         public abstract void OnStop();
 
+        /// <summary>
+        ///     Called when IME needs to be enabled
+        /// </summary>
+        public abstract void EnableIme(Vector2 location);
+
+        /// <summary>
+        ///     Called when IME is no longer needed
+        /// </summary>
+        public abstract void DisableIme();
+
         #endregion
     }
 }
-
-#endif

@@ -1,12 +1,9 @@
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-
 // UnityWebBrowser (UWB)
 // Copyright (c) 2021-2022 Voltstro-Studios
 // 
 // This project is under the MIT license. See the LICENSE.md file for more details.
 
 using System;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace VoltstroStudios.UnityWebBrowser.Core
@@ -29,10 +26,10 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         [Tooltip("The browser client, what handles the communication between the UWB engine and Unity")]
         public WebBrowserClient browserClient = new();
 
-        private async Task StartAsync()
+        private void Start()
         {
             //Start the browser client
-            await browserClient.Init();
+            browserClient.Init();
 
             OnStart();
         }
@@ -55,7 +52,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         }
 
         /// <summary>
-        ///     Override this instead of using <see cref="StartAsync" />
+        ///     Override this instead of using <see cref="Start" />
         /// </summary>
         protected virtual void OnStart()
         {
@@ -149,5 +146,3 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         #endregion
     }
 }
-
-#endif

@@ -1,5 +1,3 @@
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-
 // UnityWebBrowser (UWB)
 // Copyright (c) 2021-2022 Voltstro-Studios
 // 
@@ -12,7 +10,7 @@ using VoltstroStudios.UnityWebBrowser.Shared.Core;
 
 namespace VoltstroStudios.UnityWebBrowser.Core.Engines
 {
-    public abstract class Engine
+    public abstract class Engine : ScriptableObject
     {
         public abstract string GetEngineExecutableName();
 
@@ -30,5 +28,3 @@ namespace VoltstroStudios.UnityWebBrowser.Core.Engines
 #endif
     }
 }
-
-#endif

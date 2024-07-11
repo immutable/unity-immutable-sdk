@@ -1,13 +1,24 @@
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-
 // UnityWebBrowser (UWB)
 // Copyright (c) 2021-2022 Voltstro-Studios
 // 
 // This project is under the MIT license. See the LICENSE.md file for more details.
 
+//Defines
+#if UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX && !UWB_DOCS
+
+//We need the Unix support package installed on UNIX systems
+#if !UNIX_SUPPORT
+#error Need UNIX support package!
+#else
+#define UWB_NEED_UNIX
+#endif
+
+#endif
+
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Unity.Collections;
@@ -31,6 +42,15 @@ namespace VoltstroStudios.UnityWebBrowser.Helper
     [Preserve]
     public static class WebBrowserUtils
     {
+        private static RuntimePlatform[] supportedPlatforms = new[]
+        {
+            RuntimePlatform.WindowsPlayer,
+            RuntimePlatform.WindowsEditor,
+            RuntimePlatform.LinuxPlayer,
+            RuntimePlatform.LinuxEditor,
+            RuntimePlatform.OSXEditor
+        };
+        
         /// <summary>
         ///     Gets the main directory where logs and cache may be stored
         /// </summary>
@@ -42,16 +62,7 @@ namespace VoltstroStudios.UnityWebBrowser.Helper
 #elif UNITY_STANDALONE_OSX
             return Application.persistentDataPath;
 #else
-            // TODO to remove this once we don't stop distributing the SDK Windows DLL version, 
-            // but also doesn't matter if it stays here
-            if (Application.isEditor) 
-            {
-                return Path.GetFullPath($"{Directory.GetParent(Application.dataPath).FullName}/Library");
-            }
-            else
-            {
-			    return $"{Application.dataPath}/ImmutableSDK/Runtime";
-            }
+			return Application.dataPath;
 #endif
         }
 
@@ -69,7 +80,9 @@ namespace VoltstroStudios.UnityWebBrowser.Helper
 #elif UNITY_STANDALONE_OSX
             return Path.GetFullPath($"{Application.dataPath}/Resources/Data/UWB/");
 #elif UNITY_STANDALONE
-		    return Path.GetFullPath($"{Application.dataPath}/ImmutableSDK/Runtime/UWB/");
+		    return Path.GetFullPath($"{Application.dataPath}/UWB/");
+#else       //Unsupported platform, UWB shouldn't run anyway
+            return null;
 #endif
         }
 
@@ -83,7 +96,7 @@ namespace VoltstroStudios.UnityWebBrowser.Helper
             return EngineManager.GetEngineProcessFullPath(engine);
 #else
             string path = $"{GetBrowserEnginePath(null)}/{engine.GetEngineExecutableName()}";
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+#if UNITY_STANDALONE_WIN
             path += ".exe";
 #endif
             return  Path.GetFullPath(path);
@@ -135,6 +148,15 @@ namespace VoltstroStudios.UnityWebBrowser.Helper
             position.y = -(ptLocationRelativeToImageInScreenCoordinates.y / uiImageObjectRect.height) + 1;
 
             return true;
+        }
+        
+        /// <summary>
+        ///     Checks if UWB is running on a supported platform
+        /// </summary>
+        /// <returns></returns>
+        public static bool IsRunningOnSupportedPlatform()
+        {
+            return supportedPlatforms.Any(x => x == UnityEngine.Device.Application.platform);
         }
 
         /// <summary>
@@ -209,5 +231,3 @@ namespace VoltstroStudios.UnityWebBrowser.Helper
         }
     }
 }
-
-#endif

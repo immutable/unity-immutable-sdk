@@ -1,5 +1,3 @@
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-
 // UnityWebBrowser (UWB)
 // Copyright (c) 2021-2022 Voltstro-Studios
 // 
@@ -18,12 +16,14 @@ using Unity.Profiling;
 using UnityEngine;
 using VoltstroStudios.UnityWebBrowser.Communication;
 using VoltstroStudios.UnityWebBrowser.Core.Engines;
+using VoltstroStudios.UnityWebBrowser.Core.Js;
 using VoltstroStudios.UnityWebBrowser.Events;
 using VoltstroStudios.UnityWebBrowser.Helper;
 using VoltstroStudios.UnityWebBrowser.Logging;
 using VoltstroStudios.UnityWebBrowser.Shared;
 using VoltstroStudios.UnityWebBrowser.Shared.Core;
 using VoltstroStudios.UnityWebBrowser.Shared.Events;
+using VoltstroStudios.UnityWebBrowser.Shared.Js;
 using Object = UnityEngine.Object;
 using Resolution = VoltstroStudios.UnityWebBrowser.Shared.Resolution;
 
@@ -128,6 +128,12 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         public uint remoteDebuggingPort = 9022;
 
         /// <summary>
+        ///     Manager for JS methods
+        /// </summary>
+        [Tooltip("Manager for JS methods")]
+        public JsMethodManager jsMethodManager = new();
+
+        /// <summary>
         ///     The <see cref="CommunicationLayer" /> to use
         /// </summary>
         [Header("IPC Settings")]
@@ -160,6 +166,11 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         ///     The UWB engine has signaled that it is ready
         /// </summary>
         public bool ReadySignalReceived { get; internal set; }
+
+        /// <summary>
+        ///     The UWB engine has signaled that it is connected to the <see cref="WebBrowserClient"/>
+        /// </summary>
+        public bool ClientConnected { get; internal set; }
 
         /// <summary>
         ///     Has UWB initialized
@@ -412,7 +423,8 @@ namespace VoltstroStudios.UnityWebBrowser.Core
                 //Start the engine process
                 await UniTask.Create(() =>
                     StartEngineProcess(arguments))
-                    .ContinueWith(() => WaitForEngineReadyTask(cancellationSource.Token));
+                    .ContinueWith(() => WaitForEngineReadyTask(cancellationSource.Token))
+                    .ContinueWith(async () => await UniTask.WaitUntil(() => ClientConnected, cancellationToken: cancellationSource.Token));
             }
             catch (Exception ex)
             {
@@ -457,7 +469,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             {
                 logger.Error(engineProcess.HasExited
                     ? $"The engine did not get ready within engine startup timeout! The engine process is not even running! Exit code: {engineProcess.ExitCode}."
-                    : "The engine did not get ready within engine startup timeout!");
+                    : "The engine did not get ready within engine startup timeout! Try increasing your 'Engine Startup Timeout' time. If you continue to have this error, see issue report #166 on GitHub.");
                 await using (UniTask.ReturnToMainThread())
                 {
                     Dispose();
@@ -490,6 +502,12 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             {
                 logger.Debug("UWB startup success, connecting...");
                 communicationsManager.Connect();
+
+                //Fire OnClientConnected on main thread
+                await using (UniTask.ReturnToMainThread())
+                {
+                    ClientConnected = true;
+                }
             }
             catch (Exception ex)
             {
@@ -764,6 +782,16 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             Application.OpenURL(url);
         }
 
+        /// <summary>
+        ///     Shows dev tools
+        /// </summary>
+        public void OpenDevTools()
+        {
+            CheckIfIsReadyAndConnected();
+
+            communicationsManager.OpenDevTools();
+        }
+
         [DebuggerStepThrough]
         private void CheckIfIsReadyAndConnected()
         {
@@ -772,6 +800,113 @@ namespace VoltstroStudios.UnityWebBrowser.Core
 
             if (!IsConnected)
                 throw new UwbIsNotConnectedException("UWB is not currently connected!");
+        }
+
+        #endregion
+
+        #region JS Methods
+
+        /// <summary>
+        ///     Registers a method with <see cref="JsMethodManager"/>
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="method"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public void RegisterJsMethod(string name, Action method)
+        {
+            if (method == null)
+                throw new ArgumentNullException(nameof(method));
+
+            jsMethodManager.RegisterJsMethod(name, method.Method, method.Target);
+        }
+
+        /// <summary>
+        ///     Registers a method with <see cref="JsMethodManager"/>
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="method"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public void RegisterJsMethod<T>(string name, Action<T> method)
+        {
+            if (method == null)
+                throw new ArgumentNullException(nameof(method));
+
+            jsMethodManager.RegisterJsMethod(name, method.Method, method.Target);
+        }
+
+        /// <summary>
+        ///     Registers a method with <see cref="JsMethodManager"/>
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="method"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public void RegisterJsMethod<T1, T2>(string name, Action<T1, T2> method)
+        {
+            if (method == null)
+                throw new ArgumentNullException(nameof(method));
+
+            jsMethodManager.RegisterJsMethod(name, method.Method, method.Target);
+        }
+
+        /// <summary>
+        ///     Registers a method with <see cref="JsMethodManager"/>
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="method"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public void RegisterJsMethod<T1, T2, T3>(string name, Action<T1, T2, T3> method)
+        {
+            if (method == null)
+                throw new ArgumentNullException(nameof(method));
+
+            jsMethodManager.RegisterJsMethod(name, method.Method, method.Target);
+        }
+
+        /// <summary>
+        ///     Registers a method with <see cref="JsMethodManager"/>
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="method"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public void RegisterJsMethod<T1, T2, T3, T4>(string name, Action<T1, T2, T3, T4> method)
+        {
+            if (method == null)
+                throw new ArgumentNullException(nameof(method));
+
+            jsMethodManager.RegisterJsMethod(name, method.Method, method.Target);
+        }
+
+        /// <summary>
+        ///     Registers a method with <see cref="JsMethodManager"/>
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="method"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public void RegisterJsMethod<T1, T2, T3, T4, T5>(string name, Action<T1, T2, T3, T4, T5> method)
+        {
+            if (method == null)
+                throw new ArgumentNullException(nameof(method));
+
+            jsMethodManager.RegisterJsMethod(name, method.Method, method.Target);
+        }
+
+        /// <summary>
+        ///     Registers a method with <see cref="JsMethodManager"/>
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="method"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public void RegisterJsMethod<T1, T2, T3, T4, T5, T6>(string name, Action<T1, T2, T3, T4, T5, T6> method)
+        {
+            if (method == null)
+                throw new ArgumentNullException(nameof(method));
+
+            jsMethodManager.RegisterJsMethod(name, method.Method, method.Target);
+        }
+
+        internal void InvokeJsMethod(ExecuteJsMethod executeJsMethod)
+        {
+            jsMethodManager.InvokeJsMethod(executeJsMethod);
         }
 
         #endregion
@@ -857,7 +992,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             {
                 if (!engineProcess.HasExited)
                     engineProcess.KillProcess();
-                    
+
                 engineProcess.Dispose();
                 engineProcess = null;
             }
@@ -875,5 +1010,3 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         #endregion
     }
 }
-
-#endif

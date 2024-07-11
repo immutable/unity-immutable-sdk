@@ -1,5 +1,3 @@
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-
 // UnityWebBrowser (UWB)
 // Copyright (c) 2021-2022 Voltstro-Studios
 // 
@@ -18,7 +16,7 @@ namespace VoltstroStudios.UnityWebBrowser.Communication
     ///         <see cref="Host" /> to use.
     ///     </para>
     /// </summary>
-    public abstract class CommunicationLayer
+    public abstract class CommunicationLayer : ScriptableObject
     {
         /// <summary>
         ///     Timeout time for connection
@@ -62,5 +60,3 @@ namespace VoltstroStudios.UnityWebBrowser.Communication
             [CanBeNull] out string assemblyLocation);
     }
 }
-
-#endif

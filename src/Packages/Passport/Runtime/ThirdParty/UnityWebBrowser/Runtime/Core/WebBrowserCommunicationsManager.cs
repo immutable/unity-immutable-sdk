@@ -1,5 +1,3 @@
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-
 // UnityWebBrowser (UWB)
 // Copyright (c) 2021-2022 Voltstro-Studios
 // 
@@ -17,6 +15,7 @@ using VoltstroStudios.UnityWebBrowser.Logging;
 using VoltstroStudios.UnityWebBrowser.Shared;
 using VoltstroStudios.UnityWebBrowser.Shared.Core;
 using VoltstroStudios.UnityWebBrowser.Shared.Events;
+using VoltstroStudios.UnityWebBrowser.Shared.Js;
 using VoltstroStudios.UnityWebBrowser.Shared.ReadWriters;
 
 namespace VoltstroStudios.UnityWebBrowser.Core
@@ -45,6 +44,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         ///     Creates a new <see cref="WebBrowserCommunicationsManager" /> instance
         /// </summary>
         /// <param name="browserClient"></param>
+        /// <param name="cancellationTokenSource"></param>
         public WebBrowserCommunicationsManager(WebBrowserClient browserClient, CancellationTokenSource cancellationTokenSource)
         {
             threadLock = new object();
@@ -80,6 +80,17 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             }
         }
 
+        public PixelsEvent GetPixels()
+        {
+            using (sendEventMarker.Auto())
+            {
+                lock (threadLock)
+                {
+                    return engineProxy.GetPixels();
+                }
+            }
+        }
+
         public void Shutdown()
         {
             lock (threadLock)
@@ -106,6 +117,17 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         public void SendMouseScrollEvent(MouseScrollEvent mouseScrollEvent)
         {
             ExecuteTask(() => engineProxy.SendMouseScrollEvent(mouseScrollEvent));
+        }
+
+        public Vector2 GetScrollPosition()
+        {
+            using (sendEventMarker.Auto())
+            {
+                lock (threadLock)
+                {
+                    return engineProxy.GetScrollPosition();
+                }
+            }
         }
 
         public void GoForward()
@@ -138,6 +160,32 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             ExecuteTask(() => engineProxy.ExecuteJs(js));
         }
 
+        public void SetZoomLevel(double zoomLevel)
+        {
+            ExecuteTask(() => engineProxy.SetZoomLevel(zoomLevel));
+        }
+
+        public double GetZoomLevel()
+        {
+            using (sendEventMarker.Auto())
+            {
+                lock (threadLock)
+                {
+                    return engineProxy.GetZoomLevel();
+                }
+            }
+        }
+
+        public void OpenDevTools()
+        {
+            ExecuteTask(() => engineProxy.OpenDevTools());
+        }
+
+        public void Resize(Resolution resolution)
+        {
+            ExecuteTask(() => engineProxy.Resize(resolution));
+        }
+
         public void Connect()
         {
             ipcClient.Connect();
@@ -155,7 +203,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
                 {
                     await using (UniTask.ReturnToMainThread())
                     {
-                        if(!cancellationTokenSource.IsCancellationRequested)
+                        if (!cancellationTokenSource.IsCancellationRequested)
                             throw;
                     }
                 }
@@ -182,7 +230,6 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             if (!IsConnected)
                 return;
 
-#pragma warning disable CS4014
             UniTask.RunOnThreadPool(() =>
             {
                 sendEventMarker.Begin();
@@ -201,7 +248,6 @@ namespace VoltstroStudios.UnityWebBrowser.Core
                 sendEventMarker.End();
                 return UniTask.CompletedTask;
             });
-#pragma warning restore CS4014
         }
 
         #region Client Events
@@ -209,11 +255,6 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         public void UrlChange(string url)
         {
             ExecuteOnUnity(() => client.InvokeUrlChanged(url));
-        }
-
-        public void UnityPostMessage(string message)
-        {
-            ExecuteOnUnity(() => client.InvokeOnUnityPostMessage(message));
         }
 
         public void LoadStart(string url)
@@ -241,13 +282,21 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             ExecuteOnUnity(() => client.InvokeFullscreen(fullScreen));
         }
 
+        public void InputFocusChange(bool focused)
+        {
+            // Not required
+        }
+
         public void Ready()
         {
             client.EngineReady().Forget();
         }
 
+        public void ExecuteJsMethod(ExecuteJsMethod executeJsMethod)
+        {
+            ExecuteOnUnity(() => client.InvokeJsMethod(executeJsMethod));
+        }
+
         #endregion
     }
 }
-
-#endif

@@ -1,6 +1,4 @@
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-
-// UnityWebBrowser (UWB)
+﻿// UnityWebBrowser (UWB)
 // Copyright (c) 2021-2024 Voltstro-Studios
 // 
 // This project is under the MIT license. See the LICENSE.md file for more details.
@@ -29,7 +27,11 @@ namespace VoltstroStudios.UnityWebBrowser.Core.Engines
         /// <param name="logger"></param>
         public EngineProcess(Engine engine, IWebBrowserLogger logger)
         {
+#if UNITY_STANDALONE_WIN
             processHandle = new WindowProcess();
+#elif UNITY_STANDALONE_LINUX
+            processHandle = new LinuxProcess(logger);
+#endif
             
             this.engine = engine;
             this.logger = logger;
@@ -76,5 +78,3 @@ namespace VoltstroStudios.UnityWebBrowser.Core.Engines
         }
     }
 }
-
-#endif
