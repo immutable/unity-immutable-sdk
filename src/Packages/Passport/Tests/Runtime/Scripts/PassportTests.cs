@@ -1130,7 +1130,7 @@ namespace Immutable.Passport
             responses.Enqueue(JsonUtility.ToJson(response));
         }
 
-        public UniTask<string> Call(string fxName, string data = null, bool ignoreTimeout = false)
+        public UniTask<string> Call(string fxName, string data = null, bool ignoreTimeout = false, Nullable<long> timeoutMs = null)
         {
             if (throwExceptionOnCall)
             {
