@@ -424,7 +424,8 @@ namespace VoltstroStudios.UnityWebBrowser.Core
                 await UniTask.Create(() =>
                     StartEngineProcess(arguments))
                     .ContinueWith(() => WaitForEngineReadyTask(cancellationSource.Token))
-                    .ContinueWith(async () => await UniTask.WaitUntil(() => ClientConnected, cancellationToken: cancellationSource.Token));
+                    .ContinueWith(async () => await UniTask.WaitUntil(() => ClientConnected, cancellationToken: cancellationSource.Token))
+                    .ContinueWith(() => RegisterJsMethod<string>("UnityPostMessage", InvokeOnUnityPostMessage));
             }
             catch (Exception ex)
             {

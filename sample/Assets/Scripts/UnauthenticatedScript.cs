@@ -109,6 +109,15 @@ public class UnauthenticatedScript : MonoBehaviour
         catch (Exception ex)
         {
             ShowOutput($"Initialise Passport error: {ex.Message}");
+            if (ex is PassportException && ((PassportException)ex).Type == PassportErrorType.NOT_LOGGED_IN_ERROR)
+            {
+                await Logout(); // Clear everything
+                ReloginButton.gameObject.SetActive(false);
+                ReconnectButton.gameObject.SetActive(false);
+                LoginButton.gameObject.SetActive(true);
+                ConnectButton.gameObject.SetActive(true);
+                DeviceCodeTimeoutMs.gameObject.SetActive(!SampleAppManager.UsePKCE);
+            }
         }
     }
 

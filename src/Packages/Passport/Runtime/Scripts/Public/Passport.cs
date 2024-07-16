@@ -112,6 +112,7 @@ namespace Immutable.Passport
                 communicationsManager.OnReady += () => readySignalReceived = true;
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
                 await ((WebBrowserClient)webBrowserClient).Init(engineStartupTimeoutMs);
+                ((WebBrowserClient)webBrowserClient).OpenDevTools();
 #endif
                 passportImpl = new PassportImpl(communicationsManager);
                 passportImpl.OnAuthEvent += OnPassportAuthEvent;

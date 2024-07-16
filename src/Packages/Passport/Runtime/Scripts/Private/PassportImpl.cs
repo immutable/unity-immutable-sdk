@@ -606,16 +606,24 @@ namespace Immutable.Passport
             try
             {
                 SendAuthEvent(PassportAuthEvent.CheckingForSavedCredentials);
+
                 string accessToken = await GetAccessToken();
                 string idToken = await GetIdToken();
+
                 SendAuthEvent(PassportAuthEvent.CheckForSavedCredentialsSuccess);
+
                 return accessToken != null && idToken != null;
             }
             catch (Exception ex)
             {
-                string errorMessage = $"Failed to check if there are credentials saved: {ex.Message}";
-                Debug.Log($"{TAG} {errorMessage}");
+                Debug.Log($"{TAG} Failed to check if there are credentials saved: {ex.Message}");
                 SendAuthEvent(PassportAuthEvent.CheckForSavedCredentialsFailed);
+
+                if (ex is PassportException && ((PassportException)ex).Type == PassportErrorType.NOT_LOGGED_IN_ERROR)
+                {
+                    throw ex;
+                }
+
                 return false;
             }
         }

@@ -26,8 +26,8 @@ namespace VoltstroStudios.UnityWebBrowser.Core.Js
         ///     Enables/Disables JS Methods
         /// </summary>
         [Tooltip("Enables/Disables JS Methods")]
-        public bool jsMethodsEnable;
-        
+        public bool jsMethodsEnable = true;
+
         private readonly Dictionary<Type, JsValueType> typeMatching = new()
         {
             [typeof(int)] = JsValueType.Int,
@@ -55,7 +55,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core.Js
             if (!jsMethodsEnable)
                 throw new NotEnabledException(
                     $"The JS Method manager is disabled! You need to enable it using {nameof(jsMethodsEnable)}.");
-            
+
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentNullException(nameof(name));
 
@@ -64,13 +64,13 @@ namespace VoltstroStudios.UnityWebBrowser.Core.Js
 
             if (target == null)
                 throw new ArgumentNullException(nameof(target));
-            
+
             if (JsMethods.ContainsKey(name))
                 throw new ArgumentException($"A method of the name {name} is already registered!", nameof(name));
 
             if (methodInfo.ReturnType != typeof(void))
                 throw new UnsupportedTypeException("The provided method must return void!");
-            
+
             ParameterInfo[] methodParameters = methodInfo.GetParameters();
 
             MethodArgument[]? argumentTypes = null;
@@ -82,11 +82,11 @@ namespace VoltstroStudios.UnityWebBrowser.Core.Js
                     Type type = methodParameters[i].ParameterType;
                     if (type.IsArray)
                         throw new UnsupportedTypeException("Parameters cannot be an array type!");
-                    
+
                     KeyValuePair<Type, JsValueType> typeMatch = typeMatching.FirstOrDefault(x => x.Key == type);
 
                     JsValueType valueType = typeMatch.Key == null ? JsValueType.Object : typeMatch.Value;
-                    
+
                     //Have to "process" the type
                     CustomTypeInfo? customTypeInfo = null;
                     if (valueType == JsValueType.Object)
@@ -97,7 +97,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core.Js
                     argumentTypes[i] = new MethodArgument(valueType, customTypeInfo);
                 }
             }
-            
+
             //method.Method
             JsMethods.Add(name, new JsMethodInfo
             {
@@ -106,7 +106,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core.Js
                 Target = target
             });
         }
-        
+
         /// <summary>
         ///     Invoke a JS method
         /// </summary>
@@ -117,7 +117,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core.Js
             if (!jsMethodsEnable)
                 throw new NotEnabledException(
                     $"The JS Method manager is disabled! You need to enable it using {nameof(jsMethodsEnable)}.");
-            
+
             //Get registered method first
             (string? methodName, JsMethodInfo foundMethodInfo) = JsMethods.FirstOrDefault(x => x.Key == executeJsMethod.MethodName);
             if (methodName == null)
@@ -141,7 +141,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core.Js
                     JsValue executedArgument = executeJsMethod.Arguments[i];
                     MethodArgument matchingArgument = foundMethodArguments![i];
 
-                    if(!(matchingArgument.ValueType == JsValueType.Object && executedArgument.Type == JsValueType.Null)
+                    if (!(matchingArgument.ValueType == JsValueType.Object && executedArgument.Type == JsValueType.Null)
                        && executedArgument.Type != matchingArgument.ValueType)
                         throw new InvalidArgumentsException($"Invalid argument type! Was excepting '{matchingArgument.ValueType}', but got type of '{executedArgument.Type}'!");
 
@@ -149,9 +149,9 @@ namespace VoltstroStudios.UnityWebBrowser.Core.Js
                     if (matchingArgument.TypeInfo != null && executedArgument.Type == JsValueType.Object)
                     {
                         CustomTypeInfo customTypeInfo = matchingArgument.TypeInfo.Value;
-                        
+
                         JsObjectHolder objectHolder = (JsObjectHolder)executedArgument.Value;
-                        if(objectHolder.Keys.Length != customTypeInfo.TypeProperties.Length)
+                        if (objectHolder.Keys.Length != customTypeInfo.TypeProperties.Length)
                             throw new InvalidArgumentsException($"Passed in argument object keys count does not match what is excepted!");
 
                         argumentValue = CreateObjectFromObjectHolder(objectHolder, customTypeInfo);
@@ -184,7 +184,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core.Js
                     propertyValue = CreateObjectFromObjectHolder((JsObjectHolder)matchedKey.Value.Value,
                         customPropertyTypeInfo.TypeInfo!.Value);
                 }
-                            
+
                 customTypeInfo.RootType.GetProperty(customPropertyTypeInfo.PropertyName)!.SetValue(argumentValue, propertyValue);
             }
 
@@ -202,10 +202,10 @@ namespace VoltstroStudios.UnityWebBrowser.Core.Js
                 //Find type's matching JsValueType
                 PropertyInfo property = properties[i];
                 Type propertyType = property.PropertyType;
-                
+
                 if (propertyType.IsArray)
                     throw new UnsupportedTypeException("Parameters cannot be an array type!");
-                
+
                 KeyValuePair<Type, JsValueType> propertyTypeMatch = typeMatching.FirstOrDefault(x => x.Key == propertyType);
                 JsValueType propertyValueType = propertyTypeMatch.Key == null ? JsValueType.Object : propertyTypeMatch.Value;
 
@@ -220,7 +220,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core.Js
 
             return new CustomTypeInfo(type, propertyTypeInfos);
         }
-        
+
         /// <summary>
         ///     Contains details related to a object's property
         /// </summary>
@@ -232,23 +232,23 @@ namespace VoltstroStudios.UnityWebBrowser.Core.Js
                 PropertyName = propertyName;
                 TypeInfo = typeInfo;
             }
-            
+
             /// <summary>
             ///     What <see cref="JsValueType"/> this object is
             /// </summary>
             public JsValueType ValueType { get; set; }
-            
+
             /// <summary>
             ///     The 'Name' of the property
             /// </summary>
             public string PropertyName { get; set; }
-            
+
             /// <summary>
             ///     If this property is a custom object, then <see cref="TypeInfo"/> of this property
             /// </summary>
             public CustomTypeInfo? TypeInfo { get; set; }
         }
-        
+
         /// <summary>
         ///     Contains details to a custom object
         /// </summary>
@@ -259,7 +259,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core.Js
                 RootType = rootType;
                 TypeProperties = properties;
             }
-            
+
             /// <summary>
             ///     The root <see cref="Type"/> of this custom
             /// </summary>
@@ -270,7 +270,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core.Js
             /// </summary>
             public CustomPropertyTypeInfo[] TypeProperties { get; set; }
         }
-        
+
         /// <summary>
         ///     Contains info on a method's argument
         /// </summary>
@@ -281,18 +281,18 @@ namespace VoltstroStudios.UnityWebBrowser.Core.Js
                 ValueType = valueType;
                 TypeInfo = typeInfo;
             }
-            
+
             /// <summary>
             ///     <see cref="JsValueType"/> this argument is
             /// </summary>
             public JsValueType ValueType { get; set; }
-            
+
             /// <summary>
             ///     If this argument is a custom object, then <see cref="TypeInfo"/> about it
             /// </summary>
             public CustomTypeInfo? TypeInfo { get; set; }
         }
-        
+
         /// <summary>
         ///     Contains info a method that can be invoked by JS
         /// </summary>
@@ -302,12 +302,12 @@ namespace VoltstroStudios.UnityWebBrowser.Core.Js
             ///     The <see cref="MethodInfo"/> of the method
             /// </summary>
             public MethodInfo Method { get; set; }
-            
+
             /// <summary>
             ///     Details on the arguments (if any)
             /// </summary>
             public MethodArgument[]? Arguments { get; set; }
-            
+
             /// <summary>
             ///     The object 
             /// </summary>
