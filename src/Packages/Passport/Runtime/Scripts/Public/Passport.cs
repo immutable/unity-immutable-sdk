@@ -132,6 +132,7 @@ namespace Immutable.Passport
             // as the child engine process would still be alive
             Debug.Log($"{TAG} Quitting the Player");
             ((WebBrowserClient)webBrowserClient).Dispose();
+            Instance = null;
         }
 #endif
 
