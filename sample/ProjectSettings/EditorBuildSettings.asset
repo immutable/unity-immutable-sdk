@@ -11,4 +11,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/AuthenticatedScene.unity
     guid: dc1709435bc151f4bb6f46e9451a1efb
+  - enabled: 1
+    path: Assets/Scenes/SelectAuthMethod.unity
+    guid: bb0668e0c95b745ce8e2f127d5940ede
   m_configObjects: {}

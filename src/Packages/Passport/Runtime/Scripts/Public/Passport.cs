@@ -58,7 +58,7 @@ namespace Immutable.Passport
         /// <param name="engineStartupTimeoutMs">(Windows only) Timeout time for waiting for the engine to start (in milliseconds)</param>
         public static UniTask<Passport> Init(
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-            string clientId, string environment, string redirectUri = null, string logoutRedirectUri = null, int engineStartupTimeoutMs = 4000
+            string clientId, string environment, string redirectUri = null, string logoutRedirectUri = null, int engineStartupTimeoutMs = 30000
 #else
             string clientId, string environment, string redirectUri = null, string logoutRedirectUri = null
 #endif
