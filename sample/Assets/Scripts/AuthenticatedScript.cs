@@ -74,11 +74,11 @@ public class AuthenticatedScript : MonoBehaviour
         if (Passport.Instance != null)
         {
             passport = Passport.Instance;
-            ConnectButton.gameObject.SetActive(!SampleAppManager.IsConnected);
-            IsRegisteredOffchainButton.gameObject.SetActive(SampleAppManager.IsConnected);
-            RegisterOffchainButton.gameObject.SetActive(SampleAppManager.IsConnected);
-            GetAddressButton.gameObject.SetActive(SampleAppManager.IsConnected);
-            ShowTransferButton.gameObject.SetActive(SampleAppManager.IsConnected);
+            ConnectButton.gameObject.SetActive(!SampleAppManager.IsConnectedToImx);
+            IsRegisteredOffchainButton.gameObject.SetActive(SampleAppManager.IsConnectedToImx);
+            RegisterOffchainButton.gameObject.SetActive(SampleAppManager.IsConnectedToImx);
+            GetAddressButton.gameObject.SetActive(SampleAppManager.IsConnectedToImx);
+            ShowTransferButton.gameObject.SetActive(SampleAppManager.IsConnectedToImx);
 
             // Listen to Passport Auth events
             passport.OnAuthEvent += OnPassportAuthEvent;
@@ -201,7 +201,7 @@ public class AuthenticatedScript : MonoBehaviour
 #else
             await passport.Logout();
 #endif
-            SampleAppManager.IsConnected = false;
+            SampleAppManager.IsConnectedToImx = false;
             passport.OnAuthEvent -= OnPassportAuthEvent;
             SceneManager.LoadScene(sceneName: "UnauthenticatedScene");
         }
