@@ -15,101 +15,27 @@ public class UnauthenticatedScript : MonoBehaviour
     [SerializeField] private Button ConnectButton;
     [SerializeField] private Button ReloginButton;
     [SerializeField] private Button ReconnectButton;
-    [SerializeField] private Text SelectLoginMethod;
-    [SerializeField] private Toggle UseDeviceCodeAuthToggle;
-    [SerializeField] private Toggle UsePKCEToggle;
     [SerializeField] private InputField DeviceCodeTimeoutMs;
 
     private Passport passport;
 #pragma warning restore CS8618
 
-    void Start()
+    async void Start()
     {
-        Debug.Log("Starting...");
-        if (!SampleAppManager.InitialisedPassport)
-        {
-            // Set up login method toggles
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
-            // Allow users to select which login method
-            Debug.Log("");
-            ShowSelectLoginMethod(true);
-            UseDeviceCodeAuthToggle.onValueChanged.AddListener(delegate (bool on)
-            {
-                SampleAppManager.UsePKCE = !on;
-                ShowSelectLoginMethod(false);
-                InitialisePassport();
-            });
-            UsePKCEToggle.onValueChanged.AddListener(delegate (bool on)
-            {
-                SampleAppManager.UsePKCE = on;
-                ShowSelectLoginMethod(false);
-                InitialisePassport();
-            });
-#else
-            // Users cannot select which login method as only device code auth is supported
-            ShowSelectLoginMethod(false);
-            InitialisePassport();
-#endif
-        }
-        else
-        {
-            // This is called if user logged out from the Authenticated Scene
-            ShowSelectLoginMethod(false);
-            ReloginButton.gameObject.SetActive(false);
-            ReconnectButton.gameObject.SetActive(false);
-            LoginButton.gameObject.SetActive(true);
-            ConnectButton.gameObject.SetActive(true);
-            DeviceCodeTimeoutMs.gameObject.SetActive(!SampleAppManager.UsePKCE);
-            passport = Passport.Instance;
-        }
-    }
+        // Get Passport instance
+        passport = Passport.Instance;
 
-    private void ShowSelectLoginMethod(bool show)
-    {
-        SelectLoginMethod.gameObject.SetActive(show);
-        UseDeviceCodeAuthToggle.gameObject.SetActive(show);
-        UsePKCEToggle.gameObject.SetActive(show);
-    }
+        // Listen to Passport Auth events
+        passport.OnAuthEvent += OnPassportAuthEvent;
 
-    private async void InitialisePassport()
-    {
-        try
-        {
-            ShowOutput("Initilising Passport");
-
-            // Initiliase Passport
-            string clientId = "ZJL7JvetcDFBNDlgRs5oJoxuAUUl6uQj";
-            string environment = Immutable.Passport.Model.Environment.SANDBOX;
-            string redirectUri = SampleAppManager.UsePKCE ? "imxsample://callback" : null;
-            string logoutRedirectUri = SampleAppManager.UsePKCE ? "imxsample://callback/logout" : null;
-
-            passport = await Passport.Init(
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-        clientId, environment, redirectUri, logoutRedirectUri, 10000
-#else
-            clientId, environment, redirectUri, logoutRedirectUri
-#endif
-            );
-
-            // Listen to Passport Auth events
-            passport.OnAuthEvent += OnPassportAuthEvent;
-
-            // Check if user's logged in before
-            bool hasCredsSaved = await passport.HasCredentialsSaved();
-            Debug.Log(hasCredsSaved ? "Has credentials saved" : "Does not have credentials saved");
-            ReloginButton.gameObject.SetActive(hasCredsSaved);
-            ReconnectButton.gameObject.SetActive(hasCredsSaved);
-            LoginButton.gameObject.SetActive(!hasCredsSaved);
-            ConnectButton.gameObject.SetActive(!hasCredsSaved);
-            DeviceCodeTimeoutMs.gameObject.SetActive(!hasCredsSaved && !SampleAppManager.UsePKCE);
-
-            SampleAppManager.InitialisedPassport = true;
-            ShowOutput("Ready");
-        }
-        catch (Exception ex)
-        {
-            ShowOutput($"Initialise Passport error: {ex.Message}");
-        }
+        // Check if user's logged in before
+        bool hasCredsSaved = await passport.HasCredentialsSaved();
+        Debug.Log(hasCredsSaved ? "Has credentials saved" : "Does not have credentials saved");
+        ReloginButton.gameObject.SetActive(hasCredsSaved);
+        ReconnectButton.gameObject.SetActive(hasCredsSaved);
+        LoginButton.gameObject.SetActive(!hasCredsSaved);
+        ConnectButton.gameObject.SetActive(!hasCredsSaved);
+        DeviceCodeTimeoutMs.gameObject.SetActive(!hasCredsSaved && !SampleAppManager.UsePKCE);
     }
 
     private void OnPassportAuthEvent(PassportAuthEvent authEvent)
