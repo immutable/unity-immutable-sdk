@@ -5,237 +5,298 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Immutable.Passport;
 using Immutable.Passport.Model;
-using Immutable.Passport.Event;
 
 public class UnauthenticatedScript : MonoBehaviour
 {
 #pragma warning disable CS8618
+    [SerializeField] private GameObject TopPadding;
     [SerializeField] private Text Output;
-    [SerializeField] private Button LoginButton;
-    [SerializeField] private Button ConnectButton;
-    [SerializeField] private Button ReloginButton;
-    [SerializeField] private Button ReconnectButton;
+    // Login buttons
+    [SerializeField] private GameObject LoginButtons;
+    // Re-login buttons
+    [SerializeField] private GameObject ReloginButtons;
     [SerializeField] private InputField DeviceCodeTimeoutMs;
 
-    private Passport passport;
+    private Passport Passport;
 #pragma warning restore CS8618
 
     async void Start()
     {
+        SetupPadding();
+
         // Get Passport instance
-        passport = Passport.Instance;
+        Passport = Passport.Instance;
 
-        // Listen to Passport Auth events
-        passport.OnAuthEvent += OnPassportAuthEvent;
+        // Check if the user has logged in before
+        await CheckHasCredentialsSaved();
+    }
 
-        // Check if user's logged in before
-        bool hasCredsSaved = await passport.HasCredentialsSaved();
-        Debug.Log(hasCredsSaved ? "Has credentials saved" : "Does not have credentials saved");
-        ReloginButton.gameObject.SetActive(hasCredsSaved);
-        ReconnectButton.gameObject.SetActive(hasCredsSaved);
-        LoginButton.gameObject.SetActive(!hasCredsSaved);
-        ConnectButton.gameObject.SetActive(!hasCredsSaved);
+    /// <summary>
+    /// Checks if the user has logged in previously and updates the UI to display the appropriate buttons and fields.
+    /// </summary>
+    private async UniTask CheckHasCredentialsSaved()
+    {
+        bool hasCredsSaved = await Passport.HasCredentialsSaved();
+
+        // Show re-login buttons if user has credentials saved
+        ReloginButtons.SetActive(hasCredsSaved);
+
+        // Show login buttons if user does not have any credentials saved
+        LoginButtons.SetActive(!hasCredsSaved);
+
+        // Only show timeout field if Device Code Auth is selected as the auth method and no credentials are saved
         DeviceCodeTimeoutMs.gameObject.SetActive(!hasCredsSaved && !SampleAppManager.UsePKCE);
     }
 
-    private void OnPassportAuthEvent(PassportAuthEvent authEvent)
-    {
-        Debug.Log($"OnPassportAuthEvent {authEvent.ToString()}");
-    }
-
+    /// <summary>
+    /// Logs into Passport using the selected auth method. 
+    /// Defaults to Device Code Auth when running as a Windows Standalone application or in the Unity Editor on Windows.
+    /// </summary>
     public async void Login()
     {
+        // Get timeout
+        var timeoutMs = GetDeviceCodeTimeoutMs();
+        string formattedTimeout = timeoutMs != null ? $"{timeoutMs} ms" : "none";
+
+        ShowOutput($"Logging in (timeout: {formattedTimeout})...");
+
         try
         {
-            Nullable<long> timeoutMs = GetDeviceCodeTimeoutMs(); ;
-            ShowOutput($"Called Login() (timeout: {(timeoutMs != null ? timeoutMs.ToString() + "ms" : "none")})...");
-
+            // Login using the appropriate login method
+            if (SampleAppManager.SupportsPKCE && SampleAppManager.UsePKCE)
+            {
 #if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
-            if (SampleAppManager.UsePKCE)
-            {
-                await passport.LoginPKCE();
-            }
-            else
-            {
-                await passport.Login(timeoutMs: timeoutMs);
-            }
-#else
-            await passport.Login(timeoutMs: timeoutMs);
+                await Passport.LoginPKCE();
 #endif
-
-            SampleAppManager.IsConnected = false;
-            NavigateToAuthenticatedScene();
-        }
-        catch (Exception ex)
-        {
-            string error;
-            if (ex is PassportException passportException && passportException.IsNetworkError())
-            {
-                error = $"Login() error: Check your internet connection and try again";
-            }
-            else if (ex is OperationCanceledException)
-            {
-                error = "Login() cancelled";
             }
             else
             {
-                error = $"Login() error: {ex.Message}";
-                await Logout();
+                await Passport.Login(timeoutMs: timeoutMs);
             }
 
-            Debug.Log(error);
-            ShowOutput(error);
+            // Navigate to the authenticated scene upon successful login
+            NavigateToAuthenticatedScene(connectedToImx: false);
         }
-    }
-
-    public async void Relogin()
-    {
-        try
+        catch (OperationCanceledException)
         {
-            // Use existing credentials to log in to Passport
-            ShowOutput("Logging into Passport using saved credentials...");
-            ReloginButton.gameObject.SetActive(false);
-            bool loggedIn = await passport.Login(useCachedSession: true);
-            if (loggedIn)
-            {
-                SampleAppManager.IsConnected = false;
-                NavigateToAuthenticatedScene();
-            }
-            else
-            {
-                ClearStorageAndCache();
-                ShowOutput($"Could not login using saved credentials");
-            }
+            ShowOutput("Failed to login: cancelled");
         }
         catch (Exception ex)
         {
-            ClearStorageAndCache();
-            ShowOutput($"Relogin() error: {ex.Message}");
+            await Logout();
+            ShowOutput($"Failed to login: {ex.Message}");
         }
     }
 
+    /// <summary>
+    /// Logs into Passport using the selected auth method. 
+    /// Defaults to Device Code Auth when running as a Windows Standalone application or in the Unity Editor on Windows.
+    /// 
+    /// This function also connects to IMX, which initialises the user's wallet and sets up the IMX provider.
+    /// </summary>
     public async void Connect()
     {
+        // Get timeout
+        var timeoutMs = GetDeviceCodeTimeoutMs();
+        string formattedTimeout = timeoutMs != null ? $"{timeoutMs} ms" : "none";
+
+        ShowOutput($"Connecting (timeout: {formattedTimeout})...");
+
         try
         {
-            Nullable<long> timeoutMs = GetDeviceCodeTimeoutMs();
-            ShowOutput($"Called Connect() (timeout: {(timeoutMs != null ? timeoutMs.ToString() + "ms" : "none")})...");
-
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
-            if (SampleAppManager.UsePKCE)
+            // Login and connect to IMX using the appropriate connect method
+            if (SampleAppManager.SupportsPKCE && SampleAppManager.UsePKCE)
             {
-                await passport.ConnectImxPKCE();
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
+                await Passport.ConnectImxPKCE();
+#endif
             }
             else
             {
-                await passport.ConnectImx(timeoutMs: timeoutMs);
+                await Passport.ConnectImx(timeoutMs: timeoutMs);
             }
-#else
-            await passport.ConnectImx(timeoutMs: timeoutMs);
-#endif
 
-            SampleAppManager.IsConnected = true;
-            NavigateToAuthenticatedScene();
+            // Navigate to the authenticated scene upon successful login and connection to IMX
+            NavigateToAuthenticatedScene(connectedToImx: true);
+        }
+        catch (OperationCanceledException)
+        {
+            ShowOutput("Failed to connect: cancelled");
         }
         catch (Exception ex)
         {
-            string error;
-            if (ex is PassportException passportException && passportException.IsNetworkError())
-            {
-                error = $"Connect() error: Check your internet connection and try again";
-            }
-            else if (ex is OperationCanceledException)
-            {
-                error = "Connect() cancelled";
-            }
-            else
-            {
-                error = $"Connect() error: {ex.Message}";
-                await Logout();
-            }
-
-            Debug.Log(error);
-            ShowOutput(error);
+            await Logout();
+            ShowOutput($"Failed to connect: {ex.Message}");
         }
     }
 
+    /// <summary>
+    /// Uses the existing credentials to re-login to Passport.
+    /// </summary>
+    public async void Relogin()
+    {
+        ShowOutput("Re-logging into Passport using saved credentials...");
+
+        try
+        {
+            bool loggedIn = await Passport.Login(useCachedSession: true);
+
+            if (loggedIn)
+            {
+                // Navigate to the authenticated scene upon successful login
+                NavigateToAuthenticatedScene(connectedToImx: false);
+            }
+            else
+            {
+                // Failed to re-login, so remove existing credentials and restart
+                ClearStorageCacheAndRestart();
+                ShowOutput("Could not re-login using saved credentials");
+            }
+        }
+        catch (Exception ex)
+        {
+            // Failed to re-login, so remove existing credentials and restart
+            ClearStorageCacheAndRestart();
+            ShowOutput($"Failed to re-login: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Uses existing credentials to re-login to Passport and reconnect to IMX. 
+    /// The SDK initialises the user's wallet and sets up the IMX provider during reconnection.
+    /// </summary>
     public async void Reconnect()
     {
+        ShowOutput("Reconnecting to Passport using saved credentials...");
+
         try
         {
-            // Use existing credentials to connect to Passport
-            ShowOutput("Reconnecting into Passport using saved credentials...");
-            ReconnectButton.gameObject.SetActive(false);
-            bool connected = await passport.ConnectImx(useCachedSession: true);
+            bool connected = await Passport.ConnectImx(useCachedSession: true);
+
             if (connected)
             {
-                SampleAppManager.IsConnected = true;
-                NavigateToAuthenticatedScene();
+                // Navigate to the authenticated scene upon successful login and connection to IMX
+                NavigateToAuthenticatedScene(connectedToImx: true);
             }
             else
             {
-                ClearStorageAndCache();
-                ShowOutput($"Could not connect using saved credentials");
+                // Failed to reconnect, so remove existing credentials and restart
+                ClearStorageCacheAndRestart();
+                ShowOutput("Could not reconnect using saved credentials");
             }
         }
         catch (Exception ex)
         {
-            ClearStorageAndCache();
-            ShowOutput($"Reconnect() error: {ex.Message}");
+            // Failed to reconnect, so remove existing credentials and restart
+            ClearStorageCacheAndRestart();
+            ShowOutput($"Failed to reconnect: {ex.Message}");
         }
     }
 
+    /// <summary>
+    /// Logs out of Passport using the selected auth method. 
+    /// Defaults to Device Code Auth when running as a Windows Standalone application or in the Unity Editor on Windows.
+    /// </summary>
     private async UniTask Logout()
     {
         try
         {
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
-            if (SampleAppManager.UsePKCE)
+            // Logout using the appropriate logout method
+            if (SampleAppManager.SupportsPKCE && SampleAppManager.UsePKCE)
             {
-                await passport.LogoutPKCE();
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
+                await Passport.LogoutPKCE();
+#endif
             }
             else
             {
-                await passport.Logout();
+                await Passport.Logout();
             }
-#else
-            await passport.Logout();
-#endif
         }
         catch (Exception ex)
         {
-            ShowOutput($"Logout() error: {ex.Message}");
+            ShowOutput($"Failed to logout: {ex.Message}");
         }
     }
 
+    /// <summary>
+    /// Clears the underlying WebView storage and cache, including any saved credentials.
+    /// </summary>
     public void ClearStorageAndCache()
     {
 #if (UNITY_IPHONE && !UNITY_EDITOR) || (UNITY_ANDROID && !UNITY_EDITOR)
-        passport.ClearStorage();
-        passport.ClearCache(true);
-        ShowOutput("Cleared storage and cache");
+    passport.ClearStorage();
+    passport.ClearCache(true);
+
+    // Show login buttons as saved credentials are removed
+    ShowLoginButtons();
+    ShowOutput("Cleared storage and cache");
 #else
-        ShowOutput("Support on Android and iOS devices only");
+        ShowOutput("Available for Android and iOS devices only");
 #endif
     }
 
-    private Nullable<long> GetDeviceCodeTimeoutMs()
+    /// <summary>
+    /// Clears the WebView storage and cache, then updates the UI to show login-related buttons and fields.
+    /// </summary>
+    private void ClearStorageCacheAndRestart()
     {
-        return String.IsNullOrEmpty(DeviceCodeTimeoutMs.text) ? null : long.Parse(DeviceCodeTimeoutMs.text);
+        ClearStorageAndCache();
+        ShowLoginButtons();
     }
 
-    private void NavigateToAuthenticatedScene()
+    /// <summary>
+    /// Updates the UI to show login buttons and fields, hiding relogin buttons.
+    /// </summary>
+    private void ShowLoginButtons()
     {
-        passport.OnAuthEvent -= OnPassportAuthEvent;
-        SceneManager.LoadScene(sceneName: "AuthenticatedScene");
+        ReloginButtons.SetActive(false);
+        LoginButtons.SetActive(true);
+        DeviceCodeTimeoutMs.gameObject.SetActive(!SampleAppManager.UsePKCE);
     }
 
+    /// <summary>
+    /// Gets the Device Code Auth timeout the user entered in 
+    /// </summary>
+    /// <returns></returns>
+    private long? GetDeviceCodeTimeoutMs()
+    {
+        return string.IsNullOrEmpty(DeviceCodeTimeoutMs.text) ? null : long.Parse(DeviceCodeTimeoutMs.text);
+    }
+
+    /// <summary>
+    /// Records whether the user has only logged in or also connected to IMX.
+    /// This ensures the sample app displays the correct buttons in the authenticated scene.
+    /// Navigates the user to the authenticated scene.
+    /// </summary>
+    /// <param name="connectedToImx">Indicates if the user is connected to IMX</param>
+    private void NavigateToAuthenticatedScene(bool connectedToImx)
+    {
+        SampleAppManager.IsConnectedToImx = connectedToImx;
+        SceneManager.LoadScene("AuthenticatedScene");
+    }
+
+    /// <summary>
+    /// Prints the specified <code>message</code> to the output box.
+    /// </summary>
+    /// <param name="message">The message to print</param>
     private void ShowOutput(string message)
     {
-        Debug.Log($"Output: {message}");
         if (Output != null)
         {
             Output.text = message;
         }
+    }
+
+    /// <summary>
+    /// Adds top padding to the scene when running on an iPhone to accommodate notches that may obstruct the UI.
+    /// </summary>
+    private void SetupPadding()
+    {
+#if UNITY_IPHONE && !UNITY_EDITOR
+    TopPadding.gameObject.SetActive(true);
+#else
+        TopPadding.gameObject.SetActive(false);
+#endif
     }
 }

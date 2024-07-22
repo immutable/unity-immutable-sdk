@@ -206,7 +206,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 416242725}
   m_HandleRect: {fileID: 416242724}
   m_Direction: 0
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -987,8 +987,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 923.8324, y: -46}
-  m_SizeDelta: {x: 1815.6648, y: 60}
+  m_AnchoredPosition: {x: 1011.9289, y: -56}
+  m_SizeDelta: {x: 1991.8578, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &854433810
 MonoBehaviour:
@@ -1006,7 +1006,7 @@ MonoBehaviour:
   m_MinWidth: -1
   m_MinHeight: -1
   m_PreferredWidth: -1
-  m_PreferredHeight: 60
+  m_PreferredHeight: 80
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
@@ -1481,8 +1481,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 167431872}
   m_HandleRect: {fileID: 167431871}
   m_Direction: 2
-  m_Value: 1
-  m_Size: 0.99999994
+  m_Value: 0
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -2019,7 +2019,7 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 14
+    m_FontSize: 20
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 1
