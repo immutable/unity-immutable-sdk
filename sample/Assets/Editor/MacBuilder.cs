@@ -14,7 +14,7 @@ public class BuildScript
         {
             BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
             buildPlayerOptions.scenes = new string[] {
-            "Assets/Scenes/UnauthenticatedScene.unity", "Assets/Scenes/AuthenticatedScene.unity"
+            "Assets/Scenes/SelectAuthMethod.unity", "Assets/Scenes/UnauthenticatedScene.unity", "Assets/Scenes/AuthenticatedScene.unity"
         };
 
             buildPlayerOptions.locationPathName = "Builds/MacOS/SampleApp.app";
