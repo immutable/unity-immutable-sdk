@@ -225,8 +225,8 @@ public class UnauthenticatedScript : MonoBehaviour
     public void ClearStorageAndCache()
     {
 #if (UNITY_IPHONE && !UNITY_EDITOR) || (UNITY_ANDROID && !UNITY_EDITOR)
-    passport.ClearStorage();
-    passport.ClearCache(true);
+    Passport.ClearStorage();
+    Passport.ClearCache(true);
 
     // Show login buttons as saved credentials are removed
     ShowLoginButtons();
