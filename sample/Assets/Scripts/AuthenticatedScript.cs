@@ -7,8 +7,6 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Immutable.Passport;
 using Immutable.Passport.Model;
-using Immutable.Passport.Event;
-using Unity.VisualScripting;
 
 public class AuthenticatedScript : MonoBehaviour
 {
@@ -66,33 +64,151 @@ public class AuthenticatedScript : MonoBehaviour
     [SerializeField] private Canvas ZkGetTransactionReceiptCanvas;
     [SerializeField] private InputField ZkGetTransactionReceiptHash;
 
-    private Passport passport;
+    private Passport Passport;
 #pragma warning restore CS8618
 
     void Start()
     {
         if (Passport.Instance != null)
         {
-            passport = Passport.Instance;
-            ConnectButton.gameObject.SetActive(!SampleAppManager.IsConnectedToImx);
-            IsRegisteredOffchainButton.gameObject.SetActive(SampleAppManager.IsConnectedToImx);
-            RegisterOffchainButton.gameObject.SetActive(SampleAppManager.IsConnectedToImx);
-            GetAddressButton.gameObject.SetActive(SampleAppManager.IsConnectedToImx);
-            ShowTransferButton.gameObject.SetActive(SampleAppManager.IsConnectedToImx);
-
-            // Listen to Passport Auth events
-            passport.OnAuthEvent += OnPassportAuthEvent;
+            // Get Passport instance
+            Passport = Passport.Instance;
+            CheckIfConnectedToImx();
         }
         else
         {
-            ShowOutput("Passport Instance is null");
+            ShowOutput("Passport instance is null");
         }
     }
 
-    private void OnPassportAuthEvent(PassportAuthEvent authEvent)
+    /// <summary>
+    /// Checks if the user is connected to IMX and updates the UI to show appropriate buttons.
+    /// </summary>
+    private void CheckIfConnectedToImx()
     {
-        Debug.Log($"OnPassportAuthEvent {authEvent.ToString()}");
+        bool isConnected = SampleAppManager.IsConnectedToImx;
+        ConnectButton.gameObject.SetActive(!isConnected);
+        IsRegisteredOffchainButton.gameObject.SetActive(isConnected);
+        RegisterOffchainButton.gameObject.SetActive(isConnected);
+        GetAddressButton.gameObject.SetActive(isConnected);
+        ShowTransferButton.gameObject.SetActive(isConnected);
     }
+
+    #region Passport functions
+
+    /// <summary>
+    /// Retrieves the currently logged-in user's access token.
+    /// </summary>
+    public async void GetAccessToken()
+    {
+        try
+        {
+            string accessToken = await Passport.GetAccessToken();
+            ShowOutput(accessToken);
+        }
+        catch (Exception ex)
+        {
+            ShowOutput($"Failed to get access token: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Retrieves the currently logged-in user's ID token.
+    /// </summary>
+    public async void GetIdToken()
+    {
+        try
+        {
+            string idToken = await Passport.GetIdToken();
+            ShowOutput(idToken);
+        }
+        catch (Exception ex)
+        {
+            ShowOutput($"Failed to get ID token: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Retrieves the currently logged-in user's email.
+    /// </summary>
+    public async void GetEmail()
+    {
+        try
+        {
+            string email = await Passport.GetEmail();
+            ShowOutput(email);
+        }
+        catch (Exception ex)
+        {
+            ShowOutput($"Failed to get email: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Retrieves the currently logged-in user's Passport ID.
+    /// </summary>
+    public async void GetPassportId()
+    {
+        try
+        {
+            string passportId = await Passport.GetPassportId();
+            ShowOutput(passportId);
+        }
+        catch (Exception ex)
+        {
+            ShowOutput($"Failed to get Passport ID: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Retrieves the user's linked external wallets from the Passport account dashboard.
+    /// </summary>
+    public async void GetLinkedAddresses()
+    {
+        try
+        {
+            List<string> addresses = await Passport.GetLinkedAddresses();
+            ShowOutput(addresses.Count > 0 ? string.Join(", ", addresses) : "No linked addresses");
+        }
+        catch (Exception ex)
+        {
+            ShowOutput($"Failed to get linked addresses: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Logs out of Passport using the selected auth method. 
+    /// Defaults to Device Code Auth when running as a Windows Standalone application or in the Unity Editor on Windows.
+    /// </summary>
+    public async void Logout()
+    {
+        ShowOutput("Logging out...");
+
+        try
+        {
+            // Logout using the appropriate logout method
+            if (SampleAppManager.SupportsPKCE && SampleAppManager.UsePKCE)
+            {
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
+                await Passport.LogoutPKCE();
+#endif
+            }
+            else
+            {
+                await Passport.Logout();
+            }
+
+            // Reset connection status and navigate to the unauthenticated scene
+            SampleAppManager.IsConnectedToImx = false;
+            SceneManager.LoadScene(sceneName: "UnauthenticatedScene");
+        }
+        catch (Exception ex)
+        {
+            ShowOutput($"Failed to logout: {ex.Message}");
+        }
+    }
+
+    #endregion
 
     public async void Connect()
     {
@@ -101,7 +217,7 @@ public class AuthenticatedScript : MonoBehaviour
             // Use existing credentials to connect to Passport
             ShowOutput("Connecting into Passport using saved credentials...");
             ConnectButton.gameObject.SetActive(false);
-            bool connected = await passport.ConnectImx(useCachedSession: true);
+            bool connected = await Passport.ConnectImx(useCachedSession: true);
             if (connected)
             {
                 IsRegisteredOffchainButton.gameObject.SetActive(true);
@@ -128,7 +244,7 @@ public class AuthenticatedScript : MonoBehaviour
         ShowOutput($"Called IsRegisteredOffchain()...");
         try
         {
-            bool isRegistered = await passport.IsRegisteredOffchain();
+            bool isRegistered = await Passport.IsRegisteredOffchain();
             ShowOutput(isRegistered ? "Registered" : "Not registered");
         }
         catch (PassportException e)
@@ -146,7 +262,7 @@ public class AuthenticatedScript : MonoBehaviour
         ShowOutput($"Called RegisterOffchain()...");
         try
         {
-            RegisterUserResponse response = await passport.RegisterOffchain();
+            RegisterUserResponse response = await Passport.RegisterOffchain();
             if (response != null)
             {
                 ShowOutput($"Registered {response.tx_hash}");
@@ -171,7 +287,7 @@ public class AuthenticatedScript : MonoBehaviour
         ShowOutput($"Called GetAddress()...");
         try
         {
-            string address = await passport.GetAddress();
+            string address = await Passport.GetAddress();
             ShowOutput(address ?? "No address");
         }
         catch (PassportException e)
@@ -181,98 +297,6 @@ public class AuthenticatedScript : MonoBehaviour
         catch (Exception)
         {
             ShowOutput("Unable to get address");
-        }
-    }
-
-    public async void Logout()
-    {
-        try
-        {
-            ShowOutput("Logging out...");
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
-            if (SampleAppManager.UsePKCE)
-            {
-                await passport.LogoutPKCE();
-            }
-            else
-            {
-                await passport.Logout();
-            }
-#else
-            await passport.Logout();
-#endif
-            SampleAppManager.IsConnectedToImx = false;
-            passport.OnAuthEvent -= OnPassportAuthEvent;
-            SceneManager.LoadScene(sceneName: "UnauthenticatedScene");
-        }
-        catch (Exception ex)
-        {
-            ShowOutput($"Failed to log out: {ex.Message}");
-        }
-    }
-
-    public async void GetAccessToken()
-    {
-        try
-        {
-            string accessToken = await passport.GetAccessToken();
-            ShowOutput(accessToken);
-        }
-        catch (Exception ex)
-        {
-            ShowOutput($"Failed to get ID token: {ex.Message}");
-        }
-    }
-
-    public async void GetIdToken()
-    {
-        try
-        {
-            string idToken = await passport.GetIdToken();
-            ShowOutput(idToken);
-        }
-        catch (Exception ex)
-        {
-            ShowOutput($"Failed to get ID token: {ex.Message}");
-        }
-    }
-
-    public async void GetEmail()
-    {
-        try
-        {
-            string email = await passport.GetEmail();
-            ShowOutput(email);
-        }
-        catch (Exception ex)
-        {
-            ShowOutput($"Failed to get email: {ex.Message}");
-        }
-    }
-
-    public async void GetLinkedAddresses()
-    {
-        try
-        {
-            List<string> addresses = await passport.GetLinkedAddresses();
-            ShowOutput(addresses.Count > 0 ? String.Join(", ", addresses) : "No linked addresses");
-        }
-        catch (Exception ex)
-        {
-            ShowOutput($"Failed to get linked addresses: {ex.Message}");
-        }
-    }
-
-    public async void GetPassportId()
-    {
-        try
-        {
-            string passportId = await passport.GetPassportId();
-            ShowOutput(passportId);
-        }
-        catch (Exception ex)
-        {
-            ShowOutput($"Failed to get Passport ID: {ex.Message}");
         }
     }
 
@@ -303,7 +327,7 @@ public class AuthenticatedScript : MonoBehaviour
 
                 if (details.Count > 1)
                 {
-                    CreateBatchTransferResponse response = await passport.ImxBatchNftTransfer(details.ToArray());
+                    CreateBatchTransferResponse response = await Passport.ImxBatchNftTransfer(details.ToArray());
                     ShowOutput($"Transferred {response.transfer_ids.Length} items successfully");
                 }
                 else
@@ -313,7 +337,7 @@ public class AuthenticatedScript : MonoBehaviour
                         details[0].tokenId,
                         details[0].tokenAddress
                     );
-                    CreateTransferResponseV1 response = await passport.ImxTransfer(request);
+                    CreateTransferResponseV1 response = await Passport.ImxTransfer(request);
                     ShowOutput($"Transferred successfully. Transfer id: {response.transfer_id}");
                 }
 
@@ -371,7 +395,7 @@ public class AuthenticatedScript : MonoBehaviour
     {
         try
         {
-            await passport.ConnectEvm();
+            await Passport.ConnectEvm();
             ShowOutput("Connected to EVM");
             ConnectEvmButton.gameObject.SetActive(false);
             SendTransactionButton.gameObject.SetActive(true);
@@ -399,12 +423,12 @@ public class AuthenticatedScript : MonoBehaviour
             };
             if (ZkSendTransactionConfirm.isOn)
             {
-                TransactionReceiptResponse response = await passport.ZkEvmSendTransactionWithConfirmation(request);
+                TransactionReceiptResponse response = await Passport.ZkEvmSendTransactionWithConfirmation(request);
                 ShowOutput($"Transaction hash: {response.transactionHash}\nStatus: {GetTransactionStatusString(response.status)}");
             }
             else
             {
-                string response = await passport.ZkEvmSendTransaction(request);
+                string response = await Passport.ZkEvmSendTransaction(request);
                 ShowOutput($"Transaction hash: {response}");
             }
         }
@@ -434,7 +458,7 @@ public class AuthenticatedScript : MonoBehaviour
         try
         {
             ShowOutput($"Called RequestAccounts()...");
-            List<string> accounts = await passport.ZkEvmRequestAccounts();
+            List<string> accounts = await Passport.ZkEvmRequestAccounts();
             ShowOutput(String.Join(", ", accounts));
         }
         catch (Exception ex)
@@ -448,7 +472,7 @@ public class AuthenticatedScript : MonoBehaviour
         try
         {
             ShowOutput($"Called GetBalance()...");
-            string balance = await passport.ZkEvmGetBalance(ZkGetBalanceAccount.text);
+            string balance = await Passport.ZkEvmGetBalance(ZkGetBalanceAccount.text);
             var balanceBI = BigInteger.Parse(balance.Replace("0x", "0"), NumberStyles.HexNumber);
             ShowOutput($"Hex: {balance}\nDec: {balanceBI.ToString()}");
         }
@@ -477,7 +501,7 @@ public class AuthenticatedScript : MonoBehaviour
         {
             ShowOutput($"Getting zkEVM transaction receipt status...");
 
-            TransactionReceiptResponse response = await passport.ZkEvmGetTransactionReceipt(ZkGetTransactionReceiptHash.text);
+            TransactionReceiptResponse response = await Passport.ZkEvmGetTransactionReceipt(ZkGetTransactionReceiptHash.text);
             string status = $"Transaction receipt status: {GetTransactionStatusString(response.status)}";
             ShowOutput(status);
         }
@@ -520,8 +544,8 @@ public class AuthenticatedScript : MonoBehaviour
     public void ClearStorageAndCache()
     {
 #if (UNITY_IPHONE && !UNITY_EDITOR) || (UNITY_ANDROID && !UNITY_EDITOR)
-        passport.ClearStorage();
-        passport.ClearCache(true);
+        Passport.ClearStorage();
+        Passport.ClearCache(true);
         ShowOutput("Cleared storage and cache");
 #else
         ShowOutput("Support on Android and iOS devices only");

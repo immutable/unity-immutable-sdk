@@ -22,11 +22,18 @@ public class UnauthenticatedScript : MonoBehaviour
 
     async void Start()
     {
-        // Get Passport instance
-        Passport = Passport.Instance;
+        if (Passport.Instance != null)
+        {
+            // Get Passport instance
+            Passport = Passport.Instance;
 
-        // Check if the user has logged in before
-        await CheckHasCredentialsSaved();
+            // Check if the user has logged in before
+            await CheckHasCredentialsSaved();
+        }
+        else
+        {
+            ShowOutput("Passport Instance is null");
+        }
     }
 
     /// <summary>
