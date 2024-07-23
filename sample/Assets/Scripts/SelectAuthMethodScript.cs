@@ -9,23 +9,17 @@ public class SelectAuthMethodScript : MonoBehaviour
 #pragma warning disable CS8618
     [SerializeField] private GameObject TopPadding;
     [SerializeField] private Text Output;
-    [SerializeField] private Toggle UseDeviceCodeAuthToggle;
-    [SerializeField] private Toggle UsePKCEToggle;
+    [SerializeField] private Button UseDeviceCodeAuthButton;
+    [SerializeField] private Button UsePKCEButton;
 #pragma warning restore CS8618
 
     void Start()
     {
-        SetupPadding();
-
         // Determine if PKCE is supported based on the platform
         SampleAppManager.SupportsPKCE = IsPKCESupported();
 
-        // Set up auth based on PKCE support
-        if (SampleAppManager.SupportsPKCE)
-        {
-            ConfigureAuthOptions();
-        }
-        else
+        // If PKCE is not supported, initialise Passport to use Device Code Auth
+        if (!SampleAppManager.SupportsPKCE)
         {
             InitialisePassport();
         }
@@ -44,24 +38,21 @@ public class SelectAuthMethodScript : MonoBehaviour
     }
 
     /// <summary>
-    /// Configures auth options by setting up listeners for the Device Code Auth and PKCE toggles 
-    /// to handle changes in the authentication method.
+    /// Initialises Passport to use Device Code Auth
     /// </summary>
-    private void ConfigureAuthOptions()
+    public void UseDeviceCodeAuth()
     {
-        // Set up Device Code Auth toggle
-        UseDeviceCodeAuthToggle.onValueChanged.AddListener(delegate (bool on)
-        {
-            SampleAppManager.UsePKCE = !on;
-            InitialisePassport();
-        });
+        SampleAppManager.UsePKCE = false;
+        InitialisePassport();
+    }
 
-        // Set up PKCE toggle
-        UsePKCEToggle.onValueChanged.AddListener(delegate (bool on)
-        {
-            SampleAppManager.UsePKCE = on;
-            InitialisePassport(redirectUri: "imxsample://callback", logoutRedirectUri: "imxsample://callback/logout");
-        });
+    /// <summary>
+    /// Initialises Passport to use PKCE with the specified redirect URIs.
+    /// </summary>
+    public void UsePKCE()
+    {
+        SampleAppManager.UsePKCE = true;
+        InitialisePassport(redirectUri: "imxsample://callback", logoutRedirectUri: "imxsample://callback/logout");
     }
 
     /// <summary>
