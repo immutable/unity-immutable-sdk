@@ -504,7 +504,7 @@ public class AuthenticatedScript : MonoBehaviour
         }
     }
 
-    public void ShowZkTransactionReceiptStatus()
+    public void ShowZkTransactionReceipt()
     {
         AuthenticatedCanvas.gameObject.SetActive(false);
         ZkGetTransactionReceiptCanvas.gameObject.SetActive(true);

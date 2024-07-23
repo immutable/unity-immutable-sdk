@@ -22,8 +22,6 @@ public class UnauthenticatedScript : MonoBehaviour
 
     async void Start()
     {
-        SetupPadding();
-
         // Get Passport instance
         Passport = Passport.Instance;
 
@@ -286,17 +284,5 @@ public class UnauthenticatedScript : MonoBehaviour
         {
             Output.text = message;
         }
-    }
-
-    /// <summary>
-    /// Adds top padding to the scene when running on an iPhone to accommodate notches that may obstruct the UI.
-    /// </summary>
-    private void SetupPadding()
-    {
-#if UNITY_IPHONE && !UNITY_EDITOR
-    TopPadding.gameObject.SetActive(true);
-#else
-        TopPadding.gameObject.SetActive(false);
-#endif
     }
 }
