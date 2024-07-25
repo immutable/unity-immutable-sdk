@@ -332,7 +332,10 @@ namespace Immutable.Passport
             return response;
         }
 
-        // ZkEvm
+        /// <summary>
+        /// Instantiates the zkEVM provider
+        /// </summary>
+        /// <returns></returns>
         public async UniTask ConnectEvm()
         {
             await GetPassportImpl().ConnectEvm();
