@@ -6,6 +6,7 @@ on:
     workflows: ["Tag Release"]
     types:
       - completed
+    status: success
 
 jobs:
   release:
