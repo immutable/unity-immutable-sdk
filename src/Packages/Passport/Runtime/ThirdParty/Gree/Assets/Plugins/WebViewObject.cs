@@ -42,342 +42,345 @@ using AOT;
 using Callback = System.Action<string>;
 using ErrorCallback = System.Action<string, string>;
 
-#if UNITY_IPHONE || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
-public class Singleton 
+namespace Immutable.Browser.Gree
 {
-    private static Singleton _instance;
-    public Callback onJS;
-    public ErrorCallback onError;
-    public ErrorCallback onHttpError;
-    public Callback onAuth;
-    public Callback onLog;
-
-    public static Singleton Instance
+#if UNITY_IPHONE || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
+    public class Singleton 
     {
-        get
+        private static Singleton _instance;
+        public Callback onJS;
+        public ErrorCallback onError;
+        public ErrorCallback onHttpError;
+        public Callback onAuth;
+        public Callback onLog;
+
+        public static Singleton Instance
         {
-            if (_instance == null)
+            get
             {
-                _instance = new Singleton();
+                if (_instance == null)
+                {
+                    _instance = new Singleton();
+                }
+                return _instance;
             }
-            return _instance;
         }
     }
-}
 #endif
 
-public class WebViewObject
-{
-    private const string TAG = "[WebViewObject]";
-    Callback onJS;
-    ErrorCallback onError;
-    ErrorCallback onHttpError;
-    Callback onAuth;
-    Callback onLog;
-#if UNITY_ANDROID && !UNITY_EDITOR
-    class AndroidCallback : AndroidJavaProxy
+    public class WebViewObject
     {
-        private Action<string> callback;
-
-        public AndroidCallback(Action<string> callback) : base("net.gree.unitywebview.WebViewCallback") 
+        private const string TAG = "[WebViewObject]";
+        Callback onJS;
+        ErrorCallback onError;
+        ErrorCallback onHttpError;
+        Callback onAuth;
+        Callback onLog;
+#if UNITY_ANDROID && !UNITY_EDITOR
+        class AndroidCallback : AndroidJavaProxy
         {
-            this.callback = callback;
+            private Action<string> callback;
+
+            public AndroidCallback(Action<string> callback) : base("net.gree.unitywebview.WebViewCallback") 
+            {
+                this.callback = callback;
+            }
+
+            public void call(String message) {
+                callback(message);
+            }
         }
 
-        public void call(String message) {
-            callback(message);
-        }
-    }
-
-    AndroidJavaObject webView;
+        AndroidJavaObject webView;
 #else
-    IntPtr webView;
+        IntPtr webView;
 #endif
 
 #if UNITY_IPHONE && !UNITY_EDITOR
-    [DllImport("__Internal")]
-    private static extern IntPtr _CWebViewPlugin_Init(string ua);
-    [DllImport("__Internal")]
-    private static extern int _CWebViewPlugin_Destroy(IntPtr instance);
-    [DllImport("__Internal")]
-    private static extern void _CWebViewPlugin_LoadURL(
-        IntPtr instance, string url);
-    [DllImport("__Internal")]
-    private static extern void _CWebViewPlugin_EvaluateJS(
-        IntPtr instance, string url);
-    [DllImport("__Internal")]
-    private static extern void _CWebViewPlugin_LaunchAuthURL(IntPtr instance, string url);
-    [DllImport("__Internal")]
-    private static extern void _CWebViewPlugin_SetDelegate(DelegateMessage callback);
-    [DllImport("__Internal")]
-    private static extern void _CWebViewPlugin_ClearCache(IntPtr instance, bool includeDiskFiles);
-    [DllImport("__Internal")]
-    private static extern void _CWebViewPlugin_ClearStorage(IntPtr instance);
+        [DllImport("__Internal")]
+        private static extern IntPtr _CWebViewPlugin_Init(string ua);
+        [DllImport("__Internal")]
+        private static extern int _CWebViewPlugin_Destroy(IntPtr instance);
+        [DllImport("__Internal")]
+        private static extern void _CWebViewPlugin_LoadURL(
+            IntPtr instance, string url);
+        [DllImport("__Internal")]
+        private static extern void _CWebViewPlugin_EvaluateJS(
+            IntPtr instance, string url);
+        [DllImport("__Internal")]
+        private static extern void _CWebViewPlugin_LaunchAuthURL(IntPtr instance, string url);
+        [DllImport("__Internal")]
+        private static extern void _CWebViewPlugin_SetDelegate(DelegateMessage callback);
+        [DllImport("__Internal")]
+        private static extern void _CWebViewPlugin_ClearCache(IntPtr instance, bool includeDiskFiles);
+        [DllImport("__Internal")]
+        private static extern void _CWebViewPlugin_ClearStorage(IntPtr instance);
 #elif UNITY_STANDALONE_OSX || (UNITY_ANDROID && UNITY_EDITOR_OSX) || (UNITY_IPHONE && UNITY_EDITOR_OSX)
-    [DllImport("WebView")]
-    private static extern IntPtr _CWebViewPlugin_Init(string ua);
-    [DllImport("WebView")]
-    private static extern int _CWebViewPlugin_Destroy(IntPtr instance);
-    [DllImport("WebView")]
-    private static extern void _CWebViewPlugin_LoadURL(
-        IntPtr instance, string url);
-    [DllImport("WebView")]
-    private static extern void _CWebViewPlugin_EvaluateJS(
-        IntPtr instance, string url);
-    [DllImport("WebView")]
-    private static extern void _CWebViewPlugin_LaunchAuthURL(IntPtr instance, string url, string redirectUri);
-    [DllImport("WebView")]
-    private static extern void _CWebViewPlugin_SetDelegate(DelegateMessage callback);
+        [DllImport("WebView")]
+        private static extern IntPtr _CWebViewPlugin_Init(string ua);
+        [DllImport("WebView")]
+        private static extern int _CWebViewPlugin_Destroy(IntPtr instance);
+        [DllImport("WebView")]
+        private static extern void _CWebViewPlugin_LoadURL(
+            IntPtr instance, string url);
+        [DllImport("WebView")]
+        private static extern void _CWebViewPlugin_EvaluateJS(
+            IntPtr instance, string url);
+        [DllImport("WebView")]
+        private static extern void _CWebViewPlugin_LaunchAuthURL(IntPtr instance, string url, string redirectUri);
+        [DllImport("WebView")]
+        private static extern void _CWebViewPlugin_SetDelegate(DelegateMessage callback);
 #elif UNITY_WEBGL
-    [DllImport("__Internal")]
-    private static extern void _gree_unity_webview_init();
-    [DllImport("__Internal")]
-    private static extern void _gree_unity_webview_loadURL(string url);
-    [DllImport("__Internal")]
-    private static extern void _gree_unity_webview_evaluateJS(string js);
-    [DllImport("__Internal")]
-    private static extern void _gree_unity_webview_destroy();
+        [DllImport("__Internal")]
+        private static extern void _gree_unity_webview_init();
+        [DllImport("__Internal")]
+        private static extern void _gree_unity_webview_loadURL(string url);
+        [DllImport("__Internal")]
+        private static extern void _gree_unity_webview_evaluateJS(string js);
+        [DllImport("__Internal")]
+        private static extern void _gree_unity_webview_destroy();
 #endif
 
 #if UNITY_IPHONE || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
-    private delegate void DelegateMessage(string key, string message);
+        private delegate void DelegateMessage(string key, string message);
  
-    [MonoPInvokeCallback(typeof(DelegateMessage))] 
-    private static void delegateMessageReceived(string key, string message) {
-        if (key == "CallOnLog") {
-            if (Singleton.Instance.onLog != null) {
-                Singleton.Instance.onLog(message);
+        [MonoPInvokeCallback(typeof(DelegateMessage))] 
+        private static void delegateMessageReceived(string key, string message) {
+            if (key == "CallOnLog") {
+                if (Singleton.Instance.onLog != null) {
+                    Singleton.Instance.onLog(message);
+                }
             }
-        }
 
-        if (key == "CallFromJS") {
-            if (Singleton.Instance.onJS != null) {
-                Debug.Log($"{TAG} ==== onJS callback running message: " + message);
-                Singleton.Instance.onJS(message);
+            if (key == "CallFromJS") {
+                if (Singleton.Instance.onJS != null) {
+                    Debug.Log($"{TAG} ==== onJS callback running message: " + message);
+                    Singleton.Instance.onJS(message);
+                }
+                return;
             }
-            return;
-        }
 
-        if (key == "CallOnError" || key == "CallFromAuthCallbackError") {
-            if (Singleton.Instance.onError != null) {
-                Debug.Log($"{TAG} ==== onError callback running message: " + message);
-                Singleton.Instance.onError(key, message);
+            if (key == "CallOnError" || key == "CallFromAuthCallbackError") {
+                if (Singleton.Instance.onError != null) {
+                    Debug.Log($"{TAG} ==== onError callback running message: " + message);
+                    Singleton.Instance.onError(key, message);
+                }
+                return;
             }
-            return;
-        }
 
-        if (key == "CallOnHttpError") {
-            if (Singleton.Instance.onHttpError != null) {
-                Debug.Log($"{TAG} ==== onHttpError callback running message: " + message);
-                Singleton.Instance.onHttpError(key, message);
+            if (key == "CallOnHttpError") {
+                if (Singleton.Instance.onHttpError != null) {
+                    Debug.Log($"{TAG} ==== onHttpError callback running message: " + message);
+                    Singleton.Instance.onHttpError(key, message);
+                }
+                return;
             }
-            return;
-        }
 
-        if (key == "CallFromAuthCallback") {
-            if (Singleton.Instance.onAuth != null) {
-                Debug.Log($"{TAG} ==== CallFromAuthCallback callback running message: " + message);
-                Singleton.Instance.onAuth(message);
+            if (key == "CallFromAuthCallback") {
+                if (Singleton.Instance.onAuth != null) {
+                    Debug.Log($"{TAG} ==== CallFromAuthCallback callback running message: " + message);
+                    Singleton.Instance.onAuth(message);
+                }
+                return;
             }
-            return;
         }
-    }
 #endif
 
-    public void handleMessage(string message)
-    {
-        var i = message.IndexOf(':', 0);
-        if (i == -1)
-            return;
-        switch (message.Substring(0, i))
+        public void handleMessage(string message)
         {
-            case "CallFromJS":
-                CallFromJS(message.Substring(i + 1));
-                break;
-            case "CallOnError":
-                CallOnError("CallOnError", message.Substring(i + 1));
-                break;
-            case "CallOnHttpError":
-                CallOnHttpError("CallOnHttpError", message.Substring(i + 1));
-                break;
+            var i = message.IndexOf(':', 0);
+            if (i == -1)
+                return;
+            switch (message.Substring(0, i))
+            {
+                case "CallFromJS":
+                    CallFromJS(message.Substring(i + 1));
+                    break;
+                case "CallOnError":
+                    CallOnError("CallOnError", message.Substring(i + 1));
+                    break;
+                case "CallOnHttpError":
+                    CallOnHttpError("CallOnHttpError", message.Substring(i + 1));
+                    break;
+            }
         }
-    }
 
-    public void Init(
-        Callback cb = null,
-        ErrorCallback err = null,
-        ErrorCallback httpErr = null,
-        Callback auth = null,
-        Callback log = null,
-        string ua = "",
-        // android
-        int androidForceDarkMode = 0  // 0: follow system setting, 1: force dark off, 2: force dark on
-        )
-    {
-        onJS = cb;
-        onError = err;
-        onHttpError = httpErr;
-        onAuth = auth;
-        onLog = log;
+        public void Init(
+            Callback cb = null,
+            ErrorCallback err = null,
+            ErrorCallback httpErr = null,
+            Callback auth = null,
+            Callback log = null,
+            string ua = "",
+            // android
+            int androidForceDarkMode = 0  // 0: follow system setting, 1: force dark off, 2: force dark on
+            )
+        {
+            onJS = cb;
+            onError = err;
+            onHttpError = httpErr;
+            onAuth = auth;
+            onLog = log;
 #if UNITY_WEBGL
 #if !UNITY_EDITOR
-        _gree_unity_webview_init();
+            _gree_unity_webview_init();
 #endif
 #elif UNITY_WEBPLAYER
-        Application.ExternalCall("unityWebView.init");
+            Application.ExternalCall("unityWebView.init");
 #elif UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_LINUX
-        //TODO: UNSUPPORTED
-        Debug.LogError("Webview is not supported on this platform.");
+            //TODO: UNSUPPORTED
+            Debug.LogError("Webview is not supported on this platform.");
 #elif UNITY_IPHONE || UNITY_STANDALONE_OSX || (UNITY_ANDROID && UNITY_EDITOR_OSX)
-        webView = _CWebViewPlugin_Init(ua);
-        Singleton.Instance.onJS = ((message) => CallFromJS(message));
-        Singleton.Instance.onError = ((id, message) => CallOnError(id, message));
-        Singleton.Instance.onHttpError = ((id, message) => CallOnHttpError(id, message));
-        Singleton.Instance.onAuth = ((message) => CallOnAuth(message));
-        Singleton.Instance.onLog = ((message) => CallOnLog(message));
-        _CWebViewPlugin_SetDelegate(delegateMessageReceived);
+            webView = _CWebViewPlugin_Init(ua);
+            Singleton.Instance.onJS = ((message) => CallFromJS(message));
+            Singleton.Instance.onError = ((id, message) => CallOnError(id, message));
+            Singleton.Instance.onHttpError = ((id, message) => CallOnHttpError(id, message));
+            Singleton.Instance.onAuth = ((message) => CallOnAuth(message));
+            Singleton.Instance.onLog = ((message) => CallOnLog(message));
+            _CWebViewPlugin_SetDelegate(delegateMessageReceived);
 #elif UNITY_ANDROID
-        webView = new AndroidJavaObject("net.gree.unitywebview.CWebViewPluginNoUi");
-        webView.Call("Init", ua);
-        webView.Call("setCallback", new AndroidCallback((message) => handleMessage(message)));
+            webView = new AndroidJavaObject("net.gree.unitywebview.CWebViewPluginNoUi");
+            webView.Call("Init", ua);
+            webView.Call("setCallback", new AndroidCallback((message) => handleMessage(message)));
 #else
-        Debug.LogError("Webview is not supported on this platform.");
+            Debug.LogError("Webview is not supported on this platform.");
 #endif
-    }
+        }
 
-    public void LoadURL(string url)
-    {
-        if (string.IsNullOrEmpty(url))
-            return;
+        public void LoadURL(string url)
+        {
+            if (string.IsNullOrEmpty(url))
+                return;
 #if UNITY_WEBGL
 #if !UNITY_EDITOR
-        _gree_unity_webview_loadURL(url);
+            _gree_unity_webview_loadURL(url);
 #endif
 #elif UNITY_WEBPLAYER
-        Application.ExternalCall("unityWebView.loadURL", url);
+            Application.ExternalCall("unityWebView.loadURL", url);
 #elif UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_LINUX
-        //TODO: UNSUPPORTED
+            //TODO: UNSUPPORTED
 #elif UNITY_STANDALONE_OSX || UNITY_IPHONE || (UNITY_ANDROID && UNITY_EDITOR_OSX)
-        if (webView == IntPtr.Zero)
-            return;
-        _CWebViewPlugin_LoadURL(webView, url);
+            if (webView == IntPtr.Zero)
+                return;
+            _CWebViewPlugin_LoadURL(webView, url);
 #elif UNITY_ANDROID
-        if (webView == null)
-            return;
-        webView.Call("LoadURL", url);
+            if (webView == null)
+                return;
+            webView.Call("LoadURL", url);
 #endif
-    }
+        }
 
-    public void EvaluateJS(string js)
-    {
+        public void EvaluateJS(string js)
+        {
 #if UNITY_WEBGL
 #if !UNITY_EDITOR
-        _gree_unity_webview_evaluateJS(js);
+            _gree_unity_webview_evaluateJS(js);
 #endif
 #elif UNITY_WEBPLAYER
-        Application.ExternalCall("unityWebView.evaluateJS", js);
+            Application.ExternalCall("unityWebView.evaluateJS", js);
 #elif UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_LINUX
-        //TODO: UNSUPPORTED
+            //TODO: UNSUPPORTED
 #elif UNITY_STANDALONE_OSX || UNITY_IPHONE || (UNITY_ANDROID && UNITY_EDITOR_OSX)
-        if (webView == IntPtr.Zero)
-            return;
-        _CWebViewPlugin_EvaluateJS(webView, js);
+            if (webView == IntPtr.Zero)
+                return;
+            _CWebViewPlugin_EvaluateJS(webView, js);
 #elif UNITY_ANDROID
-        if (webView == null)
-            return;
-        webView.Call("EvaluateJS", js);
+            if (webView == null)
+                return;
+            webView.Call("EvaluateJS", js);
 #endif
-    }
+        }
 
-    public void LaunchAuthURL(string url, string redirectUri)
-    {
+        public void LaunchAuthURL(string url, string redirectUri)
+        {
 #if UNITY_STANDALONE_OSX || (UNITY_ANDROID && UNITY_EDITOR_OSX) || (UNITY_IPHONE && UNITY_EDITOR_OSX)
-        if (webView == IntPtr.Zero)
-            return;
-        _CWebViewPlugin_LaunchAuthURL(webView, url, redirectUri != null ? redirectUri : "");
+            if (webView == IntPtr.Zero)
+                return;
+            _CWebViewPlugin_LaunchAuthURL(webView, url, redirectUri != null ? redirectUri : "");
 #elif UNITY_IPHONE && !UNITY_EDITOR_WIN
-        if (webView == IntPtr.Zero)
-            return;
-        _CWebViewPlugin_LaunchAuthURL(webView, url);
+            if (webView == IntPtr.Zero)
+                return;
+            _CWebViewPlugin_LaunchAuthURL(webView, url);
 #else
-        Application.OpenURL(url);
+            Application.OpenURL(url);
 #endif
-    }
-
-    public void CallOnError(string id, string error)
-    {
-        if (onError != null)
-        {
-            onError(id, error);
         }
-    }
 
-    public void CallOnHttpError(string id, string error)
-    {
-        if (onHttpError != null)
+        public void CallOnError(string id, string error)
         {
-            onHttpError(id, error);
+            if (onError != null)
+            {
+                onError(id, error);
+            }
         }
-    }
 
-    public void CallOnAuth(string url)
-    {
-        if (onAuth != null)
+        public void CallOnHttpError(string id, string error)
         {
-            onAuth(url);
+            if (onHttpError != null)
+            {
+                onHttpError(id, error);
+            }
         }
-    }
 
-    public void CallFromJS(string message)
-    {
-        if (onJS != null)
+        public void CallOnAuth(string url)
         {
+            if (onAuth != null)
+            {
+                onAuth(url);
+            }
+        }
+
+        public void CallFromJS(string message)
+        {
+            if (onJS != null)
+            {
 #if !(UNITY_ANDROID && !UNITY_EDITOR)
 #if UNITY_2018_4_OR_NEWER
-            message = UnityWebRequest.UnEscapeURL(message.Replace("+", "%2B"));
+                message = UnityWebRequest.UnEscapeURL(message.Replace("+", "%2B"));
 #else // UNITY_2018_4_OR_NEWER
-            message = WWW.UnEscapeURL(message.Replace("+", "%2B"));
+                message = WWW.UnEscapeURL(message.Replace("+", "%2B"));
 #endif // UNITY_2018_4_OR_NEWER
 #endif // !UNITY_ANDROID
-            onJS(message);
+                onJS(message);
+            }
         }
-    }
 
-    public void CallOnLog(string message)
-    {
-        if (onLog != null)
+        public void CallOnLog(string message)
         {
-            onLog(message);
+            if (onLog != null)
+            {
+                onLog(message);
+            }
         }
-    }
 
-    public void ClearCache(bool includeDiskFiles)
-    {
+        public void ClearCache(bool includeDiskFiles)
+        {
 #if UNITY_IPHONE && !UNITY_EDITOR
-        if (webView == IntPtr.Zero)
-            return;
-        _CWebViewPlugin_ClearCache(webView, includeDiskFiles);
+            if (webView == IntPtr.Zero)
+                return;
+            _CWebViewPlugin_ClearCache(webView, includeDiskFiles);
 #elif UNITY_ANDROID && !UNITY_EDITOR
-        if (webView == null)
-            return;
-        webView.Call("ClearCache", includeDiskFiles);
+            if (webView == null)
+                return;
+            webView.Call("ClearCache", includeDiskFiles);
 #else
-        throw new NotSupportedException();
+            throw new NotSupportedException();
 #endif
-    }
+        }
 
-    public void ClearStorage()
-    {
+        public void ClearStorage()
+        {
 #if UNITY_IPHONE && !UNITY_EDITOR
-        if (webView == IntPtr.Zero)
-            return;
-        _CWebViewPlugin_ClearStorage(webView);
+            if (webView == IntPtr.Zero)
+                return;
+            _CWebViewPlugin_ClearStorage(webView);
 #elif UNITY_ANDROID && !UNITY_EDITOR
-        if (webView == null)
-            return;
-        webView.Call("ClearStorage");
+            if (webView == null)
+                return;
+            webView.Call("ClearStorage");
 #else
-        throw new NotSupportedException();
+            throw new NotSupportedException();
 #endif
+        }
     }
 }
