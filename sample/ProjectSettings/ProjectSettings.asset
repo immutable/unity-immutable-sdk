@@ -772,8 +772,8 @@ PlayerSettings:
     - -nullable+
   platformArchitecture: {}
   scriptingBackend:
-    Android: 1
-    Standalone: 0
+    Android: 0
+    Standalone: 1
   il2cppCompilerConfiguration: {}
   managedStrippingLevel:
     EmbeddedLinux: 1

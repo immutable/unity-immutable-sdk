@@ -14,4 +14,13 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/AuthenticatedScene.unity
     guid: 48b17d6cb0b0f409a9edf831addcbc0a
+  - enabled: 1
+    path: Assets/Scenes/ZkEvmSendTransaction.unity
+    guid: a7c5223614c2d4ff7ac5b06a02ef956c
+  - enabled: 1
+    path: Assets/Scenes/ZkEvmGetBalance.unity
+    guid: 996b0bbb9b6464417b845459e3e8d764
+  - enabled: 1
+    path: Assets/Scenes/ZkEvmGetTransactionReceipt.unity
+    guid: ee999224a19ee442d998a452e74dab8c
   m_configObjects: {}

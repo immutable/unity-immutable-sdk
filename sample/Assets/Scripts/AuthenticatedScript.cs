@@ -1,5 +1,3 @@
-using System.Globalization;
-using System.Numerics;
 using System.Collections.Generic;
 using System;
 using UnityEngine;
@@ -49,21 +47,6 @@ public class AuthenticatedScript : MonoBehaviour
     [SerializeField] private Button GetBalanceButton;
     [SerializeField] private Button GetTransactionReceiptButton;
 
-    // ZkEVM Get Balance Transaction
-    [SerializeField] private Canvas ZkGetBalanceCanvas;
-    [SerializeField] private InputField ZkGetBalanceAccount;
-
-    // ZkEVM Send Transaction
-    [SerializeField] private Toggle ZkSendTransactionConfirm;
-    [SerializeField] private Canvas ZkSendTransactionCanvas;
-    [SerializeField] private InputField ZkSendTransactionTo;
-    [SerializeField] private InputField ZkSendTransactionValue;
-    [SerializeField] private InputField ZkSendTransactionData;
-
-    // ZkEVM Get Transaction Receipt
-    [SerializeField] private Canvas ZkGetTransactionReceiptCanvas;
-    [SerializeField] private InputField ZkGetTransactionReceiptHash;
-
     private Passport Passport;
 #pragma warning restore CS8618
 
@@ -74,6 +57,7 @@ public class AuthenticatedScript : MonoBehaviour
             // Get Passport instance
             Passport = Passport.Instance;
             CheckIfConnectedToImx();
+            CheckIfConnectedToZkEvm();
         }
         else
         {
@@ -92,6 +76,19 @@ public class AuthenticatedScript : MonoBehaviour
         RegisterOffchainButton.gameObject.SetActive(isConnected);
         GetAddressButton.gameObject.SetActive(isConnected);
         ShowTransferButton.gameObject.SetActive(isConnected);
+    }
+
+    /// <summary>
+    /// Checks if the user is connected to zkEVM and updates the UI to show appropriate buttons.
+    /// </summary>
+    private void CheckIfConnectedToZkEvm()
+    {
+        bool isConnected = SampleAppManager.IsConnectedToZkEvm;
+        ConnectEvmButton.gameObject.SetActive(!isConnected);
+        SendTransactionButton.gameObject.SetActive(isConnected);
+        RequestAccountsButton.gameObject.SetActive(isConnected);
+        GetBalanceButton.gameObject.SetActive(isConnected);
+        GetTransactionReceiptButton.gameObject.SetActive(isConnected);
     }
 
     #region Passport functions
@@ -200,6 +197,7 @@ public class AuthenticatedScript : MonoBehaviour
 
             // Reset connection status and navigate to the unauthenticated scene
             SampleAppManager.IsConnectedToImx = false;
+            SampleAppManager.IsConnectedToZkEvm = false;
             SceneManager.LoadScene(sceneName: "UnauthenticatedScene");
         }
         catch (Exception ex)
@@ -390,156 +388,82 @@ public class AuthenticatedScript : MonoBehaviour
         return details;
     }
 
-    // ZKEvm
+    #region zkEVM
+
+    /// <summary>
+    /// Instantiates the zkEVM provider to enable interaction with zkEVM.
+    /// </summary>
     public async void ConnectEvm()
     {
         try
         {
+            // Instantiates the zkEVM provider
             await Passport.ConnectEvm();
-            ShowOutput("Connected to EVM");
+
+            // Update connection status
+            SampleAppManager.IsConnectedToZkEvm = true;
+
+            // Update UI elements to show zkEVM-related buttons
             ConnectEvmButton.gameObject.SetActive(false);
             SendTransactionButton.gameObject.SetActive(true);
             RequestAccountsButton.gameObject.SetActive(true);
             GetBalanceButton.gameObject.SetActive(true);
             GetTransactionReceiptButton.gameObject.SetActive(true);
+
+            ShowOutput("Connected to EVM");
         }
         catch (Exception ex)
         {
-            ShowOutput($"Failed to connect to EVM: {ex.Message}");
+            ShowOutput($"Failed to instantiate zkEVM provider: {ex.Message}");
         }
     }
 
-    public async void SendZkTransaction()
-    {
-        try
-        {
-            ShowOutput($"Called sendTransaction()...");
-            TransactionRequest request = new TransactionRequest()
-            {
-                to = ZkSendTransactionTo.text,
-                value = ZkSendTransactionValue.text,
-                data = ZkSendTransactionData.text
-
-            };
-            if (ZkSendTransactionConfirm.isOn)
-            {
-                TransactionReceiptResponse response = await Passport.ZkEvmSendTransactionWithConfirmation(request);
-                ShowOutput($"Transaction hash: {response.transactionHash}\nStatus: {GetTransactionStatusString(response.status)}");
-            }
-            else
-            {
-                string response = await Passport.ZkEvmSendTransaction(request);
-                ShowOutput($"Transaction hash: {response}");
-            }
-        }
-        catch (Exception ex)
-        {
-            ShowOutput($"Failed to request accounts: {ex.Message}");
-        }
-    }
-
-    public void ShowZkSendTransaction()
-    {
-        AuthenticatedCanvas.gameObject.SetActive(false);
-        ZkSendTransactionCanvas.gameObject.SetActive(true);
-        ZkSendTransactionTo.text = "";
-        ZkSendTransactionValue.text = "";
-        ZkSendTransactionData.text = "";
-    }
-
-    public void CancelZkSendTransaction()
-    {
-        AuthenticatedCanvas.gameObject.SetActive(true);
-        ZkSendTransactionCanvas.gameObject.SetActive(false);
-    }
-
+    /// <summary>
+    /// Initialises the logged-in user's Passport wallet and retrieves their wallet address.
+    /// </summary>
     public async void RequestAccounts()
     {
+        ShowOutput("Requesting wallet accounts...");
+
         try
         {
-            ShowOutput($"Called RequestAccounts()...");
+            // Initialise the wallet and get the wallet addresses from the zkEVM provider
             List<string> accounts = await Passport.ZkEvmRequestAccounts();
-            ShowOutput(String.Join(", ", accounts));
+
+            // Display the retrieved wallet addresses
+            ShowOutput(accounts.Count > 0 ? string.Join(", ", accounts) : "No accounts found.");
         }
         catch (Exception ex)
         {
-            ShowOutput($"Failed to request accounts: {ex.Message}");
+            ShowOutput($"Failed to request wallet accounts: {ex.Message}");
         }
     }
 
-    public async void GetBalance()
+    /// <summary>
+    /// Navigates to zkEVM Send Transaction scene.
+    /// </summary>
+    public void ShowZkEvmSendTransaction()
     {
-        try
-        {
-            ShowOutput($"Called GetBalance()...");
-            string balance = await Passport.ZkEvmGetBalance(ZkGetBalanceAccount.text);
-            var balanceBI = BigInteger.Parse(balance.Replace("0x", "0"), NumberStyles.HexNumber);
-            ShowOutput($"Hex: {balance}\nDec: {balanceBI.ToString()}");
-        }
-        catch (Exception ex)
-        {
-            ShowOutput($"Failed to get balance: {ex.Message}");
-        }
+        SceneManager.LoadScene("ZkEvmSendTransaction");
     }
 
-    public void ShowZkGetBalance()
+    /// <summary>
+    /// Navigates to zkEVM Get Balance scene.
+    /// </summary>
+    public void ShowZkEvmGetBalance()
     {
-        AuthenticatedCanvas.gameObject.SetActive(false);
-        ZkGetBalanceCanvas.gameObject.SetActive(true);
-        ZkGetBalanceAccount.text = "";
+        SceneManager.LoadScene("ZkEvmGetBalance");
     }
 
-    public void CancelZkGetBalance()
+    /// <summary>
+    /// Navigates to zkEVM Get Transaction Receipt scene.
+    /// </summary>
+    public void ShowZkEvmGetTransactionReceipt()
     {
-        AuthenticatedCanvas.gameObject.SetActive(true);
-        ZkGetBalanceCanvas.gameObject.SetActive(false);
+        SceneManager.LoadScene("ZkEvmGetTransactionReceipt");
     }
 
-    public async void GetZkTransactionReceiptStatus()
-    {
-        try
-        {
-            ShowOutput($"Getting zkEVM transaction receipt status...");
-
-            TransactionReceiptResponse response = await Passport.ZkEvmGetTransactionReceipt(ZkGetTransactionReceiptHash.text);
-            string status = $"Transaction receipt status: {GetTransactionStatusString(response.status)}";
-            ShowOutput(status);
-        }
-        catch (Exception ex)
-        {
-            ShowOutput($"Failed to get transaction receipt: {ex.Message}");
-        }
-    }
-
-    private string GetTransactionStatusString(string status)
-    {
-        switch (status)
-        {
-            case "1":
-            case "0x1":
-                return "Success";
-            case "0":
-            case "0x0":
-                return "Failed";
-            case null:
-                return "Still processing";
-            default:
-                return "";
-        }
-    }
-
-    public void ShowZkTransactionReceipt()
-    {
-        AuthenticatedCanvas.gameObject.SetActive(false);
-        ZkGetTransactionReceiptCanvas.gameObject.SetActive(true);
-        ZkGetTransactionReceiptHash.text = "";
-    }
-
-    public void CancelZkTransactionReceiptStatus()
-    {
-        AuthenticatedCanvas.gameObject.SetActive(true);
-        ZkGetTransactionReceiptCanvas.gameObject.SetActive(false);
-    }
+    #endregion
 
     public void ClearStorageAndCache()
     {
@@ -552,6 +476,10 @@ public class AuthenticatedScript : MonoBehaviour
 #endif
     }
 
+    /// <summary>
+    /// Prints the specified <code>message</code> to the output box.
+    /// </summary>
+    /// <param name="message">The message to print</param>
     private void ShowOutput(string message)
     {
         if (Output != null)
