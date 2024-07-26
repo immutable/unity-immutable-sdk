@@ -44,6 +44,12 @@ public class ZkEvmGetBalanceScript : MonoBehaviour
             // Convert the hexadecimal balance to a BigInteger for decimal representation
             var balanceDec = BigInteger.Parse(balanceHex.Replace("0x", ""), NumberStyles.HexNumber);
 
+            // Ensure the number is positive
+            if (balanceDec < 0)
+            {
+                balanceDec = BigInteger.Parse("0" + balanceHex.Replace("0x", ""), NumberStyles.HexNumber);
+            }
+
             // Display both hexadecimal and decimal representations of the balance
             ShowOutput($"Balance:\nHex: {balanceHex}\nDec: {balanceDec}");
         }

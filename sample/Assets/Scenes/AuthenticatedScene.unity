@@ -3530,7 +3530,7 @@ GameObject:
   - component: {fileID: 1192763473}
   - component: {fileID: 1192763474}
   m_Layer: 0
-  m_Name: Script
+  m_Name: AuthenticatedScript
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

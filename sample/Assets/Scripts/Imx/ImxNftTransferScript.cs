@@ -88,7 +88,7 @@ public class ImxNftTransferScript : MonoBehaviour
     /// <returns>A list of <see cref="NftTransferDetails"/> objects representing the NFTs to transfer.</returns>
     private List<NftTransferDetails> GetTransferDetails()
     {
-        // Initialize the list to store transfer details
+        // Initialise the list to store transfer details
         List<NftTransferDetails> details = new List<NftTransferDetails>();
 
         // Add the first NFT transfer details
