@@ -156,7 +156,7 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Logs the user into Passport via device code auth and sets up the IMX provider. This will open the user's
+        /// Logs the user into Passport via device code auth and sets up the Immutable X provider. This will open the user's
         /// default browser and take them through Passport login.
         /// <param name="useCachedSession">If true, the saved access token or refresh token will be used to connect the user. If this fails, it will not fallback to device code auth.</param>
         /// <param name="timeoutMs">(Optional) The maximum time, in milliseconds, the function is allowed to take before a TimeoutException is thrown. If not set, the function will wait indefinitely.</param>
@@ -176,7 +176,7 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Connects the user into Passport via PKCE auth and sets up the IMX provider.
+        /// Connects the user into Passport via PKCE auth and sets up the Immutable X provider.
         ///
         /// The user does not need to go through this flow if the saved access token is still valid or
         /// the refresh token can be used to get a new access token.
@@ -243,7 +243,7 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Register a User to Immutable X if they are not already registered
+        /// Registers the user to Immutable X if they are not already registered
         /// </summary>
         public async UniTask<RegisterUserResponse> RegisterOffchain()
         {

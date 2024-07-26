@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Immutable.Passport;
-using Immutable.Passport.Model;
 
 public class UnauthenticatedScript : MonoBehaviour
 {

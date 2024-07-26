@@ -1,14 +1,12 @@
 using System.Globalization;
 using System.Numerics;
-using System.Collections.Generic;
 using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Immutable.Passport;
-using Immutable.Passport.Model;
 
-public class ZkEvmGetBalance : MonoBehaviour
+public class ZkEvmGetBalanceScript : MonoBehaviour
 {
 #pragma warning disable CS8618
     [SerializeField] private Text Output;
@@ -45,6 +43,12 @@ public class ZkEvmGetBalance : MonoBehaviour
 
             // Convert the hexadecimal balance to a BigInteger for decimal representation
             var balanceDec = BigInteger.Parse(balanceHex.Replace("0x", ""), NumberStyles.HexNumber);
+
+            // Ensure the number is positive
+            if (balanceDec < 0)
+            {
+                balanceDec = BigInteger.Parse("0" + balanceHex.Replace("0x", ""), NumberStyles.HexNumber);
+            }
 
             // Display both hexadecimal and decimal representations of the balance
             ShowOutput($"Balance:\nHex: {balanceHex}\nDec: {balanceDec}");

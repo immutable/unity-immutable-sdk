@@ -23,4 +23,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/ZkEvmGetTransactionReceipt.unity
     guid: ee999224a19ee442d998a452e74dab8c
+  - enabled: 1
+    path: Assets/Scenes/ImxNftTransfer.unity
+    guid: 2f14d9e7f1e6941d3bc021f86377a3c9
   m_configObjects: {}
