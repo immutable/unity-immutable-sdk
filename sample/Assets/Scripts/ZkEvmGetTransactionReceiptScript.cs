@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 using Immutable.Passport;
 using Immutable.Passport.Model;
 
-public class ZkEvmGetTransactionReceipt : MonoBehaviour
+public class ZkEvmGetTransactionReceiptScript : MonoBehaviour
 {
 #pragma warning disable CS8618
     [SerializeField] private Text Output;

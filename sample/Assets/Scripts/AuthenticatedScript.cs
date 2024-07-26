@@ -21,24 +21,7 @@ public class AuthenticatedScript : MonoBehaviour
     [SerializeField] private Button IsRegisteredOffchainButton;
     [SerializeField] private Button RegisterOffchainButton;
     [SerializeField] private Button GetAddressButton;
-    [SerializeField] private Button ShowTransferButton;
-
-    [SerializeField] private Canvas TransferCanvas;
-
-    [SerializeField] private InputField TokenIdInput1;
-    [SerializeField] private InputField TokenAddressInput1;
-    [SerializeField] private InputField ReceiverInput1;
-
-    [SerializeField] private InputField TokenIdInput2;
-    [SerializeField] private InputField TokenAddressInput2;
-    [SerializeField] private InputField ReceiverInput2;
-
-    [SerializeField] private InputField TokenIdInput3;
-    [SerializeField] private InputField TokenAddressInput3;
-    [SerializeField] private InputField ReceiverInput3;
-
-    [SerializeField] private Button TransferButton;
-    [SerializeField] private Button CancelTransferButton;
+    [SerializeField] private Button NftTransferButton;
 
     // ZkEvm
     [SerializeField] private Button ConnectEvmButton;
@@ -75,7 +58,7 @@ public class AuthenticatedScript : MonoBehaviour
         IsRegisteredOffchainButton.gameObject.SetActive(isConnected);
         RegisterOffchainButton.gameObject.SetActive(isConnected);
         GetAddressButton.gameObject.SetActive(isConnected);
-        ShowTransferButton.gameObject.SetActive(isConnected);
+        NftTransferButton.gameObject.SetActive(isConnected);
     }
 
     /// <summary>
@@ -208,38 +191,54 @@ public class AuthenticatedScript : MonoBehaviour
 
     #endregion
 
+    #region IMX
+
+    /// <summary>
+    /// Initialises the user's wallet and sets up the Immutable X provider using saved credentials if the user is already logged in.
+    /// </summary>
     public async void Connect()
     {
+        ShowOutput("Connecting to Passport using saved credentials...");
+        ConnectButton.gameObject.SetActive(false);
+
         try
         {
-            // Use existing credentials to connect to Passport
-            ShowOutput("Connecting into Passport using saved credentials...");
-            ConnectButton.gameObject.SetActive(false);
-            bool connected = await Passport.ConnectImx(useCachedSession: true);
-            if (connected)
+            // Attempt to connect to Immutable X using saved credentials
+            bool isConnected = await Passport.ConnectImx(useCachedSession: true);
+
+            // Update connection status
+            SampleAppManager.IsConnectedToImx = isConnected;
+
+            if (isConnected)
             {
+                // Enable UI elements related to Immutable X upon successful connection
                 IsRegisteredOffchainButton.gameObject.SetActive(true);
                 RegisterOffchainButton.gameObject.SetActive(true);
                 GetAddressButton.gameObject.SetActive(true);
-                ShowTransferButton.gameObject.SetActive(true);
-                ShowOutput($"Connected");
+                NftTransferButton.gameObject.SetActive(true);
+
+                ShowOutput("Connected to IMX");
             }
             else
             {
-                ShowOutput($"Could not connect using saved credentials");
+                ShowOutput("Could not connect using saved credentials");
                 ConnectButton.gameObject.SetActive(true);
             }
         }
         catch (Exception ex)
         {
-            ShowOutput($"Connect() error: {ex.Message}");
+            ShowOutput($"Error connecting: {ex.Message}");
             ConnectButton.gameObject.SetActive(true);
         }
     }
 
+    /// <summary>
+    /// Checks if the user is registered off-chain with Immutable X.
+    /// </summary>
     public async void IsRegisteredOffchain()
     {
-        ShowOutput($"Called IsRegisteredOffchain()...");
+        ShowOutput("Checking if user is registered off-chain...");
+
         try
         {
             bool isRegistered = await Passport.IsRegisteredOffchain();
@@ -247,146 +246,75 @@ public class AuthenticatedScript : MonoBehaviour
         }
         catch (PassportException e)
         {
-            ShowOutput($"Unable to check if user is registered off chain: {e.Message} ({e.Type})");
+            ShowOutput($"Unable to check off-chain registration: {e.Message} ({e.Type})");
         }
         catch (Exception)
         {
-            ShowOutput("Unable to check if user is registered off chain");
+            ShowOutput("Unable to check off-chain registration");
         }
     }
 
+    /// <summary>
+    /// Registers the user with Immutable X if they are not already registered.
+    /// </summary>
     public async void RegisterOffchain()
     {
-        ShowOutput($"Called RegisterOffchain()...");
+        ShowOutput("Registering off-chain...");
+
         try
         {
             RegisterUserResponse response = await Passport.RegisterOffchain();
+
             if (response != null)
             {
-                ShowOutput($"Registered {response.tx_hash}");
+                ShowOutput($"Successfully registered");
             }
             else
             {
-                ShowOutput($"Not registered");
+                ShowOutput("Registration failed");
             }
         }
         catch (PassportException e)
         {
-            ShowOutput($"Unable to register off chain: {e.Message} ({e.Type})");
+            ShowOutput($"Unable to register off-chain: {e.Message} ({e.Type})");
         }
         catch (Exception)
         {
-            ShowOutput("Unable to register off chain");
+            ShowOutput("Unable to register off-chain");
         }
     }
 
+    /// <summary>
+    /// Gets the wallet address of the currently logged-in user.
+    /// </summary>
     public async void GetAddress()
     {
-        ShowOutput($"Called GetAddress()...");
+        ShowOutput("Retrieving wallet address...");
+
         try
         {
             string address = await Passport.GetAddress();
-            ShowOutput(address ?? "No address");
+            ShowOutput(string.IsNullOrEmpty(address) ? "No address found" : address);
         }
         catch (PassportException e)
         {
-            ShowOutput($"Unable to get address: {e.Message} ({e.Type})");
+            ShowOutput($"Unable to retrieve address: {e.Message} ({e.Type})");
         }
         catch (Exception)
         {
-            ShowOutput("Unable to get address");
+            ShowOutput("Unable to retrieve address");
         }
     }
 
-    public void ShowTransfer()
+    /// <summary>
+    /// Navigates to IMX NFT Transfer scene.
+    /// </summary>
+    public void ShowImxNftTransfer()
     {
-        AuthenticatedCanvas.gameObject.SetActive(false);
-        TransferCanvas.gameObject.SetActive(true);
+        SceneManager.LoadScene("ImxNftTransfer");
     }
 
-    public void CancelTransfer()
-    {
-        AuthenticatedCanvas.gameObject.SetActive(true);
-        TransferCanvas.gameObject.SetActive(false);
-        ClearInputs();
-    }
-
-    public async void Transfer()
-    {
-        if (TokenIdInput1.text != "" && TokenAddressInput1.text != "" && ReceiverInput1.text != "")
-        {
-            ShowOutput("Transferring...");
-            TransferButton.gameObject.SetActive(false);
-            CancelTransferButton.gameObject.SetActive(false);
-
-            try
-            {
-                List<NftTransferDetails> details = getTransferDetails();
-
-                if (details.Count > 1)
-                {
-                    CreateBatchTransferResponse response = await Passport.ImxBatchNftTransfer(details.ToArray());
-                    ShowOutput($"Transferred {response.transfer_ids.Length} items successfully");
-                }
-                else
-                {
-                    UnsignedTransferRequest request = UnsignedTransferRequest.ERC721(
-                        details[0].receiver,
-                        details[0].tokenId,
-                        details[0].tokenAddress
-                    );
-                    CreateTransferResponseV1 response = await Passport.ImxTransfer(request);
-                    ShowOutput($"Transferred successfully. Transfer id: {response.transfer_id}");
-                }
-
-                ClearInputs();
-            }
-            catch (Exception e)
-            {
-                ShowOutput($"Unable to transfer: {e.Message}");
-            }
-
-            TransferButton.gameObject.SetActive(true);
-            CancelTransferButton.gameObject.SetActive(true);
-        }
-    }
-
-    private List<NftTransferDetails> getTransferDetails()
-    {
-        List<NftTransferDetails> details = new List<NftTransferDetails>();
-
-        details.Add(
-            new NftTransferDetails(
-                ReceiverInput1.text,
-                TokenIdInput1.text,
-                TokenAddressInput1.text
-            )
-        );
-
-        if (TokenIdInput2.text != "" && TokenAddressInput2.text != "" && ReceiverInput2.text != "")
-        {
-            details.Add(
-                new NftTransferDetails(
-                    ReceiverInput2.text,
-                    TokenIdInput2.text,
-                    TokenAddressInput2.text
-                )
-            );
-        }
-
-        if (TokenIdInput3.text != "" && TokenAddressInput3.text != "" && ReceiverInput3.text != "")
-        {
-            details.Add(
-                new NftTransferDetails(
-                    ReceiverInput3.text,
-                    TokenIdInput3.text,
-                    TokenAddressInput3.text
-                )
-            );
-        }
-
-        return details;
-    }
+    #endregion
 
     #region zkEVM
 
@@ -465,6 +393,9 @@ public class AuthenticatedScript : MonoBehaviour
 
     #endregion
 
+    /// <summary>
+    /// Clears the underlying WebView storage and cache, including any saved credentials.
+    /// </summary>
     public void ClearStorageAndCache()
     {
 #if (UNITY_IPHONE && !UNITY_EDITOR) || (UNITY_ANDROID && !UNITY_EDITOR)
@@ -486,20 +417,5 @@ public class AuthenticatedScript : MonoBehaviour
         {
             Output.text = message;
         }
-    }
-
-    private void ClearInputs()
-    {
-        TokenIdInput1.text = "";
-        TokenAddressInput1.text = "";
-        ReceiverInput1.text = "";
-
-        TokenIdInput2.text = "";
-        TokenAddressInput2.text = "";
-        ReceiverInput2.text = "";
-
-        TokenIdInput3.text = "";
-        TokenAddressInput3.text = "";
-        ReceiverInput3.text = "";
     }
 }
