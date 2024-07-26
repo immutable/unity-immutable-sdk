@@ -72,9 +72,8 @@ jobs:
       - name: Extract TS SDK version from index.html
         id: extract_ts_sdk_version
         run: |
-          # Extract version using grep and awk
-          version=$(grep -oP '"x-sdk-version":"ts-immutable-sdk-\K[0-9]+\.[0-9]+\.[0-9]+' ./src/Packages/Passport/Runtime/Resources/index.html)
-          echo "VERSION=$version" >> $GITHUB_ENV
+          VERSION=$(grep -oP '"x-sdk-version":"ts-immutable-sdk-\K[0-9]+\.[0-9]+\.[0-9]+' ./src/Packages/Passport/Runtime/Resources/index.html)
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 
       - name: Create Release
         id: create_release
