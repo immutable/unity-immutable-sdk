@@ -14,8 +14,14 @@ public class BuildScript
         {
             BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
             buildPlayerOptions.scenes = new string[] {
-            "Assets/Scenes/SelectAuthMethod.unity", "Assets/Scenes/UnauthenticatedScene.unity", "Assets/Scenes/AuthenticatedScene.unity"
-        };
+                "Assets/Scenes/SelectAuthMethod.unity",
+                "Assets/Scenes/UnauthenticatedScene.unity",
+                "Assets/Scenes/AuthenticatedScene.unity",
+                "Assets/Scenes/ZkEvmGetBalance.unity",
+                "Assets/Scenes/ZkEvmGetTransactionReceipt.unity",
+                "Assets/Scenes/ZkEvmSendTransaction.unity",
+                "Assets/Scenes/ImxNftTransfer.unity"
+            };
 
             buildPlayerOptions.locationPathName = "Builds/MacOS/SampleApp.app";
             buildPlayerOptions.target = BuildTarget.StandaloneOSX;
