@@ -98,3 +98,7 @@ sample/AltTester.log
 
 # Crashes
 sample/mono_crash*
+
+# Vuplex
+src/Packages/Passport/Runtime/ThirdParty/Vuplex/Vuplex
+src/Packages/Passport/Runtime/ThirdParty/Vuplex/Vuplex.meta
