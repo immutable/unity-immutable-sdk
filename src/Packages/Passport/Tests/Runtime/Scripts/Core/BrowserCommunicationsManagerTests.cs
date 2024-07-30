@@ -208,5 +208,9 @@ namespace Immutable.Passport.Core
         {
             throw new NotImplementedException();
         }
+
+        public void Dispose()
+        {
+        }
     }
 }

@@ -54,8 +54,11 @@ namespace Immutable.Passport
         {
             this.redirectUri = redirectUri;
             this.logoutRedirectUri = logoutRedirectUri;
+
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
             this.communicationsManager.OnAuthPostMessage += OnDeepLinkActivated;
             this.communicationsManager.OnPostMessageError += OnPostMessageError;
+#endif
 
             var versionInfo = new VersionInfo
             {

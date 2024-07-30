@@ -609,8 +609,6 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         ///     Invoked when the browser goes in or out of fullscreen
         /// </summary>
         public event OnFullscreenChange OnFullscreen;
-        public event OnUnityPostMessageDelegate OnAuthPostMessage;
-        public event OnUnityPostMessageErrorDelegate OnPostMessageError;
 
         internal void InvokeFullscreen(bool fullscreen)
         {

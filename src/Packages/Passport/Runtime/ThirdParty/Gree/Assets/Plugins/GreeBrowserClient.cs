@@ -1,3 +1,5 @@
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
+
 using Immutable.Browser.Core;
 using UnityEngine;
 using System.IO;
@@ -97,3 +99,5 @@ namespace Immutable.Browser.Gree
 
     }
 }
+
+#endif

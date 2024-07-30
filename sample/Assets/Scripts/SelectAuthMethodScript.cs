@@ -79,6 +79,7 @@ public class SelectAuthMethodScript : MonoBehaviour
         }
         catch (Exception ex)
         {
+            Debug.Log(ex);
             ShowOutput($"Initialise Passport error: {ex.Message}");
         }
     }
