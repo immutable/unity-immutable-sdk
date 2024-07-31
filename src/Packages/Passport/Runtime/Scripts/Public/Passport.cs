@@ -69,7 +69,7 @@ namespace Immutable.Passport
             string redirectUri = null, 
             string logoutRedirectUri = null,
             int engineStartupTimeoutMs = 30000,
-            WindowsWebBrowserClient webBrowserClient = null
+            IWindowsWebBrowserClient windowsWebBrowserClient = null
 #else
             string clientId,
             string environment,
@@ -86,7 +86,7 @@ namespace Immutable.Passport
                 // Start initialisation process
                 return Instance.Initialise(
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-                        engineStartupTimeoutMs, webBrowserClient
+                        engineStartupTimeoutMs, windowsWebBrowserClient
 #endif
                     )
                     .ContinueWith(async () =>
@@ -125,7 +125,7 @@ namespace Immutable.Passport
         /// <param name="webBrowserClient">(Windows only) Custom Windows browser to use instead of the default browser in the SDK.</param>
         private async UniTask Initialise(
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-            int engineStartupTimeoutMs, WindowsWebBrowserClient webBrowserClient
+            int engineStartupTimeoutMs, IWindowsWebBrowserClient windowsWebBrowserClient
 #endif
         )
         {
@@ -133,11 +133,11 @@ namespace Immutable.Passport
             {
                 // Initialise the web browser client
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-                if (webBrowserClient != null)
+                if (windowsWebBrowserClient != null)
                 {
                     // Use the provided custom Windows browser client
-                    this.webBrowserClient = webBrowserClient;
-                    await ((WindowsWebBrowserClient)this.webBrowserClient).Init();
+                    this.webBrowserClient = new WindowsWebBrowserClientAdapter(windowsWebBrowserClient);
+                    await ((WindowsWebBrowserClientAdapter)this.webBrowserClient).Init();
                 }
                 else
                 {

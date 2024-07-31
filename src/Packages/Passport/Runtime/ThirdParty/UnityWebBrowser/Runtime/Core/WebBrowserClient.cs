@@ -316,13 +316,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             WebBrowserArgsBuilder argsBuilder = new();
 
             //Initial URL
-            string filePath = "";
-#if UNITY_EDITOR
-            filePath = Constants.SCHEME_FILE + Path.GetFullPath($"{Constants.PASSPORT_PACKAGE_RESOURCES_DIRECTORY}{Constants.PASSPORT_HTML_FILE_NAME}");
-#elif UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-            filePath = Constants.SCHEME_FILE + Path.GetFullPath(Application.dataPath) + Constants.PASSPORT_DATA_DIRECTORY_NAME + Constants.PASSPORT_HTML_FILE_NAME;
-#endif
-            initialUrl = filePath;
+            initialUrl = GameBridge.GetFilePath();
             argsBuilder.AppendArgument("initial-url", initialUrl, true);
 
             //Width & Height
