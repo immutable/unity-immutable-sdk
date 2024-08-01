@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using System;
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+#if !IMMUTABLE_CUSTOM_BROWSER
 using VoltstroStudios.UnityWebBrowser.Core;
+#endif
 #else
 using Immutable.Browser.Gree;
 #endif
@@ -141,9 +143,14 @@ namespace Immutable.Passport
                 }
                 else
                 {
+#if IMMUTABLE_CUSTOM_BROWSER
+                    throw new PassportException("When 'IMMUTABLE_CUSTOM_BROWSER' is defined in Scripting Define Symbols, " + 
+                        " 'windowsWebBrowserClient' must not be null.");
+#else
                     // Initialise with default Windows browser client
                     this.webBrowserClient = new WebBrowserClient();
                     await ((WebBrowserClient)this.webBrowserClient).Init(engineStartupTimeoutMs);
+#endif
                 }
 #else
                 // Initialise default browser client for Android, iOS, and macOS

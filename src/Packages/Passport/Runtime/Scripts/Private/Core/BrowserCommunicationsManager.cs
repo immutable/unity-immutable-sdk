@@ -2,11 +2,6 @@ using System.Net;
 using System;
 using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-using VoltstroStudios.UnityWebBrowser.Core;
-#else
-using Immutable.Browser.Gree;
-#endif
 using Immutable.Browser.Core;
 using Immutable.Passport.Model;
 using UnityEngine;

@@ -1,4 +1,4 @@
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
 
 // UnityWebBrowser (UWB)
 // Copyright (c) 2021-2022 Voltstro-Studios
@@ -83,7 +83,7 @@ namespace VoltstroStudios.UnityWebBrowser.Helper
             return EngineManager.GetEngineProcessFullPath(engine);
 #else
             string path = $"{GetBrowserEnginePath(null)}/{engine.GetEngineExecutableName()}";
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
             path += ".exe";
 #endif
             return  Path.GetFullPath(path);
