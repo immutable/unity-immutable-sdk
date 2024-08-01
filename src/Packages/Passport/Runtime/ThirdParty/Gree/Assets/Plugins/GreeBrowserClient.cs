@@ -9,9 +9,7 @@ namespace Immutable.Browser.Gree
     public class GreeBrowserClient : IWebBrowserClient
     {
         private const string TAG = "[GreeBrowserClient]";
-        private const string ANDROID_DATA_DIRECTORY = "android_asset";
-        private const string MAC_DATA_DIRECTORY = "/Resources/Data";
-        private const string MAC_EDITOR_RESOURCES_DIRECTORY = "Packages/com.immutable.passport/Runtime/Resources";
+
         private readonly WebViewObject webViewObject;
         public event OnUnityPostMessageDelegate OnUnityPostMessage;
         public event OnUnityPostMessageDelegate OnAuthPostMessage;
