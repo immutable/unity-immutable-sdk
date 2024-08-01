@@ -4,7 +4,7 @@ using System;
 #if !IMMUTABLE_CUSTOM_BROWSER
 using VoltstroStudios.UnityWebBrowser.Core;
 #endif
-#else
+#elif (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
 using Immutable.Browser.Gree;
 #endif
 using Immutable.Passport.Event;
@@ -152,9 +152,11 @@ namespace Immutable.Passport
                     await ((WebBrowserClient)this.webBrowserClient).Init(engineStartupTimeoutMs);
 #endif
                 }
-#else
+#elif (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
                 // Initialise default browser client for Android, iOS, and macOS
                 webBrowserClient = new GreeBrowserClient();
+#else
+                throw new PassportException("Platform not supported");
 #endif
 
                 // Set up browser communication
