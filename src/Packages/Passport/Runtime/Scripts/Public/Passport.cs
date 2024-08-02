@@ -1,8 +1,10 @@
 using System.Collections.Generic;
 using System;
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+#if !IMMUTABLE_CUSTOM_BROWSER
 using VoltstroStudios.UnityWebBrowser.Core;
-#else
+#endif
+#elif (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
 using Immutable.Browser.Gree;
 #endif
 using Immutable.Passport.Event;
@@ -20,47 +22,61 @@ namespace Immutable.Passport
         private const string TAG = "[Passport]";
 
         public static Passport Instance { get; private set; }
+        private PassportImpl passportImpl = null;
 
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-        private readonly IWebBrowserClient webBrowserClient = new WebBrowserClient();
-#else
-        private readonly IWebBrowserClient webBrowserClient = new GreeBrowserClient();
-#endif
+        private IWebBrowserClient webBrowserClient;
 
         // Keeps track of the latest received deeplink
         private static string deeplink = null;
         private static bool readySignalReceived = false;
-        private PassportImpl passportImpl = null;
 
+        /// <summary>
+        /// Passport auth events
+        /// </summary>
+        /// <seealso cref="Immutable.Passport.Event.PassportAuthEvent" />
         public event OnAuthEventDelegate OnAuthEvent;
 
         private Passport()
         {
+            // Handle clean-up tasks when the application is quitting
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
             Application.quitting += OnQuit;
 #elif UNITY_IPHONE || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
+            // Handle deeplinks for iOS and macOS
             Application.deepLinkActivated += OnDeepLinkActivated;
+
+            // Check if there is a deep link URL provided on application start
             if (!string.IsNullOrEmpty(Application.absoluteURL))
             {
-                // Cold start and Application.absoluteURL not null so process Deep Link.
+                // Handle the deep link if provided during a cold start
                 OnDeepLinkActivated(Application.absoluteURL);
             }
 #endif
         }
 
         /// <summary>
-        /// Initialises Passport
+        /// Initialises Passport with the specified parameters. 
+        /// This sets up the Passport instance, configures the web browser, and waits for the ready signal.
         /// </summary>
         /// <param name="clientId">The client ID</param>
         /// <param name="environment">The environment to connect to</param>
-        /// <param name="redirectUri">(Android, iOS and macOS only) The URL to which auth will redirect the browser after authorisation has been granted by the user</param>
-        /// <param name="logoutRedirectUri">(Android, iOS and macOS only) The URL to which auth will redirect the browser after log out is complete</param>
-        /// <param name="engineStartupTimeoutMs">(Windows only) Timeout time for waiting for the engine to start (in milliseconds)</param>
+        /// <param name="redirectUri">(Android, iOS, and macOS only) The URL where the browser will redirect after successful authentication.</param>
+        /// <param name="logoutRedirectUri">(Android, iOS, and macOS only) The URL where the browser will redirect after logout is complete.</param>
+        /// <param name="engineStartupTimeoutMs">(Windows only) Timeout duration in milliseconds to wait for the default Windows browser engine to start.</param>
+        /// <param name="webBrowserClient">(Windows only) Custom Windows browser to use instead of the default browser in the SDK.</param>
         public static UniTask<Passport> Init(
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-            string clientId, string environment, string redirectUri = null, string logoutRedirectUri = null, int engineStartupTimeoutMs = 30000
+            string clientId, 
+            string environment, 
+            string redirectUri = null, 
+            string logoutRedirectUri = null,
+            int engineStartupTimeoutMs = 30000,
+            IWindowsWebBrowserClient windowsWebBrowserClient = null
 #else
-            string clientId, string environment, string redirectUri = null, string logoutRedirectUri = null
+            string clientId,
+            string environment,
+            string redirectUri = null,
+            string logoutRedirectUri = null
 #endif
         )
         {
@@ -68,14 +84,16 @@ namespace Immutable.Passport
             {
                 Debug.Log($"{TAG} Initialising Passport...");
                 Instance = new Passport();
-                // Wait until we get a ready signal
+
+                // Start initialisation process
                 return Instance.Initialise(
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-                        engineStartupTimeoutMs
+                        engineStartupTimeoutMs, windowsWebBrowserClient
 #endif
                     )
                     .ContinueWith(async () =>
                     {
+                        // Wait for the ready signal
                         Debug.Log($"{TAG} Waiting for ready signal...");
                         await UniTask.WaitUntil(() => readySignalReceived == true);
                     })
@@ -83,6 +101,7 @@ namespace Immutable.Passport
                     {
                         if (readySignalReceived == true)
                         {
+                            // Initialise Passport with provided parameters
                             await Instance.GetPassportImpl().Init(clientId, environment, redirectUri, logoutRedirectUri, deeplink);
                             return Instance;
                         }
@@ -95,43 +114,79 @@ namespace Immutable.Passport
             }
             else
             {
+                // Return the existing instance if already initialised
                 readySignalReceived = true;
                 return UniTask.FromResult(Instance);
             }
         }
 
+        /// <summary>
+        /// Initialises the appropriate web browser and sets up browser communication.
+        /// </summary>
+        /// <param name="engineStartupTimeoutMs">(Windows only) Timeout duration in milliseconds to wait for the default Windows browser engine to start.</param>
+        /// <param name="webBrowserClient">(Windows only) Custom Windows browser to use instead of the default browser in the SDK.</param>
         private async UniTask Initialise(
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-            int engineStartupTimeoutMs
+            int engineStartupTimeoutMs, IWindowsWebBrowserClient windowsWebBrowserClient
 #endif
         )
         {
             try
             {
-                BrowserCommunicationsManager communicationsManager = new BrowserCommunicationsManager(webBrowserClient);
-                communicationsManager.OnReady += () => readySignalReceived = true;
+                // Initialise the web browser client
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-                await ((WebBrowserClient)webBrowserClient).Init(engineStartupTimeoutMs);
+                if (windowsWebBrowserClient != null)
+                {
+                    // Use the provided custom Windows browser client
+                    this.webBrowserClient = new WindowsWebBrowserClientAdapter(windowsWebBrowserClient);
+                    await ((WindowsWebBrowserClientAdapter)this.webBrowserClient).Init();
+                }
+                else
+                {
+#if IMMUTABLE_CUSTOM_BROWSER
+                    throw new PassportException("When 'IMMUTABLE_CUSTOM_BROWSER' is defined in Scripting Define Symbols, " + 
+                        " 'windowsWebBrowserClient' must not be null.");
+#else
+                    // Initialise with default Windows browser client
+                    this.webBrowserClient = new WebBrowserClient();
+                    await ((WebBrowserClient)this.webBrowserClient).Init(engineStartupTimeoutMs);
 #endif
+                }
+#elif (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
+                // Initialise default browser client for Android, iOS, and macOS
+                webBrowserClient = new GreeBrowserClient();
+#else
+                throw new PassportException("Platform not supported");
+#endif
+
+                // Set up browser communication
+                BrowserCommunicationsManager communicationsManager = new BrowserCommunicationsManager(webBrowserClient);
+                // Mark ready when browser is initialised and game bridge file is loaded
+                communicationsManager.OnReady += () => readySignalReceived = true;
+
+                // Set up Passport implementation
                 passportImpl = new PassportImpl(communicationsManager);
+                // Subscribe to Passport authentication events
                 passportImpl.OnAuthEvent += OnPassportAuthEvent;
             }
             catch (Exception ex)
             {
-                // Reset values
+                // Reset everything on error
                 readySignalReceived = false;
                 Instance = null;
                 throw ex;
             }
         }
 
+
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+        /// <summary>
+        /// Handles clean-up when the application quits.
+        /// </summary>
         private void OnQuit()
         {
-            // Need to clean up UWB resources when quitting the game in the editor
-            // as the child engine process would still be alive
             Debug.Log($"{TAG} Quitting the Player");
-            ((WebBrowserClient)webBrowserClient).Dispose();
+            webBrowserClient.Dispose();
             Instance = null;
         }
 #endif

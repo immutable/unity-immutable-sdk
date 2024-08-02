@@ -2,11 +2,6 @@ using System.Net;
 using System;
 using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-using VoltstroStudios.UnityWebBrowser.Core;
-#else
-using Immutable.Browser.Gree;
-#endif
 using Immutable.Browser.Core;
 using Immutable.Passport.Model;
 using UnityEngine;
@@ -19,8 +14,10 @@ namespace Immutable.Passport.Core
 
     public interface IBrowserCommunicationsManager
     {
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
         event OnUnityPostMessageDelegate OnAuthPostMessage;
         event OnUnityPostMessageErrorDelegate OnPostMessageError;
+#endif
         void SetCallTimeout(int ms);
         void LaunchAuthURL(string url, string redirectUri);
         UniTask<string> Call(string fxName, string data = null, bool ignoreTimeout = false, Nullable<long> timeoutMs = null);
@@ -60,8 +57,10 @@ namespace Immutable.Passport.Core
         {
             this.webBrowserClient = webBrowserClient;
             this.webBrowserClient.OnUnityPostMessage += InvokeOnUnityPostMessage;
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
             this.webBrowserClient.OnAuthPostMessage += InvokeOnAuthPostMessage;
             this.webBrowserClient.OnPostMessageError += InvokeOnPostMessageError;
+#endif
         }
 
         #region Unity to Browser

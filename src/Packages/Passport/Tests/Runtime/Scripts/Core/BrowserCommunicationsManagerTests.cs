@@ -5,10 +5,6 @@ using Immutable.Passport.Model;
 using UnityEngine;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-#if UNITY_STANDALONE_WIN
-using VoltstroStudios.UnityWebBrowser.Core;
-using VoltstroStudios.UnityWebBrowser.Events;
-#endif
 using Immutable.Passport.Helpers;
 
 namespace Immutable.Passport.Core
@@ -207,6 +203,10 @@ namespace Immutable.Passport.Core
         public void LaunchAuthURL(string url, string redirectUri)
         {
             throw new NotImplementedException();
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

@@ -98,3 +98,6 @@ sample/AltTester.log
 
 # Crashes
 sample/mono_crash*
+
+# Vuplex
+sample/Assets/Vuplex*

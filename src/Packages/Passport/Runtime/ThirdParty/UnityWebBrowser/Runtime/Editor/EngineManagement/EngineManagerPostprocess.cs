@@ -3,7 +3,7 @@
 // 
 // This project is under the MIT license. See the LICENSE.md file for more details.
 
-#if UNITY_EDITOR && UNITY_STANDALONE_WIN
+#if !IMMUTABLE_CUSTOM_BROWSER && UNITY_EDITOR && UNITY_STANDALONE_WIN
 
 using System.Collections.Generic;
 using System.IO;
