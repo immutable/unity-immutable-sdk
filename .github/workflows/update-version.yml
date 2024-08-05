@@ -57,6 +57,6 @@ jobs:
       with:
         title: "chore: update version"
         body: "Update version in package.json"
-        branch: "chore/update-version"
+        branch: "chore/update-version-$VERSION"
         commit-message: "chore: update version"
         labels: release
