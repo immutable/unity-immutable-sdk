@@ -26,7 +26,7 @@ namespace Immutable.Browser.Core
             // macOS
             filePath = SCHEME_FILE + Path.GetFullPath(Application.dataPath) + MAC_DATA_DIRECTORY + PASSPORT_DATA_DIRECTORY_NAME + PASSPORT_HTML_FILE_NAME;
             filePath = filePath.Replace(" ", "%20");
-#elif UNITY_IPHONE
+#elif UNITY_IPHONE && !UNITY_EDITOR
             // iOS device
             filePath = Path.GetFullPath(Application.dataPath) + PASSPORT_DATA_DIRECTORY_NAME + PASSPORT_HTML_FILE_NAME;
 #elif UNITY_EDITOR_WIN
