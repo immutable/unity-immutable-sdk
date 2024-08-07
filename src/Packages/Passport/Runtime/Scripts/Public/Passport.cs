@@ -13,6 +13,9 @@ using Immutable.Passport.Model;
 using Immutable.Passport.Core;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace Immutable.Passport
 {
@@ -52,6 +55,10 @@ namespace Immutable.Passport
                 OnDeepLinkActivated(Application.absoluteURL);
             }
 #endif
+
+#if UNITY_EDITOR
+            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+#endif
         }
 
         /// <summary>
@@ -65,18 +72,13 @@ namespace Immutable.Passport
         /// <param name="engineStartupTimeoutMs">(Windows only) Timeout duration in milliseconds to wait for the default Windows browser engine to start.</param>
         /// <param name="webBrowserClient">(Windows only) Custom Windows browser to use instead of the default browser in the SDK.</param>
         public static UniTask<Passport> Init(
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-            string clientId, 
-            string environment, 
-            string redirectUri = null, 
-            string logoutRedirectUri = null,
-            int engineStartupTimeoutMs = 30000,
-            IWindowsWebBrowserClient windowsWebBrowserClient = null
-#else
             string clientId,
             string environment,
             string redirectUri = null,
             string logoutRedirectUri = null
+#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+            , int engineStartupTimeoutMs = 30000,
+            IWindowsWebBrowserClient windowsWebBrowserClient = null
 #endif
         )
         {
@@ -177,19 +179,6 @@ namespace Immutable.Passport
                 throw ex;
             }
         }
-
-
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-        /// <summary>
-        /// Handles clean-up when the application quits.
-        /// </summary>
-        private void OnQuit()
-        {
-            Debug.Log($"{TAG} Quitting the Player");
-            webBrowserClient.Dispose();
-            Instance = null;
-        }
-#endif
 
         /// <summary>
         /// Sets the timeout time for waiting for each call to respond (in milliseconds).
@@ -501,6 +490,71 @@ namespace Immutable.Passport
             {
                 OnAuthEvent.Invoke(authEvent);
             }
+        }
+
+        /// <summary>
+        /// Handles clean-up when the application quits
+        /// </summary>
+        private void OnQuit()
+        {
+            Debug.Log($"{TAG} Quitting the Player");
+
+#if UNITY_EDITOR
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+#endif
+
+            DisposeAll();
+        }
+
+#if UNITY_EDITOR
+        /// <summary>
+        /// Handles play mode state changes in the editor
+        /// </summary>
+        /// <param name="state">The current play mode state</param>
+        private void OnPlayModeStateChanged(PlayModeStateChange state)
+        {
+            // Dispose of all resources when exiting play mode
+            if (state == PlayModeStateChange.ExitingPlayMode)
+            {
+                DisposeAll();
+            }
+        }
+#endif
+
+        /// <summary>
+        /// Disposes of all resources and unsubscribes from events
+        /// </summary>
+        private void DisposeAll()
+        {
+            // Dispose of the web browser client for Windows only
+#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+            if (webBrowserClient != null)
+            {
+                webBrowserClient.Dispose();
+                webBrowserClient = null;
+            }
+#endif
+
+            // Unsubscribe from Passport authentication events 
+            // and dispose of the Passport implementation
+            if (passportImpl != null)
+            {
+                passportImpl.OnAuthEvent -= OnPassportAuthEvent;
+                passportImpl = null;
+            }
+
+            // Unsubscribe from application quitting event
+            Application.quitting -= OnQuit;
+
+#if UNITY_IPHONE || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
+            // Unsubscribe from deep link activation events on iOS and macOS
+            Application.deepLinkActivated -= OnDeepLinkActivated;
+#endif
+
+            // Reset static fields
+            Instance = null;
+            deeplink = null;
+            readySignalReceived = false;
         }
     }
 }
