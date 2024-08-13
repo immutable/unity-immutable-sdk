@@ -533,7 +533,7 @@ namespace Immutable.Passport
         {
             string response = await communicationsManager.Call(PassportFunction.LOGOUT);
             string logoutUrl = response.GetStringResult();
-            if (String.IsNullOrEmpty(logoutUrl))
+            if (string.IsNullOrEmpty(logoutUrl))
             {
                 throw new PassportException("Failed to get logout URL", PassportErrorType.AUTHENTICATION_ERROR);
             }

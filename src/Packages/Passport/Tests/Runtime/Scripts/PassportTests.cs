@@ -9,6 +9,7 @@ using Cysharp.Threading.Tasks;
 using Immutable.Browser.Core;
 using UnityEngine;
 using Immutable.Passport.Helpers;
+using UnityEngine.TestTools;
 
 namespace Immutable.Passport
 {
@@ -1072,6 +1073,7 @@ namespace Immutable.Passport
                 e = ex;
             }
 
+            LogAssert.Expect(LogType.Error, "[Immutable] [Passport Implementation] Failed to log out: Response is invalid!");
             Assert.NotNull(e);
 
             Assert.AreEqual(0, urlsOpened.Count);
@@ -1103,6 +1105,7 @@ namespace Immutable.Passport
                 e = ex;
             }
 
+            LogAssert.Expect(LogType.Error, "[Immutable] [Passport Implementation] Failed to log out: Failed to get logout URL");
             Assert.NotNull(e);
 
             Assert.AreEqual(0, urlsOpened.Count);

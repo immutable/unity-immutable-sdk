@@ -163,9 +163,7 @@ namespace Immutable.Passport.Core
             // Validate the deserialised response object
             if (response == null || string.IsNullOrEmpty(response.responseFor) || string.IsNullOrEmpty(response.requestId))
             {
-                string responseError = "Response from browser is incorrect. Check game bridge file.";
-                PassportLogger.Error(responseError);
-                throw new PassportException(responseError);
+                throw new PassportException("Response from browser is incorrect. Check game bridge file.");
             }
 
             string logMessage = $"{TAG} Response for: {response.responseFor} (request ID: {response.requestId}) : {message}";
