@@ -13,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Immutable.Browser.Core;
+using Immutable.Passport.Core.Logging;
 using Unity.Collections;
 using Unity.Profiling;
 using UnityEngine;
@@ -253,7 +254,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         public WebBrowserClient()
         {
 #if (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-            UnityEngine.Debug.LogWarning("Native Android and iOS WebViews cannot run in the Editor, so the Windows WebView is currently used to save your development time." + 
+            logger.Warn("Native Android and iOS WebViews cannot run in the Editor, so the Windows WebView is currently used to save your development time." + 
                 " Testing your game on an actual device or emulator is recommended to ensure proper functionality.");
 #endif
         }
@@ -264,8 +265,17 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         /// <exception cref="FileNotFoundException"></exception>
         public async UniTask Init(int engineStartupTimeout = 30000)
         {
+            // Set log level
+            logSeverity = PassportLogger.CurrentLogLevel switch
+            {
+                LogLevel.Debug => LogSeverity.Debug,
+                LogLevel.Warn => LogSeverity.Warn,
+                LogLevel.Error => LogSeverity.Error,
+                _ => LogSeverity.Info
+            };
+
             this.engineStartupTimeout = engineStartupTimeout;
-            UnityEngine.Debug.Log($"{TAG} Engine startup timeout: {engineStartupTimeout}");
+            logger.Debug($"{TAG} Engine startup timeout: {engineStartupTimeout}");
 
             // Get the path to the Windows UWB process
             EngineConfiguration engineConfiguration = new EngineConfiguration();

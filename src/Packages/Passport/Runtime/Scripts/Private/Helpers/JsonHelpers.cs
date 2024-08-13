@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using Immutable.Passport.Core.Logging;
 
 namespace Immutable.Passport.Helpers
 {
@@ -19,7 +20,7 @@ namespace Immutable.Passport.Helpers
             }
             catch (Exception e)
             {
-                Debug.Log($"Failed to deserialise {json}: {e.Message}");
+                PassportLogger.Debug($"Failed to deserialise {json}: {e.Message}");
                 return null;
             }
         }

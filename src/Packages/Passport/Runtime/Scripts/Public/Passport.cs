@@ -3,6 +3,7 @@ using System;
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
 #if !IMMUTABLE_CUSTOM_BROWSER
 using VoltstroStudios.UnityWebBrowser.Core;
+using VoltstroStudios.UnityWebBrowser.Shared;
 #endif
 #elif (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
 using Immutable.Browser.Gree;
@@ -11,6 +12,7 @@ using Immutable.Passport.Event;
 using Immutable.Browser.Core;
 using Immutable.Passport.Model;
 using Immutable.Passport.Core;
+using Immutable.Passport.Core.Logging;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 #if UNITY_EDITOR
@@ -38,6 +40,31 @@ namespace Immutable.Passport
         /// </summary>
         /// <seealso cref="Immutable.Passport.Event.PassportAuthEvent" />
         public event OnAuthEventDelegate OnAuthEvent;
+
+        /// <summary>
+        /// The log level for the SDK.
+        /// </summary>
+        /// <remarks>
+        /// The log level determines which messages are recorded based on their severity. The default value is <see cref="LogLevel.Info"/>.
+        /// <para>
+        /// See <see cref="Immutable.Passport.Core.Logging.LogLevel"/> for valid log levels and their meanings.
+        /// </para>
+        /// </remarks>
+        public static LogLevel LogLevel
+        {
+            get => _logLevel;
+            set
+            {
+                _logLevel = value;
+                PassportLogger.CurrentLogLevel = _logLevel;
+
+#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
+                SetDefaultWindowsBrowserLogLevel();
+#endif
+            }
+        }
+
+        private static LogLevel _logLevel = LogLevel.Info;
 
         private Passport()
         {
@@ -84,7 +111,7 @@ namespace Immutable.Passport
         {
             if (Instance == null)
             {
-                Debug.Log($"{TAG} Initialising Passport...");
+                PassportLogger.Info($"{TAG} Initialising Passport...");
                 Instance = new Passport();
 
                 // Start initialisation process
@@ -96,7 +123,7 @@ namespace Immutable.Passport
                     .ContinueWith(async () =>
                     {
                         // Wait for the ready signal
-                        Debug.Log($"{TAG} Waiting for ready signal...");
+                        PassportLogger.Info($"{TAG} Waiting for ready signal...");
                         await UniTask.WaitUntil(() => readySignalReceived == true);
                     })
                     .ContinueWith(async () =>
@@ -109,7 +136,7 @@ namespace Immutable.Passport
                         }
                         else
                         {
-                            Debug.Log($"{TAG} Failed to initialise Passport");
+                            PassportLogger.Error($"{TAG} Failed to initialise Passport");
                             throw new PassportException("Failed to initiliase Passport", PassportErrorType.INITALISATION_ERROR);
                         }
                     });
@@ -465,6 +492,25 @@ namespace Immutable.Passport
         }
 #endif
 
+#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
+        /// <summary>
+        /// Updates the log severity for the default Windows browser based on the current SDK log level.
+        /// </summary>
+        private static void SetDefaultWindowsBrowserLogLevel()
+        {
+            if (Instance?.webBrowserClient is WebBrowserClient browserClient)
+            {
+                browserClient.logSeverity = _logLevel switch
+                {
+                    LogLevel.Debug => LogSeverity.Debug,
+                    LogLevel.Warn => LogSeverity.Warn,
+                    LogLevel.Error => LogSeverity.Error,
+                    _ => LogSeverity.Info
+                };
+            }
+        }
+#endif
+
         private PassportImpl GetPassportImpl()
         {
             if (passportImpl != null)
@@ -497,7 +543,7 @@ namespace Immutable.Passport
         /// </summary>
         private void OnQuit()
         {
-            Debug.Log($"{TAG} Quitting the Player");
+            PassportLogger.Info($"{TAG} Cleaning up Passport...");
 
 #if UNITY_EDITOR
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;

@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Immutable.Passport;
+using Immutable.Passport.Core.Logging;
 
 public class SelectAuthMethodScript : MonoBehaviour
 {
@@ -68,6 +69,9 @@ public class SelectAuthMethodScript : MonoBehaviour
 
         try
         {
+            // Set the log level for the SDK
+            Passport.LogLevel = LogLevel.Info;
+
             // Initialise Passport
             string clientId = "ZJL7JvetcDFBNDlgRs5oJoxuAUUl6uQj";
             string environment = Immutable.Passport.Model.Environment.SANDBOX;
@@ -79,6 +83,7 @@ public class SelectAuthMethodScript : MonoBehaviour
         }
         catch (Exception ex)
         {
+            Debug.LogException(ex, this);
             ShowOutput($"Initialise Passport error: {ex.Message}");
         }
     }

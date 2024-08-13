@@ -19,18 +19,14 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
+using Immutable.Passport.Core.Logging;
 using UnityEngine;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 #if UNITY_2018_4_OR_NEWER
 using UnityEngine.Networking;
 #endif
 #if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
-using System.IO;
-using System.Text.RegularExpressions;
-using UnityEngine.Rendering;
 #endif
 #if UNITY_ANDROID
 using UnityEngine.Android;
@@ -45,7 +41,7 @@ using ErrorCallback = System.Action<string, string>;
 namespace Immutable.Browser.Gree
 {
 #if UNITY_IPHONE || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
-    public class Singleton 
+    public class Singleton
     {
         private static Singleton _instance;
         public Callback onJS;
@@ -143,42 +139,53 @@ namespace Immutable.Browser.Gree
 
 #if UNITY_IPHONE || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
         private delegate void DelegateMessage(string key, string message);
- 
-        [MonoPInvokeCallback(typeof(DelegateMessage))] 
-        private static void delegateMessageReceived(string key, string message) {
-            if (key == "CallOnLog") {
-                if (Singleton.Instance.onLog != null) {
+
+        [MonoPInvokeCallback(typeof(DelegateMessage))]
+        private static void delegateMessageReceived(string key, string message)
+        {
+            if (key == "CallOnLog")
+            {
+                if (Singleton.Instance.onLog != null)
+                {
                     Singleton.Instance.onLog(message);
                 }
             }
 
-            if (key == "CallFromJS") {
-                if (Singleton.Instance.onJS != null) {
-                    Debug.Log($"{TAG} ==== onJS callback running message: " + message);
+            if (key == "CallFromJS")
+            {
+                if (Singleton.Instance.onJS != null)
+                {
+                    PassportLogger.Debug($"{TAG} onJS: " + message);
                     Singleton.Instance.onJS(message);
                 }
                 return;
             }
 
-            if (key == "CallOnError" || key == "CallFromAuthCallbackError") {
-                if (Singleton.Instance.onError != null) {
-                    Debug.Log($"{TAG} ==== onError callback running message: " + message);
+            if (key == "CallOnError" || key == "CallFromAuthCallbackError")
+            {
+                if (Singleton.Instance.onError != null)
+                {
+                    PassportLogger.Debug($"{TAG} onError: " + message);
                     Singleton.Instance.onError(key, message);
                 }
                 return;
             }
 
-            if (key == "CallOnHttpError") {
-                if (Singleton.Instance.onHttpError != null) {
-                    Debug.Log($"{TAG} ==== onHttpError callback running message: " + message);
+            if (key == "CallOnHttpError")
+            {
+                if (Singleton.Instance.onHttpError != null)
+                {
+                    PassportLogger.Debug($"{TAG} onHttpError: " + message);
                     Singleton.Instance.onHttpError(key, message);
                 }
                 return;
             }
 
-            if (key == "CallFromAuthCallback") {
-                if (Singleton.Instance.onAuth != null) {
-                    Debug.Log($"{TAG} ==== CallFromAuthCallback callback running message: " + message);
+            if (key == "CallFromAuthCallback")
+            {
+                if (Singleton.Instance.onAuth != null)
+                {
+                    PassportLogger.Debug($"{TAG} CallFromAuthCallback: " + message);
                     Singleton.Instance.onAuth(message);
                 }
                 return;
@@ -229,7 +236,7 @@ namespace Immutable.Browser.Gree
             Application.ExternalCall("unityWebView.init");
 #elif UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_LINUX
             //TODO: UNSUPPORTED
-            Debug.LogError("Webview is not supported on this platform.");
+            PassportLogger.Error("Webview is not supported on this platform.");
 #elif UNITY_IPHONE || UNITY_STANDALONE_OSX || (UNITY_ANDROID && UNITY_EDITOR_OSX)
             webView = _CWebViewPlugin_Init(ua);
             Singleton.Instance.onJS = ((message) => CallFromJS(message));
@@ -243,7 +250,7 @@ namespace Immutable.Browser.Gree
             webView.Call("Init", ua);
             webView.Call("setCallback", new AndroidCallback((message) => handleMessage(message)));
 #else
-            Debug.LogError("Webview is not supported on this platform.");
+            Logger.Error("Webview is not supported on this platform.");
 #endif
         }
 
@@ -302,7 +309,7 @@ namespace Immutable.Browser.Gree
                 return;
             _CWebViewPlugin_LaunchAuthURL(webView, url);
 #else
-            Application.OpenURL(url);
+            UnityEngine.Application.OpenURL(url);
 #endif
         }
 

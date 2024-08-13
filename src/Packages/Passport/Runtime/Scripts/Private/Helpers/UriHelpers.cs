@@ -1,5 +1,5 @@
 using System;
-using UnityEngine;
+using Immutable.Passport.Core.Logging;
 
 namespace Immutable.Passport.Helpers
 {
@@ -25,7 +25,7 @@ namespace Immutable.Passport.Helpers
             }
             catch (Exception e)
             {
-                Debug.Log($"Failed to get query parameter {key}: {e.Message}");
+                PassportLogger.Debug($"Failed to get query parameter {key}: {e.Message}");
             }
             return null;
         }
