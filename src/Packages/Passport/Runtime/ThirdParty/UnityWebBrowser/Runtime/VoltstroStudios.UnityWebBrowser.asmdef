@@ -4,7 +4,8 @@
     "references": [
         "UniTask",
         "Unity.InputSystem",
-        "Immutable.Browser.Core"
+        "Immutable.Browser.Core",
+        "Immutable.Passport.Core.Logging"
     ],
     "includePlatforms": [
         "Editor",

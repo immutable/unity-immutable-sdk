@@ -1,4 +1,3 @@
-using System.Net;
 using System;
 using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
@@ -7,6 +6,8 @@ using Immutable.Passport.Model;
 using UnityEngine;
 using UnityEngine.Scripting;
 using Immutable.Passport.Helpers;
+using Immutable.Passport.Core.Logging;
+using Immutable.Passport.Event;
 
 namespace Immutable.Passport.Core
 {
@@ -95,13 +96,23 @@ namespace Immutable.Passport.Core
 
             // Call the function on the JS side
             string js = $"callFunction(\"{requestJson}\")";
-            Debug.Log($"{TAG} Call {fxName} (request ID: {requestId}, js: {js})");
+
+            if (fxName != PassportAnalytics.TRACK)
+            {
+                string dataString = data != null ? $": {data}" : "";
+                PassportLogger.Info($"{TAG} Call {fxName} (request ID: {requestId}){dataString}");
+            }
+            else
+            {
+                PassportLogger.Debug($"{TAG} Call {fxName} (request ID: {requestId}): {js}");
+            }
+
             webBrowserClient.ExecuteJs(js);
         }
 
         public void LaunchAuthURL(string url, string redirectUri)
         {
-            Debug.Log($"{TAG} LaunchAuthURL : {url}");
+            PassportLogger.Info($"{TAG} LaunchAuthURL : {url}");
             webBrowserClient.LaunchAuthURL(url, redirectUri);
         }
 
@@ -123,13 +134,12 @@ namespace Immutable.Passport.Core
 
         private void InvokeOnUnityPostMessage(string message)
         {
-            Debug.Log($"{TAG} InvokeOnUnityPostMessage: {message}");
             HandleResponse(message);
         }
 
         private void InvokeOnAuthPostMessage(string message)
         {
-            Debug.Log($"{TAG} InvokeOnAuthPostMessage: {message}");
+            PassportLogger.Info($"{TAG} Auth message received: {message}");
             if (OnAuthPostMessage != null)
             {
                 OnAuthPostMessage.Invoke(message);
@@ -138,7 +148,7 @@ namespace Immutable.Passport.Core
 
         private void InvokeOnPostMessageError(string id, string message)
         {
-            Debug.Log($"{TAG} InvokeOnPostMessageError id: {id} message: {message}");
+            PassportLogger.Info($"{TAG} Error message received ({id}): {message}");
             if (OnPostMessageError != null)
             {
                 OnPostMessageError.Invoke(id, message);
@@ -147,19 +157,32 @@ namespace Immutable.Passport.Core
 
         private void HandleResponse(string message)
         {
-            Debug.Log($"{TAG} HandleResponse message: " + message);
+            PassportLogger.Debug($"{TAG} Handle response message: " + message);
             BrowserResponse response = message.OptDeserializeObject<BrowserResponse>();
 
-            // Check if the reponse returned is valid and the task to return the reponse exists
-            if (response == null || String.IsNullOrEmpty(response.responseFor) || String.IsNullOrEmpty(response.requestId))
+            // Validate the deserialised response object
+            if (response == null || string.IsNullOrEmpty(response.responseFor) || string.IsNullOrEmpty(response.requestId))
             {
-                throw new PassportException($"Response from browser is incorrect. Check HTML/JS files.");
+                string responseError = "Response from browser is incorrect. Check game bridge file.";
+                PassportLogger.Error(responseError);
+                throw new PassportException(responseError);
             }
 
-            // Special case to detect if index.js is loaded
+            string logMessage = $"{TAG} Response for: {response.responseFor} (request ID: {response.requestId}) : {message}";
+            if (response.responseFor != PassportAnalytics.TRACK)
+            {
+                // Log info messages for valid responses not related to tracking
+                PassportLogger.Info(logMessage);
+            }
+            else
+            {
+                PassportLogger.Debug(logMessage);
+            }
+
+            // Handle special case where the response indicates that the browser is ready
             if (response.responseFor == INIT && response.requestId == INIT_REQUEST_ID)
             {
-                Debug.Log($"{TAG} Browser is ready");
+                PassportLogger.Info($"{TAG} Browser is ready");
                 if (OnReady != null)
                 {
                     OnReady.Invoke();
@@ -167,6 +190,7 @@ namespace Immutable.Passport.Core
                 return;
             }
 
+            // Handle the response if a matching task exists for the request ID
             string requestId = response.requestId;
             if (requestTaskMap.ContainsKey(requestId))
             {
@@ -174,7 +198,9 @@ namespace Immutable.Passport.Core
             }
             else
             {
-                throw new PassportException($"No TaskCompletionSource for request id {requestId} found.");
+                string errorMsg = $"No TaskCompletionSource for request id {requestId} found.";
+                PassportLogger.Error(errorMsg);
+                throw new PassportException(errorMsg);
             }
         }
 
@@ -199,7 +225,7 @@ namespace Immutable.Passport.Core
             }
             catch (Exception ex)
             {
-                Debug.LogError($"{TAG} Parse passport type error: {ex.Message}");
+                PassportLogger.Error($"{TAG} Parse passport type error: {ex.Message}");
             }
             return new PassportException(response.error ?? "Failed to parse error");
         }

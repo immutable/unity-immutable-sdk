@@ -7,7 +7,7 @@ using Immutable.Passport.Model;
 using Immutable.Passport.Core;
 using Immutable.Passport.Helpers;
 using Cysharp.Threading.Tasks;
-using UnityEngine.Analytics;
+using Immutable.Passport.Core.Logging;
 #if UNITY_ANDROID
 using UnityEngine.Android;
 #endif
@@ -143,6 +143,12 @@ namespace Immutable.Passport
             }
         }
 
+        /// <summary>
+        /// Attempts to re-login using saved credentials.
+        /// </summary>
+        /// <returns>
+        /// Returns true if re-login is successful, otherwise false.
+        /// </returns>
         private async UniTask<bool> Relogin()
         {
             try
@@ -153,13 +159,17 @@ namespace Immutable.Passport
                 Track(PassportAnalytics.EventName.COMPLETE_RELOGIN, success: true);
                 SendAuthEvent(PassportAuthEvent.ReloginSuccess);
                 isLoggedIn = true;
+
                 return true;
             }
             catch (Exception ex)
             {
-                Debug.Log($"{TAG} Failed to login to Passport using saved credentials: {ex.Message}");
+                // Log a warning if re-login fails.
+                PassportLogger.Warn($"{TAG} Failed to login using saved credentials. " +
+                    $"Please check if user has saved credentials first by calling HasCredentialsSaved() : {ex.Message}");
                 isLoggedIn = false;
             }
+
             Track(PassportAnalytics.EventName.COMPLETE_RELOGIN, success: false);
             SendAuthEvent(PassportAuthEvent.ReloginFailed);
             return false;
@@ -211,11 +221,16 @@ namespace Immutable.Passport
             }
         }
 
+        /// <summary>
+        /// Attempts to reconnect using saved credentials.
+        /// </summary>
+        /// <returns>True if reconnect is successful, otherwise false.</returns>
         private async UniTask<bool> Reconnect()
         {
             try
             {
                 SendAuthEvent(PassportAuthEvent.Reconnecting);
+
                 string callResponse = await communicationsManager.Call(PassportFunction.RECONNECT);
 
                 Track(PassportAnalytics.EventName.COMPLETE_RECONNECT, success: true);
@@ -225,9 +240,13 @@ namespace Immutable.Passport
             }
             catch (Exception ex)
             {
-                Debug.Log($"{TAG} Failed to connect to Passport using saved credentials: {ex.Message}");
+                // Log a warning if reconnect fails.
+                PassportLogger.Warn($"{TAG} Failed to connect using saved credentials. " +
+                    $"Please check if user has saved credentials first by calling HasCredentialsSaved() : {ex.Message}");
+
                 isLoggedIn = false;
             }
+
             Track(PassportAnalytics.EventName.COMPLETE_RECONNECT, success: false);
             SendAuthEvent(PassportAuthEvent.ReconnectFailed);
             return false;
@@ -294,7 +313,7 @@ namespace Immutable.Passport
         {
             try
             {
-                Debug.Log($"{TAG} OnDeepLinkActivated URL: {url}");
+                PassportLogger.Info($"{TAG} Received deeplink URL: {url}");
 
                 Uri uri = new Uri(url);
                 string domain = $"{uri.Scheme}://{uri.Host}{uri.AbsolutePath}";
@@ -312,9 +331,9 @@ namespace Immutable.Passport
                     await CompleteLoginPKCEFlow(url);
                 }
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Debug.LogError($"{TAG} OnDeepLinkActivated error {url}: {e.Message}");
+                PassportLogger.Error($"{TAG} Deeplink error {url}: {ex.Message}");
             }
         }
 
@@ -334,7 +353,7 @@ namespace Immutable.Passport
             catch (Exception ex)
             {
                 string errorMessage = $"Failed to log in using PKCE flow: {ex.Message}";
-                Debug.Log($"{TAG} {errorMessage}");
+                PassportLogger.Error($"{TAG} {errorMessage}");
 
                 Track(PassportAnalytics.EventName.COMPLETE_LOGIN_PKCE, success: false);
                 SendAuthEvent(PassportAuthEvent.LoginPKCEFailed);
@@ -357,7 +376,7 @@ namespace Immutable.Passport
             catch (Exception ex)
             {
                 string errorMessage = $"Failed to connect using PKCE flow: {ex.Message}";
-                Debug.Log($"{TAG} {errorMessage}");
+                PassportLogger.Error($"{TAG} {errorMessage}");
 
                 Track(PassportAnalytics.EventName.COMPLETE_CONNECT_IMX_PKCE, success: false);
                 SendAuthEvent(PassportAuthEvent.ConnectImxPKCEFailed);
@@ -387,17 +406,17 @@ namespace Immutable.Passport
                 }
                 else
                 {
-                    Debug.Log($"{TAG} Failed to get PKCE Auth URL");
+                    PassportLogger.Error($"{TAG} Failed to get PKCE Auth URL");
                 }
             }
             catch (Exception e)
             {
-                Debug.Log($"{TAG} Get PKCE Auth URL error: {e.Message}");
+                PassportLogger.Error($"{TAG} Get PKCE Auth URL error: {e.Message}");
             }
 
             await UniTask.SwitchToMainThread();
             TrySetPKCEException(new PassportException(
-                "Something went wrong, please call ConnectImxPKCE() again",
+                "Something went wrong, please call LoginPKCE() or ConnectImxPKCE() again",
                 PassportErrorType.AUTHENTICATION_ERROR
             ));
         }
@@ -491,16 +510,15 @@ namespace Immutable.Passport
 #if UNITY_ANDROID
         public void OnLoginPKCEDismissed(bool completing)
         {
-            Debug.Log($"{TAG} On Login PKCE Dismissed");
             if (!completing && !isLoggedIn)
             {
                 // User hasn't entered all required details (e.g. email address) into Passport yet
-                Debug.Log($"{TAG} Login PKCE dismissed before completing the flow");
+                PassportLogger.Info($"{TAG} Login PKCE dismissed before completing the flow");
                 TrySetPKCECanceled();
             }
             else
             {
-                Debug.Log($"{TAG} Login PKCE dismissed by user or SDK");
+                PassportLogger.Info($"{TAG} Login PKCE dismissed by user or SDK");
             }
             loginPKCEUrl = null;
         }
@@ -544,7 +562,7 @@ namespace Immutable.Passport
             catch (Exception ex)
             {
                 string errorMessage = $"Failed to log out: {ex.Message}";
-                Debug.Log($"{TAG} {errorMessage}");
+                PassportLogger.Error($"{TAG} {errorMessage}");
 
                 Track(PassportAnalytics.EventName.COMPLETE_LOGOUT, success: false);
                 SendAuthEvent(PassportAuthEvent.LogoutFailed);
@@ -566,7 +584,7 @@ namespace Immutable.Passport
             catch (Exception ex)
             {
                 string errorMessage = $"Failed to log out: {ex.Message}";
-                Debug.Log($"{TAG} {errorMessage}");
+                PassportLogger.Error($"{TAG} {errorMessage}");
 
                 Track(PassportAnalytics.EventName.COMPLETE_LOGOUT_PKCE, success: false);
                 SendAuthEvent(PassportAuthEvent.LogoutPKCEFailed);
@@ -617,7 +635,7 @@ namespace Immutable.Passport
             catch (Exception ex)
             {
                 string errorMessage = $"Failed to check if there are credentials saved: {ex.Message}";
-                Debug.Log($"{TAG} {errorMessage}");
+                PassportLogger.Debug($"{TAG} {errorMessage}");
                 SendAuthEvent(PassportAuthEvent.CheckForSavedCredentialsFailed);
                 return false;
             }
@@ -764,7 +782,7 @@ namespace Immutable.Passport
             }
             else
             {
-                Debug.LogError($"{TAG} id: {id} err: {message}");
+                PassportLogger.Error($"{TAG} id: {id} err: {message}");
             }
         }
 
@@ -774,14 +792,14 @@ namespace Immutable.Passport
 
             if (message == "")
             {
-                Debug.Log($"{TAG} Get PKCE Auth URL user cancelled");
+                PassportLogger.Warn($"{TAG} Get PKCE Auth URL user cancelled");
                 TrySetPKCECanceled();
             }
             else
             {
-                Debug.Log($"{TAG} Get PKCE Auth URL error: {message}");
+                PassportLogger.Error($"{TAG} Get PKCE Auth URL error: {message}");
                 TrySetPKCEException(new PassportException(
-                    "Something went wrong, please call ConnectPKCEImx() again",
+                    "Something went wrong, please call LoginPKCE() or ConnectPKCEImx() again",
                     PassportErrorType.AUTHENTICATION_ERROR
                 ));
             }
@@ -791,46 +809,46 @@ namespace Immutable.Passport
 
         private void TrySetPKCEResult(bool result)
         {
-            Debug.Log($"{TAG} Trying to set PKCE result to {result}...");
+            PassportLogger.Debug($"{TAG} Trying to set PKCE result to {result}...");
             if (pkceCompletionSource != null)
             {
                 pkceCompletionSource.TrySetResult(result);
             }
             else
             {
-                Debug.LogError($"{TAG} PKCE completed with {result} but unable to bind result");
+                PassportLogger.Error($"{TAG} PKCE completed with {result} but unable to bind result");
             }
         }
 
         private void TrySetPKCEException(Exception exception)
         {
-            Debug.Log($"{TAG} Trying to set PKCE exception...");
+            PassportLogger.Debug($"{TAG} Trying to set PKCE exception...");
             if (pkceCompletionSource != null)
             {
                 pkceCompletionSource.TrySetException(exception);
             }
             else
             {
-                Debug.LogError($"{TAG} {exception.Message}");
+                PassportLogger.Error($"{TAG} {exception.Message}");
             }
         }
 
         private void TrySetPKCECanceled()
         {
-            Debug.Log($"{TAG} Trying to set PKCE canceled...");
+            PassportLogger.Debug($"{TAG} Trying to set PKCE canceled...");
             if (pkceCompletionSource != null)
             {
                 pkceCompletionSource.TrySetCanceled();
             }
             else
             {
-                Debug.LogWarning($"{TAG} PKCE canceled");
+                PassportLogger.Warn($"{TAG} PKCE canceled");
             }
         }
 
         private void SendAuthEvent(PassportAuthEvent authEvent)
         {
-            Debug.Log($"{TAG} Send auth event: {authEvent}");
+            PassportLogger.Debug($"{TAG} Send auth event: {authEvent}");
             if (OnAuthEvent != null)
             {
                 OnAuthEvent.Invoke(authEvent);

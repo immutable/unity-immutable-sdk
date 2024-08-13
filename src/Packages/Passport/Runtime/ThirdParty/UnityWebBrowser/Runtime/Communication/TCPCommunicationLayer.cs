@@ -65,7 +65,6 @@ namespace VoltstroStudios.UnityWebBrowser.Communication
         }
 
         private bool CheckAvailableServerPort(int port) {
-            Debug.Log($"Checking Port {port}");
             bool isAvailable = true;
 
             IPGlobalProperties ipGlobalProperties = IPGlobalProperties.GetIPGlobalProperties();
@@ -77,8 +76,6 @@ namespace VoltstroStudios.UnityWebBrowser.Communication
                     break;
                 }
             }
-
-            Debug.Log($"Port {port} available = {isAvailable}");
 
             return isAvailable;
         }

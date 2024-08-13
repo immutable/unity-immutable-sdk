@@ -1,16 +1,8 @@
 {
-    "name": "unity-webview",
+    "name": "Immutable.Passport.Core.Logging",
     "rootNamespace": "",
-    "references": [
-        "GUID:95d173a3e67b39d40803000ed05b79f4",
-        "GUID:a0996310e1aa34b7fbf14df5d255461d"
-    ],
-    "includePlatforms": [
-        "Android",
-        "Editor",
-        "iOS",
-        "macOSStandalone"
-    ],
+    "references": [],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

@@ -6,7 +6,8 @@
         "UniTask",
         "Immutable.Browser.Core",
         "unity-webview",
-        "Immutable.Passport.Runtime.Private"
+        "Immutable.Passport.Runtime.Private",
+        "Immutable.Passport.Core.Logging"
     ],
     "includePlatforms": [
         "Android",
@@ -19,7 +20,8 @@
     "allowUnsafeCode": false,
     "overrideReferences": true,
     "precompiledReferences": [
-        "Newtonsoft.Json.dll"
+        "Newtonsoft.Json.dll",
+        "VoltstroStudios.UnityWebBrowser.Shared.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],

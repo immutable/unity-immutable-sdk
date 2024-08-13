@@ -5,7 +5,8 @@
         "VoltstroStudios.UnityWebBrowser",
         "UniTask",
         "Immutable.Browser.Core",
-        "unity-webview"
+        "unity-webview",
+        "Immutable.Passport.Core.Logging"
     ],
     "includePlatforms": [
         "Android",
