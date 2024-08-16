@@ -1,9 +1,11 @@
 using System;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Immutable.Passport;
 using Immutable.Passport.Model;
+using Cysharp.Threading.Tasks;
 
 public class ZkEvmSendTransactionScript : MonoBehaviour
 {
@@ -11,6 +13,7 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
     [SerializeField] private Text Output;
 
     [SerializeField] private Toggle ConfirmToggle;
+    [SerializeField] private Toggle GetTrasactionReceiptToggle;
     [SerializeField] private InputField ToInputField;
     [SerializeField] private InputField ValueInputField;
     [SerializeField] private InputField DataInputField;
@@ -24,6 +27,12 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
         {
             // Get Passport instance
             Passport = Passport.Instance;
+
+            // Show get transaction receipt option if send transaction with confirmation toggle is off
+            ConfirmToggle.onValueChanged.AddListener(delegate
+            {
+                GetTrasactionReceiptToggle.gameObject.SetActive(!ConfirmToggle.isOn);
+            });
         }
         else
         {
@@ -39,7 +48,7 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
     /// </summary>
     public async void SendTransaction()
     {
-        ShowOutput("Called sendTransaction()...");
+        ShowOutput("Sending transaction...");
 
         try
         {
@@ -51,22 +60,67 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
                 data = DataInputField.text
             };
 
-            // Send transaction with or without confirmation
+            // Check if confirmation is requested
             if (ConfirmToggle.isOn)
             {
+                // Send transaction with confirmation and display transaction status upon completion
                 TransactionReceiptResponse response = await Passport.ZkEvmSendTransactionWithConfirmation(request);
                 ShowOutput($"Transaction hash: {response.transactionHash}\nStatus: {GetTransactionStatusString(response.status)}");
             }
             else
             {
-                string response = await Passport.ZkEvmSendTransaction(request);
-                ShowOutput($"Transaction hash: {response}");
+                // Send transaction without confirmation
+                string transactionHash = await Passport.ZkEvmSendTransaction(request);
+
+                // Check if receipt is requested
+                if (GetTrasactionReceiptToggle.isOn)
+                {
+                    // Poll for the receipt and display transaction status
+                    string? status = await PollStatus(transactionHash);
+                    ShowOutput($"Transaction hash: {transactionHash}\nStatus: {GetTransactionStatusString(status)}");
+                }
+                else
+                {
+                    ShowOutput($"Transaction hash: {transactionHash}");
+                }
             }
         }
         catch (Exception ex)
         {
-            ShowOutput($"Failed to request accounts: {ex.Message}");
+            ShowOutput($"Failed to send transaction: {ex.Message}");
         }
+    }
+
+    /// <summary>
+    /// Polls the status of the given transaction hash until either a status is retrieved or a timeout occurs.
+    /// </summary>
+    /// <param name="transactionHash">The hash of the transaction to poll.</param>
+    /// <returns>The status of the transaction, or null if a timeout occurs.</returns>
+    static async UniTask<string?> PollStatus(string transactionHash)
+    {
+        var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        try
+        {
+            while (!cancellationTokenSource.Token.IsCancellationRequested)
+            {
+                TransactionReceiptResponse response = await Passport.Instance.ZkEvmGetTransactionReceipt(transactionHash);
+                if (response.status == null)
+                {
+                    // The transaction is still being processed, poll for status again
+                    await UniTask.Delay(delayTimeSpan: TimeSpan.FromSeconds(1), cancellationToken: cancellationTokenSource.Token);
+                }
+                else
+                {
+                    return response.status;
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Task was canceled due to timeout
+        }
+
+        return null; // Timeout or could not get transaction receipt
     }
 
     /// <summary>
@@ -74,7 +128,7 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
     /// </summary>
     /// <param name="status">The transaction status code.</param>
     /// <returns>A string representing the status.</returns>
-    private string GetTransactionStatusString(string status)
+    private string GetTransactionStatusString(string? status)
     {
         switch (status)
         {
