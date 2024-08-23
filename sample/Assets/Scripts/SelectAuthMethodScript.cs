@@ -73,7 +73,7 @@ public class SelectAuthMethodScript : MonoBehaviour
             Passport.LogLevel = LogLevel.Info;
 
             // Initialise Passport
-            string clientId = "ZJL7JvetcDFBNDlgRs5oJoxuAUUl6uQj";
+            string clientId = "oSy1DjhTjSgw0psu4Kkg7EpGcR1CtEpj";
             string environment = Immutable.Passport.Model.Environment.SANDBOX;
 
             Passport passport = await Passport.Init(clientId, environment, redirectUri, logoutRedirectUri);
