@@ -435,6 +435,17 @@ namespace Immutable.Passport
         }
 
         /// <summary>
+        /// Signs the given value and types for the given domain using the logged-in Passport account.
+        /// <returns>
+        /// The signed payload string
+        /// </returns>
+        /// </summary>
+        public async UniTask<string> ZkEvmSignTypedDataV4(string domain, string types, string message)
+        {
+            return await GetPassportImpl().ZkEvmSignTypedDataV4(domain, types, message);
+        }
+
+        /// <summary>
         /// Retrieves the transaction information of a given transaction hash. This function uses the Ethereum JSON-RPC <c>eth_getTransactionReceipt</c> method.
         /// <returns>
         /// The receipt of the transaction or null if it is still processing.

@@ -746,6 +746,13 @@ namespace Immutable.Passport
             return callResponse.OptDeserializeObject<TransactionReceiptResponse>();
         }
 
+        public async UniTask<string> ZkEvmSignTypedDataV4(string domain, string types, string message)
+        {
+            string json = $"{{\"domain\": {domain}, \"types\": {types}, \"message\": {message}}}"; ;
+            string callResponse = await communicationsManager.Call(PassportFunction.ZK_EVM.SIGN_TYPED_DATA_v4, json);
+            return callResponse.GetStringResult();
+        }
+
         public async UniTask<TransactionReceiptResponse> ZkEvmGetTransactionReceipt(string hash)
         {
             string json = JsonUtility.ToJson(new TransactionReceiptRequest()
