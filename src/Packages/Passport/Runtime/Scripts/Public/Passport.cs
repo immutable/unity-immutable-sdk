@@ -440,9 +440,9 @@ namespace Immutable.Passport
         /// The signed payload string
         /// </returns>
         /// </summary>
-        public async UniTask<string> ZkEvmSignTypedDataV4(string domain, string types, string message)
+        public async UniTask<string> ZkEvmSignTypedDataV4(string payload)
         {
-            return await GetPassportImpl().ZkEvmSignTypedDataV4(domain, types, message);
+            return await GetPassportImpl().ZkEvmSignTypedDataV4(payload);
         }
 
         /// <summary>
