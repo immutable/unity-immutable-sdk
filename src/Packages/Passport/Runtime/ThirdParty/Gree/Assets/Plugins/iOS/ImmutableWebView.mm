@@ -31,7 +31,7 @@ extern "C" typedef void (*DelegateCallbackFunction)(const char * key, const char
 DelegateCallbackFunction delegateCallback = NULL;
 
 // cf. https://stackoverflow.com/questions/26383031/wkwebview-causes-my-view-controller-to-leak/33365424#33365424
-@interface WeakScriptMessageDelegate : NSObject<WKScriptMessageHandler>
+@interface ImmutableWeakScriptMessageDelegate : NSObject<WKScriptMessageHandler>
 
 @property (nonatomic, weak) id<WKScriptMessageHandler> scriptDelegate;
 
@@ -39,7 +39,7 @@ DelegateCallbackFunction delegateCallback = NULL;
 
 @end
 
-@implementation WeakScriptMessageDelegate
+@implementation ImmutableWeakScriptMessageDelegate
 
 - (instancetype)initWithDelegate:(id<WKScriptMessageHandler>)scriptDelegate
 {
@@ -87,17 +87,17 @@ DelegateCallbackFunction delegateCallback = NULL;
 }
 @end
 
-@interface CWebViewPlugin : NSObject<WKUIDelegate, WKNavigationDelegate, WKScriptMessageHandler, ASWebAuthenticationPresentationContextProviding>
+@interface CImmutableWebViewPlugin : NSObject<WKUIDelegate, WKNavigationDelegate, WKScriptMessageHandler, ASWebAuthenticationPresentationContextProviding>
 {
     WKWebView *webView;
 }
 @end
 
-@implementation CWebViewPlugin
+@implementation CImmutableWebViewPlugin
 
 static WKProcessPool *_sharedProcessPool;
 static NSMutableArray *_instances = [[NSMutableArray alloc] init];
-static CWebViewPlugin *__delegate = nil;
+static CImmutableWebViewPlugin *__delegate = nil;
 static ASWebAuthenticationSession *_authSession;
 
 - (id)initWithUa:(const char *)ua
@@ -110,9 +110,9 @@ static ASWebAuthenticationSession *_authSession;
 
     WKWebViewConfiguration *configuration = [[WKWebViewConfiguration alloc] init];
     WKUserContentController *controller = [[WKUserContentController alloc] init];
-    [controller addScriptMessageHandler:[[WeakScriptMessageDelegate alloc] initWithDelegate:self] name:@"unityControl"];
-    [controller addScriptMessageHandler:[[WeakScriptMessageDelegate alloc] initWithDelegate:self] name:@"saveDataURL"];
-    [controller addScriptMessageHandler:[[WeakScriptMessageDelegate alloc] initWithDelegate:self] name:@"logHandler"];
+    [controller addScriptMessageHandler:[[ImmutableWeakScriptMessageDelegate alloc] initWithDelegate:self] name:@"unityControl"];
+    [controller addScriptMessageHandler:[[ImmutableWeakScriptMessageDelegate alloc] initWithDelegate:self] name:@"saveDataURL"];
+    [controller addScriptMessageHandler:[[ImmutableWeakScriptMessageDelegate alloc] initWithDelegate:self] name:@"logHandler"];
     NSString *str = @"\
         window.Unity = { \
         call: function(msg) { \
@@ -185,7 +185,7 @@ static ASWebAuthenticationSession *_authSession;
 {
     // cf. https://stackoverflow.com/questions/33156567/getting-all-cookies-from-wkwebview/49744695#49744695
     _sharedProcessPool = [[WKProcessPool alloc] init];
-    [_instances enumerateObjectsUsingBlock:^(CWebViewPlugin *obj, NSUInteger idx, BOOL *stop) {
+    [_instances enumerateObjectsUsingBlock:^(CImmutableWebViewPlugin *obj, NSUInteger idx, BOOL *stop) {
         if ([obj->webView isKindOfClass:[WKWebView class]]) {
             WKWebView *webView = (WKWebView *)obj->webView;
             webView.configuration.processPool = _sharedProcessPool;
@@ -401,73 +401,73 @@ static ASWebAuthenticationSession *_authSession;
 @end
 
 extern "C" {
-    void *_CWebViewPlugin_Init(const char *ua);
-    void _CWebViewPlugin_Destroy(void *instance);
-    void _CWebViewPlugin_LoadURL(void *instance, const char *url);
-    void _CWebViewPlugin_EvaluateJS(void *instance, const char *url);
-    void _CWebViewPlugin_SetDelegate(DelegateCallbackFunction callback);
-    void _CWebViewPlugin_LaunchAuthURL(void *instance, const char *url);
-    void _CWebViewPlugin_ClearCache(void *instance, BOOL includeDiskFiles);
-    void _CWebViewPlugin_ClearStorage(void *instance);
+    void *_CImmutableWebViewPlugin_Init(const char *ua);
+    void _CImmutableWebViewPlugin_Destroy(void *instance);
+    void _CImmutableWebViewPlugin_LoadURL(void *instance, const char *url);
+    void _CImmutableWebViewPlugin_EvaluateJS(void *instance, const char *url);
+    void _CImmutableWebViewPlugin_SetDelegate(DelegateCallbackFunction callback);
+    void _CImmutableWebViewPlugin_LaunchAuthURL(void *instance, const char *url);
+    void _CImmutableWebViewPlugin_ClearCache(void *instance, BOOL includeDiskFiles);
+    void _CImmutableWebViewPlugin_ClearStorage(void *instance);
 }
 
-void _CWebViewPlugin_SetDelegate(DelegateCallbackFunction callback) {
+void _CImmutableWebViewPlugin_SetDelegate(DelegateCallbackFunction callback) {
     delegateCallback = callback;
 }
 
-void *_CWebViewPlugin_Init(const char *ua)
+void *_CImmutableWebViewPlugin_Init(const char *ua)
 {
-    CWebViewPlugin *webViewPlugin = [[CWebViewPlugin alloc] initWithUa:ua];
+    CImmutableWebViewPlugin *webViewPlugin = [[CImmutableWebViewPlugin alloc] initWithUa:ua];
     [_instances addObject:webViewPlugin];
     return (__bridge_retained void *)webViewPlugin;
 }
 
-void _CWebViewPlugin_Destroy(void *instance)
+void _CImmutableWebViewPlugin_Destroy(void *instance)
 {
     if (instance == NULL)
         return;
-    CWebViewPlugin *webViewPlugin = (__bridge_transfer CWebViewPlugin *)instance;
+    CImmutableWebViewPlugin *webViewPlugin = (__bridge_transfer CImmutableWebViewPlugin *)instance;
     [_instances removeObject:webViewPlugin];
     [webViewPlugin dispose];
     webViewPlugin = nil;
 }
 
-void _CWebViewPlugin_LoadURL(void *instance, const char *url)
+void _CImmutableWebViewPlugin_LoadURL(void *instance, const char *url)
 {
     if (instance == NULL)
         return;
-    CWebViewPlugin *webViewPlugin = (__bridge CWebViewPlugin *)instance;
+    CImmutableWebViewPlugin *webViewPlugin = (__bridge CImmutableWebViewPlugin *)instance;
     [webViewPlugin loadURL:url];
 }
 
-void _CWebViewPlugin_EvaluateJS(void *instance, const char *js)
+void _CImmutableWebViewPlugin_EvaluateJS(void *instance, const char *js)
 {
     if (instance == NULL)
         return;
-    CWebViewPlugin *webViewPlugin = (__bridge CWebViewPlugin *)instance;
+    CImmutableWebViewPlugin *webViewPlugin = (__bridge CImmutableWebViewPlugin *)instance;
     [webViewPlugin evaluateJS:js];
 }
 
-void _CWebViewPlugin_LaunchAuthURL(void *instance, const char *url)
+void _CImmutableWebViewPlugin_LaunchAuthURL(void *instance, const char *url)
 {
     if (instance == NULL)
         return;
-    CWebViewPlugin *webViewPlugin = (__bridge CWebViewPlugin *)instance;
+    CImmutableWebViewPlugin *webViewPlugin = (__bridge CImmutableWebViewPlugin *)instance;
     [webViewPlugin launchAuthURL:url];
 }
 
-void _CWebViewPlugin_ClearCache(void *instance, BOOL includeDiskFiles)
+void _CImmutableWebViewPlugin_ClearCache(void *instance, BOOL includeDiskFiles)
 {
     if (instance == NULL)
         return;
-    CWebViewPlugin *webViewPlugin = (__bridge CWebViewPlugin *)instance;
+    CImmutableWebViewPlugin *webViewPlugin = (__bridge CImmutableWebViewPlugin *)instance;
     [webViewPlugin clearCache:includeDiskFiles];
 }
 
-void _CWebViewPlugin_ClearStorage(void *instance)
+void _CImmutableWebViewPlugin_ClearStorage(void *instance)
 {
     if (instance == NULL)
         return;
-    CWebViewPlugin *webViewPlugin = (__bridge CWebViewPlugin *)instance;
+    CImmutableWebViewPlugin *webViewPlugin = (__bridge CImmutableWebViewPlugin *)instance;
     [webViewPlugin clearStorage];
 }

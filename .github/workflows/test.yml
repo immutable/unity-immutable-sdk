@@ -25,13 +25,13 @@ jobs:
           projectPath: './sample'
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           testMode: 'EditMode'
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: Test results
           path: ${{ steps.passportTest.outputs.artifactsPath }}
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: Coverage results
