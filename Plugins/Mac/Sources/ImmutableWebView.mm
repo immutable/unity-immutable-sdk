@@ -374,26 +374,26 @@ static ASWebAuthenticationSession *_authSession;
 @end
 
 extern "C" {
-void *_CWebViewPlugin_Init(const char *ua);
-void _CWebViewPlugin_Destroy(void *instance);
-void _CWebViewPlugin_LoadURL(void *instance, const char *url);
-void _CWebViewPlugin_EvaluateJS(void *instance, const char *url);
-void _CWebViewPlugin_SetDelegate(DelegateCallbackFunction callback);
-void _CWebViewPlugin_LaunchAuthURL(void *instance, const char *url, const char *redirectUri);
+void *_CImmutableWebViewPlugin_Init(const char *ua);
+void _CImmutableWebViewPlugin_Destroy(void *instance);
+void _CImmutableWebViewPlugin_LoadURL(void *instance, const char *url);
+void _CImmutableWebViewPlugin_EvaluateJS(void *instance, const char *url);
+void _CImmutableWebViewPlugin_SetDelegate(DelegateCallbackFunction callback);
+void _CImmutableWebViewPlugin_LaunchAuthURL(void *instance, const char *url, const char *redirectUri);
 }
 
-void _CWebViewPlugin_SetDelegate(DelegateCallbackFunction callback) {
+void _CImmutableWebViewPlugin_SetDelegate(DelegateCallbackFunction callback) {
     delegateCallback = callback;
 }
 
-void *_CWebViewPlugin_Init(const char *ua)
+void *_CImmutableWebViewPlugin_Init(const char *ua)
 {
     CWebViewPlugin *webViewPlugin = [[CWebViewPlugin alloc] initWithUa:ua];
     [_instances addObject:webViewPlugin];
     return (__bridge_retained void *)webViewPlugin;
 }
 
-void _CWebViewPlugin_Destroy(void *instance)
+void _CImmutableWebViewPlugin_Destroy(void *instance)
 {
     if (instance == NULL)
         return;
@@ -403,7 +403,7 @@ void _CWebViewPlugin_Destroy(void *instance)
     webViewPlugin = nil;
 }
 
-void _CWebViewPlugin_LoadURL(void *instance, const char *url)
+void _CImmutableWebViewPlugin_LoadURL(void *instance, const char *url)
 {
     if (instance == NULL)
         return;
@@ -411,7 +411,7 @@ void _CWebViewPlugin_LoadURL(void *instance, const char *url)
     [webViewPlugin loadURL:url];
 }
 
-void _CWebViewPlugin_EvaluateJS(void *instance, const char *js)
+void _CImmutableWebViewPlugin_EvaluateJS(void *instance, const char *js)
 {
     if (instance == NULL)
         return;
@@ -419,7 +419,7 @@ void _CWebViewPlugin_EvaluateJS(void *instance, const char *js)
     [webViewPlugin evaluateJS:js];
 }
 
-void _CWebViewPlugin_LaunchAuthURL(void *instance, const char *url, const char *redirectUri)
+void _CImmutableWebViewPlugin_LaunchAuthURL(void *instance, const char *url, const char *redirectUri)
 {
     if (instance == NULL)
         return;

@@ -3,17 +3,17 @@
 <plist version="1.0">
 <dict>
 	<key>BuildMachineOSBuild</key>
-	<string>23B81</string>
+	<string>23G93</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>WebView</string>
+	<string>ImmutableWebView</string>
 	<key>CFBundleIdentifier</key>
-	<string>net.gree.unitywebview.WebView</string>
+	<string>Immutable.Browser.WebView</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>WebView</string>
+	<string>ImmutableWebView</string>
 	<key>CFBundlePackageType</key>
 	<string>BNDL</string>
 	<key>CFBundleShortVersionString</key>
@@ -29,19 +29,19 @@
 	<key>DTCompiler</key>
 	<string>com.apple.compilers.llvm.clang.1_0</string>
 	<key>DTPlatformBuild</key>
-	<string></string>
+	<string>24A336</string>
 	<key>DTPlatformName</key>
 	<string>macosx</string>
 	<key>DTPlatformVersion</key>
-	<string>14.0</string>
+	<string>15.0</string>
 	<key>DTSDKBuild</key>
-	<string>23A334</string>
+	<string>24A336</string>
 	<key>DTSDKName</key>
-	<string>macosx14.0</string>
+	<string>macosx15.0</string>
 	<key>DTXcode</key>
-	<string>1501</string>
+	<string>1600</string>
 	<key>DTXcodeBuild</key>
-	<string>15A507</string>
+	<string>16A242d</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>12.4</string>
 </dict>
