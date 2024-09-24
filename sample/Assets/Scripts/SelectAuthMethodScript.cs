@@ -22,7 +22,7 @@ public class SelectAuthMethodScript : MonoBehaviour
         // If PKCE is not supported, initialise Passport to use Device Code Auth
         if (!SampleAppManager.SupportsPKCE)
         {
-            InitialisePassport();
+            InitialisePassport(logoutRedirectUri: "https://www.immutable.com");
         }
     }
 
