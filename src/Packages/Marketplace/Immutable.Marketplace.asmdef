@@ -1,0 +1,19 @@
+{
+    "name": "Immutable.Integrations",
+    "rootNamespace": "Immutable.Integrations",
+    "references": [
+        "UniTask",
+        "Immutable.Browser.Core",
+        "Immutable.Passport.Runtime.Public",
+        "Immutable.Passport.Runtime.Private"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
