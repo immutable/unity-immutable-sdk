@@ -1,6 +1,6 @@
 {
-    "name": "Immutable.Integrations",
-    "rootNamespace": "Immutable.Integrations",
+    "name": "Immutable.Marketplace",
+    "rootNamespace": "Immutable.Marketplace",
     "references": [
         "UniTask",
         "Immutable.Browser.Core",
