@@ -1,12 +1,21 @@
 ---
-name: "Update version in package.json"
+name: "Update SDK version"
 
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Version to update to (e.g. 1.20.0)'
+      upgrade_type:
+        type: choice
+        description: Upgrade Type
+        options:
+          - patch
+          - minor
+          # - major
         required: true
+        default: none
+
+env:
+  UPGRADE_TYPE: ${{ github.event.inputs.upgrade_type || 'patch' }}
 
 jobs:
   update:
@@ -37,19 +46,47 @@ jobs:
     - name: Install jq
       run: sudo apt-get install -y jq
 
-    - name: Replace version string
+    - name: Update Version in package.json
       id: replace_version
       run: |
         FILE=./src/Packages/Passport/package.json
-        VERSION=${{ github.event.inputs.version }}
-        jq --arg version "$VERSION" '.version = $version' $FILE > tmp.$$.json && mv tmp.$$.json $FILE
+        
+        CURRENT_VERSION=$(jq -r '.version' $FILE)
+        IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
 
-    - name: Replace engine sdk version string
+        # Increment version based on UPGRADE_TYPE
+        case "$UPGRADE_TYPE" in
+          major)
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+            ;;
+          minor)
+            MINOR=$((MINOR + 1))
+            PATCH=0
+            ;;
+          patch)
+            PATCH=$((PATCH + 1))
+            ;;
+          *)
+            echo "Invalid upgrade type: $UPGRADE_TYPE"
+            exit 1
+            ;;
+        esac
+
+        NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+        jq --arg version "$NEW_VERSION" '.version = $version' $FILE > tmp.$$.json && mv tmp.$$.json $FILE
+        echo "Updated version in package.json from $CURRENT_VERSION to $NEW_VERSION"
+
+        echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+
+    - name: Update SDK Version in SdkVersionInfoHelpers.cs
       id: replace_engine_sdk_version
       run: |
         FILE=./src/Packages/Passport/Runtime/Scripts/Private/Helpers/SdkVersionInfoHelpers.cs
-        VERSION=${{ github.event.inputs.version }}
-        sed -i -E "s/[0-9]+\.[0-9]+\.[0-9]+/$VERSION/g" $FILE
+        NEW_VERSION="${{ steps.replace_version.outputs.version }}"
+        sed -i -E "s/[0-9]+\.[0-9]+\.[0-9]+/$NEW_VERSION/g" $FILE
+        echo "Updated SDK version in SdkVersionInfoHelpers.cs to $NEW_VERSION"
 
     - uses: gr2m/create-or-update-pull-request-action@v1
       env:
@@ -57,6 +94,6 @@ jobs:
       with:
         title: "chore: update version"
         body: "Update version in package.json"
-        branch: "chore/update-version-${{ github.event.inputs.version }}"
+        branch: "chore/update-version-${{ steps.replace_version.outputs.version }}"
         commit-message: "chore: update version"
         labels: release
