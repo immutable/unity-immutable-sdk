@@ -2,10 +2,7 @@
     "name": "Immutable.Marketplace",
     "rootNamespace": "Immutable.Marketplace",
     "references": [
-        "UniTask",
-        "Immutable.Browser.Core",
-        "Immutable.Passport.Runtime.Public",
-        "Immutable.Passport.Runtime.Private"
+        "UniTask"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

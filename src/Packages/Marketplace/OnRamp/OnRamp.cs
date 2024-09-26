@@ -8,7 +8,9 @@ namespace Immutable.Marketplace.OnRamp
 {
     public class OnRamp
     {
-        private readonly Passport.Passport _passport;
+        private readonly string _environment;
+        private readonly string _email;
+        private readonly string _address;
         private static readonly Dictionary<string, string> TransakBaseUrls = new Dictionary<string, string>
         {
             { "sandbox", "https://global-stg.transak.com" },
@@ -21,25 +23,23 @@ namespace Immutable.Marketplace.OnRamp
             { "production", "ad1bca70-d917-4628-bb0f-5609537498bc" }
         };
 
-        public OnRamp(Passport.Passport passport)
+        public OnRamp(string environment, string email, string address)
         {
-            _passport = passport;
+            _environment = environment;
+            _email = email;
+            _address = address;
         }
 
         public async UniTask<string> GetLink(
-    string fiatCurrency = "USD",
-    string defaultFiatAmount = "50",
-    string defaultCryptoCurrency = "IMX",
-    string networks = "immutablezkevm",
-    bool disableWalletAddressForm = true)
+            string fiatCurrency = "USD",
+            string defaultFiatAmount = "50",
+            string defaultCryptoCurrency = "IMX",
+            string networks = "immutablezkevm",
+            bool disableWalletAddressForm = true
+        )
         {
-            await _passport.ConnectImx();
-            string environment = _passport.GetPassportImpl().environment;
-
-            string email = await _passport.GetEmail();
-            string walletAddress = await _passport.GetAddress();
-            string baseUrl = TransakBaseUrls[environment];
-            string apiKey = TransakApiKeys[environment];
+            string baseUrl = TransakBaseUrls[_environment];
+            string apiKey = TransakApiKeys[_environment];
 
             var queryParams = new Dictionary<string, string>
         {
@@ -51,12 +51,12 @@ namespace Immutable.Marketplace.OnRamp
             {"exchangeScreenTitle", "Buy"},
             {"themeColor", "0D0D0D"},
             {"defaultCryptoCurrency", defaultCryptoCurrency},
-            {"email", Uri.EscapeDataString(email)},
+            {"email", Uri.EscapeDataString(_email)},
             {"isAutoFillUserData", "true"},
             {"disableWalletAddressForm", disableWalletAddressForm.ToString().ToLower()},
             {"defaultFiatAmount", defaultFiatAmount},
             {"defaultFiatCurrency", fiatCurrency},
-            {"walletAddress", walletAddress},
+            {"walletAddress", _address},
             {"cryptoCurrencyList", "imx,eth,usdc"}
         };
 
