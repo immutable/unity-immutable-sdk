@@ -84,7 +84,6 @@ jobs:
         # Update Marketplace package.json
         jq --arg version "$NEW_VERSION" '.version = $version' $MARKETPLACE_FILE > tmp.$$.json && mv tmp.$$.json $MARKETPLACE_FILE
         echo "Updated version in Marketplace package.json from $CURRENT_VERSION to $NEW_VERSION"
-
         echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
 
     - name: Update SDK Version in SdkVersionInfoHelpers.cs
