@@ -5,7 +5,7 @@
         "VoltstroStudios.UnityWebBrowser",
         "UniTask",
         "Immutable.Browser.Core",
-        "unity-webview",
+        "Immutable.Browser.Gree",
         "Immutable.Passport.Runtime.Private",
         "Immutable.Passport.Core.Logging"
     ],

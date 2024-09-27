@@ -1,6 +1,6 @@
 {
-    "name": "unity-webview",
-    "rootNamespace": "",
+    "name": "Immutable.Browser.Gree",
+    "rootNamespace": "Immutable.Browser.Gree",
     "references": [
         "GUID:95d173a3e67b39d40803000ed05b79f4",
         "GUID:a0996310e1aa34b7fbf14df5d255461d"

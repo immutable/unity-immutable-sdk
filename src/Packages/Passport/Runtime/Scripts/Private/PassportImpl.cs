@@ -71,7 +71,7 @@ namespace Immutable.Passport
             };
 
             string initRequest;
-            if (redirectUri != null && logoutRedirectUri != null)
+            if (redirectUri != null)
             {
                 InitRequestWithRedirectUri requestWithRedirectUri = new InitRequestWithRedirectUri()
                 {
@@ -89,6 +89,7 @@ namespace Immutable.Passport
                 {
                     clientId = clientId,
                     environment = environment,
+                    logoutRedirectUri = logoutRedirectUri,
                     engineVersion = versionInfo
                 };
                 initRequest = JsonUtility.ToJson(request);
