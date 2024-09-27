@@ -1,5 +1,3 @@
-using UnityEngine;
-
 namespace Immutable.Passport.Core.Logging
 {
     public static class PassportLogger
@@ -10,10 +8,7 @@ namespace Immutable.Passport.Core.Logging
 
         public static void Log(LogLevel level, string message)
         {
-            if (level < CurrentLogLevel)
-            {
-                return; // Don't log messages below the current log level
-            }
+            if (level < CurrentLogLevel) return; // Don't log messages below the current log level
 
             switch (level)
             {
@@ -28,8 +23,6 @@ namespace Immutable.Passport.Core.Logging
                     break;
                 case LogLevel.Error:
                     UnityEngine.Debug.LogError($"{TAG} {message}");
-                    break;
-                default:
                     break;
             }
         }
@@ -54,5 +47,4 @@ namespace Immutable.Passport.Core.Logging
             Log(LogLevel.Error, message);
         }
     }
-
 }

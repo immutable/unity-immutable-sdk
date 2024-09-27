@@ -10,4 +10,3 @@ namespace Immutable.Passport.Core
         public string data;
     }
 }
-

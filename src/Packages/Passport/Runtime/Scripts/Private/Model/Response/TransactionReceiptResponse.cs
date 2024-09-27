@@ -21,14 +21,14 @@ namespace Immutable.Passport.Model
         public string logsBloom;
 
         /// <summary>
-        /// Possible reponses:
-        /// <list type="bullet">
-        /// <item>
-        /// <description>Success: 1 or 0x1</description>
-        /// </item>
-        /// <item>
-        /// <description>Failure: 0 or 0x0</description>
-        /// </item>
+        ///     Possible reponses:
+        ///     <list type="bullet">
+        ///         <item>
+        ///             <description>Success: 1 or 0x1</description>
+        ///         </item>
+        ///         <item>
+        ///             <description>Failure: 0 or 0x0</description>
+        ///         </item>
         /// </summary>
         public string status;
 
@@ -44,21 +44,21 @@ namespace Immutable.Passport.Model
         {
             public string address;
 
-            public string[] topics;
-
-            public string data;
+            public string blockHash;
 
             public string blockNumber;
 
-            public string transactionHash;
-
-            public string transactionIndex;
-
-            public string blockHash;
+            public string data;
 
             public string logIndex;
 
             public bool removed;
+
+            public string[] topics;
+
+            public string transactionHash;
+
+            public string transactionIndex;
         }
     }
 }

@@ -36,7 +36,7 @@ namespace Immutable.Passport.Model
             string receiver,
             string tokenId = null,
             string tokenAddress = null
-            )
+        )
         {
             this.type = type;
             this.amount = amount;

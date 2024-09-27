@@ -1,22 +1,24 @@
 using System;
 using System.Collections.Generic;
-using NUnit.Framework;
-using Immutable.Passport.Core;
-using Immutable.Passport.Model;
-using Immutable.Passport.Event;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Immutable.Browser.Core;
-using UnityEngine;
+using Immutable.Passport.Core;
+using Immutable.Passport.Event;
 using Immutable.Passport.Helpers;
+using Immutable.Passport.Model;
+using NUnit.Framework;
+using UnityEngine;
 using UnityEngine.TestTools;
 
 namespace Immutable.Passport
 {
-    class TestPassportImpl : PassportImpl
+    internal class TestPassportImpl : PassportImpl
     {
-        private List<string> urlsOpened;
-        public TestPassportImpl(IBrowserCommunicationsManager communicationsManager, List<string> urlsOpened) : base(communicationsManager)
+        private readonly List<string> urlsOpened;
+
+        public TestPassportImpl(IBrowserCommunicationsManager communicationsManager, List<string> urlsOpened) : base(
+            communicationsManager)
         {
             this.urlsOpened = urlsOpened;
         }
@@ -26,7 +28,8 @@ namespace Immutable.Passport
             urlsOpened.Add(url);
         }
 
-        protected override void Track(string eventName, bool? success = null, Dictionary<string, object> properties = null)
+        protected override void Track(string eventName, bool? success = null,
+            Dictionary<string, object> properties = null)
         {
         }
     }
@@ -34,9 +37,29 @@ namespace Immutable.Passport
     [TestFixture]
     public class PassportImplTests
     {
+        [SetUp]
+        public void Init()
+        {
+            communicationsManager = new MockBrowserCommsManager();
+            urlsOpened = new List<string>();
+            authEvents = new List<PassportAuthEvent>();
+            passport = new TestPassportImpl(communicationsManager, urlsOpened);
+            passport.OnAuthEvent += OnPassportAuthEvent;
+            communicationsManager.responses.Clear();
+        }
+
+        [TearDown]
+        public void Cleanup()
+        {
+            passport.OnAuthEvent -= OnPassportAuthEvent;
+        }
+
         internal static string DEVICE_CODE = "deviceCode";
-        internal static string ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6Ikp" +
+
+        internal static string ACCESS_TOKEN =
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6Ikp" +
             "vaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjEyM30.kRqQkJudxgI3koJAp9K4ENp6E2ExFQ5VchogaTWx6Fk";
+
         internal static string ACCESS_TOKEN_KEY = "accessToken";
         internal static string REFRESH_TOKEN = "refreshToken";
         internal static string REFRESH_TOKEN_KEY = "refreshToken";
@@ -54,30 +77,8 @@ namespace Immutable.Passport
         internal static int INTERVAL = 5;
         private const string REQUEST_ID = "50";
 
-#pragma warning disable CS8618
-        private MockBrowserCommsManager communicationsManager;
-        private TestPassportImpl passport;
-#pragma warning restore CS8618
-
         private List<string> urlsOpened;
         private List<PassportAuthEvent> authEvents;
-
-        [SetUp]
-        public void Init()
-        {
-            communicationsManager = new MockBrowserCommsManager();
-            urlsOpened = new List<string>();
-            authEvents = new List<PassportAuthEvent>();
-            passport = new TestPassportImpl(communicationsManager, urlsOpened);
-            passport.OnAuthEvent += OnPassportAuthEvent;
-            communicationsManager.responses.Clear();
-        }
-
-        [TearDown]
-        public void Cleanup()
-        {
-            passport.OnAuthEvent -= OnPassportAuthEvent;
-        }
 
         private void OnPassportAuthEvent(PassportAuthEvent authEvent)
         {
@@ -110,7 +111,7 @@ namespace Immutable.Passport
             communicationsManager.AddMockResponse(logoutResponse);
 
             // Login
-            bool success = await passport.Login();
+            var success = await passport.Login();
             Assert.True(success);
 
             // Logout
@@ -119,14 +120,15 @@ namespace Immutable.Passport
             Assert.AreEqual(2, urlsOpened.Count);
             Assert.AreEqual(URL, urlsOpened[0]);
             Assert.AreEqual(LOGOUT_URL, urlsOpened[1]);
-            List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
-                    PassportAuthEvent.LoggingIn,
-                    PassportAuthEvent.LoginOpeningBrowser,
-                    PassportAuthEvent.PendingBrowserLogin,
-                    PassportAuthEvent.LoginSuccess,
-                    PassportAuthEvent.LoggingOut,
-                    PassportAuthEvent.LogoutSuccess
-                };
+            var expectedEvents = new List<PassportAuthEvent>
+            {
+                PassportAuthEvent.LoggingIn,
+                PassportAuthEvent.LoginOpeningBrowser,
+                PassportAuthEvent.PendingBrowserLogin,
+                PassportAuthEvent.LoginSuccess,
+                PassportAuthEvent.LoggingOut,
+                PassportAuthEvent.LogoutSuccess
+            };
             Assert.AreEqual(expectedEvents.Count, authEvents.Count);
             Assert.AreEqual(expectedEvents, authEvents);
         }
@@ -156,22 +158,23 @@ namespace Immutable.Passport
             communicationsManager.AddMockResponse(logoutResponse);
 
             // Login
-            bool success = await passport.Login();
+            var success = await passport.Login();
             Assert.True(success);
 
             // Logout
-            await passport.Logout(hardLogout: false);
+            await passport.Logout(false);
 
             Assert.AreEqual(1, urlsOpened.Count);
             Assert.AreEqual(URL, urlsOpened[0]);
-            List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
-                    PassportAuthEvent.LoggingIn,
-                    PassportAuthEvent.LoginOpeningBrowser,
-                    PassportAuthEvent.PendingBrowserLogin,
-                    PassportAuthEvent.LoginSuccess,
-                    PassportAuthEvent.LoggingOut,
-                    PassportAuthEvent.LogoutSuccess
-                };
+            var expectedEvents = new List<PassportAuthEvent>
+            {
+                PassportAuthEvent.LoggingIn,
+                PassportAuthEvent.LoginOpeningBrowser,
+                PassportAuthEvent.PendingBrowserLogin,
+                PassportAuthEvent.LoginSuccess,
+                PassportAuthEvent.LoggingOut,
+                PassportAuthEvent.LogoutSuccess
+            };
             Assert.AreEqual(expectedEvents.Count, authEvents.Count);
             Assert.AreEqual(expectedEvents, authEvents);
         }
@@ -198,10 +201,11 @@ namespace Immutable.Passport
             Assert.NotNull(e);
 
             Assert.AreEqual(0, urlsOpened.Count);
-            List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
-                    PassportAuthEvent.LoggingIn,
-                    PassportAuthEvent.LoginFailed
-                };
+            var expectedEvents = new List<PassportAuthEvent>
+            {
+                PassportAuthEvent.LoggingIn,
+                PassportAuthEvent.LoginFailed
+            };
             Assert.AreEqual(expectedEvents.Count, authEvents.Count);
             Assert.AreEqual(expectedEvents, authEvents);
         }
@@ -222,10 +226,11 @@ namespace Immutable.Passport
             Assert.NotNull(e);
 
             Assert.AreEqual(0, urlsOpened.Count);
-            List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
-                    PassportAuthEvent.LoggingIn,
-                    PassportAuthEvent.LoginFailed
-                };
+            var expectedEvents = new List<PassportAuthEvent>
+            {
+                PassportAuthEvent.LoggingIn,
+                PassportAuthEvent.LoginFailed
+            };
             Assert.AreEqual(expectedEvents.Count, authEvents.Count);
             Assert.AreEqual(expectedEvents, authEvents);
         }
@@ -261,12 +266,13 @@ namespace Immutable.Passport
 
             Assert.AreEqual(1, urlsOpened.Count);
             Assert.AreEqual(URL, urlsOpened[0]);
-            List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
-                    PassportAuthEvent.LoggingIn,
-                    PassportAuthEvent.LoginOpeningBrowser,
-                    PassportAuthEvent.PendingBrowserLogin,
-                    PassportAuthEvent.LoginFailed
-                };
+            var expectedEvents = new List<PassportAuthEvent>
+            {
+                PassportAuthEvent.LoggingIn,
+                PassportAuthEvent.LoginOpeningBrowser,
+                PassportAuthEvent.PendingBrowserLogin,
+                PassportAuthEvent.LoginFailed
+            };
             Assert.AreEqual(expectedEvents.Count, authEvents.Count);
             Assert.AreEqual(expectedEvents, authEvents);
         }
@@ -297,12 +303,13 @@ namespace Immutable.Passport
 
             Assert.AreEqual(1, urlsOpened.Count);
             Assert.AreEqual(URL, urlsOpened[0]);
-            List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
-                    PassportAuthEvent.LoggingIn,
-                    PassportAuthEvent.LoginOpeningBrowser,
-                    PassportAuthEvent.PendingBrowserLogin,
-                    PassportAuthEvent.LoginFailed
-                };
+            var expectedEvents = new List<PassportAuthEvent>
+            {
+                PassportAuthEvent.LoggingIn,
+                PassportAuthEvent.LoginOpeningBrowser,
+                PassportAuthEvent.PendingBrowserLogin,
+                PassportAuthEvent.LoginFailed
+            };
             Assert.AreEqual(expectedEvents.Count, authEvents.Count);
             Assert.AreEqual(expectedEvents, authEvents);
         }
@@ -326,7 +333,7 @@ namespace Immutable.Passport
             communicationsManager.AddMockResponse(confirmCodeResponse);
 
             // Login
-            bool success = false;
+            var success = false;
             ArgumentException e = null;
             try
             {
@@ -384,7 +391,7 @@ namespace Immutable.Passport
             communicationsManager.AddMockResponse(logoutResponse);
 
             // Relogin
-            bool success = await passport.Login(useCachedSession: true);
+            var success = await passport.Login(true);
             Assert.True(success);
 
             // Logout
@@ -392,12 +399,13 @@ namespace Immutable.Passport
 
             Assert.AreEqual(1, urlsOpened.Count);
             Assert.AreEqual(LOGOUT_URL, urlsOpened[0]);
-            List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
-                    PassportAuthEvent.ReloggingIn,
-                    PassportAuthEvent.ReloginSuccess,
-                    PassportAuthEvent.LoggingOut,
-                    PassportAuthEvent.LogoutSuccess
-                };
+            var expectedEvents = new List<PassportAuthEvent>
+            {
+                PassportAuthEvent.ReloggingIn,
+                PassportAuthEvent.ReloginSuccess,
+                PassportAuthEvent.LoggingOut,
+                PassportAuthEvent.LogoutSuccess
+            };
             Assert.AreEqual(expectedEvents.Count, authEvents.Count);
             Assert.AreEqual(expectedEvents, authEvents);
         }
@@ -411,14 +419,15 @@ namespace Immutable.Passport
             };
             communicationsManager.AddMockResponse(reloginResponse);
 
-            bool success = await passport.Login(useCachedSession: true);
+            var success = await passport.Login(true);
             Assert.False(success);
 
             Assert.AreEqual(0, urlsOpened.Count);
-            List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
-                    PassportAuthEvent.ReloggingIn,
-                    PassportAuthEvent.ReloginFailed
-                };
+            var expectedEvents = new List<PassportAuthEvent>
+            {
+                PassportAuthEvent.ReloggingIn,
+                PassportAuthEvent.ReloginFailed
+            };
             Assert.AreEqual(expectedEvents.Count, authEvents.Count);
             Assert.AreEqual(expectedEvents, authEvents);
         }
@@ -428,14 +437,15 @@ namespace Immutable.Passport
         {
             communicationsManager.throwExceptionOnCall = true;
 
-            bool success = await passport.Login(useCachedSession: true);
+            var success = await passport.Login(true);
             Assert.False(success);
 
             Assert.AreEqual(0, urlsOpened.Count);
-            List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
-                    PassportAuthEvent.ReloggingIn,
-                    PassportAuthEvent.ReloginFailed
-                };
+            var expectedEvents = new List<PassportAuthEvent>
+            {
+                PassportAuthEvent.ReloggingIn,
+                PassportAuthEvent.ReloginFailed
+            };
             Assert.AreEqual(expectedEvents.Count, authEvents.Count);
             Assert.AreEqual(expectedEvents, authEvents);
         }
@@ -443,14 +453,15 @@ namespace Immutable.Passport
         [Test]
         public async Task Relogin_NullResponse_Failed()
         {
-            bool success = await passport.Login(useCachedSession: true);
+            var success = await passport.Login(true);
             Assert.False(success);
 
             Assert.AreEqual(0, urlsOpened.Count);
-            List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
-                    PassportAuthEvent.ReloggingIn,
-                    PassportAuthEvent.ReloginFailed
-                };
+            var expectedEvents = new List<PassportAuthEvent>
+            {
+                PassportAuthEvent.ReloggingIn,
+                PassportAuthEvent.ReloginFailed
+            };
             Assert.AreEqual(expectedEvents.Count, authEvents.Count);
             Assert.AreEqual(expectedEvents, authEvents);
         }
@@ -493,7 +504,7 @@ namespace Immutable.Passport
             communicationsManager.AddMockResponse(logoutResponse);
 
             // Connect
-            bool success = await passport.ConnectImx();
+            var success = await passport.ConnectImx();
             Assert.True(success);
 
             // Logout
@@ -502,18 +513,19 @@ namespace Immutable.Passport
             Assert.AreEqual(2, urlsOpened.Count);
             Assert.AreEqual(URL, urlsOpened[0]);
             Assert.AreEqual(LOGOUT_URL, urlsOpened[1]);
-            List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
-                    PassportAuthEvent.CheckingForSavedCredentials,
-                    PassportAuthEvent.CheckForSavedCredentialsSuccess,
-                    PassportAuthEvent.Reconnecting,
-                    PassportAuthEvent.ReconnectFailed,
-                    PassportAuthEvent.ConnectingImx,
-                    PassportAuthEvent.ConnectImxOpeningBrowser,
-                    PassportAuthEvent.PendingBrowserLoginAndProviderSetup,
-                    PassportAuthEvent.ConnectImxSuccess,
-                    PassportAuthEvent.LoggingOut,
-                    PassportAuthEvent.LogoutSuccess
-                };
+            var expectedEvents = new List<PassportAuthEvent>
+            {
+                PassportAuthEvent.CheckingForSavedCredentials,
+                PassportAuthEvent.CheckForSavedCredentialsSuccess,
+                PassportAuthEvent.Reconnecting,
+                PassportAuthEvent.ReconnectFailed,
+                PassportAuthEvent.ConnectingImx,
+                PassportAuthEvent.ConnectImxOpeningBrowser,
+                PassportAuthEvent.PendingBrowserLoginAndProviderSetup,
+                PassportAuthEvent.ConnectImxSuccess,
+                PassportAuthEvent.LoggingOut,
+                PassportAuthEvent.LogoutSuccess
+            };
             Assert.AreEqual(expectedEvents.Count, authEvents.Count);
             Assert.AreEqual(expectedEvents, authEvents);
         }
@@ -553,14 +565,15 @@ namespace Immutable.Passport
             Assert.NotNull(e);
 
             Assert.AreEqual(0, urlsOpened.Count);
-            List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
-                    PassportAuthEvent.CheckingForSavedCredentials,
-                    PassportAuthEvent.CheckForSavedCredentialsSuccess,
-                    PassportAuthEvent.Reconnecting,
-                    PassportAuthEvent.ReconnectFailed,
-                    PassportAuthEvent.ConnectingImx,
-                    PassportAuthEvent.ConnectImxFailed
-                };
+            var expectedEvents = new List<PassportAuthEvent>
+            {
+                PassportAuthEvent.CheckingForSavedCredentials,
+                PassportAuthEvent.CheckForSavedCredentialsSuccess,
+                PassportAuthEvent.Reconnecting,
+                PassportAuthEvent.ReconnectFailed,
+                PassportAuthEvent.ConnectingImx,
+                PassportAuthEvent.ConnectImxFailed
+            };
             Assert.AreEqual(expectedEvents.Count, authEvents.Count);
             Assert.AreEqual(expectedEvents, authEvents);
         }
@@ -595,14 +608,15 @@ namespace Immutable.Passport
             Assert.NotNull(e);
 
             Assert.AreEqual(0, urlsOpened.Count);
-            List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
-                    PassportAuthEvent.CheckingForSavedCredentials,
-                    PassportAuthEvent.CheckForSavedCredentialsSuccess,
-                    PassportAuthEvent.Reconnecting,
-                    PassportAuthEvent.ReconnectFailed,
-                    PassportAuthEvent.ConnectingImx,
-                    PassportAuthEvent.ConnectImxFailed
-                };
+            var expectedEvents = new List<PassportAuthEvent>
+            {
+                PassportAuthEvent.CheckingForSavedCredentials,
+                PassportAuthEvent.CheckForSavedCredentialsSuccess,
+                PassportAuthEvent.Reconnecting,
+                PassportAuthEvent.ReconnectFailed,
+                PassportAuthEvent.ConnectingImx,
+                PassportAuthEvent.ConnectImxFailed
+            };
             Assert.AreEqual(expectedEvents.Count, authEvents.Count);
             Assert.AreEqual(expectedEvents, authEvents);
         }
@@ -652,16 +666,17 @@ namespace Immutable.Passport
 
             Assert.AreEqual(1, urlsOpened.Count);
             Assert.AreEqual(URL, urlsOpened[0]);
-            List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
-                    PassportAuthEvent.CheckingForSavedCredentials,
-                    PassportAuthEvent.CheckForSavedCredentialsSuccess,
-                    PassportAuthEvent.Reconnecting,
-                    PassportAuthEvent.ReconnectFailed,
-                    PassportAuthEvent.ConnectingImx,
-                    PassportAuthEvent.ConnectImxOpeningBrowser,
-                    PassportAuthEvent.PendingBrowserLoginAndProviderSetup,
-                    PassportAuthEvent.ConnectImxFailed
-                };
+            var expectedEvents = new List<PassportAuthEvent>
+            {
+                PassportAuthEvent.CheckingForSavedCredentials,
+                PassportAuthEvent.CheckForSavedCredentialsSuccess,
+                PassportAuthEvent.Reconnecting,
+                PassportAuthEvent.ReconnectFailed,
+                PassportAuthEvent.ConnectingImx,
+                PassportAuthEvent.ConnectImxOpeningBrowser,
+                PassportAuthEvent.PendingBrowserLoginAndProviderSetup,
+                PassportAuthEvent.ConnectImxFailed
+            };
             Assert.AreEqual(expectedEvents.Count, authEvents.Count);
             Assert.AreEqual(expectedEvents, authEvents);
         }
@@ -706,16 +721,17 @@ namespace Immutable.Passport
 
             Assert.AreEqual(1, urlsOpened.Count);
             Assert.AreEqual(URL, urlsOpened[0]);
-            List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
-                    PassportAuthEvent.CheckingForSavedCredentials,
-                    PassportAuthEvent.CheckForSavedCredentialsSuccess,
-                    PassportAuthEvent.Reconnecting,
-                    PassportAuthEvent.ReconnectFailed,
-                    PassportAuthEvent.ConnectingImx,
-                    PassportAuthEvent.ConnectImxOpeningBrowser,
-                    PassportAuthEvent.PendingBrowserLoginAndProviderSetup,
-                    PassportAuthEvent.ConnectImxFailed
-                };
+            var expectedEvents = new List<PassportAuthEvent>
+            {
+                PassportAuthEvent.CheckingForSavedCredentials,
+                PassportAuthEvent.CheckForSavedCredentialsSuccess,
+                PassportAuthEvent.Reconnecting,
+                PassportAuthEvent.ReconnectFailed,
+                PassportAuthEvent.ConnectingImx,
+                PassportAuthEvent.ConnectImxOpeningBrowser,
+                PassportAuthEvent.PendingBrowserLoginAndProviderSetup,
+                PassportAuthEvent.ConnectImxFailed
+            };
             Assert.AreEqual(expectedEvents.Count, authEvents.Count);
             Assert.AreEqual(expectedEvents, authEvents);
         }
@@ -760,7 +776,7 @@ namespace Immutable.Passport
             communicationsManager.AddMockResponse(logoutResponse);
 
             // Connect
-            bool success = await passport.ConnectImx();
+            var success = await passport.ConnectImx();
             Assert.True(success);
 
             // Logout
@@ -769,18 +785,19 @@ namespace Immutable.Passport
             Assert.AreEqual(2, urlsOpened.Count);
             Assert.AreEqual(URL, urlsOpened[0]);
             Assert.AreEqual(LOGOUT_URL, urlsOpened[1]);
-            List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
-                    PassportAuthEvent.CheckingForSavedCredentials,
-                    PassportAuthEvent.CheckForSavedCredentialsSuccess,
-                    PassportAuthEvent.Reconnecting,
-                    PassportAuthEvent.ReconnectFailed,
-                    PassportAuthEvent.ConnectingImx,
-                    PassportAuthEvent.ConnectImxOpeningBrowser,
-                    PassportAuthEvent.PendingBrowserLoginAndProviderSetup,
-                    PassportAuthEvent.ConnectImxSuccess,
-                    PassportAuthEvent.LoggingOut,
-                    PassportAuthEvent.LogoutSuccess
-                };
+            var expectedEvents = new List<PassportAuthEvent>
+            {
+                PassportAuthEvent.CheckingForSavedCredentials,
+                PassportAuthEvent.CheckForSavedCredentialsSuccess,
+                PassportAuthEvent.Reconnecting,
+                PassportAuthEvent.ReconnectFailed,
+                PassportAuthEvent.ConnectingImx,
+                PassportAuthEvent.ConnectImxOpeningBrowser,
+                PassportAuthEvent.PendingBrowserLoginAndProviderSetup,
+                PassportAuthEvent.ConnectImxSuccess,
+                PassportAuthEvent.LoggingOut,
+                PassportAuthEvent.LogoutSuccess
+            };
             Assert.AreEqual(expectedEvents.Count, authEvents.Count);
             Assert.AreEqual(expectedEvents, authEvents);
         }
@@ -811,7 +828,7 @@ namespace Immutable.Passport
             communicationsManager.AddMockResponse(logoutResponse);
 
             // Login
-            bool success = await passport.ConnectImx();
+            var success = await passport.ConnectImx();
             Assert.True(success);
 
             // Logout
@@ -819,14 +836,15 @@ namespace Immutable.Passport
 
             Assert.AreEqual(1, urlsOpened.Count);
             Assert.AreEqual(LOGOUT_URL, urlsOpened[0]);
-            List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
-                    PassportAuthEvent.CheckingForSavedCredentials,
-                    PassportAuthEvent.CheckForSavedCredentialsSuccess,
-                    PassportAuthEvent.Reconnecting,
-                    PassportAuthEvent.ReconnectSuccess,
-                    PassportAuthEvent.LoggingOut,
-                    PassportAuthEvent.LogoutSuccess
-                };
+            var expectedEvents = new List<PassportAuthEvent>
+            {
+                PassportAuthEvent.CheckingForSavedCredentials,
+                PassportAuthEvent.CheckForSavedCredentialsSuccess,
+                PassportAuthEvent.Reconnecting,
+                PassportAuthEvent.ReconnectSuccess,
+                PassportAuthEvent.LoggingOut,
+                PassportAuthEvent.LogoutSuccess
+            };
             Assert.AreEqual(expectedEvents.Count, authEvents.Count);
             Assert.AreEqual(expectedEvents, authEvents);
         }
@@ -847,7 +865,7 @@ namespace Immutable.Passport
             communicationsManager.AddMockResponse(logoutResponse);
 
             // Reconnect
-            bool success = await passport.ConnectImx(useCachedSession: true);
+            var success = await passport.ConnectImx(true);
             Assert.True(success);
 
             // Logout
@@ -855,12 +873,13 @@ namespace Immutable.Passport
 
             Assert.AreEqual(1, urlsOpened.Count);
             Assert.AreEqual(LOGOUT_URL, urlsOpened[0]);
-            List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
-                    PassportAuthEvent.Reconnecting,
-                    PassportAuthEvent.ReconnectSuccess,
-                    PassportAuthEvent.LoggingOut,
-                    PassportAuthEvent.LogoutSuccess
-                };
+            var expectedEvents = new List<PassportAuthEvent>
+            {
+                PassportAuthEvent.Reconnecting,
+                PassportAuthEvent.ReconnectSuccess,
+                PassportAuthEvent.LoggingOut,
+                PassportAuthEvent.LogoutSuccess
+            };
             Assert.AreEqual(expectedEvents.Count, authEvents.Count);
             Assert.AreEqual(expectedEvents, authEvents);
         }
@@ -874,14 +893,15 @@ namespace Immutable.Passport
             };
             communicationsManager.AddMockResponse(reconnectResponse);
 
-            bool success = await passport.ConnectImx(useCachedSession: true);
+            var success = await passport.ConnectImx(true);
             Assert.False(success);
 
             Assert.AreEqual(0, urlsOpened.Count);
-            List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
-                    PassportAuthEvent.Reconnecting,
-                    PassportAuthEvent.ReconnectFailed
-                };
+            var expectedEvents = new List<PassportAuthEvent>
+            {
+                PassportAuthEvent.Reconnecting,
+                PassportAuthEvent.ReconnectFailed
+            };
             Assert.AreEqual(expectedEvents.Count, authEvents.Count);
             Assert.AreEqual(expectedEvents, authEvents);
         }
@@ -891,14 +911,15 @@ namespace Immutable.Passport
         {
             communicationsManager.throwExceptionOnCall = true;
 
-            bool success = await passport.ConnectImx(useCachedSession: true);
+            var success = await passport.ConnectImx(true);
             Assert.False(success);
 
             Assert.AreEqual(0, urlsOpened.Count);
-            List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
-                    PassportAuthEvent.Reconnecting,
-                    PassportAuthEvent.ReconnectFailed
-                };
+            var expectedEvents = new List<PassportAuthEvent>
+            {
+                PassportAuthEvent.Reconnecting,
+                PassportAuthEvent.ReconnectFailed
+            };
             Assert.AreEqual(expectedEvents.Count, authEvents.Count);
             Assert.AreEqual(expectedEvents, authEvents);
         }
@@ -906,14 +927,15 @@ namespace Immutable.Passport
         [Test]
         public async Task Reconnect_NullResponse_Failed()
         {
-            bool success = await passport.ConnectImx(useCachedSession: true);
+            var success = await passport.ConnectImx(true);
             Assert.False(success);
 
             Assert.AreEqual(0, urlsOpened.Count);
-            List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
-                    PassportAuthEvent.Reconnecting,
-                    PassportAuthEvent.ReconnectFailed
-                };
+            var expectedEvents = new List<PassportAuthEvent>
+            {
+                PassportAuthEvent.Reconnecting,
+                PassportAuthEvent.ReconnectFailed
+            };
             Assert.AreEqual(expectedEvents.Count, authEvents.Count);
             Assert.AreEqual(expectedEvents, authEvents);
         }
@@ -932,7 +954,7 @@ namespace Immutable.Passport
 
             Assert.AreEqual(ADDRESS, address);
             Assert.AreEqual(PassportFunction.IMX.GET_ADDRESS, communicationsManager.fxName);
-            Assert.True(String.IsNullOrEmpty(communicationsManager.data));
+            Assert.True(string.IsNullOrEmpty(communicationsManager.data));
         }
 
         [Test]
@@ -967,7 +989,7 @@ namespace Immutable.Passport
 
             Assert.AreEqual(EMAIL, email);
             Assert.AreEqual(PassportFunction.GET_EMAIL, communicationsManager.fxName);
-            Assert.True(String.IsNullOrEmpty(communicationsManager.data));
+            Assert.True(string.IsNullOrEmpty(communicationsManager.data));
         }
 
         [Test]
@@ -1002,7 +1024,7 @@ namespace Immutable.Passport
 
             Assert.AreEqual(PASSPORT_ID, passportId);
             Assert.AreEqual(PassportFunction.GET_PASSPORT_ID, communicationsManager.fxName);
-            Assert.True(String.IsNullOrEmpty(communicationsManager.data));
+            Assert.True(string.IsNullOrEmpty(communicationsManager.data));
         }
 
         [Test]
@@ -1046,10 +1068,11 @@ namespace Immutable.Passport
             Assert.Null(e);
 
             Assert.AreEqual(1, urlsOpened.Count);
-            List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
-                    PassportAuthEvent.LoggingOut,
-                    PassportAuthEvent.LogoutSuccess
-                };
+            var expectedEvents = new List<PassportAuthEvent>
+            {
+                PassportAuthEvent.LoggingOut,
+                PassportAuthEvent.LogoutSuccess
+            };
             Assert.AreEqual(expectedEvents.Count, authEvents.Count);
             Assert.AreEqual(expectedEvents, authEvents);
         }
@@ -1073,14 +1096,16 @@ namespace Immutable.Passport
                 e = ex;
             }
 
-            LogAssert.Expect(LogType.Error, "[Immutable] [Passport Implementation] Failed to log out: Response is invalid!");
+            LogAssert.Expect(LogType.Error,
+                "[Immutable] [Passport Implementation] Failed to log out: Response is invalid!");
             Assert.NotNull(e);
 
             Assert.AreEqual(0, urlsOpened.Count);
-            List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
-                    PassportAuthEvent.LoggingOut,
-                    PassportAuthEvent.LogoutFailed
-                };
+            var expectedEvents = new List<PassportAuthEvent>
+            {
+                PassportAuthEvent.LoggingOut,
+                PassportAuthEvent.LogoutFailed
+            };
             Assert.AreEqual(expectedEvents.Count, authEvents.Count);
             Assert.AreEqual(expectedEvents, authEvents);
         }
@@ -1105,14 +1130,16 @@ namespace Immutable.Passport
                 e = ex;
             }
 
-            LogAssert.Expect(LogType.Error, "[Immutable] [Passport Implementation] Failed to log out: Failed to get logout URL");
+            LogAssert.Expect(LogType.Error,
+                "[Immutable] [Passport Implementation] Failed to log out: Failed to get logout URL");
             Assert.NotNull(e);
 
             Assert.AreEqual(0, urlsOpened.Count);
-            List<PassportAuthEvent> expectedEvents = new List<PassportAuthEvent>{
-                    PassportAuthEvent.LoggingOut,
-                    PassportAuthEvent.LogoutFailed
-                };
+            var expectedEvents = new List<PassportAuthEvent>
+            {
+                PassportAuthEvent.LoggingOut,
+                PassportAuthEvent.LogoutFailed
+            };
             Assert.AreEqual(expectedEvents.Count, authEvents.Count);
             Assert.AreEqual(expectedEvents, authEvents);
         }
@@ -1183,45 +1210,42 @@ namespace Immutable.Passport
 
             Assert.AreEqual(0, linkedAddresses.Count);
         }
+
+#pragma warning disable CS8618
+        private MockBrowserCommsManager communicationsManager;
+        private TestPassportImpl passport;
+#pragma warning restore CS8618
     }
 
     internal class MockBrowserCommsManager : IBrowserCommunicationsManager
     {
-        public Queue<string> responses = new Queue<string>();
-        public bool throwExceptionOnCall = false;
-        public string fxName = "";
         public string data = "";
+        public string fxName = "";
+        public Queue<string> responses = new();
+        public bool throwExceptionOnCall;
         public event OnUnityPostMessageDelegate OnAuthPostMessage;
         public event OnUnityPostMessageErrorDelegate OnPostMessageError;
 
-        public void AddMockResponse(object response)
-        {
-            responses.Enqueue(JsonUtility.ToJson(response));
-        }
-
-        public UniTask<string> Call(string fxName, string data = null, bool ignoreTimeout = false, Nullable<long> timeoutMs = null)
+        public UniTask<string> Call(string fxName, string data = null, bool ignoreTimeout = false,
+            long? timeoutMs = null)
         {
             if (throwExceptionOnCall)
             {
                 Debug.Log("Error on call");
                 throw new PassportException("Error on call!");
             }
-            else
+
+            this.fxName = fxName;
+            this.data = data;
+            var result = responses.Count > 0 ? responses.Dequeue() : "";
+            var response = result.OptDeserializeObject<BrowserResponse>();
+            if (response == null || response?.success == false || !string.IsNullOrEmpty(response?.error))
             {
-                this.fxName = fxName;
-                this.data = data;
-                string result = responses.Count > 0 ? responses.Dequeue() : "";
-                BrowserResponse response = result.OptDeserializeObject<BrowserResponse>();
-                if (response == null || response?.success == false || !String.IsNullOrEmpty(response?.error))
-                {
-                    Debug.Log("No response");
-                    throw new PassportException("Response is invalid!");
-                }
-                else
-                {
-                    return UniTask.FromResult(result);
-                }
+                Debug.Log("No response");
+                throw new PassportException("Response is invalid!");
             }
+
+            return UniTask.FromResult(result);
         }
 
         public void LaunchAuthURL(string url, string redirectUri)
@@ -1231,6 +1255,11 @@ namespace Immutable.Passport
 
         public void SetCallTimeout(int ms)
         {
+        }
+
+        public void AddMockResponse(object response)
+        {
+            responses.Enqueue(JsonUtility.ToJson(response));
         }
     }
 }

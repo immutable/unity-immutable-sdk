@@ -2,9 +2,8 @@ namespace Immutable.Passport.Model
 {
     public class CreateTransferResponseV1
     {
-        public string sent_signature;
-
         public string receiver;
+        public string sent_signature;
 
         public string status;
 

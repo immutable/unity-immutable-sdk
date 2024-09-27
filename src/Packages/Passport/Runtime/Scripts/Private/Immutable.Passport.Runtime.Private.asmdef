@@ -1,28 +1,28 @@
 {
-    "name": "Immutable.Passport.Runtime.Private",
-    "rootNamespace": "Immutable.Passport",
-    "references": [
-        "VoltstroStudios.UnityWebBrowser",
-        "UniTask",
-        "Immutable.Browser.Core",
-        "Immutable.Browser.Gree",
-        "Immutable.Passport.Core.Logging"
-    ],
-    "includePlatforms": [
-        "Android",
-        "Editor",
-        "iOS",
-        "macOSStandalone",
-        "WindowsStandalone64"
-    ],
-    "excludePlatforms": [],
-    "allowUnsafeCode": false,
-    "overrideReferences": true,
-    "precompiledReferences": [
-        "Newtonsoft.Json.dll"
-    ],
-    "autoReferenced": true,
-    "defineConstraints": [],
-    "versionDefines": [],
-    "noEngineReferences": false
+  "name": "Immutable.Passport.Runtime.Private",
+  "rootNamespace": "Immutable.Passport",
+  "references": [
+    "VoltstroStudios.UnityWebBrowser",
+    "UniTask",
+    "Immutable.Browser.Core",
+    "Immutable.Browser.Gree",
+    "Immutable.Passport.Core.Logging"
+  ],
+  "includePlatforms": [
+    "Android",
+    "Editor",
+    "iOS",
+    "macOSStandalone",
+    "WindowsStandalone64"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "Newtonsoft.Json.dll"
+  ],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
 }

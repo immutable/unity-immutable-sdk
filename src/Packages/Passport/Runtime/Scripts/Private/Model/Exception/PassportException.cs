@@ -21,16 +21,16 @@ namespace Immutable.Passport.Model
 
     public class PassportException : Exception
     {
-        public Nullable<PassportErrorType> Type;
+        public PassportErrorType? Type;
 
-        public PassportException(string message, Nullable<PassportErrorType> type = null) : base(message)
+        public PassportException(string message, PassportErrorType? type = null) : base(message)
         {
-            this.Type = type;
+            Type = type;
         }
 
         /**
         * The error message for api requests via axios that fail due to network connectivity is "Network Error".
-        * This isn't the most reliable way to determine connectivity but it is currently the best we have. 
+        * This isn't the most reliable way to determine connectivity but it is currently the best we have.
         */
         public bool IsNetworkError()
         {

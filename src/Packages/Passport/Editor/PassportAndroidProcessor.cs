@@ -2,21 +2,21 @@
 
 using System;
 using System.IO;
-using UnityEditor;
 using UnityEditor.Android;
 using UnityEngine;
 
 namespace Immutable.Passport.Editor
 {
-    class PassportAndroidProcessor : IPostGenerateGradleAndroidProject
+    internal class PassportAndroidProcessor : IPostGenerateGradleAndroidProject
     {
-        public int callbackOrder { get { return 0; } }
+        public int callbackOrder => 0;
+
         public void OnPostGenerateGradleAndroidProject(string path)
         {
             Debug.Log("MyCustomBuildProcessor.OnPostGenerateGradleAndroidProject at path " + path);
 
             // Find the location of the files
-            string passportWebFilesDir = Path.GetFullPath("Packages/com.immutable.passport/Runtime/Resources");
+            var passportWebFilesDir = Path.GetFullPath("Packages/com.immutable.passport/Runtime/Resources");
             if (!Directory.Exists(passportWebFilesDir))
             {
                 Debug.LogError("The Passport files directory doesn't exist!");
@@ -24,7 +24,7 @@ namespace Immutable.Passport.Editor
             }
 
             FileHelpers.CopyDirectory(passportWebFilesDir, $"{path}/src/main/assets/ImmutableSDK/Runtime/Passport");
-            Debug.Log($"Sucessfully copied Passport files");
+            Debug.Log("Sucessfully copied Passport files");
 
             AddUseAndroidX(path);
         }

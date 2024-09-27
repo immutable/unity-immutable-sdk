@@ -9,6 +9,7 @@ namespace Immutable.Passport.Model
         * Ethereum address of the receiving user
         */
         public string receiver;
+
         /**
         * The token ID
         */
@@ -23,7 +24,7 @@ namespace Immutable.Passport.Model
             string receiver,
             string tokenId,
             string tokenAddress
-            )
+        )
         {
             this.receiver = receiver;
             this.tokenId = tokenId;

@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System;
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
 #if !IMMUTABLE_CUSTOM_BROWSER
 using VoltstroStudios.UnityWebBrowser.Core;
@@ -8,47 +6,49 @@ using VoltstroStudios.UnityWebBrowser.Shared;
 #elif (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
 using Immutable.Browser.Gree;
 #endif
-using Immutable.Passport.Event;
-using Immutable.Browser.Core;
-using Immutable.Passport.Model;
-using Immutable.Passport.Core;
-using Immutable.Passport.Core.Logging;
-using Cysharp.Threading.Tasks;
-using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
+using System;
+using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
+using Immutable.Browser.Core;
+using Immutable.Passport.Core;
+using Immutable.Passport.Core.Logging;
+using Immutable.Passport.Event;
+using Immutable.Passport.Model;
+using UnityEngine;
 
 namespace Immutable.Passport
 {
-
     public class Passport
     {
         private const string TAG = "[Passport]";
 
         public static Passport Instance { get; private set; }
-        private PassportImpl passportImpl = null;
+        private PassportImpl passportImpl;
 
         private IWebBrowserClient webBrowserClient;
 
         // Keeps track of the latest received deeplink
-        private static string deeplink = null;
-        private static bool readySignalReceived = false;
+        private static string deeplink;
+        private static bool readySignalReceived;
 
         /// <summary>
-        /// Passport auth events
+        ///     Passport auth events
         /// </summary>
         /// <seealso cref="Immutable.Passport.Event.PassportAuthEvent" />
         public event OnAuthEventDelegate OnAuthEvent;
 
         /// <summary>
-        /// The log level for the SDK.
+        ///     The log level for the SDK.
         /// </summary>
         /// <remarks>
-        /// The log level determines which messages are recorded based on their severity. The default value is <see cref="LogLevel.Info"/>.
-        /// <para>
-        /// See <see cref="Immutable.Passport.Core.Logging.LogLevel"/> for valid log levels and their meanings.
-        /// </para>
+        ///     The log level determines which messages are recorded based on their severity. The default value is
+        ///     <see cref="Core.Logging.LogLevel.Info" />.
+        ///     <para>
+        ///         See <see cref="Immutable.Passport.Core.Logging.LogLevel" /> for valid log levels and their meanings.
+        ///     </para>
         /// </remarks>
         public static LogLevel LogLevel
         {
@@ -77,10 +77,8 @@ namespace Immutable.Passport
 
             // Check if there is a deep link URL provided on application start
             if (!string.IsNullOrEmpty(Application.absoluteURL))
-            {
                 // Handle the deep link if provided during a cold start
                 OnDeepLinkActivated(Application.absoluteURL);
-            }
 #endif
 
 #if UNITY_EDITOR
@@ -89,14 +87,23 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Initialises Passport with the specified parameters. 
-        /// This sets up the Passport instance, configures the web browser, and waits for the ready signal.
+        ///     Initialises Passport with the specified parameters.
+        ///     This sets up the Passport instance, configures the web browser, and waits for the ready signal.
         /// </summary>
         /// <param name="clientId">The client ID</param>
         /// <param name="environment">The environment to connect to</param>
-        /// <param name="redirectUri">(Android, iOS, and macOS only) The URL where the browser will redirect after successful authentication.</param>
-        /// <param name="logoutRedirectUri">(Android, iOS, and macOS only) The URL where the browser will redirect after logout is complete.</param>
-        /// <param name="engineStartupTimeoutMs">(Windows only) Timeout duration in milliseconds to wait for the default Windows browser engine to start.</param>
+        /// <param name="redirectUri">
+        ///     (Android, iOS, and macOS only) The URL where the browser will redirect after successful
+        ///     authentication.
+        /// </param>
+        /// <param name="logoutRedirectUri">
+        ///     (Android, iOS, and macOS only) The URL where the browser will redirect after logout is
+        ///     complete.
+        /// </param>
+        /// <param name="engineStartupTimeoutMs">
+        ///     (Windows only) Timeout duration in milliseconds to wait for the default Windows
+        ///     browser engine to start.
+        /// </param>
         /// <param name="webBrowserClient">(Windows only) Custom Windows browser to use instead of the default browser in the SDK.</param>
         public static UniTask<Passport> Init(
             string clientId,
@@ -124,35 +131,36 @@ namespace Immutable.Passport
                     {
                         // Wait for the ready signal
                         PassportLogger.Info($"{TAG} Waiting for ready signal...");
-                        await UniTask.WaitUntil(() => readySignalReceived == true);
+                        await UniTask.WaitUntil(() => readySignalReceived);
                     })
                     .ContinueWith(async () =>
                     {
-                        if (readySignalReceived == true)
+                        if (readySignalReceived)
                         {
                             // Initialise Passport with provided parameters
-                            await Instance.GetPassportImpl().Init(clientId, environment, redirectUri, logoutRedirectUri, deeplink);
+                            await Instance.GetPassportImpl().Init(clientId, environment, redirectUri, logoutRedirectUri,
+                                deeplink);
                             return Instance;
                         }
-                        else
-                        {
-                            PassportLogger.Error($"{TAG} Failed to initialise Passport");
-                            throw new PassportException("Failed to initiliase Passport", PassportErrorType.INITALISATION_ERROR);
-                        }
+
+                        PassportLogger.Error($"{TAG} Failed to initialise Passport");
+                        throw new PassportException("Failed to initiliase Passport",
+                            PassportErrorType.INITALISATION_ERROR);
                     });
             }
-            else
-            {
-                // Return the existing instance if already initialised
-                readySignalReceived = true;
-                return UniTask.FromResult(Instance);
-            }
+
+            // Return the existing instance if already initialised
+            readySignalReceived = true;
+            return UniTask.FromResult(Instance);
         }
 
         /// <summary>
-        /// Initialises the appropriate web browser and sets up browser communication.
+        ///     Initialises the appropriate web browser and sets up browser communication.
         /// </summary>
-        /// <param name="engineStartupTimeoutMs">(Windows only) Timeout duration in milliseconds to wait for the default Windows browser engine to start.</param>
+        /// <param name="engineStartupTimeoutMs">
+        ///     (Windows only) Timeout duration in milliseconds to wait for the default Windows
+        ///     browser engine to start.
+        /// </param>
         /// <param name="webBrowserClient">(Windows only) Custom Windows browser to use instead of the default browser in the SDK.</param>
         private async UniTask Initialise(
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
@@ -189,7 +197,7 @@ namespace Immutable.Passport
 #endif
 
                 // Set up browser communication
-                BrowserCommunicationsManager communicationsManager = new BrowserCommunicationsManager(webBrowserClient);
+                var communicationsManager = new BrowserCommunicationsManager(webBrowserClient);
                 // Mark ready when browser is initialised and game bridge file is loaded
                 communicationsManager.OnReady += () => readySignalReceived = true;
 
@@ -208,8 +216,8 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Sets the timeout time for waiting for each call to respond (in milliseconds).
-        /// This only applies to functions that use the browser communications manager.
+        ///     Sets the timeout time for waiting for each call to respond (in milliseconds).
+        ///     This only applies to functions that use the browser communications manager.
         /// </summary>
         public void SetCallTimeout(int ms)
         {
@@ -217,29 +225,42 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Logs the user into Passport via device code auth. This will open the user's default browser and take them through Passport login.
-        /// <param name="useCachedSession">If true, the saved access token or refresh token will be used to log the user in. If this fails, it will not fallback to device code auth.</param>
-        /// <param name="timeoutMs">(Optional) The maximum time, in milliseconds, the function is allowed to take before a TimeoutException is thrown. If not set, the function will wait indefinitely.</param>
+        ///     Logs the user into Passport via device code auth. This will open the user's default browser and take them through
+        ///     Passport login.
+        ///     <param name="useCachedSession">
+        ///         If true, the saved access token or refresh token will be used to log the user in. If
+        ///         this fails, it will not fallback to device code auth.
+        ///     </param>
+        ///     <param name="timeoutMs">
+        ///         (Optional) The maximum time, in milliseconds, the function is allowed to take before a
+        ///         TimeoutException is thrown. If not set, the function will wait indefinitely.
+        ///     </param>
         /// </summary>
-        public async UniTask<bool> Login(bool useCachedSession = false, Nullable<long> timeoutMs = null)
+        public async UniTask<bool> Login(bool useCachedSession = false, long? timeoutMs = null)
         {
             return await GetPassportImpl().Login(useCachedSession, timeoutMs);
         }
 
         /// <summary>
-        /// Logs the user into Passport via device code auth and sets up the Immutable X provider. This will open the user's
-        /// default browser and take them through Passport login.
-        /// <param name="useCachedSession">If true, the saved access token or refresh token will be used to connect the user. If this fails, it will not fallback to device code auth.</param>
-        /// <param name="timeoutMs">(Optional) The maximum time, in milliseconds, the function is allowed to take before a TimeoutException is thrown. If not set, the function will wait indefinitely.</param>
+        ///     Logs the user into Passport via device code auth and sets up the Immutable X provider. This will open the user's
+        ///     default browser and take them through Passport login.
+        ///     <param name="useCachedSession">
+        ///         If true, the saved access token or refresh token will be used to connect the user.
+        ///         If this fails, it will not fallback to device code auth.
+        ///     </param>
+        ///     <param name="timeoutMs">
+        ///         (Optional) The maximum time, in milliseconds, the function is allowed to take before a
+        ///         TimeoutException is thrown. If not set, the function will wait indefinitely.
+        ///     </param>
         /// </summary>
-        public async UniTask<bool> ConnectImx(bool useCachedSession = false, Nullable<long> timeoutMs = null)
+        public async UniTask<bool> ConnectImx(bool useCachedSession = false, long? timeoutMs = null)
         {
             return await GetPassportImpl().ConnectImx(useCachedSession, timeoutMs);
         }
 
 #if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
         /// <summary>
-        /// Connects the user into Passport via PKCE auth.
+        ///     Connects the user into Passport via PKCE auth.
         /// </summary>
         public async UniTask LoginPKCE()
         {
@@ -247,10 +268,9 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Connects the user into Passport via PKCE auth and sets up the Immutable X provider.
-        ///
-        /// The user does not need to go through this flow if the saved access token is still valid or
-        /// the refresh token can be used to get a new access token.
+        ///     Connects the user into Passport via PKCE auth and sets up the Immutable X provider.
+        ///     The user does not need to go through this flow if the saved access token is still valid or
+        ///     the refresh token can be used to get a new access token.
         /// </summary>
         public async UniTask<bool> ConnectImxPKCE()
         {
@@ -259,10 +279,10 @@ namespace Immutable.Passport
 #endif
 
         /// <summary>
-        /// Gets the wallet address of the logged in user.
-        /// <returns>
-        /// The wallet address
-        /// </returns>
+        ///     Gets the wallet address of the logged in user.
+        ///     <returns>
+        ///         The wallet address
+        ///     </returns>
         /// </summary>
         public async UniTask<string> GetAddress()
         {
@@ -270,8 +290,8 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Logs the user out of Passport and removes any stored credentials.
-        /// Recommended to use when logging in using device auth flow - ConnectImx()
+        ///     Logs the user out of Passport and removes any stored credentials.
+        ///     Recommended to use when logging in using device auth flow - ConnectImx()
         /// </summary>
         /// <param name="hardLogout">If false, the user will not be logged out of Passport in the browser. The default is true.</param>
         public async UniTask Logout(bool hardLogout = true)
@@ -281,8 +301,8 @@ namespace Immutable.Passport
 
 #if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
         /// <summary>
-        /// Logs the user out of Passport and removes any stored credentials.
-        /// Recommended to use when logging in using PKCE flow - ConnectImxPKCE()
+        ///     Logs the user out of Passport and removes any stored credentials.
+        ///     Recommended to use when logging in using PKCE flow - ConnectImxPKCE()
         /// </summary>
         /// <param name="hardLogout">If false, the user will not be logged out of Passport in the browser. The default is true.</param>
         public async UniTask LogoutPKCE(bool hardLogout = true)
@@ -292,10 +312,10 @@ namespace Immutable.Passport
 #endif
 
         /// <summary>
-        /// Checks if credentials exist but does not check if they're valid
-        /// <returns>
-        /// True if there are crendentials saved
-        /// </returns>
+        ///     Checks if credentials exist but does not check if they're valid
+        ///     <returns>
+        ///         True if there are crendentials saved
+        ///     </returns>
         /// </summary>
         public UniTask<bool> HasCredentialsSaved()
         {
@@ -303,10 +323,10 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Checks if the user is registered off-chain
-        /// <returns>
-        /// True if the user is registered with Immutable X, false otherwise
-        /// </returns>
+        ///     Checks if the user is registered off-chain
+        ///     <returns>
+        ///         True if the user is registered with Immutable X, false otherwise
+        ///     </returns>
         /// </summary>
         public async UniTask<bool> IsRegisteredOffchain()
         {
@@ -314,7 +334,7 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Registers the user to Immutable X if they are not already registered
+        ///     Registers the user to Immutable X if they are not already registered
         /// </summary>
         public async UniTask<RegisterUserResponse> RegisterOffchain()
         {
@@ -322,34 +342,34 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Retrieves the email address of the user whose credentials are currently stored.
-        /// <returns>
-        /// The email address
-        /// </returns>
+        ///     Retrieves the email address of the user whose credentials are currently stored.
+        ///     <returns>
+        ///         The email address
+        ///     </returns>
         /// </summary>
         public async UniTask<string> GetEmail()
         {
-            string email = await GetPassportImpl().GetEmail();
+            var email = await GetPassportImpl().GetEmail();
             return email;
         }
 
         /// <summary>
-        /// Retrieves the Passport ID of the user whose credentials are currently stored.
-        /// <returns>
-        /// The Passport ID
-        /// </returns>
+        ///     Retrieves the Passport ID of the user whose credentials are currently stored.
+        ///     <returns>
+        ///         The Passport ID
+        ///     </returns>
         /// </summary>
         public async UniTask<string> GetPassportId()
         {
-            string passportId = await GetPassportImpl().GetPassportId();
+            var passportId = await GetPassportImpl().GetPassportId();
             return passportId;
         }
 
         /// <summary>
-        /// Gets the currently saved access token without verifying its validity.
-        /// <returns>
-        /// The access token
-        /// </returns>
+        ///     Gets the currently saved access token without verifying its validity.
+        ///     <returns>
+        ///         The access token
+        ///     </returns>
         /// </summary>
         public UniTask<string> GetAccessToken()
         {
@@ -357,10 +377,10 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Gets the currently saved ID token without verifying its validity.
-        /// <returns>
-        /// The ID token
-        /// </returns>
+        ///     Gets the currently saved ID token without verifying its validity.
+        ///     <returns>
+        ///         The ID token
+        ///     </returns>
         /// </summary>
         public UniTask<string> GetIdToken()
         {
@@ -368,11 +388,11 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Gets the list of external wallets the user has linked to their Passport account via the 
-        /// <see href="https://passport.immutable.com/">Dashboard</see>.
-        /// <returns>
-        /// Linked addresses
-        /// </returns>
+        ///     Gets the list of external wallets the user has linked to their Passport account via the
+        ///     <see href="https://passport.immutable.com/">Dashboard</see>.
+        ///     <returns>
+        ///         Linked addresses
+        ///     </returns>
         /// </summary>
         public async UniTask<List<string>> GetLinkedAddresses()
         {
@@ -380,31 +400,31 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Create a new transfer request with the given unsigned transfer request.
-        /// <returns>
-        /// The transfer response if successful
-        /// </returns>
+        ///     Create a new transfer request with the given unsigned transfer request.
+        ///     <returns>
+        ///         The transfer response if successful
+        ///     </returns>
         /// </summary>
         public async UniTask<CreateTransferResponseV1> ImxTransfer(UnsignedTransferRequest request)
         {
-            CreateTransferResponseV1 response = await GetPassportImpl().ImxTransfer(request);
+            var response = await GetPassportImpl().ImxTransfer(request);
             return response;
         }
 
         /// <summary>
-        /// Create a new batch nft transfer request with the given transfer details.
-        /// <returns>
-        /// The transfer response if successful
-        /// </returns>
+        ///     Create a new batch nft transfer request with the given transfer details.
+        ///     <returns>
+        ///         The transfer response if successful
+        ///     </returns>
         /// </summary>
         public async UniTask<CreateBatchTransferResponse> ImxBatchNftTransfer(NftTransferDetails[] details)
         {
-            CreateBatchTransferResponse response = await GetPassportImpl().ImxBatchNftTransfer(details);
+            var response = await GetPassportImpl().ImxBatchNftTransfer(details);
             return response;
         }
 
         /// <summary>
-        /// Instantiates the zkEVM provider
+        ///     Instantiates the zkEVM provider
         /// </summary>
         /// <returns></returns>
         public async UniTask ConnectEvm()
@@ -413,10 +433,10 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Sends a transaction to the network and signs it using the logged-in Passport account.
-        /// <returns>
-        /// The transaction hash, or the zero hash if the transaction is not yet available.
-        /// </returns>
+        ///     Sends a transaction to the network and signs it using the logged-in Passport account.
+        ///     <returns>
+        ///         The transaction hash, or the zero hash if the transaction is not yet available.
+        ///     </returns>
         /// </summary>
         public async UniTask<string> ZkEvmSendTransaction(TransactionRequest request)
         {
@@ -424,21 +444,23 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Similar to <code>ZkEvmSendTransaction</code>. Sends a transaction to the network, signs it using the logged-in Passport account, and waits for the transaction to be included in a block.
-        /// <returns>
-        /// The receipt of the transaction or null if it is still processing.
-        /// </returns>
+        ///     Similar to <code>ZkEvmSendTransaction</code>. Sends a transaction to the network, signs it using the logged-in
+        ///     Passport account, and waits for the transaction to be included in a block.
+        ///     <returns>
+        ///         The receipt of the transaction or null if it is still processing.
+        ///     </returns>
         /// </summary>
-        public async UniTask<TransactionReceiptResponse> ZkEvmSendTransactionWithConfirmation(TransactionRequest request)
+        public async UniTask<TransactionReceiptResponse> ZkEvmSendTransactionWithConfirmation(
+            TransactionRequest request)
         {
             return await GetPassportImpl().ZkEvmSendTransactionWithConfirmation(request);
         }
 
         /// <summary>
-        /// Signs the given value and types for the given domain using the logged-in Passport account.
-        /// <returns>
-        /// The signed payload string
-        /// </returns>
+        ///     Signs the given value and types for the given domain using the logged-in Passport account.
+        ///     <returns>
+        ///         The signed payload string
+        ///     </returns>
         /// </summary>
         public async UniTask<string> ZkEvmSignTypedDataV4(string payload)
         {
@@ -446,10 +468,11 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Retrieves the transaction information of a given transaction hash. This function uses the Ethereum JSON-RPC <c>eth_getTransactionReceipt</c> method.
-        /// <returns>
-        /// The receipt of the transaction or null if it is still processing.
-        /// </returns>
+        ///     Retrieves the transaction information of a given transaction hash. This function uses the Ethereum JSON-RPC
+        ///     <c>eth_getTransactionReceipt</c> method.
+        ///     <returns>
+        ///         The receipt of the transaction or null if it is still processing.
+        ///     </returns>
         /// </summary>
         public async UniTask<TransactionReceiptResponse> ZkEvmGetTransactionReceipt(string hash)
         {
@@ -457,10 +480,10 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Returns a list of addresses owned by the user
-        /// <returns>
-        /// Addresses owned by the user
-        /// </returns>
+        ///     Returns a list of addresses owned by the user
+        ///     <returns>
+        ///         Addresses owned by the user
+        ///     </returns>
         /// </summary>
         public async UniTask<List<string>> ZkEvmRequestAccounts()
         {
@@ -468,12 +491,12 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Returns the balance of the account of given address.
+        ///     Returns the balance of the account of given address.
         /// </summary>
         /// <param name="address">Address to check for balance</param>
         /// <param name="blockNumberOrTag">Integer block number, or the string "latest", "earliest" or "pending"</param>
         /// <returns>
-        /// The balance in wei
+        ///     The balance in wei
         /// </returns>
         public async UniTask<string> ZkEvmGetBalance(string address, string blockNumberOrTag = "latest")
         {
@@ -524,10 +547,7 @@ namespace Immutable.Passport
 
         private PassportImpl GetPassportImpl()
         {
-            if (passportImpl != null)
-            {
-                return passportImpl;
-            }
+            if (passportImpl != null) return passportImpl;
             throw new PassportException("Passport not initialised");
         }
 
@@ -535,22 +555,16 @@ namespace Immutable.Passport
         {
             deeplink = url;
 
-            if (passportImpl != null)
-            {
-                GetPassportImpl().OnDeepLinkActivated(url);
-            }
+            if (passportImpl != null) GetPassportImpl().OnDeepLinkActivated(url);
         }
 
         private void OnPassportAuthEvent(PassportAuthEvent authEvent)
         {
-            if (OnAuthEvent != null)
-            {
-                OnAuthEvent.Invoke(authEvent);
-            }
+            if (OnAuthEvent != null) OnAuthEvent.Invoke(authEvent);
         }
 
         /// <summary>
-        /// Handles clean-up when the application quits
+        ///     Handles clean-up when the application quits
         /// </summary>
         private void OnQuit()
         {
@@ -565,21 +579,18 @@ namespace Immutable.Passport
 
 #if UNITY_EDITOR
         /// <summary>
-        /// Handles play mode state changes in the editor
+        ///     Handles play mode state changes in the editor
         /// </summary>
         /// <param name="state">The current play mode state</param>
         private void OnPlayModeStateChanged(PlayModeStateChange state)
         {
             // Dispose of all resources when exiting play mode
-            if (state == PlayModeStateChange.ExitingPlayMode)
-            {
-                DisposeAll();
-            }
+            if (state == PlayModeStateChange.ExitingPlayMode) DisposeAll();
         }
 #endif
 
         /// <summary>
-        /// Disposes of all resources and unsubscribes from events
+        ///     Disposes of all resources and unsubscribes from events
         /// </summary>
         private void DisposeAll()
         {

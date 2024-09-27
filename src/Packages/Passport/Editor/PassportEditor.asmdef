@@ -1,18 +1,18 @@
 {
-    "name": "Immutable.Passport.Editor",
-    "rootNamespace": "Immutable.Passport.Editor",
-    "references": [],
-    "includePlatforms": [
-        "Editor",
-        "macOSStandalone",
-        "WindowsStandalone64"
-    ],
-    "excludePlatforms": [],
-    "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
-    "autoReferenced": true,
-    "defineConstraints": [],
-    "versionDefines": [],
-    "noEngineReferences": false
+  "name": "Immutable.Passport.Editor",
+  "rootNamespace": "Immutable.Passport.Editor",
+  "references": [],
+  "includePlatforms": [
+    "Editor",
+    "macOSStandalone",
+    "WindowsStandalone64"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
 }

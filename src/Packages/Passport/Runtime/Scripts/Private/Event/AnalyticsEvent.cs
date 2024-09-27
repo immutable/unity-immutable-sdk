@@ -1,10 +1,10 @@
-using System.Collections.Generic;
 using System;
-using UnityEngine;
-using Immutable.Passport.Model;
+using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using Immutable.Passport.Core;
 using Immutable.Passport.Helpers;
-using Cysharp.Threading.Tasks;
+using Immutable.Passport.Model;
+using UnityEngine;
 
 namespace Immutable.Passport.Event
 {
@@ -12,6 +12,27 @@ namespace Immutable.Passport.Event
     {
         public const string TRACK = "track";
         public const string MODULE_NAME = "unitySdk";
+
+        public async UniTask Track(IBrowserCommunicationsManager communicationsManager, string eventName,
+            bool? success = null, Dictionary<string, object> properties = null)
+        {
+            try
+            {
+                if (properties == null) properties = new Dictionary<string, object>();
+                if (success != null) properties.Add(Properties.SUCCESS, success);
+                var json = JsonUtility.ToJson(new TrackData
+                {
+                    moduleName = MODULE_NAME,
+                    eventName = eventName,
+                    properties = properties.ToJson()
+                });
+                await communicationsManager.Call(TRACK, json);
+            }
+            catch (Exception)
+            {
+                // Ignore tracking errors
+            }
+        }
 
         public static class EventName
         {
@@ -39,33 +60,6 @@ namespace Immutable.Passport.Event
         public static class Properties
         {
             public const string SUCCESS = "succeeded";
-        }
-
-        public async UniTask Track(IBrowserCommunicationsManager communicationsManager, string eventName,
-            bool? success = null, Dictionary<string, object> properties = null)
-        {
-            try
-            {
-                if (properties == null)
-                {
-                    properties = new Dictionary<string, object>();
-                }
-                if (success != null)
-                {
-                    properties.Add(Properties.SUCCESS, success);
-                }
-                string json = JsonUtility.ToJson(new TrackData()
-                {
-                    moduleName = MODULE_NAME,
-                    eventName = eventName,
-                    properties = properties.ToJson()
-                });
-                await communicationsManager.Call(TRACK, json);
-            }
-            catch (Exception)
-            {
-                // Ignore tracking errors
-            }
         }
     }
 }

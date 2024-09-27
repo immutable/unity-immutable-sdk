@@ -1,6 +1,6 @@
 using System;
-using NUnit.Framework;
 using Immutable.Passport.Helpers;
+using NUnit.Framework;
 
 namespace Immutable.Passport.Core
 {
@@ -16,7 +16,8 @@ namespace Immutable.Passport.Core
         [Test]
         public void GetQueryParameter_Success()
         {
-            Uri uri = new Uri($"{DOMAIN}?{QUERY_PARAMETER_KEY1}={QUERY_PARAMETER_VALUE1}&{QUERY_PARAMETER_KEY2}={QUERY_PARAMETER_VALUE2}");
+            var uri = new Uri(
+                $"{DOMAIN}?{QUERY_PARAMETER_KEY1}={QUERY_PARAMETER_VALUE1}&{QUERY_PARAMETER_KEY2}={QUERY_PARAMETER_VALUE2}");
             Assert.True(uri.GetQueryParameter(QUERY_PARAMETER_KEY1) == QUERY_PARAMETER_VALUE1);
             Assert.True(uri.GetQueryParameter(QUERY_PARAMETER_KEY2) == QUERY_PARAMETER_VALUE2);
         }
@@ -24,14 +25,14 @@ namespace Immutable.Passport.Core
         [Test]
         public void GetQueryParameter_NoQueryParameterWithKey()
         {
-            Uri uri = new Uri($"{DOMAIN}?noKey=some-value");
+            var uri = new Uri($"{DOMAIN}?noKey=some-value");
             Assert.Null(uri.GetQueryParameter(QUERY_PARAMETER_KEY1));
         }
 
         [Test]
         public void GetQueryParameter_NoQueryParameters()
         {
-            Uri uri = new Uri(DOMAIN);
+            var uri = new Uri(DOMAIN);
             Assert.Null(uri.GetQueryParameter(QUERY_PARAMETER_KEY1));
             uri = new Uri($"{DOMAIN}?");
             Assert.Null(uri.GetQueryParameter(QUERY_PARAMETER_KEY1));

@@ -10,4 +10,3 @@ namespace Immutable.Passport.Model
         public long? timeoutMs;
     }
 }
-

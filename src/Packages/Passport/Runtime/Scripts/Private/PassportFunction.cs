@@ -18,6 +18,7 @@ namespace Immutable.Passport
         public const string GET_EMAIL = "getEmail";
         public const string GET_PASSPORT_ID = "getPassportId";
         public const string GET_LINKED_ADDRESSES = "getLinkedAddresses";
+
         public static class IMX
         {
             public const string GET_ADDRESS = "getAddress";

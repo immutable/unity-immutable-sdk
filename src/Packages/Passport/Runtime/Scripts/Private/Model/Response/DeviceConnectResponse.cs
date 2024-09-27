@@ -6,7 +6,7 @@ namespace Immutable.Passport.Model
     {
         public string code;
         public string deviceCode;
-        public string url;
         public int interval;
+        public string url;
     }
 }

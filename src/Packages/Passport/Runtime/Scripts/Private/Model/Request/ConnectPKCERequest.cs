@@ -2,7 +2,6 @@ using System;
 
 namespace Immutable.Passport.Model
 {
-
     [Serializable]
     internal class ConnectPKCERequest
     {
@@ -10,4 +9,3 @@ namespace Immutable.Passport.Model
         public string state;
     }
 }
-

@@ -1,31 +1,25 @@
 using System;
-using NUnit.Framework;
-using Immutable.Browser.Core;
-using Immutable.Passport.Model;
-using UnityEngine;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Immutable.Browser.Core;
 using Immutable.Passport.Helpers;
+using Immutable.Passport.Model;
+using NUnit.Framework;
+using UnityEngine;
 
 namespace Immutable.Passport.Core
 {
     [TestFixture]
     public class BrowserCommunicationsManagerTests
     {
-        private const string FUNCTION_NAME = "someFunction";
-        private const string ERROR = "some error";
-
-#pragma warning disable CS8618
-        private BrowserCommunicationsManager manager;
-        private MockBrowserClient mockClient;
-#pragma warning restore CS8618
-
         [SetUp]
         public void Init()
         {
             mockClient = new MockBrowserClient();
             manager = new BrowserCommunicationsManager(mockClient);
         }
+
+        private const string FUNCTION_NAME = "someFunction";
+        private const string ERROR = "some error";
 
         [Test]
         public async Task CallAndResponse_Success_WithData()
@@ -54,7 +48,7 @@ namespace Immutable.Passport.Core
 
             Assert.NotNull(mockClient.request);
             Assert.True(mockClient.request.fxName == FUNCTION_NAME);
-            Assert.True(String.IsNullOrEmpty(mockClient.request.data));
+            Assert.True(string.IsNullOrEmpty(mockClient.request.data));
         }
 
         [Test]
@@ -70,7 +64,7 @@ namespace Immutable.Passport.Core
             Exception e = null;
             try
             {
-                string response = await manager.Call(FUNCTION_NAME);
+                var response = await manager.Call(FUNCTION_NAME);
             }
             catch (PassportException exception)
             {
@@ -78,7 +72,7 @@ namespace Immutable.Passport.Core
             }
 
             Assert.NotNull(e);
-            Assert.IsTrue(e.Message.Contains("Response from browser is incorrect") == true);
+            Assert.IsTrue(e.Message.Contains("Response from browser is incorrect"));
         }
 
         [Test]
@@ -95,7 +89,7 @@ namespace Immutable.Passport.Core
             PassportException e = null;
             try
             {
-                string response = await manager.Call(FUNCTION_NAME);
+                var response = await manager.Call(FUNCTION_NAME);
             }
             catch (PassportException exception)
             {
@@ -119,7 +113,7 @@ namespace Immutable.Passport.Core
             PassportException e = null;
             try
             {
-                string response = await manager.Call(FUNCTION_NAME);
+                var response = await manager.Call(FUNCTION_NAME);
             }
             catch (PassportException exception)
             {
@@ -135,74 +129,64 @@ namespace Immutable.Passport.Core
         [Test]
         public void CallAndResponse_Success_BrowserReady()
         {
-            BrowserResponse browserResponse = new BrowserResponse()
+            var browserResponse = new BrowserResponse
             {
                 responseFor = BrowserCommunicationsManager.INIT,
                 requestId = BrowserCommunicationsManager.INIT_REQUEST_ID,
                 success = true
             };
 
-            bool onReadyCalled = false;
+            var onReadyCalled = false;
             manager.OnReady += () => onReadyCalled = true;
 
             mockClient.InvokeUnityPostMessage(JsonUtility.ToJson(browserResponse));
 
             Assert.True(onReadyCalled);
         }
+
+#pragma warning disable CS8618
+        private BrowserCommunicationsManager manager;
+        private MockBrowserClient mockClient;
+#pragma warning restore CS8618
     }
 
     internal class MockBrowserClient : IWebBrowserClient
     {
+        public BrowserResponse browserResponse;
+
+        public BrowserRequest request;
+        public bool setRequestId = true;
         public event OnUnityPostMessageDelegate OnUnityPostMessage;
         public event OnUnityPostMessageDelegate OnAuthPostMessage;
         public event OnUnityPostMessageErrorDelegate OnPostMessageError;
-
-        public BrowserRequest request = null;
-        public BrowserResponse browserResponse = null;
-        public bool setRequestId = true;
 
         public void ExecuteJs(string js)
         {
             var json = Between(js, "callFunction(\"", "\")").Replace("\\\\", "\\").Replace("\\\"", "\"");
             request = json.OptDeserializeObject<BrowserRequest>();
-            if (setRequestId && browserResponse != null)
-            {
-                browserResponse.requestId = request.requestId;
-            }
+            if (setRequestId && browserResponse != null) browserResponse.requestId = request.requestId;
             InvokeUnityPostMessage(JsonUtility.ToJson(browserResponse));
-        }
-
-        internal void InvokeUnityPostMessage(string message)
-        {
-            if (OnUnityPostMessage != null)
-            {
-                OnUnityPostMessage.Invoke(message);
-            }
-        }
-
-        private string Between(string value, string a, string b)
-        {
-            int posA = value.IndexOf(a);
-            int posB = value.LastIndexOf(b);
-            if (posA == -1)
-            {
-                return "";
-            }
-            if (posB == -1)
-            {
-                return "";
-            }
-            int adjustedPosA = posA + a.Length;
-            if (adjustedPosA >= posB)
-            {
-                return "";
-            }
-            return value.Substring(adjustedPosA, posB - adjustedPosA);
         }
 
         public void LaunchAuthURL(string url, string redirectUri)
         {
             throw new NotImplementedException();
+        }
+
+        internal void InvokeUnityPostMessage(string message)
+        {
+            if (OnUnityPostMessage != null) OnUnityPostMessage.Invoke(message);
+        }
+
+        private string Between(string value, string a, string b)
+        {
+            var posA = value.IndexOf(a);
+            var posB = value.LastIndexOf(b);
+            if (posA == -1) return "";
+            if (posB == -1) return "";
+            var adjustedPosA = posA + a.Length;
+            if (adjustedPosA >= posB) return "";
+            return value.Substring(adjustedPosA, posB - adjustedPosA);
         }
 
         public void Dispose()
