@@ -1,0 +1,19 @@
+{
+  "name": "com.immutable.marketplace",
+  "version": "1.26.0",
+  "description": "Marketplace package for the Immutable SDK for Unity",
+  "displayName": "Immutable Marketplace",
+  "author": {
+    "name": "Immutable",
+    "url": "https://immutable.com"
+  },
+  "dependencies": {
+    "com.cysharp.unitask": "2.3.3"
+  },
+  "keywords": [
+    "unity",
+    "immutable",
+    "Marketplace"
+  ],
+  "unity": "2021.3"
+}
