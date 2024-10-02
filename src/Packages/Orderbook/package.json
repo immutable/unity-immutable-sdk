@@ -1,0 +1,19 @@
+{
+  "name": "com.immutable.orderbook",
+  "version": "0.1.0-alpha",
+  "description": "Orderbook package for the Immutable SDK for Unity",
+  "displayName": "Immutable Orderbook",
+  "author": {
+    "name": "Immutable",
+    "url": "https://immutable.com"
+  },
+  "dependencies": {
+    "com.cysharp.unitask": "2.3.3"
+  },
+  "keywords": [
+    "unity",
+    "immutable",
+    "Orderbook"
+  ],
+  "unity": "2021.3"
+}
