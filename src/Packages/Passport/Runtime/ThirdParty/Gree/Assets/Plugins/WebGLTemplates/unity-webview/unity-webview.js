@@ -39,34 +39,6 @@ var unityWebView =
             unityInstance.SendMessage(name, "CallFromJS", message);
         },
 
-        setMargins: function (name, left, top, right, bottom) {
-            var container = $('#unity-container');
-            var r = (container.hasClass('unity-desktop')) ? window.devicePixelRatio : 1;
-            var w0 = container.width() * r;
-            var h0 = container.height() * r;
-            var canvas = $('#unity-canvas');
-            var w1 = canvas.attr('width');
-            var h1 = canvas.attr('height');
-
-            var lp = left / w0 * 100;
-            var tp = top / h0 * 100;
-            var wp = (w1 - left - right) / w0 * 100;
-            var hp = (h1 - top - bottom) / h0 * 100;
-
-            this.iframe(name)
-                .css('left', lp + '%')
-                .css('top', tp + '%')
-                .css('width', wp + '%')
-                .css('height', hp + '%');
-        },
-
-        setVisibility: function (name, visible) {
-            if (visible)
-                this.iframe(name).show();
-            else
-                this.iframe(name).hide();
-        },
-
         loadURL: function(name, url) {
             const host = window.location.origin.includes('localhost') ? window.location.origin : 'https://immutable.github.io/unity-sample-game-webgl';
             this.iframe(name).attr('loaded', 'false')[0].contentWindow.location.replace(host + url);

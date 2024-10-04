@@ -320,8 +320,6 @@ namespace Immutable.Passport
 				string hostWithPort = uri.IsDefaultPort ? uri.Host : $"{uri.Host}:{uri.Port}";
 
 				string domain = $"{uri.Scheme}://{hostWithPort}{uri.AbsolutePath}";
-                PassportLogger.Info($"{TAG} domain: {domain}");
-                PassportLogger.Info($"{TAG} redirectUri: {redirectUri}");
 
                 if (domain.EndsWith("/"))
                 {
