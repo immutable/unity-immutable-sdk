@@ -11,6 +11,7 @@ namespace Immutable.Browser.Core
         private const string PASSPORT_PACKAGE_RESOURCES_DIRECTORY = "Packages/com.immutable.passport/Runtime/Resources";
         private const string ANDROID_DATA_DIRECTORY = "android_asset";
         private const string MAC_DATA_DIRECTORY = "/Resources/Data";
+        private const string WEBGL_DIRECTORY = "/Passport";
         private const string MAC_EDITOR_RESOURCES_DIRECTORY = "Packages/com.immutable.passport/Runtime/Resources";
 
         public static string GetFilePath()
@@ -32,6 +33,9 @@ namespace Immutable.Browser.Core
 #elif UNITY_EDITOR_WIN
             // Windows editor
             filePath = SCHEME_FILE + Path.GetFullPath($"{PASSPORT_PACKAGE_RESOURCES_DIRECTORY}{PASSPORT_HTML_FILE_NAME}");
+#elif UNITY_WEBGL && !UNITY_EDITOR
+            // WebGL
+            filePath = WEBGL_DIRECTORY + PASSPORT_HTML_FILE_NAME;
 #else
             filePath = SCHEME_FILE + Path.GetFullPath(Application.dataPath) + PASSPORT_DATA_DIRECTORY_NAME + PASSPORT_HTML_FILE_NAME;
 #endif

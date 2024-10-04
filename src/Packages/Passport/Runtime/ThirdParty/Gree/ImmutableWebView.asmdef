@@ -9,7 +9,8 @@
         "Android",
         "Editor",
         "iOS",
-        "macOSStandalone"
+        "macOSStandalone",
+        "WebGL"
     ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
