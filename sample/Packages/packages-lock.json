@@ -14,6 +14,22 @@
       "dependencies": {},
       "url": "https://package.openupm.com"
     },
+    "com.immutable.marketplace": {
+      "version": "file:../../src/Packages/Marketplace",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {
+        "com.cysharp.unitask": "2.3.3"
+      }
+    },
+    "com.immutable.orderbook": {
+      "version": "file:../../src/Packages/Orderbook",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {
+        "com.cysharp.unitask": "2.3.3"
+      }
+    },
     "com.immutable.passport": {
       "version": "file:../../src/Packages/Passport",
       "depth": 0,

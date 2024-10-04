@@ -104,10 +104,7 @@ namespace Immutable.Passport
                 throw new PassportException(initResponse.error ?? "Unable to initialise Passport");
             }
 
-            if (deeplink != null)
-            {
-                OnDeepLinkActivated(deeplink);
-            }
+            if (deeplink != null) OnDeepLinkActivated(deeplink);
 
             Track(PassportAnalytics.EventName.INIT_PASSPORT, true);
         }
@@ -175,10 +172,7 @@ namespace Immutable.Passport
         public async UniTask<bool> ConnectImx(bool useCachedSession = false, long? timeoutMs = null)
         {
             var functionName = "ConnectImx";
-            if (useCachedSession)
-            {
-                return await Reconnect();
-            }
+            if (useCachedSession) return await Reconnect();
 
             // If the user called Login before and then ConnectImx, there is no point triggering device flow again
             var hasCredsSaved = await HasCredentialsSaved();

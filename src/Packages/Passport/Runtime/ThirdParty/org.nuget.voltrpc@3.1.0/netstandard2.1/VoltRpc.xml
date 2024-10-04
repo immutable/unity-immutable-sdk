@@ -435,8 +435,9 @@
                     <see cref="T:VoltRpc.IO.BufferedWriter"/>
                     for
                     you
-                    then call<see
-                        cref="M:VoltRpc.Communication.Host.ProcessRequest(VoltRpc.IO.BufferedReader,VoltRpc.IO.BufferedWriter)"/>
+                    then call
+                    <see
+                            cref="M:VoltRpc.Communication.Host.ProcessRequest(VoltRpc.IO.BufferedReader,VoltRpc.IO.BufferedWriter)"/>
                     .
                     <para>This is the preferred process request method to call.</para>
                 </para>
