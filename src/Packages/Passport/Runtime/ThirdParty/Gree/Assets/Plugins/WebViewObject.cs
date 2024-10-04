@@ -64,7 +64,11 @@ namespace Immutable.Browser.Gree
     }
 #endif
 
+#if UNITY_WEBGL && !UNITY_EDITOR
     public class WebViewObject : MonoBehaviour
+#else
+    public class WebViewObject
+#endif
     {
         private const string TAG = "[WebViewObject]";
         Callback onJS;
