@@ -189,13 +189,13 @@ namespace Immutable.Passport
 #endif
 
                 // Set up browser communication
-				BrowserCommunicationsManager communicationsManager = new BrowserCommunicationsManager(webBrowserClient);
-                
+                BrowserCommunicationsManager communicationsManager = new BrowserCommunicationsManager(webBrowserClient);
+
 #if UNITY_WEBGL
                 readySignalReceived = true;
 #else
-				// Mark ready when browser is initialised and game bridge file is loaded
-				communicationsManager.OnReady += () => readySignalReceived = true;
+                // Mark ready when browser is initialised and game bridge file is loaded
+                communicationsManager.OnReady += () => readySignalReceived = true;
 #endif
                 // Set up Passport implementation
                 passportImpl = new PassportImpl(communicationsManager);

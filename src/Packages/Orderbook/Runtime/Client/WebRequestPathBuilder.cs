@@ -37,8 +37,8 @@ namespace Immutable.Orderbook.Client
         public void AddQueryParameters(Multimap<string, string> parameters)
         {
             foreach (var parameter in parameters)
-            foreach (var value in parameter.Value)
-                _query = _query + parameter.Key + "=" + Uri.EscapeDataString(value) + "&";
+                foreach (var value in parameter.Value)
+                    _query = _query + parameter.Key + "=" + Uri.EscapeDataString(value) + "&";
         }
 
         public string GetFullUri()

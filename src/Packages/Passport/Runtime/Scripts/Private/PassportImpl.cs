@@ -94,7 +94,7 @@ namespace Immutable.Passport
                 };
                 initRequest = JsonUtility.ToJson(request);
             }
- 
+
             string response = await communicationsManager.Call(PassportFunction.INIT, initRequest);
             BrowserResponse initResponse = response.OptDeserializeObject<BrowserResponse>();
 
@@ -317,15 +317,15 @@ namespace Immutable.Passport
                 PassportLogger.Info($"{TAG} Received deeplink URL: {url}");
 
                 Uri uri = new Uri(url);
-				string hostWithPort = uri.IsDefaultPort ? uri.Host : $"{uri.Host}:{uri.Port}";
+                string hostWithPort = uri.IsDefaultPort ? uri.Host : $"{uri.Host}:{uri.Port}";
 
-				string domain = $"{uri.Scheme}://{hostWithPort}{uri.AbsolutePath}";
+                string domain = $"{uri.Scheme}://{hostWithPort}{uri.AbsolutePath}";
 
                 if (domain.EndsWith("/"))
                 {
                     domain = domain.Remove(domain.Length - 1);
                 }
-                
+
                 if (domain.Equals(logoutRedirectUri))
                 {
                     HandleLogoutPKCESuccess();
