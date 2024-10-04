@@ -314,7 +314,7 @@ namespace Immutable.Browser.Gree
             if (webView == IntPtr.Zero)
                 return;
             _CImmutableWebViewPlugin_LaunchAuthURL(webView, url);
-#elif UNITY_WEBGL
+#elif UNITY_WEBGL && !UNITY_EDITOR
             _gree_unity_webview_launchAuthURL(name, url);
 #else
             UnityEngine.Application.OpenURL(url);
