@@ -198,7 +198,12 @@ namespace Immutable.Browser.Gree
             }
         }
 #endif
-
+#if UNITY_WEBGL && !UNITY_EDITOR
+        void Awake()
+        {
+            DontDestroyOnLoad(this);
+        }
+#endif
         public void handleMessage(string message)
         {
             var i = message.IndexOf(':', 0);
