@@ -13,7 +13,7 @@ public class SelectAuthMethodScript : MonoBehaviour
     [SerializeField] private Button UseDeviceCodeAuthButton;
     [SerializeField] private Button UsePKCEButton;
 #pragma warning restore CS8618
-    
+
     void Start()
     {
         // Determine if PKCE is supported based on the platform
