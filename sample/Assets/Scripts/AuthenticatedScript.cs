@@ -169,7 +169,7 @@ public class AuthenticatedScript : MonoBehaviour
             // Logout using the appropriate logout method
             if (SampleAppManager.SupportsPKCE && SampleAppManager.UsePKCE)
             {
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
                 await Passport.LogoutPKCE();
 #endif
             }

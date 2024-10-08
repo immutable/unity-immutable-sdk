@@ -12,17 +12,29 @@ public class SelectAuthMethodScript : MonoBehaviour
     [SerializeField] private Text Output;
     [SerializeField] private Button UseDeviceCodeAuthButton;
     [SerializeField] private Button UsePKCEButton;
+    string REDIRECT_URI = null;
+    string LOGOUT_REIDIRECT_URI = "https://www.immutable.com";
 #pragma warning restore CS8618
-
     void Start()
     {
+#if UNITY_WEBGL
+    string url = Application.absoluteURL;
+    Uri uri = new Uri(url);
+    string scheme = uri.Scheme;
+    string hostWithPort = uri.IsDefaultPort ? uri.Host : $"{uri.Host}:{uri.Port}";
+    string fullPath = uri.AbsolutePath.EndsWith("/") ? uri.AbsolutePath : uri.AbsolutePath.Substring(0, uri.AbsolutePath.LastIndexOf('/') + 1);
+
+    REDIRECT_URI = $"{scheme}://{hostWithPort}{fullPath}callback.html";
+    LOGOUT_REIDIRECT_URI = $"{scheme}://{hostWithPort}{fullPath}logout.html";
+#endif
+    
         // Determine if PKCE is supported based on the platform
         SampleAppManager.SupportsPKCE = IsPKCESupported();
 
         // If PKCE is not supported, initialise Passport to use Device Code Auth
         if (!SampleAppManager.SupportsPKCE)
         {
-            InitialisePassport(logoutRedirectUri: "https://www.immutable.com");
+            InitialisePassport(redirectUri: REDIRECT_URI, logoutRedirectUri: LOGOUT_REIDIRECT_URI);
         }
     }
 
@@ -31,7 +43,7 @@ public class SelectAuthMethodScript : MonoBehaviour
     /// </summary>
     private bool IsPKCESupported()
     {
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
         return true;
 #else
         return false;
@@ -44,7 +56,7 @@ public class SelectAuthMethodScript : MonoBehaviour
     public void UseDeviceCodeAuth()
     {
         SampleAppManager.UsePKCE = false;
-        InitialisePassport(logoutRedirectUri: "https://www.immutable.com");
+        InitialisePassport(redirectUri: REDIRECT_URI, logoutRedirectUri: LOGOUT_REIDIRECT_URI);
     }
 
     /// <summary>
@@ -53,7 +65,7 @@ public class SelectAuthMethodScript : MonoBehaviour
     public void UsePKCE()
     {
         SampleAppManager.UsePKCE = true;
-        InitialisePassport(redirectUri: "imxsample://callback", logoutRedirectUri: "imxsample://callback/logout");
+        InitialisePassport(redirectUri: REDIRECT_URI, logoutRedirectUri: LOGOUT_REIDIRECT_URI);
     }
 
     /// <summary>

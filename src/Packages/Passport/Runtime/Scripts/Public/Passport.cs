@@ -241,7 +241,7 @@ namespace Immutable.Passport
             return await GetPassportImpl().ConnectImx(useCachedSession, timeoutMs);
         }
 
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX  || UNITY_WEBGL
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
         /// <summary>
         /// Connects the user into Passport via PKCE auth.
         /// </summary>
@@ -283,7 +283,7 @@ namespace Immutable.Passport
             await GetPassportImpl().Logout(hardLogout);
         }
 
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
         /// <summary>
         /// Logs the user out of Passport and removes any stored credentials.
         /// Recommended to use when logging in using PKCE flow - ConnectImxPKCE()
