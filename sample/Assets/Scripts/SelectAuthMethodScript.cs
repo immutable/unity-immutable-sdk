@@ -31,7 +31,7 @@ public class SelectAuthMethodScript : MonoBehaviour
     /// </summary>
     private bool IsPKCESupported()
     {
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
         return true;
 #else
         return false;
@@ -53,7 +53,20 @@ public class SelectAuthMethodScript : MonoBehaviour
     public void UsePKCE()
     {
         SampleAppManager.UsePKCE = true;
+#if UNITY_WEBGL
+        string url = Application.absoluteURL;
+        Uri uri = new Uri(url);
+        string scheme = uri.Scheme;
+        string hostWithPort = uri.IsDefaultPort ? uri.Host : $"{uri.Host}:{uri.Port}";
+        string fullPath = uri.AbsolutePath.EndsWith("/") ? uri.AbsolutePath : uri.AbsolutePath.Substring(0, uri.AbsolutePath.LastIndexOf('/') + 1);
+
+        string redirectUri = $"{scheme}://{hostWithPort}{fullPath}callback.html";
+        string logoutRedirectUri = $"{scheme}://{hostWithPort}{fullPath}logout.html";
+        
+        InitialisePassport(redirectUri: redirectUri, logoutRedirectUri: logoutRedirectUri);
+#else
         InitialisePassport(redirectUri: "imxsample://callback", logoutRedirectUri: "imxsample://callback/logout");
+#endif
     }
 
     /// <summary>
@@ -73,9 +86,12 @@ public class SelectAuthMethodScript : MonoBehaviour
             Passport.LogLevel = LogLevel.Info;
 
             // Initialise Passport
-            string clientId = "ZJL7JvetcDFBNDlgRs5oJoxuAUUl6uQj";
             string environment = Immutable.Passport.Model.Environment.SANDBOX;
-
+#if UNITY_WEBGL
+            string clientId = "UnB98ngnXIZIEJWGJOjVe1BpCx5ix7qc";
+#else
+            string clientId = "ZJL7JvetcDFBNDlgRs5oJoxuAUUl6uQj";
+#endif
             Passport passport = await Passport.Init(clientId, environment, redirectUri, logoutRedirectUri);
 
             // Navigate to the unauthenticated scene after initialising Passport

@@ -64,7 +64,11 @@ namespace Immutable.Browser.Gree
     }
 #endif
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+    public class WebViewObject : MonoBehaviour
+#else
     public class WebViewObject
+#endif
     {
         private const string TAG = "[WebViewObject]";
         Callback onJS;
@@ -128,13 +132,15 @@ namespace Immutable.Browser.Gree
         private static extern void _CImmutableWebViewPlugin_SetDelegate(DelegateMessage callback);
 #elif UNITY_WEBGL
         [DllImport("__Internal")]
-        private static extern void _gree_unity_webview_init();
+        private static extern void _gree_unity_webview_init(string name);
         [DllImport("__Internal")]
-        private static extern void _gree_unity_webview_loadURL(string url);
+        private static extern void _gree_unity_webview_loadURL(string name, string url);
         [DllImport("__Internal")]
-        private static extern void _gree_unity_webview_evaluateJS(string js);
+        private static extern void _gree_unity_webview_evaluateJS(string name, string js);
         [DllImport("__Internal")]
-        private static extern void _gree_unity_webview_destroy();
+        private static extern void _gree_unity_webview_destroy(string name);
+        [DllImport("__Internal")]
+        private static extern void _gree_unity_webview_launchAuthURL(string name, string url);
 #endif
 
 #if UNITY_IPHONE || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
@@ -192,7 +198,12 @@ namespace Immutable.Browser.Gree
             }
         }
 #endif
-
+#if UNITY_WEBGL && !UNITY_EDITOR
+        void Awake()
+        {
+            DontDestroyOnLoad(this);
+        }
+#endif
         public void handleMessage(string message)
         {
             var i = message.IndexOf(':', 0);
@@ -230,7 +241,7 @@ namespace Immutable.Browser.Gree
             onLog = log;
 #if UNITY_WEBGL
 #if !UNITY_EDITOR
-            _gree_unity_webview_init();
+            _gree_unity_webview_init(name);
 #endif
 #elif UNITY_WEBPLAYER
             Application.ExternalCall("unityWebView.init");
@@ -260,7 +271,7 @@ namespace Immutable.Browser.Gree
                 return;
 #if UNITY_WEBGL
 #if !UNITY_EDITOR
-            _gree_unity_webview_loadURL(url);
+            _gree_unity_webview_loadURL(name, url);
 #endif
 #elif UNITY_WEBPLAYER
             Application.ExternalCall("unityWebView.loadURL", url);
@@ -281,7 +292,7 @@ namespace Immutable.Browser.Gree
         {
 #if UNITY_WEBGL
 #if !UNITY_EDITOR
-            _gree_unity_webview_evaluateJS(js);
+            _gree_unity_webview_evaluateJS(name, js);
 #endif
 #elif UNITY_WEBPLAYER
             Application.ExternalCall("unityWebView.evaluateJS", js);
@@ -308,6 +319,8 @@ namespace Immutable.Browser.Gree
             if (webView == IntPtr.Zero)
                 return;
             _CImmutableWebViewPlugin_LaunchAuthURL(webView, url);
+#elif UNITY_WEBGL && !UNITY_EDITOR
+            _gree_unity_webview_launchAuthURL(name, url);
 #else
             UnityEngine.Application.OpenURL(url);
 #endif

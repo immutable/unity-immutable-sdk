@@ -5,7 +5,7 @@ using System;
 using VoltstroStudios.UnityWebBrowser.Core;
 using VoltstroStudios.UnityWebBrowser.Shared;
 #endif
-#elif (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
+#elif (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
 using Immutable.Browser.Gree;
 #endif
 using Immutable.Passport.Event;
@@ -181,7 +181,7 @@ namespace Immutable.Passport
                     await ((WebBrowserClient)this.webBrowserClient).Init(engineStartupTimeoutMs);
 #endif
                 }
-#elif (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
+#elif (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
                 // Initialise default browser client for Android, iOS, and macOS
                 webBrowserClient = new GreeBrowserClient();
 #else
@@ -190,9 +190,13 @@ namespace Immutable.Passport
 
                 // Set up browser communication
                 BrowserCommunicationsManager communicationsManager = new BrowserCommunicationsManager(webBrowserClient);
+
+#if UNITY_WEBGL
+                readySignalReceived = true;
+#else
                 // Mark ready when browser is initialised and game bridge file is loaded
                 communicationsManager.OnReady += () => readySignalReceived = true;
-
+#endif
                 // Set up Passport implementation
                 passportImpl = new PassportImpl(communicationsManager);
                 // Subscribe to Passport authentication events
@@ -237,7 +241,7 @@ namespace Immutable.Passport
             return await GetPassportImpl().ConnectImx(useCachedSession, timeoutMs);
         }
 
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
         /// <summary>
         /// Connects the user into Passport via PKCE auth.
         /// </summary>
@@ -279,7 +283,7 @@ namespace Immutable.Passport
             await GetPassportImpl().Logout(hardLogout);
         }
 
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
         /// <summary>
         /// Logs the user out of Passport and removes any stored credentials.
         /// Recommended to use when logging in using PKCE flow - ConnectImxPKCE()

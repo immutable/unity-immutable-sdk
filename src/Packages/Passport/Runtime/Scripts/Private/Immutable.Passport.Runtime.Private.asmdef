@@ -13,7 +13,8 @@
         "Editor",
         "iOS",
         "macOSStandalone",
-        "WindowsStandalone64"
+        "WindowsStandalone64",
+        "WebGL"
     ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

@@ -5,7 +5,7 @@ namespace Immutable.Browser.Core
         event OnUnityPostMessageDelegate OnUnityPostMessage;
 
         // Required for Gree browser only
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
         event OnUnityPostMessageDelegate OnAuthPostMessage;
         event OnUnityPostMessageErrorDelegate OnPostMessageError;
 #endif

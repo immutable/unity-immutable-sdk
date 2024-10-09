@@ -69,7 +69,7 @@ public class UnauthenticatedScript : MonoBehaviour
             // Login using the appropriate login method
             if (SampleAppManager.SupportsPKCE && SampleAppManager.UsePKCE)
             {
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
                 await Passport.LoginPKCE();
 #endif
             }
@@ -111,7 +111,7 @@ public class UnauthenticatedScript : MonoBehaviour
             // Login and connect to IMX using the appropriate connect method
             if (SampleAppManager.SupportsPKCE && SampleAppManager.UsePKCE)
             {
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
                 await Passport.ConnectImxPKCE();
 #endif
             }
@@ -208,7 +208,7 @@ public class UnauthenticatedScript : MonoBehaviour
             // Logout using the appropriate logout method
             if (SampleAppManager.SupportsPKCE && SampleAppManager.UsePKCE)
             {
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
                 await Passport.LogoutPKCE();
 #endif
             }
