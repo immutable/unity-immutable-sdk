@@ -41,8 +41,6 @@ var unityWebView =
 
         loadURL: function(name, url) {
             var baseUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, "");
-            console.log(url, window.location.origin, window.location.pathname);
-            console.log(baseUrl);
             const host = window.location.origin.includes('localhost') ? window.location.origin : baseUrl;
             this.iframe(name).attr('loaded', 'false')[0].contentWindow.location.replace(host + url);
         },
