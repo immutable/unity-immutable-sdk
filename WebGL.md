@@ -18,9 +18,9 @@ A Custom WebGL Template is required to implement the Immutable Unity SDK in WebG
 Every Unity Project includes these templates by default. Copy a template and place it in your own **Assets > WebGLTemplates** folder, and rename it to something meaningful so you can identify your template later.
 
 Once you have created your own template, copy the following files from Passport package into the **Assets > WebGLTemplates** folder:
-   - `Packages/Immutable Passport/WebGLTemplates/unity-webview.js`
-   - `Packages/Immutable Passport/WebGLTemplates/callback.html`
-   - `Packages/Immutable Passport/WebGLTemplates/logout.html`
+   - `Packages/Immutable Passport/WebGLTemplates~/unity-webview.js`
+   - `Packages/Immutable Passport/WebGLTemplates~/callback.html`
+   - `Packages/Immutable Passport/WebGLTemplates~/logout.html`
    - `Packages/Immutable Passport/Runtime/Resources/index.html` > `Passport/index.html`
 
 3. Add the following script tag to the `index.html` in WebGL Templates:
