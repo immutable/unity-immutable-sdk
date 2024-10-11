@@ -16,14 +16,19 @@ public class SelectAuthMethodScript : MonoBehaviour
 
     void Start()
     {
+        // WebGL does not support Device Code Auth, so we'll use PKCE by default instead.
+#if UNITY_WEBGL
+        UsePKCE();
+#else
         // Determine if PKCE is supported based on the platform
         SampleAppManager.SupportsPKCE = IsPKCESupported();
 
         // If PKCE is not supported, initialise Passport to use Device Code Auth
         if (!SampleAppManager.SupportsPKCE)
         {
-            InitialisePassport(logoutRedirectUri: "https://www.immutable.com");
+            UseDeviceCodeAuth();
         }
+#endif
     }
 
     /// <summary>
