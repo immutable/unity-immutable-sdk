@@ -5,7 +5,7 @@ using System;
 using VoltstroStudios.UnityWebBrowser.Core;
 using VoltstroStudios.UnityWebBrowser.Shared;
 #endif
-#elif (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
+#elif (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
 using Immutable.Browser.Gree;
 #endif
 using Immutable.Passport.Event;
@@ -95,7 +95,7 @@ namespace Immutable.Passport
         /// <param name="clientId">The client ID</param>
         /// <param name="environment">The environment to connect to</param>
         /// <param name="redirectUri">(Android, iOS, and macOS only) The URL where the browser will redirect after successful authentication.</param>
-        /// <param name="logoutRedirectUri">(Android, iOS, and macOS only) The URL where the browser will redirect after logout is complete.</param>
+        /// <param name="logoutRedirectUri">The URL where the browser will redirect after logout is complete.</param>
         /// <param name="engineStartupTimeoutMs">(Windows only) Timeout duration in milliseconds to wait for the default Windows browser engine to start.</param>
         /// <param name="webBrowserClient">(Windows only) Custom Windows browser to use instead of the default browser in the SDK.</param>
         public static UniTask<Passport> Init(
@@ -181,7 +181,7 @@ namespace Immutable.Passport
                     await ((WebBrowserClient)this.webBrowserClient).Init(engineStartupTimeoutMs);
 #endif
                 }
-#elif (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
+#elif (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
                 // Initialise default browser client for Android, iOS, and macOS
                 webBrowserClient = new GreeBrowserClient();
 #else
@@ -190,9 +190,13 @@ namespace Immutable.Passport
 
                 // Set up browser communication
                 BrowserCommunicationsManager communicationsManager = new BrowserCommunicationsManager(webBrowserClient);
+
+#if UNITY_WEBGL
+                readySignalReceived = true;
+#else
                 // Mark ready when browser is initialised and game bridge file is loaded
                 communicationsManager.OnReady += () => readySignalReceived = true;
-
+#endif
                 // Set up Passport implementation
                 passportImpl = new PassportImpl(communicationsManager);
                 // Subscribe to Passport authentication events
@@ -221,6 +225,9 @@ namespace Immutable.Passport
         /// <param name="useCachedSession">If true, the saved access token or refresh token will be used to log the user in. If this fails, it will not fallback to device code auth.</param>
         /// <param name="timeoutMs">(Optional) The maximum time, in milliseconds, the function is allowed to take before a TimeoutException is thrown. If not set, the function will wait indefinitely.</param>
         /// </summary>
+        /// <returns>
+        /// Returns true if login is successful, otherwise false.
+        /// </returns>
         public async UniTask<bool> Login(bool useCachedSession = false, Nullable<long> timeoutMs = null)
         {
             return await GetPassportImpl().Login(useCachedSession, timeoutMs);
@@ -237,7 +244,7 @@ namespace Immutable.Passport
             return await GetPassportImpl().ConnectImx(useCachedSession, timeoutMs);
         }
 
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
         /// <summary>
         /// Connects the user into Passport via PKCE auth.
         /// </summary>
@@ -279,7 +286,7 @@ namespace Immutable.Passport
             await GetPassportImpl().Logout(hardLogout);
         }
 
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
         /// <summary>
         /// Logs the user out of Passport and removes any stored credentials.
         /// Recommended to use when logging in using PKCE flow - ConnectImxPKCE()

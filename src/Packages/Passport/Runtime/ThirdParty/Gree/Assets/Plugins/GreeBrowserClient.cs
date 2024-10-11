@@ -1,7 +1,8 @@
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
 
 using Immutable.Browser.Core;
 using Immutable.Passport.Core.Logging;
+using UnityEngine;
 
 namespace Immutable.Browser.Gree
 {
@@ -20,7 +21,12 @@ namespace Immutable.Browser.Gree
             PassportLogger.Warn("Native Android and iOS WebViews cannot run in the Editor, so the macOS WebView is currently used to save your development time." +
                 " Testing your game on an actual device or emulator is recommended to ensure proper functionality.");
 #endif
+#if UNITY_WEBGL && !UNITY_EDITOR
+            GameObject webViewGameObject = new GameObject("WebViewObject");
+            webViewObject = webViewGameObject.AddComponent<WebViewObject>();
+#else
             webViewObject = new WebViewObject();
+#endif
             webViewObject.Init(
                 cb: InvokeOnUnityPostMessage,
                 httpErr: InvokeOnPostMessageError,

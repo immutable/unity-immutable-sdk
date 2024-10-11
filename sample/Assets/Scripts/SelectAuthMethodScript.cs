@@ -16,14 +16,19 @@ public class SelectAuthMethodScript : MonoBehaviour
 
     void Start()
     {
+    // WebGL does not support Device Code Auth, so we'll use PKCE by default instead.
+#if UNITY_WEBGL
+        UsePKCE();
+#else
         // Determine if PKCE is supported based on the platform
         SampleAppManager.SupportsPKCE = IsPKCESupported();
 
         // If PKCE is not supported, initialise Passport to use Device Code Auth
         if (!SampleAppManager.SupportsPKCE)
         {
-            InitialisePassport();
+            UseDeviceCodeAuth();
         }
+#endif
     }
 
     /// <summary>
@@ -31,7 +36,7 @@ public class SelectAuthMethodScript : MonoBehaviour
     /// </summary>
     private bool IsPKCESupported()
     {
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
         return true;
 #else
         return false;
@@ -44,7 +49,7 @@ public class SelectAuthMethodScript : MonoBehaviour
     public void UseDeviceCodeAuth()
     {
         SampleAppManager.UsePKCE = false;
-        InitialisePassport();
+        InitialisePassport(logoutRedirectUri: "https://www.immutable.com");
     }
 
     /// <summary>
@@ -53,7 +58,20 @@ public class SelectAuthMethodScript : MonoBehaviour
     public void UsePKCE()
     {
         SampleAppManager.UsePKCE = true;
+#if UNITY_WEBGL
+        string url = Application.absoluteURL;
+        Uri uri = new Uri(url);
+        string scheme = uri.Scheme;
+        string hostWithPort = uri.IsDefaultPort ? uri.Host : $"{uri.Host}:{uri.Port}";
+        string fullPath = uri.AbsolutePath.EndsWith("/") ? uri.AbsolutePath : uri.AbsolutePath.Substring(0, uri.AbsolutePath.LastIndexOf('/') + 1);
+
+        string redirectUri = $"{scheme}://{hostWithPort}{fullPath}callback.html";
+        string logoutRedirectUri = $"{scheme}://{hostWithPort}{fullPath}logout.html";
+        
+        InitialisePassport(redirectUri: redirectUri, logoutRedirectUri: logoutRedirectUri);
+#else
         InitialisePassport(redirectUri: "imxsample://callback", logoutRedirectUri: "imxsample://callback/logout");
+#endif
     }
 
     /// <summary>
@@ -61,7 +79,7 @@ public class SelectAuthMethodScript : MonoBehaviour
     /// </summary>
     /// <param name="redirectUri">(Android, iOS and macOS only) The URL to which auth will redirect the browser after 
     /// authorisation has been granted by the user</param>
-    /// <param name="logoutRedirectUri">(Android, iOS and macOS only) The URL to which auth will redirect the browser
+    /// <param name="logoutRedirectUri">The URL to which auth will redirect the browser
     /// after log out is complete</param>
     private async void InitialisePassport(string redirectUri = null, string logoutRedirectUri = null)
     {
@@ -73,9 +91,12 @@ public class SelectAuthMethodScript : MonoBehaviour
             Passport.LogLevel = LogLevel.Info;
 
             // Initialise Passport
-            string clientId = "ZJL7JvetcDFBNDlgRs5oJoxuAUUl6uQj";
             string environment = Immutable.Passport.Model.Environment.SANDBOX;
-
+#if UNITY_WEBGL
+            string clientId = "UnB98ngnXIZIEJWGJOjVe1BpCx5ix7qc";
+#else
+            string clientId = "ZJL7JvetcDFBNDlgRs5oJoxuAUUl6uQj";
+#endif
             Passport passport = await Passport.Init(clientId, environment, redirectUri, logoutRedirectUri);
 
             // Navigate to the unauthenticated scene after initialising Passport

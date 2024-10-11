@@ -15,7 +15,7 @@ namespace Immutable.Passport.Core
 
     public interface IBrowserCommunicationsManager
     {
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
         event OnUnityPostMessageDelegate OnAuthPostMessage;
         event OnUnityPostMessageErrorDelegate OnPostMessageError;
 #endif
@@ -58,7 +58,7 @@ namespace Immutable.Passport.Core
         {
             this.webBrowserClient = webBrowserClient;
             this.webBrowserClient.OnUnityPostMessage += InvokeOnUnityPostMessage;
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
             this.webBrowserClient.OnAuthPostMessage += InvokeOnAuthPostMessage;
             this.webBrowserClient.OnPostMessageError += InvokeOnPostMessageError;
 #endif

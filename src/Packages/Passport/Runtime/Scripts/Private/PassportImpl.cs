@@ -55,7 +55,7 @@ namespace Immutable.Passport
             this.redirectUri = redirectUri;
             this.logoutRedirectUri = logoutRedirectUri;
 
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
             this.communicationsManager.OnAuthPostMessage += OnDeepLinkActivated;
             this.communicationsManager.OnPostMessageError += OnPostMessageError;
 #endif
@@ -71,7 +71,7 @@ namespace Immutable.Passport
             };
 
             string initRequest;
-            if (redirectUri != null && logoutRedirectUri != null)
+            if (redirectUri != null)
             {
                 InitRequestWithRedirectUri requestWithRedirectUri = new InitRequestWithRedirectUri()
                 {
@@ -89,6 +89,7 @@ namespace Immutable.Passport
                 {
                     clientId = clientId,
                     environment = environment,
+                    logoutRedirectUri = logoutRedirectUri,
                     engineVersion = versionInfo
                 };
                 initRequest = JsonUtility.ToJson(request);
@@ -316,7 +317,10 @@ namespace Immutable.Passport
                 PassportLogger.Info($"{TAG} Received deeplink URL: {url}");
 
                 Uri uri = new Uri(url);
-                string domain = $"{uri.Scheme}://{uri.Host}{uri.AbsolutePath}";
+                string hostWithPort = uri.IsDefaultPort ? uri.Host : $"{uri.Host}:{uri.Port}";
+
+                string domain = $"{uri.Scheme}://{hostWithPort}{uri.AbsolutePath}";
+
                 if (domain.EndsWith("/"))
                 {
                     domain = domain.Remove(domain.Length - 1);
