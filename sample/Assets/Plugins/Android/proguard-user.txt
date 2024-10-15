@@ -1,7 +1,0 @@
--dontwarn com.immutable.**
--keep class com.immutable.** { *; }
--keep interface com.immutable.** { *; }
-
--dontwarn androidx.**
--keep class androidx.** { *; }
--keep interface androidx.** { *; }

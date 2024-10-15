@@ -1,0 +1,22 @@
+{
+    "name": "ImmutableSDK.Runtime",
+    "rootNamespace": "Immutable.Passport",
+    "includePlatforms": [
+        "Editor",
+        "WindowsStandalone64"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Newtonsoft.Json.dll",
+        "Immutable.Passport.Runtime.Private.dll",
+        "UniTask.dll",
+        "VoltstroStudios.UnityWebBrowser.dll",
+        "Immutable.Browser.Core.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
