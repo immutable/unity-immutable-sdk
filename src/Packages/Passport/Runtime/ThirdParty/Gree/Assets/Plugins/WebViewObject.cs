@@ -315,7 +315,7 @@ namespace Immutable.Browser.Gree
             if (webView == IntPtr.Zero)
                 return;
             _CImmutableWebViewPlugin_LaunchAuthURL(webView, url, redirectUri != null ? redirectUri : "");
-#elif UNITY_IPHONE && !UNITY_EDITOR_WIN
+#elif UNITY_IPHONE && !UNITY_EDITOR
             if (webView == IntPtr.Zero)
                 return;
             _CImmutableWebViewPlugin_LaunchAuthURL(webView, url);
