@@ -22,7 +22,7 @@ jobs:
           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         with:
           unityVersion: 2021.3.26f1
-          projectPath: './sample'
+          projectPath: './src/Packages/Passport/Samples~/sample'
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           testMode: 'EditMode'
       - uses: actions/upload-artifact@v4
