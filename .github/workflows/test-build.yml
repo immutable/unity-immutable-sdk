@@ -74,7 +74,7 @@ jobs:
           projectPath: './src/Packages/Passport/Samples~/sample'
       - uses: actions/upload-artifact@v3
         with:
-          name: Build
+          name: Build-${{ matrix.targetPlatform }}
           path: build
   windows-build:
     name: Build for ${{ matrix.targetPlatform }}
@@ -108,5 +108,5 @@ jobs:
           projectPath: './src/Packages/Passport/Samples~/sample'
       - uses: actions/upload-artifact@v3
         with:
-          name: Build
+          name: Build-${{ matrix.targetPlatform }}
           path: build
