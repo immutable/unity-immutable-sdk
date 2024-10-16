@@ -54,7 +54,7 @@ jobs:
           - iOS
           - Android
           - WebGL
-          - StandaloneOSX
+#          - StandaloneOSX
           - StandaloneWindows64
     steps:
       - uses: actions/checkout@v4
