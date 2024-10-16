@@ -11,13 +11,12 @@ Live example can be found at https://immutable.github.io/unity-immutable-sdk/sam
 
 WebGL template is a configuration setting that lets you control the appearance of the HTML page, so that you can: test, demonstrate, and preview your WebGL application in a browser.
 
-A WebGL Template is always needed for creating a WebGL application and it will always be stored within **Assets > WebGL Templates** to be used. You can refer to [Unity: WebGL Templates](https://docs.unity3d.com/Manual/webgl-templates.html) for more information.
+1. Create a custom WebGL template:
+   - Navigate to **Assets > WebGLTemplates** in your Unity project.
+   - Copy one of the built-in templates (Default or Minimal) from **[Unity Installation] > PlaybackEngines > WebGLSupport > BuildTools > WebGLTemplates**.
+   - Rename the copied template to something meaningful for your project.
 
-A Custom WebGL Template is required to implement the Immutable Unity SDK in WebGL projects. The easiest way to create a new custom WebGL template is to make a copy of the built-in Default or Minimal templates, which are stored in corresponding subfolders under <Unity Installation> > PlaybackEngines > WebGLSupport > BuildTools > WebGLTemplates.
-
-Every Unity Project includes these templates by default. Copy a template and place it in your own **Assets > WebGLTemplates** folder, and rename it to something meaningful so you can identify your template later.
-
-Once you have created your own template, copy the following files from Passport package into the **Assets > WebGLTemplates** folder:
+2. Copy the following files from the Passport package into your **Assets > WebGLTemplates** folder:
    - `Packages/Immutable Passport/WebGLTemplates~/unity-webview.js`
    - `Packages/Immutable Passport/WebGLTemplates~/callback.html`
    - `Packages/Immutable Passport/WebGLTemplates~/logout.html`
@@ -35,6 +34,7 @@ Once you have created your own template, copy the following files from Passport 
 Follow these steps for implementation:
 > [!NOTE]
 > You can rename `callback.html` and `logout.html` to suit your project needs.
+> For local testing with WebGL builds, note the random port number assigned (e.g., http://localhost:60750). You may need to update the Hub Passport config each time you start a new local WebGL build, as the port number may change.
 1. Define a deep link scheme for your game:
    - Redirect URL: https://game.domain.com/callback.html
    - Logout URL: https://game.domain.com/logout.html
