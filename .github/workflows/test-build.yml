@@ -79,6 +79,7 @@ jobs:
           targetPlatform: ${{ matrix.targetPlatform }}
           projectPath: './src/Packages/Passport/Samples~/sample'
       - uses: actions/upload-artifact@v3
+        if: always()
         with:
           name: Build-${{ matrix.targetPlatform }}
           path: build
