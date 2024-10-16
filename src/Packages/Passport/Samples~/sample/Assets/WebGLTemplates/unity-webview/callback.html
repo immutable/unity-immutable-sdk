@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Unity WebGL Player | Immutable SDK Sample App</title>
+    <link rel="shortcut icon" href="TemplateData/favicon.ico">
+    <link rel="stylesheet" href="TemplateData/style.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script src="unity-webview.js"></script>
+</head>
+<body>
+<div id="unity-container" class="unity-desktop">
+    <div id="unity-build-title">Logging in</div>
+</div>
+<script>
+    window.opener.postMessage({
+        type: 'callback',
+        url: window.location.href,
+    });
+    window.close();
+</script>
+</body>
+</html>
