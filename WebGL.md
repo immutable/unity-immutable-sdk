@@ -5,7 +5,7 @@ This guide provides focused instructions for implementing the Unity-Immutable-SD
 For general information on the SDK, please refer to
 the [Immutable Unity SDK documentation](https://docs.immutable.com/sdks/zkEVM/unity).
 
-Live example can be found at https://immutable.github.io/unity-immutable-sdk/sample/webgl
+Live example can be found at https://immutable.github.io/unity-immutable-sdk
 
 ## WebGL Template Setup
 
