@@ -84,7 +84,7 @@ jobs:
         if: matrix.targetPlatform == 'WebGL'
         with:
           branch: gh-pages
-          folder: build
+          folder: build/WebGL/WebGL
       - uses: actions/upload-artifact@v3
         if: always()
         with:
