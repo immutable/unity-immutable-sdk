@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity WebGL Player | Immutable SDK Sample App</title>
+    <title>Unity WebGL Player | {{{ PRODUCT_NAME }}}</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
@@ -21,20 +21,20 @@
       <div id="unity-footer">
         <div id="unity-webgl-logo"></div>
         <div id="unity-fullscreen-button"></div>
-        <div id="unity-build-title">Immutable SDK Sample App</div>
+        <div id="unity-build-title">{{{ PRODUCT_NAME }}}</div>
       </div>
     </div>
     <script>
       var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/webgl.loader.js";
+      var loaderUrl = buildUrl + "/{{{ LOADER_FILENAME }}}";
       var config = {
-        dataUrl: buildUrl + "/webgl.data",
-        frameworkUrl: buildUrl + "/webgl.framework.js",
-        codeUrl: buildUrl + "/webgl.wasm",
+        dataUrl: buildUrl + "/{{{ DATA_FILENAME }}}",
+        frameworkUrl: buildUrl + "/{{{ FRAMEWORK_FILENAME }}}",
+        codeUrl: buildUrl + "/{{{ CODE_FILENAME }}}",
         streamingAssetsUrl: "StreamingAssets",
-        companyName: "Immutable",
-        productName: "Immutable SDK Sample App",
-        productVersion: "0.1.0",
+        companyName: "{{{ COMPANY_NAME }}}",
+        productName: "{{{ PRODUCT_NAME }}}",
+        productVersion: "{{{ PRODUCT_VERSION }}}",
       };
 
       var container = document.querySelector("#unity-container");
@@ -42,15 +42,15 @@
       var loadingBar = document.querySelector("#unity-loading-bar");
       var progressBarFull = document.querySelector("#unity-progress-bar-full");
       var fullscreenButton = document.querySelector("#unity-fullscreen-button");
-      var width0 = "960px";
-      var height0 = "600px";
+      var width0 = "{{{ WIDTH }}}px";
+      var height0 = "{{{ HEIGHT }}}px";
 
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
         container.className = "unity-mobile";
         config.devicePixelRatio = 1;
       } else {
-        canvas.style.width = "960px";
-        canvas.style.height = "600px";
+        canvas.style.width = "{{{ WIDTH }}}px";
+        canvas.style.height = "{{{ HEIGHT }}}px";
       }
       loadingBar.style.display = "block";
 
