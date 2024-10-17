@@ -1,5 +1,3 @@
-#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
-
 // UnityWebBrowser (UWB)
 // Copyright (c) 2021-2022 Voltstro-Studios
 // 
@@ -29,6 +27,8 @@ namespace VoltstroStudios.UnityWebBrowser.Logging
         {
             if (reader.Value is string value)
             {
+                if (value == "Fatal")
+                    return LogSeverity.Fatal;
                 if (value == "Error")
                     return LogSeverity.Error;
                 if (value == "Warning")
@@ -49,5 +49,3 @@ namespace VoltstroStudios.UnityWebBrowser.Logging
         }
     }
 }
-
-#endif

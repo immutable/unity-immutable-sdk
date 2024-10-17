@@ -1,23 +1,25 @@
 Chromium Embedded Framework (CEF) Minimal Binary Distribution for Windows
 -------------------------------------------------------------------------------
 
-Date:             October 21, 2022
+Date:             October 03, 2024
 
-CEF Version:      106.1.1+g5891c70+chromium-106.0.5249.119
+CEF Version:      129.0.11+g57354b8+chromium-129.0.6668.90
 CEF URL:          https://bitbucket.org/chromiumembedded/cef.git
-                  @5891c702dae4647f09400db52f57ee38e04c7b4c
+                  @57354b8bbf07c041381b5e5f5a1b3de88eceaf35
 
-Chromium Version: 106.0.5249.119
+Chromium Version: 129.0.6668.90
 Chromium URL:     https://chromium.googlesource.com/chromium/src.git
-                  @33512c3fb17e231fa81198c09841892d0cef8c66
+                  @abb728f8afc6a86cc66b1313f5056728ce422ddd
 
-This distribution contains the minimial components necessary to build and
+This distribution contains the minimal components necessary to build and
 distribute an application using CEF on the Windows platform. Please see
 the LICENSING section of this document for licensing terms and conditions.
 
 
 CONTENTS
 --------
+
+bazel       Contains Bazel configuration files shared by all targets.
 
 cmake       Contains CMake configuration files shared by all targets.
 
@@ -41,6 +43,11 @@ USAGE
 Building using CMake:
   CMake can be used to generate project files in many different formats. See
   usage instructions at the top of the CMakeLists.txt file.
+
+Building using Bazel:
+  Bazel can be used to build CEF-based applications. CEF support for Bazel is
+  considered experimental. For current development status see
+  https://github.com/chromiumembedded/cef/issues/3757.
 
 Please visit the CEF Website for additional usage information.
 
@@ -104,6 +111,12 @@ run but any related functionality may become broken or disabled.
   acceleration is enabled (default in most cases). Use of this bundled version
   is recommended instead of relying on the possibly old and untested system
   installed version.
+
+* DirectX compiler support (x64 only).
+  * dxil.dll
+  * dxcompiler.dll
+  Support for DirectX rendering of WebGPU. Without these files the
+  aforementioned capabilities may fail.
 
 * ANGLE support.
   * libEGL.dll

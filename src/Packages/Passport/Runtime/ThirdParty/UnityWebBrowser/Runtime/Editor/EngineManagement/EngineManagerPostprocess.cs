@@ -3,8 +3,9 @@
 // 
 // This project is under the MIT license. See the LICENSE.md file for more details.
 
-#if !IMMUTABLE_CUSTOM_BROWSER && UNITY_EDITOR && UNITY_STANDALONE_WIN
+#if UNITY_EDITOR && !UWB_DISABLE_POSTPROCESSOR
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,7 +15,6 @@ using UnityEditor.Build.Reporting;
 using UnityEngine;
 using VoltstroStudios.UnityWebBrowser.Core.Engines;
 using VoltstroStudios.UnityWebBrowser.Shared.Core;
-using VoltstroStudios.UnityWebBrowser.Core;
 
 namespace VoltstroStudios.UnityWebBrowser.Editor.EngineManagement
 {
@@ -27,88 +27,95 @@ namespace VoltstroStudios.UnityWebBrowser.Editor.EngineManagement
             if (report.summary.result is BuildResult.Failed or BuildResult.Cancelled)
                 return;
 
+#if UWB_ENGINE_PRJ //For CI reasons
+            if(Application.isBatchMode)
+                return;
+#endif
+
+            BuildTarget buildTarget = report.summary.platform;
+            Platform buildPlatform;
+            try
+            {
+                buildPlatform = buildTarget.UnityBuildTargetToPlatform();
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                Debug.LogWarning("UWB engine will not be copied! Unsupported platform.");
+                return;
+            }
+
             string buildFullOutputPath = report.summary.outputPath;
             string buildAppName = Path.GetFileNameWithoutExtension(buildFullOutputPath);
-            string buildOutputPath = Path.GetDirectoryName(buildFullOutputPath);
+            string buildOutputPath = Path.GetDirectoryName(buildFullOutputPath)!;
+            
+            List<Engine> engines = EditorHelper.FindAssetsByType<Engine>();
 
-            Debug.Log("Copying engine process files...");
+            if (engines.Count == 0)
+            {
+                Debug.LogWarning("There were no UWB engines found to copy!");
+                return;
+            }
 
-            //We need to get the build's data folder
-            string buildDataPath = Path.GetFullPath($"{buildOutputPath}/{buildAppName}_Data/");
-
-            //Make sure the data folder exists
-            if (!Directory.Exists(buildDataPath))
+            string builtAppFolder = Path.GetFullPath(buildTarget == BuildTarget.StandaloneOSX
+                ? Path.Combine(buildOutputPath, $"{buildAppName}.app", "Contents/Frameworks/")
+                : buildOutputPath);
+            
+            //Make sure the build folder exists
+            if (!Directory.Exists(builtAppFolder))
             {
                 Debug.LogError(
-                    "Failed to get the build's data folder! Make sure your build is the same name as your product name (In your project settings).");
+                    "Failed to get the build's folder! Make sure your build is the same name as your product name (In your project settings).");
                 return;
             }
 
-            //UWB folder in the data folder
-            string buildUwbPath = $"{buildDataPath}/ImmutableSDK/Runtime/UWB/";
+            //We need to get folder where UWB will live
+            string buildDataPath =
+                Path.GetFullPath(
+                    buildTarget == BuildTarget.StandaloneOSX 
+                        ? Path.Combine(buildOutputPath, $"{buildAppName}.app", "Contents/Frameworks/") 
+                        : Path.Combine(buildOutputPath, $"{buildAppName}_Data/UWB/"));
 
-            //Make sure it exists
-            DirectoryInfo buildUwbInfo = new(buildUwbPath);
-            if (!buildUwbInfo.Exists)
+            //MacOS has a more customized way of deleting
+            if (buildTarget != BuildTarget.StandaloneOSX)
             {
-                Directory.CreateDirectory(buildUwbPath);
-            }
-            else //If the directory exists, clear it
-            {
-                foreach (FileInfo fileInfo in buildUwbInfo.EnumerateFiles())
-                    fileInfo.Delete();
-
-                foreach (DirectoryInfo directoryInfo in buildUwbInfo.EnumerateDirectories())
-                    directoryInfo.Delete(true);
+                if (Directory.Exists(buildDataPath))
+                    Directory.Delete(buildDataPath, true);
             }
 
-            buildUwbPath = Path.GetFullPath(buildUwbPath);
-
-            Debug.Log("Copying UWB engine files...");
-
-            //Get the location where we are copying all the files
-            string engineFilesDir = Path.GetFullPath(WebBrowserClient.ENGINE_FILE_LOCATION);
-            if (!Directory.Exists(engineFilesDir))
-            {
-                Debug.LogError("The engine files directory doesn't exist!");
-                return;
-            }
-
-            string engineFilesParentDir = Directory.GetParent(engineFilesDir)?.Name;
-
-            //Get all files that aren't Unity .meta files
-            //NOTE: UWB 2.0 stores it's engine files in '~' folder, which is excluded by Unity, so we shouldn't need this anymore, but we will keep it anyway
-            string[] files = Directory.EnumerateFiles(engineFilesDir, "*.*", SearchOption.AllDirectories)
-                .Where(fileType => !fileType.EndsWith(".meta"))
-                .ToArray();
-
-            int size = files.Length;
-            Debug.Log($"Found {size} number of files to copy...");
-
-            //Now to copy all the files.
-            //We need to keep the structure of the process
-            for (int i = 0; i < size; i++)
-            {
-                string file = files[i];
-                string destFileName = Path.GetFileName(file);
-                EditorUtility.DisplayProgressBar("Copying UWB Engine Files",
-                    $"Copying {destFileName}", i / size);
-
-                //If the file is not at the parent directory, then we need to create the directory in the UWB folder
-                string parentDirectory = "";
-                if (Directory.GetParent(file)?.Name != engineFilesParentDir)
+            foreach (Engine engine in engines)
+                if (engine.EngineFiles.Any(x => x.platform == buildPlatform))
                 {
-                    parentDirectory = $"{Directory.GetParent(file)?.Name}/";
+                    Debug.Log("Copying UWB engine files...");
 
-                    if (!Directory.Exists($"{buildUwbPath}{parentDirectory}"))
-                        Directory.CreateDirectory($"{buildUwbPath}{parentDirectory}");
+                    Engine.EnginePlatformFiles engineFiles =
+                        engine.EngineFiles.First(x => x.platform == buildPlatform);
+
+                    //Get the location where we are copying all the files
+                    string engineFilesDir = Path.GetFullPath(engineFiles.engineEditorLocation);
+                    if (!Directory.Exists(engineFilesDir))
+                    {
+                        Debug.LogError("The engine files directory doesn't exist!");
+                        continue;
+                    }
+
+                    //Delete app path first on MacOS (if it exists)
+                    string engineBuildPath = buildDataPath;
+                    if (buildTarget == BuildTarget.StandaloneOSX)
+                    {
+                        engineBuildPath = Path.Combine(buildDataPath, $"{engine.GetEngineExecutableName()}.app");
+                        if(Directory.Exists(engineBuildPath))
+                            Directory.Delete(engineBuildPath, true);
+                        
+                        engineFilesDir = Path.Combine(engineFilesDir, $"{engine.GetEngineExecutableName()}.app");
+                    }
+                    
+                    Debug.Log($"Copying engine files from {engineFilesDir} to {buildDataPath}...");
+                    EditorUtility.DisplayProgressBar("Copying UWB Engine Files", $"Copying engine files from {engineFilesDir} to {buildDataPath}...", 0);
+                    
+                    FileUtil.CopyFileOrDirectory(engineFilesDir, engineBuildPath);
+                    
+                    EditorUtility.ClearProgressBar();
                 }
-
-                //Copy the file
-                File.Copy(file, $"{buildUwbPath}{parentDirectory}{destFileName}", true);
-            }
-
-            EditorUtility.ClearProgressBar();
 
             Debug.Log("Done!");
         }

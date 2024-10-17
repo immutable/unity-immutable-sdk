@@ -59,7 +59,6 @@ namespace Immutable.Passport
                 PassportLogger.CurrentLogLevel = _logLevel;
 
 #if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
-                SetDefaultWindowsBrowserLogLevel();
 #endif
             }
         }
@@ -96,7 +95,6 @@ namespace Immutable.Passport
         /// <param name="environment">The environment to connect to</param>
         /// <param name="redirectUri">(Android, iOS, and macOS only) The URL where the browser will redirect after successful authentication.</param>
         /// <param name="logoutRedirectUri">The URL where the browser will redirect after logout is complete.</param>
-        /// <param name="engineStartupTimeoutMs">(Windows only) Timeout duration in milliseconds to wait for the default Windows browser engine to start.</param>
         /// <param name="webBrowserClient">(Windows only) Custom Windows browser to use instead of the default browser in the SDK.</param>
         public static UniTask<Passport> Init(
             string clientId,
@@ -104,8 +102,7 @@ namespace Immutable.Passport
             string redirectUri = null,
             string logoutRedirectUri = null
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-            , int engineStartupTimeoutMs = 30000,
-            IWindowsWebBrowserClient windowsWebBrowserClient = null
+            ,IWindowsWebBrowserClient windowsWebBrowserClient = null
 #endif
         )
         {
@@ -117,7 +114,7 @@ namespace Immutable.Passport
                 // Start initialisation process
                 return Instance.Initialise(
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-                        engineStartupTimeoutMs, windowsWebBrowserClient
+                        windowsWebBrowserClient
 #endif
                     )
                     .ContinueWith(async () =>
@@ -156,7 +153,7 @@ namespace Immutable.Passport
         /// <param name="webBrowserClient">(Windows only) Custom Windows browser to use instead of the default browser in the SDK.</param>
         private async UniTask Initialise(
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-            int engineStartupTimeoutMs, IWindowsWebBrowserClient windowsWebBrowserClient
+            IWindowsWebBrowserClient windowsWebBrowserClient
 #endif
         )
         {
@@ -169,6 +166,7 @@ namespace Immutable.Passport
                     // Use the provided custom Windows browser client
                     this.webBrowserClient = new WindowsWebBrowserClientAdapter(windowsWebBrowserClient);
                     await ((WindowsWebBrowserClientAdapter)this.webBrowserClient).Init();
+                    ((WebBrowserClient)webBrowserClient).OpenDevTools();
                 }
                 else
                 {
@@ -178,7 +176,7 @@ namespace Immutable.Passport
 #else
                     // Initialise with default Windows browser client
                     this.webBrowserClient = new WebBrowserClient();
-                    await ((WebBrowserClient)this.webBrowserClient).Init(engineStartupTimeoutMs);
+                    await ((WebBrowserClient)this.webBrowserClient).Init();
 #endif
                 }
 #elif (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
@@ -500,22 +498,7 @@ namespace Immutable.Passport
 #endif
 
 #if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
-        /// <summary>
-        /// Updates the log severity for the default Windows browser based on the current SDK log level.
-        /// </summary>
-        private static void SetDefaultWindowsBrowserLogLevel()
-        {
-            if (Instance?.webBrowserClient is WebBrowserClient browserClient)
-            {
-                browserClient.logSeverity = _logLevel switch
-                {
-                    LogLevel.Debug => LogSeverity.Debug,
-                    LogLevel.Warn => LogSeverity.Warn,
-                    LogLevel.Error => LogSeverity.Error,
-                    _ => LogSeverity.Info
-                };
-            }
-        }
+
 #endif
 
         private PassportImpl GetPassportImpl()

@@ -1,5 +1,3 @@
-#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
-
 // UnityWebBrowser (UWB)
 // Copyright (c) 2021-2022 Voltstro-Studios
 // 
@@ -49,13 +47,13 @@ namespace VoltstroStudios.UnityWebBrowser.Logging
                 JsonLogStructure logStructure = ReadJsonLog(e.Data);
 
                 if (logStructure.Level is LogSeverity.Debug or LogSeverity.Info)
-                    logger.Debug(logStructure.Message);
+                    logger.Debug($"[{logStructure.Category}]: {logStructure.Message}");
                 else if (logStructure.Level == LogSeverity.Warn)
-                    logger.Warn(logStructure.Message);
+                    logger.Warn($"[{logStructure.Category}]: {logStructure.Message}");
                 else if (logStructure.Level == LogSeverity.Error)
-                    logger.Error($"{logStructure.Message}\n{logStructure.Exception}");
+                    logger.Error($"[{logStructure.Category}]: {logStructure.Message}\n{logStructure.Exception}");
                 else if (logStructure.Level == LogSeverity.Fatal)
-                    logger.Error($"{logStructure.Message}\n{logStructure.Exception}");
+                    logger.Error($"[{logStructure.Category}]: {logStructure.Message}\n{logStructure.Exception}");
             }
             catch (Exception ex)
             {
@@ -77,5 +75,3 @@ namespace VoltstroStudios.UnityWebBrowser.Logging
         }
     }
 }
-
-#endif

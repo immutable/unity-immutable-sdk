@@ -1,5 +1,3 @@
-#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
-
 // UnityWebBrowser (UWB)
 // Copyright (c) 2021-2022 Voltstro-Studios
 // 
@@ -34,6 +32,8 @@ namespace VoltstroStudios.UnityWebBrowser.Input
 
         private readonly List<WindowsKey> keysDown = new();
         private readonly List<WindowsKey> keysUp = new();
+
+        private IMECompositionMode compositionMode;
 
         public override float GetScroll()
         {
@@ -109,7 +109,17 @@ namespace VoltstroStudios.UnityWebBrowser.Input
         public override void OnStop()
         {
         }
+
+        public override void EnableIme(Vector2 location)
+        {
+            compositionMode = UnityEngine.Input.imeCompositionMode;
+            UnityEngine.Input.imeCompositionMode = IMECompositionMode.On;
+            UnityEngine.Input.compositionCursorPos = location;
+        }
+
+        public override void DisableIme()
+        {
+            UnityEngine.Input.imeCompositionMode = compositionMode;
+        }
     }
 }
-
-#endif

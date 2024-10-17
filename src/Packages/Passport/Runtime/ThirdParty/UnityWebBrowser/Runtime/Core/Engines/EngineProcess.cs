@@ -1,15 +1,15 @@
-#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
-
-// UnityWebBrowser (UWB)
+﻿// UnityWebBrowser (UWB)
 // Copyright (c) 2021-2024 Voltstro-Studios
 // 
 // This project is under the MIT license. See the LICENSE.md file for more details.
 
 using System;
 using System.Diagnostics;
+using System.IO;
 using VoltstroStudios.UnityWebBrowser.Core.Engines.Process;
 using VoltstroStudios.UnityWebBrowser.Helper;
 using VoltstroStudios.UnityWebBrowser.Logging;
+using VoltstroStudios.UnityWebBrowser.Shared.Core;
 
 namespace VoltstroStudios.UnityWebBrowser.Core.Engines
 {
@@ -21,7 +21,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core.Engines
         private readonly IProcess processHandle;
         private readonly Engine engine;
         private readonly IWebBrowserLogger logger;
-        
+
         /// <summary>
         ///     Creates a new <see cref="EngineProcess"/> instance
         /// </summary>
@@ -30,7 +30,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core.Engines
         public EngineProcess(Engine engine, IWebBrowserLogger logger)
         {
             processHandle = new WindowProcess();
-            
+
             this.engine = engine;
             this.logger = logger;
         }
@@ -55,10 +55,10 @@ namespace VoltstroStudios.UnityWebBrowser.Core.Engines
         {
             string engineFullProcessPath = WebBrowserUtils.GetBrowserEngineProcessPath(engine);
             string engineDirectory = WebBrowserUtils.GetBrowserEnginePath(engine);
-            
+
             logger.Debug($"Process Path: '{engineFullProcessPath}'\nWorking: '{engineDirectory}'");
             logger.Debug($"Arguments: '{arguments}'");
-            
+
             processHandle.StartProcess(engineFullProcessPath, engineDirectory, arguments, onLogEvent, onErrorLogEvent);
         }
 
@@ -69,12 +69,10 @@ namespace VoltstroStudios.UnityWebBrowser.Core.Engines
         {
             processHandle.KillProcess();
         }
-        
+
         public void Dispose()
         {
             processHandle.Dispose();
         }
     }
 }
-
-#endif

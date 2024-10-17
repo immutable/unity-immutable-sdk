@@ -3,8 +3,9 @@
 // 
 // This project is under the MIT license. See the LICENSE.md file for more details.
 
-#if !IMMUTABLE_CUSTOM_BROWSER && UNITY_EDITOR && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
+#if UNITY_EDITOR
 
+using System;
 using System.IO;
 using System.Linq;
 using UnityEngine;
@@ -15,6 +16,7 @@ namespace VoltstroStudios.UnityWebBrowser.Editor.EngineManagement
 {
     public static class EngineManager
     {
+        [Obsolete("Fetching of engine paths is now handled by the Engine class.")]
         public static string GetEngineDirectory(Engine engine, Platform platform)
         {
             Engine.EnginePlatformFiles files = engine.EngineFiles.FirstOrDefault(x => x.platform == platform);
@@ -27,20 +29,23 @@ namespace VoltstroStudios.UnityWebBrowser.Editor.EngineManagement
             return Path.GetFullPath(files.engineFileLocation);
         }
 
+        [Obsolete("Fetching of engine paths is now handled by the Engine class.")]
         public static string GetEngineDirectory(Engine engine)
         {
             return GetEngineDirectory(engine, GetCurrentEditorPlatform());
         }
 
+        [Obsolete("Fetching of engine paths is now handled by the Engine class.")]
         public static string GetEngineProcessFullPath(Engine engine, Platform platform)
         {
-            string appPath = $"{GetEngineDirectory(engine, platform)}{engine.GetEngineExecutableName()}";
-            if (platform == Platform.Windows64)
-                appPath += ".exe";
+            string appPath = Path.Combine(GetEngineDirectory(engine, platform), engine.GetEngineExecutableName());
+            // if (platform == Platform.Windows64)
+            //     appPath += ".exe";
 
             return Path.GetFullPath(appPath);
         }
 
+        [Obsolete("Fetching of engine paths is now handled by the Engine class.")]
         public static string GetEngineProcessFullPath(Engine engine)
         {
             return GetEngineProcessFullPath(engine, GetCurrentEditorPlatform());
@@ -56,9 +61,7 @@ namespace VoltstroStudios.UnityWebBrowser.Editor.EngineManagement
             Platform platform = Platform.MacOS;
 #else
 #error Unsupported platform!
-
 #endif
-
             return platform;
         }
     }

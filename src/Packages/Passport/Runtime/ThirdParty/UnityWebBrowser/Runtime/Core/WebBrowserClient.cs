@@ -1,5 +1,3 @@
-#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
-
 // UnityWebBrowser (UWB)
 // Copyright (c) 2021-2022 Voltstro-Studios
 // 
@@ -19,14 +17,19 @@ using Unity.Profiling;
 using UnityEngine;
 using VoltstroStudios.UnityWebBrowser.Communication;
 using VoltstroStudios.UnityWebBrowser.Core.Engines;
+using VoltstroStudios.UnityWebBrowser.Core.Js;
+using VoltstroStudios.UnityWebBrowser.Core.Popups;
 using VoltstroStudios.UnityWebBrowser.Events;
 using VoltstroStudios.UnityWebBrowser.Helper;
 using VoltstroStudios.UnityWebBrowser.Logging;
 using VoltstroStudios.UnityWebBrowser.Shared;
 using VoltstroStudios.UnityWebBrowser.Shared.Core;
 using VoltstroStudios.UnityWebBrowser.Shared.Events;
+using VoltstroStudios.UnityWebBrowser.Shared.Js;
+using VoltstroStudios.UnityWebBrowser.Shared.Popups;
 using Object = UnityEngine.Object;
 using Resolution = VoltstroStudios.UnityWebBrowser.Shared.Resolution;
+
 
 namespace VoltstroStudios.UnityWebBrowser.Core
 {
@@ -46,8 +49,6 @@ namespace VoltstroStudios.UnityWebBrowser.Core
     [Serializable]
     public class WebBrowserClient : IWebBrowserClient, IDisposable
     {
-        private const string TAG = "[Web Browser Client]";
-
         #region Profile Markers
 
         internal static ProfilerMarker markerGetPixels = new("UWB.GetPixels");
@@ -78,6 +79,21 @@ namespace VoltstroStudios.UnityWebBrowser.Core
 
         [SerializeField] private Resolution resolution = new(1920, 1080);
 
+        /// <summary>
+        ///     The resolution of the browser.
+        ///     <para>There is a chance that resizing the screen causes UWB to crash Unity, use carefully!</para>
+        ///     <para>Resizing in performance mode is not supported!</para>
+        /// </summary>
+        public Resolution Resolution
+        {
+            get => resolution;
+            set
+            {
+                resolution = value;
+                Resize(value);
+            }
+        }
+
         #endregion
 
         /// <summary>
@@ -96,12 +112,16 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         ///     Enable or disable the cache
         /// </summary>
         [Tooltip("Enable or disable the cache")]
+        [Obsolete("Cache control is no longer used. A cache path will always be used now. To use a incognito/private mode, where no profile-specific data is persisted to disk, set incognitoMode to true.")]
+        [HideInInspector]
         public bool cache = true;
 
         /// <summary>
-        ///     Enable or disable WebRTC
+        ///     Enable or disable incognito/private mode.
+        ///     When true, no profile-specific data is persisted to disk, but cache is sill used to persist installation-specific data.
         /// </summary>
-        [Tooltip("Enable or disable WebRTC")] public bool webRtc;
+        [Tooltip("Enable or disable incognito/private mode. When true, no profile-specific data is persisted to disk, but cache is still used to persist installation-specific data.")]
+        public bool incognitoMode;
 
         /// <summary>
         ///     Enable or disable local storage
@@ -110,9 +130,20 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         public bool localStorage = true;
 
         /// <summary>
+        ///     How to handle popups
+        /// </summary>
+        [Tooltip("How to handle popups")] public PopupAction popupAction;
+
+        /// <summary>
         ///     Proxy Settings
         /// </summary>
         [Tooltip("Proxy settings")] public ProxySettings proxySettings;
+
+        /// <summary>
+        ///     Enable or disable WebRTC
+        /// </summary>
+        [Header("Advanced")]
+        [Tooltip("Enable or disable WebRTC")] public bool webRtc;
 
         /// <summary>
         ///     Enable or disable remote debugging
@@ -128,6 +159,30 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         public uint remoteDebuggingPort = 9022;
 
         /// <summary>
+        ///     Origins that are allowed to access remote debugging when <see cref="remoteDebugging"/> is enabled
+        /// </summary>
+        [Tooltip("Origins that are allowed to access remote debugging when remoteDeubgging is enabled")]
+        public string[] remoteDebuggingAllowedOrigins = new[] { "http://127.0.0.1:9022" };
+
+        /// <summary>
+        ///     Manager for JS methods
+        /// </summary>
+        [Tooltip("Manager for JS methods")]
+        public JsMethodManager jsMethodManager = new();
+
+        /// <summary>
+        ///     Will ignore SSL errors on provided domains in <see cref="ignoreSslErrorsDomains"/>
+        /// </summary>
+        [Tooltip("Will ignore SSL errors on provided domains in ignoreSSLErrorsDomains")]
+        public bool ignoreSslErrors = false;
+
+        /// <summary>
+        ///     Domains to ignore SSL errors on if <see cref="ignoreSslErrors"/> is enabled
+        /// </summary>
+        [Tooltip("Domains to ignore SSL errors on if ignoreSSLErrors is enabled")]
+        public string[] ignoreSslErrorsDomains;
+
+        /// <summary>
         ///     The <see cref="CommunicationLayer" /> to use
         /// </summary>
         [Header("IPC Settings")]
@@ -138,7 +193,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         ///     Timeout time for waiting for the engine to start (in milliseconds)
         /// </summary>
         [Tooltip("Timeout time for waiting for the engine to start (in milliseconds)")]
-        public int engineStartupTimeout = 30000;
+        public int engineStartupTimeout = 4000;
 
         /// <summary>
         ///     The log severity. Only messages of this severity level or higher will be logged
@@ -162,6 +217,11 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         public bool ReadySignalReceived { get; internal set; }
 
         /// <summary>
+        ///     The UWB engine has signaled that it is connected to the <see cref="WebBrowserClient"/>
+        /// </summary>
+        public bool ClientConnected { get; internal set; }
+
+        /// <summary>
         ///     Has UWB initialized
         /// </summary>
         public bool HasInitialized { get; internal set; }
@@ -178,16 +238,15 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         /// <summary>
         ///     The path that UWB engine will log to
         /// </summary>
-        /// <exception cref="UwbIsConnectedException"></exception>
-        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="UwbHasInitializedException">Thrown if value is attempted to be changed once UWB has already initialized</exception>
+        /// <exception cref="ArgumentNullException">Thrown is value provide is null</exception>
         public FileInfo LogPath
         {
             get => logPath;
             set
             {
-                if (IsConnected)
-                    throw new UwbIsConnectedException(
-                        "You cannot change the log path once the browser engine is connected");
+                if (HasInitialized)
+                    throw new UwbHasInitializedException("You cannot change the log path once UWB has initialized!");
 
                 logPath = value ?? throw new ArgumentNullException(nameof(value));
             }
@@ -202,20 +261,15 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         /// <summary>
         ///     The path to the cache
         /// </summary>
-        /// <exception cref="UwbIsConnectedException"></exception>
-        /// <exception cref="ArgumentException"></exception>
-        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="UwbHasInitializedException">Thrown if value is attempted to be changed once UWB has already initialized</exception>
+        /// <exception cref="ArgumentNullException">Thrown is value provide is null</exception>
         public FileInfo CachePath
         {
             get => cachePath;
             set
             {
-                if (IsConnected)
-                    throw new UwbIsConnectedException(
-                        "You cannot change the cache path once the browser engine is connected");
-
-                if (!cache)
-                    throw new ArgumentException("The cache is disabled!");
+                if (HasInitialized)
+                    throw new UwbHasInitializedException("You cannot change the cache path once UWB has initialized!");
 
                 cachePath = value ?? throw new ArgumentNullException(nameof(value));
             }
@@ -248,6 +302,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         private WebBrowserCommunicationsManager communicationsManager;
         private CancellationTokenSource cancellationSource;
 
+        private object resizeLock;
         private NativeArray<byte> textureData;
         internal NativeArray<byte> nextTextureData;
 
@@ -263,19 +318,24 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         ///     Inits the browser client
         /// </summary>
         /// <exception cref="FileNotFoundException"></exception>
-        public async UniTask Init(int engineStartupTimeout = 30000)
+        public async UniTask Init()
         {
             // Set log level
-            logSeverity = PassportLogger.CurrentLogLevel switch
-            {
-                LogLevel.Debug => LogSeverity.Debug,
-                LogLevel.Warn => LogSeverity.Warn,
-                LogLevel.Error => LogSeverity.Error,
-                _ => LogSeverity.Info
-            };
+            logSeverity = LogSeverity.Debug;
+            // logSeverity = PassportLogger.CurrentLogLevel switch
+            // {
+            //     LogLevel.Debug => LogSeverity.Debug,
+            //     LogLevel.Warn => LogSeverity.Warn,
+            //     LogLevel.Error => LogSeverity.Error,
+            //     _ => LogSeverity.Info
+            // };
 
-            this.engineStartupTimeout = engineStartupTimeout;
-            logger.Debug($"{TAG} Engine startup timeout: {engineStartupTimeout}");
+            if (!WebBrowserUtils.IsRunningOnSupportedPlatform())
+            {
+                logger.Warn("UWB is not supported on the current runtime platform! Not running.");
+                Dispose();
+                return;
+            }
 
             // Get the path to the Windows UWB process
             EngineConfiguration engineConfiguration = new EngineConfiguration();
@@ -293,6 +353,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
 #endif
             engine = engineConfiguration;
 
+            //Get the path to the UWB process we are using and make sure it exists
             string browserEnginePath = WebBrowserUtils.GetBrowserEngineProcessPath(engine);
             logger.Debug($"Starting browser engine process from '{browserEnginePath}'...");
 
@@ -317,6 +378,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
                 false);
             WebBrowserUtils.SetAllTextureColorToOne(BrowserTexture, backgroundColor);
 
+            resizeLock = new object();
             textureData = BrowserTexture.GetRawTextureData<byte>();
             nextTextureData = new NativeArray<byte>(textureData.ToArray(), Allocator.Persistent);
 
@@ -340,7 +402,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             argsBuilder.AppendArgument("background-color", WebBrowserUtils.ColorToHex(backgroundColor));
 
             //Logging
-            LogPath ??= new FileInfo($"{browserEngineMainDir}/{engine.GetEngineExecutableName()}.log");
+            LogPath ??= new FileInfo(Path.Combine(browserEngineMainDir, $"{Path.GetFileNameWithoutExtension(engine.GetEngineExecutableName())}.log"));
             argsBuilder.AppendArgument("log-path", LogPath.FullName, true);
             argsBuilder.AppendArgument("log-severity", logSeverity);
 
@@ -349,25 +411,21 @@ namespace VoltstroStudios.UnityWebBrowser.Core
                 out string assemblyLocation);
             if (assemblyLocation != null)
             {
-                if (!File.Exists(assemblyLocation))
-                {
-                    logger.Error("Failed to find provided communication layer assembly!");
-                    throw new FileNotFoundException("Failed to find provided communication layer assembly!");
-                }
-
-                argsBuilder.AppendArgument("comms-layer-path", assemblyLocation, true);
-                logger.Debug($"Using communication layer assembly at '{assemblyLocation}'.");
+                argsBuilder.AppendArgument("comms-layer-name", assemblyLocation, true);
+                logger.Debug($"Using communication layer of '{assemblyLocation}'.");
             }
 
             argsBuilder.AppendArgument("in-location", inLocation, true);
             argsBuilder.AppendArgument("out-location", outLocation, true);
 
-            //If we have a cache, set the cache path
-            if (cache)
-            {
-                cachePath ??= new FileInfo($"{browserEngineMainDir}/UWBCache");
-                argsBuilder.AppendArgument("cache-path", cachePath.FullName, true);
-            }
+            //Set cache path
+            cachePath ??= new FileInfo(Path.Combine(browserEngineMainDir, "UWBCache"));
+            argsBuilder.AppendArgument("cache-path", cachePath.FullName, true);
+
+            argsBuilder.AppendArgument("incognito-mode", incognitoMode);
+
+            //Popups
+            argsBuilder.AppendArgument("popup-action", popupAction, true);
 
             //Setup web RTC
             if (webRtc)
@@ -377,15 +435,28 @@ namespace VoltstroStudios.UnityWebBrowser.Core
 
             //Setup remote debugging
             if (remoteDebugging)
+            {
                 argsBuilder.AppendArgument("remote-debugging", remoteDebuggingPort);
+                argsBuilder.AppendArgument("remote-debugging-allowed-origins", string.Join(",", remoteDebuggingAllowedOrigins));
+            }
 
             //Setup proxy
-            argsBuilder.AppendArgument("proxy-server", proxySettings.ProxyServer);
-            if (!string.IsNullOrWhiteSpace(proxySettings.Username))
-                argsBuilder.AppendArgument("proxy-username", proxySettings.Username, true);
+            if (proxySettings.ProxyServer)
+            {
+                argsBuilder.AppendArgument("proxy-server", true);
+                if (!string.IsNullOrWhiteSpace(proxySettings.Username))
+                    argsBuilder.AppendArgument("proxy-username", proxySettings.Username, true);
 
-            if (!string.IsNullOrWhiteSpace(proxySettings.Password))
-                argsBuilder.AppendArgument("proxy-password", proxySettings.Password, true);
+                if (!string.IsNullOrWhiteSpace(proxySettings.Password))
+                    argsBuilder.AppendArgument("proxy-password", proxySettings.Password, true);
+            }
+
+            //Ignore ssl errors
+            if (ignoreSslErrors)
+            {
+                argsBuilder.AppendArgument("ignore-ssl-errors", true);
+                argsBuilder.AppendArgument("ignore-ssl-errors-domains", string.Join(",", ignoreSslErrorsDomains));
+            }
 
             //Make sure not to include this, its for testing
 #if UWB_ENGINE_PRJ //Define for backup, cause I am dumb as fuck and gonna accidentally include this in a release build one day 
@@ -407,13 +478,23 @@ namespace VoltstroStudios.UnityWebBrowser.Core
 
             //Mark has initialized and invoke event
             HasInitialized = true;
+            try
+            {
+                OnClientInitialized?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Error invoking OnClientInitialized! {ex}");
+            }
 
             try
             {
                 //Start the engine process
                 await UniTask.Create(() =>
                     StartEngineProcess(arguments))
-                    .ContinueWith(() => WaitForEngineReadyTask(cancellationSource.Token));
+                    .ContinueWith(() => WaitForEngineReadyTask(cancellationSource.Token))
+                    .ContinueWith(async () => await UniTask.WaitUntil(() => ClientConnected, cancellationToken: cancellationSource.Token))
+                    .ContinueWith(() => RegisterJsMethod<string>("UnityPostMessage", InvokeOnUnityPostMessage));
             }
             catch (Exception ex)
             {
@@ -429,6 +510,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         {
             try
             {
+                //TODO: Move process log handler to engine process class
                 processLogHandler = new ProcessLogHandler(this);
                 engineProcess = new EngineProcess(engine, logger);
                 engineProcess.StartProcess(engineProcessArguments, processLogHandler.HandleOutputProcessLog, processLogHandler.HandleErrorProcessLog);
@@ -458,7 +540,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             {
                 logger.Error(engineProcess.HasExited
                     ? $"The engine did not get ready within engine startup timeout! The engine process is not even running! Exit code: {engineProcess.ExitCode}."
-                    : "The engine did not get ready within engine startup timeout!");
+                    : "The engine did not get ready within engine startup timeout! Try increasing your 'Engine Startup Timeout' time. If you continue to have this error, see issue report #166 on GitHub.");
                 await using (UniTask.ReturnToMainThread())
                 {
                     Dispose();
@@ -491,6 +573,12 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             {
                 logger.Debug("UWB startup success, connecting...");
                 communicationsManager.Connect();
+
+                //Fire OnClientConnected on main thread
+                await using (UniTask.ReturnToMainThread())
+                {
+                    ClientConnected = true;
+                }
             }
             catch (Exception ex)
             {
@@ -505,6 +593,54 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         #endregion
 
         #region Main Loop
+
+        internal void PixelDataLoop()
+        {
+            CancellationToken token = cancellationSource.Token;
+            while (!token.IsCancellationRequested)
+                try
+                {
+                    if (!IsConnected)
+                        continue;
+
+                    if (engineProcess.HasExited)
+                    {
+                        logger.Error("It appears that the engine process has quit!");
+                        cancellationSource.Cancel();
+                        return;
+                    }
+
+                    Thread.Sleep(5);
+
+                    if (token.IsCancellationRequested)
+                        return;
+
+                    markerGetPixels.Begin();
+                    {
+                        lock (resizeLock)
+                        {
+                            markerGetPixelsRpc.Begin();
+                            {
+                                communicationsManager.GetPixels();
+                            }
+                            markerGetPixelsRpc.End();
+
+                            textureData.CopyFrom(nextTextureData);
+                        }
+                    }
+                    markerGetPixels.End();
+
+                    frames++;
+                }
+                catch (TaskCanceledException)
+                {
+                    //Do nothing
+                }
+                catch (Exception ex)
+                {
+                    logger.Error($"Error in data loop! {ex}");
+                }
+        }
 
         /// <summary>
         ///     Loads the pixel data into the <see cref="BrowserTexture" />
@@ -547,6 +683,18 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         #endregion
 
         #region Browser Events
+
+        /// <summary>
+        ///     Invoked when this <see cref="WebBrowserClient"/> initalizes.
+        ///
+        ///     <para>Initialized does not mean that the engine is ready, for that, use <see cref="OnClientConnected"/></para>
+        /// </summary>
+        public event OnClientInitialized OnClientInitialized;
+
+        /// <summary>
+        ///     Invoked when this <see cref="WebBrowserClient"/> connects to the engine
+        /// </summary>
+        public event OnClientConnected OnClientConnected;
 
         /// <summary>
         ///     Invoked when the url changes
@@ -617,6 +765,23 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         internal void InvokeFullscreen(bool fullscreen)
         {
             OnFullscreen?.Invoke(fullscreen);
+        }
+
+        /// <summary>
+        ///     Invoked when the browser gets a popup
+        /// </summary>
+        public event OnPopup OnPopup;
+
+        internal void InvokeOnPopup(WebBrowserPopupInfo popupInfo)
+        {
+            OnPopup?.Invoke(popupInfo);
+        }
+
+        public event OnInputFocus OnInputFocus;
+
+        internal void InvokeOnInputFocus(bool focused)
+        {
+            OnInputFocus?.Invoke(focused);
         }
 
         #endregion
@@ -707,6 +872,20 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         }
 
         /// <summary>
+        ///     Gets the mouse scroll position
+        ///     <para>THIS IS INVOKED ON THE THREAD THAT IS CALLING THIS AND IS BLOCKING</para>
+        /// </summary>
+        /// <returns>Returns the mouse scroll position as a <see cref="Vector2" /></returns>
+        public Vector2 GetScrollPosition()
+        {
+            CheckIfIsReadyAndConnected();
+
+            //Gotta convert it to a Unity vector2
+            System.Numerics.Vector2 position = communicationsManager.GetScrollPosition();
+            return new Vector2(position.X, position.Y);
+        }
+
+        /// <summary>
         ///     Tells the browser to go forward
         /// </summary>
         public void GoForward()
@@ -763,6 +942,80 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             Application.OpenURL(url);
         }
 
+        /// <summary>
+        ///     Sets zoom level based off a percentage
+        /// </summary>
+        /// <param name="percent"></param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if percent is 0 or less</exception>
+        public void SetZoomLevelPercent(double percent)
+        {
+            if (percent <= 0)
+                throw new ArgumentOutOfRangeException(nameof(percent),
+                    "Percent must be larger then 0. To reset, use SetZoomLevel(0).");
+
+            //Logic from:
+            //https://magpcss.org/ceforum/viewtopic.php?t=11491
+            double scale = 1.2 * percent;
+            double zoomLevel = Math.Log(scale);
+            SetZoomLevel(zoomLevel);
+        }
+
+        /// <summary>
+        ///     Set browser's zoom level. Use 0.0 to reset.
+        /// </summary>
+        /// <param name="zoomLevel"></param>
+        public void SetZoomLevel(double zoomLevel)
+        {
+            CheckIfIsReadyAndConnected();
+
+            communicationsManager.SetZoomLevel(zoomLevel);
+        }
+
+        /// <summary>
+        ///     Get's browser's zoom level
+        /// </summary>
+        /// <returns></returns>
+        public double GetZoomLevel()
+        {
+            CheckIfIsReadyAndConnected();
+
+            return communicationsManager.GetZoomLevel();
+        }
+
+        /// <summary>
+        ///     Shows dev tools
+        /// </summary>
+        public void OpenDevTools()
+        {
+            CheckIfIsReadyAndConnected();
+
+            communicationsManager.OpenDevTools();
+        }
+
+        /// <summary>
+        ///     Resizes the screen.
+        /// </summary>
+        /// <param name="newResolution"></param>
+        /// <exception cref="UwbIsNotConnectedException"></exception>
+        /// <exception cref="NotSupportedException"></exception>
+        public void Resize(Resolution newResolution)
+        {
+            CheckIfIsReadyAndConnected();
+
+            lock (resizeLock)
+            {
+                BrowserTexture.Reinitialize((int)newResolution.Width, (int)newResolution.Height);
+                textureData = BrowserTexture.GetRawTextureData<byte>();
+                communicationsManager.Resize(newResolution);
+
+                nextTextureData.Dispose();
+                nextTextureData = new NativeArray<byte>(textureData.ToArray(), Allocator.Persistent);
+                communicationsManager.pixelsEventTypeReader.SetPixelDataArray(nextTextureData);
+            }
+
+            logger.Debug($"Resized to {newResolution}.");
+        }
+
         [DebuggerStepThrough]
         private void CheckIfIsReadyAndConnected()
         {
@@ -771,6 +1024,113 @@ namespace VoltstroStudios.UnityWebBrowser.Core
 
             if (!IsConnected)
                 throw new UwbIsNotConnectedException("UWB is not currently connected!");
+        }
+
+        #endregion
+
+        #region JS Methods
+
+        /// <summary>
+        ///     Registers a method with <see cref="JsMethodManager"/>
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="method"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public void RegisterJsMethod(string name, Action method)
+        {
+            if (method == null)
+                throw new ArgumentNullException(nameof(method));
+
+            jsMethodManager.RegisterJsMethod(name, method.Method, method.Target);
+        }
+
+        /// <summary>
+        ///     Registers a method with <see cref="JsMethodManager"/>
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="method"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public void RegisterJsMethod<T>(string name, Action<T> method)
+        {
+            if (method == null)
+                throw new ArgumentNullException(nameof(method));
+
+            jsMethodManager.RegisterJsMethod(name, method.Method, method.Target);
+        }
+
+        /// <summary>
+        ///     Registers a method with <see cref="JsMethodManager"/>
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="method"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public void RegisterJsMethod<T1, T2>(string name, Action<T1, T2> method)
+        {
+            if (method == null)
+                throw new ArgumentNullException(nameof(method));
+
+            jsMethodManager.RegisterJsMethod(name, method.Method, method.Target);
+        }
+
+        /// <summary>
+        ///     Registers a method with <see cref="JsMethodManager"/>
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="method"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public void RegisterJsMethod<T1, T2, T3>(string name, Action<T1, T2, T3> method)
+        {
+            if (method == null)
+                throw new ArgumentNullException(nameof(method));
+
+            jsMethodManager.RegisterJsMethod(name, method.Method, method.Target);
+        }
+
+        /// <summary>
+        ///     Registers a method with <see cref="JsMethodManager"/>
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="method"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public void RegisterJsMethod<T1, T2, T3, T4>(string name, Action<T1, T2, T3, T4> method)
+        {
+            if (method == null)
+                throw new ArgumentNullException(nameof(method));
+
+            jsMethodManager.RegisterJsMethod(name, method.Method, method.Target);
+        }
+
+        /// <summary>
+        ///     Registers a method with <see cref="JsMethodManager"/>
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="method"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public void RegisterJsMethod<T1, T2, T3, T4, T5>(string name, Action<T1, T2, T3, T4, T5> method)
+        {
+            if (method == null)
+                throw new ArgumentNullException(nameof(method));
+
+            jsMethodManager.RegisterJsMethod(name, method.Method, method.Target);
+        }
+
+        /// <summary>
+        ///     Registers a method with <see cref="JsMethodManager"/>
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="method"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public void RegisterJsMethod<T1, T2, T3, T4, T5, T6>(string name, Action<T1, T2, T3, T4, T5, T6> method)
+        {
+            if (method == null)
+                throw new ArgumentNullException(nameof(method));
+
+            jsMethodManager.RegisterJsMethod(name, method.Method, method.Target);
+        }
+
+        internal void InvokeJsMethod(ExecuteJsMethod executeJsMethod)
+        {
+            jsMethodManager.InvokeJsMethod(executeJsMethod);
         }
 
         #endregion
@@ -856,7 +1216,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             {
                 if (!engineProcess.HasExited)
                     engineProcess.KillProcess();
-                    
+
                 engineProcess.Dispose();
                 engineProcess = null;
             }
@@ -867,12 +1227,16 @@ namespace VoltstroStudios.UnityWebBrowser.Core
 #endif
 
             //Dispose of buffers
-            if (nextTextureData.IsCreated)
-                nextTextureData.Dispose();
+            if (resizeLock == null)
+                return;
+
+            lock (resizeLock)
+            {
+                if (nextTextureData.IsCreated)
+                    nextTextureData.Dispose();
+            }
         }
 
         #endregion
     }
 }
-
-#endif

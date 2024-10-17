@@ -2,8 +2,10 @@
     "name": "VoltstroStudios.UnityWebBrowser",
     "rootNamespace": "VoltstroStudios.UnityWebBrowser",
     "references": [
-        "UniTask",
+        "VoltstroStudios.NativeArraySpanExtensions",
+        "Unity.TextMeshPro",
         "Unity.InputSystem",
+        "UniTask",
         "Immutable.Browser.Core",
         "Immutable.Passport.Core.Logging"
     ],

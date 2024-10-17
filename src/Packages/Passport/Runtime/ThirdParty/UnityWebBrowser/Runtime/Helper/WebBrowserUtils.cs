@@ -1,24 +1,17 @@
-#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
-
 // UnityWebBrowser (UWB)
 // Copyright (c) 2021-2022 Voltstro-Studios
 // 
 // This project is under the MIT license. See the LICENSE.md file for more details.
 
 using System;
-using System.Diagnostics;
 using System.IO;
-using System.Runtime.CompilerServices;
-using System.Threading;
-using Unity.Collections;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Scripting;
 using UnityEngine.UI;
 using VoltstroStudios.UnityWebBrowser.Core.Engines;
-using VoltstroStudios.UnityWebBrowser.Logging;
-#if UWB_NEED_UNIX
-using VoltstroStudios.UnityWebBrowser.UnixSupport;
-#endif
+using VoltstroStudios.UnityWebBrowser.Shared.Core;
+
 #if UNITY_EDITOR
 using VoltstroStudios.UnityWebBrowser.Editor.EngineManagement;
 #endif
@@ -31,6 +24,15 @@ namespace VoltstroStudios.UnityWebBrowser.Helper
     [Preserve]
     public static class WebBrowserUtils
     {
+        private static readonly RuntimePlatform[] SupportedPlatforms = {
+            RuntimePlatform.WindowsPlayer,
+            RuntimePlatform.WindowsEditor,
+            RuntimePlatform.LinuxPlayer,
+            RuntimePlatform.LinuxEditor,
+            RuntimePlatform.OSXEditor,
+            RuntimePlatform.OSXPlayer
+        };
+
         /// <summary>
         ///     Gets the main directory where logs and cache may be stored
         /// </summary>
@@ -38,20 +40,11 @@ namespace VoltstroStudios.UnityWebBrowser.Helper
         public static string GetAdditionFilesDirectory()
         {
 #if UNITY_EDITOR
-            return Path.GetFullPath($"{Directory.GetParent(Application.dataPath).FullName}/Library");
+            return Path.GetFullPath(Path.Combine(Directory.GetParent(Application.dataPath)!.FullName, "Library"));
 #elif UNITY_STANDALONE_OSX
             return Application.persistentDataPath;
 #else
-            // TODO to remove this once we don't stop distributing the SDK Windows DLL version, 
-            // but also doesn't matter if it stays here
-            if (Application.isEditor) 
-            {
-                return Path.GetFullPath($"{Directory.GetParent(Application.dataPath).FullName}/Library");
-            }
-            else
-            {
-			    return $"{Application.dataPath}/ImmutableSDK/Runtime";
-            }
+            return Application.dataPath;
 #endif
         }
 
@@ -86,7 +79,7 @@ namespace VoltstroStudios.UnityWebBrowser.Helper
 #if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
             path += ".exe";
 #endif
-            return  Path.GetFullPath(path);
+            return Path.GetFullPath(path);
 #endif
         }
 
@@ -138,56 +131,36 @@ namespace VoltstroStudios.UnityWebBrowser.Helper
         }
 
         /// <summary>
+        ///     Gets the current running platform
+        /// </summary>
+        /// <returns></returns>
+        public static Platform GetRunningPlatform()
+        {
+#if UNITY_STANDALONE_WIN
+            return Platform.Windows64;
+#elif UNITY_STANDALONE_LINUX
+            return Platform.Linux64;
+#elif UNITY_STANDALONE_OSX
+            return RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? Platform.MacOSArm64 : Platform.MacOS;
+#endif
+        }
+
+        /// <summary>
+        ///     Checks if UWB is running on a supported platform
+        /// </summary>
+        /// <returns></returns>
+        public static bool IsRunningOnSupportedPlatform()
+        {
+            return SupportedPlatforms.Any(x => x == UnityEngine.Device.Application.platform);
+        }
+
+        /// <summary>
         ///     Converts a <see cref="Color32" /> to hex
         /// </summary>
         /// <param name="color"></param>
         internal static string ColorToHex(Color32 color)
         {
             return ColorUtility.ToHtmlStringRGBA(color);
-        }
-
-        /// <summary>
-        ///     Creates a <see cref="Process" /> for an engine
-        /// </summary>
-        /// <param name="logger"></param>
-        /// <param name="engine"></param>
-        /// <param name="arguments"></param>
-        /// <param name="onLogEvent"></param>
-        /// <param name="onErrorLogEvent"></param>
-        /// <returns></returns>
-        internal static Process CreateEngineProcess(IWebBrowserLogger logger, Engine engine, string arguments,
-            DataReceivedEventHandler onLogEvent, DataReceivedEventHandler onErrorLogEvent)
-        {
-            string engineFullProcessPath = GetBrowserEngineProcessPath(engine);
-            string engineDirectory = GetBrowserEnginePath(engine);
-
-            logger.Debug($"Process Path: '{engineFullProcessPath}'\nWorking: '{engineDirectory}'");
-            logger.Debug($"Arguments: '{arguments}'");
-
-#if UWB_NEED_UNIX
-            if (PermissionsManager.CheckAndSetIfNeededFileExecutablePermission(engineFullProcessPath))
-                logger.Warn(
-                    "UWB engine process did not have +rwx permissions! Engine process permission's were updated for the user.");
-#endif
-
-            Process process = new()
-            {
-                StartInfo = new ProcessStartInfo(engineFullProcessPath, arguments)
-                {
-                    CreateNoWindow = true,
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    WorkingDirectory = engineDirectory
-                },
-                EnableRaisingEvents = true
-            };
-            process.OutputDataReceived += onLogEvent;
-            process.ErrorDataReceived += onErrorLogEvent;
-            process.Start();
-            process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
-            return process;
         }
 
         /// <summary>
@@ -209,5 +182,3 @@ namespace VoltstroStudios.UnityWebBrowser.Helper
         }
     }
 }
-
-#endif

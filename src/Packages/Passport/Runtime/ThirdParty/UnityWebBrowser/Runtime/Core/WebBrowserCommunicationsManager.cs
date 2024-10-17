@@ -1,5 +1,3 @@
-#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
-
 // UnityWebBrowser (UWB)
 // Copyright (c) 2021-2022 Voltstro-Studios
 // 
@@ -13,10 +11,13 @@ using Cysharp.Threading.Tasks;
 using Unity.Profiling;
 using UnityEngine.Scripting;
 using VoltRpc.Communication;
+using VoltstroStudios.UnityWebBrowser.Core.Popups;
 using VoltstroStudios.UnityWebBrowser.Logging;
 using VoltstroStudios.UnityWebBrowser.Shared;
 using VoltstroStudios.UnityWebBrowser.Shared.Core;
 using VoltstroStudios.UnityWebBrowser.Shared.Events;
+using VoltstroStudios.UnityWebBrowser.Shared.Js;
+using VoltstroStudios.UnityWebBrowser.Shared.Popups;
 using VoltstroStudios.UnityWebBrowser.Shared.ReadWriters;
 
 namespace VoltstroStudios.UnityWebBrowser.Core
@@ -37,6 +38,8 @@ namespace VoltstroStudios.UnityWebBrowser.Core
 
         public readonly IWebBrowserLogger logger;
 
+        public readonly PixelsEventTypeReader pixelsEventTypeReader;
+
         private readonly object threadLock;
         private readonly SynchronizationContext unityThread;
         private readonly CancellationTokenSource cancellationTokenSource;
@@ -45,6 +48,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         ///     Creates a new <see cref="WebBrowserCommunicationsManager" /> instance
         /// </summary>
         /// <param name="browserClient"></param>
+        /// <param name="cancellationTokenSource"></param>
         public WebBrowserCommunicationsManager(WebBrowserClient browserClient, CancellationTokenSource cancellationTokenSource)
         {
             threadLock = new object();
@@ -56,12 +60,19 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             ipcClient = browserClient.communicationLayer.CreateClient();
             ipcHost = browserClient.communicationLayer.CreateHost();
 
+            WebBrowserPopupService popupService = new(this);
+
             ReadWriterUtils.AddBaseTypeReadWriters(ipcHost.TypeReaderWriterManager);
             ipcHost.AddService<IClientControls>(this);
+            ipcHost.AddService<IPopupEngineControls>(popupService);
 
             ReadWriterUtils.AddBaseTypeReadWriters(ipcClient.TypeReaderWriterManager);
 
+            pixelsEventTypeReader = new PixelsEventTypeReader(browserClient.nextTextureData);
+            ipcClient.TypeReaderWriterManager.AddType(pixelsEventTypeReader);
+
             ipcClient.AddService<IEngineControls>();
+            ipcClient.AddService<IPopupClientControls>();
             engineProxy = new EngineControls(ipcClient);
             this.cancellationTokenSource = cancellationTokenSource;
         }
@@ -77,6 +88,17 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             {
                 ipcHost?.Dispose();
                 ipcClient?.Dispose();
+            }
+        }
+
+        public PixelsEvent GetPixels()
+        {
+            using (sendEventMarker.Auto())
+            {
+                lock (threadLock)
+                {
+                    return engineProxy.GetPixels();
+                }
             }
         }
 
@@ -108,6 +130,17 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             ExecuteTask(() => engineProxy.SendMouseScrollEvent(mouseScrollEvent));
         }
 
+        public Vector2 GetScrollPosition()
+        {
+            using (sendEventMarker.Auto())
+            {
+                lock (threadLock)
+                {
+                    return engineProxy.GetScrollPosition();
+                }
+            }
+        }
+
         public void GoForward()
         {
             ExecuteTask(() => engineProxy.GoForward());
@@ -136,6 +169,32 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         public void ExecuteJs(string js)
         {
             ExecuteTask(() => engineProxy.ExecuteJs(js));
+        }
+
+        public void SetZoomLevel(double zoomLevel)
+        {
+            ExecuteTask(() => engineProxy.SetZoomLevel(zoomLevel));
+        }
+
+        public double GetZoomLevel()
+        {
+            using (sendEventMarker.Auto())
+            {
+                lock (threadLock)
+                {
+                    return engineProxy.GetZoomLevel();
+                }
+            }
+        }
+
+        public void OpenDevTools()
+        {
+            ExecuteTask(() => engineProxy.OpenDevTools());
+        }
+
+        public void Resize(Resolution resolution)
+        {
+            ExecuteTask(() => engineProxy.Resize(resolution));
         }
 
         public void Connect()
@@ -182,7 +241,6 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             if (!IsConnected)
                 return;
 
-#pragma warning disable CS4014
             UniTask.RunOnThreadPool(() =>
             {
                 sendEventMarker.Begin();
@@ -201,7 +259,6 @@ namespace VoltstroStudios.UnityWebBrowser.Core
                 sendEventMarker.End();
                 return UniTask.CompletedTask;
             });
-#pragma warning restore CS4014
         }
 
         #region Client Events
@@ -209,11 +266,6 @@ namespace VoltstroStudios.UnityWebBrowser.Core
         public void UrlChange(string url)
         {
             ExecuteOnUnity(() => client.InvokeUrlChanged(url));
-        }
-
-        public void UnityPostMessage(string message)
-        {
-            ExecuteOnUnity(() => client.InvokeOnUnityPostMessage(message));
         }
 
         public void LoadStart(string url)
@@ -241,13 +293,21 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             ExecuteOnUnity(() => client.InvokeFullscreen(fullScreen));
         }
 
+        public void InputFocusChange(bool focused)
+        {
+            ExecuteOnUnity(() => client.InvokeOnInputFocus(focused));
+        }
+        
         public void Ready()
         {
             client.EngineReady().Forget();
         }
 
+        public void ExecuteJsMethod(ExecuteJsMethod executeJsMethod)
+        {
+            ExecuteOnUnity(() => client.InvokeJsMethod(executeJsMethod));
+        }
+
         #endregion
     }
 }
-
-#endif
