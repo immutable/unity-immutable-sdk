@@ -70,7 +70,7 @@ public class SelectAuthMethodScript : MonoBehaviour
         
         InitialisePassport(redirectUri: redirectUri, logoutRedirectUri: logoutRedirectUri);
 #else
-        InitialisePassport(redirectUri: "imxsample://callback", logoutRedirectUri: "imxsample://callback/logout");
+        InitialisePassport(redirectUri: "immutablerunner://callback", logoutRedirectUri: "immutablerunner://logout");
 #endif
     }
 
@@ -95,7 +95,7 @@ public class SelectAuthMethodScript : MonoBehaviour
 #if UNITY_WEBGL
             string clientId = "UnB98ngnXIZIEJWGJOjVe1BpCx5ix7qc";
 #else
-            string clientId = "ZJL7JvetcDFBNDlgRs5oJoxuAUUl6uQj";
+            string clientId = "mp6rxfMDwwZDogcdgNrAaHnG0qMlXuMK";
 #endif
             Passport passport = await Passport.Init(clientId, environment, redirectUri, logoutRedirectUri);
 
