@@ -30,7 +30,7 @@ jobs:
           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         with:
           unityVersion: 2021.3.26f1
-          projectPath: './src/Packages/Passport/Samples~/sample'
+          projectPath: './sample'
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           testMode: 'EditMode'
       - uses: actions/upload-artifact@v4
@@ -78,7 +78,7 @@ jobs:
         with:
           unityVersion: 2021.3.26f1
           targetPlatform: ${{ matrix.targetPlatform }}
-          projectPath: './src/Packages/Passport/Samples~/sample'
+          projectPath: './sample'
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@4.1.3
         if: matrix.targetPlatform == 'WebGL'
