@@ -82,6 +82,8 @@ crashlytics-build.properties
 sample-passport-unity-game/
 src/Packages/Passport/Samples~/sample/iosBuild
 !src/Packages/Passport/Samples~/sample/webgl/Build/
+sample/iosBuild
+sample/webgl/Build/
 
 # Android
 src/Packages/Passport/Runtime/Assets/ImmutableAndroid.androidlib/**/*.meta
