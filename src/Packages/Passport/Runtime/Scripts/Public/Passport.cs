@@ -453,6 +453,19 @@ namespace Immutable.Passport
         }
 
         /// <summary>
+        /// Signs the EIP-712 structured message in JSON string format using the logged-in Passport account.
+        /// See <see href="https://eips.ethereum.org/EIPS/eip-712">EIP-712</see>.
+        /// <param name="payload">The EIP-712 structured data in JSON string format</param>
+        /// <returns>
+        /// The signed payload string.
+        /// </returns>
+        /// </summary>
+        public async UniTask<string> ZkEvmSignTypedDataV4(string payload)
+        {
+            return await GetPassportImpl().ZkEvmSignTypedDataV4(payload);
+        }
+
+        /// <summary>
         /// Returns a list of addresses owned by the user
         /// <returns>
         /// Addresses owned by the user
