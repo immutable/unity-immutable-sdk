@@ -15,7 +15,7 @@
       "url": "https://package.openupm.com"
     },
     "com.immutable.passport": {
-      "version": "file:../../../",
+      "version": "file:../../src/Packages/Passport",
       "depth": 0,
       "source": "local",
       "dependencies": {
