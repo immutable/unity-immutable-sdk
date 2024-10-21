@@ -760,6 +760,12 @@ namespace Immutable.Passport
             return jsonResponse.OptDeserializeObject<TransactionReceiptResponse>();
         }
 
+        public async UniTask<string> ZkEvmSignTypedDataV4(string payload)
+        {
+            var callResponse = await communicationsManager.Call(PassportFunction.ZK_EVM.SIGN_TYPED_DATA_V4, payload);
+            return callResponse.GetStringResult();
+        }
+
         public async UniTask<List<string>> ZkEvmRequestAccounts()
         {
             string callResponse = await communicationsManager.Call(PassportFunction.ZK_EVM.REQUEST_ACCOUNTS);

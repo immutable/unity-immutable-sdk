@@ -4,5 +4,6 @@ namespace Immutable.Passport.Model
     {
         public const string PRODUCTION = "production";
         public const string SANDBOX = "sandbox";
+        public const string DEVELOPMENT = "dev";
     }
 }

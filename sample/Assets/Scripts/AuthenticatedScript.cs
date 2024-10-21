@@ -29,6 +29,7 @@ public class AuthenticatedScript : MonoBehaviour
     [SerializeField] private Button RequestAccountsButton;
     [SerializeField] private Button GetBalanceButton;
     [SerializeField] private Button GetTransactionReceiptButton;
+    [SerializeField] private Button SignTypedDataButton;
 
     private Passport Passport;
 #pragma warning restore CS8618
@@ -72,6 +73,7 @@ public class AuthenticatedScript : MonoBehaviour
         RequestAccountsButton.gameObject.SetActive(isConnected);
         GetBalanceButton.gameObject.SetActive(isConnected);
         GetTransactionReceiptButton.gameObject.SetActive(isConnected);
+        SignTypedDataButton.gameObject.SetActive(isConnected);
     }
 
     #region Passport functions
@@ -337,6 +339,7 @@ public class AuthenticatedScript : MonoBehaviour
             RequestAccountsButton.gameObject.SetActive(true);
             GetBalanceButton.gameObject.SetActive(true);
             GetTransactionReceiptButton.gameObject.SetActive(true);
+            SignTypedDataButton.gameObject.SetActive(true);
 
             ShowOutput("Connected to EVM");
         }
@@ -389,6 +392,14 @@ public class AuthenticatedScript : MonoBehaviour
     public void ShowZkEvmGetTransactionReceipt()
     {
         SceneManager.LoadScene("ZkEvmGetTransactionReceipt");
+    }
+
+    /// <summary>
+    /// Navigates to zkEVM Sign Typed Data scene.
+    /// </summary>
+    public void ShowZkEvmSignTypedData()
+    {
+        SceneManager.LoadScene("ZkEvmSignTypedData");
     }
 
     #endregion
