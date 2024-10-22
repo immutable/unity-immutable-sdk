@@ -14,7 +14,7 @@ jobs:
   build:
     if: github.event.pull_request.head.repo.fork == false
     name: Build sample game for AltTester 🛠️
-    runs-on: macos-13
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
         with:
@@ -32,6 +32,7 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PERSONAL_PASSWORD }}
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
+          unityVersion: 2020.2.1f1
           targetPlatform: StandaloneOSX
           projectPath: sample
 #          buildMethod: MacBuilder.BuildForAltTester
