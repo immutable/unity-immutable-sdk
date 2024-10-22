@@ -94,6 +94,20 @@ jobs:
         sed -i -E "s/[0-9]+\.[0-9]+\.[0-9]+/$NEW_VERSION/g" $FILE
         echo "Updated SDK version in SdkVersionInfoHelpers.cs to $NEW_VERSION"
 
+    - name: Ensure Passport Samples~ directory exists and clear contents
+      run: |
+        mkdir -p ./src/Packages/Passport/Samples~
+        rm -rf ./src/Packages/Passport/Samples~/*
+
+    - name: Install rsync
+      run: sudo apt-get install -y rsync
+
+    - name: Copy sample scenes and scripts to Passport package Samples~
+      id: copy_sample_scenes_and_scripts
+      run: |
+        rsync -av --exclude='*.meta' ./sample/Assets/Scenes/ ./src/Packages/Passport/Samples~/Scenes/
+        rsync -av --exclude='*.meta' ./sample/Assets/Scripts/ ./src/Packages/Passport/Samples~/Scripts/
+
     - uses: gr2m/create-or-update-pull-request-action@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
