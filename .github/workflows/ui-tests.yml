@@ -52,6 +52,7 @@ jobs:
         with:
           name: Build-StandaloneOSX
       - name: Open application
+        working-directory: Builds/MacOS
         run: |
           pwd
           ls -la
