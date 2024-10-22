@@ -39,13 +39,11 @@ jobs:
       - name: Open application
         working-directory: sample/Builds/MacOS
         run: |
-          pwd
-          ls -la
           export RUN_IN_BROWSERSTACK="false"
           export ALTSERVER_PORT=13005
           export ALTSERVER_HOST="192.168.11.35"
-          chmod -R 755 sampleApp.app
-          open sampleApp.app
+          chmod -R 755 SampleApp.app
+          open SampleApp.app
       - uses: actions/setup-python@v4
         with:
           python-version: "3.10"
