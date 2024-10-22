@@ -35,9 +35,9 @@ jobs:
           targetPlatform: StandaloneOSX
           projectPath: sample
           buildMethod: MacBuilder.Build
-          customParameters: -logFile logFile.log -quit -batchmode -nographics
-          cacheUnityInstallationOnMac: true
-          allowDirtyBuild: true
+          customParameters: -quit -batchmode
+#          cacheUnityInstallationOnMac: true
+#          allowDirtyBuild: true
       - name: Open application
         working-directory: sample/Builds/MacOS
         run: |
