@@ -85,7 +85,7 @@ jobs:
         with:
           branch: gh-pages
           folder: build/WebGL/WebGL
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: Build-${{ matrix.targetPlatform }}
