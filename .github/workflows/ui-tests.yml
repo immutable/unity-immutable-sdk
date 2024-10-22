@@ -42,7 +42,7 @@ jobs:
           export RUN_IN_BROWSERSTACK="false"
           export ALTSERVER_PORT=13005
           export ALTSERVER_HOST="192.168.11.35"
-          chmod -R 755 SampleApp.app
+          sudo chmod -R 755 SampleApp.app
           open SampleApp.app
       - uses: actions/setup-python@v4
         with:
