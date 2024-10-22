@@ -37,6 +37,7 @@ jobs:
           buildMethod: MacBuilder.BuildForAltTester
           customParameters: -logFile logFile.log -quit -batchmode
           cacheUnityInstallationOnMac: true
+          allowDirtyBuild: true
       - name: Open application
         working-directory: sample/Builds/MacOS
         run: |
