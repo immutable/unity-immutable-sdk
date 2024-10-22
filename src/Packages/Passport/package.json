@@ -1,7 +1,7 @@
 {
   "name": "com.immutable.passport",
   "version": "1.27.1",
-  "description": "The Immutable SDK for Unity helps you integrate your game with Immutable Passport.",
+  "description": "The Immutable SDK for Unity helps you integrate your game with Immutable Passport.\n\nFor a complete working example, please visit https://github.com/immutable/unity-immutable-sdk/tree/main/sample.",
   "displayName": "Immutable Passport",
   "author": {
     "name": "Immutable",
@@ -28,8 +28,9 @@
   "unity": "2021.3",
   "samples": [
     {
-      "displayName": "Immutable Unity Sample App",
-      "path": "Samples~/sample"
+      "displayName": "Sample Scenes and Scripts",
+      "description": "Includes sample scenes and scripts for the Immutable Unity SDK.",
+      "path": "Samples~/SamplesScenesScripts"
     }
   ]
 }
