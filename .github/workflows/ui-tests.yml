@@ -34,7 +34,7 @@ jobs:
         with:
           targetPlatform: StandaloneOSX
           projectPath: sample
-          buildMethod: MacBuilder.BuildForAltTester
+          buildMethod: MacBuilder.Build
           customParameters: -logFile logFile.log -quit -batchmode
           cacheUnityInstallationOnMac: true
           allowDirtyBuild: true
