@@ -32,11 +32,10 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PERSONAL_PASSWORD }}
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
-          unityVersion: 2020.2.1f1
           targetPlatform: StandaloneOSX
           projectPath: sample
-#          buildMethod: MacBuilder.BuildForAltTester
-#          customParameters: -logFile logFile.log -quit -batchmode
+          buildMethod: MacBuilder.BuildForAltTester
+          customParameters: -logFile logFile.log -quit -batchmode
           cacheUnityInstallationOnMac: true
           allowDirtyBuild: true
       - name: Open application
