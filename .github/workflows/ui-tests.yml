@@ -32,12 +32,13 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PERSONAL_PASSWORD }}
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
+          unityVersion: 2020.3.15f2
           targetPlatform: StandaloneOSX
           projectPath: sample
           buildMethod: MacBuilder.Build
           customParameters: -quit -batchmode
-#          cacheUnityInstallationOnMac: true
-#          allowDirtyBuild: true
+          cacheUnityInstallationOnMac: true
+          allowDirtyBuild: true
       - name: Open application
         working-directory: sample/Builds/MacOS
         run: |
