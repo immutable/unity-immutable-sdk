@@ -40,7 +40,5 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: Build-StandaloneOSX
-          path: |
-            **/build/StandaloneOSX
-            **/logFile.log
+          path: build
       
