@@ -40,5 +40,8 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: Build-StandaloneOSX
-          path: build
+          path: '**'
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
       
