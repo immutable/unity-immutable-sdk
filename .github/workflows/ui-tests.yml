@@ -14,7 +14,7 @@ jobs:
   build:
     if: github.event.pull_request.head.repo.fork == false
     name: Build sample game for AltTester 🛠️
-    runs-on: macos-latest
+    runs-on: windows-2022
     steps:
       - uses: actions/checkout@v3
         with:
@@ -28,17 +28,14 @@ jobs:
       - name: Build project
         uses: game-ci/unity-builder@v4
         env:
-          UNITY_EMAIL: ${{ secrets.UNITY_PERSONAL_EMAIL }}
-          UNITY_PASSWORD: ${{ secrets.UNITY_PERSONAL_PASSWORD }}
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         with:
-          unityVersion: 2020.3.15f2
-          targetPlatform: StandaloneOSX
+          targetPlatform: StandaloneWindows64
           projectPath: sample
-          buildMethod: MacBuilder.Build
-          customParameters: -quit -batchmode
-#          cacheUnityInstallationOnMac: true
-#          allowDirtyBuild: true
+          buildMethod: WindowsBuilder.BuildForAltTester
+          customParameters: -logFile logFile.log -quit -batchmode
       - name: Open application
         working-directory: sample/Builds/MacOS
         run: |
