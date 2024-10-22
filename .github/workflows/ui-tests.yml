@@ -12,9 +12,8 @@ concurrency:
 
 jobs:
   build:
-    if: github.event.pull_request.head.repo.fork == false
     name: Build sample game for AltTester 🛠️
-    runs-on: windows-2022
+    runs-on: ubuntu-latest-8-cores
     steps:
       - uses: actions/checkout@v3
         with:
@@ -32,13 +31,31 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         with:
-          targetPlatform: StandaloneWindows64
+          targetPlatform: StandaloneOSX
           projectPath: sample
-          buildMethod: WindowsBuilder.BuildForAltTester
+          buildMethod: MacBuilder.BuildForAltTester
           customParameters: -logFile logFile.log -quit -batchmode
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Build-StandaloneOSX
+          path: sample/**
+  test:
+    name: Run UI tests on AltTester 🧪
+    runs-on: macos-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          lfs: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: Build-StandaloneOSX
       - name: Open application
         working-directory: sample/Builds/MacOS
         run: |
+          pwd
+          ls -la
           export RUN_IN_BROWSERSTACK="false"
           export ALTSERVER_PORT=13005
           export ALTSERVER_HOST="192.168.11.35"
