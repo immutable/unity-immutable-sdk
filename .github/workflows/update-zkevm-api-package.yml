@@ -11,6 +11,9 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
 
+      - name: Pull files from Git LFS
+        run: git lfs pull
+
       - name: Get current date and time
         id: date
         run: echo "::set-output name=date::$(date +'%Y-%m-%d-%H-%M-%S')"
@@ -66,6 +69,19 @@ jobs:
           rm openapi-generator-cli.jar
           rm openapi.json
 
+      - name: Open sample app in Unity to generate .meta files
+        if: steps.comparison.outputs.difference == 'true'
+        uses: game-ci/unity-test-runner@v4
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        with:
+          unityVersion: 2021.3.26f1
+          projectPath: './sample'
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          testMode: 'EditMode'
+
       - name: Create or update PR
         if: steps.comparison.outputs.difference == 'true'
         uses: gr2m/create-or-update-pull-request-action@v1
@@ -76,3 +92,4 @@ jobs:
           body: "Update Immutable zkEVM API package"
           branch: "chore/update-zkevm-api-${{ steps.date.outputs.date }}"
           commit-message: "feat: update immutable zkEVM API package"
+          paths: ./src/Packages/ZkEvmApi/
