@@ -39,7 +39,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Build-StandaloneOSX
-          path: sample/**
+          path: sample/Builds/MacOS
   test:
     name: Run UI tests on AltTester 🧪
     runs-on: macos-latest
@@ -52,7 +52,6 @@ jobs:
         with:
           name: Build-StandaloneOSX
       - name: Open application
-        working-directory: Builds/MacOS
         run: |
           pwd
           ls -la
@@ -68,8 +67,6 @@ jobs:
         run: pip install -r "sample/Tests/requirements.txt"
       - name: Run UI tests
         run: |
-          pwd
-          ls -la
           export ALTSERVER_PORT=13000
           export ALTSERVER_HOST="159.196.149.251"
           pytest -s -v sample/Tests/test.py
