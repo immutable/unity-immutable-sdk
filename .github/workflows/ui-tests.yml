@@ -13,7 +13,7 @@ concurrency:
 jobs:
   build:
     name: Build sample game for AltTester 🛠️
-    runs-on: macos-15
+    runs-on: windows-2022
     steps:
       - uses: actions/checkout@v3
         with:
@@ -33,29 +33,20 @@ jobs:
           ALTSERVER_HOST: 54.66.58.33
           ALTSERVER_PORT: 13000
         with:
-          targetPlatform: StandaloneOSX
+          targetPlatform: StandaloneWindows64
           projectPath: sample
-          buildMethod: MacBuilder.BuildForAltTester
+          buildMethod: WindowsBuilder.BuildForAltTester
           customParameters: -logFile logFile.log -quit -batchmode
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: Build-StandaloneOSX
-          path: sample/Builds/MacOS
-  test:
-    name: Run UI tests on AltTester 🧪
-    runs-on: macos-latest
-    needs: build
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          lfs: true
-      - uses: actions/download-artifact@v4
-        with:
-          name: Build-StandaloneOSX
+          name: Build-StandaloneWindows64
+          path: sample/**
       - name: Open application
         run: |
+          pwd
+          ls -la
           export RUN_IN_BROWSERSTACK="false"
           export ALTSERVER_HOST="54.66.58.33"
           export ALTSERVER_PORT=13000
@@ -68,7 +59,39 @@ jobs:
         run: pip install -r "sample/Tests/requirements.txt"
       - name: Run UI tests
         run: |
+          pwd
+          ls -la
           export ALTSERVER_HOST="54.66.58.33"
           export ALTSERVER_PORT=13000
           pytest -s -v sample/Tests/test.py
+#  test:
+#    name: Run UI tests on AltTester 🧪
+#    runs-on: macos-latest
+#    needs: build
+#    steps:
+#      - uses: actions/checkout@v3
+#        with:
+#          lfs: true
+#      - uses: actions/download-artifact@v4
+#        with:
+#          name: Build-StandaloneWindows64
+#      - name: Open application
+#        run: |
+#          pwd
+#          ls -la
+#          export RUN_IN_BROWSERSTACK="false"
+#          export ALTSERVER_HOST="54.66.58.33"
+#          export ALTSERVER_PORT=13000
+#          chmod -R 755 SampleApp.app
+#          open SampleApp.app
+#      - uses: actions/setup-python@v4
+#        with:
+#          python-version: "3.10"
+#      - name: Install dependencies
+#        run: pip install -r "sample/Tests/requirements.txt"
+#      - name: Run UI tests
+#        run: |
+#          export ALTSERVER_HOST="54.66.58.33"
+#          export ALTSERVER_PORT=13000
+#          pytest -s -v sample/Tests/test.py
       
