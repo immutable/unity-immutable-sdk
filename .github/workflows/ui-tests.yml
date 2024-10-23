@@ -58,7 +58,8 @@ jobs:
           export ALTSERVER_PORT=13000
           ls -la
           chmod -R 755 SampleApp.app
-          xattr -d com.apple.quarantine SampleApp.app
+          codesign --deep -s - -f SampleApp.app
+          xattr -l SampleApp.app
           open SampleApp.app
           osascript -e 'tell application "SampleApp" to activate'
       - uses: actions/setup-python@v4
