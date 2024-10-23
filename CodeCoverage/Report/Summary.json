@@ -1,0 +1,36 @@
+{
+  "summary": {
+    "generatedon": "2024-10-23T22:05:35Z",
+    "parser": "OpenCoverParser",
+    "assemblies": 2,
+    "classes": 12,
+    "files": 12,
+    "coveredlines": 0,
+    "uncoveredlines": 787,
+    "coverablelines": 787,
+    "totallines": 1729,
+    "linecoverage": 0,
+    "coveredbranches": 0,
+    "totalbranches": 0,
+    "coveredmethods": 0,
+    "totalmethods": 88,
+    "methodcoverage": 0
+ },
+  "coverage": {
+    "assemblies": [
+      { "name": "Assembly-CSharp", "classes": 10, "coverage": 0, "coveredlines": 0, "coverablelines": 639, "totallines": 1456, "branchcoverage": null, "coveredbranches": 0, "totalbranches": 0, "methodcoverage": 0, "coveredmethods": 0, "totalmethods": 74, "classesinassembly": [
+        { "name": "AuthenticatedScript", "coverage": 0, "coveredlines": 0, "coverablelines": 224, "totallines": 432, "branchcoverage": null, "coveredbranches": 0, "totalbranches": 0, "methodcoverage": 0, "coveredmethods": 0, "totalmethods": 22 },
+        { "name": "ImxNftTransferScript", "coverage": 0, "coveredlines": 0, "coverablelines": 57, "totallines": 141, "branchcoverage": null, "coveredbranches": 0, "totalbranches": 0, "methodcoverage": 0, "coveredmethods": 0, "totalmethods": 5 },
+        { "name": "SafeArea", "coverage": 0, "coveredlines": 0, "coverablelines": 2, "totallines": 33, "branchcoverage": null, "coveredbranches": 0, "totalbranches": 0, "methodcoverage": 0, "coveredmethods": 0, "totalmethods": 1 },
+        { "name": "SampleAppManager", "coverage": 0, "coveredlines": 0, "coverablelines": 4, "totallines": 22, "branchcoverage": null, "coveredbranches": 0, "totalbranches": 0, "methodcoverage": 0, "coveredmethods": 0, "totalmethods": 8 },
+        { "name": "SelectAuthMethodScript", "coverage": 0, "coveredlines": 0, "coverablelines": 39, "totallines": 123, "branchcoverage": null, "coveredbranches": 0, "totalbranches": 0, "methodcoverage": 0, "coveredmethods": 0, "totalmethods": 6 },
+        { "name": "UnauthenticatedScript", "coverage": 0, "coveredlines": 0, "coverablelines": 139, "totallines": 294, "branchcoverage": null, "coveredbranches": 0, "totalbranches": 0, "methodcoverage": 0, "coveredmethods": 0, "totalmethods": 13 },
+        { "name": "ZkEvmGetBalanceScript", "coverage": 0, "coveredlines": 0, "coverablelines": 34, "totallines": 83, "branchcoverage": null, "coveredbranches": 0, "totalbranches": 0, "methodcoverage": 0, "coveredmethods": 0, "totalmethods": 4 },
+        { "name": "ZkEvmGetTransactionReceiptScript", "coverage": 0, "coveredlines": 0, "coverablelines": 37, "totallines": 93, "branchcoverage": null, "coveredbranches": 0, "totalbranches": 0, "methodcoverage": 0, "coveredmethods": 0, "totalmethods": 5 },
+        { "name": "ZkEvmSendTransactionScript", "coverage": 0, "coveredlines": 0, "coverablelines": 74, "totallines": 167, "branchcoverage": null, "coveredbranches": 0, "totalbranches": 0, "methodcoverage": 0, "coveredmethods": 0, "totalmethods": 6 },
+        { "name": "ZkEvmSignTypedDataScript", "coverage": 0, "coveredlines": 0, "coverablelines": 29, "totallines": 68, "branchcoverage": null, "coveredbranches": 0, "totalbranches": 0, "methodcoverage": 0, "coveredmethods": 0, "totalmethods": 4 } ] },
+      { "name": "Assembly-CSharp-Editor", "classes": 2, "coverage": 0, "coveredlines": 0, "coverablelines": 148, "totallines": 273, "branchcoverage": null, "coveredbranches": 0, "totalbranches": 0, "methodcoverage": 0, "coveredmethods": 0, "totalmethods": 14, "classesinassembly": [
+        { "name": "AndroidBuilder", "coverage": 0, "coveredlines": 0, "coverablelines": 74, "totallines": 140, "branchcoverage": null, "coveredbranches": 0, "totalbranches": 0, "methodcoverage": 0, "coveredmethods": 0, "totalmethods": 7 },
+        { "name": "MacBuilder", "coverage": 0, "coveredlines": 0, "coverablelines": 74, "totallines": 133, "branchcoverage": null, "coveredbranches": 0, "totalbranches": 0, "methodcoverage": 0, "coveredmethods": 0, "totalmethods": 7 } ] } ]
+  }
+}
