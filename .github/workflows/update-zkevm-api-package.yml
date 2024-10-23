@@ -1,0 +1,83 @@
+---
+name: Update ZkEvm API Package
+
+on:
+  schedule:
+    - cron: '0 10 * * *'
+
+jobs:
+  update-zkevm-api:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Download remote OpenAPI spec
+        run: curl -o remote-openapi.json https://imx-openapiv3-mr-sandbox.s3.us-east-2.amazonaws.com/openapi.json
+
+      - name: Ensure local OpenAPI spec exists
+        run: |
+          if [ ! -f ./src/Packages/ZkEvmApi/api~/openapi.yaml ]; then
+            echo "Local OpenAPI spec not found. Creating an empty file."
+            touch ./local-openapi-empty.yaml
+          else
+            cp ./src/Packages/ZkEvmApi/api~/openapi.yaml ./local-openapi-empty.yaml
+          fi
+
+      - name: Compare OpenAPI specs
+        id: compare
+        run: |
+          if diff remote-openapi.json ./local-openapi-empty.yaml > /dev/null; then
+            echo "::set-output name=changed::false"
+          else
+            echo "::set-output name=changed::true"
+          fi
+
+      - name: Install OpenAPI Generator
+        if: steps.compare.outputs.changed == 'true'
+        run: |
+          curl https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/6.5.0/openapi-generator-cli-6.5.0.jar -o openapi-generator-cli.jar
+          alias openapi-generator='java -jar openapi-generator-cli.jar'
+
+      - name: Generate new ZkEvm API
+        if: steps.compare.outputs.changed == 'true'
+        run: |
+          openapi-generator generate \
+            -i remote-openapi.json \
+            -g csharp \
+            --library unityWebRequest \
+            -o ./ZkEvmApi \
+            --skip-validate-spec \
+            --additional-properties=apiName=ImmutableZkEvmApi,packageName=Immutable.Api.ZkEvm
+
+      - name: Copy generated API files
+        if: steps.compare.outputs.changed == 'true'
+        run: |
+          rm -rf ./src/Packages/ZkEvmApi/api~/*
+          cp -r ./ZkEvmApi/api/* ./src/Packages/ZkEvmApi/api~/
+
+          rm -rf ./src/Packages/ZkEvmApi/Documentation~/*
+          cp -r ./ZkEvmApi/docs/* ./src/Packages/ZkEvmApi/Documentation~/
+
+          rm -rf ./src/Packages/ZkEvmApi/Runtime~/*
+          cp -r ./ZkEvmApi/src/Immutable.Api.ZkEvm/* ./src/Packages/ZkEvmApi/Runtime~/
+
+      - name: Clean up
+        if: steps.compare.outputs.changed == 'true'
+        run: rm -rf ./ZkEvmApi ./local-openapi-empty.yaml
+
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d-%H-%M-%S')"
+
+      - name: Create or update PR
+        if: steps.compare.outputs.changed == 'true'
+        uses: gr2m/create-or-update-pull-request-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          title: "feat: update immutable zkevm api package"
+          body: "Update Immutable zkEVM API package"
+          branch: "chore/update-zkevm-api-${{ steps.date.outputs.date }}"
+          commit-message: "feat: update immutable zkevm api package"
