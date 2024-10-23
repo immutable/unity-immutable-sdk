@@ -8,7 +8,7 @@
     "url": "https://immutable.com"
   },
   "dependencies": {
-    "com.cysharp.unitask": "2.3.3"
+    "com.unity.nuget.newtonsoft-json": "3.0.2"
   },
   "keywords": [
     "unity",
