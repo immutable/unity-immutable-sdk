@@ -74,5 +74,7 @@ jobs:
         run: |
           export ALTSERVER_HOST="54.66.58.33"
           export ALTSERVER_PORT=13000
+          pgrep -f SampleApp
+          osascript -e 'tell application "SampleApp" to activate'
           pytest -s -v sample/Tests/test.py
       
