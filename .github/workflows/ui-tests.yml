@@ -11,9 +11,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  windows:
+  build:
     name: Build sample game for AltTester 🛠️
-    runs-on: windows-2022
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
         with:
@@ -30,27 +30,38 @@ jobs:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
-          ALTSERVER_HOST: 54.66.58.33
-          ALTSERVER_PORT: 13000
         with:
-          targetPlatform: StandaloneWindows64
+          targetPlatform: StandaloneOSX
           projectPath: sample
-          buildMethod: WindowsBuilder.BuildForAltTester
+          buildMethod: MacBuilder.BuildForAltTester
           customParameters: -logFile logFile.log -quit -batchmode
+      - name: build permissions
+        run: |
+          chmod -R 755 sample/Builds/MacOS/SampleApp.app
+          xattr -d com.apple.quarantine sample/Builds/MacOS/SampleApp.app
       - name: Upload artifact
         uses: actions/upload-artifact@v4
-        if: always()
         with:
-          name: Build-StandaloneWindows64
-          path: sample/**
+          name: Build-StandaloneOSX
+          path: sample/Builds/MacOS
+  test:
+    name: Run UI tests on AltTester 🧪
+    runs-on: macos-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          lfs: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: Build-StandaloneOSX
       - name: Open application
         run: |
-          pwd
-          ls -la
           export RUN_IN_BROWSERSTACK="false"
           export ALTSERVER_HOST="54.66.58.33"
           export ALTSERVER_PORT=13000
           chmod -R 755 SampleApp.app
+          xattr -d com.apple.quarantine SampleApp.app
           open SampleApp.app
       - uses: actions/setup-python@v4
         with:
@@ -59,94 +70,7 @@ jobs:
         run: pip install -r "sample/Tests/requirements.txt"
       - name: Run UI tests
         run: |
-          pwd
-          ls -la
           export ALTSERVER_HOST="54.66.58.33"
           export ALTSERVER_PORT=13000
           pytest -s -v sample/Tests/test.py
-  macos:
-    name: Build sample game for AltTester 🛠️
-    runs-on: macos-15
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          lfs: true
-      - uses: actions/cache@v3
-        with:
-          path: Library
-          key: Library-${{ hashFiles('sample/Assets/**', 'sample/Packages/**', 'sample/ProjectSettings/**') }}
-          restore-keys: |
-            Library-
-      - uses: buildalon/unity-setup@v1
-        with:
-          unity-version: 2021.3.26f1(a16dc32e0ff2)
-          build-targets: StandaloneOSX
-          modules: mac-server
-
-      - run: |
-          echo "UNITY_HUB_PATH: '${{ env.UNITY_HUB_PATH }}'"
-          echo "UNITY_EDITORS: '${{ env.UNITY_EDITORS }}'"
-          echo "UNITY_EDITOR_PATH: '${{ env.UNITY_EDITOR_PATH }}'"
-          echo "UNITY_PROJECT_PATH: '${{ env.UNITY_PROJECT_PATH }}'"
-          ${{ env.UNITY_EDITOR_PATH }} -quit -batchmode -projectPath ${{ env.UNITY_PROJECT_PATH }} -executeMethod MacBuilder.BuildForAltTester -logFile unity_build.log 2>&1
-        continue-on-error: true
-      - name: Upload Unity Build Log
-        uses: actions/upload-artifact@v3
-        with:
-          name: Unity-Build-Log
-          path: unity_build.log
-#  build:
-#    name: Build sample game for AltTester 🛠️
-#    runs-on: macos-15
-#    steps:
-#      - uses: actions/checkout@v3
-#        with:
-#          lfs: true
-#      - uses: actions/cache@v3
-#        with:
-#          path: Library
-#          key: Library-${{ hashFiles('sample/Assets/**', 'sample/Packages/**', 'sample/ProjectSettings/**') }}
-#          restore-keys: |
-#            Library-
-#      - uses: buildalon/unity-setup@v1
-#        with:
-#          unity-version: 2021.3.26f1
-#          build-targets: StandaloneOSX
-#          modules: mac-server
-#
-#      - run: |
-#          echo "UNITY_HUB_PATH: '${{ env.UNITY_HUB_PATH }}'"
-#          echo "UNITY_EDITORS: '${{ env.UNITY_EDITORS }}'"
-#          echo "UNITY_EDITOR_PATH: '${{ env.UNITY_EDITOR_PATH }}'"
-#          echo "UNITY_PROJECT_PATH: '${{ env.UNITY_PROJECT_PATH }}'"
-#  test:
-#    name: Run UI tests on AltTester 🧪
-#    runs-on: macos-latest
-#    needs: build
-#    steps:
-#      - uses: actions/checkout@v3
-#        with:
-#          lfs: true
-#      - uses: actions/download-artifact@v4
-#        with:
-#          name: Build-StandaloneWindows64
-#      - name: Open application
-#        run: |
-#          pwd
-#          ls -la
-#          export RUN_IN_BROWSERSTACK="false"
-#          export ALTSERVER_HOST="54.66.58.33"
-#          export ALTSERVER_PORT=13000
-#          chmod -R 755 SampleApp.app
-#          open SampleApp.app
-#      - uses: actions/setup-python@v4
-#        with:
-#          python-version: "3.10"
-#      - name: Install dependencies
-#        run: pip install -r "sample/Tests/requirements.txt"
-#      - name: Run UI tests
-#        run: |
-#          export ALTSERVER_HOST="54.66.58.33"
-#          export ALTSERVER_PORT=13000
-#          pytest -s -v sample/Tests/test.py
       
