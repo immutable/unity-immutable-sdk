@@ -4,12 +4,18 @@ name: Update zkEVM API Package
 on:
   workflow_dispatch:
 
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
   update-api:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
+
+      - name: Pull files from Git LFS
+        run: git lfs pull
 
       - name: Get current date and time
         id: date
@@ -66,13 +72,41 @@ jobs:
           rm openapi-generator-cli.jar
           rm openapi.json
 
-      - name: Create or update PR
+      - name: Open sample app in Unity to generate .meta files
         if: steps.comparison.outputs.difference == 'true'
-        uses: gr2m/create-or-update-pull-request-action@v1
+        uses: game-ci/unity-test-runner@v4
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         with:
-          title: "feat: update immutable zkEVM API package"
-          body: "Update Immutable zkEVM API package"
-          branch: "chore/update-zkevm-api-${{ steps.date.outputs.date }}"
-          commit-message: "feat: update immutable zkEVM API package"
+          unityVersion: 2021.3.26f1
+          projectPath: './sample'
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          testMode: 'EditMode'
+
+      - name: Create a new branch
+        if: steps.comparison.outputs.difference == 'true'
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git checkout -b feat/update-zkevm-api-${{ steps.date.outputs.date }}
+
+      - name: Commit changes
+        if: steps.comparison.outputs.difference == 'true'
+        run: |
+          git add ./src/Packages/ZkEvmApi/
+          git commit -m "feat: update immutable zkEVM API package"
+
+      - name: Push changes
+        if: steps.comparison.outputs.difference == 'true'
+        run: |
+          git push origin feat/update-zkevm-api-${{ steps.date.outputs.date }}
+
+      - name: Create pull request
+        if: steps.comparison.outputs.difference == 'true'
+        run: |
+          gh pr create --title "feat: update immutable zkEVM API package" \
+                        --body "Update Immutable zkEVM API package" \
+                        --base main \
+                        --head feat/update-zkevm-api-${{ steps.date.outputs.date }}
