@@ -57,7 +57,8 @@ jobs:
           export ALTSERVER_HOST="54.66.58.33"
           export ALTSERVER_PORT=13000
           chmod -R 755 SampleApp.app
-          xattr -d com.apple.quarantine SampleApp.app
+          codesign --deep -s - -f SampleApp.app
+#          xattr -d com.apple.quarantine SampleApp.app
           open SampleApp.app
       - uses: actions/setup-python@v4
         with:
