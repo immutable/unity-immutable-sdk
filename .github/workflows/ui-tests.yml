@@ -79,7 +79,7 @@ jobs:
             Library-
       - uses: buildalon/unity-setup@v1
         with:
-          unity-version: 2021.3.26f1
+          unity-version: 2021.3.26f1(a16dc32e0ff2)
           build-targets: StandaloneOSX
           modules: mac-server
 
@@ -88,6 +88,7 @@ jobs:
           echo "UNITY_EDITORS: '${{ env.UNITY_EDITORS }}'"
           echo "UNITY_EDITOR_PATH: '${{ env.UNITY_EDITOR_PATH }}'"
           echo "UNITY_PROJECT_PATH: '${{ env.UNITY_PROJECT_PATH }}'"
+          ${{ env.UNITY_EDITOR_PATH }} -quit -batchmode -projectPath ${{ env.UNITY_PROJECT_PATH }} -executeMethod MacBuilder.BuildForAltTester
 #  build:
 #    name: Build sample game for AltTester 🛠️
 #    runs-on: macos-15
