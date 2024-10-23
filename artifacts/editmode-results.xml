@@ -1,0 +1,382 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="46" result="Passed" total="46" passed="46" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:20Z" duration="0.4868895">
+  <test-suite type="TestSuite" id="1060" name="Immutable Sample" fullname="Immutable Sample" runstate="Runnable" testcasecount="46" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:20Z" duration="0.486890" total="46" passed="46" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties />
+    <test-suite type="Assembly" id="1113" name="Immutable.Passport.Runtime.Tests.dll" fullname="/github/workspace/sample/Library/ScriptAssemblies/Immutable.Passport.Runtime.Tests.dll" runstate="Runnable" testcasecount="46" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:20Z" duration="0.472676" total="46" passed="46" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="1140" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+      </properties>
+      <test-suite type="TestSuite" id="1114" name="Immutable" fullname="Immutable" runstate="Runnable" testcasecount="46" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:20Z" duration="0.472189" total="46" passed="46" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1115" name="Passport" fullname="Immutable.Passport" runstate="Runnable" testcasecount="46" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:20Z" duration="0.468849" total="46" passed="46" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1116" name="Core" fullname="Immutable.Passport.Core" runstate="Runnable" testcasecount="10" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:19Z" duration="0.123482" total="10" passed="10" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1100" name="BrowserCommunicationsManagerTests" fullname="Immutable.Passport.Core.BrowserCommunicationsManagerTests" classname="Immutable.Passport.Core.BrowserCommunicationsManagerTests" runstate="Runnable" testcasecount="6" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:19Z" duration="0.107426" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1105" name="CallAndResponse_Failed_ClientError_NoType" fullname="Immutable.Passport.Core.BrowserCommunicationsManagerTests.CallAndResponse_Failed_ClientError_NoType" methodname="CallAndResponse_Failed_ClientError_NoType" classname="Immutable.Passport.Core.BrowserCommunicationsManagerTests" runstate="Runnable" seed="2100154862" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:19Z" duration="0.060260" asserts="0">
+                <properties />
+                <output><![CDATA[[Immutable] [Browser Communications Manager] Call someFunction (request ID: 190ee297-a52b-4c1b-87c8-80ecb82230b5)
+[Immutable] [Browser Communications Manager] Response for: someFunction (request ID: 190ee297-a52b-4c1b-87c8-80ecb82230b5) : {"responseFor":"someFunction","requestId":"190ee297-a52b-4c1b-87c8-80ecb82230b5","success":false,"errorType":"","error":"some error"}
+]]></output>
+              </test-case>
+              <test-case id="1104" name="CallAndResponse_Failed_ClientError_WithType" fullname="Immutable.Passport.Core.BrowserCommunicationsManagerTests.CallAndResponse_Failed_ClientError_WithType" methodname="CallAndResponse_Failed_ClientError_WithType" classname="Immutable.Passport.Core.BrowserCommunicationsManagerTests" runstate="Runnable" seed="1316545542" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:19Z" duration="0.009240" asserts="0">
+                <properties />
+                <output><![CDATA[[Immutable] [Browser Communications Manager] Call someFunction (request ID: 1ad9824a-6220-4006-926f-2d9ea59bb688)
+[Immutable] [Browser Communications Manager] Response for: someFunction (request ID: 1ad9824a-6220-4006-926f-2d9ea59bb688) : {"responseFor":"someFunction","requestId":"1ad9824a-6220-4006-926f-2d9ea59bb688","success":false,"errorType":"WALLET_CONNECTION_ERROR","error":"some error"}
+]]></output>
+              </test-case>
+              <test-case id="1103" name="CallAndResponse_Failed_NoRequestId" fullname="Immutable.Passport.Core.BrowserCommunicationsManagerTests.CallAndResponse_Failed_NoRequestId" methodname="CallAndResponse_Failed_NoRequestId" classname="Immutable.Passport.Core.BrowserCommunicationsManagerTests" runstate="Runnable" seed="451477677" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:19Z" duration="0.006017" asserts="0">
+                <properties />
+                <output><![CDATA[[Immutable] [Browser Communications Manager] Call someFunction (request ID: 94713f09-1d17-4550-b75b-c44225f48389)
+]]></output>
+              </test-case>
+              <test-case id="1106" name="CallAndResponse_Success_BrowserReady" fullname="Immutable.Passport.Core.BrowserCommunicationsManagerTests.CallAndResponse_Success_BrowserReady" methodname="CallAndResponse_Success_BrowserReady" classname="Immutable.Passport.Core.BrowserCommunicationsManagerTests" runstate="Runnable" seed="498306098" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:19Z" duration="0.004242" asserts="0">
+                <properties />
+                <output><![CDATA[[Immutable] [Browser Communications Manager] Response for: init (request ID: 1) : {"responseFor":"init","requestId":"1","success":true,"errorType":"","error":""}
+[Immutable] [Browser Communications Manager] Browser is ready
+]]></output>
+              </test-case>
+              <test-case id="1102" name="CallAndResponse_Success_NoData" fullname="Immutable.Passport.Core.BrowserCommunicationsManagerTests.CallAndResponse_Success_NoData" methodname="CallAndResponse_Success_NoData" classname="Immutable.Passport.Core.BrowserCommunicationsManagerTests" runstate="Runnable" seed="1471168235" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:19Z" duration="0.006698" asserts="0">
+                <properties />
+                <output><![CDATA[[Immutable] [Browser Communications Manager] Call someFunction (request ID: 1b4f825d-3963-4d40-a40b-a51d911555c3)
+[Immutable] [Browser Communications Manager] Response for: someFunction (request ID: 1b4f825d-3963-4d40-a40b-a51d911555c3) : {"responseFor":"someFunction","requestId":"1b4f825d-3963-4d40-a40b-a51d911555c3","success":true,"errorType":"","error":""}
+]]></output>
+              </test-case>
+              <test-case id="1101" name="CallAndResponse_Success_WithData" fullname="Immutable.Passport.Core.BrowserCommunicationsManagerTests.CallAndResponse_Success_WithData" methodname="CallAndResponse_Success_WithData" classname="Immutable.Passport.Core.BrowserCommunicationsManagerTests" runstate="Runnable" seed="2105869721" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:19Z" duration="0.006376" asserts="0">
+                <properties />
+                <output><![CDATA[[Immutable] [Browser Communications Manager] Call someFunction (request ID: e62a98c3-eae6-4aaf-82fd-a4e8ce8ee295): {"someKey":"someData"}
+[Immutable] [Browser Communications Manager] Response for: someFunction (request ID: e62a98c3-eae6-4aaf-82fd-a4e8ce8ee295) : {"responseFor":"someFunction","requestId":"e62a98c3-eae6-4aaf-82fd-a4e8ce8ee295","success":true,"errorType":"","error":""}
+]]></output>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="1107" name="JsonHelpersTests" fullname="Immutable.Passport.Core.JsonHelpersTests" classname="Immutable.Passport.Core.JsonHelpersTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:19Z" duration="0.004245" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1108" name="DictionaryToJson" fullname="Immutable.Passport.Core.JsonHelpersTests.DictionaryToJson" methodname="DictionaryToJson" classname="Immutable.Passport.Core.JsonHelpersTests" runstate="Runnable" seed="107944317" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:19Z" duration="0.003510" asserts="0">
+                <properties />
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="1109" name="UriHelpersTests" fullname="Immutable.Passport.Core.UriHelpersTests" classname="Immutable.Passport.Core.UriHelpersTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:19Z" duration="0.007107" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1112" name="GetQueryParameter_NoQueryParameters" fullname="Immutable.Passport.Core.UriHelpersTests.GetQueryParameter_NoQueryParameters" methodname="GetQueryParameter_NoQueryParameters" classname="Immutable.Passport.Core.UriHelpersTests" runstate="Runnable" seed="1276996242" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:19Z" duration="0.003074" asserts="0">
+                <properties />
+              </test-case>
+              <test-case id="1111" name="GetQueryParameter_NoQueryParameterWithKey" fullname="Immutable.Passport.Core.UriHelpersTests.GetQueryParameter_NoQueryParameterWithKey" methodname="GetQueryParameter_NoQueryParameterWithKey" classname="Immutable.Passport.Core.UriHelpersTests" runstate="Runnable" seed="1713764242" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:19Z" duration="0.001165" asserts="0">
+                <properties />
+              </test-case>
+              <test-case id="1110" name="GetQueryParameter_Success" fullname="Immutable.Passport.Core.UriHelpersTests.GetQueryParameter_Success" methodname="GetQueryParameter_Success" classname="Immutable.Passport.Core.UriHelpersTests" runstate="Runnable" seed="95989522" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:19Z" duration="0.001604" asserts="0">
+                <properties />
+              </test-case>
+            </test-suite>
+          </test-suite>
+          <test-suite type="TestFixture" id="1063" name="PassportImplTests" fullname="Immutable.Passport.PassportImplTests" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" testcasecount="36" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:20Z" duration="0.341371" total="36" passed="36" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1079" name="ConnectImx_ConfirmCode_Failed" fullname="Immutable.Passport.PassportImplTests.ConnectImx_ConfirmCode_Failed" methodname="ConnectImx_ConfirmCode_Failed" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="1643210243" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:19Z" duration="0.040663" asserts="0">
+              <properties />
+              <output><![CDATA[OnPassportAuthEvent CheckingForSavedCredentials
+OnPassportAuthEvent CheckForSavedCredentialsSuccess
+OnPassportAuthEvent Reconnecting
+No response
+[Immutable] [Passport Implementation] Failed to connect using saved credentials. Please check if user has saved credentials first by calling HasCredentialsSaved() : Response is invalid!
+OnPassportAuthEvent ReconnectFailed
+OnPassportAuthEvent ConnectingImx
+OnPassportAuthEvent ConnectImxOpeningBrowser
+OnPassportAuthEvent PendingBrowserLoginAndProviderSetup
+No response
+OnPassportAuthEvent ConnectImxFailed
+]]></output>
+            </test-case>
+            <test-case id="1080" name="ConnectImx_ConfirmCode_NullResponse_Failed" fullname="Immutable.Passport.PassportImplTests.ConnectImx_ConfirmCode_NullResponse_Failed" methodname="ConnectImx_ConfirmCode_NullResponse_Failed" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="194294287" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:19Z" duration="0.016302" asserts="0">
+              <properties />
+              <output><![CDATA[OnPassportAuthEvent CheckingForSavedCredentials
+OnPassportAuthEvent CheckForSavedCredentialsSuccess
+OnPassportAuthEvent Reconnecting
+No response
+[Immutable] [Passport Implementation] Failed to connect using saved credentials. Please check if user has saved credentials first by calling HasCredentialsSaved() : Response is invalid!
+OnPassportAuthEvent ReconnectFailed
+OnPassportAuthEvent ConnectingImx
+OnPassportAuthEvent ConnectImxOpeningBrowser
+OnPassportAuthEvent PendingBrowserLoginAndProviderSetup
+No response
+OnPassportAuthEvent ConnectImxFailed
+]]></output>
+            </test-case>
+            <test-case id="1081" name="ConnectImx_HasCredentialsSaved_CannotReconnect_Logout_Success" fullname="Immutable.Passport.PassportImplTests.ConnectImx_HasCredentialsSaved_CannotReconnect_Logout_Success" methodname="ConnectImx_HasCredentialsSaved_CannotReconnect_Logout_Success" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="614088538" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:19Z" duration="0.021752" asserts="0">
+              <properties />
+              <output><![CDATA[OnPassportAuthEvent CheckingForSavedCredentials
+OnPassportAuthEvent CheckForSavedCredentialsSuccess
+OnPassportAuthEvent Reconnecting
+No response
+[Immutable] [Passport Implementation] Failed to connect using saved credentials. Please check if user has saved credentials first by calling HasCredentialsSaved() : Response is invalid!
+OnPassportAuthEvent ReconnectFailed
+OnPassportAuthEvent ConnectingImx
+OnPassportAuthEvent ConnectImxOpeningBrowser
+OnPassportAuthEvent PendingBrowserLoginAndProviderSetup
+OnPassportAuthEvent ConnectImxSuccess
+OnPassportAuthEvent LoggingOut
+OnPassportAuthEvent LogoutSuccess
+]]></output>
+            </test-case>
+            <test-case id="1082" name="ConnectImx_HasCredentialsSaved_Reconnect_Logout_Success" fullname="Immutable.Passport.PassportImplTests.ConnectImx_HasCredentialsSaved_Reconnect_Logout_Success" methodname="ConnectImx_HasCredentialsSaved_Reconnect_Logout_Success" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="1040543378" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:19Z" duration="0.008514" asserts="0">
+              <properties />
+              <output><![CDATA[OnPassportAuthEvent CheckingForSavedCredentials
+OnPassportAuthEvent CheckForSavedCredentialsSuccess
+OnPassportAuthEvent Reconnecting
+OnPassportAuthEvent ReconnectSuccess
+OnPassportAuthEvent LoggingOut
+OnPassportAuthEvent LogoutSuccess
+]]></output>
+            </test-case>
+            <test-case id="1077" name="ConnectImx_InitialiseDeviceCodeAuth_Failed" fullname="Immutable.Passport.PassportImplTests.ConnectImx_InitialiseDeviceCodeAuth_Failed" methodname="ConnectImx_InitialiseDeviceCodeAuth_Failed" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="344015731" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:19Z" duration="0.009913" asserts="0">
+              <properties />
+              <output><![CDATA[OnPassportAuthEvent CheckingForSavedCredentials
+OnPassportAuthEvent CheckForSavedCredentialsSuccess
+OnPassportAuthEvent Reconnecting
+No response
+[Immutable] [Passport Implementation] Failed to connect using saved credentials. Please check if user has saved credentials first by calling HasCredentialsSaved() : Response is invalid!
+OnPassportAuthEvent ReconnectFailed
+OnPassportAuthEvent ConnectingImx
+No response
+OnPassportAuthEvent ConnectImxFailed
+]]></output>
+            </test-case>
+            <test-case id="1078" name="ConnectImx_InitialiseDeviceCodeAuth_NullResponse_Failed" fullname="Immutable.Passport.PassportImplTests.ConnectImx_InitialiseDeviceCodeAuth_NullResponse_Failed" methodname="ConnectImx_InitialiseDeviceCodeAuth_NullResponse_Failed" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="1092361173" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:19Z" duration="0.009749" asserts="0">
+              <properties />
+              <output><![CDATA[OnPassportAuthEvent CheckingForSavedCredentials
+OnPassportAuthEvent CheckForSavedCredentialsSuccess
+OnPassportAuthEvent Reconnecting
+No response
+[Immutable] [Passport Implementation] Failed to connect using saved credentials. Please check if user has saved credentials first by calling HasCredentialsSaved() : Response is invalid!
+OnPassportAuthEvent ReconnectFailed
+OnPassportAuthEvent ConnectingImx
+No response
+OnPassportAuthEvent ConnectImxFailed
+]]></output>
+            </test-case>
+            <test-case id="1076" name="ConnectImx_Logout_Success" fullname="Immutable.Passport.PassportImplTests.ConnectImx_Logout_Success" methodname="ConnectImx_Logout_Success" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="1359068834" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:19Z" duration="0.011249" asserts="0">
+              <properties />
+              <output><![CDATA[OnPassportAuthEvent CheckingForSavedCredentials
+OnPassportAuthEvent CheckForSavedCredentialsSuccess
+OnPassportAuthEvent Reconnecting
+No response
+[Immutable] [Passport Implementation] Failed to connect using saved credentials. Please check if user has saved credentials first by calling HasCredentialsSaved() : Response is invalid!
+OnPassportAuthEvent ReconnectFailed
+OnPassportAuthEvent ConnectingImx
+OnPassportAuthEvent ConnectImxOpeningBrowser
+OnPassportAuthEvent PendingBrowserLoginAndProviderSetup
+OnPassportAuthEvent ConnectImxSuccess
+OnPassportAuthEvent LoggingOut
+OnPassportAuthEvent LogoutSuccess
+]]></output>
+            </test-case>
+            <test-case id="1088" name="GetAddress_Failed" fullname="Immutable.Passport.PassportImplTests.GetAddress_Failed" methodname="GetAddress_Failed" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="189126516" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:19Z" duration="0.006791" asserts="0">
+              <properties />
+              <output><![CDATA[Error on call
+]]></output>
+            </test-case>
+            <test-case id="1087" name="GetAddress_Success" fullname="Immutable.Passport.PassportImplTests.GetAddress_Success" methodname="GetAddress_Success" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="1245112426" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:19Z" duration="0.005196" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1090" name="GetEmail_Failed" fullname="Immutable.Passport.PassportImplTests.GetEmail_Failed" methodname="GetEmail_Failed" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="1986559834" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:19Z" duration="0.007960" asserts="0">
+              <properties />
+              <output><![CDATA[Error on call
+]]></output>
+            </test-case>
+            <test-case id="1089" name="GetEmail_Success" fullname="Immutable.Passport.PassportImplTests.GetEmail_Success" methodname="GetEmail_Success" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="494269203" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:19Z" duration="0.004997" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1099" name="GetLinkedAddresses_EmptyResponse" fullname="Immutable.Passport.PassportImplTests.GetLinkedAddresses_EmptyResponse" methodname="GetLinkedAddresses_EmptyResponse" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="1076083602" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:19Z" duration="0.009719" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1097" name="GetLinkedAddresses_Failed" fullname="Immutable.Passport.PassportImplTests.GetLinkedAddresses_Failed" methodname="GetLinkedAddresses_Failed" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="360512469" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:19Z" duration="0.005722" asserts="0">
+              <properties />
+              <output><![CDATA[Error on call
+]]></output>
+            </test-case>
+            <test-case id="1098" name="GetLinkedAddresses_NullResponse" fullname="Immutable.Passport.PassportImplTests.GetLinkedAddresses_NullResponse" methodname="GetLinkedAddresses_NullResponse" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="1711271052" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:19Z" duration="0.006316" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1096" name="GetLinkedAddresses_Success" fullname="Immutable.Passport.PassportImplTests.GetLinkedAddresses_Success" methodname="GetLinkedAddresses_Success" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="577143635" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:19Z" duration="0.006299" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1092" name="GetPassportId_Failed" fullname="Immutable.Passport.PassportImplTests.GetPassportId_Failed" methodname="GetPassportId_Failed" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="819664868" result="Passed" start-time="2024-10-23 22:23:19Z" end-time="2024-10-23 22:23:20Z" duration="0.007912" asserts="0">
+              <properties />
+              <output><![CDATA[Error on call
+]]></output>
+            </test-case>
+            <test-case id="1091" name="GetPassportId_Success" fullname="Immutable.Passport.PassportImplTests.GetPassportId_Success" methodname="GetPassportId_Success" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="90209270" result="Passed" start-time="2024-10-23 22:23:20Z" end-time="2024-10-23 22:23:20Z" duration="0.005214" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1068" name="Login_ConfirmCode_Failed" fullname="Immutable.Passport.PassportImplTests.Login_ConfirmCode_Failed" methodname="Login_ConfirmCode_Failed" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="1881086443" result="Passed" start-time="2024-10-23 22:23:20Z" end-time="2024-10-23 22:23:20Z" duration="0.010665" asserts="0">
+              <properties />
+              <output><![CDATA[OnPassportAuthEvent LoggingIn
+OnPassportAuthEvent LoginOpeningBrowser
+OnPassportAuthEvent PendingBrowserLogin
+No response
+OnPassportAuthEvent LoginFailed
+]]></output>
+            </test-case>
+            <test-case id="1069" name="Login_ConfirmCode_NullResponse_Failed" fullname="Immutable.Passport.PassportImplTests.Login_ConfirmCode_NullResponse_Failed" methodname="Login_ConfirmCode_NullResponse_Failed" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="431976294" result="Passed" start-time="2024-10-23 22:23:20Z" end-time="2024-10-23 22:23:20Z" duration="0.007668" asserts="0">
+              <properties />
+              <output><![CDATA[OnPassportAuthEvent LoggingIn
+OnPassportAuthEvent LoginOpeningBrowser
+OnPassportAuthEvent PendingBrowserLogin
+No response
+OnPassportAuthEvent LoginFailed
+]]></output>
+            </test-case>
+            <test-case id="1066" name="Login_InitialiseDeviceCodeAuth_Failed" fullname="Immutable.Passport.PassportImplTests.Login_InitialiseDeviceCodeAuth_Failed" methodname="Login_InitialiseDeviceCodeAuth_Failed" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="406334717" result="Passed" start-time="2024-10-23 22:23:20Z" end-time="2024-10-23 22:23:20Z" duration="0.006735" asserts="0">
+              <properties />
+              <output><![CDATA[OnPassportAuthEvent LoggingIn
+No response
+OnPassportAuthEvent LoginFailed
+]]></output>
+            </test-case>
+            <test-case id="1067" name="Login_InitialiseDeviceCodeAuth_NullResponse_Failed" fullname="Immutable.Passport.PassportImplTests.Login_InitialiseDeviceCodeAuth_NullResponse_Failed" methodname="Login_InitialiseDeviceCodeAuth_NullResponse_Failed" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="736212560" result="Passed" start-time="2024-10-23 22:23:20Z" end-time="2024-10-23 22:23:20Z" duration="0.006696" asserts="0">
+              <properties />
+              <output><![CDATA[OnPassportAuthEvent LoggingIn
+No response
+OnPassportAuthEvent LoginFailed
+]]></output>
+            </test-case>
+            <test-case id="1071" name="Login_InvalidTimeout" fullname="Immutable.Passport.PassportImplTests.Login_InvalidTimeout" methodname="Login_InvalidTimeout" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="618221009" result="Passed" start-time="2024-10-23 22:23:20Z" end-time="2024-10-23 22:23:20Z" duration="0.006610" asserts="0">
+              <properties />
+              <output><![CDATA[OnPassportAuthEvent LoggingIn
+OnPassportAuthEvent LoginFailed
+]]></output>
+            </test-case>
+            <test-case id="1064" name="Login_Logout_Success" fullname="Immutable.Passport.PassportImplTests.Login_Logout_Success" methodname="Login_Logout_Success" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="1432444366" result="Passed" start-time="2024-10-23 22:23:20Z" end-time="2024-10-23 22:23:20Z" duration="0.008450" asserts="0">
+              <properties />
+              <output><![CDATA[OnPassportAuthEvent LoggingIn
+OnPassportAuthEvent LoginOpeningBrowser
+OnPassportAuthEvent PendingBrowserLogin
+OnPassportAuthEvent LoginSuccess
+OnPassportAuthEvent LoggingOut
+OnPassportAuthEvent LogoutSuccess
+]]></output>
+            </test-case>
+            <test-case id="1065" name="Login_Soft_Logout_Success" fullname="Immutable.Passport.PassportImplTests.Login_Soft_Logout_Success" methodname="Login_Soft_Logout_Success" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="1024473800" result="Passed" start-time="2024-10-23 22:23:20Z" end-time="2024-10-23 22:23:20Z" duration="0.008174" asserts="0">
+              <properties />
+              <output><![CDATA[OnPassportAuthEvent LoggingIn
+OnPassportAuthEvent LoginOpeningBrowser
+OnPassportAuthEvent PendingBrowserLogin
+OnPassportAuthEvent LoginSuccess
+OnPassportAuthEvent LoggingOut
+OnPassportAuthEvent LogoutSuccess
+]]></output>
+            </test-case>
+            <test-case id="1070" name="Login_ValidTimeout" fullname="Immutable.Passport.PassportImplTests.Login_ValidTimeout" methodname="Login_ValidTimeout" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="71377455" result="Passed" start-time="2024-10-23 22:23:20Z" end-time="2024-10-23 22:23:20Z" duration="0.006978" asserts="0">
+              <properties />
+              <output><![CDATA[OnPassportAuthEvent LoggingIn
+OnPassportAuthEvent LoginOpeningBrowser
+OnPassportAuthEvent PendingBrowserLogin
+OnPassportAuthEvent LoginSuccess
+]]></output>
+            </test-case>
+            <test-case id="1095" name="Logout_EmptyGetLogoutUrl" fullname="Immutable.Passport.PassportImplTests.Logout_EmptyGetLogoutUrl" methodname="Logout_EmptyGetLogoutUrl" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="1942138027" result="Passed" start-time="2024-10-23 22:23:20Z" end-time="2024-10-23 22:23:20Z" duration="0.010362" asserts="0">
+              <properties />
+              <output><![CDATA[OnPassportAuthEvent LoggingOut
+[Immutable] [Passport Implementation] Failed to log out: Failed to get logout URL
+OnPassportAuthEvent LogoutFailed
+]]></output>
+            </test-case>
+            <test-case id="1094" name="Logout_FailedGetLogoutUrl" fullname="Immutable.Passport.PassportImplTests.Logout_FailedGetLogoutUrl" methodname="Logout_FailedGetLogoutUrl" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="158918227" result="Passed" start-time="2024-10-23 22:23:20Z" end-time="2024-10-23 22:23:20Z" duration="0.007297" asserts="0">
+              <properties />
+              <output><![CDATA[OnPassportAuthEvent LoggingOut
+No response
+[Immutable] [Passport Implementation] Failed to log out: Response is invalid!
+OnPassportAuthEvent LogoutFailed
+]]></output>
+            </test-case>
+            <test-case id="1093" name="Logout_Success" fullname="Immutable.Passport.PassportImplTests.Logout_Success" methodname="Logout_Success" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="1355357624" result="Passed" start-time="2024-10-23 22:23:20Z" end-time="2024-10-23 22:23:20Z" duration="0.008370" asserts="0">
+              <properties />
+              <output><![CDATA[OnPassportAuthEvent LoggingOut
+OnPassportAuthEvent LogoutSuccess
+]]></output>
+            </test-case>
+            <test-case id="1085" name="Reconnect_CallFailed" fullname="Immutable.Passport.PassportImplTests.Reconnect_CallFailed" methodname="Reconnect_CallFailed" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="576614864" result="Passed" start-time="2024-10-23 22:23:20Z" end-time="2024-10-23 22:23:20Z" duration="0.007319" asserts="0">
+              <properties />
+              <output><![CDATA[OnPassportAuthEvent Reconnecting
+Error on call
+[Immutable] [Passport Implementation] Failed to connect using saved credentials. Please check if user has saved credentials first by calling HasCredentialsSaved() : Error on call!
+OnPassportAuthEvent ReconnectFailed
+]]></output>
+            </test-case>
+            <test-case id="1084" name="Reconnect_Failed" fullname="Immutable.Passport.PassportImplTests.Reconnect_Failed" methodname="Reconnect_Failed" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="1129575048" result="Passed" start-time="2024-10-23 22:23:20Z" end-time="2024-10-23 22:23:20Z" duration="0.007214" asserts="0">
+              <properties />
+              <output><![CDATA[OnPassportAuthEvent Reconnecting
+No response
+[Immutable] [Passport Implementation] Failed to connect using saved credentials. Please check if user has saved credentials first by calling HasCredentialsSaved() : Response is invalid!
+OnPassportAuthEvent ReconnectFailed
+]]></output>
+            </test-case>
+            <test-case id="1086" name="Reconnect_NullResponse_Failed" fullname="Immutable.Passport.PassportImplTests.Reconnect_NullResponse_Failed" methodname="Reconnect_NullResponse_Failed" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="1895916940" result="Passed" start-time="2024-10-23 22:23:20Z" end-time="2024-10-23 22:23:20Z" duration="0.006934" asserts="0">
+              <properties />
+              <output><![CDATA[OnPassportAuthEvent Reconnecting
+No response
+[Immutable] [Passport Implementation] Failed to connect using saved credentials. Please check if user has saved credentials first by calling HasCredentialsSaved() : Response is invalid!
+OnPassportAuthEvent ReconnectFailed
+]]></output>
+            </test-case>
+            <test-case id="1083" name="Reconnect_Success" fullname="Immutable.Passport.PassportImplTests.Reconnect_Success" methodname="Reconnect_Success" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="1898132523" result="Passed" start-time="2024-10-23 22:23:20Z" end-time="2024-10-23 22:23:20Z" duration="0.007155" asserts="0">
+              <properties />
+              <output><![CDATA[OnPassportAuthEvent Reconnecting
+OnPassportAuthEvent ReconnectSuccess
+OnPassportAuthEvent LoggingOut
+OnPassportAuthEvent LogoutSuccess
+]]></output>
+            </test-case>
+            <test-case id="1074" name="Relogin_CallFailed" fullname="Immutable.Passport.PassportImplTests.Relogin_CallFailed" methodname="Relogin_CallFailed" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="1457641667" result="Passed" start-time="2024-10-23 22:23:20Z" end-time="2024-10-23 22:23:20Z" duration="0.008471" asserts="0">
+              <properties />
+              <output><![CDATA[OnPassportAuthEvent ReloggingIn
+Error on call
+[Immutable] [Passport Implementation] Failed to login using saved credentials. Please check if user has saved credentials first by calling HasCredentialsSaved() : Error on call!
+OnPassportAuthEvent ReloginFailed
+]]></output>
+            </test-case>
+            <test-case id="1073" name="Relogin_Failed" fullname="Immutable.Passport.PassportImplTests.Relogin_Failed" methodname="Relogin_Failed" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="1225141764" result="Passed" start-time="2024-10-23 22:23:20Z" end-time="2024-10-23 22:23:20Z" duration="0.007003" asserts="0">
+              <properties />
+              <output><![CDATA[OnPassportAuthEvent ReloggingIn
+No response
+[Immutable] [Passport Implementation] Failed to login using saved credentials. Please check if user has saved credentials first by calling HasCredentialsSaved() : Response is invalid!
+OnPassportAuthEvent ReloginFailed
+]]></output>
+            </test-case>
+            <test-case id="1075" name="Relogin_NullResponse_Failed" fullname="Immutable.Passport.PassportImplTests.Relogin_NullResponse_Failed" methodname="Relogin_NullResponse_Failed" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="1990309500" result="Passed" start-time="2024-10-23 22:23:20Z" end-time="2024-10-23 22:23:20Z" duration="0.007064" asserts="0">
+              <properties />
+              <output><![CDATA[OnPassportAuthEvent ReloggingIn
+No response
+[Immutable] [Passport Implementation] Failed to login using saved credentials. Please check if user has saved credentials first by calling HasCredentialsSaved() : Response is invalid!
+OnPassportAuthEvent ReloginFailed
+]]></output>
+            </test-case>
+            <test-case id="1072" name="Relogin_Success" fullname="Immutable.Passport.PassportImplTests.Relogin_Success" methodname="Relogin_Success" classname="Immutable.Passport.PassportImplTests" runstate="Runnable" seed="2074381169" result="Failed" label="Error" start-time="2024-10-23 22:23:20Z" end-time="2024-10-23 22:23:20Z" duration="0.007455" asserts="0">
+              <properties />
+              <failure>
+                <message><![CDATA[System.InvalidOperationException : EditMode test can only yield null]]></message>
+                <stack-trace><![CDATA[]]></stack-trace>
+              </failure>
+              <output><![CDATA[OnPassportAuthEvent ReloggingIn
+OnPassportAuthEvent ReloginSuccess
+OnPassportAuthEvent LoggingOut
+OnPassportAuthEvent LogoutSuccess
+[Code Coverage] Code coverage results were not saved. Visited sequence points not found. 
+Included Assemblies: Assembly-CSharp,Assembly-CSharp-Editor
+Excluded Assemblies: <Not specified>
+Included Paths: <Not specified>
+Excluded Paths: <Not specified>
+[Code Coverage] Code Coverage Report was generated in /github/workspace/CodeCoverage/Report
+Included Assemblies: Assembly-CSharp,Assembly-CSharp-Editor
+Excluded Assemblies: <Not specified>
+Included Paths: <Not specified>
+Excluded Paths: <Not specified>
+]]></output>
+            </test-case>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

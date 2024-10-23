@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CoverageReport scope="Summary">
+  <Summary>
+    <Generatedon>10/23/2024 - 22:23:20</Generatedon>
+    <Parser>OpenCoverParser</Parser>
+    <Assemblies>2</Assemblies>
+    <Classes>12</Classes>
+    <Files>12</Files>
+    <Coveredlines>0</Coveredlines>
+    <Uncoveredlines>787</Uncoveredlines>
+    <Coverablelines>787</Coverablelines>
+    <Totallines>1729</Totallines>
+    <Linecoverage>0</Linecoverage>
+    <Coveredbranches>0</Coveredbranches>
+    <Totalbranches>0</Totalbranches>
+    <Coveredmethods>0</Coveredmethods>
+    <Totalmethods>88</Totalmethods>
+    <Methodcoverage>0</Methodcoverage>
+  </Summary>
+  <Coverage>
+    <Assembly name="Assembly-CSharp" classes="10" coverage="0" coveredlines="0" coverablelines="639" totallines="1456" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="74" methodcoverage="0">
+      <Class name="AuthenticatedScript" coverage="0" coveredlines="0" coverablelines="224" totallines="432" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="22" methodcoverage="0" />
+      <Class name="ImxNftTransferScript" coverage="0" coveredlines="0" coverablelines="57" totallines="141" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="5" methodcoverage="0" />
+      <Class name="SafeArea" coverage="0" coveredlines="0" coverablelines="2" totallines="33" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="1" methodcoverage="0" />
+      <Class name="SampleAppManager" coverage="0" coveredlines="0" coverablelines="4" totallines="22" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="8" methodcoverage="0" />
+      <Class name="SelectAuthMethodScript" coverage="0" coveredlines="0" coverablelines="39" totallines="123" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="6" methodcoverage="0" />
+      <Class name="UnauthenticatedScript" coverage="0" coveredlines="0" coverablelines="139" totallines="294" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="13" methodcoverage="0" />
+      <Class name="ZkEvmGetBalanceScript" coverage="0" coveredlines="0" coverablelines="34" totallines="83" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="4" methodcoverage="0" />
+      <Class name="ZkEvmGetTransactionReceiptScript" coverage="0" coveredlines="0" coverablelines="37" totallines="93" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="5" methodcoverage="0" />
+      <Class name="ZkEvmSendTransactionScript" coverage="0" coveredlines="0" coverablelines="74" totallines="167" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="6" methodcoverage="0" />
+      <Class name="ZkEvmSignTypedDataScript" coverage="0" coveredlines="0" coverablelines="29" totallines="68" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="4" methodcoverage="0" />
+    </Assembly>
+    <Assembly name="Assembly-CSharp-Editor" classes="2" coverage="0" coveredlines="0" coverablelines="148" totallines="273" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="14" methodcoverage="0">
+      <Class name="AndroidBuilder" coverage="0" coveredlines="0" coverablelines="74" totallines="140" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="7" methodcoverage="0" />
+      <Class name="MacBuilder" coverage="0" coveredlines="0" coverablelines="74" totallines="133" branchcoverage="" coveredbranches="0" totalbranches="0" coveredmethods="0" totalmethods="7" methodcoverage="0" />
+    </Assembly>
+  </Coverage>
+</CoverageReport>
