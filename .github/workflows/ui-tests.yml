@@ -59,6 +59,9 @@ jobs:
           chmod -R 755 SampleApp.app
           codesign --deep -s - -f SampleApp.app
           open SampleApp.app
+          echo $?
+          pgrep -f SampleApp
+          osascript -e 'tell application "System Events" to count (every process whose name is "SampleApp")'
       - uses: actions/setup-python@v4
         with:
           python-version: "3.10"
