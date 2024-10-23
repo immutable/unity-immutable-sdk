@@ -88,7 +88,13 @@ jobs:
           echo "UNITY_EDITORS: '${{ env.UNITY_EDITORS }}'"
           echo "UNITY_EDITOR_PATH: '${{ env.UNITY_EDITOR_PATH }}'"
           echo "UNITY_PROJECT_PATH: '${{ env.UNITY_PROJECT_PATH }}'"
-          ${{ env.UNITY_EDITOR_PATH }} -quit -batchmode -projectPath ${{ env.UNITY_PROJECT_PATH }} -executeMethod MacBuilder.BuildForAltTester
+          ${{ env.UNITY_EDITOR_PATH }} -quit -batchmode -projectPath ${{ env.UNITY_PROJECT_PATH }} -executeMethod MacBuilder.BuildForAltTester -logFile unity_build.log 2>&1
+        continue-on-error: true
+      - name: Upload Unity Build Log
+        uses: actions/upload-artifact@v3
+        with:
+          name: Unity-Build-Log
+          path: unity_build.log
 #  build:
 #    name: Build sample game for AltTester 🛠️
 #    runs-on: macos-15
