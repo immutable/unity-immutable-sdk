@@ -1,5 +1,3 @@
-#if UNITY_EDITOR_OSX
-
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -117,5 +115,3 @@ public class MacBuilder
     }
 
 }
-
-#endif
