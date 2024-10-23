@@ -30,6 +30,8 @@ jobs:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+          ALTSERVER_HOST: 54.66.58.33
+          ALTSERVER_PORT: 13000
         with:
           targetPlatform: StandaloneOSX
           projectPath: sample
@@ -53,11 +55,9 @@ jobs:
           name: Build-StandaloneOSX
       - name: Open application
         run: |
-          pwd
-          ls -la
           export RUN_IN_BROWSERSTACK="false"
+          export ALTSERVER_HOST="54.66.58.33"
           export ALTSERVER_PORT=13000
-          export ALTSERVER_HOST="159.196.149.251"
           chmod -R 755 SampleApp.app
           open SampleApp.app
       - uses: actions/setup-python@v4
@@ -67,7 +67,7 @@ jobs:
         run: pip install -r "sample/Tests/requirements.txt"
       - name: Run UI tests
         run: |
+          export ALTSERVER_HOST="54.66.58.33"
           export ALTSERVER_PORT=13000
-          export ALTSERVER_HOST="159.196.149.251"
           pytest -s -v sample/Tests/test.py
       

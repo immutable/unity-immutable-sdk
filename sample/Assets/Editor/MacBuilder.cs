@@ -85,6 +85,22 @@ public class MacBuilder
         AltBuilder.CreateJsonFileForInputMappingOfAxis();
 
         var instrumentationSettings = new AltInstrumentationSettings();
+        var host = System.Environment.GetEnvironmentVariable("ALTSERVER_HOST");
+        if (!string.IsNullOrEmpty(host))
+        {
+            instrumentationSettings.AltServerHost = host;
+        }
+
+        var port = System.Environment.GetEnvironmentVariable("ALTSERVER_PORT");
+        if (!string.IsNullOrEmpty(port))
+        {
+            instrumentationSettings.AltServerPort = int.Parse(port);
+        }
+        else
+        {
+            instrumentationSettings.AltServerPort = 13000;
+        }
+        instrumentationSettings.ResetConnectionData = true;
         AltBuilder.InsertAltInScene(buildPlayerOptions.scenes[0], instrumentationSettings);
     }
 
