@@ -25,8 +25,6 @@ This generator should support all current LTS versions of Unity
 
 - [Newtonsoft.Json](https://docs.unity3d.com/Packages/com.unity.nuget.newtonsoft-json@3.0/manual/index.html) - 3.0.2 or
   later
-- [Unity Test Framework](https://docs.unity3d.com/Packages/com.unity.test-framework@1.1/manual/index.html) - 1.1.33 or
-  later
 
 <a id="installation"></a>
 
@@ -38,8 +36,7 @@ Add the dependencies to `Packages/manifest.json`
 {
   "dependencies": {
     ...
-    "com.unity.nuget.newtonsoft-json": "3.0.2",
-    "com.unity.test-framework": "1.1.33",
+    "com.unity.nuget.newtonsoft-json": "3.0.2"
   }
 }
 ```
