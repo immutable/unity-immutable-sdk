@@ -57,8 +57,8 @@ jobs:
           pwd
           ls -la
           export RUN_IN_BROWSERSTACK="false"
-          export ALTSERVER_PORT=13005
-          export ALTSERVER_HOST="192.168.11.35"
+          export ALTSERVER_PORT=13000
+          export ALTSERVER_HOST="159.196.149.251"
           chmod -R 755 SampleApp.app
           open SampleApp.app
       - uses: actions/setup-python@v4
@@ -66,4 +66,9 @@ jobs:
           python-version: "3.10"
       - name: Install dependencies
         run: pip install -r "sample/Tests/requirements.txt"
+      - name: Run UI tests
+        run: |
+          export ALTSERVER_PORT=13000
+          export ALTSERVER_HOST="159.196.149.251"
+          pytest -s -v sample/Tests/test.py
       
