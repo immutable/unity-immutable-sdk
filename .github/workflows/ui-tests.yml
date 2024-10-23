@@ -13,7 +13,7 @@ concurrency:
 jobs:
   build:
     name: Build sample game for AltTester 🛠️
-    runs-on: macos-latest
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v3
         with:
