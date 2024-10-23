@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  windows:
     name: Build sample game for AltTester 🛠️
     runs-on: windows-2022
     steps:
@@ -64,6 +64,54 @@ jobs:
           export ALTSERVER_HOST="54.66.58.33"
           export ALTSERVER_PORT=13000
           pytest -s -v sample/Tests/test.py
+  macos:
+    name: Build sample game for AltTester 🛠️
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          lfs: true
+      - uses: actions/cache@v3
+        with:
+          path: Library
+          key: Library-${{ hashFiles('sample/Assets/**', 'sample/Packages/**', 'sample/ProjectSettings/**') }}
+          restore-keys: |
+            Library-
+      - uses: buildalon/unity-setup@v1
+        with:
+          unity-version: 2021.3.26f1
+          build-targets: StandaloneOSX
+          modules: mac-server
+
+      - run: |
+          echo "UNITY_HUB_PATH: '${{ env.UNITY_HUB_PATH }}'"
+          echo "UNITY_EDITORS: '${{ env.UNITY_EDITORS }}'"
+          echo "UNITY_EDITOR_PATH: '${{ env.UNITY_EDITOR_PATH }}'"
+          echo "UNITY_PROJECT_PATH: '${{ env.UNITY_PROJECT_PATH }}'"
+#  build:
+#    name: Build sample game for AltTester 🛠️
+#    runs-on: macos-15
+#    steps:
+#      - uses: actions/checkout@v3
+#        with:
+#          lfs: true
+#      - uses: actions/cache@v3
+#        with:
+#          path: Library
+#          key: Library-${{ hashFiles('sample/Assets/**', 'sample/Packages/**', 'sample/ProjectSettings/**') }}
+#          restore-keys: |
+#            Library-
+#      - uses: buildalon/unity-setup@v1
+#        with:
+#          unity-version: 2021.3.26f1
+#          build-targets: StandaloneOSX
+#          modules: mac-server
+#
+#      - run: |
+#          echo "UNITY_HUB_PATH: '${{ env.UNITY_HUB_PATH }}'"
+#          echo "UNITY_EDITORS: '${{ env.UNITY_EDITORS }}'"
+#          echo "UNITY_EDITOR_PATH: '${{ env.UNITY_EDITOR_PATH }}'"
+#          echo "UNITY_PROJECT_PATH: '${{ env.UNITY_PROJECT_PATH }}'"
 #  test:
 #    name: Run UI tests on AltTester 🧪
 #    runs-on: macos-latest
