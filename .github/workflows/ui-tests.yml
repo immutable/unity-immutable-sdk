@@ -58,10 +58,13 @@ jobs:
           export ALTSERVER_PORT=13000
           chmod -R 755 SampleApp.app
           codesign --deep -s - -f SampleApp.app
+          echo "Opening Unity sample app..."
           open SampleApp.app
+          echo "Unity sample app launched. Waiting for 5 seconds..."
+          sleep 5
           echo $?
           pgrep -f SampleApp
-          osascript -e 'tell application "System Events" to count (every process whose name is "SampleApp")'
+          osascript -e 'tell application "SampleApp" to activate'
       - uses: actions/setup-python@v4
         with:
           python-version: "3.10"
