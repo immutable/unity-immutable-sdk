@@ -57,7 +57,7 @@ jobs:
           VALIDATE_ALL_CODEBASE: true
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          FILTER_REGEX_EXCLUDE: (.*src/Packages/Passport/Runtime/ThirdParty/.*|.*src/Packages/Passport/Runtime/Resources/.*|.*Plugins/.*|.*src/Packages/Passport/Runtime/Assets/ImmutableAndroid.androidlib/.*|.*src/Packages/Orderbook|.*src/Packages/ZkEvmApi|.*sample|.*src/Packages/Passport/WebGLTemplates~|.*.github/workflows)
+          FILTER_REGEX_EXCLUDE: (.*src/Packages/Passport/Runtime/ThirdParty/.*|.*src/Packages/Passport/Runtime/Resources/.*|.*Plugins/.*|.*src/Packages/Passport/Runtime/Assets/ImmutableAndroid.androidlib/.*|.*src/Packages/Orderbook|.*src/Packages/ZkEvmApi/.*|.*sample|.*src/Packages/Passport/WebGLTemplates~|.*.github/workflows)
           VALIDATE_MARKDOWN: false
           VALIDATE_GITLEAKS: false
           VALIDATE_JSCPD: false
