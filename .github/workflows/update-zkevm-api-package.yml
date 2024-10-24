@@ -57,13 +57,26 @@ jobs:
           mkdir -p ./src/Packages/ZkEvmApi/Documentation~
           mkdir -p ./src/Packages/ZkEvmApi/Runtime
 
-          rm -rf ./src/Packages/ZkEvmApi/api~/*
-          rm -rf ./src/Packages/ZkEvmApi/Documentation~/*
-          rm -rf ./src/Packages/ZkEvmApi/Runtime/*
+          # Clear contents while preserving .meta files
+          find ./src/Packages/ZkEvmApi/api~ -type f ! -name '*.meta' -exec rm {} +
+          find ./src/Packages/ZkEvmApi/Documentation~ -type f ! -name '*.meta' -exec rm {} +
+          find ./src/Packages/ZkEvmApi/Runtime -type f ! -name '*.meta' -exec rm {} +
 
           cp -r ./ZkEvmApi/api/* ./src/Packages/ZkEvmApi/api~/
           cp -r ./ZkEvmApi/docs/* ./src/Packages/ZkEvmApi/Documentation~/
           cp -r ./ZkEvmApi/src/Immutable.Api.ZkEvm/* ./src/Packages/ZkEvmApi/Runtime/
+
+          # Remove .meta files that do not have corresponding files
+          for dir in ./src/Packages/ZkEvmApi/Runtime; do
+            for meta_file in "$dir"/*.meta; do
+              # Check if the corresponding file exists
+              base_file="${meta_file%.meta}"
+              if [ ! -e "$base_file" ]; then
+                echo "Deleting unmatched meta file: $meta_file"
+                rm "$meta_file"
+              fi
+            done
+          done
 
       - name: Clean up
         if: steps.comparison.outputs.difference == 'true'
@@ -93,18 +106,25 @@ jobs:
           git checkout -b feat/update-zkevm-api-${{ steps.date.outputs.date }}
 
       - name: Commit changes
+        id: commit_changes
         if: steps.comparison.outputs.difference == 'true'
         run: |
           git add ./src/Packages/ZkEvmApi/
-          git commit -m "feat: update immutable zkEVM API package"
+          if [ -n "$(git diff --cached)" ]; then
+            git commit -m "feat: update immutable zkEVM API package"
+            echo "commit=true" >> $GITHUB_ENV
+          else
+            echo "No changes to commit."
+            echo "commit=false" >> $GITHUB_ENV
+          fi
 
       - name: Push changes
-        if: steps.comparison.outputs.difference == 'true'
+        if: env.commit == 'true'
         run: |
           git push origin feat/update-zkevm-api-${{ steps.date.outputs.date }}
 
       - name: Create pull request
-        if: steps.comparison.outputs.difference == 'true'
+        if: env.commit == 'true'
         run: |
           gh pr create --title "feat: update immutable zkEVM API package" \
                         --body "Update Immutable zkEVM API package" \
