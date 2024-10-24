@@ -19,16 +19,14 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-package net.gree.unitywebview;
+package com.immutable.gree.unitywebview;
 
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
@@ -37,7 +35,6 @@ import android.webkit.GeolocationPermissions.Callback;
 import android.webkit.JavascriptInterface;
 import android.webkit.JsPromptResult;
 import android.webkit.JsResult;
-import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -49,12 +46,6 @@ import android.webkit.WebViewClient;
 import com.unity3d.player.UnityPlayer;
 
 import java.net.URLEncoder;
-import java.util.ArrayDeque;
-import java.util.Hashtable;
-import java.util.Objects;
-import java.util.Queue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.FutureTask;
 
 class CWebViewPluginNoUiInterface {
     private CWebViewPluginNoUi mPlugin;

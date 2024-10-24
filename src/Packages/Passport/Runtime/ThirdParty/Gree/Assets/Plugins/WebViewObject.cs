@@ -81,7 +81,7 @@ namespace Immutable.Browser.Gree
         {
             private Action<string> callback;
 
-            public AndroidCallback(Action<string> callback) : base("net.gree.unitywebview.WebViewCallback") 
+            public AndroidCallback(Action<string> callback) : base("com.immutable.gree.unitywebview.WebViewCallback") 
             {
                 this.callback = callback;
             }
@@ -257,7 +257,7 @@ namespace Immutable.Browser.Gree
             Singleton.Instance.onLog = ((message) => CallOnLog(message));
             _CImmutableWebViewPlugin_SetDelegate(delegateMessageReceived);
 #elif UNITY_ANDROID
-            webView = new AndroidJavaObject("net.gree.unitywebview.CWebViewPluginNoUi");
+            webView = new AndroidJavaObject("com.immutable.gree.unitywebview.CWebViewPluginNoUi");
             webView.Call("Init", ua);
             webView.Call("setCallback", new AndroidCallback((message) => handleMessage(message)));
 #else
