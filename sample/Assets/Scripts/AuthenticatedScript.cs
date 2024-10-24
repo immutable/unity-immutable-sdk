@@ -429,4 +429,9 @@ public class AuthenticatedScript : MonoBehaviour
             Output.text = message;
         }
     }
+
+    public void OpenGree()
+    {
+        SceneManager.LoadScene("SampleWebViewScene");
+    }
 }
