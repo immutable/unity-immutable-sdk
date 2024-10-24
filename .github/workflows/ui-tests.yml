@@ -42,7 +42,7 @@ jobs:
           path: sample/Builds/MacOS
   test:
     name: Run UI tests on AltTester 🧪
-    runs-on: macos-latest
+    runs-on: self-hosted
     needs: build
     steps:
       - uses: actions/checkout@v3
