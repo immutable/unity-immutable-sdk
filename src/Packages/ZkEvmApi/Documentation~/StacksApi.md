@@ -4,8 +4,108 @@ All URIs are relative to *https://api.sandbox.immutable.com*
 
 | Method | HTTP request | Description |
 |--------|--------------|-------------|
+| [**ListStacks**](StacksApi.md#liststacks) | **GET** /experimental/chains/{chain_name}/stacks | Experimental: List NFT stacks by stack_id |
 | [**SearchNFTs**](StacksApi.md#searchnfts) | **GET** /experimental/chains/{chain_name}/search/nfts | Experimental: Search NFTs |
 | [**SearchStacks**](StacksApi.md#searchstacks) | **GET** /experimental/chains/{chain_name}/search/stacks | Experimental: Search NFT stacks |
+
+<a id="liststacks"></a>
+# **ListStacks**
+> List&lt;StackBundle&gt; ListStacks (string chainName, List<Guid> stackId)
+
+Experimental: List NFT stacks by stack_id
+
+![Experimental](https://img.shields.io/badge/status-experimental-yellow) NFT stacks
+
+### Example
+```csharp
+using System.Collections.Generic;
+using System.Diagnostics;
+using Immutable.Api.ZkEvm.Api;
+using Immutable.Api.ZkEvm.Client;
+using Immutable.Api.ZkEvm.Model;
+
+namespace Example
+{
+    public class ListStacksExample
+    {
+        public static void Main()
+        {
+            Configuration config = new Configuration();
+            config.BasePath = "https://api.sandbox.immutable.com";
+            var apiInstance = new StacksApi(config);
+            var chainName = imtbl-zkevm-testnet;  // string | The name of chain
+            var stackId = new List<Guid>(); // List<Guid> | List of stack_id to filter by
+
+            try
+            {
+                // Experimental: List NFT stacks by stack_id
+                List<StackBundle> result = apiInstance.ListStacks(chainName, stackId);
+                Debug.WriteLine(result);
+            }
+            catch (ApiException  e)
+            {
+                Debug.Print("Exception when calling StacksApi.ListStacks: " + e.Message);
+                Debug.Print("Status Code: " + e.ErrorCode);
+                Debug.Print(e.StackTrace);
+            }
+        }
+    }
+}
+```
+
+#### Using the ListStacksWithHttpInfo variant
+This returns an ApiResponse object which contains the response data, status code and headers.
+
+```csharp
+try
+{
+    // Experimental: List NFT stacks by stack_id
+    ApiResponse<List<StackBundle>> response = apiInstance.ListStacksWithHttpInfo(chainName, stackId);
+    Debug.Write("Status Code: " + response.StatusCode);
+    Debug.Write("Response Headers: " + response.Headers);
+    Debug.Write("Response Body: " + response.Data);
+}
+catch (ApiException e)
+{
+    Debug.Print("Exception when calling StacksApi.ListStacksWithHttpInfo: " + e.Message);
+    Debug.Print("Status Code: " + e.ErrorCode);
+    Debug.Print(e.StackTrace);
+}
+```
+
+### Parameters
+
+| Name | Type | Description | Notes |
+|------|------|-------------|-------|
+| **chainName** | **string** | The name of chain |  |
+| **stackId** | [**List&lt;Guid&gt;**](Guid.md) | List of stack_id to filter by |  |
+
+### Return type
+
+[**List&lt;StackBundle&gt;**](StackBundle.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | 200 response |  -  |
+| **400** | Bad Request (400) |  -  |
+| **401** | Unauthorised Request (401) |  -  |
+| **403** | Forbidden Request (403) |  -  |
+| **404** | The specified resource was not found (404) |  -  |
+| **429** | Too Many Requests (429) |  * Retry-After -  <br>  |
+| **500** | Internal Server Error (500) |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 <a id="searchnfts"></a>
 # **SearchNFTs**

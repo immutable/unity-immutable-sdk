@@ -28,6 +28,29 @@ namespace Immutable.Api.ZkEvm.Api
     {
         #region Synchronous Operations
         /// <summary>
+        /// Experimental: List NFT stacks by stack_id
+        /// </summary>
+        /// <remarks>
+        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) NFT stacks
+        /// </remarks>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="chainName">The name of chain</param>
+        /// <param name="stackId">List of stack_id to filter by</param>
+        /// <returns>List&lt;StackBundle&gt;</returns>
+        List<StackBundle> ListStacks(string chainName, List<Guid> stackId);
+
+        /// <summary>
+        /// Experimental: List NFT stacks by stack_id
+        /// </summary>
+        /// <remarks>
+        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) NFT stacks
+        /// </remarks>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="chainName">The name of chain</param>
+        /// <param name="stackId">List of stack_id to filter by</param>
+        /// <returns>ApiResponse of List&lt;StackBundle&gt;</returns>
+        ApiResponse<List<StackBundle>> ListStacksWithHttpInfo(string chainName, List<Guid> stackId);
+        /// <summary>
         /// Experimental: Search NFTs
         /// </summary>
         /// <remarks>
@@ -108,6 +131,31 @@ namespace Immutable.Api.ZkEvm.Api
     public interface IStacksApiAsync : IApiAccessor
     {
         #region Asynchronous Operations
+        /// <summary>
+        /// Experimental: List NFT stacks by stack_id
+        /// </summary>
+        /// <remarks>
+        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) NFT stacks
+        /// </remarks>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="chainName">The name of chain</param>
+        /// <param name="stackId">List of stack_id to filter by</param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of List&lt;StackBundle&gt;</returns>
+        System.Threading.Tasks.Task<List<StackBundle>> ListStacksAsync(string chainName, List<Guid> stackId, System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
+
+        /// <summary>
+        /// Experimental: List NFT stacks by stack_id
+        /// </summary>
+        /// <remarks>
+        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) NFT stacks
+        /// </remarks>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="chainName">The name of chain</param>
+        /// <param name="stackId">List of stack_id to filter by</param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of ApiResponse (List&lt;StackBundle&gt;)</returns>
+        System.Threading.Tasks.Task<ApiResponse<List<StackBundle>>> ListStacksWithHttpInfoAsync(string chainName, List<Guid> stackId, System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
         /// <summary>
         /// Experimental: Search NFTs
         /// </summary>
@@ -326,6 +374,146 @@ namespace Immutable.Api.ZkEvm.Api
                 return _exceptionFactory;
             }
             set { _exceptionFactory = value; }
+        }
+
+        /// <summary>
+        /// Experimental: List NFT stacks by stack_id ![Experimental](https://img.shields.io/badge/status-experimental-yellow) NFT stacks
+        /// </summary>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="chainName">The name of chain</param>
+        /// <param name="stackId">List of stack_id to filter by</param>
+        /// <returns>List&lt;StackBundle&gt;</returns>
+        public List<StackBundle> ListStacks(string chainName, List<Guid> stackId)
+        {
+            Immutable.Api.ZkEvm.Client.ApiResponse<List<StackBundle>> localVarResponse = ListStacksWithHttpInfo(chainName, stackId);
+            return localVarResponse.Data;
+        }
+
+        /// <summary>
+        /// Experimental: List NFT stacks by stack_id ![Experimental](https://img.shields.io/badge/status-experimental-yellow) NFT stacks
+        /// </summary>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="chainName">The name of chain</param>
+        /// <param name="stackId">List of stack_id to filter by</param>
+        /// <returns>ApiResponse of List&lt;StackBundle&gt;</returns>
+        public Immutable.Api.ZkEvm.Client.ApiResponse<List<StackBundle>> ListStacksWithHttpInfo(string chainName, List<Guid> stackId)
+        {
+            // verify the required parameter 'chainName' is set
+            if (chainName == null)
+                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'chainName' when calling StacksApi->ListStacks");
+
+            // verify the required parameter 'stackId' is set
+            if (stackId == null)
+                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'stackId' when calling StacksApi->ListStacks");
+
+            Immutable.Api.ZkEvm.Client.RequestOptions localVarRequestOptions = new Immutable.Api.ZkEvm.Client.RequestOptions();
+
+            string[] _contentTypes = new string[] {
+            };
+
+            // to determine the Accept header
+            string[] _accepts = new string[] {
+                "application/json"
+            };
+
+            var localVarContentType = Immutable.Api.ZkEvm.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
+            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
+
+            var localVarAccept = Immutable.Api.ZkEvm.Client.ClientUtils.SelectHeaderAccept(_accepts);
+            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
+
+            localVarRequestOptions.PathParameters.Add("chain_name", Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToString(chainName)); // path parameter
+            localVarRequestOptions.QueryParameters.Add(Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToMultiMap("multi", "stack_id", stackId));
+
+
+            // make the HTTP request
+            var localVarResponse = this.Client.Get<List<StackBundle>>("/experimental/chains/{chain_name}/stacks", localVarRequestOptions, this.Configuration);
+
+            if (this.ExceptionFactory != null)
+            {
+                Exception _exception = this.ExceptionFactory("ListStacks", localVarResponse);
+                if (_exception != null) throw _exception;
+            }
+
+            return localVarResponse;
+        }
+
+        /// <summary>
+        /// Experimental: List NFT stacks by stack_id ![Experimental](https://img.shields.io/badge/status-experimental-yellow) NFT stacks
+        /// </summary>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="chainName">The name of chain</param>
+        /// <param name="stackId">List of stack_id to filter by</param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of List&lt;StackBundle&gt;</returns>
+        public async System.Threading.Tasks.Task<List<StackBundle>> ListStacksAsync(string chainName, List<Guid> stackId, System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+        {
+            var task = ListStacksWithHttpInfoAsync(chainName, stackId, cancellationToken);
+#if UNITY_EDITOR || !UNITY_WEBGL
+            Immutable.Api.ZkEvm.Client.ApiResponse<List<StackBundle>> localVarResponse = await task.ConfigureAwait(false);
+#else
+            Immutable.Api.ZkEvm.Client.ApiResponse<List<StackBundle>> localVarResponse = await task;
+#endif
+            return localVarResponse.Data;
+        }
+
+        /// <summary>
+        /// Experimental: List NFT stacks by stack_id ![Experimental](https://img.shields.io/badge/status-experimental-yellow) NFT stacks
+        /// </summary>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="chainName">The name of chain</param>
+        /// <param name="stackId">List of stack_id to filter by</param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of ApiResponse (List&lt;StackBundle&gt;)</returns>
+        public async System.Threading.Tasks.Task<Immutable.Api.ZkEvm.Client.ApiResponse<List<StackBundle>>> ListStacksWithHttpInfoAsync(string chainName, List<Guid> stackId, System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+        {
+            // verify the required parameter 'chainName' is set
+            if (chainName == null)
+                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'chainName' when calling StacksApi->ListStacks");
+
+            // verify the required parameter 'stackId' is set
+            if (stackId == null)
+                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'stackId' when calling StacksApi->ListStacks");
+
+
+            Immutable.Api.ZkEvm.Client.RequestOptions localVarRequestOptions = new Immutable.Api.ZkEvm.Client.RequestOptions();
+
+            string[] _contentTypes = new string[] {
+            };
+
+            // to determine the Accept header
+            string[] _accepts = new string[] {
+                "application/json"
+            };
+
+
+            var localVarContentType = Immutable.Api.ZkEvm.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
+            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
+
+            var localVarAccept = Immutable.Api.ZkEvm.Client.ClientUtils.SelectHeaderAccept(_accepts);
+            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
+
+            localVarRequestOptions.PathParameters.Add("chain_name", Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToString(chainName)); // path parameter
+            localVarRequestOptions.QueryParameters.Add(Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToMultiMap("multi", "stack_id", stackId));
+
+
+            // make the HTTP request
+
+            var task = this.AsynchronousClient.GetAsync<List<StackBundle>>("/experimental/chains/{chain_name}/stacks", localVarRequestOptions, this.Configuration, cancellationToken);
+
+#if UNITY_EDITOR || !UNITY_WEBGL
+            var localVarResponse = await task.ConfigureAwait(false);
+#else
+            var localVarResponse = await task;
+#endif
+
+            if (this.ExceptionFactory != null)
+            {
+                Exception _exception = this.ExceptionFactory("ListStacks", localVarResponse);
+                if (_exception != null) throw _exception;
+            }
+
+            return localVarResponse;
         }
 
         /// <summary>

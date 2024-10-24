@@ -3611,6 +3611,91 @@ paths:
       tags:
       - stacks
       x-hide-from-sdk: true
+  /experimental/chains/{chain_name}/stacks:
+    get:
+      description: "![Experimental](https://img.shields.io/badge/status-experimental-yellow)\
+        \ NFT stacks"
+      operationId: ListStacks
+      parameters:
+      - description: The name of chain
+        examples:
+          testnet:
+            summary: Immutable zkEVM Public Testnet
+            value: imtbl-zkevm-testnet
+        explode: false
+        in: path
+        name: chain_name
+        required: true
+        schema:
+          $ref: '#/components/schemas/ChainName'
+        style: simple
+      - description: List of stack_id to filter by
+        explode: true
+        in: query
+        name: stack_id
+        required: true
+        schema:
+          items:
+            example: 7053e765-c119-4efb-b5cf-405ccccaf6c4
+            format: uuid
+            type: string
+          maxItems: 20
+          minItems: 1
+          type: array
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                description: List of stack bundles
+                items:
+                  $ref: '#/components/schemas/StackBundle'
+                type: array
+          description: 200 response
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError400'
+          description: Bad Request (400)
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError401'
+          description: Unauthorised Request (401)
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError403'
+          description: Forbidden Request (403)
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError404'
+          description: The specified resource was not found (404)
+        "429":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError429'
+          description: Too Many Requests (429)
+          headers:
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError500'
+          description: Internal Server Error (500)
+      summary: "Experimental: List NFT stacks by stack_id"
+      tags:
+      - stacks
+      x-hide-from-sdk: true
   /experimental/chains/{chain_name}/quotes/{contract_address}/stacks:
     get:
       description: "![Experimental](https://img.shields.io/badge/status-experimental-yellow)\
