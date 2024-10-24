@@ -53,9 +53,6 @@ jobs:
           name: Build-StandaloneOSX
       - name: Open application
         run: |
-          export RUN_IN_BROWSERSTACK="false"
-          export ALTSERVER_HOST="54.66.58.33"
-          export ALTSERVER_PORT=13000
           ls -la
           chmod -R 755 SampleApp.app
           open SampleApp.app
@@ -66,8 +63,6 @@ jobs:
         run: pip install -r "sample/Tests/requirements.txt"
       - name: Run UI tests
         run: |
-          export ALTSERVER_HOST="54.66.58.33"
-          export ALTSERVER_PORT=13000
           osascript -e 'tell application "SampleApp" to activate'
           pytest -s -v sample/Tests/test.py
       
