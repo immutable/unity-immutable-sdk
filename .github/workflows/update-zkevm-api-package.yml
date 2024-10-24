@@ -3,6 +3,8 @@ name: Update zkEVM API Package
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 10 * * *'
 
 env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
