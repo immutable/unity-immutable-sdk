@@ -64,5 +64,6 @@ jobs:
         run: |
           chmod -R 755 ${{ github.workspace }}/SampleApp.app
           chmod +x test_mac.sh
+          echo '${{ secrets.GMAIL_CREDENTIALS }}' > credentials.json
           ./test_mac.sh
       
