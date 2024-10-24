@@ -40,7 +40,7 @@ cp ${UNITY_JAVA_LIB} ${LIBS_DIR}
 # install
 DEST_DIR='../../build/Packager/Assets/Plugins/Android'
 mkdir -p ${DEST_DIR}
-cp ${BUILD_DIR}/build/outputs/aar/*.aar ${DEST_DIR}/WebViewPlugin.aar
+cp ${BUILD_DIR}/build/outputs/aar/*.aar ${DEST_DIR}/ImmutableWebViewPlugin.aar
 rm -f ${DEST_DIR}/core*.aar.tmpl
 
 popd
