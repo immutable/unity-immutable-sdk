@@ -58,10 +58,7 @@ jobs:
           export ALTSERVER_PORT=13000
           ls -la
           chmod -R 755 SampleApp.app
-          codesign --deep -s - -f SampleApp.app
-          xattr -d com.apple.quarantine SampleApp.app/Contents/MacOS/Immutable\ Sample
           open SampleApp.app
-          osascript -e 'tell application "SampleApp" to activate'
       - uses: actions/setup-python@v4
         with:
           python-version: "3.10"
