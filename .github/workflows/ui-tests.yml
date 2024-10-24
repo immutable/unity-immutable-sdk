@@ -58,10 +58,11 @@ jobs:
         run: pip install -r "sample/Tests/requirements.txt"
       - name: Run UI tests
         env:
-          UNITY_APP_PATH: SampleApp.app
+          UNITY_APP_PATH: ${{ github.workspace }}/SampleApp.app
           UNITY_APP_NAME: SampleApp
+        working-directory: sample/Tests
         run: |
-          chmod -R 755 SampleApp.app
-          chmod +x sample/Tests/test_mac.sh
-          ./sample/Tests/test_mac.sh
+          chmod -R 755 ${{ github.workspace }}/SampleApp.app
+          chmod +x test_mac.sh
+          ./test_mac.sh
       
