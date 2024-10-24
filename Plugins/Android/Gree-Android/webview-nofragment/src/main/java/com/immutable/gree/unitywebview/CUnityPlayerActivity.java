@@ -1,10 +1,9 @@
-package net.gree.unitywebview;
+package com.immutable.gree.unitywebview;
 
 import com.unity3d.player.*;
 import android.os.Bundle;
 
-public class CUnityPlayerActivity
-    extends UnityPlayerActivity
+public class CUnityPlayerActivity extends UnityPlayerActivity
 {
     @Override
     public void onCreate(Bundle bundle) {

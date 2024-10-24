@@ -1,4 +1,4 @@
-package net.gree.unitywebview;
+package com.immutable.gree.unitywebview;
 
 import com.unity3d.player.*;
 import android.content.ContextWrapper;
