@@ -13,7 +13,6 @@
     "com.unity.textmeshpro": "3.0.9",
     "com.unity.uiextensions": "2.2.4",
     "com.unity.visualscripting": "1.9.1",
-    "net.gree.unity-webview": "https://github.com/gree/unity-webview.git?path=/dist/package",
     "com.unity.modules.ai": "1.0.0",
     "com.unity.modules.androidjni": "1.0.0",
     "com.unity.modules.animation": "1.0.0",
