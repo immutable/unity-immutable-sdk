@@ -28,6 +28,29 @@ namespace Immutable.Api.ZkEvm.Api
     {
         #region Synchronous Operations
         /// <summary>
+        /// Experimental: Get list of metadata attribute filters
+        /// </summary>
+        /// <remarks>
+        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get list of metadata filters
+        /// </remarks>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="chainName">The name of chain</param>
+        /// <param name="contractAddress">Contract addresses for collection</param>
+        /// <returns>ListFiltersResult</returns>
+        ListFiltersResult ListFilters(string chainName, string contractAddress);
+
+        /// <summary>
+        /// Experimental: Get list of metadata attribute filters
+        /// </summary>
+        /// <remarks>
+        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get list of metadata filters
+        /// </remarks>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="chainName">The name of chain</param>
+        /// <param name="contractAddress">Contract addresses for collection</param>
+        /// <returns>ApiResponse of ListFiltersResult</returns>
+        ApiResponse<ListFiltersResult> ListFiltersWithHttpInfo(string chainName, string contractAddress);
+        /// <summary>
         /// Experimental: List NFT stacks by stack_id
         /// </summary>
         /// <remarks>
@@ -131,6 +154,31 @@ namespace Immutable.Api.ZkEvm.Api
     public interface IStacksApiAsync : IApiAccessor
     {
         #region Asynchronous Operations
+        /// <summary>
+        /// Experimental: Get list of metadata attribute filters
+        /// </summary>
+        /// <remarks>
+        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get list of metadata filters
+        /// </remarks>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="chainName">The name of chain</param>
+        /// <param name="contractAddress">Contract addresses for collection</param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of ListFiltersResult</returns>
+        System.Threading.Tasks.Task<ListFiltersResult> ListFiltersAsync(string chainName, string contractAddress, System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
+
+        /// <summary>
+        /// Experimental: Get list of metadata attribute filters
+        /// </summary>
+        /// <remarks>
+        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get list of metadata filters
+        /// </remarks>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="chainName">The name of chain</param>
+        /// <param name="contractAddress">Contract addresses for collection</param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of ApiResponse (ListFiltersResult)</returns>
+        System.Threading.Tasks.Task<ApiResponse<ListFiltersResult>> ListFiltersWithHttpInfoAsync(string chainName, string contractAddress, System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
         /// <summary>
         /// Experimental: List NFT stacks by stack_id
         /// </summary>
@@ -374,6 +422,146 @@ namespace Immutable.Api.ZkEvm.Api
                 return _exceptionFactory;
             }
             set { _exceptionFactory = value; }
+        }
+
+        /// <summary>
+        /// Experimental: Get list of metadata attribute filters ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get list of metadata filters
+        /// </summary>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="chainName">The name of chain</param>
+        /// <param name="contractAddress">Contract addresses for collection</param>
+        /// <returns>ListFiltersResult</returns>
+        public ListFiltersResult ListFilters(string chainName, string contractAddress)
+        {
+            Immutable.Api.ZkEvm.Client.ApiResponse<ListFiltersResult> localVarResponse = ListFiltersWithHttpInfo(chainName, contractAddress);
+            return localVarResponse.Data;
+        }
+
+        /// <summary>
+        /// Experimental: Get list of metadata attribute filters ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get list of metadata filters
+        /// </summary>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="chainName">The name of chain</param>
+        /// <param name="contractAddress">Contract addresses for collection</param>
+        /// <returns>ApiResponse of ListFiltersResult</returns>
+        public Immutable.Api.ZkEvm.Client.ApiResponse<ListFiltersResult> ListFiltersWithHttpInfo(string chainName, string contractAddress)
+        {
+            // verify the required parameter 'chainName' is set
+            if (chainName == null)
+                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'chainName' when calling StacksApi->ListFilters");
+
+            // verify the required parameter 'contractAddress' is set
+            if (contractAddress == null)
+                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'contractAddress' when calling StacksApi->ListFilters");
+
+            Immutable.Api.ZkEvm.Client.RequestOptions localVarRequestOptions = new Immutable.Api.ZkEvm.Client.RequestOptions();
+
+            string[] _contentTypes = new string[] {
+            };
+
+            // to determine the Accept header
+            string[] _accepts = new string[] {
+                "application/json"
+            };
+
+            var localVarContentType = Immutable.Api.ZkEvm.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
+            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
+
+            var localVarAccept = Immutable.Api.ZkEvm.Client.ClientUtils.SelectHeaderAccept(_accepts);
+            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
+
+            localVarRequestOptions.PathParameters.Add("chain_name", Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToString(chainName)); // path parameter
+            localVarRequestOptions.PathParameters.Add("contract_address", Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToString(contractAddress)); // path parameter
+
+
+            // make the HTTP request
+            var localVarResponse = this.Client.Get<ListFiltersResult>("/experimental/chains/{chain_name}/search/filters/{contract_address}", localVarRequestOptions, this.Configuration);
+
+            if (this.ExceptionFactory != null)
+            {
+                Exception _exception = this.ExceptionFactory("ListFilters", localVarResponse);
+                if (_exception != null) throw _exception;
+            }
+
+            return localVarResponse;
+        }
+
+        /// <summary>
+        /// Experimental: Get list of metadata attribute filters ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get list of metadata filters
+        /// </summary>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="chainName">The name of chain</param>
+        /// <param name="contractAddress">Contract addresses for collection</param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of ListFiltersResult</returns>
+        public async System.Threading.Tasks.Task<ListFiltersResult> ListFiltersAsync(string chainName, string contractAddress, System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+        {
+            var task = ListFiltersWithHttpInfoAsync(chainName, contractAddress, cancellationToken);
+#if UNITY_EDITOR || !UNITY_WEBGL
+            Immutable.Api.ZkEvm.Client.ApiResponse<ListFiltersResult> localVarResponse = await task.ConfigureAwait(false);
+#else
+            Immutable.Api.ZkEvm.Client.ApiResponse<ListFiltersResult> localVarResponse = await task;
+#endif
+            return localVarResponse.Data;
+        }
+
+        /// <summary>
+        /// Experimental: Get list of metadata attribute filters ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get list of metadata filters
+        /// </summary>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="chainName">The name of chain</param>
+        /// <param name="contractAddress">Contract addresses for collection</param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of ApiResponse (ListFiltersResult)</returns>
+        public async System.Threading.Tasks.Task<Immutable.Api.ZkEvm.Client.ApiResponse<ListFiltersResult>> ListFiltersWithHttpInfoAsync(string chainName, string contractAddress, System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+        {
+            // verify the required parameter 'chainName' is set
+            if (chainName == null)
+                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'chainName' when calling StacksApi->ListFilters");
+
+            // verify the required parameter 'contractAddress' is set
+            if (contractAddress == null)
+                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'contractAddress' when calling StacksApi->ListFilters");
+
+
+            Immutable.Api.ZkEvm.Client.RequestOptions localVarRequestOptions = new Immutable.Api.ZkEvm.Client.RequestOptions();
+
+            string[] _contentTypes = new string[] {
+            };
+
+            // to determine the Accept header
+            string[] _accepts = new string[] {
+                "application/json"
+            };
+
+
+            var localVarContentType = Immutable.Api.ZkEvm.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
+            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
+
+            var localVarAccept = Immutable.Api.ZkEvm.Client.ClientUtils.SelectHeaderAccept(_accepts);
+            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
+
+            localVarRequestOptions.PathParameters.Add("chain_name", Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToString(chainName)); // path parameter
+            localVarRequestOptions.PathParameters.Add("contract_address", Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToString(contractAddress)); // path parameter
+
+
+            // make the HTTP request
+
+            var task = this.AsynchronousClient.GetAsync<ListFiltersResult>("/experimental/chains/{chain_name}/search/filters/{contract_address}", localVarRequestOptions, this.Configuration, cancellationToken);
+
+#if UNITY_EDITOR || !UNITY_WEBGL
+            var localVarResponse = await task.ConfigureAwait(false);
+#else
+            var localVarResponse = await task;
+#endif
+
+            if (this.ExceptionFactory != null)
+            {
+                Exception _exception = this.ExceptionFactory("ListFilters", localVarResponse);
+                if (_exception != null) throw _exception;
+            }
+
+            return localVarResponse;
         }
 
         /// <summary>
