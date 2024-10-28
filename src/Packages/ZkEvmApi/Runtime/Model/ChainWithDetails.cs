@@ -42,7 +42,9 @@ namespace Immutable.Api.ZkEvm.Model
         /// <param name="id">The id of chain (required).</param>
         /// <param name="name">The name of chain (required).</param>
         /// <param name="rpcUrl">URL for RPC node (required).</param>
-        public ChainWithDetails(string id = default(string), string name = default(string), string rpcUrl = default(string))
+        /// <param name="operatorAllowlistAddress">The address of the Operator Allowlist - https://docs.immutable.com/products/zkevm/minting/royalties/allowlist-spec/ (required).</param>
+        /// <param name="minterAddress">The address of the minter used in the Minting API - https://docs.immutable.com/products/zkEVM/minting/minting-api#minting-api-prerequisites (required).</param>
+        public ChainWithDetails(string id = default(string), string name = default(string), string rpcUrl = default(string), string operatorAllowlistAddress = default(string), string minterAddress = default(string))
         {
             // to ensure "id" is required (not null)
             if (id == null)
@@ -62,6 +64,18 @@ namespace Immutable.Api.ZkEvm.Model
                 throw new ArgumentNullException("rpcUrl is a required property for ChainWithDetails and cannot be null");
             }
             this.RpcUrl = rpcUrl;
+            // to ensure "operatorAllowlistAddress" is required (not null)
+            if (operatorAllowlistAddress == null)
+            {
+                throw new ArgumentNullException("operatorAllowlistAddress is a required property for ChainWithDetails and cannot be null");
+            }
+            this.OperatorAllowlistAddress = operatorAllowlistAddress;
+            // to ensure "minterAddress" is required (not null)
+            if (minterAddress == null)
+            {
+                throw new ArgumentNullException("minterAddress is a required property for ChainWithDetails and cannot be null");
+            }
+            this.MinterAddress = minterAddress;
         }
 
         /// <summary>
@@ -88,6 +102,20 @@ namespace Immutable.Api.ZkEvm.Model
         public string RpcUrl { get; set; }
 
         /// <summary>
+        /// The address of the Operator Allowlist - https://docs.immutable.com/products/zkevm/minting/royalties/allowlist-spec/
+        /// </summary>
+        /// <value>The address of the Operator Allowlist - https://docs.immutable.com/products/zkevm/minting/royalties/allowlist-spec/</value>
+        [DataMember(Name = "operator_allowlist_address", IsRequired = true, EmitDefaultValue = true)]
+        public string OperatorAllowlistAddress { get; set; }
+
+        /// <summary>
+        /// The address of the minter used in the Minting API - https://docs.immutable.com/products/zkEVM/minting/minting-api#minting-api-prerequisites
+        /// </summary>
+        /// <value>The address of the minter used in the Minting API - https://docs.immutable.com/products/zkEVM/minting/minting-api#minting-api-prerequisites</value>
+        [DataMember(Name = "minter_address", IsRequired = true, EmitDefaultValue = true)]
+        public string MinterAddress { get; set; }
+
+        /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
         /// <returns>String presentation of the object</returns>
@@ -98,6 +126,8 @@ namespace Immutable.Api.ZkEvm.Model
             sb.Append("  Id: ").Append(Id).Append("\n");
             sb.Append("  Name: ").Append(Name).Append("\n");
             sb.Append("  RpcUrl: ").Append(RpcUrl).Append("\n");
+            sb.Append("  OperatorAllowlistAddress: ").Append(OperatorAllowlistAddress).Append("\n");
+            sb.Append("  MinterAddress: ").Append(MinterAddress).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }

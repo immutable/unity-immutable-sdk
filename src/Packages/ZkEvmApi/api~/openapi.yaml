@@ -3320,6 +3320,84 @@ paths:
       summary: Get all info for a Passport user
       tags:
       - passport profile
+  /experimental/chains/{chain_name}/search/filters/{contract_address}:
+    get:
+      description: "![Experimental](https://img.shields.io/badge/status-experimental-yellow)\
+        \ Get list of metadata filters"
+      operationId: ListFilters
+      parameters:
+      - description: The name of chain
+        examples:
+          testnet:
+            summary: Immutable zkEVM Public Testnet
+            value: imtbl-zkevm-testnet
+        explode: false
+        in: path
+        name: chain_name
+        required: true
+        schema:
+          $ref: '#/components/schemas/ChainName'
+        style: simple
+      - description: Contract addresses for collection
+        explode: false
+        in: path
+        name: contract_address
+        required: true
+        schema:
+          example: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          pattern: "^0x[a-fA-F0-9]{40}$"
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListFiltersResult'
+          description: 200 response
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError400'
+          description: Bad Request (400)
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError401'
+          description: Unauthorised Request (401)
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError403'
+          description: Forbidden Request (403)
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError404'
+          description: The specified resource was not found (404)
+        "429":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError429'
+          description: Too Many Requests (429)
+          headers:
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError500'
+          description: Internal Server Error (500)
+      summary: "Experimental: Get list of metadata attribute filters"
+      tags:
+      - stacks
+      x-hide-from-sdk: true
   /experimental/chains/{chain_name}/search/nfts:
     get:
       description: "![Experimental](https://img.shields.io/badge/status-experimental-yellow)\
@@ -5641,13 +5719,25 @@ components:
             description: URL for RPC node
             nullable: true
             type: string
+          operator_allowlist_address:
+            description: The address of the Operator Allowlist - https://docs.immutable.com/products/zkevm/minting/royalties/allowlist-spec/
+            nullable: true
+            type: string
+          minter_address:
+            description: The address of the minter used in the Minting API - https://docs.immutable.com/products/zkEVM/minting/minting-api#minting-api-prerequisites
+            nullable: true
+            type: string
         required:
+        - minter_address
+        - operator_allowlist_address
         - rpc_url
         type: object
       example:
         rpc_url: rpc_url
         name: imtbl-zkevm-testnet
+        minter_address: minter_address
         id: eip155:13372
+        operator_allowlist_address: operator_allowlist_address
     Chain:
       description: The chain details
       example:
@@ -5671,10 +5761,14 @@ components:
         result:
         - rpc_url: rpc_url
           name: imtbl-zkevm-testnet
+          minter_address: minter_address
           id: eip155:13372
+          operator_allowlist_address: operator_allowlist_address
         - rpc_url: rpc_url
           name: imtbl-zkevm-testnet
+          minter_address: minter_address
           id: eip155:13372
+          operator_allowlist_address: operator_allowlist_address
         page:
           previous_cursor: ewogICJ0eXBlIjogInByZXYiLAogICJpdGVtIjogewogICAgImlkIjogNjI3NTEzMCwKICAgICJjcmVhdGVkX2F0IjogIjIwMjItMDktMTNUMTc6MDQ6MTIuMDI0MTI2WiIKICB9Cn0=
           next_cursor: ewogICJ0eXBlIjogInByZXYiLAogICJpdGVtIjogewogICAgImlkIjogNjI3NTEzMCwKICAgICJjcmVhdGVkX2F0IjogIjIwMjItMDktMTNUMTc6MDQ6MTIuMDI0MTI2WiIKICB9Cn0=
@@ -8680,6 +8774,144 @@ components:
       - linked_addresses
       - sub
       type: object
+    FilterValue:
+      example:
+      - value: Common
+        nft_count: "42"
+      - value: Rare
+        nft_count: "17"
+      properties:
+        value:
+          type: string
+        nft_count:
+          description: Number of NFTs that have this trait. Uint256 as string
+          type: string
+      required:
+      - nft_count
+      - value
+      type: object
+    Filter:
+      example:
+        omitted_values_count: 0
+        values:
+        - - value: Common
+            nft_count: "42"
+          - value: Rare
+            nft_count: "17"
+        - - value: Common
+            nft_count: "42"
+          - value: Rare
+            nft_count: "17"
+        name: Rarity
+      properties:
+        name:
+          description: Name of trait
+          example: Rarity
+          type: string
+        values:
+          description: List of 100 most common values for this trait sorted by number
+            of associated NFTs
+          items:
+            $ref: '#/components/schemas/FilterValue'
+          type: array
+        omitted_values_count:
+          description: Indicated how many more distinct values exist
+          example: 0
+          type: integer
+      required:
+      - name
+      - omitted_values_count
+      - values
+      type: object
+    FilterResult:
+      example:
+        chain:
+          name: imtbl-zkevm-testnet
+          id: eip155:13372
+        filters:
+        - omitted_values_count: 0
+          values:
+          - - value: Common
+              nft_count: "42"
+            - value: Rare
+              nft_count: "17"
+          - - value: Common
+              nft_count: "42"
+            - value: Rare
+              nft_count: "17"
+          name: Rarity
+        - omitted_values_count: 0
+          values:
+          - - value: Common
+              nft_count: "42"
+            - value: Rare
+              nft_count: "17"
+          - - value: Common
+              nft_count: "42"
+            - value: Rare
+              nft_count: "17"
+          name: Rarity
+        contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+      properties:
+        chain:
+          $ref: '#/components/schemas/Chain'
+        contract_address:
+          description: ETH Address of collection that the asset belongs to
+          example: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          type: string
+        filters:
+          description: List of all filters and the most common values
+          items:
+            $ref: '#/components/schemas/Filter'
+          type: array
+      required:
+      - chain
+      - contract_address
+      - filters
+      type: object
+    ListFiltersResult:
+      description: List filters result
+      example:
+        result:
+          chain:
+            name: imtbl-zkevm-testnet
+            id: eip155:13372
+          filters:
+          - omitted_values_count: 0
+            values:
+            - - value: Common
+                nft_count: "42"
+              - value: Rare
+                nft_count: "17"
+            - - value: Common
+                nft_count: "42"
+              - value: Rare
+                nft_count: "17"
+            name: Rarity
+          - omitted_values_count: 0
+            values:
+            - - value: Common
+                nft_count: "42"
+              - value: Rare
+                nft_count: "17"
+            - - value: Common
+                nft_count: "42"
+              - value: Rare
+                nft_count: "17"
+            name: Rarity
+          contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+        page:
+          previous_cursor: ewogICJ0eXBlIjogInByZXYiLAogICJpdGVtIjogewogICAgImlkIjogNjI3NTEzMCwKICAgICJjcmVhdGVkX2F0IjogIjIwMjItMDktMTNUMTc6MDQ6MTIuMDI0MTI2WiIKICB9Cn0=
+          next_cursor: ewogICJ0eXBlIjogInByZXYiLAogICJpdGVtIjogewogICAgImlkIjogNjI3NTEzMCwKICAgICJjcmVhdGVkX2F0IjogIjIwMjItMDktMTNUMTc6MDQ6MTIuMDI0MTI2WiIKICB9Cn0=
+      properties:
+        result:
+          $ref: '#/components/schemas/FilterResult'
+        page:
+          $ref: '#/components/schemas/Page'
+      required:
+      - page
+      - result
+      type: object
     MarketplaceContractType:
       description: The contract type for a collection
       enum:
@@ -8929,6 +9161,7 @@ components:
       example:
         ETH: "0.0058079775"
         USD: "15.89"
+      nullable: true
       type: object
     Listing:
       example:
@@ -8965,6 +9198,7 @@ components:
           example:
             ETH: "0.0058079775"
             USD: "15.89"
+          nullable: true
           type: object
         token_id:
           description: Token ID
