@@ -30,8 +30,6 @@ jobs:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
-          ALTSERVER_HOST: 54.66.58.33
-          ALTSERVER_PORT: 13000
         with:
           targetPlatform: StandaloneOSX
           projectPath: sample
@@ -39,13 +37,12 @@ jobs:
           customParameters: -logFile logFile.log -quit -batchmode
       - name: Upload artifact
         uses: actions/upload-artifact@v4
-        if: always()
         with:
           name: Build-StandaloneOSX
           path: sample/Builds/MacOS
   test:
     name: Run UI tests on AltTester 🧪
-    runs-on: macos-latest
+    runs-on: self-hosted
     needs: build
     steps:
       - uses: actions/checkout@v3
@@ -54,21 +51,19 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: Build-StandaloneOSX
-      - name: Open application
-        run: |
-          export RUN_IN_BROWSERSTACK="false"
-          export ALTSERVER_HOST="54.66.58.33"
-          export ALTSERVER_PORT=13000
-          chmod -R 755 SampleApp.app
-          open SampleApp.app
       - uses: actions/setup-python@v4
         with:
           python-version: "3.10"
       - name: Install dependencies
         run: pip install -r "sample/Tests/requirements.txt"
       - name: Run UI tests
+        env:
+          UNITY_APP_PATH: ${{ github.workspace }}/SampleApp.app
+          UNITY_APP_NAME: SampleApp
+          MAILSLURP_API_KEY: ${{ secrets.MAILSLURP_API_KEY }}
+        working-directory: sample/Tests
         run: |
-          export ALTSERVER_HOST="54.66.58.33"
-          export ALTSERVER_PORT=13000
-          pytest -s -v sample/Tests/test.py
+          chmod -R 755 ${{ github.workspace }}/SampleApp.app
+          chmod +x test_mac.sh
+          ./test_mac.sh
       
