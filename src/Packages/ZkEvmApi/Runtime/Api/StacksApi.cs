@@ -118,13 +118,13 @@ namespace Immutable.Api.ZkEvm.Api
         /// <param name="accountAddress">Account address to filter by (optional)</param>
         /// <param name="onlyIncludeOwnerListings">Whether to the listings should include only the owner created listings (optional)</param>
         /// <param name="onlyIfHasActiveListings">Filters results to include only stacks that have a current active listing. False and &#39;null&#39; return all unfiltered stacks. (optional)</param>
-        /// <param name="trait">JSON encoded traits to filter by. e.g. encodeURIComponent(JSON.stringify({\&quot;rarity\&quot;: {\&quot;values\&quot;: [\&quot;common\&quot;, \&quot;rare\&quot;], \&quot;condition\&quot;: \&quot;eq\&quot;}})) (optional)</param>
+        /// <param name="traits">JSON encoded traits to filter by. e.g. encodeURIComponent(JSON.stringify({\&quot;rarity\&quot;: {\&quot;values\&quot;: [\&quot;common\&quot;, \&quot;rare\&quot;], \&quot;condition\&quot;: \&quot;eq\&quot;}})) (optional)</param>
         /// <param name="keyword">Keyword to search NFT name and description. Alphanumeric characters only. (optional)</param>
         /// <param name="sortBy">Sort results in a specific order (optional)</param>
         /// <param name="pageSize">Number of results to return per page (optional, default to 100)</param>
         /// <param name="pageCursor">Encoded page cursor to retrieve previous or next page. Use the value returned in the response. (optional)</param>
         /// <returns>SearchStacksResult</returns>
-        SearchStacksResult SearchStacks(string chainName, List<string> contractAddress, string? accountAddress = default(string?), bool? onlyIncludeOwnerListings = default(bool?), bool? onlyIfHasActiveListings = default(bool?), string? trait = default(string?), string? keyword = default(string?), string? sortBy = default(string?), int? pageSize = default(int?), string? pageCursor = default(string?));
+        SearchStacksResult SearchStacks(string chainName, List<string> contractAddress, string? accountAddress = default(string?), bool? onlyIncludeOwnerListings = default(bool?), bool? onlyIfHasActiveListings = default(bool?), string? traits = default(string?), string? keyword = default(string?), string? sortBy = default(string?), int? pageSize = default(int?), string? pageCursor = default(string?));
 
         /// <summary>
         /// Experimental: Search NFT stacks
@@ -138,13 +138,13 @@ namespace Immutable.Api.ZkEvm.Api
         /// <param name="accountAddress">Account address to filter by (optional)</param>
         /// <param name="onlyIncludeOwnerListings">Whether to the listings should include only the owner created listings (optional)</param>
         /// <param name="onlyIfHasActiveListings">Filters results to include only stacks that have a current active listing. False and &#39;null&#39; return all unfiltered stacks. (optional)</param>
-        /// <param name="trait">JSON encoded traits to filter by. e.g. encodeURIComponent(JSON.stringify({\&quot;rarity\&quot;: {\&quot;values\&quot;: [\&quot;common\&quot;, \&quot;rare\&quot;], \&quot;condition\&quot;: \&quot;eq\&quot;}})) (optional)</param>
+        /// <param name="traits">JSON encoded traits to filter by. e.g. encodeURIComponent(JSON.stringify({\&quot;rarity\&quot;: {\&quot;values\&quot;: [\&quot;common\&quot;, \&quot;rare\&quot;], \&quot;condition\&quot;: \&quot;eq\&quot;}})) (optional)</param>
         /// <param name="keyword">Keyword to search NFT name and description. Alphanumeric characters only. (optional)</param>
         /// <param name="sortBy">Sort results in a specific order (optional)</param>
         /// <param name="pageSize">Number of results to return per page (optional, default to 100)</param>
         /// <param name="pageCursor">Encoded page cursor to retrieve previous or next page. Use the value returned in the response. (optional)</param>
         /// <returns>ApiResponse of SearchStacksResult</returns>
-        ApiResponse<SearchStacksResult> SearchStacksWithHttpInfo(string chainName, List<string> contractAddress, string? accountAddress = default(string?), bool? onlyIncludeOwnerListings = default(bool?), bool? onlyIfHasActiveListings = default(bool?), string? trait = default(string?), string? keyword = default(string?), string? sortBy = default(string?), int? pageSize = default(int?), string? pageCursor = default(string?));
+        ApiResponse<SearchStacksResult> SearchStacksWithHttpInfo(string chainName, List<string> contractAddress, string? accountAddress = default(string?), bool? onlyIncludeOwnerListings = default(bool?), bool? onlyIfHasActiveListings = default(bool?), string? traits = default(string?), string? keyword = default(string?), string? sortBy = default(string?), int? pageSize = default(int?), string? pageCursor = default(string?));
         #endregion Synchronous Operations
     }
 
@@ -251,14 +251,14 @@ namespace Immutable.Api.ZkEvm.Api
         /// <param name="accountAddress">Account address to filter by (optional)</param>
         /// <param name="onlyIncludeOwnerListings">Whether to the listings should include only the owner created listings (optional)</param>
         /// <param name="onlyIfHasActiveListings">Filters results to include only stacks that have a current active listing. False and &#39;null&#39; return all unfiltered stacks. (optional)</param>
-        /// <param name="trait">JSON encoded traits to filter by. e.g. encodeURIComponent(JSON.stringify({\&quot;rarity\&quot;: {\&quot;values\&quot;: [\&quot;common\&quot;, \&quot;rare\&quot;], \&quot;condition\&quot;: \&quot;eq\&quot;}})) (optional)</param>
+        /// <param name="traits">JSON encoded traits to filter by. e.g. encodeURIComponent(JSON.stringify({\&quot;rarity\&quot;: {\&quot;values\&quot;: [\&quot;common\&quot;, \&quot;rare\&quot;], \&quot;condition\&quot;: \&quot;eq\&quot;}})) (optional)</param>
         /// <param name="keyword">Keyword to search NFT name and description. Alphanumeric characters only. (optional)</param>
         /// <param name="sortBy">Sort results in a specific order (optional)</param>
         /// <param name="pageSize">Number of results to return per page (optional, default to 100)</param>
         /// <param name="pageCursor">Encoded page cursor to retrieve previous or next page. Use the value returned in the response. (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of SearchStacksResult</returns>
-        System.Threading.Tasks.Task<SearchStacksResult> SearchStacksAsync(string chainName, List<string> contractAddress, string? accountAddress = default(string?), bool? onlyIncludeOwnerListings = default(bool?), bool? onlyIfHasActiveListings = default(bool?), string? trait = default(string?), string? keyword = default(string?), string? sortBy = default(string?), int? pageSize = default(int?), string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<SearchStacksResult> SearchStacksAsync(string chainName, List<string> contractAddress, string? accountAddress = default(string?), bool? onlyIncludeOwnerListings = default(bool?), bool? onlyIfHasActiveListings = default(bool?), string? traits = default(string?), string? keyword = default(string?), string? sortBy = default(string?), int? pageSize = default(int?), string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
 
         /// <summary>
         /// Experimental: Search NFT stacks
@@ -272,14 +272,14 @@ namespace Immutable.Api.ZkEvm.Api
         /// <param name="accountAddress">Account address to filter by (optional)</param>
         /// <param name="onlyIncludeOwnerListings">Whether to the listings should include only the owner created listings (optional)</param>
         /// <param name="onlyIfHasActiveListings">Filters results to include only stacks that have a current active listing. False and &#39;null&#39; return all unfiltered stacks. (optional)</param>
-        /// <param name="trait">JSON encoded traits to filter by. e.g. encodeURIComponent(JSON.stringify({\&quot;rarity\&quot;: {\&quot;values\&quot;: [\&quot;common\&quot;, \&quot;rare\&quot;], \&quot;condition\&quot;: \&quot;eq\&quot;}})) (optional)</param>
+        /// <param name="traits">JSON encoded traits to filter by. e.g. encodeURIComponent(JSON.stringify({\&quot;rarity\&quot;: {\&quot;values\&quot;: [\&quot;common\&quot;, \&quot;rare\&quot;], \&quot;condition\&quot;: \&quot;eq\&quot;}})) (optional)</param>
         /// <param name="keyword">Keyword to search NFT name and description. Alphanumeric characters only. (optional)</param>
         /// <param name="sortBy">Sort results in a specific order (optional)</param>
         /// <param name="pageSize">Number of results to return per page (optional, default to 100)</param>
         /// <param name="pageCursor">Encoded page cursor to retrieve previous or next page. Use the value returned in the response. (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (SearchStacksResult)</returns>
-        System.Threading.Tasks.Task<ApiResponse<SearchStacksResult>> SearchStacksWithHttpInfoAsync(string chainName, List<string> contractAddress, string? accountAddress = default(string?), bool? onlyIncludeOwnerListings = default(bool?), bool? onlyIfHasActiveListings = default(bool?), string? trait = default(string?), string? keyword = default(string?), string? sortBy = default(string?), int? pageSize = default(int?), string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse<SearchStacksResult>> SearchStacksWithHttpInfoAsync(string chainName, List<string> contractAddress, string? accountAddress = default(string?), bool? onlyIncludeOwnerListings = default(bool?), bool? onlyIfHasActiveListings = default(bool?), string? traits = default(string?), string? keyword = default(string?), string? sortBy = default(string?), int? pageSize = default(int?), string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
         #endregion Asynchronous Operations
     }
 
@@ -913,15 +913,15 @@ namespace Immutable.Api.ZkEvm.Api
         /// <param name="accountAddress">Account address to filter by (optional)</param>
         /// <param name="onlyIncludeOwnerListings">Whether to the listings should include only the owner created listings (optional)</param>
         /// <param name="onlyIfHasActiveListings">Filters results to include only stacks that have a current active listing. False and &#39;null&#39; return all unfiltered stacks. (optional)</param>
-        /// <param name="trait">JSON encoded traits to filter by. e.g. encodeURIComponent(JSON.stringify({\&quot;rarity\&quot;: {\&quot;values\&quot;: [\&quot;common\&quot;, \&quot;rare\&quot;], \&quot;condition\&quot;: \&quot;eq\&quot;}})) (optional)</param>
+        /// <param name="traits">JSON encoded traits to filter by. e.g. encodeURIComponent(JSON.stringify({\&quot;rarity\&quot;: {\&quot;values\&quot;: [\&quot;common\&quot;, \&quot;rare\&quot;], \&quot;condition\&quot;: \&quot;eq\&quot;}})) (optional)</param>
         /// <param name="keyword">Keyword to search NFT name and description. Alphanumeric characters only. (optional)</param>
         /// <param name="sortBy">Sort results in a specific order (optional)</param>
         /// <param name="pageSize">Number of results to return per page (optional, default to 100)</param>
         /// <param name="pageCursor">Encoded page cursor to retrieve previous or next page. Use the value returned in the response. (optional)</param>
         /// <returns>SearchStacksResult</returns>
-        public SearchStacksResult SearchStacks(string chainName, List<string> contractAddress, string? accountAddress = default(string?), bool? onlyIncludeOwnerListings = default(bool?), bool? onlyIfHasActiveListings = default(bool?), string? trait = default(string?), string? keyword = default(string?), string? sortBy = default(string?), int? pageSize = default(int?), string? pageCursor = default(string?))
+        public SearchStacksResult SearchStacks(string chainName, List<string> contractAddress, string? accountAddress = default(string?), bool? onlyIncludeOwnerListings = default(bool?), bool? onlyIfHasActiveListings = default(bool?), string? traits = default(string?), string? keyword = default(string?), string? sortBy = default(string?), int? pageSize = default(int?), string? pageCursor = default(string?))
         {
-            Immutable.Api.ZkEvm.Client.ApiResponse<SearchStacksResult> localVarResponse = SearchStacksWithHttpInfo(chainName, contractAddress, accountAddress, onlyIncludeOwnerListings, onlyIfHasActiveListings, trait, keyword, sortBy, pageSize, pageCursor);
+            Immutable.Api.ZkEvm.Client.ApiResponse<SearchStacksResult> localVarResponse = SearchStacksWithHttpInfo(chainName, contractAddress, accountAddress, onlyIncludeOwnerListings, onlyIfHasActiveListings, traits, keyword, sortBy, pageSize, pageCursor);
             return localVarResponse.Data;
         }
 
@@ -934,13 +934,13 @@ namespace Immutable.Api.ZkEvm.Api
         /// <param name="accountAddress">Account address to filter by (optional)</param>
         /// <param name="onlyIncludeOwnerListings">Whether to the listings should include only the owner created listings (optional)</param>
         /// <param name="onlyIfHasActiveListings">Filters results to include only stacks that have a current active listing. False and &#39;null&#39; return all unfiltered stacks. (optional)</param>
-        /// <param name="trait">JSON encoded traits to filter by. e.g. encodeURIComponent(JSON.stringify({\&quot;rarity\&quot;: {\&quot;values\&quot;: [\&quot;common\&quot;, \&quot;rare\&quot;], \&quot;condition\&quot;: \&quot;eq\&quot;}})) (optional)</param>
+        /// <param name="traits">JSON encoded traits to filter by. e.g. encodeURIComponent(JSON.stringify({\&quot;rarity\&quot;: {\&quot;values\&quot;: [\&quot;common\&quot;, \&quot;rare\&quot;], \&quot;condition\&quot;: \&quot;eq\&quot;}})) (optional)</param>
         /// <param name="keyword">Keyword to search NFT name and description. Alphanumeric characters only. (optional)</param>
         /// <param name="sortBy">Sort results in a specific order (optional)</param>
         /// <param name="pageSize">Number of results to return per page (optional, default to 100)</param>
         /// <param name="pageCursor">Encoded page cursor to retrieve previous or next page. Use the value returned in the response. (optional)</param>
         /// <returns>ApiResponse of SearchStacksResult</returns>
-        public Immutable.Api.ZkEvm.Client.ApiResponse<SearchStacksResult> SearchStacksWithHttpInfo(string chainName, List<string> contractAddress, string? accountAddress = default(string?), bool? onlyIncludeOwnerListings = default(bool?), bool? onlyIfHasActiveListings = default(bool?), string? trait = default(string?), string? keyword = default(string?), string? sortBy = default(string?), int? pageSize = default(int?), string? pageCursor = default(string?))
+        public Immutable.Api.ZkEvm.Client.ApiResponse<SearchStacksResult> SearchStacksWithHttpInfo(string chainName, List<string> contractAddress, string? accountAddress = default(string?), bool? onlyIncludeOwnerListings = default(bool?), bool? onlyIfHasActiveListings = default(bool?), string? traits = default(string?), string? keyword = default(string?), string? sortBy = default(string?), int? pageSize = default(int?), string? pageCursor = default(string?))
         {
             // verify the required parameter 'chainName' is set
             if (chainName == null)
@@ -980,9 +980,9 @@ namespace Immutable.Api.ZkEvm.Api
             {
                 localVarRequestOptions.QueryParameters.Add(Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToMultiMap("", "only_if_has_active_listings", onlyIfHasActiveListings));
             }
-            if (trait != null)
+            if (traits != null)
             {
-                localVarRequestOptions.QueryParameters.Add(Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToMultiMap("", "trait", trait));
+                localVarRequestOptions.QueryParameters.Add(Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToMultiMap("", "traits", traits));
             }
             if (keyword != null)
             {
@@ -1023,16 +1023,16 @@ namespace Immutable.Api.ZkEvm.Api
         /// <param name="accountAddress">Account address to filter by (optional)</param>
         /// <param name="onlyIncludeOwnerListings">Whether to the listings should include only the owner created listings (optional)</param>
         /// <param name="onlyIfHasActiveListings">Filters results to include only stacks that have a current active listing. False and &#39;null&#39; return all unfiltered stacks. (optional)</param>
-        /// <param name="trait">JSON encoded traits to filter by. e.g. encodeURIComponent(JSON.stringify({\&quot;rarity\&quot;: {\&quot;values\&quot;: [\&quot;common\&quot;, \&quot;rare\&quot;], \&quot;condition\&quot;: \&quot;eq\&quot;}})) (optional)</param>
+        /// <param name="traits">JSON encoded traits to filter by. e.g. encodeURIComponent(JSON.stringify({\&quot;rarity\&quot;: {\&quot;values\&quot;: [\&quot;common\&quot;, \&quot;rare\&quot;], \&quot;condition\&quot;: \&quot;eq\&quot;}})) (optional)</param>
         /// <param name="keyword">Keyword to search NFT name and description. Alphanumeric characters only. (optional)</param>
         /// <param name="sortBy">Sort results in a specific order (optional)</param>
         /// <param name="pageSize">Number of results to return per page (optional, default to 100)</param>
         /// <param name="pageCursor">Encoded page cursor to retrieve previous or next page. Use the value returned in the response. (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of SearchStacksResult</returns>
-        public async System.Threading.Tasks.Task<SearchStacksResult> SearchStacksAsync(string chainName, List<string> contractAddress, string? accountAddress = default(string?), bool? onlyIncludeOwnerListings = default(bool?), bool? onlyIfHasActiveListings = default(bool?), string? trait = default(string?), string? keyword = default(string?), string? sortBy = default(string?), int? pageSize = default(int?), string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+        public async System.Threading.Tasks.Task<SearchStacksResult> SearchStacksAsync(string chainName, List<string> contractAddress, string? accountAddress = default(string?), bool? onlyIncludeOwnerListings = default(bool?), bool? onlyIfHasActiveListings = default(bool?), string? traits = default(string?), string? keyword = default(string?), string? sortBy = default(string?), int? pageSize = default(int?), string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
         {
-            var task = SearchStacksWithHttpInfoAsync(chainName, contractAddress, accountAddress, onlyIncludeOwnerListings, onlyIfHasActiveListings, trait, keyword, sortBy, pageSize, pageCursor, cancellationToken);
+            var task = SearchStacksWithHttpInfoAsync(chainName, contractAddress, accountAddress, onlyIncludeOwnerListings, onlyIfHasActiveListings, traits, keyword, sortBy, pageSize, pageCursor, cancellationToken);
 #if UNITY_EDITOR || !UNITY_WEBGL
             Immutable.Api.ZkEvm.Client.ApiResponse<SearchStacksResult> localVarResponse = await task.ConfigureAwait(false);
 #else
@@ -1050,14 +1050,14 @@ namespace Immutable.Api.ZkEvm.Api
         /// <param name="accountAddress">Account address to filter by (optional)</param>
         /// <param name="onlyIncludeOwnerListings">Whether to the listings should include only the owner created listings (optional)</param>
         /// <param name="onlyIfHasActiveListings">Filters results to include only stacks that have a current active listing. False and &#39;null&#39; return all unfiltered stacks. (optional)</param>
-        /// <param name="trait">JSON encoded traits to filter by. e.g. encodeURIComponent(JSON.stringify({\&quot;rarity\&quot;: {\&quot;values\&quot;: [\&quot;common\&quot;, \&quot;rare\&quot;], \&quot;condition\&quot;: \&quot;eq\&quot;}})) (optional)</param>
+        /// <param name="traits">JSON encoded traits to filter by. e.g. encodeURIComponent(JSON.stringify({\&quot;rarity\&quot;: {\&quot;values\&quot;: [\&quot;common\&quot;, \&quot;rare\&quot;], \&quot;condition\&quot;: \&quot;eq\&quot;}})) (optional)</param>
         /// <param name="keyword">Keyword to search NFT name and description. Alphanumeric characters only. (optional)</param>
         /// <param name="sortBy">Sort results in a specific order (optional)</param>
         /// <param name="pageSize">Number of results to return per page (optional, default to 100)</param>
         /// <param name="pageCursor">Encoded page cursor to retrieve previous or next page. Use the value returned in the response. (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (SearchStacksResult)</returns>
-        public async System.Threading.Tasks.Task<Immutable.Api.ZkEvm.Client.ApiResponse<SearchStacksResult>> SearchStacksWithHttpInfoAsync(string chainName, List<string> contractAddress, string? accountAddress = default(string?), bool? onlyIncludeOwnerListings = default(bool?), bool? onlyIfHasActiveListings = default(bool?), string? trait = default(string?), string? keyword = default(string?), string? sortBy = default(string?), int? pageSize = default(int?), string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+        public async System.Threading.Tasks.Task<Immutable.Api.ZkEvm.Client.ApiResponse<SearchStacksResult>> SearchStacksWithHttpInfoAsync(string chainName, List<string> contractAddress, string? accountAddress = default(string?), bool? onlyIncludeOwnerListings = default(bool?), bool? onlyIfHasActiveListings = default(bool?), string? traits = default(string?), string? keyword = default(string?), string? sortBy = default(string?), int? pageSize = default(int?), string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
         {
             // verify the required parameter 'chainName' is set
             if (chainName == null)
@@ -1099,9 +1099,9 @@ namespace Immutable.Api.ZkEvm.Api
             {
                 localVarRequestOptions.QueryParameters.Add(Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToMultiMap("", "only_if_has_active_listings", onlyIfHasActiveListings));
             }
-            if (trait != null)
+            if (traits != null)
             {
-                localVarRequestOptions.QueryParameters.Add(Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToMultiMap("", "trait", trait));
+                localVarRequestOptions.QueryParameters.Add(Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToMultiMap("", "traits", traits));
             }
             if (keyword != null)
             {

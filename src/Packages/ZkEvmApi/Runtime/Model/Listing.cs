@@ -41,12 +41,11 @@ namespace Immutable.Api.ZkEvm.Model
         /// </summary>
         /// <param name="listingId">Global Order identifier (required).</param>
         /// <param name="priceDetails">priceDetails (required).</param>
-        /// <param name="convertedPrices">A mapping of converted prices for major currencies such as ETH, USD. All converted prices are fee-inclusive. (required).</param>
         /// <param name="tokenId">Token ID (required).</param>
         /// <param name="contractAddress">ETH Address of collection that the asset belongs to (required).</param>
         /// <param name="creator">ETH Address of listing creator (required).</param>
         /// <param name="amount">Amount of token included in the listing (required).</param>
-        public Listing(string listingId = default(string), MarketPriceDetails priceDetails = default(MarketPriceDetails), Dictionary<string, string> convertedPrices = default(Dictionary<string, string>), string tokenId = default(string), string contractAddress = default(string), string creator = default(string), string amount = default(string))
+        public Listing(string listingId = default(string), MarketPriceDetails priceDetails = default(MarketPriceDetails), string tokenId = default(string), string contractAddress = default(string), string creator = default(string), string amount = default(string))
         {
             // to ensure "listingId" is required (not null)
             if (listingId == null)
@@ -60,12 +59,6 @@ namespace Immutable.Api.ZkEvm.Model
                 throw new ArgumentNullException("priceDetails is a required property for Listing and cannot be null");
             }
             this.PriceDetails = priceDetails;
-            // to ensure "convertedPrices" is required (not null)
-            if (convertedPrices == null)
-            {
-                throw new ArgumentNullException("convertedPrices is a required property for Listing and cannot be null");
-            }
-            this.ConvertedPrices = convertedPrices;
             // to ensure "tokenId" is required (not null)
             if (tokenId == null)
             {
@@ -105,14 +98,6 @@ namespace Immutable.Api.ZkEvm.Model
         /// </summary>
         [DataMember(Name = "price_details", IsRequired = true, EmitDefaultValue = true)]
         public MarketPriceDetails PriceDetails { get; set; }
-
-        /// <summary>
-        /// A mapping of converted prices for major currencies such as ETH, USD. All converted prices are fee-inclusive.
-        /// </summary>
-        /// <value>A mapping of converted prices for major currencies such as ETH, USD. All converted prices are fee-inclusive.</value>
-        /// <example>{&quot;ETH&quot;:&quot;0.0058079775&quot;,&quot;USD&quot;:&quot;15.89&quot;}</example>
-        [DataMember(Name = "converted_prices", IsRequired = true, EmitDefaultValue = true)]
-        public Dictionary<string, string> ConvertedPrices { get; set; }
 
         /// <summary>
         /// Token ID
@@ -156,7 +141,6 @@ namespace Immutable.Api.ZkEvm.Model
             sb.Append("class Listing {\n");
             sb.Append("  ListingId: ").Append(ListingId).Append("\n");
             sb.Append("  PriceDetails: ").Append(PriceDetails).Append("\n");
-            sb.Append("  ConvertedPrices: ").Append(ConvertedPrices).Append("\n");
             sb.Append("  TokenId: ").Append(TokenId).Append("\n");
             sb.Append("  ContractAddress: ").Append(ContractAddress).Append("\n");
             sb.Append("  Creator: ").Append(Creator).Append("\n");
