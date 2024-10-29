@@ -12,8 +12,16 @@ concurrency:
 
 jobs:
   build:
-    name: Build sample game for AltTester 🛠️
+    name: Build sample game for AltTester ${{ matrix.targetPlatform }} 🛠️
     runs-on: ubuntu-latest-8-cores
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - targetPlatform: StandaloneOSX
+            buildMethod: MacBuilder.BuildForAltTester
+          - targetPlatform: StandaloneWindows64
+            buildMethod: WindowsBuilder.BuildForAltTester
     steps:
       - uses: actions/checkout@v3
         with:
@@ -21,8 +29,9 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: Library
-          key: Library-${{ hashFiles('sample/Assets/**', 'sample/Packages/**', 'sample/ProjectSettings/**') }}
+          key: Library-${{ matrix.targetPlatform }}-${{ hashFiles('sample/Assets/**', 'sample/Packages/**', 'sample/ProjectSettings/**') }}
           restore-keys: |
+            Library-${{ matrix.targetPlatform }}
             Library-
       - name: Build project
         uses: game-ci/unity-builder@v4
@@ -31,26 +40,37 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         with:
-          targetPlatform: StandaloneOSX
+          targetPlatform: ${{ matrix.targetPlatform }}
           projectPath: sample
-          buildMethod: MacBuilder.BuildForAltTester
+          buildMethod: ${{ matrix.buildMethod }}
           customParameters: -logFile logFile.log -quit -batchmode
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Build-StandaloneOSX
-          path: sample/Builds/MacOS
+          name: Build-${{ matrix.targetPlatform }}
+          path: build
   test:
     name: Run UI tests on AltTester 🧪
-    runs-on: self-hosted
     needs: build
+    strategy:
+      matrix:
+        include:
+          - targetPlatform: StandaloneOSX
+            runs-on: [self-hosted, macOS]
+            artifact: Build-StandaloneOSX
+            test_script: test_mac.sh
+          - targetPlatform: StandaloneWindows64
+            runs-on: [self-hosted, windows]
+            artifact: Build-StandaloneWindows64
+            test_script: test_windows.ps1
+    runs-on: ${{ matrix.runs-on }}
     steps:
       - uses: actions/checkout@v3
         with:
           lfs: true
       - uses: actions/download-artifact@v4
         with:
-          name: Build-StandaloneOSX
+          name: ${{ matrix.artifact }}
       - uses: actions/setup-python@v4
         with:
           python-version: "3.10"
@@ -64,6 +84,6 @@ jobs:
         working-directory: sample/Tests
         run: |
           chmod -R 755 ${{ github.workspace }}/SampleApp.app
-          chmod +x test_mac.sh
-          ./test_mac.sh
+          chmod +x ${{ matrix.test_script }}
+          ./${{ matrix.test_script }}
       
