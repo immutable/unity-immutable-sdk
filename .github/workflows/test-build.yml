@@ -78,7 +78,7 @@ jobs:
         with:
           unityVersion: 2021.3.26f1
           targetPlatform: ${{ matrix.targetPlatform }}
-          projectPath: './sample'
+          projectPath: sample
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@4.1.3
         if: matrix.targetPlatform == 'WebGL'

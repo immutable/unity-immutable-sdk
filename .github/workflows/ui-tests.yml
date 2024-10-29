@@ -20,8 +20,10 @@ jobs:
         include:
           - targetPlatform: StandaloneOSX
             buildMethod: MacBuilder.BuildForAltTester
+            buildPath: MacOS
           - targetPlatform: StandaloneWindows64
             buildMethod: WindowsBuilder.BuildForAltTester
+            buildPath: Windows64
     steps:
       - uses: actions/checkout@v3
         with:
@@ -44,24 +46,24 @@ jobs:
           projectPath: sample
           buildMethod: ${{ matrix.buildMethod }}
           customParameters: -logFile logFile.log -quit -batchmode
+      - name: List build directory
+        run: ls -R sample/Builds/
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: Build-${{ matrix.targetPlatform }}
-          path: build
+          path: sample/Builds/${{ matrix.buildPath }}
   test:
-    name: Run UI tests on AltTester 🧪
+    name: Run ${{ matrix.targetPlatform }} UI tests 🧪
     needs: build
     strategy:
       matrix:
         include:
           - targetPlatform: StandaloneOSX
             runs-on: [self-hosted, macOS]
-            artifact: Build-StandaloneOSX
             test_script: test_mac.sh
           - targetPlatform: StandaloneWindows64
             runs-on: [self-hosted, windows]
-            artifact: Build-StandaloneWindows64
             test_script: test_windows.ps1
     runs-on: ${{ matrix.runs-on }}
     steps:
@@ -70,7 +72,7 @@ jobs:
           lfs: true
       - uses: actions/download-artifact@v4
         with:
-          name: ${{ matrix.artifact }}
+          name: Build-${{ matrix.targetPlatform }}
       - uses: actions/setup-python@v4
         with:
           python-version: "3.10"
