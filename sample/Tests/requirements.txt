@@ -5,3 +5,4 @@ protobuf==5.27.2
 selenium==4.22.0
 pytest==8.2.2
 requests==2.32.3
+mailslurp-client==15.19.22

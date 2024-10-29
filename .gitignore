@@ -104,3 +104,7 @@ sample/mono_crash*
 
 # Vuplex
 sample/Assets/Vuplex*
+
+__pycache__/
+*.pyc
+.pytest_cache/
