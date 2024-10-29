@@ -43,7 +43,8 @@ namespace Immutable.Api.ZkEvm.Model
         /// <param name="amount">The token amount value. This value is provided in the smallest unit of the token (e.g. wei for ETH) (required).</param>
         /// <param name="feeInclusiveAmount">The token amount value. This value is provided in the smallest unit of the token (e.g. wei for ETH) (required).</param>
         /// <param name="fees">fees (required).</param>
-        public MarketPriceDetails(MarketPriceDetailsToken token = default(MarketPriceDetailsToken), string amount = default(string), string feeInclusiveAmount = default(string), List<MarketPriceFees> fees = default(List<MarketPriceFees>))
+        /// <param name="convertedPrices">A mapping of converted prices for major currencies such as ETH, USD. All converted prices are fee-inclusive. (required).</param>
+        public MarketPriceDetails(MarketPriceDetailsToken token = default(MarketPriceDetailsToken), string amount = default(string), string feeInclusiveAmount = default(string), List<MarketPriceFees> fees = default(List<MarketPriceFees>), Dictionary<string, string> convertedPrices = default(Dictionary<string, string>))
         {
             // to ensure "token" is required (not null)
             if (token == null)
@@ -69,6 +70,12 @@ namespace Immutable.Api.ZkEvm.Model
                 throw new ArgumentNullException("fees is a required property for MarketPriceDetails and cannot be null");
             }
             this.Fees = fees;
+            // to ensure "convertedPrices" is required (not null)
+            if (convertedPrices == null)
+            {
+                throw new ArgumentNullException("convertedPrices is a required property for MarketPriceDetails and cannot be null");
+            }
+            this.ConvertedPrices = convertedPrices;
         }
 
         /// <summary>
@@ -101,6 +108,14 @@ namespace Immutable.Api.ZkEvm.Model
         public List<MarketPriceFees> Fees { get; set; }
 
         /// <summary>
+        /// A mapping of converted prices for major currencies such as ETH, USD. All converted prices are fee-inclusive.
+        /// </summary>
+        /// <value>A mapping of converted prices for major currencies such as ETH, USD. All converted prices are fee-inclusive.</value>
+        /// <example>{&quot;ETH&quot;:&quot;0.0058079775&quot;,&quot;USD&quot;:&quot;15.89&quot;}</example>
+        [DataMember(Name = "converted_prices", IsRequired = true, EmitDefaultValue = true)]
+        public Dictionary<string, string> ConvertedPrices { get; set; }
+
+        /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
         /// <returns>String presentation of the object</returns>
@@ -112,6 +127,7 @@ namespace Immutable.Api.ZkEvm.Model
             sb.Append("  Amount: ").Append(Amount).Append("\n");
             sb.Append("  FeeInclusiveAmount: ").Append(FeeInclusiveAmount).Append("\n");
             sb.Append("  Fees: ").Append(Fees).Append("\n");
+            sb.Append("  ConvertedPrices: ").Append(ConvertedPrices).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }

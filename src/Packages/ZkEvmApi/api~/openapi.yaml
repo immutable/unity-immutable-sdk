@@ -3596,7 +3596,7 @@ paths:
           rarity\": {\"values\": [\"common\", \"rare\"], \"condition\": \"eq\"}}))"
         explode: true
         in: query
-        name: trait
+        name: traits
         required: false
         schema:
           type: string
@@ -9112,6 +9112,16 @@ components:
       - recipient_address
       - type
       type: object
+    ConvertedPrices:
+      additionalProperties:
+        type: string
+      description: "A mapping of converted prices for major currencies such as ETH,\
+        \ USD. All converted prices are fee-inclusive."
+      example:
+        ETH: "0.0058079775"
+        USD: "15.89"
+      nullable: true
+      type: object
     MarketPriceDetails:
       description: Market Price details
       example:
@@ -9120,6 +9130,9 @@ components:
         - type: TAKER_ECOSYSTEM
           recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
           amount: "1000000000000000000"
+        converted_prices:
+          ETH: "0.0058079775"
+          USD: "15.89"
         token:
           symbol: IMX
           type: NATIVE
@@ -9147,21 +9160,22 @@ components:
           items:
             $ref: '#/components/schemas/MarketPriceFees'
           type: array
+        converted_prices:
+          additionalProperties:
+            type: string
+          description: "A mapping of converted prices for major currencies such as\
+            \ ETH, USD. All converted prices are fee-inclusive."
+          example:
+            ETH: "0.0058079775"
+            USD: "15.89"
+          nullable: true
+          type: object
       required:
       - amount
+      - converted_prices
       - fee_inclusive_amount
       - fees
       - token
-      type: object
-    ConvertedPrices:
-      additionalProperties:
-        type: string
-      description: "A mapping of converted prices for major currencies such as ETH,\
-        \ USD. All converted prices are fee-inclusive."
-      example:
-        ETH: "0.0058079775"
-        USD: "15.89"
-      nullable: true
       type: object
     Listing:
       example:
@@ -9175,13 +9189,13 @@ components:
           - type: TAKER_ECOSYSTEM
             recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
             amount: "1000000000000000000"
+          converted_prices:
+            ETH: "0.0058079775"
+            USD: "15.89"
           token:
             symbol: IMX
             type: NATIVE
           fee_inclusive_amount: "9750000000000000000"
-        converted_prices:
-          ETH: "0.0058079775"
-          USD: "15.89"
         contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
       properties:
         listing_id:
@@ -9190,16 +9204,6 @@ components:
           type: string
         price_details:
           $ref: '#/components/schemas/MarketPriceDetails'
-        converted_prices:
-          additionalProperties:
-            type: string
-          description: "A mapping of converted prices for major currencies such as\
-            \ ETH, USD. All converted prices are fee-inclusive."
-          example:
-            ETH: "0.0058079775"
-            USD: "15.89"
-          nullable: true
-          type: object
         token_id:
           description: Token ID
           example: "1"
@@ -9219,7 +9223,6 @@ components:
       required:
       - amount
       - contract_address
-      - converted_prices
       - creator
       - listing_id
       - price_details
@@ -9237,6 +9240,9 @@ components:
           - type: TAKER_ECOSYSTEM
             recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
             amount: "1000000000000000000"
+          converted_prices:
+            ETH: "0.0058079775"
+            USD: "15.89"
           token:
             symbol: IMX
             type: NATIVE
@@ -9246,6 +9252,9 @@ components:
           - type: TAKER_ECOSYSTEM
             recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
             amount: "1000000000000000000"
+          converted_prices:
+            ETH: "0.0058079775"
+            USD: "15.89"
           token:
             symbol: IMX
             type: NATIVE
@@ -9302,6 +9311,9 @@ components:
             - type: TAKER_ECOSYSTEM
               recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
               amount: "1000000000000000000"
+            converted_prices:
+              ETH: "0.0058079775"
+              USD: "15.89"
             token:
               symbol: IMX
               type: NATIVE
@@ -9311,6 +9323,9 @@ components:
             - type: TAKER_ECOSYSTEM
               recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
               amount: "1000000000000000000"
+            converted_prices:
+              ETH: "0.0058079775"
+              USD: "15.89"
             token:
               symbol: IMX
               type: NATIVE
@@ -9345,13 +9360,13 @@ components:
             - type: TAKER_ECOSYSTEM
               recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
               amount: "1000000000000000000"
+            converted_prices:
+              ETH: "0.0058079775"
+              USD: "15.89"
             token:
               symbol: IMX
               type: NATIVE
             fee_inclusive_amount: "9750000000000000000"
-          converted_prices:
-            ETH: "0.0058079775"
-            USD: "15.89"
           contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
         - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           amount: "1"
@@ -9363,13 +9378,13 @@ components:
             - type: TAKER_ECOSYSTEM
               recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
               amount: "1000000000000000000"
+            converted_prices:
+              ETH: "0.0058079775"
+              USD: "15.89"
             token:
               symbol: IMX
               type: NATIVE
             fee_inclusive_amount: "9750000000000000000"
-          converted_prices:
-            ETH: "0.0058079775"
-            USD: "15.89"
           contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
         - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           amount: "1"
@@ -9381,13 +9396,13 @@ components:
             - type: TAKER_ECOSYSTEM
               recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
               amount: "1000000000000000000"
+            converted_prices:
+              ETH: "0.0058079775"
+              USD: "15.89"
             token:
               symbol: IMX
               type: NATIVE
             fee_inclusive_amount: "9750000000000000000"
-          converted_prices:
-            ETH: "0.0058079775"
-            USD: "15.89"
           contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
         - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           amount: "1"
@@ -9399,13 +9414,13 @@ components:
             - type: TAKER_ECOSYSTEM
               recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
               amount: "1000000000000000000"
+            converted_prices:
+              ETH: "0.0058079775"
+              USD: "15.89"
             token:
               symbol: IMX
               type: NATIVE
             fee_inclusive_amount: "9750000000000000000"
-          converted_prices:
-            ETH: "0.0058079775"
-            USD: "15.89"
           contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
         - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           amount: "1"
@@ -9417,13 +9432,13 @@ components:
             - type: TAKER_ECOSYSTEM
               recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
               amount: "1000000000000000000"
+            converted_prices:
+              ETH: "0.0058079775"
+              USD: "15.89"
             token:
               symbol: IMX
               type: NATIVE
             fee_inclusive_amount: "9750000000000000000"
-          converted_prices:
-            ETH: "0.0058079775"
-            USD: "15.89"
           contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
         nft_with_stack:
           image: https://some-url
@@ -9483,13 +9498,13 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
               fee_inclusive_amount: "9750000000000000000"
-            converted_prices:
-              ETH: "0.0058079775"
-              USD: "15.89"
             contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
             amount: "1"
@@ -9501,13 +9516,13 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
               fee_inclusive_amount: "9750000000000000000"
-            converted_prices:
-              ETH: "0.0058079775"
-              USD: "15.89"
             contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
             amount: "1"
@@ -9519,13 +9534,13 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
               fee_inclusive_amount: "9750000000000000000"
-            converted_prices:
-              ETH: "0.0058079775"
-              USD: "15.89"
             contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
             amount: "1"
@@ -9537,13 +9552,13 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
               fee_inclusive_amount: "9750000000000000000"
-            converted_prices:
-              ETH: "0.0058079775"
-              USD: "15.89"
             contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
             amount: "1"
@@ -9555,13 +9570,13 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
               fee_inclusive_amount: "9750000000000000000"
-            converted_prices:
-              ETH: "0.0058079775"
-              USD: "15.89"
             contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           nft_with_stack:
             image: https://some-url
@@ -9599,13 +9614,13 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
               fee_inclusive_amount: "9750000000000000000"
-            converted_prices:
-              ETH: "0.0058079775"
-              USD: "15.89"
             contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
             amount: "1"
@@ -9617,13 +9632,13 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
               fee_inclusive_amount: "9750000000000000000"
-            converted_prices:
-              ETH: "0.0058079775"
-              USD: "15.89"
             contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
             amount: "1"
@@ -9635,13 +9650,13 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
               fee_inclusive_amount: "9750000000000000000"
-            converted_prices:
-              ETH: "0.0058079775"
-              USD: "15.89"
             contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
             amount: "1"
@@ -9653,13 +9668,13 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
               fee_inclusive_amount: "9750000000000000000"
-            converted_prices:
-              ETH: "0.0058079775"
-              USD: "15.89"
             contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
             amount: "1"
@@ -9671,13 +9686,13 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
               fee_inclusive_amount: "9750000000000000000"
-            converted_prices:
-              ETH: "0.0058079775"
-              USD: "15.89"
             contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           nft_with_stack:
             image: https://some-url
@@ -9830,13 +9845,13 @@ components:
             - type: TAKER_ECOSYSTEM
               recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
               amount: "1000000000000000000"
+            converted_prices:
+              ETH: "0.0058079775"
+              USD: "15.89"
             token:
               symbol: IMX
               type: NATIVE
             fee_inclusive_amount: "9750000000000000000"
-          converted_prices:
-            ETH: "0.0058079775"
-            USD: "15.89"
           contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
         - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           amount: "1"
@@ -9848,13 +9863,13 @@ components:
             - type: TAKER_ECOSYSTEM
               recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
               amount: "1000000000000000000"
+            converted_prices:
+              ETH: "0.0058079775"
+              USD: "15.89"
             token:
               symbol: IMX
               type: NATIVE
             fee_inclusive_amount: "9750000000000000000"
-          converted_prices:
-            ETH: "0.0058079775"
-            USD: "15.89"
           contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
         - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           amount: "1"
@@ -9866,13 +9881,13 @@ components:
             - type: TAKER_ECOSYSTEM
               recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
               amount: "1000000000000000000"
+            converted_prices:
+              ETH: "0.0058079775"
+              USD: "15.89"
             token:
               symbol: IMX
               type: NATIVE
             fee_inclusive_amount: "9750000000000000000"
-          converted_prices:
-            ETH: "0.0058079775"
-            USD: "15.89"
           contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
         - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           amount: "1"
@@ -9884,13 +9899,13 @@ components:
             - type: TAKER_ECOSYSTEM
               recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
               amount: "1000000000000000000"
+            converted_prices:
+              ETH: "0.0058079775"
+              USD: "15.89"
             token:
               symbol: IMX
               type: NATIVE
             fee_inclusive_amount: "9750000000000000000"
-          converted_prices:
-            ETH: "0.0058079775"
-            USD: "15.89"
           contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
         - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           amount: "1"
@@ -9902,13 +9917,13 @@ components:
             - type: TAKER_ECOSYSTEM
               recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
               amount: "1000000000000000000"
+            converted_prices:
+              ETH: "0.0058079775"
+              USD: "15.89"
             token:
               symbol: IMX
               type: NATIVE
             fee_inclusive_amount: "9750000000000000000"
-          converted_prices:
-            ETH: "0.0058079775"
-            USD: "15.89"
           contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
         stack:
           image: https://some-url
@@ -9972,13 +9987,13 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
               fee_inclusive_amount: "9750000000000000000"
-            converted_prices:
-              ETH: "0.0058079775"
-              USD: "15.89"
             contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
             amount: "1"
@@ -9990,13 +10005,13 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
               fee_inclusive_amount: "9750000000000000000"
-            converted_prices:
-              ETH: "0.0058079775"
-              USD: "15.89"
             contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
             amount: "1"
@@ -10008,13 +10023,13 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
               fee_inclusive_amount: "9750000000000000000"
-            converted_prices:
-              ETH: "0.0058079775"
-              USD: "15.89"
             contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
             amount: "1"
@@ -10026,13 +10041,13 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
               fee_inclusive_amount: "9750000000000000000"
-            converted_prices:
-              ETH: "0.0058079775"
-              USD: "15.89"
             contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
             amount: "1"
@@ -10044,13 +10059,13 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
               fee_inclusive_amount: "9750000000000000000"
-            converted_prices:
-              ETH: "0.0058079775"
-              USD: "15.89"
             contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           stack:
             image: https://some-url
@@ -10087,13 +10102,13 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
               fee_inclusive_amount: "9750000000000000000"
-            converted_prices:
-              ETH: "0.0058079775"
-              USD: "15.89"
             contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
             amount: "1"
@@ -10105,13 +10120,13 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
               fee_inclusive_amount: "9750000000000000000"
-            converted_prices:
-              ETH: "0.0058079775"
-              USD: "15.89"
             contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
             amount: "1"
@@ -10123,13 +10138,13 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
               fee_inclusive_amount: "9750000000000000000"
-            converted_prices:
-              ETH: "0.0058079775"
-              USD: "15.89"
             contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
             amount: "1"
@@ -10141,13 +10156,13 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
               fee_inclusive_amount: "9750000000000000000"
-            converted_prices:
-              ETH: "0.0058079775"
-              USD: "15.89"
             contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
             amount: "1"
@@ -10159,13 +10174,13 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
               fee_inclusive_amount: "9750000000000000000"
-            converted_prices:
-              ETH: "0.0058079775"
-              USD: "15.89"
             contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           stack:
             image: https://some-url
@@ -10222,6 +10237,9 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
@@ -10231,6 +10249,9 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
@@ -10250,6 +10271,9 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
@@ -10259,6 +10283,9 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
@@ -10300,6 +10327,9 @@ components:
                 - type: TAKER_ECOSYSTEM
                   recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                   amount: "1000000000000000000"
+                converted_prices:
+                  ETH: "0.0058079775"
+                  USD: "15.89"
                 token:
                   symbol: IMX
                   type: NATIVE
@@ -10309,6 +10339,9 @@ components:
                 - type: TAKER_ECOSYSTEM
                   recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                   amount: "1000000000000000000"
+                converted_prices:
+                  ETH: "0.0058079775"
+                  USD: "15.89"
                 token:
                   symbol: IMX
                   type: NATIVE
@@ -10328,6 +10361,9 @@ components:
                 - type: TAKER_ECOSYSTEM
                   recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                   amount: "1000000000000000000"
+                converted_prices:
+                  ETH: "0.0058079775"
+                  USD: "15.89"
                 token:
                   symbol: IMX
                   type: NATIVE
@@ -10337,6 +10373,9 @@ components:
                 - type: TAKER_ECOSYSTEM
                   recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                   amount: "1000000000000000000"
+                converted_prices:
+                  ETH: "0.0058079775"
+                  USD: "15.89"
                 token:
                   symbol: IMX
                   type: NATIVE
@@ -10358,6 +10397,9 @@ components:
                 - type: TAKER_ECOSYSTEM
                   recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                   amount: "1000000000000000000"
+                converted_prices:
+                  ETH: "0.0058079775"
+                  USD: "15.89"
                 token:
                   symbol: IMX
                   type: NATIVE
@@ -10367,6 +10409,9 @@ components:
                 - type: TAKER_ECOSYSTEM
                   recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                   amount: "1000000000000000000"
+                converted_prices:
+                  ETH: "0.0058079775"
+                  USD: "15.89"
                 token:
                   symbol: IMX
                   type: NATIVE
@@ -10386,6 +10431,9 @@ components:
                 - type: TAKER_ECOSYSTEM
                   recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                   amount: "1000000000000000000"
+                converted_prices:
+                  ETH: "0.0058079775"
+                  USD: "15.89"
                 token:
                   symbol: IMX
                   type: NATIVE
@@ -10395,6 +10443,9 @@ components:
                 - type: TAKER_ECOSYSTEM
                   recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                   amount: "1000000000000000000"
+                converted_prices:
+                  ETH: "0.0058079775"
+                  USD: "15.89"
                 token:
                   symbol: IMX
                   type: NATIVE
@@ -10430,6 +10481,9 @@ components:
             - type: TAKER_ECOSYSTEM
               recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
               amount: "1000000000000000000"
+            converted_prices:
+              ETH: "0.0058079775"
+              USD: "15.89"
             token:
               symbol: IMX
               type: NATIVE
@@ -10439,6 +10493,9 @@ components:
             - type: TAKER_ECOSYSTEM
               recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
               amount: "1000000000000000000"
+            converted_prices:
+              ETH: "0.0058079775"
+              USD: "15.89"
             token:
               symbol: IMX
               type: NATIVE
@@ -10469,6 +10526,9 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
@@ -10478,6 +10538,9 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
@@ -10496,6 +10559,9 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
@@ -10505,6 +10571,9 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
@@ -10522,6 +10591,9 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
@@ -10531,6 +10603,9 @@ components:
               - type: TAKER_ECOSYSTEM
                 recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                 amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
               token:
                 symbol: IMX
                 type: NATIVE
@@ -10576,6 +10651,9 @@ components:
                 - type: TAKER_ECOSYSTEM
                   recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                   amount: "1000000000000000000"
+                converted_prices:
+                  ETH: "0.0058079775"
+                  USD: "15.89"
                 token:
                   symbol: IMX
                   type: NATIVE
@@ -10585,6 +10663,9 @@ components:
                 - type: TAKER_ECOSYSTEM
                   recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                   amount: "1000000000000000000"
+                converted_prices:
+                  ETH: "0.0058079775"
+                  USD: "15.89"
                 token:
                   symbol: IMX
                   type: NATIVE
@@ -10603,6 +10684,9 @@ components:
                 - type: TAKER_ECOSYSTEM
                   recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                   amount: "1000000000000000000"
+                converted_prices:
+                  ETH: "0.0058079775"
+                  USD: "15.89"
                 token:
                   symbol: IMX
                   type: NATIVE
@@ -10612,6 +10696,9 @@ components:
                 - type: TAKER_ECOSYSTEM
                   recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                   amount: "1000000000000000000"
+                converted_prices:
+                  ETH: "0.0058079775"
+                  USD: "15.89"
                 token:
                   symbol: IMX
                   type: NATIVE
@@ -10629,6 +10716,9 @@ components:
                 - type: TAKER_ECOSYSTEM
                   recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                   amount: "1000000000000000000"
+                converted_prices:
+                  ETH: "0.0058079775"
+                  USD: "15.89"
                 token:
                   symbol: IMX
                   type: NATIVE
@@ -10638,6 +10728,9 @@ components:
                 - type: TAKER_ECOSYSTEM
                   recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                   amount: "1000000000000000000"
+                converted_prices:
+                  ETH: "0.0058079775"
+                  USD: "15.89"
                 token:
                   symbol: IMX
                   type: NATIVE
@@ -10660,6 +10753,9 @@ components:
                 - type: TAKER_ECOSYSTEM
                   recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                   amount: "1000000000000000000"
+                converted_prices:
+                  ETH: "0.0058079775"
+                  USD: "15.89"
                 token:
                   symbol: IMX
                   type: NATIVE
@@ -10669,6 +10765,9 @@ components:
                 - type: TAKER_ECOSYSTEM
                   recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                   amount: "1000000000000000000"
+                converted_prices:
+                  ETH: "0.0058079775"
+                  USD: "15.89"
                 token:
                   symbol: IMX
                   type: NATIVE
@@ -10687,6 +10786,9 @@ components:
                 - type: TAKER_ECOSYSTEM
                   recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                   amount: "1000000000000000000"
+                converted_prices:
+                  ETH: "0.0058079775"
+                  USD: "15.89"
                 token:
                   symbol: IMX
                   type: NATIVE
@@ -10696,6 +10798,9 @@ components:
                 - type: TAKER_ECOSYSTEM
                   recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                   amount: "1000000000000000000"
+                converted_prices:
+                  ETH: "0.0058079775"
+                  USD: "15.89"
                 token:
                   symbol: IMX
                   type: NATIVE
@@ -10713,6 +10818,9 @@ components:
                 - type: TAKER_ECOSYSTEM
                   recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                   amount: "1000000000000000000"
+                converted_prices:
+                  ETH: "0.0058079775"
+                  USD: "15.89"
                 token:
                   symbol: IMX
                   type: NATIVE
@@ -10722,6 +10830,9 @@ components:
                 - type: TAKER_ECOSYSTEM
                   recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
                   amount: "1000000000000000000"
+                converted_prices:
+                  ETH: "0.0058079775"
+                  USD: "15.89"
                 token:
                   symbol: IMX
                   type: NATIVE
