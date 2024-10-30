@@ -56,6 +56,9 @@ app_name="${UNITY_APP_NAME:-SampleApp}"
 # Capture the start time
 start_time=$(date +%s)
 
+# Set permissions for the app bundle
+chmod -R 755 "$app_path"
+
 echo "Starting Unity sample app..."
 open_sample_app "$app_path"
 
