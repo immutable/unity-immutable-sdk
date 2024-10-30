@@ -6,9 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 import time
-from gmail_fetch_otp import fetch_gmail_code
-
-EMAIL = 'user-33f17f82-274b-4269-9ce6-c620e89fcd8d@mailslurp.biz'
+from fetch_otp import EMAIL, fetch_code
 
 # Add chrome.exe to environment variable
 # Download chrome driver and add to environment variable
@@ -46,7 +44,7 @@ def main():
     time.sleep(10)
 
     print("Get OTP from Gmail...")
-    code = fetch_gmail_code()
+    code = fetch_code()
     if code:
         print(f"Successfully fetched OTP: {code}")
     else:
