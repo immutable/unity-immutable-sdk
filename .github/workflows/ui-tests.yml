@@ -65,6 +65,8 @@ jobs:
           - targetPlatform: StandaloneWindows64
             runs-on: [self-hosted, windows]
             test_script: test_windows.ps1
+    concurrency:
+      group: test-${{ matrix.targetPlatform }}
     runs-on: ${{ matrix.runs-on }}
     steps:
       - uses: actions/checkout@v3
