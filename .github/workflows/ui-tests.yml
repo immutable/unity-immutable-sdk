@@ -73,6 +73,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: Build-${{ matrix.targetPlatform }}
+          path: sample/Tests
       - uses: actions/setup-python@v4
         with:
           python-version: "3.10"
@@ -80,12 +81,9 @@ jobs:
         run: pip install -r "sample/Tests/requirements.txt"
       - name: Run UI tests
         env:
-          UNITY_APP_PATH: ${{ github.workspace }}/SampleApp.app
+          UNITY_APP_PATH: SampleApp.app
           UNITY_APP_NAME: SampleApp
           MAILSLURP_API_KEY: ${{ secrets.MAILSLURP_API_KEY }}
         working-directory: sample/Tests
-        run: |
-          chmod -R 755 ${{ github.workspace }}/SampleApp.app
-          chmod +x ${{ matrix.test_script }}
-          ./${{ matrix.test_script }}
+        run: ./${{ matrix.test_script }}
       

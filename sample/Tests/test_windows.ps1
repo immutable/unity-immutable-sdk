@@ -13,7 +13,7 @@ function Stop-SampleApp {
 # Function to start the Unity sample app
 function Start-SampleApp {
     Write-Output "Starting Unity sample app..."
-    Start-Process -FilePath "build\output\Windows64\SampleApp.exe"
+    Start-Process -FilePath "SampleApp.exe"
     Start-Sleep -Seconds 10
 }
 
