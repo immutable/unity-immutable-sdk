@@ -56,7 +56,7 @@ function Login {
     )
     # Start Chrome for remote debugging
     Write-Output "Starting Chrome..."
-    $chromePath = (Get-Command chrome.exe).Source
+    $chromePath = "C:\Program Files\Google\Chrome\Application\chrome.exe"
     Start-Process -FilePath $chromePath -ArgumentList "--remote-debugging-port=9222"
 
     # Run Python script for login
