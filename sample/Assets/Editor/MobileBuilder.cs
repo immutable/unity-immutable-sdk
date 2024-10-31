@@ -6,32 +6,36 @@ using AltTester.AltTesterUnitySDK;
 using System;
 using System.IO;
 
-public class AndroidBuilder
+public class MobileBuilder
 {
-    private const string DefaultBuildPath = "Builds/Android/SampleApp.apk";
+    private const string DefaultAndroidBuildPath = "Builds/Android/SampleApp.apk";
+    private const string DefaultiOSBuildPath = "Builds/iOS";
 
     static void Build()
     {
-        BuildPlayer(DefaultBuildPath, BuildOptions.Development);
+        var platform = GetPlatformFromArgs();
+        string defaultBuildPath = platform == BuildTarget.Android ? DefaultAndroidBuildPath : DefaultiOSBuildPath;
+        BuildPlayer(defaultBuildPath, BuildOptions.Development, platform);
     }
 
     static void BuildForAltTester()
     {
-        BuildPlayer(DefaultBuildPath, BuildOptions.Development | BuildOptions.IncludeTestAssemblies, true);
+        var platform = GetPlatformFromArgs();
+        string defaultBuildPath = platform == BuildTarget.Android ? DefaultAndroidBuildPath : DefaultiOSBuildPath;
+        BuildPlayer(defaultBuildPath, BuildOptions.Development | BuildOptions.IncludeTestAssemblies, platform, true);
     }
 
-
-    private static void BuildPlayer(string defaultBuildPath, BuildOptions buildOptions, bool setupForAltTester = false)
+    private static void BuildPlayer(string defaultBuildPath, BuildOptions buildOptions, BuildTarget platform, bool setupForAltTester = false)
     {
         try
         {
             string buildPath = GetBuildPathFromArgs(defaultBuildPath);
 
-            BuildPlayerOptions buildPlayerOptions = CreateBuildPlayerOptions(buildPath, buildOptions);
+            BuildPlayerOptions buildPlayerOptions = CreateBuildPlayerOptions(buildPath, buildOptions, platform);
 
             if (setupForAltTester)
             {
-                SetupAltTester(buildPlayerOptions);
+                SetupAltTester(buildPlayerOptions, platform);
             }
 
             var results = BuildPipeline.BuildPlayer(buildPlayerOptions);
@@ -39,7 +43,7 @@ public class AndroidBuilder
             if (setupForAltTester)
             {
                 // Clean up AltTester settings after build
-                AltBuilder.RemoveAltTesterFromScriptingDefineSymbols(BuildTargetGroup.Android);
+                AltBuilder.RemoveAltTesterFromScriptingDefineSymbols(platform == BuildTarget.Android ? BuildTargetGroup.Android : BuildTargetGroup.iOS);
                 RemoveAltFromScene(buildPlayerOptions.scenes[0]);
             }
         }
@@ -62,7 +66,20 @@ public class AndroidBuilder
         return defaultBuildPath;
     }
 
-    private static BuildPlayerOptions CreateBuildPlayerOptions(string buildPath, BuildOptions buildOptions)
+    private static BuildTarget GetPlatformFromArgs()
+    {
+        string[] args = Environment.GetCommandLineArgs();
+        for (int i = 0; i < args.Length; i++)
+        {
+            if (args[i] == "--platform" && i + 1 < args.Length)
+            {
+                return args[i + 1].Equals("iOS", StringComparison.OrdinalIgnoreCase) ? BuildTarget.iOS : BuildTarget.Android;
+            }
+        }
+        return BuildTarget.Android; // Default to Android if no platform is specified
+    }
+
+    private static BuildPlayerOptions CreateBuildPlayerOptions(string buildPath, BuildOptions buildOptions, BuildTarget platform)
     {
         return new BuildPlayerOptions
         {
@@ -74,17 +91,18 @@ public class AndroidBuilder
                 "Assets/Scenes/ZkEvmGetBalance.unity",
                 "Assets/Scenes/ZkEvmGetTransactionReceipt.unity",
                 "Assets/Scenes/ZkEvmSendTransaction.unity",
-                "Assets/Scenes/ImxNftTransfer.unity"
+                "Assets/Scenes/ImxNftTransfer.unity",
+                "Assets/Scenes/ZkEVMSignTypedData.unity"
             },
             locationPathName = buildPath,
-            target = BuildTarget.Android,
+            target = platform,
             options = buildOptions
         };
     }
 
-    private static void SetupAltTester(BuildPlayerOptions buildPlayerOptions)
+    private static void SetupAltTester(BuildPlayerOptions buildPlayerOptions, BuildTarget platform)
     {
-        AltBuilder.AddAltTesterInScriptingDefineSymbolsGroup(BuildTargetGroup.Android);
+        AltBuilder.AddAltTesterInScriptingDefineSymbolsGroup(platform == BuildTarget.Android ? BuildTargetGroup.Android : BuildTargetGroup.iOS);
         AltBuilder.CreateJsonFileForInputMappingOfAxis();
 
         var instrumentationSettings = new AltInstrumentationSettings();
