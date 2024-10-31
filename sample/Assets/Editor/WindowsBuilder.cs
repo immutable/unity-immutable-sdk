@@ -71,7 +71,8 @@ public class WindowsBuilder
                 "Assets/Scenes/ZkEvmGetBalance.unity",
                 "Assets/Scenes/ZkEvmGetTransactionReceipt.unity",
                 "Assets/Scenes/ZkEvmSendTransaction.unity",
-                "Assets/Scenes/ImxNftTransfer.unity"
+                "Assets/Scenes/ImxNftTransfer.unity",
+                "Assets/Scenes/ZkEVMSignTypedData.unity"
             },
             locationPathName = buildPath,
             target = BuildTarget.StandaloneWindows64,
