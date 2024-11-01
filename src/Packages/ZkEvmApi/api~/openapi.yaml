@@ -57,9 +57,8 @@ tags:
 - description: Pricing Endpoints
   name: pricing
   x-displayName: pricing
-- description: Stacks Endpoints
-  name: stacks
-  x-displayName: stacks
+- name: metadata-search
+  x-displayName: metadata-search
 paths:
   /v1/chains/{chain_name}/activity-history:
     get:
@@ -3320,10 +3319,9 @@ paths:
       summary: Get all info for a Passport user
       tags:
       - passport profile
-  /experimental/chains/{chain_name}/search/filters/{contract_address}:
+  /v1/chains/{chain_name}/search/filters/{contract_address}:
     get:
-      description: "![Experimental](https://img.shields.io/badge/status-experimental-yellow)\
-        \ Get list of metadata filters"
+      description: Get list of metadata filters
       operationId: ListFilters
       parameters:
       - description: The name of chain
@@ -3394,14 +3392,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/APIError500'
           description: Internal Server Error (500)
-      summary: "Experimental: Get list of metadata attribute filters"
+      summary: Get list of metadata attribute filters
       tags:
-      - stacks
+      - metadata-search
       x-hide-from-sdk: true
-  /experimental/chains/{chain_name}/search/nfts:
+  /v1/chains/{chain_name}/search/nfts:
     get:
-      description: "![Experimental](https://img.shields.io/badge/status-experimental-yellow)\
-        \ Search NFTs"
+      description: Search NFTs
       operationId: SearchNFTs
       parameters:
       - description: The name of chain
@@ -3526,14 +3523,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/APIError500'
           description: Internal Server Error (500)
-      summary: "Experimental: Search NFTs"
+      summary: Search NFTs
       tags:
-      - stacks
+      - metadata-search
       x-hide-from-sdk: true
-  /experimental/chains/{chain_name}/search/stacks:
+  /v1/chains/{chain_name}/search/stacks:
     get:
-      description: "![Experimental](https://img.shields.io/badge/status-experimental-yellow)\
-        \ Search NFT stacks"
+      description: Search NFT stacks
       operationId: SearchStacks
       parameters:
       - description: The name of chain
@@ -3685,14 +3681,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/APIError500'
           description: Internal Server Error (500)
-      summary: "Experimental: Search NFT stacks"
+      summary: Search NFT stacks
       tags:
-      - stacks
+      - metadata-search
       x-hide-from-sdk: true
-  /experimental/chains/{chain_name}/stacks:
+  /v1/chains/{chain_name}/stacks:
     get:
-      description: "![Experimental](https://img.shields.io/badge/status-experimental-yellow)\
-        \ NFT stacks"
+      description: "List NFT stack bundles by stack_id. This endpoint functions similarly\
+        \ to `ListMetadataByID` but extends the response to include Market, Listings\
+        \ & Stack Count information for each stack."
       operationId: ListStacks
       parameters:
       - description: The name of chain
@@ -3770,14 +3767,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/APIError500'
           description: Internal Server Error (500)
-      summary: "Experimental: List NFT stacks by stack_id"
+      summary: "List NFT stack bundles by stack_id. Response will include Market,\
+        \ Listings & Stack Count information for each stack"
       tags:
-      - stacks
+      - metadata
       x-hide-from-sdk: true
-  /experimental/chains/{chain_name}/quotes/{contract_address}/stacks:
+  /v1/chains/{chain_name}/quotes/{contract_address}/stacks:
     get:
-      description: "![Experimental](https://img.shields.io/badge/status-experimental-yellow)\
-        \ Get pricing data for a list of stack ids"
+      description: Get pricing data for a list of stack ids
       operationId: QuotesForStacks
       parameters:
       - description: The name of chain
@@ -3870,14 +3867,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/APIError500'
           description: Internal Server Error (500)
-      summary: "Experimental: Get pricing data for a list of stack ids"
+      summary: Get pricing data for a list of stack ids
       tags:
       - pricing
       x-hide-from-sdk: true
-  /experimental/chains/{chain_name}/quotes/{contract_address}/nfts:
+  /v1/chains/{chain_name}/quotes/{contract_address}/nfts:
     get:
-      description: "![Experimental](https://img.shields.io/badge/status-experimental-yellow)\
-        \ Get pricing data for a list of token ids"
+      description: pricing data for a list of token ids
       operationId: QuotesForNFTs
       parameters:
       - description: The name of chain
@@ -3969,7 +3965,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/APIError500'
           description: Internal Server Error (500)
-      summary: "Experimental: Get pricing data for a list of token ids"
+      summary: Get pricing data for a list of token ids
       tags:
       - pricing
       x-hide-from-sdk: true
@@ -11099,33 +11095,4 @@ components:
       name: x-immutable-api-key
       type: apiKey
       x-go-name: ImmutableApiKey
-x-tagGroups:
-- name: Multi Rollup API
-  tags:
-  - activities
-  - chains
-  - collections
-  - nfts
-  - nft owners
-  - metadata
-  - tokens
-  - demopage
-  - verification
-  - operatorallowlist
-  - crafting
-  - listings
-  - orders
-- name: Passport MR
-  tags:
-  - passport
-- name: Passport Profile Service API
-  tags:
-  - passport profile
-- name: Guardian
-  tags:
-  - guardian
-- name: Indexer Marketplace APIs
-  tags:
-  - pricing
-  - stacks
 
