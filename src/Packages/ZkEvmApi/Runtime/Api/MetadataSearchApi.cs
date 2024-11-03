@@ -24,14 +24,14 @@ namespace Immutable.Api.ZkEvm.Api
     /// <summary>
     /// Represents a collection of functions to interact with the API endpoints
     /// </summary>
-    public interface IStacksApiSync : IApiAccessor
+    public interface IMetadataSearchApiSync : IApiAccessor
     {
         #region Synchronous Operations
         /// <summary>
-        /// Experimental: Get list of metadata attribute filters
+        /// Get list of metadata attribute filters
         /// </summary>
         /// <remarks>
-        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get list of metadata filters
+        /// Get list of metadata filters
         /// </remarks>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -40,10 +40,10 @@ namespace Immutable.Api.ZkEvm.Api
         ListFiltersResult ListFilters(string chainName, string contractAddress);
 
         /// <summary>
-        /// Experimental: Get list of metadata attribute filters
+        /// Get list of metadata attribute filters
         /// </summary>
         /// <remarks>
-        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get list of metadata filters
+        /// Get list of metadata filters
         /// </remarks>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -51,33 +51,10 @@ namespace Immutable.Api.ZkEvm.Api
         /// <returns>ApiResponse of ListFiltersResult</returns>
         ApiResponse<ListFiltersResult> ListFiltersWithHttpInfo(string chainName, string contractAddress);
         /// <summary>
-        /// Experimental: List NFT stacks by stack_id
+        /// Search NFTs
         /// </summary>
         /// <remarks>
-        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) NFT stacks
-        /// </remarks>
-        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="chainName">The name of chain</param>
-        /// <param name="stackId">List of stack_id to filter by</param>
-        /// <returns>List&lt;StackBundle&gt;</returns>
-        List<StackBundle> ListStacks(string chainName, List<Guid> stackId);
-
-        /// <summary>
-        /// Experimental: List NFT stacks by stack_id
-        /// </summary>
-        /// <remarks>
-        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) NFT stacks
-        /// </remarks>
-        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="chainName">The name of chain</param>
-        /// <param name="stackId">List of stack_id to filter by</param>
-        /// <returns>ApiResponse of List&lt;StackBundle&gt;</returns>
-        ApiResponse<List<StackBundle>> ListStacksWithHttpInfo(string chainName, List<Guid> stackId);
-        /// <summary>
-        /// Experimental: Search NFTs
-        /// </summary>
-        /// <remarks>
-        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Search NFTs
+        /// Search NFTs
         /// </remarks>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -91,10 +68,10 @@ namespace Immutable.Api.ZkEvm.Api
         SearchNFTsResult SearchNFTs(string chainName, List<string> contractAddress, string? accountAddress = default(string?), List<Guid>? stackId = default(List<Guid>?), bool? onlyIncludeOwnerListings = default(bool?), int? pageSize = default(int?), string? pageCursor = default(string?));
 
         /// <summary>
-        /// Experimental: Search NFTs
+        /// Search NFTs
         /// </summary>
         /// <remarks>
-        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Search NFTs
+        /// Search NFTs
         /// </remarks>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -107,10 +84,10 @@ namespace Immutable.Api.ZkEvm.Api
         /// <returns>ApiResponse of SearchNFTsResult</returns>
         ApiResponse<SearchNFTsResult> SearchNFTsWithHttpInfo(string chainName, List<string> contractAddress, string? accountAddress = default(string?), List<Guid>? stackId = default(List<Guid>?), bool? onlyIncludeOwnerListings = default(bool?), int? pageSize = default(int?), string? pageCursor = default(string?));
         /// <summary>
-        /// Experimental: Search NFT stacks
+        /// Search NFT stacks
         /// </summary>
         /// <remarks>
-        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Search NFT stacks
+        /// Search NFT stacks
         /// </remarks>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -127,10 +104,10 @@ namespace Immutable.Api.ZkEvm.Api
         SearchStacksResult SearchStacks(string chainName, List<string> contractAddress, string? accountAddress = default(string?), bool? onlyIncludeOwnerListings = default(bool?), bool? onlyIfHasActiveListings = default(bool?), string? traits = default(string?), string? keyword = default(string?), string? sortBy = default(string?), int? pageSize = default(int?), string? pageCursor = default(string?));
 
         /// <summary>
-        /// Experimental: Search NFT stacks
+        /// Search NFT stacks
         /// </summary>
         /// <remarks>
-        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Search NFT stacks
+        /// Search NFT stacks
         /// </remarks>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -151,14 +128,14 @@ namespace Immutable.Api.ZkEvm.Api
     /// <summary>
     /// Represents a collection of functions to interact with the API endpoints
     /// </summary>
-    public interface IStacksApiAsync : IApiAccessor
+    public interface IMetadataSearchApiAsync : IApiAccessor
     {
         #region Asynchronous Operations
         /// <summary>
-        /// Experimental: Get list of metadata attribute filters
+        /// Get list of metadata attribute filters
         /// </summary>
         /// <remarks>
-        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get list of metadata filters
+        /// Get list of metadata filters
         /// </remarks>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -168,10 +145,10 @@ namespace Immutable.Api.ZkEvm.Api
         System.Threading.Tasks.Task<ListFiltersResult> ListFiltersAsync(string chainName, string contractAddress, System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
 
         /// <summary>
-        /// Experimental: Get list of metadata attribute filters
+        /// Get list of metadata attribute filters
         /// </summary>
         /// <remarks>
-        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get list of metadata filters
+        /// Get list of metadata filters
         /// </remarks>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -180,35 +157,10 @@ namespace Immutable.Api.ZkEvm.Api
         /// <returns>Task of ApiResponse (ListFiltersResult)</returns>
         System.Threading.Tasks.Task<ApiResponse<ListFiltersResult>> ListFiltersWithHttpInfoAsync(string chainName, string contractAddress, System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
         /// <summary>
-        /// Experimental: List NFT stacks by stack_id
+        /// Search NFTs
         /// </summary>
         /// <remarks>
-        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) NFT stacks
-        /// </remarks>
-        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="chainName">The name of chain</param>
-        /// <param name="stackId">List of stack_id to filter by</param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of List&lt;StackBundle&gt;</returns>
-        System.Threading.Tasks.Task<List<StackBundle>> ListStacksAsync(string chainName, List<Guid> stackId, System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
-
-        /// <summary>
-        /// Experimental: List NFT stacks by stack_id
-        /// </summary>
-        /// <remarks>
-        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) NFT stacks
-        /// </remarks>
-        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="chainName">The name of chain</param>
-        /// <param name="stackId">List of stack_id to filter by</param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse (List&lt;StackBundle&gt;)</returns>
-        System.Threading.Tasks.Task<ApiResponse<List<StackBundle>>> ListStacksWithHttpInfoAsync(string chainName, List<Guid> stackId, System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
-        /// <summary>
-        /// Experimental: Search NFTs
-        /// </summary>
-        /// <remarks>
-        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Search NFTs
+        /// Search NFTs
         /// </remarks>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -223,10 +175,10 @@ namespace Immutable.Api.ZkEvm.Api
         System.Threading.Tasks.Task<SearchNFTsResult> SearchNFTsAsync(string chainName, List<string> contractAddress, string? accountAddress = default(string?), List<Guid>? stackId = default(List<Guid>?), bool? onlyIncludeOwnerListings = default(bool?), int? pageSize = default(int?), string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
 
         /// <summary>
-        /// Experimental: Search NFTs
+        /// Search NFTs
         /// </summary>
         /// <remarks>
-        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Search NFTs
+        /// Search NFTs
         /// </remarks>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -240,10 +192,10 @@ namespace Immutable.Api.ZkEvm.Api
         /// <returns>Task of ApiResponse (SearchNFTsResult)</returns>
         System.Threading.Tasks.Task<ApiResponse<SearchNFTsResult>> SearchNFTsWithHttpInfoAsync(string chainName, List<string> contractAddress, string? accountAddress = default(string?), List<Guid>? stackId = default(List<Guid>?), bool? onlyIncludeOwnerListings = default(bool?), int? pageSize = default(int?), string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
         /// <summary>
-        /// Experimental: Search NFT stacks
+        /// Search NFT stacks
         /// </summary>
         /// <remarks>
-        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Search NFT stacks
+        /// Search NFT stacks
         /// </remarks>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -261,10 +213,10 @@ namespace Immutable.Api.ZkEvm.Api
         System.Threading.Tasks.Task<SearchStacksResult> SearchStacksAsync(string chainName, List<string> contractAddress, string? accountAddress = default(string?), bool? onlyIncludeOwnerListings = default(bool?), bool? onlyIfHasActiveListings = default(bool?), string? traits = default(string?), string? keyword = default(string?), string? sortBy = default(string?), int? pageSize = default(int?), string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
 
         /// <summary>
-        /// Experimental: Search NFT stacks
+        /// Search NFT stacks
         /// </summary>
         /// <remarks>
-        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Search NFT stacks
+        /// Search NFT stacks
         /// </remarks>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -286,7 +238,7 @@ namespace Immutable.Api.ZkEvm.Api
     /// <summary>
     /// Represents a collection of functions to interact with the API endpoints
     /// </summary>
-    public interface IStacksApi : IStacksApiSync, IStacksApiAsync
+    public interface IMetadataSearchApi : IMetadataSearchApiSync, IMetadataSearchApiAsync
     {
 
     }
@@ -294,29 +246,29 @@ namespace Immutable.Api.ZkEvm.Api
     /// <summary>
     /// Represents a collection of functions to interact with the API endpoints
     /// </summary>
-    public partial class StacksApi : IDisposable, IStacksApi
+    public partial class MetadataSearchApi : IDisposable, IMetadataSearchApi
     {
         private Immutable.Api.ZkEvm.Client.ExceptionFactory _exceptionFactory = (name, response) => null;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="StacksApi"/> class.
+        /// Initializes a new instance of the <see cref="MetadataSearchApi"/> class.
         /// **IMPORTANT** This will also create an instance of HttpClient, which is less than ideal.
         /// It's better to reuse the <see href="https://docs.microsoft.com/en-us/dotnet/architecture/microservices/implement-resilient-applications/use-httpclientfactory-to-implement-resilient-http-requests#issues-with-the-original-httpclient-class-available-in-net">HttpClient and HttpClientHandler</see>.
         /// </summary>
         /// <returns></returns>
-        public StacksApi() : this((string)null)
+        public MetadataSearchApi() : this((string)null)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="StacksApi"/> class.
+        /// Initializes a new instance of the <see cref="MetadataSearchApi"/> class.
         /// **IMPORTANT** This will also create an instance of HttpClient, which is less than ideal.
         /// It's better to reuse the <see href="https://docs.microsoft.com/en-us/dotnet/architecture/microservices/implement-resilient-applications/use-httpclientfactory-to-implement-resilient-http-requests#issues-with-the-original-httpclient-class-available-in-net">HttpClient and HttpClientHandler</see>.
         /// </summary>
         /// <param name="basePath">The target service's base path in URL format.</param>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
-        public StacksApi(string basePath)
+        public MetadataSearchApi(string basePath)
         {
             this.Configuration = Immutable.Api.ZkEvm.Client.Configuration.MergeConfigurations(
                 Immutable.Api.ZkEvm.Client.GlobalConfiguration.Instance,
@@ -329,14 +281,14 @@ namespace Immutable.Api.ZkEvm.Api
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="StacksApi"/> class using Configuration object.
+        /// Initializes a new instance of the <see cref="MetadataSearchApi"/> class using Configuration object.
         /// **IMPORTANT** This will also create an instance of HttpClient, which is less than ideal.
         /// It's better to reuse the <see href="https://docs.microsoft.com/en-us/dotnet/architecture/microservices/implement-resilient-applications/use-httpclientfactory-to-implement-resilient-http-requests#issues-with-the-original-httpclient-class-available-in-net">HttpClient and HttpClientHandler</see>.
         /// </summary>
         /// <param name="configuration">An instance of Configuration.</param>
         /// <exception cref="ArgumentNullException"></exception>
         /// <returns></returns>
-        public StacksApi(Immutable.Api.ZkEvm.Client.Configuration configuration)
+        public MetadataSearchApi(Immutable.Api.ZkEvm.Client.Configuration configuration)
         {
             if (configuration == null) throw new ArgumentNullException("configuration");
 
@@ -351,14 +303,14 @@ namespace Immutable.Api.ZkEvm.Api
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="StacksApi"/> class
+        /// Initializes a new instance of the <see cref="MetadataSearchApi"/> class
         /// using a Configuration object and client instance.
         /// </summary>
         /// <param name="client">The client interface for synchronous API access.</param>
         /// <param name="asyncClient">The client interface for asynchronous API access.</param>
         /// <param name="configuration">The configuration object.</param>
         /// <exception cref="ArgumentNullException"></exception>
-        public StacksApi(Immutable.Api.ZkEvm.Client.ISynchronousClient client, Immutable.Api.ZkEvm.Client.IAsynchronousClient asyncClient, Immutable.Api.ZkEvm.Client.IReadableConfiguration configuration)
+        public MetadataSearchApi(Immutable.Api.ZkEvm.Client.ISynchronousClient client, Immutable.Api.ZkEvm.Client.IAsynchronousClient asyncClient, Immutable.Api.ZkEvm.Client.IReadableConfiguration configuration)
         {
             if (client == null) throw new ArgumentNullException("client");
             if (asyncClient == null) throw new ArgumentNullException("asyncClient");
@@ -425,7 +377,7 @@ namespace Immutable.Api.ZkEvm.Api
         }
 
         /// <summary>
-        /// Experimental: Get list of metadata attribute filters ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get list of metadata filters
+        /// Get list of metadata attribute filters Get list of metadata filters
         /// </summary>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -438,7 +390,7 @@ namespace Immutable.Api.ZkEvm.Api
         }
 
         /// <summary>
-        /// Experimental: Get list of metadata attribute filters ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get list of metadata filters
+        /// Get list of metadata attribute filters Get list of metadata filters
         /// </summary>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -448,11 +400,11 @@ namespace Immutable.Api.ZkEvm.Api
         {
             // verify the required parameter 'chainName' is set
             if (chainName == null)
-                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'chainName' when calling StacksApi->ListFilters");
+                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'chainName' when calling MetadataSearchApi->ListFilters");
 
             // verify the required parameter 'contractAddress' is set
             if (contractAddress == null)
-                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'contractAddress' when calling StacksApi->ListFilters");
+                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'contractAddress' when calling MetadataSearchApi->ListFilters");
 
             Immutable.Api.ZkEvm.Client.RequestOptions localVarRequestOptions = new Immutable.Api.ZkEvm.Client.RequestOptions();
 
@@ -475,7 +427,7 @@ namespace Immutable.Api.ZkEvm.Api
 
 
             // make the HTTP request
-            var localVarResponse = this.Client.Get<ListFiltersResult>("/experimental/chains/{chain_name}/search/filters/{contract_address}", localVarRequestOptions, this.Configuration);
+            var localVarResponse = this.Client.Get<ListFiltersResult>("/v1/chains/{chain_name}/search/filters/{contract_address}", localVarRequestOptions, this.Configuration);
 
             if (this.ExceptionFactory != null)
             {
@@ -487,7 +439,7 @@ namespace Immutable.Api.ZkEvm.Api
         }
 
         /// <summary>
-        /// Experimental: Get list of metadata attribute filters ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get list of metadata filters
+        /// Get list of metadata attribute filters Get list of metadata filters
         /// </summary>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -506,7 +458,7 @@ namespace Immutable.Api.ZkEvm.Api
         }
 
         /// <summary>
-        /// Experimental: Get list of metadata attribute filters ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get list of metadata filters
+        /// Get list of metadata attribute filters Get list of metadata filters
         /// </summary>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -517,11 +469,11 @@ namespace Immutable.Api.ZkEvm.Api
         {
             // verify the required parameter 'chainName' is set
             if (chainName == null)
-                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'chainName' when calling StacksApi->ListFilters");
+                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'chainName' when calling MetadataSearchApi->ListFilters");
 
             // verify the required parameter 'contractAddress' is set
             if (contractAddress == null)
-                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'contractAddress' when calling StacksApi->ListFilters");
+                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'contractAddress' when calling MetadataSearchApi->ListFilters");
 
 
             Immutable.Api.ZkEvm.Client.RequestOptions localVarRequestOptions = new Immutable.Api.ZkEvm.Client.RequestOptions();
@@ -547,7 +499,7 @@ namespace Immutable.Api.ZkEvm.Api
 
             // make the HTTP request
 
-            var task = this.AsynchronousClient.GetAsync<ListFiltersResult>("/experimental/chains/{chain_name}/search/filters/{contract_address}", localVarRequestOptions, this.Configuration, cancellationToken);
+            var task = this.AsynchronousClient.GetAsync<ListFiltersResult>("/v1/chains/{chain_name}/search/filters/{contract_address}", localVarRequestOptions, this.Configuration, cancellationToken);
 
 #if UNITY_EDITOR || !UNITY_WEBGL
             var localVarResponse = await task.ConfigureAwait(false);
@@ -565,147 +517,7 @@ namespace Immutable.Api.ZkEvm.Api
         }
 
         /// <summary>
-        /// Experimental: List NFT stacks by stack_id ![Experimental](https://img.shields.io/badge/status-experimental-yellow) NFT stacks
-        /// </summary>
-        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="chainName">The name of chain</param>
-        /// <param name="stackId">List of stack_id to filter by</param>
-        /// <returns>List&lt;StackBundle&gt;</returns>
-        public List<StackBundle> ListStacks(string chainName, List<Guid> stackId)
-        {
-            Immutable.Api.ZkEvm.Client.ApiResponse<List<StackBundle>> localVarResponse = ListStacksWithHttpInfo(chainName, stackId);
-            return localVarResponse.Data;
-        }
-
-        /// <summary>
-        /// Experimental: List NFT stacks by stack_id ![Experimental](https://img.shields.io/badge/status-experimental-yellow) NFT stacks
-        /// </summary>
-        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="chainName">The name of chain</param>
-        /// <param name="stackId">List of stack_id to filter by</param>
-        /// <returns>ApiResponse of List&lt;StackBundle&gt;</returns>
-        public Immutable.Api.ZkEvm.Client.ApiResponse<List<StackBundle>> ListStacksWithHttpInfo(string chainName, List<Guid> stackId)
-        {
-            // verify the required parameter 'chainName' is set
-            if (chainName == null)
-                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'chainName' when calling StacksApi->ListStacks");
-
-            // verify the required parameter 'stackId' is set
-            if (stackId == null)
-                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'stackId' when calling StacksApi->ListStacks");
-
-            Immutable.Api.ZkEvm.Client.RequestOptions localVarRequestOptions = new Immutable.Api.ZkEvm.Client.RequestOptions();
-
-            string[] _contentTypes = new string[] {
-            };
-
-            // to determine the Accept header
-            string[] _accepts = new string[] {
-                "application/json"
-            };
-
-            var localVarContentType = Immutable.Api.ZkEvm.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
-            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
-
-            var localVarAccept = Immutable.Api.ZkEvm.Client.ClientUtils.SelectHeaderAccept(_accepts);
-            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
-
-            localVarRequestOptions.PathParameters.Add("chain_name", Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToString(chainName)); // path parameter
-            localVarRequestOptions.QueryParameters.Add(Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToMultiMap("multi", "stack_id", stackId));
-
-
-            // make the HTTP request
-            var localVarResponse = this.Client.Get<List<StackBundle>>("/experimental/chains/{chain_name}/stacks", localVarRequestOptions, this.Configuration);
-
-            if (this.ExceptionFactory != null)
-            {
-                Exception _exception = this.ExceptionFactory("ListStacks", localVarResponse);
-                if (_exception != null) throw _exception;
-            }
-
-            return localVarResponse;
-        }
-
-        /// <summary>
-        /// Experimental: List NFT stacks by stack_id ![Experimental](https://img.shields.io/badge/status-experimental-yellow) NFT stacks
-        /// </summary>
-        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="chainName">The name of chain</param>
-        /// <param name="stackId">List of stack_id to filter by</param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of List&lt;StackBundle&gt;</returns>
-        public async System.Threading.Tasks.Task<List<StackBundle>> ListStacksAsync(string chainName, List<Guid> stackId, System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
-        {
-            var task = ListStacksWithHttpInfoAsync(chainName, stackId, cancellationToken);
-#if UNITY_EDITOR || !UNITY_WEBGL
-            Immutable.Api.ZkEvm.Client.ApiResponse<List<StackBundle>> localVarResponse = await task.ConfigureAwait(false);
-#else
-            Immutable.Api.ZkEvm.Client.ApiResponse<List<StackBundle>> localVarResponse = await task;
-#endif
-            return localVarResponse.Data;
-        }
-
-        /// <summary>
-        /// Experimental: List NFT stacks by stack_id ![Experimental](https://img.shields.io/badge/status-experimental-yellow) NFT stacks
-        /// </summary>
-        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="chainName">The name of chain</param>
-        /// <param name="stackId">List of stack_id to filter by</param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse (List&lt;StackBundle&gt;)</returns>
-        public async System.Threading.Tasks.Task<Immutable.Api.ZkEvm.Client.ApiResponse<List<StackBundle>>> ListStacksWithHttpInfoAsync(string chainName, List<Guid> stackId, System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
-        {
-            // verify the required parameter 'chainName' is set
-            if (chainName == null)
-                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'chainName' when calling StacksApi->ListStacks");
-
-            // verify the required parameter 'stackId' is set
-            if (stackId == null)
-                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'stackId' when calling StacksApi->ListStacks");
-
-
-            Immutable.Api.ZkEvm.Client.RequestOptions localVarRequestOptions = new Immutable.Api.ZkEvm.Client.RequestOptions();
-
-            string[] _contentTypes = new string[] {
-            };
-
-            // to determine the Accept header
-            string[] _accepts = new string[] {
-                "application/json"
-            };
-
-
-            var localVarContentType = Immutable.Api.ZkEvm.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
-            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
-
-            var localVarAccept = Immutable.Api.ZkEvm.Client.ClientUtils.SelectHeaderAccept(_accepts);
-            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
-
-            localVarRequestOptions.PathParameters.Add("chain_name", Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToString(chainName)); // path parameter
-            localVarRequestOptions.QueryParameters.Add(Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToMultiMap("multi", "stack_id", stackId));
-
-
-            // make the HTTP request
-
-            var task = this.AsynchronousClient.GetAsync<List<StackBundle>>("/experimental/chains/{chain_name}/stacks", localVarRequestOptions, this.Configuration, cancellationToken);
-
-#if UNITY_EDITOR || !UNITY_WEBGL
-            var localVarResponse = await task.ConfigureAwait(false);
-#else
-            var localVarResponse = await task;
-#endif
-
-            if (this.ExceptionFactory != null)
-            {
-                Exception _exception = this.ExceptionFactory("ListStacks", localVarResponse);
-                if (_exception != null) throw _exception;
-            }
-
-            return localVarResponse;
-        }
-
-        /// <summary>
-        /// Experimental: Search NFTs ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Search NFTs
+        /// Search NFTs Search NFTs
         /// </summary>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -723,7 +535,7 @@ namespace Immutable.Api.ZkEvm.Api
         }
 
         /// <summary>
-        /// Experimental: Search NFTs ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Search NFTs
+        /// Search NFTs Search NFTs
         /// </summary>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -738,11 +550,11 @@ namespace Immutable.Api.ZkEvm.Api
         {
             // verify the required parameter 'chainName' is set
             if (chainName == null)
-                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'chainName' when calling StacksApi->SearchNFTs");
+                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'chainName' when calling MetadataSearchApi->SearchNFTs");
 
             // verify the required parameter 'contractAddress' is set
             if (contractAddress == null)
-                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'contractAddress' when calling StacksApi->SearchNFTs");
+                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'contractAddress' when calling MetadataSearchApi->SearchNFTs");
 
             Immutable.Api.ZkEvm.Client.RequestOptions localVarRequestOptions = new Immutable.Api.ZkEvm.Client.RequestOptions();
 
@@ -785,7 +597,7 @@ namespace Immutable.Api.ZkEvm.Api
 
 
             // make the HTTP request
-            var localVarResponse = this.Client.Get<SearchNFTsResult>("/experimental/chains/{chain_name}/search/nfts", localVarRequestOptions, this.Configuration);
+            var localVarResponse = this.Client.Get<SearchNFTsResult>("/v1/chains/{chain_name}/search/nfts", localVarRequestOptions, this.Configuration);
 
             if (this.ExceptionFactory != null)
             {
@@ -797,7 +609,7 @@ namespace Immutable.Api.ZkEvm.Api
         }
 
         /// <summary>
-        /// Experimental: Search NFTs ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Search NFTs
+        /// Search NFTs Search NFTs
         /// </summary>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -821,7 +633,7 @@ namespace Immutable.Api.ZkEvm.Api
         }
 
         /// <summary>
-        /// Experimental: Search NFTs ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Search NFTs
+        /// Search NFTs Search NFTs
         /// </summary>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -837,11 +649,11 @@ namespace Immutable.Api.ZkEvm.Api
         {
             // verify the required parameter 'chainName' is set
             if (chainName == null)
-                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'chainName' when calling StacksApi->SearchNFTs");
+                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'chainName' when calling MetadataSearchApi->SearchNFTs");
 
             // verify the required parameter 'contractAddress' is set
             if (contractAddress == null)
-                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'contractAddress' when calling StacksApi->SearchNFTs");
+                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'contractAddress' when calling MetadataSearchApi->SearchNFTs");
 
 
             Immutable.Api.ZkEvm.Client.RequestOptions localVarRequestOptions = new Immutable.Api.ZkEvm.Client.RequestOptions();
@@ -887,7 +699,7 @@ namespace Immutable.Api.ZkEvm.Api
 
             // make the HTTP request
 
-            var task = this.AsynchronousClient.GetAsync<SearchNFTsResult>("/experimental/chains/{chain_name}/search/nfts", localVarRequestOptions, this.Configuration, cancellationToken);
+            var task = this.AsynchronousClient.GetAsync<SearchNFTsResult>("/v1/chains/{chain_name}/search/nfts", localVarRequestOptions, this.Configuration, cancellationToken);
 
 #if UNITY_EDITOR || !UNITY_WEBGL
             var localVarResponse = await task.ConfigureAwait(false);
@@ -905,7 +717,7 @@ namespace Immutable.Api.ZkEvm.Api
         }
 
         /// <summary>
-        /// Experimental: Search NFT stacks ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Search NFT stacks
+        /// Search NFT stacks Search NFT stacks
         /// </summary>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -926,7 +738,7 @@ namespace Immutable.Api.ZkEvm.Api
         }
 
         /// <summary>
-        /// Experimental: Search NFT stacks ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Search NFT stacks
+        /// Search NFT stacks Search NFT stacks
         /// </summary>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -944,11 +756,11 @@ namespace Immutable.Api.ZkEvm.Api
         {
             // verify the required parameter 'chainName' is set
             if (chainName == null)
-                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'chainName' when calling StacksApi->SearchStacks");
+                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'chainName' when calling MetadataSearchApi->SearchStacks");
 
             // verify the required parameter 'contractAddress' is set
             if (contractAddress == null)
-                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'contractAddress' when calling StacksApi->SearchStacks");
+                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'contractAddress' when calling MetadataSearchApi->SearchStacks");
 
             Immutable.Api.ZkEvm.Client.RequestOptions localVarRequestOptions = new Immutable.Api.ZkEvm.Client.RequestOptions();
 
@@ -1003,7 +815,7 @@ namespace Immutable.Api.ZkEvm.Api
 
 
             // make the HTTP request
-            var localVarResponse = this.Client.Get<SearchStacksResult>("/experimental/chains/{chain_name}/search/stacks", localVarRequestOptions, this.Configuration);
+            var localVarResponse = this.Client.Get<SearchStacksResult>("/v1/chains/{chain_name}/search/stacks", localVarRequestOptions, this.Configuration);
 
             if (this.ExceptionFactory != null)
             {
@@ -1015,7 +827,7 @@ namespace Immutable.Api.ZkEvm.Api
         }
 
         /// <summary>
-        /// Experimental: Search NFT stacks ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Search NFT stacks
+        /// Search NFT stacks Search NFT stacks
         /// </summary>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -1042,7 +854,7 @@ namespace Immutable.Api.ZkEvm.Api
         }
 
         /// <summary>
-        /// Experimental: Search NFT stacks ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Search NFT stacks
+        /// Search NFT stacks Search NFT stacks
         /// </summary>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -1061,11 +873,11 @@ namespace Immutable.Api.ZkEvm.Api
         {
             // verify the required parameter 'chainName' is set
             if (chainName == null)
-                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'chainName' when calling StacksApi->SearchStacks");
+                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'chainName' when calling MetadataSearchApi->SearchStacks");
 
             // verify the required parameter 'contractAddress' is set
             if (contractAddress == null)
-                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'contractAddress' when calling StacksApi->SearchStacks");
+                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'contractAddress' when calling MetadataSearchApi->SearchStacks");
 
 
             Immutable.Api.ZkEvm.Client.RequestOptions localVarRequestOptions = new Immutable.Api.ZkEvm.Client.RequestOptions();
@@ -1123,7 +935,7 @@ namespace Immutable.Api.ZkEvm.Api
 
             // make the HTTP request
 
-            var task = this.AsynchronousClient.GetAsync<SearchStacksResult>("/experimental/chains/{chain_name}/search/stacks", localVarRequestOptions, this.Configuration, cancellationToken);
+            var task = this.AsynchronousClient.GetAsync<SearchStacksResult>("/v1/chains/{chain_name}/search/stacks", localVarRequestOptions, this.Configuration, cancellationToken);
 
 #if UNITY_EDITOR || !UNITY_WEBGL
             var localVarResponse = await task.ConfigureAwait(false);
