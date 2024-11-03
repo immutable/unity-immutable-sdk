@@ -4,16 +4,16 @@ All URIs are relative to *https://api.sandbox.immutable.com*
 
 | Method | HTTP request | Description |
 |--------|--------------|-------------|
-| [**QuotesForNFTs**](PricingApi.md#quotesfornfts) | **GET** /experimental/chains/{chain_name}/quotes/{contract_address}/nfts | Experimental: Get pricing data for a list of token ids |
-| [**QuotesForStacks**](PricingApi.md#quotesforstacks) | **GET** /experimental/chains/{chain_name}/quotes/{contract_address}/stacks | Experimental: Get pricing data for a list of stack ids |
+| [**QuotesForNFTs**](PricingApi.md#quotesfornfts) | **GET** /v1/chains/{chain_name}/quotes/{contract_address}/nfts | Get pricing data for a list of token ids |
+| [**QuotesForStacks**](PricingApi.md#quotesforstacks) | **GET** /v1/chains/{chain_name}/quotes/{contract_address}/stacks | Get pricing data for a list of stack ids |
 
 <a id="quotesfornfts"></a>
 # **QuotesForNFTs**
 > QuotesForNFTsResult QuotesForNFTs (string chainName, string contractAddress, List<string> tokenId, string? pageCursor = null)
 
-Experimental: Get pricing data for a list of token ids
+Get pricing data for a list of token ids
 
-![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get pricing data for a list of token ids
+pricing data for a list of token ids
 
 ### Example
 ```csharp
@@ -39,7 +39,7 @@ namespace Example
 
             try
             {
-                // Experimental: Get pricing data for a list of token ids
+                // Get pricing data for a list of token ids
                 QuotesForNFTsResult result = apiInstance.QuotesForNFTs(chainName, contractAddress, tokenId, pageCursor);
                 Debug.WriteLine(result);
             }
@@ -60,7 +60,7 @@ This returns an ApiResponse object which contains the response data, status code
 ```csharp
 try
 {
-    // Experimental: Get pricing data for a list of token ids
+    // Get pricing data for a list of token ids
     ApiResponse<QuotesForNFTsResult> response = apiInstance.QuotesForNFTsWithHttpInfo(chainName, contractAddress, tokenId, pageCursor);
     Debug.Write("Status Code: " + response.StatusCode);
     Debug.Write("Response Headers: " + response.Headers);
@@ -114,9 +114,9 @@ No authorization required
 # **QuotesForStacks**
 > QuotesForStacksResult QuotesForStacks (string chainName, string contractAddress, List<Guid> stackId, string? pageCursor = null)
 
-Experimental: Get pricing data for a list of stack ids
+Get pricing data for a list of stack ids
 
-![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get pricing data for a list of stack ids
+Get pricing data for a list of stack ids
 
 ### Example
 ```csharp
@@ -142,7 +142,7 @@ namespace Example
 
             try
             {
-                // Experimental: Get pricing data for a list of stack ids
+                // Get pricing data for a list of stack ids
                 QuotesForStacksResult result = apiInstance.QuotesForStacks(chainName, contractAddress, stackId, pageCursor);
                 Debug.WriteLine(result);
             }
@@ -163,7 +163,7 @@ This returns an ApiResponse object which contains the response data, status code
 ```csharp
 try
 {
-    // Experimental: Get pricing data for a list of stack ids
+    // Get pricing data for a list of stack ids
     ApiResponse<QuotesForStacksResult> response = apiInstance.QuotesForStacksWithHttpInfo(chainName, contractAddress, stackId, pageCursor);
     Debug.Write("Status Code: " + response.StatusCode);
     Debug.Write("Response Headers: " + response.Headers);

@@ -28,10 +28,10 @@ namespace Immutable.Api.ZkEvm.Api
     {
         #region Synchronous Operations
         /// <summary>
-        /// Experimental: Get pricing data for a list of token ids
+        /// Get pricing data for a list of token ids
         /// </summary>
         /// <remarks>
-        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get pricing data for a list of token ids
+        /// pricing data for a list of token ids
         /// </remarks>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -42,10 +42,10 @@ namespace Immutable.Api.ZkEvm.Api
         QuotesForNFTsResult QuotesForNFTs(string chainName, string contractAddress, List<string> tokenId, string? pageCursor = default(string?));
 
         /// <summary>
-        /// Experimental: Get pricing data for a list of token ids
+        /// Get pricing data for a list of token ids
         /// </summary>
         /// <remarks>
-        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get pricing data for a list of token ids
+        /// pricing data for a list of token ids
         /// </remarks>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -55,10 +55,10 @@ namespace Immutable.Api.ZkEvm.Api
         /// <returns>ApiResponse of QuotesForNFTsResult</returns>
         ApiResponse<QuotesForNFTsResult> QuotesForNFTsWithHttpInfo(string chainName, string contractAddress, List<string> tokenId, string? pageCursor = default(string?));
         /// <summary>
-        /// Experimental: Get pricing data for a list of stack ids
+        /// Get pricing data for a list of stack ids
         /// </summary>
         /// <remarks>
-        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get pricing data for a list of stack ids
+        /// Get pricing data for a list of stack ids
         /// </remarks>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -69,10 +69,10 @@ namespace Immutable.Api.ZkEvm.Api
         QuotesForStacksResult QuotesForStacks(string chainName, string contractAddress, List<Guid> stackId, string? pageCursor = default(string?));
 
         /// <summary>
-        /// Experimental: Get pricing data for a list of stack ids
+        /// Get pricing data for a list of stack ids
         /// </summary>
         /// <remarks>
-        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get pricing data for a list of stack ids
+        /// Get pricing data for a list of stack ids
         /// </remarks>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -91,10 +91,10 @@ namespace Immutable.Api.ZkEvm.Api
     {
         #region Asynchronous Operations
         /// <summary>
-        /// Experimental: Get pricing data for a list of token ids
+        /// Get pricing data for a list of token ids
         /// </summary>
         /// <remarks>
-        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get pricing data for a list of token ids
+        /// pricing data for a list of token ids
         /// </remarks>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -106,10 +106,10 @@ namespace Immutable.Api.ZkEvm.Api
         System.Threading.Tasks.Task<QuotesForNFTsResult> QuotesForNFTsAsync(string chainName, string contractAddress, List<string> tokenId, string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
 
         /// <summary>
-        /// Experimental: Get pricing data for a list of token ids
+        /// Get pricing data for a list of token ids
         /// </summary>
         /// <remarks>
-        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get pricing data for a list of token ids
+        /// pricing data for a list of token ids
         /// </remarks>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -120,10 +120,10 @@ namespace Immutable.Api.ZkEvm.Api
         /// <returns>Task of ApiResponse (QuotesForNFTsResult)</returns>
         System.Threading.Tasks.Task<ApiResponse<QuotesForNFTsResult>> QuotesForNFTsWithHttpInfoAsync(string chainName, string contractAddress, List<string> tokenId, string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
         /// <summary>
-        /// Experimental: Get pricing data for a list of stack ids
+        /// Get pricing data for a list of stack ids
         /// </summary>
         /// <remarks>
-        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get pricing data for a list of stack ids
+        /// Get pricing data for a list of stack ids
         /// </remarks>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -135,10 +135,10 @@ namespace Immutable.Api.ZkEvm.Api
         System.Threading.Tasks.Task<QuotesForStacksResult> QuotesForStacksAsync(string chainName, string contractAddress, List<Guid> stackId, string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
 
         /// <summary>
-        /// Experimental: Get pricing data for a list of stack ids
+        /// Get pricing data for a list of stack ids
         /// </summary>
         /// <remarks>
-        /// ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get pricing data for a list of stack ids
+        /// Get pricing data for a list of stack ids
         /// </remarks>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -293,7 +293,7 @@ namespace Immutable.Api.ZkEvm.Api
         }
 
         /// <summary>
-        /// Experimental: Get pricing data for a list of token ids ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get pricing data for a list of token ids
+        /// Get pricing data for a list of token ids pricing data for a list of token ids
         /// </summary>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -308,7 +308,7 @@ namespace Immutable.Api.ZkEvm.Api
         }
 
         /// <summary>
-        /// Experimental: Get pricing data for a list of token ids ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get pricing data for a list of token ids
+        /// Get pricing data for a list of token ids pricing data for a list of token ids
         /// </summary>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -356,7 +356,7 @@ namespace Immutable.Api.ZkEvm.Api
 
 
             // make the HTTP request
-            var localVarResponse = this.Client.Get<QuotesForNFTsResult>("/experimental/chains/{chain_name}/quotes/{contract_address}/nfts", localVarRequestOptions, this.Configuration);
+            var localVarResponse = this.Client.Get<QuotesForNFTsResult>("/v1/chains/{chain_name}/quotes/{contract_address}/nfts", localVarRequestOptions, this.Configuration);
 
             if (this.ExceptionFactory != null)
             {
@@ -368,7 +368,7 @@ namespace Immutable.Api.ZkEvm.Api
         }
 
         /// <summary>
-        /// Experimental: Get pricing data for a list of token ids ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get pricing data for a list of token ids
+        /// Get pricing data for a list of token ids pricing data for a list of token ids
         /// </summary>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -389,7 +389,7 @@ namespace Immutable.Api.ZkEvm.Api
         }
 
         /// <summary>
-        /// Experimental: Get pricing data for a list of token ids ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get pricing data for a list of token ids
+        /// Get pricing data for a list of token ids pricing data for a list of token ids
         /// </summary>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -441,7 +441,7 @@ namespace Immutable.Api.ZkEvm.Api
 
             // make the HTTP request
 
-            var task = this.AsynchronousClient.GetAsync<QuotesForNFTsResult>("/experimental/chains/{chain_name}/quotes/{contract_address}/nfts", localVarRequestOptions, this.Configuration, cancellationToken);
+            var task = this.AsynchronousClient.GetAsync<QuotesForNFTsResult>("/v1/chains/{chain_name}/quotes/{contract_address}/nfts", localVarRequestOptions, this.Configuration, cancellationToken);
 
 #if UNITY_EDITOR || !UNITY_WEBGL
             var localVarResponse = await task.ConfigureAwait(false);
@@ -459,7 +459,7 @@ namespace Immutable.Api.ZkEvm.Api
         }
 
         /// <summary>
-        /// Experimental: Get pricing data for a list of stack ids ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get pricing data for a list of stack ids
+        /// Get pricing data for a list of stack ids Get pricing data for a list of stack ids
         /// </summary>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -474,7 +474,7 @@ namespace Immutable.Api.ZkEvm.Api
         }
 
         /// <summary>
-        /// Experimental: Get pricing data for a list of stack ids ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get pricing data for a list of stack ids
+        /// Get pricing data for a list of stack ids Get pricing data for a list of stack ids
         /// </summary>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -522,7 +522,7 @@ namespace Immutable.Api.ZkEvm.Api
 
 
             // make the HTTP request
-            var localVarResponse = this.Client.Get<QuotesForStacksResult>("/experimental/chains/{chain_name}/quotes/{contract_address}/stacks", localVarRequestOptions, this.Configuration);
+            var localVarResponse = this.Client.Get<QuotesForStacksResult>("/v1/chains/{chain_name}/quotes/{contract_address}/stacks", localVarRequestOptions, this.Configuration);
 
             if (this.ExceptionFactory != null)
             {
@@ -534,7 +534,7 @@ namespace Immutable.Api.ZkEvm.Api
         }
 
         /// <summary>
-        /// Experimental: Get pricing data for a list of stack ids ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get pricing data for a list of stack ids
+        /// Get pricing data for a list of stack ids Get pricing data for a list of stack ids
         /// </summary>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -555,7 +555,7 @@ namespace Immutable.Api.ZkEvm.Api
         }
 
         /// <summary>
-        /// Experimental: Get pricing data for a list of stack ids ![Experimental](https://img.shields.io/badge/status-experimental-yellow) Get pricing data for a list of stack ids
+        /// Get pricing data for a list of stack ids Get pricing data for a list of stack ids
         /// </summary>
         /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="chainName">The name of chain</param>
@@ -607,7 +607,7 @@ namespace Immutable.Api.ZkEvm.Api
 
             // make the HTTP request
 
-            var task = this.AsynchronousClient.GetAsync<QuotesForStacksResult>("/experimental/chains/{chain_name}/quotes/{contract_address}/stacks", localVarRequestOptions, this.Configuration, cancellationToken);
+            var task = this.AsynchronousClient.GetAsync<QuotesForStacksResult>("/v1/chains/{chain_name}/quotes/{contract_address}/stacks", localVarRequestOptions, this.Configuration, cancellationToken);
 
 #if UNITY_EDITOR || !UNITY_WEBGL
             var localVarResponse = await task.ConfigureAwait(false);
