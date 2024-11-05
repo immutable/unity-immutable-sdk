@@ -79,6 +79,19 @@ public class MobileBuilder
         return BuildTarget.Android; // Default to Android if no platform is specified
     }
 
+    private static string GetAltTesterHostFromArgs()
+    {
+        string[] args = Environment.GetCommandLineArgs();
+        for (int i = 0; i < args.Length; i++)
+        {
+            if (args[i] == "--host" && i + 1 < args.Length)
+            {
+                return args[i + 1];
+            }
+        }
+        return null;
+    }
+
     private static BuildPlayerOptions CreateBuildPlayerOptions(string buildPath, BuildOptions buildOptions, BuildTarget platform)
     {
         return new BuildPlayerOptions
@@ -106,7 +119,7 @@ public class MobileBuilder
         AltBuilder.CreateJsonFileForInputMappingOfAxis();
 
         var instrumentationSettings = new AltInstrumentationSettings();
-        var host = System.Environment.GetEnvironmentVariable("ALTSERVER_HOST");
+        var host = System.Environment.GetEnvironmentVariable("ALTSERVER_HOST") ?? GetAltTesterHostFromArgs();
         if (!string.IsNullOrEmpty(host))
         {
             instrumentationSettings.AltServerHost = host;
