@@ -24,6 +24,9 @@ jobs:
           - targetPlatform: StandaloneWindows64
             buildMethod: WindowsBuilder.BuildForAltTester
             buildPath: Windows64
+          - targetPlatform: Android
+            buildMethod: MobileBuilder.BuildForAltTester
+            buildPath: Android
     steps:
       - uses: actions/checkout@v3
         with:
