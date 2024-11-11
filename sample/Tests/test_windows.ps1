@@ -56,7 +56,18 @@ function Login {
     )
     # Start Chrome for remote debugging
     Write-Output "Starting Chrome..."
+    
     $chromePath = "C:\Program Files\Google\Chrome\Application\chrome.exe"
+
+    if (-not (Test-Path $chromePath)) {
+        $chromePath = "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+    }
+
+    if (-not (Test-Path $chromePath)) {
+        Write-Output "Chrome executable not found."
+        exit
+    }
+
     Start-Process -FilePath $chromePath -ArgumentList "--remote-debugging-port=9222"
 
     # Run Python script for login
@@ -116,16 +127,28 @@ Login "test/test_windows.py::WindowsTest::test_1_device_code_login"
 
 # Run IMX and zkEVM tests
 Run-Pytest "test/test.py"
+if (-not $?) {
+    Write-Output "Tests failed. Stopping execution."
+    exit 1
+}
 
 # Relogin
 Stop-SampleApp
 Start-SampleApp
 Run-Pytest "test/test_windows.py::WindowsTest::test_3_device_code_relogin"
+if (-not $?) {
+    Write-Output "Relogin test failed. Stopping execution."
+    exit 1
+}
 
 # Reconnect
 Stop-SampleApp
 Start-SampleApp
 Run-Pytest "test/test_windows.py::WindowsTest::test_4_device_code_reconnect"
+if (-not $?) {
+    Write-Output "Reconnect test failed. Stopping execution."
+    exit 1
+}
 
 # Logout
 Logout
