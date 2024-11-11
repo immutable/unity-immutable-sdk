@@ -36,11 +36,6 @@ class TestBase(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         print("\nEnding")
-        try:
-            AltReversePortForwarding.remove_reverse_port_forwarding_android()
-            print("Reverse port forwarding removed")
-        except:
-            print("No adb forward was present")
         cls.altdriver.stop()
         cls.appium_driver.quit()
 

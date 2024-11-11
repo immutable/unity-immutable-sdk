@@ -68,6 +68,9 @@ jobs:
           - targetPlatform: StandaloneWindows64
             runs-on: [self-hosted, windows]
             test_script: test_windows.ps1
+          - targetPlatform: Android
+            runs-on: [ self-hosted, macOS ]
+            test_script: pytest test/test_android.py
     concurrency:
       group: test-${{ matrix.targetPlatform }}
     runs-on: ${{ matrix.runs-on }}
@@ -89,6 +92,8 @@ jobs:
           UNITY_APP_PATH: SampleApp.app
           UNITY_APP_NAME: SampleApp
           MAILSLURP_API_KEY: ${{ secrets.MAILSLURP_API_KEY }}
+          BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
+          BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
         working-directory: sample/Tests
-        run: ./${{ matrix.test_script }}
+        run: ${{ matrix.test_script }}
       
