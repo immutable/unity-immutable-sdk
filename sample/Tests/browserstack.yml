@@ -26,7 +26,7 @@ source: pytest-browserstack:sample-sdk:v1.0
 # Set `app` to define the app that is to be used for testing.
 # It can either take the id of any uploaded app or the path of the app directly.
 #app: ./WikipediaSample.apk
-app: SampleApp.apk #For running local tests
+app: ./SampleApp.apk #For running local tests
 
 # =======================================
 # Platforms (Browsers / Devices to test)
