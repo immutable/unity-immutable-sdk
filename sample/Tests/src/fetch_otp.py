@@ -8,7 +8,7 @@ EMAIL = "user-33f17f82-274b-4269-9ce6-c620e89fcd8d@mailslurp.biz"
 
 def get_mailslurp_client():
     configuration = mailslurp_client.Configuration()
-    configuration.api_key['x-api-key'] = os.getenv('MAILSLURP_API_KEY')
+    configuration.api_key['x-api-key'] = '31750ed2e66c1fe56566877d5297fbdd6f8bba046942fab2909f495aeb7f1533' #os.getenv('MAILSLURP_API_KEY')
     api_client = mailslurp_client.ApiClient(configuration)
     waitfor_controller = WaitForControllerApi(api_client)
     return waitfor_controller
@@ -28,3 +28,7 @@ def fetch_code():
         otp = extract_otp_from_email(email.body)
         return otp
     return None
+
+if __name__ == "__main__":
+    code = fetch_code()
+    print(code)

@@ -34,7 +34,7 @@ public class AuthenticatedScript : MonoBehaviour
     private Passport Passport;
 #pragma warning restore CS8618
 
-    void Start()
+    async void Start()
     {
         if (Passport.Instance != null)
         {
@@ -280,9 +280,9 @@ public class AuthenticatedScript : MonoBehaviour
         {
             ShowOutput($"Unable to register off-chain: {e.Message} ({e.Type})");
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            ShowOutput("Unable to register off-chain");
+            ShowOutput($"Unable to register off-chain {e.Message}");
         }
     }
 
@@ -416,6 +416,14 @@ public class AuthenticatedScript : MonoBehaviour
 #else
         ShowOutput("Support on Android and iOS devices only");
 #endif
+    }
+
+    /// <summary>
+    /// Navigates to Set Call Timeout scene.
+    /// </summary>
+    public void ShowSetCallTimeout()
+    {
+        SceneManager.LoadScene("SetCallTimeout");
     }
 
     /// <summary>

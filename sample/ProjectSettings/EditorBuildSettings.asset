@@ -29,4 +29,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/ZkEvmSignTypedData.unity
     guid: 7947e157cd8d541138343d5eba099466
+  - enabled: 1
+    path: Assets/Scenes/SetCallTimeout.unity
+    guid: 73ba07ed56efd1949b722042d50dc444
   m_configObjects: {}
