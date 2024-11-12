@@ -28,7 +28,7 @@ jobs:
             buildMethod: MobileBuilder.BuildForAltTester
             buildPath: Android
           - targetPlatform: iOS
-            buildMethod: MobileBuilder.BuildForAltTester
+            buildMethod: MobileBuilder.Build
             buildPath: iOS
     steps:
       - uses: actions/checkout@v3
@@ -52,8 +52,6 @@ jobs:
           projectPath: sample
           buildMethod: ${{ matrix.buildMethod }}
           customParameters: -logFile logFile.log -quit -batchmode
-      - name: List build directory
-        run: ls -R sample/Builds/
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
