@@ -28,7 +28,7 @@ jobs:
             buildMethod: MobileBuilder.BuildForAltTester
             buildPath: sample/Builds/Android
           - targetPlatform: iOS
-            buildMethod: MobileBuilder.BuildForAltTester
+            buildMethod: MobileBuilder.Build
             buildPath: build/iOS
     steps:
       - uses: actions/checkout@v3
@@ -50,6 +50,7 @@ jobs:
         with:
           targetPlatform: ${{ matrix.targetPlatform }}
           projectPath: sample
+          buildMethod: ${{ matrix.buildMethod }}
           customParameters: -logFile logFile.log -quit -batchmode
       - name: List build directory
         run: ls -R ./
