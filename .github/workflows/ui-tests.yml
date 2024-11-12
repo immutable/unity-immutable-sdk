@@ -51,7 +51,7 @@ jobs:
           targetPlatform: ${{ matrix.targetPlatform }}
           projectPath: sample
           buildMethod: ${{ matrix.buildMethod }}
-          customParameters: -logFile logFile.log -quit -batchmode --host 172.20.10.2
+          customParameters: -logFile logFile.log -quit
       - name: List build directory
         run: ls -R ./
       - name: Upload artifact
