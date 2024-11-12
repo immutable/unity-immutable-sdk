@@ -18,9 +18,18 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - targetPlatform: StandaloneOSX
+            buildMethod: MacBuilder.BuildForAltTester
+            buildPath: sample/Builds/MacOS
+          - targetPlatform: StandaloneWindows64
+            buildMethod: WindowsBuilder.BuildForAltTester
+            buildPath: sample/Builds/Windows64
+          - targetPlatform: Android
+            buildMethod: MobileBuilder.BuildForAltTester
+            buildPath: sample/Builds/Android
           - targetPlatform: iOS
             buildMethod: MobileBuilder.BuildForAltTester
-            buildPath: iOS
+            buildPath: build/iOS
     steps:
       - uses: actions/checkout@v3
         with:
@@ -43,14 +52,12 @@ jobs:
           projectPath: sample
           buildMethod: ${{ matrix.buildMethod }}
           customParameters: -logFile logFile.log -quit -batchmode
-      - name: List build directory
-        run: ls -R ./
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: Build-${{ matrix.targetPlatform }}
-          path: sample/Builds/${{ matrix.buildPath }}
+          path: ${{ matrix.buildPath }}
   test:
     name: Run ${{ matrix.targetPlatform }} UI tests 🧪
     needs: build
