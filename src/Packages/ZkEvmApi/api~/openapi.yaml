@@ -3395,7 +3395,6 @@ paths:
       summary: Get list of metadata attribute filters
       tags:
       - metadata-search
-      x-hide-from-sdk: true
   /v1/chains/{chain_name}/search/nfts:
     get:
       description: Search NFTs
@@ -3526,7 +3525,6 @@ paths:
       summary: Search NFTs
       tags:
       - metadata-search
-      x-hide-from-sdk: true
   /v1/chains/{chain_name}/search/stacks:
     get:
       description: Search NFT stacks
@@ -3684,7 +3682,6 @@ paths:
       summary: Search NFT stacks
       tags:
       - metadata-search
-      x-hide-from-sdk: true
   /v1/chains/{chain_name}/stacks:
     get:
       description: "List NFT stack bundles by stack_id. This endpoint functions similarly\
@@ -3771,7 +3768,6 @@ paths:
         \ Listings & Stack Count information for each stack"
       tags:
       - metadata
-      x-hide-from-sdk: true
   /v1/chains/{chain_name}/quotes/{contract_address}/stacks:
     get:
       description: Get pricing data for a list of stack ids
@@ -3870,7 +3866,6 @@ paths:
       summary: Get pricing data for a list of stack ids
       tags:
       - pricing
-      x-hide-from-sdk: true
   /v1/chains/{chain_name}/quotes/{contract_address}/nfts:
     get:
       description: pricing data for a list of token ids
@@ -3968,7 +3963,6 @@ paths:
       summary: Get pricing data for a list of token ids
       tags:
       - pricing
-      x-hide-from-sdk: true
 components:
   headers:
     MetadataRefreshLimit:
