@@ -6,9 +6,9 @@ import re
 from alttester import *
 
 class TestConfig:
-    EMAIL = "user-33f17f82-274b-4269-9ce6-c620e89fcd8d@mailslurp.biz"
-    PASSPORT_ID="email|671ed01e2ab74483c4fb1f42"
-    WALLET_ADDRESS = "0x7dd423aeaccfbdd3a043bb8583085c7d97032de9"
+    EMAIL = "7cff2120-f684-4f31-886f-b29ca2400247@mailslurp.net"
+    PASSPORT_ID="email|67365ff8219c150ace187e28"
+    WALLET_ADDRESS = "0xdd571aa2f37f6b5166b14c6e43f1114bf444cdd8"
     
 class UnityTest(unittest.TestCase):
 
