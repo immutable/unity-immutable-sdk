@@ -20,13 +20,13 @@ jobs:
         include:
           - targetPlatform: StandaloneOSX
             buildMethod: MacBuilder.BuildForAltTester
-            buildPath: MacOS
+            buildPath: sample/Builds/MacOS
           - targetPlatform: StandaloneWindows64
             buildMethod: WindowsBuilder.BuildForAltTester
-            buildPath: Windows64
+            buildPath: sample/Builds/Windows64
           - targetPlatform: Android
             buildMethod: MobileBuilder.BuildForAltTester
-            buildPath: Android
+            buildPath: sample/Builds/Android
     steps:
       - uses: actions/checkout@v3
         with:
@@ -47,15 +47,14 @@ jobs:
         with:
           targetPlatform: ${{ matrix.targetPlatform }}
           projectPath: sample
-          buildMethod: ${{ matrix.buildMethod }}
-          customParameters: -logFile logFile.log -quit -batchmode
       - name: List build directory
-        run: ls -R sample/Builds/
+        run: ls -R ./
       - name: Upload artifact
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: Build-${{ matrix.targetPlatform }}
-          path: sample/Builds/${{ matrix.buildPath }}
+          path: ${{ matrix.buildPath }}
   test:
     name: Run ${{ matrix.targetPlatform }} UI tests 🧪
     needs: build
@@ -70,7 +69,10 @@ jobs:
             test_script: ./test_windows.ps1
           - targetPlatform: Android
             runs-on: [ self-hosted, macOS ]
-            test_script: browserstack-sdk pytest -s ./test/test_android.py
+            test_script: browserstack-sdk pytest -s ./test/test_android.py --browserstack.config "browserstack.android.yml"
+          - targetPlatform: iOS
+            runs-on: [ self-hosted, macOS ]
+            test_script: browserstack-sdk pytest -s ./test/test_ios.py --browserstack.config "browserstack.ios.yml"
     concurrency:
       group: test-${{ matrix.targetPlatform }}
     runs-on: ${{ matrix.runs-on }}
