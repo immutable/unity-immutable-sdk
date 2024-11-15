@@ -4,6 +4,8 @@ import requests
 
 from alttester import *
 
+from test import TestConfig
+
 class WindowsTest(unittest.TestCase):
 
     altdriver = None
@@ -39,7 +41,7 @@ class WindowsTest(unittest.TestCase):
 
         # Get address without having to click Connect to IMX button
         self.altdriver.find_object(By.NAME, "GetAddressBtn").tap()
-        self.assertEqual("0x7dd423aeaccfbdd3a043bb8583085c7d97032de9", output.get_text())
+        self.assertEqual(TestConfig.WALLET_ADDRESS, output.get_text())
 
     def test_3_device_code_relogin(self):
         # Relogin
@@ -73,4 +75,4 @@ class WindowsTest(unittest.TestCase):
 
         # Get address without having to click Connect to IMX button
         self.altdriver.find_object(By.NAME, "GetAddressBtn").tap()
-        self.assertEqual("0x7dd423aeaccfbdd3a043bb8583085c7d97032de9", output.get_text())
+        self.assertEqual(TestConfig.WALLET_ADDRESS, output.get_text())

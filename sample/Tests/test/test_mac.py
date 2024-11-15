@@ -5,6 +5,8 @@ import re
 
 from alttester import *
 
+from test import TestConfig
+
 class MacTest(unittest.TestCase):
 
     altdriver = None
@@ -52,7 +54,7 @@ class MacTest(unittest.TestCase):
 
         # Get address without having to click Connect to IMX button
         self.altdriver.find_object(By.NAME, "GetAddressBtn").tap()
-        self.assertEqual("0x9cb14f273de4a8c3d8e9b4c5decbb53519dfa7bd", output.get_text())
+        self.assertEqual(TestConfig.WALLET_ADDRESS, output.get_text())
 
     def test_3_device_code_relogin(self):
         # Select use device code auth
@@ -98,4 +100,13 @@ class MacTest(unittest.TestCase):
 
         # Get address without having to click Connect to IMX button
         self.altdriver.find_object(By.NAME, "GetAddressBtn").tap()
-        self.assertEqual("0x9cb14f273de4a8c3d8e9b4c5decbb53519dfa7bd", output.get_text())
+        self.assertEqual(TestConfig.WALLET_ADDRESS, output.get_text())
+
+    def test_5_logout(self):
+        # Logout
+        self.altdriver.find_object(By.NAME, "LogoutBtn").tap()
+
+        time.sleep(10)
+
+        # Wait for authenticated screen
+        self.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
