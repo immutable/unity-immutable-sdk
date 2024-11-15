@@ -88,14 +88,9 @@ jobs:
           python-version: "3.10"
       - name: Install dependencies (Windows)
         if: ${{ matrix.targetPlatform == 'StandaloneWindows64' }}
-        shell: pwsh
-        run: |
-          if (${{ matrix.targetPlatform }} -eq "StandaloneWindows64") {
-            pip install -r "sample/Tests/requirements-desktop.txt"
-          }
+        run: pip install -r "sample/Tests/requirements-desktop.txt"
       - name: Install dependencies (Mac)
         if: ${{ matrix.targetPlatform != 'StandaloneWindows64' }}
-        shell: bash
         run: |
           if [[ "${{ matrix.targetPlatform }}" == "StandaloneOSX" ]]; then
             pip install -r "sample/Tests/requirements-desktop.txt"
