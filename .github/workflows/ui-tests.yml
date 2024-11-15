@@ -27,9 +27,6 @@ jobs:
           - targetPlatform: Android
             buildMethod: MobileBuilder.BuildForAltTester
             buildPath: sample/Builds/Android
-          - targetPlatform: iOS
-            buildMethod: MobileBuilder.Build
-            buildPath: build/iOS
     steps:
       - uses: actions/checkout@v3
         with:
@@ -60,19 +57,22 @@ jobs:
           path: ${{ matrix.buildPath }}
   test:
     name: Run ${{ matrix.targetPlatform }} UI tests 🧪
-    needs: build
+#    needs: build
     strategy:
       matrix:
         include:
-          - targetPlatform: StandaloneOSX
-            runs-on: [self-hosted, macOS]
-            test_script: test_mac.sh
-          - targetPlatform: StandaloneWindows64
-            runs-on: [self-hosted, windows]
-            test_script: test_windows.ps1
-          - targetPlatform: Android
+#          - targetPlatform: StandaloneOSX
+#            runs-on: [self-hosted, macOS]
+#            test_script: test_mac.sh
+#          - targetPlatform: StandaloneWindows64
+#            runs-on: [self-hosted, windows]
+#            test_script: test_windows.ps1
+#          - targetPlatform: Android
+#            runs-on: [ self-hosted, macOS ]
+#            test_script: browserstack-sdk pytest -s ./test/test_android.py --browserstack.config "browserstack.android.yml"
+          - targetPlatform: iOS
             runs-on: [ self-hosted, macOS ]
-            test_script: browserstack-sdk pytest -s ./test/test_android.py
+            test_script: browserstack-sdk pytest -s ./test/ios.py --browserstack.config "browserstack.ios.yml"
     concurrency:
       group: test-${{ matrix.targetPlatform }}
     runs-on: ${{ matrix.runs-on }}

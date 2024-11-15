@@ -13,7 +13,7 @@
 # Set 'projectName' to the name of your project. Example, Marketing Website
 projectName: Unity Sample App
 # Set `buildName` as the name of the job / testsuite being run
-buildName: browserstack build
+buildName: iOS build
 # `buildIdentifier` is a unique id to differentiate every execution that gets appended to
 # buildName. Choose your buildIdentifier format from the available expressions:
 # ${BUILD_NUMBER} (Default): Generates an incremental counter with every execution
@@ -26,7 +26,7 @@ source: pytest-browserstack:sample-sdk:v1.0
 # Set `app` to define the app that is to be used for testing.
 # It can either take the id of any uploaded app or the path of the app directly.
 #app: ./WikipediaSample.apk
-app: ./SampleApp.apk #For running local tests
+app: ./Payload.ipa #For running local tests
 
 # =======================================
 # Platforms (Browsers / Devices to test)
@@ -35,15 +35,9 @@ app: ./SampleApp.apk #For running local tests
 # Entire list available here -> (https://www.browserstack.com/list-of-browsers-and-platforms/automate)
 
 platforms:
-  #  - deviceName: Samsung Galaxy S22 Ultra
-  #    osVersion: 12.0
-  #    platformName: android
-  #  - deviceName: Samsung Galaxy S21
-  #    osVersion: 11.0
-  #    platformName: android
-  - deviceName: Google Pixel 6 Pro
-    osVersion: 12.0
-    platformName: android
+  - platformName: ios
+    deviceName: iPhone 14 Pro Max
+    platformVersion: 16
 
 # =======================
 # Parallels per Platform
