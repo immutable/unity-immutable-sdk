@@ -64,10 +64,10 @@ jobs:
         include:
           - targetPlatform: StandaloneOSX
             runs-on: [self-hosted, macOS]
-            test_script: test_mac.sh
+            test_script: ./test_mac.sh
           - targetPlatform: StandaloneWindows64
             runs-on: [self-hosted, windows]
-            test_script: test_windows.ps1
+            test_script: ./test_windows.ps1
           - targetPlatform: Android
             runs-on: [ self-hosted, macOS ]
             test_script: browserstack-sdk pytest -s ./test/test_android.py
@@ -94,6 +94,9 @@ jobs:
           MAILSLURP_API_KEY: ${{ secrets.MAILSLURP_API_KEY }}
           BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
           BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
-        working-directory: sample/Tests
-        run: ${{ matrix.test_script }}
+        run: |
+          pwd
+          ls -la
+          cd sample/Tests
+          ./${{ matrix.test_script }}
       
