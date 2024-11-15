@@ -8,7 +8,7 @@ EMAIL = "user-33f17f82-274b-4269-9ce6-c620e89fcd8d@mailslurp.biz"
 
 def get_mailslurp_client():
     configuration = mailslurp_client.Configuration()
-    configuration.api_key['x-api-key'] = '***REMOVED***' #os.getenv('MAILSLURP_API_KEY')
+    configuration.api_key['x-api-key'] = os.getenv('MAILSLURP_API_KEY')
     api_client = mailslurp_client.ApiClient(configuration)
     waitfor_controller = WaitForControllerApi(api_client)
     return waitfor_controller
