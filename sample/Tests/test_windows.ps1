@@ -105,7 +105,7 @@ function Logout {
     Bring-SampleAppToForeground
 
     Write-Output "Running logout test..."
-    $pytestProcess = Start-Process -FilePath "pytest" -ArgumentList "test/test_mac_device_code_logout.py" -NoNewWindow -PassThru
+    $pytestProcess = Start-Process -FilePath "pytest" -ArgumentList "test/test_device_code_logout.py" -NoNewWindow -PassThru
 
     $pythonProcess | Wait-Process
 

@@ -3,8 +3,8 @@ import mailslurp_client
 from mailslurp_client.api import InboxControllerApi, WaitForControllerApi
 import re
 
-INBOX_ID = "33f17f82-274b-4269-9ce6-c620e89fcd8d"
-EMAIL = "user-33f17f82-274b-4269-9ce6-c620e89fcd8d@mailslurp.biz"
+INBOX_ID = "7cff2120-f684-4f31-886f-b29ca2400247"
+EMAIL = "7cff2120-f684-4f31-886f-b29ca2400247@mailslurp.net"
 
 def get_mailslurp_client():
     configuration = mailslurp_client.Configuration()

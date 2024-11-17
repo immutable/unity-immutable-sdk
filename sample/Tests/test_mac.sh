@@ -96,7 +96,7 @@ run_python_script "src/device_code_logout.py"
 sleep 5
 activate_sample_app "$app_name"
 echo "Running Mac device code logout test..."
-pytest test/test_mac_device_code_logout.py
+pytest test/test_device_code_logout.py
 wait
 close_chrome
 
@@ -118,7 +118,7 @@ run_python_script "src/device_code_logout.py"
 sleep 5
 activate_sample_app "$app_name"
 echo "Running Mac device code logout test..."
-pytest test/test_mac_device_code_logout.py
+pytest test/test_device_code_logout.py
 wait
 close_chrome
 
