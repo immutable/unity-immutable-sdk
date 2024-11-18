@@ -11089,4 +11089,8 @@ components:
       name: x-immutable-api-key
       type: apiKey
       x-go-name: ImmutableApiKey
+    BearerAuthWithClient:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http
 
