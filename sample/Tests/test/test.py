@@ -33,6 +33,10 @@ class UnityTest(unittest.TestCase):
         output = self.altdriver.find_object(By.NAME, "Output")
         self.assertEqual("Set call timeout to: 600000ms", output.get_text())
 
+        # Go back to authenticated scene
+        self.altdriver.find_object(By.NAME, "CancelButton").tap()
+        self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
+
     def test_1_passport_functions(self):
         output = self.altdriver.find_object(By.NAME, "Output")
 
