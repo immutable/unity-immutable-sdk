@@ -1,3 +1,9 @@
+import os
+import sys
+import subprocess
+import time
+from pathlib import Path
+
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -6,21 +12,26 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 import time
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'src'))
 from fetch_otp import EMAIL, fetch_code
 
-# Add chrome.exe to environment variable
-# Download chrome driver and add to environment variable
+# brew install chromedriver
 
-def main():
+def login():
     print("Connect to Chrome")
     # Set up Chrome options to connect to the existing Chrome instance
     chrome_options = Options()
-    chrome_options.add_experimental_option("debuggerAddress", "localhost:9222")
+    chrome_options.add_argument('--remote-debugging-port=9222')
     # Connect to the existing Chrome instance
     driver = webdriver.Chrome(options=chrome_options)
 
+    print("Open a window on Chrome")
+    # Get the original window handle
+    original_window = driver.current_window_handle
+
     print("Waiting for new window...")
-    WebDriverWait(driver, 60).until(EC.number_of_windows_to_be(2))
+    WebDriverWait(driver, 30).until(EC.number_of_windows_to_be(2))
 
     # Get all window handles
     all_windows = driver.window_handles
@@ -43,7 +54,7 @@ def main():
     print("Wait for OTP...")
     time.sleep(10)
 
-    print("Get OTP from Gmail...")
+    print("Get OTP from Mailslurp...")
     code = fetch_code()
     if code:
         print(f"Successfully fetched OTP: {code}")
@@ -62,5 +73,39 @@ def main():
 
     driver.quit()
 
-if __name__ == "__main__":
-    main()
+def open_sample_app():
+    print("Opening Unity sample app...")
+    subprocess.Popen(["open", "SampleApp.app"], shell=False)
+    time.sleep(5)
+    print("Unity sample app opened successfully.")
+
+def stop_sample_app():
+    print("Stopping sample app...")
+    try:
+        # Get the PID of the sample app using ps, grep, and awk
+        cmd = f"ps aux | grep 'Sample.app' | grep -v grep | awk '{{print $2}}'"
+        pid = subprocess.check_output(cmd, shell=True, text=True).strip()
+
+        if pid:
+            # Terminate the process using the PID
+            subprocess.run(["kill", pid])
+            print(f"Sample app (PID {pid}) has been terminated.")
+        else:
+            print("Sample app is not running.")
+    except subprocess.CalledProcessError:
+        print("Failed to find the sample app process.")
+
+    time.sleep(5)
+    print("Stopped sample app.")
+
+def bring_sample_app_to_foreground(app_name):
+    print("Bringing Unity sample app to the foreground...")
+    subprocess.run(
+            ['osascript', '-e', f'tell application "{app_name}" to activate'],
+            check=True
+        )
+    
+def stop_chrome():
+    print("Stopping Chrome all Chrome instances...")
+    subprocess.run(["pkill", "-f", "chrome"], check=True)
+    print("Stopped Chrome.")

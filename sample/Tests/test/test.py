@@ -2,13 +2,14 @@ import time
 import unittest
 import requests
 import re
+import pytest
 
 from alttester import *
 
 class TestConfig:
-    EMAIL = "a1369a61-9149-4499-a75e-610523e2baa7@mailslurp.net"
-    PASSPORT_ID="email|673a7cc7219c150ace38cf60"
-    WALLET_ADDRESS = "0xf629c9f0fee71cce1b21a6e5b0db8df2e8cd7354"
+    EMAIL = "26b067b8-ef3a-4655-955a-19f157b35b6e@mailslurp.net"
+    PASSPORT_ID="email|673d0795219c150acebff862"
+    WALLET_ADDRESS = "0x9af9826a83581ddfa0bdd7754de8a741ce64ebe8"
     
 class UnityTest(unittest.TestCase):
 
@@ -22,6 +23,7 @@ class UnityTest(unittest.TestCase):
     def tearDownClass(cls):
         cls.altdriver.stop()
 
+    @pytest.mark.skip(reason="Base test should not be executed directly")
     def test_0_other_functions(self):
         # Show set call timeout scene
         self.altdriver.find_object(By.NAME, "CallTimeout").tap()
@@ -37,6 +39,7 @@ class UnityTest(unittest.TestCase):
         self.altdriver.find_object(By.NAME, "CancelButton").tap()
         self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
 
+    @pytest.mark.skip(reason="Base test should not be executed directly")
     def test_1_passport_functions(self):
         output = self.altdriver.find_object(By.NAME, "Output")
 
@@ -61,6 +64,7 @@ class UnityTest(unittest.TestCase):
         time.sleep(1)
         self.assertEqual("No linked addresses", output.get_text())
 
+    @pytest.mark.skip(reason="Base test should not be executed directly")
     def test_2_imx_functions(self):
         output = self.altdriver.find_object(By.NAME, "Output")
 
@@ -75,20 +79,20 @@ class UnityTest(unittest.TestCase):
 
         # Register off-chain
         # Wait up to 3 times for "Passport account already registered" to appear
-        #attempts = 0
-        #while attempts < 6:
-        #    self.altdriver.find_object(By.NAME, "RegisterOffchainBtn").tap()
-        #    self.assertEqual("Registering off-chain...", output.get_text())
-        #    time.sleep(20)
-        #    if "Passport account already registered" in output.get_text():
-        #        break
-        #    attempts += 1
+        attempts = 0
+        while attempts < 3:
+           self.altdriver.find_object(By.NAME, "RegisterOffchainBtn").tap()
+           self.assertEqual("Registering off-chain...", output.get_text())
+           time.sleep(20)
+           if "Passport account already registered" in output.get_text():
+               break
+           attempts += 1
 
         # Assert that the desired text is found after waiting
-        #self.assertTrue(
-        #    "Passport account already registered" in output.get_text(),
-        #    f"Expected 'Passport account already registered' not found. Actual output: '{output.get_text()}'"
-        #)
+        self.assertTrue(
+           "Passport account already registered" in output.get_text(),
+           f"Expected 'Passport account already registered' not found. Actual output: '{output.get_text()}'"
+        )
 
         # Get address
         self.altdriver.find_object(By.NAME, "GetAddressBtn").tap()
@@ -158,6 +162,7 @@ class UnityTest(unittest.TestCase):
         self.altdriver.find_object(By.NAME, "CancelButton").tap()
         self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
 
+    @pytest.mark.skip(reason="Base test should not be executed directly")
     def test_3_zkevm_functions(self):
         output = self.altdriver.find_object(By.NAME, "Output")
 

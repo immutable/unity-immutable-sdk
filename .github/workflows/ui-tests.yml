@@ -68,7 +68,7 @@ jobs:
             test_script: ./test_mac.sh
           - targetPlatform: StandaloneWindows64
             runs-on: [self-hosted, windows]
-            test_script: ./test_windows.ps1
+            test_script: pytest -xs test/test_windows.py::WindowsTest
           - targetPlatform: Android
             runs-on: [ self-hosted, macOS ]
             test_script: browserstack-sdk pytest -s ./test/test_android.py --browserstack.config "browserstack.android.yml"
