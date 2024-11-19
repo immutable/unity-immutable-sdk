@@ -54,12 +54,12 @@ def login():
     print("Wait for OTP...")
     time.sleep(10)
 
-    print("Get OTP from Gmail...")
+    print("Get OTP from MailSlurp...")
     code = fetch_code()
     if code:
         print(f"Successfully fetched OTP: {code}")
     else:
-        print("Failed to fetch OTP from Gmail")
+        print("Failed to fetch OTP from MailSlurp")
         driver.quit()
 
     print("Find OTP input...")

@@ -12,12 +12,12 @@ class WindowsTest(UnityTest):
     @classmethod
     def setUpClass(cls):
         open_sample_app()
-
         cls.altdriver = AltDriver()
 
     @classmethod
     def tearDownClass(cls):
-        cls.altdriver.stop()        
+        cls.altdriver.stop()
+        stop_sample_app()        
 
     def test_1_device_code_login(self):
         launch_chrome()

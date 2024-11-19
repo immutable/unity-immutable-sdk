@@ -13,11 +13,11 @@ class MacTest(UnityTest):
     @classmethod
     def setUpClass(cls):
         open_sample_app
-
         cls.altdriver = AltDriver()
 
     @classmethod
     def tearDownClass(cls):
+        stop_sample_app()
         cls.altdriver.stop()
 
     def test_1_device_code_login(self):
