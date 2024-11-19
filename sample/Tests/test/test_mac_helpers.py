@@ -59,7 +59,7 @@ def login():
     if code:
         print(f"Successfully fetched OTP: {code}")
     else:
-        print("Failed to fetch OTP from Gmail")
+        print("Failed to fetch OTP from MailSlurp")
         driver.quit()
 
     print("Find OTP input...")
