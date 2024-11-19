@@ -72,7 +72,8 @@ public class MacBuilder
                 "Assets/Scenes/ZkEvmGetTransactionReceipt.unity",
                 "Assets/Scenes/ZkEvmSendTransaction.unity",
                 "Assets/Scenes/ImxNftTransfer.unity",
-                "Assets/Scenes/ZkEVMSignTypedData.unity"
+                "Assets/Scenes/ZkEVMSignTypedData.unity",
+                "Assets/Scenes/SetCallTimeout.unity"
             },
             locationPathName = buildPath,
             target = BuildTarget.StandaloneOSX,

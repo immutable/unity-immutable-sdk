@@ -30,7 +30,11 @@ function Run-Pytest {
         [string]$testFile
     )
     Write-Output "Running pytest for $testFile..."
-    Start-Process -FilePath "pytest" -ArgumentList $testFile -NoNewWindow -PassThru | Wait-Process
+    $process = Start-Process -FilePath "pytest" -ArgumentList "-x", $testFile -NoNewWindow -PassThru -Wait
+    if ($process.ExitCode -ne 0) {
+        Write-Output "Test failed for $testFile. Stopping execution."
+        exit $process.ExitCode
+    }
 }
 
 # Function to stop Chrome if it's running
@@ -95,7 +99,17 @@ function Login {
 function Logout {
     # Start Chrome for remote debugging
     Write-Output "Starting Chrome..."
-    $chromePath = (Get-Command chrome.exe).Source
+    $chromePath = "C:\Program Files\Google\Chrome\Application\chrome.exe"
+
+    if (-not (Test-Path $chromePath)) {
+        $chromePath = "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+    }
+
+    if (-not (Test-Path $chromePath)) {
+        Write-Output "Chrome executable not found."
+        exit
+    }
+
     Start-Process -FilePath $chromePath -ArgumentList "--remote-debugging-port=9222"
 
     Write-Output "Running python script to logout..."
