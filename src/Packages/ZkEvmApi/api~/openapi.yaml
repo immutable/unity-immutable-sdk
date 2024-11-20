@@ -9218,6 +9218,40 @@ components:
       - price_details
       - token_id
       type: object
+    Bid:
+      properties:
+        bid_id:
+          description: Global Order identifier
+          example: 018792C9-4AD7-8EC4-4038-9E05C598534A
+          type: string
+        price_details:
+          $ref: '#/components/schemas/MarketPriceDetails'
+        token_id:
+          description: Token ID. Null for collection bids that can be fulfilled by
+            any asset in the collection
+          example: "1"
+          nullable: true
+          type: string
+        contract_address:
+          description: ETH Address of collection that the asset belongs to
+          example: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          type: string
+        creator:
+          description: ETH Address of listing creator
+          example: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          type: string
+        amount:
+          description: Amount of token included in the listing
+          example: "1"
+          type: string
+      required:
+      - amount
+      - bid_id
+      - contract_address
+      - creator
+      - price_details
+      - token_id
+      type: object
     LastTrade:
       description: Most recent trade
       example:
@@ -9291,6 +9325,7 @@ components:
     Market:
       description: Market data
       example:
+        top_bid: ""
         last_trade:
           amount: "1"
           trade_id: 4e28df8d-f65c-4c11-ba04-6a9dd47b179b
@@ -9329,11 +9364,17 @@ components:
           - $ref: '#/components/schemas/Listing'
           description: Cheapest active listing
           nullable: true
+        top_bid:
+          allOf:
+          - $ref: '#/components/schemas/Bid'
+          description: Highest active big
+          nullable: true
         last_trade:
           $ref: '#/components/schemas/LastTrade'
       required:
       - floor_listing
       - last_trade
+      - top_bid
       type: object
     NFTBundle:
       description: "NFT bundle includes NFT with stack, markets and listings"
@@ -10217,6 +10258,7 @@ components:
           name: imtbl-zkevm-testnet
           id: eip155:13372
         market_collection:
+          top_bid: ""
           last_trade:
             amount: "1"
             trade_id: 4e28df8d-f65c-4c11-ba04-6a9dd47b179b
@@ -10251,6 +10293,7 @@ components:
           floor_listing: ""
         stack_id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
         market_stack:
+          top_bid: ""
           last_trade:
             amount: "1"
             trade_id: 4e28df8d-f65c-4c11-ba04-6a9dd47b179b
@@ -10307,6 +10350,7 @@ components:
             name: imtbl-zkevm-testnet
             id: eip155:13372
           market_collection:
+            top_bid: ""
             last_trade:
               amount: "1"
               trade_id: 4e28df8d-f65c-4c11-ba04-6a9dd47b179b
@@ -10341,6 +10385,7 @@ components:
             floor_listing: ""
           stack_id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
           market_stack:
+            top_bid: ""
             last_trade:
               amount: "1"
               trade_id: 4e28df8d-f65c-4c11-ba04-6a9dd47b179b
@@ -10377,6 +10422,7 @@ components:
             name: imtbl-zkevm-testnet
             id: eip155:13372
           market_collection:
+            top_bid: ""
             last_trade:
               amount: "1"
               trade_id: 4e28df8d-f65c-4c11-ba04-6a9dd47b179b
@@ -10411,6 +10457,7 @@ components:
             floor_listing: ""
           stack_id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
           market_stack:
+            top_bid: ""
             last_trade:
               amount: "1"
               trade_id: 4e28df8d-f65c-4c11-ba04-6a9dd47b179b
@@ -10506,6 +10553,7 @@ components:
           id: eip155:13372
         token_id: token_id
         market_collection:
+          top_bid: ""
           last_trade:
             amount: "1"
             trade_id: 4e28df8d-f65c-4c11-ba04-6a9dd47b179b
@@ -10571,6 +10619,7 @@ components:
             created_at: 2022-08-16T17:43:26.991388Z
             contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
         market_stack:
+          top_bid: ""
           last_trade:
             amount: "1"
             trade_id: 4e28df8d-f65c-4c11-ba04-6a9dd47b179b
@@ -10631,6 +10680,7 @@ components:
             id: eip155:13372
           token_id: token_id
           market_collection:
+            top_bid: ""
             last_trade:
               amount: "1"
               trade_id: 4e28df8d-f65c-4c11-ba04-6a9dd47b179b
@@ -10696,6 +10746,7 @@ components:
               created_at: 2022-08-16T17:43:26.991388Z
               contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           market_stack:
+            top_bid: ""
             last_trade:
               amount: "1"
               trade_id: 4e28df8d-f65c-4c11-ba04-6a9dd47b179b
@@ -10733,6 +10784,7 @@ components:
             id: eip155:13372
           token_id: token_id
           market_collection:
+            top_bid: ""
             last_trade:
               amount: "1"
               trade_id: 4e28df8d-f65c-4c11-ba04-6a9dd47b179b
@@ -10798,6 +10850,7 @@ components:
               created_at: 2022-08-16T17:43:26.991388Z
               contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           market_stack:
+            top_bid: ""
             last_trade:
               amount: "1"
               trade_id: 4e28df8d-f65c-4c11-ba04-6a9dd47b179b
