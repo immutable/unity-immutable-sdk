@@ -65,7 +65,7 @@ jobs:
         include:
           - targetPlatform: StandaloneOSX
             runs-on: [self-hosted, macOS]
-            test_script: ./test_mac.sh
+            test_script: pytest -xs test/test_mac.py::MacTest
           - targetPlatform: StandaloneWindows64
             runs-on: [self-hosted, windows]
             test_script: pytest -xs test/test_windows.py::WindowsTest

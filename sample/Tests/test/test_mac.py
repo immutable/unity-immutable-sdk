@@ -52,7 +52,8 @@ class MacTest(UnityTest):
 
         # Switch to the new window
         all_windows = cls.seleniumdriver.window_handles
-        new_window = next(window for window in all_windows if window != cls.seleniumdriver.current_window_handle)
+        new_window = [window for window in all_windows if window != cls.seleniumdriver.current_window_handle][0]
+        cls.seleniumdriver.switch_to.window(new_window)
         print("Switched to new window")
 
         # Wait for email input and enter email
