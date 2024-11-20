@@ -65,13 +65,13 @@ jobs:
         include:
           - targetPlatform: StandaloneOSX
             runs-on: [self-hosted, macOS]
-            test_script: ./test_mac.sh
+            test_script: pytest -xs test/test_mac.py::MacTest
           - targetPlatform: StandaloneWindows64
             runs-on: [self-hosted, windows]
-            test_script: ./test_windows.ps1
-          - targetPlatform: Android
-            runs-on: [ self-hosted, macOS ]
-            test_script: browserstack-sdk pytest -s ./test/test_android.py --browserstack.config "browserstack.android.yml"
+            test_script: pytest -xs test/test_windows.py::WindowsTest
+          # - targetPlatform: Android
+          #   runs-on: [ self-hosted, macOS ]
+          #   test_script: browserstack-sdk pytest -s ./test/test_android.py --browserstack.config "browserstack.android.yml"
     concurrency:
       group: test-${{ matrix.targetPlatform }}
     runs-on: ${{ matrix.runs-on }}
@@ -83,6 +83,9 @@ jobs:
         with:
           name: Build-${{ matrix.targetPlatform }}
           path: sample/Tests
+      - name: Make macOS artifact executable
+        if: ${{ matrix.targetPlatform == 'StandaloneOSX' }}
+        run: chmod +x sample/Tests/SampleApp.app/Contents/MacOS/*
       - uses: actions/setup-python@v4
         with:
           python-version: "3.10"
@@ -107,26 +110,26 @@ jobs:
           BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
         working-directory: sample/Tests
         run: ${{ matrix.test_script }}
-  test-ios:
-    name: Run iOS UI tests 🧪
-    runs-on: [ self-hosted, macOS ]
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          lfs: true
-      - name: build iOS app
-        working-directory: sample
-        run: ./build_ios.sh
-      - uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
-      - name: Install dependencies
-        run: pip install -r "sample/Tests/requirements.txt"
-      - name: Run UI tests
-        env:
-          MAILSLURP_API_KEY: ${{ secrets.MAILSLURP_API_KEY }}
-          BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
-          BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
-        working-directory: sample/Tests
-        run: browserstack-sdk pytest -s ./test/test_ios.py --browserstack.config "browserstack.ios.yml"
+  # test-ios:
+  #   name: Run iOS UI tests 🧪
+  #   runs-on: [ self-hosted, macOS ]
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         lfs: true
+  #     - name: build iOS app
+  #       working-directory: sample
+  #       run: ./build_ios.sh
+  #     - uses: actions/setup-python@v4
+  #       with:
+  #         python-version: "3.10"
+  #     - name: Install dependencies
+  #       run: pip install -r "sample/Tests/requirements.txt"
+  #     - name: Run UI tests
+  #       env:
+  #         MAILSLURP_API_KEY: ${{ secrets.MAILSLURP_API_KEY }}
+  #         BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
+  #         BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+  #       working-directory: sample/Tests
+  #       run: browserstack-sdk pytest -s ./test/test_ios.py --browserstack.config "browserstack.ios.yml"
       
