@@ -32,7 +32,6 @@ jobs:
         with:
           lfs: true
       - uses: actions/cache@v3
-        if: ${{ matrix.targetPlatform != 'StandaloneOSX' }}
         with:
           path: Library
           key: Library-${{ matrix.targetPlatform }}-${{ hashFiles('sample/Assets/**', 'sample/Packages/**', 'sample/ProjectSettings/**') }}
@@ -84,6 +83,9 @@ jobs:
         with:
           name: Build-${{ matrix.targetPlatform }}
           path: sample/Tests
+      - name: Make macOS artifact executable
+        if: ${{ matrix.targetPlatform == 'StandaloneOSX' }}
+        run: chmod +x sample/Tests/SampleApp.app/Contents/MacOS/*
       - uses: actions/setup-python@v4
         with:
           python-version: "3.10"
