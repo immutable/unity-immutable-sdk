@@ -32,6 +32,7 @@ jobs:
         with:
           lfs: true
       - uses: actions/cache@v3
+        if: ${{ matrix.targetPlatform != 'StandaloneOSX' }}
         with:
           path: Library
           key: Library-${{ matrix.targetPlatform }}-${{ hashFiles('sample/Assets/**', 'sample/Packages/**', 'sample/ProjectSettings/**') }}
