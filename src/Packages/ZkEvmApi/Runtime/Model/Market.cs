@@ -40,8 +40,9 @@ namespace Immutable.Api.ZkEvm.Model
         /// Initializes a new instance of the <see cref="Market" /> class.
         /// </summary>
         /// <param name="floorListing">Cheapest active listing (required).</param>
+        /// <param name="topBid">Highest active big (required).</param>
         /// <param name="lastTrade">lastTrade (required).</param>
-        public Market(Listing floorListing = default(Listing), LastTrade lastTrade = default(LastTrade))
+        public Market(Listing floorListing = default(Listing), Bid topBid = default(Bid), LastTrade lastTrade = default(LastTrade))
         {
             // to ensure "floorListing" is required (not null)
             if (floorListing == null)
@@ -49,6 +50,12 @@ namespace Immutable.Api.ZkEvm.Model
                 throw new ArgumentNullException("floorListing is a required property for Market and cannot be null");
             }
             this.FloorListing = floorListing;
+            // to ensure "topBid" is required (not null)
+            if (topBid == null)
+            {
+                throw new ArgumentNullException("topBid is a required property for Market and cannot be null");
+            }
+            this.TopBid = topBid;
             // to ensure "lastTrade" is required (not null)
             if (lastTrade == null)
             {
@@ -65,6 +72,13 @@ namespace Immutable.Api.ZkEvm.Model
         public Listing FloorListing { get; set; }
 
         /// <summary>
+        /// Highest active big
+        /// </summary>
+        /// <value>Highest active big</value>
+        [DataMember(Name = "top_bid", IsRequired = true, EmitDefaultValue = true)]
+        public Bid TopBid { get; set; }
+
+        /// <summary>
         /// Gets or Sets LastTrade
         /// </summary>
         [DataMember(Name = "last_trade", IsRequired = true, EmitDefaultValue = true)]
@@ -79,6 +93,7 @@ namespace Immutable.Api.ZkEvm.Model
             StringBuilder sb = new StringBuilder();
             sb.Append("class Market {\n");
             sb.Append("  FloorListing: ").Append(FloorListing).Append("\n");
+            sb.Append("  TopBid: ").Append(TopBid).Append("\n");
             sb.Append("  LastTrade: ").Append(LastTrade).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
