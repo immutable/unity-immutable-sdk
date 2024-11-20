@@ -1,24 +1,88 @@
+import sys
 import time
+from pathlib import Path
+
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By as SeleniumBy
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.keys import Keys
 
 from alttester import *
 
 from test import TestConfig, UnityTest
-from test_mac_helpers import login, open_sample_app, bring_sample_app_to_foreground, stop_chrome, stop_sample_app
+from test_mac_helpers import open_sample_app, bring_sample_app_to_foreground, stop_sample_app
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'src'))
+from fetch_otp import fetch_code
 
 class MacTest(UnityTest):
 
     altdriver = None
+    seleniumdriver = None
 
     @classmethod
     def setUpClass(cls):
-        open_sample_app
+        open_sample_app()
         cls.altdriver = AltDriver()
 
     @classmethod
     def tearDownClass(cls):
         stop_sample_app()
         cls.altdriver.stop()
+
+    @classmethod
+    def setupChrome(cls):
+        print("Connect to Chrome")
+        chrome_options = Options()
+        chrome_options.add_argument('--remote-debugging-port=9222')
+
+        # Initialise Chrome driver
+        cls.seleniumdriver = webdriver.Chrome(options=chrome_options)
+
+        print("Open a window on Chrome")
+        cls.seleniumdriver.current_window_handle
+
+    @classmethod
+    def login(cls):
+        print("Waiting for new window...")
+        WebDriverWait(cls.seleniumdriver, 30).until(EC.number_of_windows_to_be(2))
+
+        # Switch to the new window
+        all_windows = cls.seleniumdriver.window_handles
+        new_window = next(window for window in all_windows if window != cls.seleniumdriver.current_window_handle)
+        print("Switched to new window")
+
+        # Wait for email input and enter email
+        email_field = WebDriverWait(cls.seleniumdriver, 60).until(EC.presence_of_element_located((SeleniumBy.ID, ':r1:')))
+        print("Entering email...")
+        email_field.send_keys(TestConfig.EMAIL)
+        email_field.send_keys(Keys.RETURN)
+
+        # Wait for OTP
+        print("Waiting for OTP...")
+        time.sleep(10)
+        print("Fetching OTP from MailSlurp...")
+        code = fetch_code()
+        
+        if not code:
+            cls.seleniumdriver.quit()
+            raise AssertionError("Failed to fetch OTP from MailSlurp")
+        
+        print(f"Successfully fetched OTP: {code}")
+
+        # Find OTP input and enter the code
+        otp_field = WebDriverWait(cls.seleniumdriver, 60).until(EC.presence_of_element_located((SeleniumBy.CSS_SELECTOR, 'input[data-testid="passwordless_passcode__TextInput--0__input"]')))
+        print("Entering OTP...")
+        otp_field.send_keys(code)
+
+        # Wait for success page and confirm
+        success = WebDriverWait(cls.seleniumdriver, 60).until(EC.presence_of_element_located((SeleniumBy.CSS_SELECTOR, 'h1[data-testid="device_success_title"]')))
+        print("Connected to Passport!")
+        
+        cls.seleniumdriver.quit()
 
     def test_1_device_code_login(self):
         # Select use device code auth
@@ -29,9 +93,12 @@ class MacTest(UnityTest):
 
         # Login
         print("Logging in...")
-        login()
+        self.setupChrome()
         bring_sample_app_to_foreground()
         self.altdriver.wait_for_object(By.NAME, "LoginBtn").tap()
+        self.login()
+        bring_sample_app_to_foreground()
+
         # Wait for authenticated screen
         self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
         print("Logged in")
@@ -116,23 +183,28 @@ class MacTest(UnityTest):
 
         # Logout
         print("Logging out...")
+        self.setupChrome()
+        bring_sample_app_to_foreground()
         self.altdriver.find_object(By.NAME, "LogoutBtn").tap()
         time.sleep(5)
         bring_sample_app_to_foreground()
+        
         # Wait for authenticated screen
         self.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
-        stop_chrome()
+        self.seleniumdriver.quit()
         print("Logged out")
-
+        
         # Connect IMX
         print("Logging in and connecting to IMX...")
-        self.altdriver.wait_for_object(By.NAME, "ConnectBtn").tap()
-        login()
+        self.setupChrome()
         bring_sample_app_to_foreground()
+        self.altdriver.wait_for_object(By.NAME, "ConnectBtn").tap()
+        self.login()
+        bring_sample_app_to_foreground()
+
         # Wait for authenticated screen
         self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
         print("Logged in and connected to IMX")
-        stop_chrome()
 
         # Get access token
         self.altdriver.find_object(By.NAME, "GetAccessTokenBtn").tap()
@@ -145,10 +217,13 @@ class MacTest(UnityTest):
 
         # Logout
         print("Logging out...")
+        self.setupChrome()
+        bring_sample_app_to_foreground()
         self.altdriver.find_object(By.NAME, "LogoutBtn").tap()
         time.sleep(5)
         bring_sample_app_to_foreground()
+
         # Wait for authenticated screen
         self.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
-        stop_chrome()
+        self.seleniumdriver.quit()
         print("Logged out")

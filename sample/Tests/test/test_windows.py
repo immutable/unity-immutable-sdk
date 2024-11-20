@@ -31,6 +31,7 @@ class WindowsTest(UnityTest):
         self.altdriver.wait_for_object(By.NAME, "LoginBtn").tap()
         login()
         bring_sample_app_to_foreground()
+
         # Wait for authenticated screen
         self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
         print("Logged in")
@@ -112,6 +113,7 @@ class WindowsTest(UnityTest):
         self.altdriver.find_object(By.NAME, "LogoutBtn").tap()
         time.sleep(5)
         bring_sample_app_to_foreground()
+
         # Wait for authenticated screen
         self.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
         stop_chrome()
@@ -124,6 +126,7 @@ class WindowsTest(UnityTest):
         self.altdriver.wait_for_object(By.NAME, "ConnectBtn").tap()
         login()
         bring_sample_app_to_foreground()
+        
         # Wait for authenticated screen
         self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
         print("Logged in and connected to IMX")
@@ -145,6 +148,7 @@ class WindowsTest(UnityTest):
         self.altdriver.find_object(By.NAME, "LogoutBtn").tap()
         time.sleep(5)
         bring_sample_app_to_foreground()
+        
         # Wait for authenticated screen
         self.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
         stop_chrome()

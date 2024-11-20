@@ -1,6 +1,6 @@
 import os
 import mailslurp_client
-from mailslurp_client.api import InboxControllerApi, WaitForControllerApi
+from mailslurp_client.api import WaitForControllerApi
 import re
 
 INBOX_ID = "26b067b8-ef3a-4655-955a-19f157b35b6e"
