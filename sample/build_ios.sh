@@ -1,14 +1,15 @@
 #!/bin/bash
 
-PATH_UNITY="/Applications/Unity/Unity.app/Contents/MacOS/Unity"
+PATH_UNITY="/Applications/Unity/Hub/Editor/2021.3.26f1/Unity.app/Contents/MacOS/Unity"
 PATH_TO_UNITY_SDK_SAMPLE_APP="./"
 BUILD_METHOD="MobileBuilder.BuildForAltTester"
-APPLE_TEAM_ID=""
+APPLE_TEAM_ID="54XMLXPF98"
 
 # Define the build paths
 BUILD_XCODE_PATH="$(pwd)/build/output/iOS/Xcode"
 BUILD_ARCHIVE_PATH="$(pwd)/build/output/iOS/Archive"
 BUILD_IPA_PATH="$(pwd)/build/output/iOS/IPA"
+DERIVED_DATA_PATH="$(pwd)/build/output/iOS/DerivedData"
 
 # Function to clear a directory
 clear_directory() {
@@ -25,9 +26,15 @@ clear_directory() {
 clear_directory "$BUILD_XCODE_PATH"
 clear_directory "$BUILD_ARCHIVE_PATH"
 clear_directory "$BUILD_IPA_PATH"
+clear_directory "$DERIVED_DATA_PATH"
+
+mkdir -p "$BUILD_XCODE_PATH"
+mkdir -p "$BUILD_ARCHIVE_PATH"
+mkdir -p "$BUILD_IPA_PATH"
+mkdir -p "$DERIVED_DATA_PATH"
 
 # Unity build command
-UNITY_COMMAND="$PATH_UNITY -projectPath \"$PATH_TO_UNITY_SDK_SAMPLE_APP\" -executeMethod $BUILD_METHOD -logFile logFile.log -quit -batchmode --buildPath \"$BUILD_XCODE_PATH\" --platform iOS"
+UNITY_COMMAND="$PATH_UNITY -projectPath \"$PATH_TO_UNITY_SDK_SAMPLE_APP\" -executeMethod $BUILD_METHOD -logFile logFile.log -quit -batchmode --buildPath \"$BUILD_XCODE_PATH\" --platform iOS --bundleIdentifier com.immutable.Immutable-Sample-GameSDK"
 echo "Running command: $UNITY_COMMAND"
 
 # Execute the Unity build command
@@ -39,39 +46,19 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Build and archive project
-xcodebuild -project "$(pwd)/build/output/iOS/Xcode/Unity-iPhone.xcodeproj" \
+echo "Building app..."
+xcodebuild clean build \
+           -project "$(pwd)/build/output/iOS/Xcode/Unity-iPhone.xcodeproj" \
            -scheme Unity-iPhone \
-           -archivePath "$(pwd)/build/output/iOS/Archive/Unity-iPhone.xcarchive" \
-           -configuration Release \
+           -destination "generic/platform=iOS" \
            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
-           CODE_SIGN_STYLE=Automatic \
-           archive
+           -allowProvisioningUpdates \
+           -derivedDataPath "$(pwd)/build/output/iOS/DerivedData"
 
-# Create ExportOptions.plist with the correct APPLE_TEAM_ID
-EXPORT_OPTIONS_PATH="$(pwd)/build/output/iOS/Archive/ExportOptions.plist"
+mkdir -p "$(pwd)/build/output/iOS/IPA/Payload"
 
-cat <<EOF > "$EXPORT_OPTIONS_PATH"
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>method</key>
-    <string>development</string> <!-- Use 'ad-hoc' or 'app-store' as needed -->
-    <key>teamID</key>
-    <string>$APPLE_TEAM_ID</string>
-    <key>signingStyle</key>
-    <string>automatic</string> <!-- Use automatic signing -->
-    <key>compileBitcode</key>
-    <false/>
-    <key>thinning</key>
-    <string>&lt;none&gt;</string>
-</dict>
-</plist>
-EOF
+mv "$(pwd)/build/output/iOS/DerivedData/Build/Products/ReleaseForRunning-iphoneos/ImmutableSample.app" "$(pwd)/build/output/iOS/IPA/Payload"
 
-# Generate .ipa file
-xcodebuild -exportArchive \
-           -archivePath "$(pwd)/build/output/iOS/Archive/Unity-iPhone.xcarchive" \
-           -exportPath "$(pwd)/build/output/iOS/IPA" \
-           -exportOptionsPlist "$EXPORT_OPTIONS_PATH"
+pushd "$(pwd)/build/output/iOS/IPA" && zip -r Payload.zip Payload && popd
+
+mv "$(pwd)/build/output/iOS/IPA/Payload.zip" "$(pwd)/Tests/Payload.ipa"

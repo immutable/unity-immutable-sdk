@@ -12,8 +12,10 @@ from selenium.webdriver.support import expected_conditions as EC
 
 from alttester import AltDriver, By
 
+from test import TestConfig
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'src'))
-from fetch_otp import EMAIL, fetch_code
+from fetch_otp import fetch_code
 
 # To run this test on an actual Android device: appium --base-path /wd/hub --allow-insecure chromedriver_autodownload
 class TestBase(unittest.TestCase):
@@ -24,9 +26,7 @@ class TestBase(unittest.TestCase):
     def setUpClass(cls):
         # https://appium.github.io/appium-xcuitest-driver/latest/preparation/real-device-config/
         options = XCUITestOptions()
-        options.app = "./Payload.ipa"
         options.show_xcode_log = True
-        options.xcode_org_id = "APPLE_TEAM_ID" # Replace with Apple Team ID
         options.auto_accept_alerts = True
 
         cls.appium_driver = webdriver.Remote('https://hub-cloud.browserstack.com/wd/hub/', options=options)
@@ -75,14 +75,14 @@ class TestBase(unittest.TestCase):
                 # Found email
                 target_context = context
 
-                email_field.send_keys("imx.game.sdk.demo@gmail.com")
+                email_field.send_keys(TestConfig.EMAIL)
                 submit_button = driver.find_element(by=AppiumBy.XPATH, value="//form/div/div/div[2]/button")
                 submit_button.click()
 
                 time.sleep(10) # Wait for OTP
 
-                code = fetch_gmail_code()
-                assert code, "Failed to fetch OTP from Gmail"
+                code = fetch_code()
+                assert code, "Failed to fetch OTP from MailSlurp"
                 print(f"Successfully fetched OTP: {code}")
 
                 # Unlike on Android, each digit must be entered into a separate input field on iOS.
