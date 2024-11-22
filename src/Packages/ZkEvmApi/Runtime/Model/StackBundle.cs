@@ -43,7 +43,8 @@ namespace Immutable.Api.ZkEvm.Model
         /// <param name="stackCount">Total count of NFTs in the stack matching the filter params (required).</param>
         /// <param name="market">market (required).</param>
         /// <param name="listings">List of open listings for the stack. (required).</param>
-        public StackBundle(Stack stack = default(Stack), int stackCount = default(int), Market market = default(Market), List<Listing> listings = default(List<Listing>))
+        /// <param name="bids">List of open bids for the stack. (required).</param>
+        public StackBundle(Stack stack = default(Stack), int stackCount = default(int), Market market = default(Market), List<Listing> listings = default(List<Listing>), List<Bid> bids = default(List<Bid>))
         {
             // to ensure "stack" is required (not null)
             if (stack == null)
@@ -64,6 +65,12 @@ namespace Immutable.Api.ZkEvm.Model
                 throw new ArgumentNullException("listings is a required property for StackBundle and cannot be null");
             }
             this.Listings = listings;
+            // to ensure "bids" is required (not null)
+            if (bids == null)
+            {
+                throw new ArgumentNullException("bids is a required property for StackBundle and cannot be null");
+            }
+            this.Bids = bids;
         }
 
         /// <summary>
@@ -94,6 +101,13 @@ namespace Immutable.Api.ZkEvm.Model
         public List<Listing> Listings { get; set; }
 
         /// <summary>
+        /// List of open bids for the stack.
+        /// </summary>
+        /// <value>List of open bids for the stack.</value>
+        [DataMember(Name = "bids", IsRequired = true, EmitDefaultValue = true)]
+        public List<Bid> Bids { get; set; }
+
+        /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
         /// <returns>String presentation of the object</returns>
@@ -105,6 +119,7 @@ namespace Immutable.Api.ZkEvm.Model
             sb.Append("  StackCount: ").Append(StackCount).Append("\n");
             sb.Append("  Market: ").Append(Market).Append("\n");
             sb.Append("  Listings: ").Append(Listings).Append("\n");
+            sb.Append("  Bids: ").Append(Bids).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
