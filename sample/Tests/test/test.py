@@ -7,9 +7,9 @@ import pytest
 from alttester import *
 
 class TestConfig:
-    EMAIL = "26b067b8-ef3a-4655-955a-19f157b35b6e@mailslurp.net"
-    PASSPORT_ID="email|673d0795219c150acebff862"
-    WALLET_ADDRESS = "0x9af9826a83581ddfa0bdd7754de8a741ce64ebe8"
+    EMAIL = "2d8e4d25-91f6-4da5-b613-bf3b807dc5d5@mailslurp.net"
+    PASSPORT_ID="email|673eb448219c150aceb417da"
+    WALLET_ADDRESS = "0x2eaedd0e4c78d44fcb87d7494463360810761c3e"
     
 class UnityTest(unittest.TestCase):
 

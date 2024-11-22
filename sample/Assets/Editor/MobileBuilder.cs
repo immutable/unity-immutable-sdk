@@ -31,6 +31,12 @@ public class MobileBuilder
         {
             string buildPath = GetBuildPathFromArgs(defaultBuildPath);
 
+            if (platform == BuildTarget.iOS)
+            {
+                string bundleIdentifier = GetBundleIdentifierFromArgs();
+                PlayerSettings.applicationIdentifier = bundleIdentifier;
+            }
+
             BuildPlayerOptions buildPlayerOptions = CreateBuildPlayerOptions(buildPath, buildOptions, platform);
 
             if (setupForAltTester)
@@ -77,6 +83,19 @@ public class MobileBuilder
             }
         }
         return BuildTarget.Android; // Default to Android if no platform is specified
+    }
+
+    private static string GetBundleIdentifierFromArgs()
+    {
+        string[] args = Environment.GetCommandLineArgs();
+        for (int i = 0; i < args.Length; i++)
+        {
+            if (args[i] == "--bundleIdentifier" && i + 1 < args.Length)
+            {
+                return args[i + 1];
+            }
+        }
+        return "com.immutable.Immutable-Sample";
     }
 
     private static string GetAltTesterHostFromArgs()
