@@ -9219,6 +9219,25 @@ components:
       - token_id
       type: object
     Bid:
+      example:
+        creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+        amount: "1"
+        token_id: "1"
+        price_details:
+          amount: "9750000000000000000"
+          fees:
+          - type: TAKER_ECOSYSTEM
+            recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+            amount: "1000000000000000000"
+          converted_prices:
+            ETH: "0.0058079775"
+            USD: "15.89"
+          token:
+            symbol: IMX
+            type: NATIVE
+          fee_inclusive_amount: "9750000000000000000"
+        bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
+        contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
       properties:
         bid_id:
           description: Global Order identifier
@@ -9471,6 +9490,97 @@ components:
               type: NATIVE
             fee_inclusive_amount: "9750000000000000000"
           contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+        bids:
+        - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          amount: "1"
+          token_id: "1"
+          price_details:
+            amount: "9750000000000000000"
+            fees:
+            - type: TAKER_ECOSYSTEM
+              recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+              amount: "1000000000000000000"
+            converted_prices:
+              ETH: "0.0058079775"
+              USD: "15.89"
+            token:
+              symbol: IMX
+              type: NATIVE
+            fee_inclusive_amount: "9750000000000000000"
+          bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
+          contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+        - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          amount: "1"
+          token_id: "1"
+          price_details:
+            amount: "9750000000000000000"
+            fees:
+            - type: TAKER_ECOSYSTEM
+              recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+              amount: "1000000000000000000"
+            converted_prices:
+              ETH: "0.0058079775"
+              USD: "15.89"
+            token:
+              symbol: IMX
+              type: NATIVE
+            fee_inclusive_amount: "9750000000000000000"
+          bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
+          contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+        - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          amount: "1"
+          token_id: "1"
+          price_details:
+            amount: "9750000000000000000"
+            fees:
+            - type: TAKER_ECOSYSTEM
+              recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+              amount: "1000000000000000000"
+            converted_prices:
+              ETH: "0.0058079775"
+              USD: "15.89"
+            token:
+              symbol: IMX
+              type: NATIVE
+            fee_inclusive_amount: "9750000000000000000"
+          bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
+          contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+        - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          amount: "1"
+          token_id: "1"
+          price_details:
+            amount: "9750000000000000000"
+            fees:
+            - type: TAKER_ECOSYSTEM
+              recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+              amount: "1000000000000000000"
+            converted_prices:
+              ETH: "0.0058079775"
+              USD: "15.89"
+            token:
+              symbol: IMX
+              type: NATIVE
+            fee_inclusive_amount: "9750000000000000000"
+          bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
+          contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+        - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          amount: "1"
+          token_id: "1"
+          price_details:
+            amount: "9750000000000000000"
+            fees:
+            - type: TAKER_ECOSYSTEM
+              recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+              amount: "1000000000000000000"
+            converted_prices:
+              ETH: "0.0058079775"
+              USD: "15.89"
+            token:
+              symbol: IMX
+              type: NATIVE
+            fee_inclusive_amount: "9750000000000000000"
+          bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
+          contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
         nft_with_stack:
           image: https://some-url
           chain:
@@ -9503,12 +9613,19 @@ components:
           - $ref: '#/components/schemas/Market'
           nullable: true
         listings:
-          description: List of open listings for the stack.
+          description: List of open listings for the NFT.
           items:
             $ref: '#/components/schemas/Listing'
           maxItems: 10
           type: array
+        bids:
+          description: List of open bids for the NFT.
+          items:
+            $ref: '#/components/schemas/Bid'
+          maxItems: 10
+          type: array
       required:
+      - bids
       - listings
       - market
       - nft_with_stack
@@ -9608,6 +9725,97 @@ components:
                 symbol: IMX
                 type: NATIVE
               fee_inclusive_amount: "9750000000000000000"
+            contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          bids:
+          - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+            amount: "1"
+            token_id: "1"
+            price_details:
+              amount: "9750000000000000000"
+              fees:
+              - type: TAKER_ECOSYSTEM
+                recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+                amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
+              token:
+                symbol: IMX
+                type: NATIVE
+              fee_inclusive_amount: "9750000000000000000"
+            bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
+            contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+            amount: "1"
+            token_id: "1"
+            price_details:
+              amount: "9750000000000000000"
+              fees:
+              - type: TAKER_ECOSYSTEM
+                recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+                amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
+              token:
+                symbol: IMX
+                type: NATIVE
+              fee_inclusive_amount: "9750000000000000000"
+            bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
+            contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+            amount: "1"
+            token_id: "1"
+            price_details:
+              amount: "9750000000000000000"
+              fees:
+              - type: TAKER_ECOSYSTEM
+                recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+                amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
+              token:
+                symbol: IMX
+                type: NATIVE
+              fee_inclusive_amount: "9750000000000000000"
+            bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
+            contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+            amount: "1"
+            token_id: "1"
+            price_details:
+              amount: "9750000000000000000"
+              fees:
+              - type: TAKER_ECOSYSTEM
+                recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+                amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
+              token:
+                symbol: IMX
+                type: NATIVE
+              fee_inclusive_amount: "9750000000000000000"
+            bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
+            contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+            amount: "1"
+            token_id: "1"
+            price_details:
+              amount: "9750000000000000000"
+              fees:
+              - type: TAKER_ECOSYSTEM
+                recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+                amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
+              token:
+                symbol: IMX
+                type: NATIVE
+              fee_inclusive_amount: "9750000000000000000"
+            bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
             contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           nft_with_stack:
             image: https://some-url
@@ -9724,6 +9932,97 @@ components:
                 symbol: IMX
                 type: NATIVE
               fee_inclusive_amount: "9750000000000000000"
+            contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          bids:
+          - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+            amount: "1"
+            token_id: "1"
+            price_details:
+              amount: "9750000000000000000"
+              fees:
+              - type: TAKER_ECOSYSTEM
+                recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+                amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
+              token:
+                symbol: IMX
+                type: NATIVE
+              fee_inclusive_amount: "9750000000000000000"
+            bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
+            contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+            amount: "1"
+            token_id: "1"
+            price_details:
+              amount: "9750000000000000000"
+              fees:
+              - type: TAKER_ECOSYSTEM
+                recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+                amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
+              token:
+                symbol: IMX
+                type: NATIVE
+              fee_inclusive_amount: "9750000000000000000"
+            bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
+            contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+            amount: "1"
+            token_id: "1"
+            price_details:
+              amount: "9750000000000000000"
+              fees:
+              - type: TAKER_ECOSYSTEM
+                recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+                amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
+              token:
+                symbol: IMX
+                type: NATIVE
+              fee_inclusive_amount: "9750000000000000000"
+            bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
+            contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+            amount: "1"
+            token_id: "1"
+            price_details:
+              amount: "9750000000000000000"
+              fees:
+              - type: TAKER_ECOSYSTEM
+                recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+                amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
+              token:
+                symbol: IMX
+                type: NATIVE
+              fee_inclusive_amount: "9750000000000000000"
+            bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
+            contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+            amount: "1"
+            token_id: "1"
+            price_details:
+              amount: "9750000000000000000"
+              fees:
+              - type: TAKER_ECOSYSTEM
+                recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+                amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
+              token:
+                symbol: IMX
+                type: NATIVE
+              fee_inclusive_amount: "9750000000000000000"
+            bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
             contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           nft_with_stack:
             image: https://some-url
@@ -9978,6 +10277,97 @@ components:
             value: Happy
             trait_type: Aqua Power
           youtube_url: https://some-url
+        bids:
+        - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          amount: "1"
+          token_id: "1"
+          price_details:
+            amount: "9750000000000000000"
+            fees:
+            - type: TAKER_ECOSYSTEM
+              recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+              amount: "1000000000000000000"
+            converted_prices:
+              ETH: "0.0058079775"
+              USD: "15.89"
+            token:
+              symbol: IMX
+              type: NATIVE
+            fee_inclusive_amount: "9750000000000000000"
+          bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
+          contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+        - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          amount: "1"
+          token_id: "1"
+          price_details:
+            amount: "9750000000000000000"
+            fees:
+            - type: TAKER_ECOSYSTEM
+              recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+              amount: "1000000000000000000"
+            converted_prices:
+              ETH: "0.0058079775"
+              USD: "15.89"
+            token:
+              symbol: IMX
+              type: NATIVE
+            fee_inclusive_amount: "9750000000000000000"
+          bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
+          contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+        - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          amount: "1"
+          token_id: "1"
+          price_details:
+            amount: "9750000000000000000"
+            fees:
+            - type: TAKER_ECOSYSTEM
+              recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+              amount: "1000000000000000000"
+            converted_prices:
+              ETH: "0.0058079775"
+              USD: "15.89"
+            token:
+              symbol: IMX
+              type: NATIVE
+            fee_inclusive_amount: "9750000000000000000"
+          bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
+          contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+        - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          amount: "1"
+          token_id: "1"
+          price_details:
+            amount: "9750000000000000000"
+            fees:
+            - type: TAKER_ECOSYSTEM
+              recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+              amount: "1000000000000000000"
+            converted_prices:
+              ETH: "0.0058079775"
+              USD: "15.89"
+            token:
+              symbol: IMX
+              type: NATIVE
+            fee_inclusive_amount: "9750000000000000000"
+          bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
+          contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+        - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          amount: "1"
+          token_id: "1"
+          price_details:
+            amount: "9750000000000000000"
+            fees:
+            - type: TAKER_ECOSYSTEM
+              recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+              amount: "1000000000000000000"
+            converted_prices:
+              ETH: "0.0058079775"
+              USD: "15.89"
+            token:
+              symbol: IMX
+              type: NATIVE
+            fee_inclusive_amount: "9750000000000000000"
+          bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
+          contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
         stack_count: 1
       properties:
         stack:
@@ -9996,7 +10386,14 @@ components:
             $ref: '#/components/schemas/Listing'
           maxItems: 10
           type: array
+        bids:
+          description: List of open bids for the stack.
+          items:
+            $ref: '#/components/schemas/Bid'
+          maxItems: 10
+          type: array
       required:
+      - bids
       - listings
       - market
       - stack
@@ -10120,6 +10517,97 @@ components:
               value: Happy
               trait_type: Aqua Power
             youtube_url: https://some-url
+          bids:
+          - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+            amount: "1"
+            token_id: "1"
+            price_details:
+              amount: "9750000000000000000"
+              fees:
+              - type: TAKER_ECOSYSTEM
+                recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+                amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
+              token:
+                symbol: IMX
+                type: NATIVE
+              fee_inclusive_amount: "9750000000000000000"
+            bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
+            contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+            amount: "1"
+            token_id: "1"
+            price_details:
+              amount: "9750000000000000000"
+              fees:
+              - type: TAKER_ECOSYSTEM
+                recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+                amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
+              token:
+                symbol: IMX
+                type: NATIVE
+              fee_inclusive_amount: "9750000000000000000"
+            bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
+            contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+            amount: "1"
+            token_id: "1"
+            price_details:
+              amount: "9750000000000000000"
+              fees:
+              - type: TAKER_ECOSYSTEM
+                recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+                amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
+              token:
+                symbol: IMX
+                type: NATIVE
+              fee_inclusive_amount: "9750000000000000000"
+            bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
+            contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+            amount: "1"
+            token_id: "1"
+            price_details:
+              amount: "9750000000000000000"
+              fees:
+              - type: TAKER_ECOSYSTEM
+                recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+                amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
+              token:
+                symbol: IMX
+                type: NATIVE
+              fee_inclusive_amount: "9750000000000000000"
+            bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
+            contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+            amount: "1"
+            token_id: "1"
+            price_details:
+              amount: "9750000000000000000"
+              fees:
+              - type: TAKER_ECOSYSTEM
+                recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+                amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
+              token:
+                symbol: IMX
+                type: NATIVE
+              fee_inclusive_amount: "9750000000000000000"
+            bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
+            contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           stack_count: 1
         - market: ""
           listings:
@@ -10235,6 +10723,97 @@ components:
               value: Happy
               trait_type: Aqua Power
             youtube_url: https://some-url
+          bids:
+          - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+            amount: "1"
+            token_id: "1"
+            price_details:
+              amount: "9750000000000000000"
+              fees:
+              - type: TAKER_ECOSYSTEM
+                recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+                amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
+              token:
+                symbol: IMX
+                type: NATIVE
+              fee_inclusive_amount: "9750000000000000000"
+            bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
+            contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+            amount: "1"
+            token_id: "1"
+            price_details:
+              amount: "9750000000000000000"
+              fees:
+              - type: TAKER_ECOSYSTEM
+                recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+                amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
+              token:
+                symbol: IMX
+                type: NATIVE
+              fee_inclusive_amount: "9750000000000000000"
+            bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
+            contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+            amount: "1"
+            token_id: "1"
+            price_details:
+              amount: "9750000000000000000"
+              fees:
+              - type: TAKER_ECOSYSTEM
+                recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+                amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
+              token:
+                symbol: IMX
+                type: NATIVE
+              fee_inclusive_amount: "9750000000000000000"
+            bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
+            contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+            amount: "1"
+            token_id: "1"
+            price_details:
+              amount: "9750000000000000000"
+              fees:
+              - type: TAKER_ECOSYSTEM
+                recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+                amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
+              token:
+                symbol: IMX
+                type: NATIVE
+              fee_inclusive_amount: "9750000000000000000"
+            bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
+            contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+          - creator: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
+            amount: "1"
+            token_id: "1"
+            price_details:
+              amount: "9750000000000000000"
+              fees:
+              - type: TAKER_ECOSYSTEM
+                recipient_address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92233
+                amount: "1000000000000000000"
+              converted_prices:
+                ETH: "0.0058079775"
+                USD: "15.89"
+              token:
+                symbol: IMX
+                type: NATIVE
+              fee_inclusive_amount: "9750000000000000000"
+            bid_id: 018792C9-4AD7-8EC4-4038-9E05C598534A
+            contract_address: 0xe9b00a87700f660e46b6f5deaa1232836bcc07d3
           stack_count: 1
         page:
           previous_cursor: ewogICJ0eXBlIjogInByZXYiLAogICJpdGVtIjogewogICAgImlkIjogNjI3NTEzMCwKICAgICJjcmVhdGVkX2F0IjogIjIwMjItMDktMTNUMTc6MDQ6MTIuMDI0MTI2WiIKICB9Cn0=
