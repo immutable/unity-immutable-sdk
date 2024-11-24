@@ -41,8 +41,9 @@ namespace Immutable.Api.ZkEvm.Model
         /// </summary>
         /// <param name="nftWithStack">nftWithStack (required).</param>
         /// <param name="market">market (required).</param>
-        /// <param name="listings">List of open listings for the stack. (required).</param>
-        public NFTBundle(NFTWithStack nftWithStack = default(NFTWithStack), Market market = default(Market), List<Listing> listings = default(List<Listing>))
+        /// <param name="listings">List of open listings for the NFT. (required).</param>
+        /// <param name="bids">List of open bids for the NFT. (required).</param>
+        public NFTBundle(NFTWithStack nftWithStack = default(NFTWithStack), Market market = default(Market), List<Listing> listings = default(List<Listing>), List<Bid> bids = default(List<Bid>))
         {
             // to ensure "nftWithStack" is required (not null)
             if (nftWithStack == null)
@@ -62,6 +63,12 @@ namespace Immutable.Api.ZkEvm.Model
                 throw new ArgumentNullException("listings is a required property for NFTBundle and cannot be null");
             }
             this.Listings = listings;
+            // to ensure "bids" is required (not null)
+            if (bids == null)
+            {
+                throw new ArgumentNullException("bids is a required property for NFTBundle and cannot be null");
+            }
+            this.Bids = bids;
         }
 
         /// <summary>
@@ -77,11 +84,18 @@ namespace Immutable.Api.ZkEvm.Model
         public Market Market { get; set; }
 
         /// <summary>
-        /// List of open listings for the stack.
+        /// List of open listings for the NFT.
         /// </summary>
-        /// <value>List of open listings for the stack.</value>
+        /// <value>List of open listings for the NFT.</value>
         [DataMember(Name = "listings", IsRequired = true, EmitDefaultValue = true)]
         public List<Listing> Listings { get; set; }
+
+        /// <summary>
+        /// List of open bids for the NFT.
+        /// </summary>
+        /// <value>List of open bids for the NFT.</value>
+        [DataMember(Name = "bids", IsRequired = true, EmitDefaultValue = true)]
+        public List<Bid> Bids { get; set; }
 
         /// <summary>
         /// Returns the string presentation of the object
@@ -94,6 +108,7 @@ namespace Immutable.Api.ZkEvm.Model
             sb.Append("  NftWithStack: ").Append(NftWithStack).Append("\n");
             sb.Append("  Market: ").Append(Market).Append("\n");
             sb.Append("  Listings: ").Append(Listings).Append("\n");
+            sb.Append("  Bids: ").Append(Bids).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
