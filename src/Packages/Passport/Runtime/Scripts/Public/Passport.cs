@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System;
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
 #if !IMMUTABLE_CUSTOM_BROWSER
+using VoltstroStudios.UnityWebBrowser;
 using VoltstroStudios.UnityWebBrowser.Core;
 using VoltstroStudios.UnityWebBrowser.Shared;
 #endif
@@ -22,18 +23,22 @@ using UnityEditor;
 namespace Immutable.Passport
 {
 
+#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+    public class Passport : MonoBehaviour
+#else
     public class Passport
+#endif
     {
         private const string TAG = "[Passport]";
 
-        public static Passport Instance { get; private set; }
-        private PassportImpl passportImpl = null;
+        public static Passport? Instance { get; private set; }
+        private PassportImpl? passportImpl;
 
         private IWebBrowserClient webBrowserClient;
 
         // Keeps track of the latest received deeplink
-        private static string deeplink = null;
-        private static bool readySignalReceived = false;
+        private static string? deeplink;
+        private static bool readySignalReceived;
 
         /// <summary>
         /// Passport auth events
@@ -104,7 +109,7 @@ namespace Immutable.Passport
             string redirectUri = null,
             string logoutRedirectUri = null
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-            , int engineStartupTimeoutMs = 30000,
+            , int engineStartupTimeoutMs = 60000,
             IWindowsWebBrowserClient windowsWebBrowserClient = null
 #endif
         )
@@ -112,7 +117,14 @@ namespace Immutable.Passport
             if (Instance == null)
             {
                 PassportLogger.Info($"{TAG} Initialising Passport...");
+                
+#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+                var obj = new GameObject("Passport");
+                Instance = obj.AddComponent<Passport>();
+                DontDestroyOnLoad(obj);
+#else
                 Instance = new Passport();
+#endif
 
                 // Start initialisation process
                 return Instance.Initialise(
@@ -128,7 +140,7 @@ namespace Immutable.Passport
                     })
                     .ContinueWith(async () =>
                     {
-                        if (readySignalReceived == true)
+                        if (readySignalReceived)
                         {
                             // Initialise Passport with provided parameters
                             await Instance.GetPassportImpl().Init(clientId, environment, redirectUri, logoutRedirectUri, deeplink);
@@ -137,7 +149,7 @@ namespace Immutable.Passport
                         else
                         {
                             PassportLogger.Error($"{TAG} Failed to initialise Passport");
-                            throw new PassportException("Failed to initiliase Passport", PassportErrorType.INITALISATION_ERROR);
+                            throw new PassportException("Failed to initialise Passport", PassportErrorType.INITALISATION_ERROR);
                         }
                     });
             }
@@ -176,9 +188,10 @@ namespace Immutable.Passport
                     throw new PassportException("When 'IMMUTABLE_CUSTOM_BROWSER' is defined in Scripting Define Symbols, " + 
                         " 'windowsWebBrowserClient' must not be null.");
 #else
-                    // Initialise with default Windows browser client
-                    this.webBrowserClient = new WebBrowserClient();
-                    await ((WebBrowserClient)this.webBrowserClient).Init(engineStartupTimeoutMs);
+                    this.webBrowserClient = new UwbWebView();
+                    await ((UwbWebView)this.webBrowserClient).Init(engineStartupTimeoutMs);
+                    readySignalReceived = true;
+
 #endif
                 }
 #elif (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
@@ -195,7 +208,7 @@ namespace Immutable.Passport
                 readySignalReceived = true;
 #else
                 // Mark ready when browser is initialised and game bridge file is loaded
-                communicationsManager.OnReady += () => readySignalReceived = true;
+                communicationsManager.OnReady += () =>readySignalReceived = true;
 #endif
                 // Set up Passport implementation
                 passportImpl = new PassportImpl(communicationsManager);
@@ -210,6 +223,21 @@ namespace Immutable.Passport
                 throw ex;
             }
         }
+        
+#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+        private void Awake()
+        {
+            if (Instance == null)
+            {
+                Instance = this;
+                DontDestroyOnLoad(gameObject);
+            }
+            else if (Instance != this)
+            {
+                Destroy(gameObject);
+            }
+        }
+#endif
 
         /// <summary>
         /// Sets the timeout time for waiting for each call to respond (in milliseconds).

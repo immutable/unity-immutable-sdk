@@ -43,7 +43,6 @@ namespace Immutable.Browser.Core
             webBrowserClient.ExecuteJavaScript($"function UnityPostMessage(message) {{ {postMessageApiCall}(message); }}");
         }
 
-
         public void ExecuteJs(string js)
         {
             webBrowserClient.ExecuteJavaScript(js);
