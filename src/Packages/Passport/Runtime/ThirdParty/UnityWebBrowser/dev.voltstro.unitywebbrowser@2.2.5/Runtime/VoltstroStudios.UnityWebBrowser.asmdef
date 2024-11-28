@@ -10,26 +10,8 @@
         "Immutable.Passport.Core.Logging"
     ],
     "includePlatforms": [
-        "Android",
         "Editor",
-        "EmbeddedLinux",
-        "GameCoreScarlett",
-        "GameCoreXboxOne",
-        "iOS",
-        "LinuxStandalone64",
-        "CloudRendering",
-        "Lumin",
-        "macOSStandalone",
-        "PS4",
-        "PS5",
-        "Stadia",
-        "Switch",
-        "tvOS",
-        "WSA",
-        "WebGL",
-        "WindowsStandalone32",
-        "WindowsStandalone64",
-        "XboxOne"
+        "WindowsStandalone64"
     ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

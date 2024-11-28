@@ -1,3 +1,5 @@
+#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
+
 using System;
 using System.Diagnostics;
 using Unity.Collections.LowLevel.Unsafe;
@@ -24,3 +26,5 @@ namespace VoltstroStudios.NativeArraySpanExtensions
         }
     }
 }
+
+#endif

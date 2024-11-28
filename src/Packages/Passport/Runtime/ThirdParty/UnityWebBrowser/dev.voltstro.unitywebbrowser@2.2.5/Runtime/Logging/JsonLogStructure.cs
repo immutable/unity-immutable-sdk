@@ -1,3 +1,5 @@
+#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
+
 // UnityWebBrowser (UWB)
 // Copyright (c) 2021-2022 Voltstro-Studios
 // 
@@ -33,3 +35,5 @@ namespace VoltstroStudios.UnityWebBrowser.Logging
         public string Category { get; set; }
     }
 }
+
+#endif

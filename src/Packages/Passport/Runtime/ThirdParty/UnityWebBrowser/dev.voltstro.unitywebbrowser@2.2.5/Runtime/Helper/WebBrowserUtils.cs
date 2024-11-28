@@ -1,3 +1,5 @@
+#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
+
 // UnityWebBrowser (UWB)
 // Copyright (c) 2021-2022 Voltstro-Studios
 // 
@@ -142,10 +144,8 @@ namespace VoltstroStudios.UnityWebBrowser.Helper
         {
 #if UNITY_STANDALONE_WIN
             return Platform.Windows64;
-#elif UNITY_STANDALONE_LINUX
-            return Platform.Linux64;
-#elif UNITY_STANDALONE_OSX
-            return System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture == System.Runtime.InteropServices.Architecture.Arm64 ? Platform.MacOSArm64 : Platform.MacOS;
+#else
+            throw new NotSupportedException();
 #endif
         }
         
@@ -186,3 +186,5 @@ namespace VoltstroStudios.UnityWebBrowser.Helper
         }
     }
 }
+
+#endif

@@ -191,7 +191,6 @@ namespace Immutable.Passport
                     this.webBrowserClient = new UwbWebView();
                     await ((UwbWebView)this.webBrowserClient).Init(engineStartupTimeoutMs);
                     readySignalReceived = true;
-
 #endif
                 }
 #elif (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
