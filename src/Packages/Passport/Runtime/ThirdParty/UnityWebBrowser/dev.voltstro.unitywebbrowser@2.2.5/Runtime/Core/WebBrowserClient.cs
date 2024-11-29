@@ -26,6 +26,7 @@ using VoltstroStudios.UnityWebBrowser.Shared;
 using VoltstroStudios.UnityWebBrowser.Shared.Events;
 using VoltstroStudios.UnityWebBrowser.Shared.Js;
 using VoltstroStudios.UnityWebBrowser.Shared.Popups;
+using Debug = UnityEngine.Debug;
 using Object = UnityEngine.Object;
 using Resolution = VoltstroStudios.UnityWebBrowser.Shared.Resolution;
 

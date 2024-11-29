@@ -55,16 +55,7 @@ namespace VoltstroStudios.UnityWebBrowser.Editor.EngineManagement
 
         public static Platform GetCurrentEditorPlatform()
         {
-#if UNITY_EDITOR_LINUX
-            Platform platform = Platform.Linux64;
-#elif UNITY_EDITOR_WIN
-            Platform platform = Platform.Windows64;
-#elif UNITY_EDITOR_OSX
-            Platform platform = Platform.MacOS;
-#else
-#error Unsupported platform!
-#endif
-            return platform;
+            return Platform.Windows64;
         }
     }
 }

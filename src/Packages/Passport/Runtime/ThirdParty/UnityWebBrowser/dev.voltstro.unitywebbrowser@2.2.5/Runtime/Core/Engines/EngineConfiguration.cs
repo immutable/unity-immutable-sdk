@@ -31,11 +31,7 @@ namespace VoltstroStudios.UnityWebBrowser.Core.Engines
 
         public override string GetEngineExecutableName()
         {
-#if UNITY_STANDALONE_WIN
             return engineAppName + ".exe";
-#else 
-            return engineAppName;
-#endif
         }
         
         [Obsolete]

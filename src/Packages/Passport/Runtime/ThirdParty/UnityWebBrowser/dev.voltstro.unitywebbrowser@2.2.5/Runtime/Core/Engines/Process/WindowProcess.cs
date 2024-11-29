@@ -1,11 +1,9 @@
 #if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
 
-﻿// UnityWebBrowser (UWB)
+// UnityWebBrowser (UWB)
 // Copyright (c) 2021-2024 Voltstro-Studios
 // 
 // This project is under the MIT license. See the LICENSE.md file for more details.
-
-#if UNITY_STANDALONE_WIN
 
 using System;
 using System.ComponentModel;
@@ -167,7 +165,5 @@ namespace VoltstroStudios.UnityWebBrowser.Core.Engines.Process
         #endregion
     }
 }
-
-#endif
 
 #endif

@@ -142,11 +142,7 @@ namespace VoltstroStudios.UnityWebBrowser.Helper
         /// <returns></returns>
         public static Platform GetRunningPlatform()
         {
-#if UNITY_STANDALONE_WIN
             return Platform.Windows64;
-#else
-            throw new NotSupportedException();
-#endif
         }
         
         /// <summary>
