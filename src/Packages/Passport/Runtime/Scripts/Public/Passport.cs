@@ -117,7 +117,7 @@ namespace Immutable.Passport
             if (Instance == null)
             {
                 PassportLogger.Info($"{TAG} Initialising Passport...");
-                
+
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
                 var obj = new GameObject("Passport");
                 Instance = obj.AddComponent<Passport>();
@@ -207,7 +207,7 @@ namespace Immutable.Passport
                 readySignalReceived = true;
 #else
                 // Mark ready when browser is initialised and game bridge file is loaded
-                communicationsManager.OnReady += () =>readySignalReceived = true;
+                communicationsManager.OnReady += () => readySignalReceived = true;
 #endif
                 // Set up Passport implementation
                 passportImpl = new PassportImpl(communicationsManager);
@@ -222,7 +222,7 @@ namespace Immutable.Passport
                 throw ex;
             }
         }
-        
+
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
         private void Awake()
         {

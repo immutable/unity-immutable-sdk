@@ -30,7 +30,7 @@ public class AuthenticatedScript : MonoBehaviour
     [SerializeField] private Button GetBalanceButton;
     [SerializeField] private Button GetTransactionReceiptButton;
     [SerializeField] private Button SignTypedDataButton;
-    
+
     // Other
     [SerializeField] private Button LaunchBrowserButton;
 
@@ -50,7 +50,7 @@ public class AuthenticatedScript : MonoBehaviour
         {
             ShowOutput("Passport instance is null");
         }
-        
+
 #if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
         LaunchBrowserButton.gameObject.SetActive(true);
 #else
@@ -412,7 +412,7 @@ public class AuthenticatedScript : MonoBehaviour
     }
 
     #endregion
-    
+
     #region Other
 
     /// <summary>
@@ -436,7 +436,7 @@ public class AuthenticatedScript : MonoBehaviour
     {
         SceneManager.LoadScene("SetCallTimeout");
     }
-    
+
     /// <summary>
     /// Navigates to Launch Browser scene.
     /// </summary>
@@ -444,7 +444,7 @@ public class AuthenticatedScript : MonoBehaviour
     {
         SceneManager.LoadScene("LaunchBrowser");
     }
-    
+
     #endregion
 
     /// <summary>
