@@ -79,20 +79,20 @@ class UnityTest(unittest.TestCase):
 
         # Register off-chain
         # Wait up to 3 times for "Passport account already registered" to appear
-#         attempts = 0
-#         while attempts < 3:
-#            self.altdriver.find_object(By.NAME, "RegisterOffchainBtn").tap()
-#            self.assertEqual("Registering off-chain...", output.get_text())
-#            time.sleep(20)
-#            if "Passport account already registered" in output.get_text():
-#                break
-#            attempts += 1
-# 
-#         # Assert that the desired text is found after waiting
-#         self.assertTrue(
-#            "Passport account already registered" in output.get_text(),
-#            f"Expected 'Passport account already registered' not found. Actual output: '{output.get_text()}'"
-#         )
+        attempts = 0
+        while attempts < 3:
+           self.altdriver.find_object(By.NAME, "RegisterOffchainBtn").tap()
+           self.assertEqual("Registering off-chain...", output.get_text())
+           time.sleep(20)
+           if "Passport account already registered" in output.get_text():
+               break
+           attempts += 1
+
+        # Assert that the desired text is found after waiting
+        self.assertTrue(
+           "Passport account already registered" in output.get_text(),
+           f"Expected 'Passport account already registered' not found. Actual output: '{output.get_text()}'"
+        )
 
         # Get address
         self.altdriver.find_object(By.NAME, "GetAddressBtn").tap()
