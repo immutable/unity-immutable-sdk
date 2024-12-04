@@ -12,17 +12,17 @@ namespace Immutable.Passport.Core
         {
             var array = new[] { "a", "b", "c" };
             Assert.AreEqual("[\"a\",\"b\",\"c\"]", array.ToJson());
-            
+
             array = new[] { "Items" };
             Assert.AreEqual("[\"Items\"]", array.ToJson());
-            
+
             array = new[] { "{Items:" };
             Assert.AreEqual("[\"{Items:\"]", array.ToJson());
-            
-            array = new string[] {};
+
+            array = new string[] { };
             Assert.AreEqual("[]", array.ToJson());
         }
-        
+
         [Test]
         public void DictionaryToJson()
         {

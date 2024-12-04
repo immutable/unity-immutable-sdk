@@ -39,7 +39,7 @@ public class LinkWalletScript : MonoBehaviour
     public async void LinkWallet()
     {
         ShowOutput("Linking wallet...");
-        
+
         try
         {
             await Passport.ConnectEvm();
@@ -63,9 +63,9 @@ public class LinkWalletScript : MonoBehaviour
                 walletAddress: WalletAddressInput.text,
                 signature: SignatureInput.text,
                 nonce: NonceInput.text);
-            
+
             await apiInstance.LinkWalletV2Async(linkWalletV2Request);
-            
+
             ShowOutput($"Linked external wallet: {WalletAddressInput.text}");
         }
         catch (ApiException e)

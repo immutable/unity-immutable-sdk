@@ -166,7 +166,7 @@ public class AuthenticatedScript : MonoBehaviour
             ShowOutput($"Failed to get linked addresses: {ex.Message}");
         }
     }
-    
+
     /// <summary>
     /// Navigates to Link Wallet scene.
     /// </summary>
