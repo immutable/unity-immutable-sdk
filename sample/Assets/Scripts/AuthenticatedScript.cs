@@ -166,6 +166,14 @@ public class AuthenticatedScript : MonoBehaviour
             ShowOutput($"Failed to get linked addresses: {ex.Message}");
         }
     }
+    
+    /// <summary>
+    /// Navigates to Link Wallet scene.
+    /// </summary>
+    public void ShowLinkWallet()
+    {
+        SceneManager.LoadScene("LinkWallet");
+    }
 
     /// <summary>
     /// Logs out of Passport using the selected auth method. 

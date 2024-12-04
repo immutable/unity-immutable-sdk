@@ -28,39 +28,27 @@ namespace Immutable.Passport.Helpers
         public static string ToJson<T>(this T[] array)
         {
             // Need a wrapper to serialise arrays
-            Wrapper<T> wrapper = new Wrapper<T>();
-            wrapper.Items = array;
-            string wrapped = JsonUtility.ToJson(wrapper);
+            var wrapper = new Wrapper<T> { Items = array };
+            var wrapped = JsonUtility.ToJson(wrapper);
+            
             // Remove the wrapper
-            return wrapped.ReplaceFirst("{\"Items\":", "").ReplaceLast("}", "");
+            return wrapped.ReplaceFirst("{\"Items\":", "").TrimEnd('}');
         }
 
         private static string ReplaceFirst(this string source, string search, string replace)
         {
-            int pos = source.IndexOf(search);
-            if (pos < 0)
-            {
-                return source;
-            }
-            return source.Substring(0, pos) + replace + source.Substring(pos + search.Length);
-        }
-
-        private static string ReplaceLast(this string source, string search, string replace)
-        {
-            int place = source.LastIndexOf(search);
-            if (place == -1)
-            {
-                return source;
-            }
-            return source.Remove(place, search.Length).Insert(place, replace);
+            var pos = source.IndexOf(search);
+            return pos < 0 
+                ? source 
+                : source.Substring(0, pos) + replace + source.Substring(pos + search.Length);
         }
 
         public static string ToJson(this IDictionary<string, object> dictionary)
         {
             // JsonUtility cannot serialise dictionary, but not using newtonsoft json as it doesn't
             // work properly with older unity versions so doing it manually
-            StringBuilder sb = new StringBuilder("{");
-            for (int i = 0; i < dictionary.Count; i++)
+            var sb = new StringBuilder("{");
+            for (var i = 0; i < dictionary.Count; i++)
             {
                 object value = dictionary.ElementAt(i).Value;
                 if (value is string || value is int || value is long || value is double || value is bool)

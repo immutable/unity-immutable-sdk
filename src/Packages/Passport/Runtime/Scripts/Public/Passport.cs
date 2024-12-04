@@ -33,6 +33,7 @@ namespace Immutable.Passport
 
         public static Passport? Instance { get; private set; }
         private PassportImpl? passportImpl;
+        public string environment { get; private set; }
 
         private IWebBrowserClient webBrowserClient;
 
@@ -125,6 +126,7 @@ namespace Immutable.Passport
 #else
                 Instance = new Passport();
 #endif
+                Instance.environment = environment;
 
                 // Start initialisation process
                 return Instance.Initialise(
