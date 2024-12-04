@@ -35,4 +35,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Other/LaunchBrowser.unity
     guid: 7c72c29391829c742a018e4f2e629313
+  - enabled: 1
+    path: Assets/Scenes/LinkWallet.unity
+    guid: d62e0cc2be6134dadaa8057f46fb8761
   m_configObjects: {}

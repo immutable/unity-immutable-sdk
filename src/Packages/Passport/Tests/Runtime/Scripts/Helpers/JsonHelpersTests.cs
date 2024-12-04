@@ -8,6 +8,22 @@ namespace Immutable.Passport.Core
     public class JsonHelpersTests
     {
         [Test]
+        public void ArrayToJson()
+        {
+            var array = new[] { "a", "b", "c" };
+            Assert.AreEqual("[\"a\",\"b\",\"c\"]", array.ToJson());
+
+            array = new[] { "Items" };
+            Assert.AreEqual("[\"Items\"]", array.ToJson());
+
+            array = new[] { "{Items:" };
+            Assert.AreEqual("[\"{Items:\"]", array.ToJson());
+
+            array = new string[] { };
+            Assert.AreEqual("[]", array.ToJson());
+        }
+
+        [Test]
         public void DictionaryToJson()
         {
             var properties = new Dictionary<string, object>(){
