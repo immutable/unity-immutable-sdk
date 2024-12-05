@@ -37,9 +37,10 @@ namespace Immutable.Api.ZkEvm.Api
         /// <param name="chainName">The name of chain</param>
         /// <param name="contractAddress">Contract address for collection that these token ids are on</param>
         /// <param name="tokenId">List of token ids to get pricing data for</param>
+        /// <param name="paymentToken">Filters the active listings, bids, floor listing and top bid by the specified payment token, either the address of the payment token contract or &#39;NATIVE&#39;. (optional)</param>
         /// <param name="pageCursor">Encoded page cursor to retrieve previous or next page. Use the value returned in the response. (optional)</param>
         /// <returns>QuotesForNFTsResult</returns>
-        QuotesForNFTsResult QuotesForNFTs(string chainName, string contractAddress, List<string> tokenId, string? pageCursor = default(string?));
+        QuotesForNFTsResult QuotesForNFTs(string chainName, string contractAddress, List<string> tokenId, string? paymentToken = default(string?), string? pageCursor = default(string?));
 
         /// <summary>
         /// Get pricing data for a list of token ids
@@ -51,9 +52,10 @@ namespace Immutable.Api.ZkEvm.Api
         /// <param name="chainName">The name of chain</param>
         /// <param name="contractAddress">Contract address for collection that these token ids are on</param>
         /// <param name="tokenId">List of token ids to get pricing data for</param>
+        /// <param name="paymentToken">Filters the active listings, bids, floor listing and top bid by the specified payment token, either the address of the payment token contract or &#39;NATIVE&#39;. (optional)</param>
         /// <param name="pageCursor">Encoded page cursor to retrieve previous or next page. Use the value returned in the response. (optional)</param>
         /// <returns>ApiResponse of QuotesForNFTsResult</returns>
-        ApiResponse<QuotesForNFTsResult> QuotesForNFTsWithHttpInfo(string chainName, string contractAddress, List<string> tokenId, string? pageCursor = default(string?));
+        ApiResponse<QuotesForNFTsResult> QuotesForNFTsWithHttpInfo(string chainName, string contractAddress, List<string> tokenId, string? paymentToken = default(string?), string? pageCursor = default(string?));
         /// <summary>
         /// Get pricing data for a list of stack ids
         /// </summary>
@@ -64,9 +66,10 @@ namespace Immutable.Api.ZkEvm.Api
         /// <param name="chainName">The name of chain</param>
         /// <param name="contractAddress">Contract address for collection that these stacks are on</param>
         /// <param name="stackId">List of stack ids to get pricing data for</param>
+        /// <param name="paymentToken">Filters the active listings, bids, floor listing and top bid by the specified payment token, either the address of the payment token contract or &#39;NATIVE&#39;. (optional)</param>
         /// <param name="pageCursor">Encoded page cursor to retrieve previous or next page. Use the value returned in the response. (optional)</param>
         /// <returns>QuotesForStacksResult</returns>
-        QuotesForStacksResult QuotesForStacks(string chainName, string contractAddress, List<Guid> stackId, string? pageCursor = default(string?));
+        QuotesForStacksResult QuotesForStacks(string chainName, string contractAddress, List<Guid> stackId, string? paymentToken = default(string?), string? pageCursor = default(string?));
 
         /// <summary>
         /// Get pricing data for a list of stack ids
@@ -78,9 +81,10 @@ namespace Immutable.Api.ZkEvm.Api
         /// <param name="chainName">The name of chain</param>
         /// <param name="contractAddress">Contract address for collection that these stacks are on</param>
         /// <param name="stackId">List of stack ids to get pricing data for</param>
+        /// <param name="paymentToken">Filters the active listings, bids, floor listing and top bid by the specified payment token, either the address of the payment token contract or &#39;NATIVE&#39;. (optional)</param>
         /// <param name="pageCursor">Encoded page cursor to retrieve previous or next page. Use the value returned in the response. (optional)</param>
         /// <returns>ApiResponse of QuotesForStacksResult</returns>
-        ApiResponse<QuotesForStacksResult> QuotesForStacksWithHttpInfo(string chainName, string contractAddress, List<Guid> stackId, string? pageCursor = default(string?));
+        ApiResponse<QuotesForStacksResult> QuotesForStacksWithHttpInfo(string chainName, string contractAddress, List<Guid> stackId, string? paymentToken = default(string?), string? pageCursor = default(string?));
         #endregion Synchronous Operations
     }
 
@@ -100,10 +104,11 @@ namespace Immutable.Api.ZkEvm.Api
         /// <param name="chainName">The name of chain</param>
         /// <param name="contractAddress">Contract address for collection that these token ids are on</param>
         /// <param name="tokenId">List of token ids to get pricing data for</param>
+        /// <param name="paymentToken">Filters the active listings, bids, floor listing and top bid by the specified payment token, either the address of the payment token contract or &#39;NATIVE&#39;. (optional)</param>
         /// <param name="pageCursor">Encoded page cursor to retrieve previous or next page. Use the value returned in the response. (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of QuotesForNFTsResult</returns>
-        System.Threading.Tasks.Task<QuotesForNFTsResult> QuotesForNFTsAsync(string chainName, string contractAddress, List<string> tokenId, string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<QuotesForNFTsResult> QuotesForNFTsAsync(string chainName, string contractAddress, List<string> tokenId, string? paymentToken = default(string?), string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
 
         /// <summary>
         /// Get pricing data for a list of token ids
@@ -115,10 +120,11 @@ namespace Immutable.Api.ZkEvm.Api
         /// <param name="chainName">The name of chain</param>
         /// <param name="contractAddress">Contract address for collection that these token ids are on</param>
         /// <param name="tokenId">List of token ids to get pricing data for</param>
+        /// <param name="paymentToken">Filters the active listings, bids, floor listing and top bid by the specified payment token, either the address of the payment token contract or &#39;NATIVE&#39;. (optional)</param>
         /// <param name="pageCursor">Encoded page cursor to retrieve previous or next page. Use the value returned in the response. (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (QuotesForNFTsResult)</returns>
-        System.Threading.Tasks.Task<ApiResponse<QuotesForNFTsResult>> QuotesForNFTsWithHttpInfoAsync(string chainName, string contractAddress, List<string> tokenId, string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse<QuotesForNFTsResult>> QuotesForNFTsWithHttpInfoAsync(string chainName, string contractAddress, List<string> tokenId, string? paymentToken = default(string?), string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
         /// <summary>
         /// Get pricing data for a list of stack ids
         /// </summary>
@@ -129,10 +135,11 @@ namespace Immutable.Api.ZkEvm.Api
         /// <param name="chainName">The name of chain</param>
         /// <param name="contractAddress">Contract address for collection that these stacks are on</param>
         /// <param name="stackId">List of stack ids to get pricing data for</param>
+        /// <param name="paymentToken">Filters the active listings, bids, floor listing and top bid by the specified payment token, either the address of the payment token contract or &#39;NATIVE&#39;. (optional)</param>
         /// <param name="pageCursor">Encoded page cursor to retrieve previous or next page. Use the value returned in the response. (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of QuotesForStacksResult</returns>
-        System.Threading.Tasks.Task<QuotesForStacksResult> QuotesForStacksAsync(string chainName, string contractAddress, List<Guid> stackId, string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<QuotesForStacksResult> QuotesForStacksAsync(string chainName, string contractAddress, List<Guid> stackId, string? paymentToken = default(string?), string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
 
         /// <summary>
         /// Get pricing data for a list of stack ids
@@ -144,10 +151,11 @@ namespace Immutable.Api.ZkEvm.Api
         /// <param name="chainName">The name of chain</param>
         /// <param name="contractAddress">Contract address for collection that these stacks are on</param>
         /// <param name="stackId">List of stack ids to get pricing data for</param>
+        /// <param name="paymentToken">Filters the active listings, bids, floor listing and top bid by the specified payment token, either the address of the payment token contract or &#39;NATIVE&#39;. (optional)</param>
         /// <param name="pageCursor">Encoded page cursor to retrieve previous or next page. Use the value returned in the response. (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (QuotesForStacksResult)</returns>
-        System.Threading.Tasks.Task<ApiResponse<QuotesForStacksResult>> QuotesForStacksWithHttpInfoAsync(string chainName, string contractAddress, List<Guid> stackId, string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse<QuotesForStacksResult>> QuotesForStacksWithHttpInfoAsync(string chainName, string contractAddress, List<Guid> stackId, string? paymentToken = default(string?), string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
         #endregion Asynchronous Operations
     }
 
@@ -299,11 +307,12 @@ namespace Immutable.Api.ZkEvm.Api
         /// <param name="chainName">The name of chain</param>
         /// <param name="contractAddress">Contract address for collection that these token ids are on</param>
         /// <param name="tokenId">List of token ids to get pricing data for</param>
+        /// <param name="paymentToken">Filters the active listings, bids, floor listing and top bid by the specified payment token, either the address of the payment token contract or &#39;NATIVE&#39;. (optional)</param>
         /// <param name="pageCursor">Encoded page cursor to retrieve previous or next page. Use the value returned in the response. (optional)</param>
         /// <returns>QuotesForNFTsResult</returns>
-        public QuotesForNFTsResult QuotesForNFTs(string chainName, string contractAddress, List<string> tokenId, string? pageCursor = default(string?))
+        public QuotesForNFTsResult QuotesForNFTs(string chainName, string contractAddress, List<string> tokenId, string? paymentToken = default(string?), string? pageCursor = default(string?))
         {
-            Immutable.Api.ZkEvm.Client.ApiResponse<QuotesForNFTsResult> localVarResponse = QuotesForNFTsWithHttpInfo(chainName, contractAddress, tokenId, pageCursor);
+            Immutable.Api.ZkEvm.Client.ApiResponse<QuotesForNFTsResult> localVarResponse = QuotesForNFTsWithHttpInfo(chainName, contractAddress, tokenId, paymentToken, pageCursor);
             return localVarResponse.Data;
         }
 
@@ -314,9 +323,10 @@ namespace Immutable.Api.ZkEvm.Api
         /// <param name="chainName">The name of chain</param>
         /// <param name="contractAddress">Contract address for collection that these token ids are on</param>
         /// <param name="tokenId">List of token ids to get pricing data for</param>
+        /// <param name="paymentToken">Filters the active listings, bids, floor listing and top bid by the specified payment token, either the address of the payment token contract or &#39;NATIVE&#39;. (optional)</param>
         /// <param name="pageCursor">Encoded page cursor to retrieve previous or next page. Use the value returned in the response. (optional)</param>
         /// <returns>ApiResponse of QuotesForNFTsResult</returns>
-        public Immutable.Api.ZkEvm.Client.ApiResponse<QuotesForNFTsResult> QuotesForNFTsWithHttpInfo(string chainName, string contractAddress, List<string> tokenId, string? pageCursor = default(string?))
+        public Immutable.Api.ZkEvm.Client.ApiResponse<QuotesForNFTsResult> QuotesForNFTsWithHttpInfo(string chainName, string contractAddress, List<string> tokenId, string? paymentToken = default(string?), string? pageCursor = default(string?))
         {
             // verify the required parameter 'chainName' is set
             if (chainName == null)
@@ -349,6 +359,10 @@ namespace Immutable.Api.ZkEvm.Api
             localVarRequestOptions.PathParameters.Add("chain_name", Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToString(chainName)); // path parameter
             localVarRequestOptions.PathParameters.Add("contract_address", Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToString(contractAddress)); // path parameter
             localVarRequestOptions.QueryParameters.Add(Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToMultiMap("multi", "token_id", tokenId));
+            if (paymentToken != null)
+            {
+                localVarRequestOptions.QueryParameters.Add(Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToMultiMap("", "payment_token", paymentToken));
+            }
             if (pageCursor != null)
             {
                 localVarRequestOptions.QueryParameters.Add(Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToMultiMap("", "page_cursor", pageCursor));
@@ -374,12 +388,13 @@ namespace Immutable.Api.ZkEvm.Api
         /// <param name="chainName">The name of chain</param>
         /// <param name="contractAddress">Contract address for collection that these token ids are on</param>
         /// <param name="tokenId">List of token ids to get pricing data for</param>
+        /// <param name="paymentToken">Filters the active listings, bids, floor listing and top bid by the specified payment token, either the address of the payment token contract or &#39;NATIVE&#39;. (optional)</param>
         /// <param name="pageCursor">Encoded page cursor to retrieve previous or next page. Use the value returned in the response. (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of QuotesForNFTsResult</returns>
-        public async System.Threading.Tasks.Task<QuotesForNFTsResult> QuotesForNFTsAsync(string chainName, string contractAddress, List<string> tokenId, string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+        public async System.Threading.Tasks.Task<QuotesForNFTsResult> QuotesForNFTsAsync(string chainName, string contractAddress, List<string> tokenId, string? paymentToken = default(string?), string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
         {
-            var task = QuotesForNFTsWithHttpInfoAsync(chainName, contractAddress, tokenId, pageCursor, cancellationToken);
+            var task = QuotesForNFTsWithHttpInfoAsync(chainName, contractAddress, tokenId, paymentToken, pageCursor, cancellationToken);
 #if UNITY_EDITOR || !UNITY_WEBGL
             Immutable.Api.ZkEvm.Client.ApiResponse<QuotesForNFTsResult> localVarResponse = await task.ConfigureAwait(false);
 #else
@@ -395,10 +410,11 @@ namespace Immutable.Api.ZkEvm.Api
         /// <param name="chainName">The name of chain</param>
         /// <param name="contractAddress">Contract address for collection that these token ids are on</param>
         /// <param name="tokenId">List of token ids to get pricing data for</param>
+        /// <param name="paymentToken">Filters the active listings, bids, floor listing and top bid by the specified payment token, either the address of the payment token contract or &#39;NATIVE&#39;. (optional)</param>
         /// <param name="pageCursor">Encoded page cursor to retrieve previous or next page. Use the value returned in the response. (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (QuotesForNFTsResult)</returns>
-        public async System.Threading.Tasks.Task<Immutable.Api.ZkEvm.Client.ApiResponse<QuotesForNFTsResult>> QuotesForNFTsWithHttpInfoAsync(string chainName, string contractAddress, List<string> tokenId, string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+        public async System.Threading.Tasks.Task<Immutable.Api.ZkEvm.Client.ApiResponse<QuotesForNFTsResult>> QuotesForNFTsWithHttpInfoAsync(string chainName, string contractAddress, List<string> tokenId, string? paymentToken = default(string?), string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
         {
             // verify the required parameter 'chainName' is set
             if (chainName == null)
@@ -433,6 +449,10 @@ namespace Immutable.Api.ZkEvm.Api
             localVarRequestOptions.PathParameters.Add("chain_name", Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToString(chainName)); // path parameter
             localVarRequestOptions.PathParameters.Add("contract_address", Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToString(contractAddress)); // path parameter
             localVarRequestOptions.QueryParameters.Add(Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToMultiMap("multi", "token_id", tokenId));
+            if (paymentToken != null)
+            {
+                localVarRequestOptions.QueryParameters.Add(Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToMultiMap("", "payment_token", paymentToken));
+            }
             if (pageCursor != null)
             {
                 localVarRequestOptions.QueryParameters.Add(Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToMultiMap("", "page_cursor", pageCursor));
@@ -465,11 +485,12 @@ namespace Immutable.Api.ZkEvm.Api
         /// <param name="chainName">The name of chain</param>
         /// <param name="contractAddress">Contract address for collection that these stacks are on</param>
         /// <param name="stackId">List of stack ids to get pricing data for</param>
+        /// <param name="paymentToken">Filters the active listings, bids, floor listing and top bid by the specified payment token, either the address of the payment token contract or &#39;NATIVE&#39;. (optional)</param>
         /// <param name="pageCursor">Encoded page cursor to retrieve previous or next page. Use the value returned in the response. (optional)</param>
         /// <returns>QuotesForStacksResult</returns>
-        public QuotesForStacksResult QuotesForStacks(string chainName, string contractAddress, List<Guid> stackId, string? pageCursor = default(string?))
+        public QuotesForStacksResult QuotesForStacks(string chainName, string contractAddress, List<Guid> stackId, string? paymentToken = default(string?), string? pageCursor = default(string?))
         {
-            Immutable.Api.ZkEvm.Client.ApiResponse<QuotesForStacksResult> localVarResponse = QuotesForStacksWithHttpInfo(chainName, contractAddress, stackId, pageCursor);
+            Immutable.Api.ZkEvm.Client.ApiResponse<QuotesForStacksResult> localVarResponse = QuotesForStacksWithHttpInfo(chainName, contractAddress, stackId, paymentToken, pageCursor);
             return localVarResponse.Data;
         }
 
@@ -480,9 +501,10 @@ namespace Immutable.Api.ZkEvm.Api
         /// <param name="chainName">The name of chain</param>
         /// <param name="contractAddress">Contract address for collection that these stacks are on</param>
         /// <param name="stackId">List of stack ids to get pricing data for</param>
+        /// <param name="paymentToken">Filters the active listings, bids, floor listing and top bid by the specified payment token, either the address of the payment token contract or &#39;NATIVE&#39;. (optional)</param>
         /// <param name="pageCursor">Encoded page cursor to retrieve previous or next page. Use the value returned in the response. (optional)</param>
         /// <returns>ApiResponse of QuotesForStacksResult</returns>
-        public Immutable.Api.ZkEvm.Client.ApiResponse<QuotesForStacksResult> QuotesForStacksWithHttpInfo(string chainName, string contractAddress, List<Guid> stackId, string? pageCursor = default(string?))
+        public Immutable.Api.ZkEvm.Client.ApiResponse<QuotesForStacksResult> QuotesForStacksWithHttpInfo(string chainName, string contractAddress, List<Guid> stackId, string? paymentToken = default(string?), string? pageCursor = default(string?))
         {
             // verify the required parameter 'chainName' is set
             if (chainName == null)
@@ -515,6 +537,10 @@ namespace Immutable.Api.ZkEvm.Api
             localVarRequestOptions.PathParameters.Add("chain_name", Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToString(chainName)); // path parameter
             localVarRequestOptions.PathParameters.Add("contract_address", Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToString(contractAddress)); // path parameter
             localVarRequestOptions.QueryParameters.Add(Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToMultiMap("multi", "stack_id", stackId));
+            if (paymentToken != null)
+            {
+                localVarRequestOptions.QueryParameters.Add(Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToMultiMap("", "payment_token", paymentToken));
+            }
             if (pageCursor != null)
             {
                 localVarRequestOptions.QueryParameters.Add(Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToMultiMap("", "page_cursor", pageCursor));
@@ -540,12 +566,13 @@ namespace Immutable.Api.ZkEvm.Api
         /// <param name="chainName">The name of chain</param>
         /// <param name="contractAddress">Contract address for collection that these stacks are on</param>
         /// <param name="stackId">List of stack ids to get pricing data for</param>
+        /// <param name="paymentToken">Filters the active listings, bids, floor listing and top bid by the specified payment token, either the address of the payment token contract or &#39;NATIVE&#39;. (optional)</param>
         /// <param name="pageCursor">Encoded page cursor to retrieve previous or next page. Use the value returned in the response. (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of QuotesForStacksResult</returns>
-        public async System.Threading.Tasks.Task<QuotesForStacksResult> QuotesForStacksAsync(string chainName, string contractAddress, List<Guid> stackId, string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+        public async System.Threading.Tasks.Task<QuotesForStacksResult> QuotesForStacksAsync(string chainName, string contractAddress, List<Guid> stackId, string? paymentToken = default(string?), string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
         {
-            var task = QuotesForStacksWithHttpInfoAsync(chainName, contractAddress, stackId, pageCursor, cancellationToken);
+            var task = QuotesForStacksWithHttpInfoAsync(chainName, contractAddress, stackId, paymentToken, pageCursor, cancellationToken);
 #if UNITY_EDITOR || !UNITY_WEBGL
             Immutable.Api.ZkEvm.Client.ApiResponse<QuotesForStacksResult> localVarResponse = await task.ConfigureAwait(false);
 #else
@@ -561,10 +588,11 @@ namespace Immutable.Api.ZkEvm.Api
         /// <param name="chainName">The name of chain</param>
         /// <param name="contractAddress">Contract address for collection that these stacks are on</param>
         /// <param name="stackId">List of stack ids to get pricing data for</param>
+        /// <param name="paymentToken">Filters the active listings, bids, floor listing and top bid by the specified payment token, either the address of the payment token contract or &#39;NATIVE&#39;. (optional)</param>
         /// <param name="pageCursor">Encoded page cursor to retrieve previous or next page. Use the value returned in the response. (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (QuotesForStacksResult)</returns>
-        public async System.Threading.Tasks.Task<Immutable.Api.ZkEvm.Client.ApiResponse<QuotesForStacksResult>> QuotesForStacksWithHttpInfoAsync(string chainName, string contractAddress, List<Guid> stackId, string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+        public async System.Threading.Tasks.Task<Immutable.Api.ZkEvm.Client.ApiResponse<QuotesForStacksResult>> QuotesForStacksWithHttpInfoAsync(string chainName, string contractAddress, List<Guid> stackId, string? paymentToken = default(string?), string? pageCursor = default(string?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
         {
             // verify the required parameter 'chainName' is set
             if (chainName == null)
@@ -599,6 +627,10 @@ namespace Immutable.Api.ZkEvm.Api
             localVarRequestOptions.PathParameters.Add("chain_name", Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToString(chainName)); // path parameter
             localVarRequestOptions.PathParameters.Add("contract_address", Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToString(contractAddress)); // path parameter
             localVarRequestOptions.QueryParameters.Add(Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToMultiMap("multi", "stack_id", stackId));
+            if (paymentToken != null)
+            {
+                localVarRequestOptions.QueryParameters.Add(Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToMultiMap("", "payment_token", paymentToken));
+            }
             if (pageCursor != null)
             {
                 localVarRequestOptions.QueryParameters.Add(Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToMultiMap("", "page_cursor", pageCursor));

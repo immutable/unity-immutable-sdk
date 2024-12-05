@@ -9,7 +9,7 @@ All URIs are relative to *https://api.sandbox.immutable.com*
 
 <a id="quotesfornfts"></a>
 # **QuotesForNFTs**
-> QuotesForNFTsResult QuotesForNFTs (string chainName, string contractAddress, List<string> tokenId, string? pageCursor = null)
+> QuotesForNFTsResult QuotesForNFTs (string chainName, string contractAddress, List<string> tokenId, string? paymentToken = null, string? pageCursor = null)
 
 Get pricing data for a list of token ids
 
@@ -35,12 +35,13 @@ namespace Example
             var chainName = imtbl-zkevm-testnet;  // string | The name of chain
             var contractAddress = "contractAddress_example";  // string | Contract address for collection that these token ids are on
             var tokenId = new List<string>(); // List<string> | List of token ids to get pricing data for
+            var paymentToken = NATIVE;  // string? | Filters the active listings, bids, floor listing and top bid by the specified payment token, either the address of the payment token contract or 'NATIVE'. (optional) 
             var pageCursor = "pageCursor_example";  // string? | Encoded page cursor to retrieve previous or next page. Use the value returned in the response. (optional) 
 
             try
             {
                 // Get pricing data for a list of token ids
-                QuotesForNFTsResult result = apiInstance.QuotesForNFTs(chainName, contractAddress, tokenId, pageCursor);
+                QuotesForNFTsResult result = apiInstance.QuotesForNFTs(chainName, contractAddress, tokenId, paymentToken, pageCursor);
                 Debug.WriteLine(result);
             }
             catch (ApiException  e)
@@ -61,7 +62,7 @@ This returns an ApiResponse object which contains the response data, status code
 try
 {
     // Get pricing data for a list of token ids
-    ApiResponse<QuotesForNFTsResult> response = apiInstance.QuotesForNFTsWithHttpInfo(chainName, contractAddress, tokenId, pageCursor);
+    ApiResponse<QuotesForNFTsResult> response = apiInstance.QuotesForNFTsWithHttpInfo(chainName, contractAddress, tokenId, paymentToken, pageCursor);
     Debug.Write("Status Code: " + response.StatusCode);
     Debug.Write("Response Headers: " + response.Headers);
     Debug.Write("Response Body: " + response.Data);
@@ -81,6 +82,7 @@ catch (ApiException e)
 | **chainName** | **string** | The name of chain |  |
 | **contractAddress** | **string** | Contract address for collection that these token ids are on |  |
 | **tokenId** | [**List&lt;string&gt;**](string.md) | List of token ids to get pricing data for |  |
+| **paymentToken** | **string?** | Filters the active listings, bids, floor listing and top bid by the specified payment token, either the address of the payment token contract or &#39;NATIVE&#39;. | [optional]  |
 | **pageCursor** | **string?** | Encoded page cursor to retrieve previous or next page. Use the value returned in the response. | [optional]  |
 
 ### Return type
@@ -112,7 +114,7 @@ No authorization required
 
 <a id="quotesforstacks"></a>
 # **QuotesForStacks**
-> QuotesForStacksResult QuotesForStacks (string chainName, string contractAddress, List<Guid> stackId, string? pageCursor = null)
+> QuotesForStacksResult QuotesForStacks (string chainName, string contractAddress, List<Guid> stackId, string? paymentToken = null, string? pageCursor = null)
 
 Get pricing data for a list of stack ids
 
@@ -138,12 +140,13 @@ namespace Example
             var chainName = imtbl-zkevm-testnet;  // string | The name of chain
             var contractAddress = "contractAddress_example";  // string | Contract address for collection that these stacks are on
             var stackId = new List<Guid>(); // List<Guid> | List of stack ids to get pricing data for
+            var paymentToken = NATIVE;  // string? | Filters the active listings, bids, floor listing and top bid by the specified payment token, either the address of the payment token contract or 'NATIVE'. (optional) 
             var pageCursor = "pageCursor_example";  // string? | Encoded page cursor to retrieve previous or next page. Use the value returned in the response. (optional) 
 
             try
             {
                 // Get pricing data for a list of stack ids
-                QuotesForStacksResult result = apiInstance.QuotesForStacks(chainName, contractAddress, stackId, pageCursor);
+                QuotesForStacksResult result = apiInstance.QuotesForStacks(chainName, contractAddress, stackId, paymentToken, pageCursor);
                 Debug.WriteLine(result);
             }
             catch (ApiException  e)
@@ -164,7 +167,7 @@ This returns an ApiResponse object which contains the response data, status code
 try
 {
     // Get pricing data for a list of stack ids
-    ApiResponse<QuotesForStacksResult> response = apiInstance.QuotesForStacksWithHttpInfo(chainName, contractAddress, stackId, pageCursor);
+    ApiResponse<QuotesForStacksResult> response = apiInstance.QuotesForStacksWithHttpInfo(chainName, contractAddress, stackId, paymentToken, pageCursor);
     Debug.Write("Status Code: " + response.StatusCode);
     Debug.Write("Response Headers: " + response.Headers);
     Debug.Write("Response Body: " + response.Data);
@@ -184,6 +187,7 @@ catch (ApiException e)
 | **chainName** | **string** | The name of chain |  |
 | **contractAddress** | **string** | Contract address for collection that these stacks are on |  |
 | **stackId** | [**List&lt;Guid&gt;**](Guid.md) | List of stack ids to get pricing data for |  |
+| **paymentToken** | **string?** | Filters the active listings, bids, floor listing and top bid by the specified payment token, either the address of the payment token contract or &#39;NATIVE&#39;. | [optional]  |
 | **pageCursor** | **string?** | Encoded page cursor to retrieve previous or next page. Use the value returned in the response. | [optional]  |
 
 ### Return type
