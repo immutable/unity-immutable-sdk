@@ -3605,6 +3605,17 @@ paths:
           example: sword
           type: string
         style: form
+      - description: "Filters the active listings, bids, floor listing and top bid\
+          \ by the specified payment token, either the address of the payment token\
+          \ contract or 'NATIVE'"
+        explode: true
+        in: query
+        name: payment_token
+        required: false
+        schema:
+          example: NATIVE
+          type: string
+        style: form
       - description: Sort results in a specific order
         explode: true
         in: query
@@ -3808,6 +3819,17 @@ paths:
           minItems: 1
           type: array
         style: form
+      - description: "Filters the active listings, bids, floor listing and top bid\
+          \ by the specified payment token, either the address of the payment token\
+          \ contract or 'NATIVE'."
+        explode: true
+        in: query
+        name: payment_token
+        required: false
+        schema:
+          example: NATIVE
+          type: string
+        style: form
       - description: Encoded page cursor to retrieve previous or next page. Use the
           value returned in the response.
         explode: true
@@ -3904,6 +3926,17 @@ paths:
           maxItems: 20
           minItems: 1
           type: array
+        style: form
+      - description: "Filters the active listings, bids, floor listing and top bid\
+          \ by the specified payment token, either the address of the payment token\
+          \ contract or 'NATIVE'."
+        explode: true
+        in: query
+        name: payment_token
+        required: false
+        schema:
+          example: NATIVE
+          type: string
         style: form
       - description: Encoded page cursor to retrieve previous or next page. Use the
           value returned in the response.

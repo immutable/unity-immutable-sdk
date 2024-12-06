@@ -218,7 +218,7 @@ No authorization required
 
 <a id="searchstacks"></a>
 # **SearchStacks**
-> SearchStacksResult SearchStacks (string chainName, List<string> contractAddress, string? accountAddress = null, bool? onlyIncludeOwnerListings = null, bool? onlyIfHasActiveListings = null, string? traits = null, string? keyword = null, string? sortBy = null, int? pageSize = null, string? pageCursor = null)
+> SearchStacksResult SearchStacks (string chainName, List<string> contractAddress, string? accountAddress = null, bool? onlyIncludeOwnerListings = null, bool? onlyIfHasActiveListings = null, string? traits = null, string? keyword = null, string? paymentToken = null, string? sortBy = null, int? pageSize = null, string? pageCursor = null)
 
 Search NFT stacks
 
@@ -248,6 +248,7 @@ namespace Example
             var onlyIfHasActiveListings = true;  // bool? | Filters results to include only stacks that have a current active listing. False and 'null' return all unfiltered stacks. (optional) 
             var traits = "traits_example";  // string? | JSON encoded traits to filter by. e.g. encodeURIComponent(JSON.stringify({\"rarity\": {\"values\": [\"common\", \"rare\"], \"condition\": \"eq\"}})) (optional) 
             var keyword = sword;  // string? | Keyword to search NFT name and description. Alphanumeric characters only. (optional) 
+            var paymentToken = NATIVE;  // string? | Filters the active listings, bids, floor listing and top bid by the specified payment token, either the address of the payment token contract or 'NATIVE' (optional) 
             var sortBy = "cheapest_first";  // string? | Sort results in a specific order (optional) 
             var pageSize = 100;  // int? | Number of results to return per page (optional)  (default to 100)
             var pageCursor = "pageCursor_example";  // string? | Encoded page cursor to retrieve previous or next page. Use the value returned in the response. (optional) 
@@ -255,7 +256,7 @@ namespace Example
             try
             {
                 // Search NFT stacks
-                SearchStacksResult result = apiInstance.SearchStacks(chainName, contractAddress, accountAddress, onlyIncludeOwnerListings, onlyIfHasActiveListings, traits, keyword, sortBy, pageSize, pageCursor);
+                SearchStacksResult result = apiInstance.SearchStacks(chainName, contractAddress, accountAddress, onlyIncludeOwnerListings, onlyIfHasActiveListings, traits, keyword, paymentToken, sortBy, pageSize, pageCursor);
                 Debug.WriteLine(result);
             }
             catch (ApiException  e)
@@ -276,7 +277,7 @@ This returns an ApiResponse object which contains the response data, status code
 try
 {
     // Search NFT stacks
-    ApiResponse<SearchStacksResult> response = apiInstance.SearchStacksWithHttpInfo(chainName, contractAddress, accountAddress, onlyIncludeOwnerListings, onlyIfHasActiveListings, traits, keyword, sortBy, pageSize, pageCursor);
+    ApiResponse<SearchStacksResult> response = apiInstance.SearchStacksWithHttpInfo(chainName, contractAddress, accountAddress, onlyIncludeOwnerListings, onlyIfHasActiveListings, traits, keyword, paymentToken, sortBy, pageSize, pageCursor);
     Debug.Write("Status Code: " + response.StatusCode);
     Debug.Write("Response Headers: " + response.Headers);
     Debug.Write("Response Body: " + response.Data);
@@ -300,6 +301,7 @@ catch (ApiException e)
 | **onlyIfHasActiveListings** | **bool?** | Filters results to include only stacks that have a current active listing. False and &#39;null&#39; return all unfiltered stacks. | [optional]  |
 | **traits** | **string?** | JSON encoded traits to filter by. e.g. encodeURIComponent(JSON.stringify({\&quot;rarity\&quot;: {\&quot;values\&quot;: [\&quot;common\&quot;, \&quot;rare\&quot;], \&quot;condition\&quot;: \&quot;eq\&quot;}})) | [optional]  |
 | **keyword** | **string?** | Keyword to search NFT name and description. Alphanumeric characters only. | [optional]  |
+| **paymentToken** | **string?** | Filters the active listings, bids, floor listing and top bid by the specified payment token, either the address of the payment token contract or &#39;NATIVE&#39; | [optional]  |
 | **sortBy** | **string?** | Sort results in a specific order | [optional]  |
 | **pageSize** | **int?** | Number of results to return per page | [optional] [default to 100] |
 | **pageCursor** | **string?** | Encoded page cursor to retrieve previous or next page. Use the value returned in the response. | [optional]  |
