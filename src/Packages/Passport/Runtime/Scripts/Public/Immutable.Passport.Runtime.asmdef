@@ -2,20 +2,20 @@
     "name": "Immutable.Passport.Runtime.Public",
     "rootNamespace": "Immutable.Passport",
     "references": [
-        "VoltstroStudios.UnityWebBrowser",
         "UniTask",
         "Immutable.Browser.Core",
         "Immutable.Browser.Gree",
         "Immutable.Passport.Runtime.Private",
-        "Immutable.Passport.Core.Logging"
+        "Immutable.Passport.Core.Logging",
+        "VoltstroStudios.UnityWebBrowser"
     ],
     "includePlatforms": [
         "Android",
         "Editor",
         "iOS",
         "macOSStandalone",
-        "WindowsStandalone64",
-        "WebGL"
+        "WebGL",
+        "WindowsStandalone64"
     ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
