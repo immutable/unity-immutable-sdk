@@ -9,7 +9,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace VoltstroStudios.UnityWebBrowser.Core
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Core
 {
     /// <summary>
     ///     Implementation of <see cref="BaseUwbClientManager" /> for rendering to a <see cref="RawImage" />

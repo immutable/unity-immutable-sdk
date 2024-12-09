@@ -14,7 +14,7 @@ using VoltstroStudios.UnityWebBrowser.Input;
 using VoltstroStudios.UnityWebBrowser.Shared;
 using VoltstroStudios.UnityWebBrowser.Shared.Events;
 
-namespace VoltstroStudios.UnityWebBrowser.Core
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Core
 {
     /// <summary>
     ///     Input handler for <see cref="RawImageUwbClientManager" />.

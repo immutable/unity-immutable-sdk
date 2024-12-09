@@ -13,7 +13,7 @@ using Object = UnityEngine.Object;
 
 #if UNITY_EDITOR
 
-namespace VoltstroStudios.UnityWebBrowser.Editor
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Editor
 {
     public static class EditorHelper
     {

@@ -7,7 +7,7 @@
 
 using System.Collections.Generic;
 
-namespace VoltstroStudios.UnityWebBrowser.Core
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Core
 {
     /// <summary>
     ///     Creates a <see cref="string" />

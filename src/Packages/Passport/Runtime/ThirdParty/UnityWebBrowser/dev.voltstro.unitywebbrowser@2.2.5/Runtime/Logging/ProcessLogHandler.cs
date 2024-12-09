@@ -12,7 +12,7 @@ using UnityEngine.Scripting;
 using VoltstroStudios.UnityWebBrowser.Core;
 using VoltstroStudios.UnityWebBrowser.Shared;
 
-namespace VoltstroStudios.UnityWebBrowser.Logging
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Logging
 {
     /// <summary>
     ///     Handles UWB logs

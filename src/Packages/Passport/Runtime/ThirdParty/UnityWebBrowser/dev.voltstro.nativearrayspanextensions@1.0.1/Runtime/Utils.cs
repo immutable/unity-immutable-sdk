@@ -4,7 +4,7 @@ using System;
 using System.Diagnostics;
 using Unity.Collections.LowLevel.Unsafe;
 
-namespace VoltstroStudios.NativeArraySpanExtensions
+namespace Immutable.VoltstroStudios.NativeArraySpanExtensions
 {
     internal static class Utils
     {

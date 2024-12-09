@@ -7,7 +7,7 @@
 
 using System;
 
-namespace VoltstroStudios.UnityWebBrowser.Core.Js
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Core.Js
 {
     /// <summary>
     ///     An <see cref="Exception"/> related to when JS Methods are disabled

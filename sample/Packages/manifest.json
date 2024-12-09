@@ -48,6 +48,14 @@
   },
   "scopedRegistries": [
     {
+      "name": "Voltstro UPM",
+      "url": "https://upm-pkgs.voltstro.dev",
+      "scopes": [
+        "dev.voltstro",
+        "org.nuget"
+      ]
+    },
+    {
       "name": "Open UPM Packages",
       "url": "https://package.openupm.com",
       "scopes": [

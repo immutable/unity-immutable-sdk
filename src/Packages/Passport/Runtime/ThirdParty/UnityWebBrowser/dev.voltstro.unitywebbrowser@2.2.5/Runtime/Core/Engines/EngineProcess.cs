@@ -13,7 +13,7 @@ using VoltstroStudios.UnityWebBrowser.Helper;
 using VoltstroStudios.UnityWebBrowser.Logging;
 using VoltstroStudios.UnityWebBrowser.Shared.Core;
 
-namespace VoltstroStudios.UnityWebBrowser.Core.Engines
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Core.Engines
 {
     /// <summary>
     ///     Handler for the engine process

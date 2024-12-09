@@ -8,7 +8,7 @@
 using UnityEngine;
 using VoltstroStudios.UnityWebBrowser.Shared;
 
-namespace VoltstroStudios.UnityWebBrowser.Input
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Input
 {
     /// <summary>
     ///     Abstraction layer for getting input

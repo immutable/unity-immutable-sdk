@@ -2,7 +2,7 @@
 
 ﻿using VoltstroStudios.UnityWebBrowser.Core;
 
-namespace VoltstroStudios.UnityWebBrowser
+namespace Immuatble.VoltstroStudios.UnityWebBrowser
 {
     public class WebBrowserNoUi : BaseUwbClientManager
     {

@@ -13,7 +13,7 @@ using System.Diagnostics;
 using System.IO;
 using VoltstroStudios.UnityWebBrowser.Logging;
 
-namespace VoltstroStudios.UnityWebBrowser.Core.Engines.Process
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Core.Engines.Process
 {
     internal sealed class LinuxProcess : IProcess
     {

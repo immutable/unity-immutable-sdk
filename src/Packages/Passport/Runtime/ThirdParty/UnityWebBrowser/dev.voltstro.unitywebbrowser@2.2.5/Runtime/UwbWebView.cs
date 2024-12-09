@@ -20,7 +20,7 @@ using VoltstroStudios.UnityWebBrowser.Shared.Core;
 
 // ReSharper disable Unity.IncorrectScriptableObjectInstantiation
 
-namespace VoltstroStudios.UnityWebBrowser
+namespace Immuatble.VoltstroStudios.UnityWebBrowser
 {
     public class UwbWebView : MonoBehaviour, IWebBrowserClient
     {

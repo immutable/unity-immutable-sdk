@@ -1,13 +1,13 @@
 {
-    "name": "Immutable.VoltstroStudios.NativeArraySpanExtensions",
-    "rootNamespace": "Immutable.VoltstroStudios.NativeArraySpanExtensions",
+    "name": "Immutable.VoltRpc",
+    "rootNamespace": "",
     "references": [],
     "includePlatforms": [
         "Editor",
         "WindowsStandalone64"
     ],
     "excludePlatforms": [],
-    "allowUnsafeCode": true,
+    "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,

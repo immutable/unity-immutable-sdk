@@ -14,7 +14,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using VoltstroStudios.UnityWebBrowser.Shared;
 
-namespace VoltstroStudios.UnityWebBrowser.Input
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Input
 {
     /// <summary>
     ///     Input handler using Unity's new input system

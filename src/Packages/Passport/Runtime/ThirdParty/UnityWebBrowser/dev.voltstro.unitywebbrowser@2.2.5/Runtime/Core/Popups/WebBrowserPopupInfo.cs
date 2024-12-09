@@ -9,7 +9,7 @@ using System;
 using System.Diagnostics;
 using VoltstroStudios.UnityWebBrowser.Shared.Popups;
 
-namespace VoltstroStudios.UnityWebBrowser.Core.Popups
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Core.Popups
 {
     public class WebBrowserPopupInfo : EnginePopupInfo
     {

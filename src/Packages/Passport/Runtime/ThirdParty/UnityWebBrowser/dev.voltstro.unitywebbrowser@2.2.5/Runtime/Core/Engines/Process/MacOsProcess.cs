@@ -10,7 +10,7 @@ using VoltstroStudios.UnityWebBrowser.Helper;
 
 #if UNITY_STANDALONE_OSX
 
-namespace VoltstroStudios.UnityWebBrowser.Core.Engines.Process
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Core.Engines.Process
 {
     internal sealed class MacOsProcess : IProcess
     {

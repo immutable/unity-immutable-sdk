@@ -10,7 +10,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace VoltstroStudios.UnityWebBrowser.Core.Engines.Process
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Core.Engines.Process
 {
     internal sealed class WindowProcess : IProcess
     {

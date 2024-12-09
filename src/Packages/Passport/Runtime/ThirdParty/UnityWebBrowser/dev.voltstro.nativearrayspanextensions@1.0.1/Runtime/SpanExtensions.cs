@@ -3,7 +3,7 @@
 using System;
 using Unity.Collections;
 
-namespace VoltstroStudios.NativeArraySpanExtensions
+namespace Immutable.VoltstroStudios.NativeArraySpanExtensions
 {
     /// <summary>
     ///     Provides <see cref="NativeArray{T}" /> copying utils to <see cref="Span{T}" />

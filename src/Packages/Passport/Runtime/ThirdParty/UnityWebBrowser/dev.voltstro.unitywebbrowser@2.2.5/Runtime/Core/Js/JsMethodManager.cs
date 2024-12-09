@@ -14,7 +14,7 @@ using UnityEngine;
 using UnityEngine.Scripting;
 using VoltstroStudios.UnityWebBrowser.Shared.Js;
 
-namespace VoltstroStudios.UnityWebBrowser.Core.Js
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Core.Js
 {
     /// <summary>
     ///     The core JS Method Manager.

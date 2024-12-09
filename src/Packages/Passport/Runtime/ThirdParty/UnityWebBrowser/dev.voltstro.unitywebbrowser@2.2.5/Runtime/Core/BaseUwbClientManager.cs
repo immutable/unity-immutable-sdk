@@ -8,7 +8,7 @@
 using System;
 using UnityEngine;
 
-namespace VoltstroStudios.UnityWebBrowser.Core
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Core
 {
     /// <summary>
     ///     Base for all other systems that want to build custom rendering with UWB.

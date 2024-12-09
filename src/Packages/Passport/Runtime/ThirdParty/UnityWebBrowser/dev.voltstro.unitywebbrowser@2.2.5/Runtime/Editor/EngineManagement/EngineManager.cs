@@ -14,7 +14,7 @@ using UnityEngine;
 using VoltstroStudios.UnityWebBrowser.Core.Engines;
 using VoltstroStudios.UnityWebBrowser.Shared.Core;
 
-namespace VoltstroStudios.UnityWebBrowser.Editor.EngineManagement
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Editor.EngineManagement
 {
     public static class EngineManager
     {

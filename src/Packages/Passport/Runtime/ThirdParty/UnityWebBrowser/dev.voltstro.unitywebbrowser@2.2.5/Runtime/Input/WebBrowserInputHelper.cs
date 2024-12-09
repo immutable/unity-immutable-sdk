@@ -12,7 +12,7 @@ using VoltstroStudios.UnityWebBrowser.Shared;
 using UnityEngine.InputSystem;
 #endif
 
-namespace VoltstroStudios.UnityWebBrowser.Input
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Input
 {
     /// <summary>
     ///     Helper class for inputs

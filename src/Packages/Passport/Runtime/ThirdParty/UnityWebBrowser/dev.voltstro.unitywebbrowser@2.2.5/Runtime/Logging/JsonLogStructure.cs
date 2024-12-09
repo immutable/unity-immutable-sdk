@@ -10,7 +10,7 @@ using Newtonsoft.Json;
 using UnityEngine.Scripting;
 using VoltstroStudios.UnityWebBrowser.Shared;
 
-namespace VoltstroStudios.UnityWebBrowser.Logging
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Logging
 {
     [Preserve]
     internal class JsonLogStructure

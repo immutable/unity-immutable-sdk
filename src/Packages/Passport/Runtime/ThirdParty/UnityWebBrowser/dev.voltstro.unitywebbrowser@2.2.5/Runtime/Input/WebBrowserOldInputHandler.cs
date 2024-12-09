@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using VoltstroStudios.UnityWebBrowser.Shared;
 
-namespace VoltstroStudios.UnityWebBrowser.Input
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Input
 {
     /// <summary>
     ///     Input handler using Unity's old <see cref="UnityEngine.Input" />

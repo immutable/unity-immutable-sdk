@@ -9,7 +9,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace VoltstroStudios.UnityWebBrowser.Core
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Core
 {
     /// <summary>
     ///     Handles dealing with fullscreen stuff

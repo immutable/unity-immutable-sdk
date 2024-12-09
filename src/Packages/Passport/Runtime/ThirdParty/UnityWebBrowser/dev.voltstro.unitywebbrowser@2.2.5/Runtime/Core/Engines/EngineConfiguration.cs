@@ -14,7 +14,7 @@ using VoltstroStudios.UnityWebBrowser.Shared.Core;
 using VoltstroStudios.UnityWebBrowser.Editor.EngineManagement;
 #endif
 
-namespace VoltstroStudios.UnityWebBrowser.Core.Engines
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Core.Engines
 {
     [CreateAssetMenu(menuName = "UWB/UWB Engine Configuration", fileName = "New UWB Engine Configuration")]
     public class EngineConfiguration : Engine

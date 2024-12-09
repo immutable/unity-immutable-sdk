@@ -16,7 +16,7 @@ using VoltstroStudios.UnityWebBrowser.Shared.Events;
 using VoltstroStudios.NativeArraySpanExtensions;
 #endif
 
-namespace VoltstroStudios.UnityWebBrowser.Core
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Core
 {
     internal class PixelsEventTypeReader : TypeReadWriter<PixelsEvent>
     {

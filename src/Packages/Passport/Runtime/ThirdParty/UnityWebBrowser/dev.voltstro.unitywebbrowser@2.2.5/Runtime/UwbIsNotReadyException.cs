@@ -7,7 +7,7 @@
 
 using System;
 
-namespace VoltstroStudios.UnityWebBrowser
+namespace Immuatble.VoltstroStudios.UnityWebBrowser
 {
     /// <summary>
     ///     An <see cref="Exception" /> when UWB is not ready

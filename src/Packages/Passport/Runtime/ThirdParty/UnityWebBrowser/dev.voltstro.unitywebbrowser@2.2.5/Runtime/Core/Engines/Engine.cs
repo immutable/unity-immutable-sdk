@@ -14,7 +14,7 @@ using UnityEngine.Serialization;
 using VoltstroStudios.UnityWebBrowser.Shared.Core;
 
 #nullable enable
-namespace VoltstroStudios.UnityWebBrowser.Core.Engines
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Core.Engines
 {
     public abstract class Engine : ScriptableObject
     {

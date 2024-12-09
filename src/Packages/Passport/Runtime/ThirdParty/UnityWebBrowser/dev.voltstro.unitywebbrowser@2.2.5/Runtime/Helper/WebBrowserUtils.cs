@@ -18,7 +18,7 @@ using VoltstroStudios.UnityWebBrowser.Shared.Core;
 using VoltstroStudios.UnityWebBrowser.Editor.EngineManagement;
 #endif
 
-namespace VoltstroStudios.UnityWebBrowser.Helper
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Helper
 {
     /// <summary>
     ///     Provides Utils to be used by the web browser

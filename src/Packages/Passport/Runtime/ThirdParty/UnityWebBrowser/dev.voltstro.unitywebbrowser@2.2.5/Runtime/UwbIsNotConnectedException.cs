@@ -7,7 +7,7 @@
 
 using System;
 
-namespace VoltstroStudios.UnityWebBrowser
+namespace Immuatble.VoltstroStudios.UnityWebBrowser
 {
     /// <summary>
     ///     An <see cref="Exception" /> related to when you are trying to do something when the engine is not running

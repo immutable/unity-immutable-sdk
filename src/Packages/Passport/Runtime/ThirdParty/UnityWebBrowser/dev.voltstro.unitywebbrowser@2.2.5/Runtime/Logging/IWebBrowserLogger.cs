@@ -5,7 +5,7 @@
 // 
 // This project is under the MIT license. See the LICENSE.md file for more details.
 
-namespace VoltstroStudios.UnityWebBrowser.Logging
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Logging
 {
     /// <summary>
     ///     Interface for the web browser's logger.

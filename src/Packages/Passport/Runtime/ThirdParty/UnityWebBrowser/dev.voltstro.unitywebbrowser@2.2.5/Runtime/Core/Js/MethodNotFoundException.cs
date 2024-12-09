@@ -7,7 +7,7 @@
 
 using System;
 
-namespace VoltstroStudios.UnityWebBrowser.Core.Js
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Core.Js
 {
     /// <summary>
     ///     An <see cref="Exception"/> to when a method name cannot be found

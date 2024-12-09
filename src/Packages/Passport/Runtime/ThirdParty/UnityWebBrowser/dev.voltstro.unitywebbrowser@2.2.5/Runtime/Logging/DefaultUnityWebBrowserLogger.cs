@@ -7,7 +7,7 @@
 
 using UnityEngine;
 
-namespace VoltstroStudios.UnityWebBrowser.Logging
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Logging
 {
     /// <summary>
     ///     An <see cref="IWebBrowserLogger" /> using Unity's <see cref="ILogger" />

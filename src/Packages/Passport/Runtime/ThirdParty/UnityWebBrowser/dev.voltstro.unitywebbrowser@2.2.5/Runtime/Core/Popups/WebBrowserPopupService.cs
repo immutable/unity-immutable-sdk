@@ -12,7 +12,7 @@ using VoltstroStudios.UnityWebBrowser.Events;
 using VoltstroStudios.UnityWebBrowser.Logging;
 using VoltstroStudios.UnityWebBrowser.Shared.Popups;
 
-namespace VoltstroStudios.UnityWebBrowser.Core.Popups
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Core.Popups
 {
     internal class WebBrowserPopupService : IPopupEngineControls, IPopupClientControls
     {

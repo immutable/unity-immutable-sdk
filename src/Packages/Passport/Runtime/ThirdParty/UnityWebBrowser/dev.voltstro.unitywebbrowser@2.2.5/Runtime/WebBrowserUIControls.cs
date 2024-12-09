@@ -10,7 +10,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using VoltstroStudios.UnityWebBrowser.Core;
 
-namespace VoltstroStudios.UnityWebBrowser
+namespace Immuatble.VoltstroStudios.UnityWebBrowser
 {
     /// <summary>
     ///     Included UI controller for UWB.

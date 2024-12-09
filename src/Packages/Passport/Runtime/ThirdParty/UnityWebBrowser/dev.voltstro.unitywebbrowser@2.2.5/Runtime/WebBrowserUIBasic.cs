@@ -8,7 +8,7 @@
 using UnityEngine;
 using VoltstroStudios.UnityWebBrowser.Core;
 
-namespace VoltstroStudios.UnityWebBrowser
+namespace Immuatble.VoltstroStudios.UnityWebBrowser
 {
     /// <summary>
     ///     Basic version of UWB. Lacks fullscreen controls

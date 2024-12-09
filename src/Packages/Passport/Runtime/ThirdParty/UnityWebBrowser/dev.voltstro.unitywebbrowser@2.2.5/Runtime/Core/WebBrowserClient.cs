@@ -30,7 +30,7 @@ using Debug = UnityEngine.Debug;
 using Object = UnityEngine.Object;
 using Resolution = VoltstroStudios.UnityWebBrowser.Shared.Resolution;
 
-namespace VoltstroStudios.UnityWebBrowser.Core
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Core
 {
     /// <summary>
     ///     The main object responsible for UWB.

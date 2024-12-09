@@ -22,7 +22,7 @@ using VoltstroStudios.UnityWebBrowser.Shared.Js;
 using VoltstroStudios.UnityWebBrowser.Shared.Popups;
 using VoltstroStudios.UnityWebBrowser.Shared.ReadWriters;
 
-namespace VoltstroStudios.UnityWebBrowser.Core
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Core
 {
     /// <summary>
     ///     Handles the RPC methods and two-way communication between the UWB engine and Unity

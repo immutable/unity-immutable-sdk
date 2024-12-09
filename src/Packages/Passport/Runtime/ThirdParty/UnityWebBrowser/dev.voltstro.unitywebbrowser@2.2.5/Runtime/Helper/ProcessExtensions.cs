@@ -11,7 +11,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace VoltstroStudios.UnityWebBrowser.Helper
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Helper
 {
     internal static class ProcessExtensions
     {

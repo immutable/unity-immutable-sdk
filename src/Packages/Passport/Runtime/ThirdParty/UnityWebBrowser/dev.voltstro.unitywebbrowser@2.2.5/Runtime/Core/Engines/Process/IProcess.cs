@@ -8,7 +8,7 @@
 using System;
 using System.Diagnostics;
 
-namespace VoltstroStudios.UnityWebBrowser.Core.Engines.Process
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Core.Engines.Process
 {
     internal interface IProcess : IDisposable
     {

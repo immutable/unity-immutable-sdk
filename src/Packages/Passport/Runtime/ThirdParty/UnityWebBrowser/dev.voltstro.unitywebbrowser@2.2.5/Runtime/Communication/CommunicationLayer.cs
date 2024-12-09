@@ -10,7 +10,7 @@ using JetBrains.Annotations;
 using UnityEngine;
 using VoltRpc.Communication;
 
-namespace VoltstroStudios.UnityWebBrowser.Communication
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Communication
 {
     /// <summary>
     ///     Base class that communication layers need to implement.

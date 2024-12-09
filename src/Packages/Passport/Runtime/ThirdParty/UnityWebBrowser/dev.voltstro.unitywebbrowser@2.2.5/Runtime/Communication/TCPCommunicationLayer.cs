@@ -10,7 +10,7 @@ using UnityEngine;
 using VoltRpc.Communication;
 using VoltRpc.Communication.TCP;
 
-namespace VoltstroStudios.UnityWebBrowser.Communication
+namespace Immuatble.VoltstroStudios.UnityWebBrowser.Communication
 {
     /// <summary>
     ///     In-Built TCP layer that uses VoltRpc's <see cref="TCPClient" /> and <see cref="TCPHost" />
