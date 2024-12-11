@@ -4,6 +4,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Immutable.Passport;
+using Thirdweb;
+using Thirdweb.Unity;
 
 public class UnauthenticatedScript : MonoBehaviour
 {
@@ -290,5 +292,16 @@ public class UnauthenticatedScript : MonoBehaviour
         {
             Output.text = message;
         }
+    }
+
+    public async void ThirdWebPrivateKeyWallet()
+    {
+        var ActiveChainId = 421614;
+        var WebglForceMetamaskExtension = false;
+        
+        var options = new WalletOptions(provider: WalletProvider.PrivateKeyWallet, chainId: ActiveChainId);
+        var wallet = await ThirdwebManager.Instance.ConnectWallet(options);
+        var address = await wallet.GetAddress();
+        ShowOutput($"ThirdWeb address: {address}");
     }
 }
