@@ -22,16 +22,16 @@ namespace Immutable.Passport
     {
         private const string TAG = "[Passport Implementation]";
         public readonly IBrowserCommunicationsManager communicationsManager;
-        private PassportAnalytics analytics = new PassportAnalytics();
+        private PassportAnalytics analytics = new();
 
         // Used for device code auth
-        private DeviceConnectResponse deviceConnectResponse;
+        private DeviceConnectResponse? deviceConnectResponse;
 
         // Used for PKCE
-        private bool pkceLoginOnly = false; // Used to differentiate between a login and connect
-        private UniTaskCompletionSource<bool> pkceCompletionSource;
-        private string redirectUri = null;
-        private string logoutRedirectUri = null;
+        private bool pkceLoginOnly; // Used to differentiate between a login and connect
+        private UniTaskCompletionSource<bool>? pkceCompletionSource;
+        private string? redirectUri;
+        private string? logoutRedirectUri;
 
 #if UNITY_ANDROID
         // Used for the PKCE callback
@@ -42,15 +42,15 @@ namespace Immutable.Passport
         // Used to prevent calling login/connect functions multiple times
         private bool isLoggedIn = false;
 
-        public event OnAuthEventDelegate OnAuthEvent;
+        public event OnAuthEventDelegate? OnAuthEvent;
 
         public PassportImpl(IBrowserCommunicationsManager communicationsManager)
         {
             this.communicationsManager = communicationsManager;
         }
 
-        public async UniTask Init(string clientId, string environment, string redirectUri = null,
-            string logoutRedirectUri = null, string deeplink = null)
+        public async UniTask Init(string clientId, string environment, string? redirectUri = null,
+            string? logoutRedirectUri = null, string? deeplink = null)
         {
             this.redirectUri = redirectUri;
             this.logoutRedirectUri = logoutRedirectUri;
@@ -85,7 +85,7 @@ namespace Immutable.Passport
             }
             else
             {
-                InitRequest request = new InitRequest()
+                InitRequest request = new InitRequest
                 {
                     clientId = clientId,
                     environment = environment,
@@ -113,34 +113,32 @@ namespace Immutable.Passport
 
         public async UniTask<bool> Login(bool useCachedSession = false, Nullable<long> timeoutMs = null)
         {
-            string functionName = "Login";
             if (useCachedSession)
             {
                 return await Relogin();
             }
-            else
+
+            try
             {
-                try
-                {
-                    Track(PassportAnalytics.EventName.START_LOGIN);
-                    SendAuthEvent(PassportAuthEvent.LoggingIn);
+                const string functionName = "Login";
+                Track(PassportAnalytics.EventName.START_LOGIN);
+                SendAuthEvent(PassportAuthEvent.LoggingIn);
 
-                    await InitialiseDeviceCodeAuth(functionName);
-                    await ConfirmCode(
-                        PassportAuthEvent.LoginOpeningBrowser, PassportAuthEvent.PendingBrowserLogin, functionName,
-                        PassportFunction.LOGIN_CONFIRM_CODE, timeoutMs);
+                await InitialiseDeviceCodeAuth(functionName);
+                await ConfirmCode(
+                    PassportAuthEvent.LoginOpeningBrowser, PassportAuthEvent.PendingBrowserLogin, functionName,
+                    PassportFunction.LOGIN_CONFIRM_CODE, timeoutMs);
 
-                    Track(PassportAnalytics.EventName.COMPLETE_LOGIN, success: true);
-                    SendAuthEvent(PassportAuthEvent.LoginSuccess);
-                    isLoggedIn = true;
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    Track(PassportAnalytics.EventName.COMPLETE_LOGIN, success: false);
-                    SendAuthEvent(PassportAuthEvent.LoginFailed);
-                    throw ex;
-                }
+                Track(PassportAnalytics.EventName.COMPLETE_LOGIN, success: true);
+                SendAuthEvent(PassportAuthEvent.LoginSuccess);
+                isLoggedIn = true;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Track(PassportAnalytics.EventName.COMPLETE_LOGIN, success: false);
+                SendAuthEvent(PassportAuthEvent.LoginFailed);
+                throw ex;
             }
         }
 
@@ -176,49 +174,47 @@ namespace Immutable.Passport
             return false;
         }
 
-        public async UniTask<bool> ConnectImx(bool useCachedSession = false, Nullable<long> timeoutMs = null)
+        public async UniTask<bool> ConnectImx(bool useCachedSession = false, long? timeoutMs = null)
         {
-            string functionName = "ConnectImx";
             if (useCachedSession)
             {
                 return await Reconnect();
             }
-            else
+
+            // If the user called Login before and then ConnectImx, there is no point triggering device flow again
+            bool hasCredsSaved = await HasCredentialsSaved();
+            if (hasCredsSaved)
             {
-                // If the user called Login before and then ConnectImx, there is no point triggering device flow again
-                bool hasCredsSaved = await HasCredentialsSaved();
-                if (hasCredsSaved)
+                bool reconnected = await Reconnect();
+                if (reconnected)
                 {
-                    bool reconnected = await Reconnect();
-                    if (reconnected)
-                    {
-                        // Successfully reconnected
-                        return reconnected;
-                    }
-                    // Otherwise fallback to device code flow
+                    // Successfully reconnected
+                    return reconnected;
                 }
+                // Otherwise fallback to device code flow
+            }
 
-                try
-                {
-                    Track(PassportAnalytics.EventName.START_CONNECT_IMX);
-                    SendAuthEvent(PassportAuthEvent.ConnectingImx);
+            try
+            {
+                const string functionName = "ConnectImx";
+                Track(PassportAnalytics.EventName.START_CONNECT_IMX);
+                SendAuthEvent(PassportAuthEvent.ConnectingImx);
 
-                    await InitialiseDeviceCodeAuth(functionName);
-                    await ConfirmCode(
-                        PassportAuthEvent.ConnectImxOpeningBrowser, PassportAuthEvent.PendingBrowserLoginAndProviderSetup,
-                        functionName, PassportFunction.CONNECT_CONFIRM_CODE, timeoutMs);
+                await InitialiseDeviceCodeAuth(functionName);
+                await ConfirmCode(
+                    PassportAuthEvent.ConnectImxOpeningBrowser, PassportAuthEvent.PendingBrowserLoginAndProviderSetup,
+                    functionName, PassportFunction.CONNECT_CONFIRM_CODE, timeoutMs);
 
-                    Track(PassportAnalytics.EventName.COMPLETE_CONNECT_IMX, success: true);
-                    SendAuthEvent(PassportAuthEvent.ConnectImxSuccess);
-                    isLoggedIn = true;
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    Track(PassportAnalytics.EventName.COMPLETE_CONNECT_IMX, success: false);
-                    SendAuthEvent(PassportAuthEvent.ConnectImxFailed);
-                    throw ex;
-                }
+                Track(PassportAnalytics.EventName.COMPLETE_CONNECT_IMX, success: true);
+                SendAuthEvent(PassportAuthEvent.ConnectImxSuccess);
+                isLoggedIn = true;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Track(PassportAnalytics.EventName.COMPLETE_CONNECT_IMX, success: false);
+                SendAuthEvent(PassportAuthEvent.ConnectImxFailed);
+                throw ex;
             }
         }
 
@@ -274,7 +270,7 @@ namespace Immutable.Passport
 
         private async UniTask ConfirmCode(
             PassportAuthEvent openingBrowserAuthEvent, PassportAuthEvent pendingAuthEvent,
-            string callingFunction, string functionToCall, Nullable<long> timeoutMs = null)
+            string callingFunction, string functionToCall, long? timeoutMs)
         {
             if (deviceConnectResponse != null)
             {
@@ -553,9 +549,9 @@ namespace Immutable.Passport
             {
                 SendAuthEvent(PassportAuthEvent.LoggingOut);
 
-                string logoutUrl = await GetLogoutUrl();
                 if (hardLogout)
                 {
+                    var logoutUrl = await GetLogoutUrl();
                     OpenUrl(logoutUrl);
                 }
 
@@ -859,10 +855,7 @@ namespace Immutable.Passport
         private void SendAuthEvent(PassportAuthEvent authEvent)
         {
             PassportLogger.Debug($"{TAG} Send auth event: {authEvent}");
-            if (OnAuthEvent != null)
-            {
-                OnAuthEvent.Invoke(authEvent);
-            }
+            OnAuthEvent?.Invoke(authEvent);
         }
 
         protected virtual void OpenUrl(string url)

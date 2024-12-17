@@ -257,7 +257,7 @@ namespace Immutable.Passport
         /// <returns>
         /// Returns true if login is successful, otherwise false.
         /// </returns>
-        public async UniTask<bool> Login(bool useCachedSession = false, Nullable<long> timeoutMs = null)
+        public async UniTask<bool> Login(bool useCachedSession = false, long? timeoutMs = null)
         {
             return await GetPassportImpl().Login(useCachedSession, timeoutMs);
         }
@@ -268,7 +268,7 @@ namespace Immutable.Passport
         /// <param name="useCachedSession">If true, the saved access token or refresh token will be used to connect the user. If this fails, it will not fallback to device code auth.</param>
         /// <param name="timeoutMs">(Optional) The maximum time, in milliseconds, the function is allowed to take before a TimeoutException is thrown. If not set, the function will wait indefinitely.</param>
         /// </summary>
-        public async UniTask<bool> ConnectImx(bool useCachedSession = false, Nullable<long> timeoutMs = null)
+        public async UniTask<bool> ConnectImx(bool useCachedSession = false, long? timeoutMs = null)
         {
             return await GetPassportImpl().ConnectImx(useCachedSession, timeoutMs);
         }
