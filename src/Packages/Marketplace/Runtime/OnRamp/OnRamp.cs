@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
-using UnityEngine;
 
 namespace Immutable.Marketplace.OnRamp
 {
@@ -34,8 +33,7 @@ namespace Immutable.Marketplace.OnRamp
             string fiatCurrency = "USD",
             string defaultFiatAmount = "50",
             string defaultCryptoCurrency = "IMX",
-            string networks = "immutablezkevm",
-            bool disableWalletAddressForm = true
+            string defaultCryptoCurrencyList = "imx,eth,usdc"
         )
         {
             string baseUrl = TransakBaseUrls[_environment];
@@ -44,7 +42,7 @@ namespace Immutable.Marketplace.OnRamp
             var queryParams = new Dictionary<string, string>
         {
             {"apiKey", apiKey},
-            {"network", networks},
+            {"network", "immutablezkevm"},
             {"defaultPaymentMethod", "credit_debit_card"},
             {"disablePaymentMethods", ""},
             {"productsAvailed", "buy"},
@@ -53,11 +51,11 @@ namespace Immutable.Marketplace.OnRamp
             {"defaultCryptoCurrency", defaultCryptoCurrency},
             {"email", Uri.EscapeDataString(_email)},
             {"isAutoFillUserData", "true"},
-            {"disableWalletAddressForm", disableWalletAddressForm.ToString().ToLower()},
+            {"disableWalletAddressForm", "true"},
             {"defaultFiatAmount", defaultFiatAmount},
             {"defaultFiatCurrency", fiatCurrency},
             {"walletAddress", _address},
-            {"cryptoCurrencyList", "imx,eth,usdc"}
+            {"cryptoCurrencyList", defaultCryptoCurrencyList}
         };
 
             string queryString = string.Join("&", queryParams.Select(kvp => $"{kvp.Key}={Uri.EscapeDataString(kvp.Value)}").ToArray());
