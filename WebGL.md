@@ -1,5 +1,8 @@
 # Implementing Immutable Unity SDK for WebGL
 
+> [!WARNING]  
+> WebGL functionality is not officially supported.
+
 This guide provides focused instructions for implementing the Unity-Immutable-SDK in WebGL projects.
 
 For general information on the SDK, please refer to
