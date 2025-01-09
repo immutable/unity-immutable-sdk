@@ -3922,6 +3922,7 @@ paths:
         schema:
           items:
             example: "1337"
+            pattern: ^\d+$
             type: string
           maxItems: 20
           minItems: 1
