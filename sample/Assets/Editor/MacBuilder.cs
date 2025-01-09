@@ -65,15 +65,7 @@ public class MacBuilder
         {
             scenes = new[]
             {
-                "Assets/Scenes/SelectAuthMethod.unity",
-                "Assets/Scenes/UnauthenticatedScene.unity",
-                "Assets/Scenes/AuthenticatedScene.unity",
-                "Assets/Scenes/ZkEvmGetBalance.unity",
-                "Assets/Scenes/ZkEvmGetTransactionReceipt.unity",
-                "Assets/Scenes/ZkEvmSendTransaction.unity",
-                "Assets/Scenes/ImxNftTransfer.unity",
-                "Assets/Scenes/ZkEVMSignTypedData.unity",
-                "Assets/Scenes/SetCallTimeout.unity"
+                "Assets/Scenes/TestScene.unity"
             },
             locationPathName = buildPath,
             target = BuildTarget.StandaloneOSX,
