@@ -89,10 +89,12 @@ jobs:
         run: |
           mkdir -p ~/custom-bin
           echo '#!/bin/bash' > ~/custom-bin/open
-          echo 'if [[ "$1" =~ ^https?:// ]]; then' >> ~/custom-bin/open
-          echo '  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" "$@"' >> ~/custom-bin/open
+          echo 'if [[ "$1" == http* ]]; then' >> ~/custom-bin/open
+          echo '    # Open URLs in Chrome in the background' >> ~/custom-bin/open
+          echo '    nohup /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome "$1" &>/dev/null &' >> ~/custom-bin/open
           echo 'else' >> ~/custom-bin/open
-          echo '  /usr/bin/open "$@"' >> ~/custom-bin/open
+          echo '    # Fallback to the default open command for non-URL files' >> ~/custom-bin/open
+          echo '    /usr/bin/open "$@"' >> ~/custom-bin/open
           echo 'fi' >> ~/custom-bin/open
           chmod +x ~/custom-bin/open
 
