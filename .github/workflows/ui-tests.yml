@@ -1,135 +1,142 @@
-# ---
-# name: UI Tests 🧪
+---
+name: UI Tests 🧪
 
-# on:
-#   push:
-#     branches: [main]
-#   pull_request:
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
 
-# concurrency:
-#   group: ${{ github.workflow }}-${{ github.ref }}
-#   cancel-in-progress: true
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
-# jobs:
-#   build:
-#     name: Build ${{ matrix.targetPlatform }} for AltTester 🛠️
-#     runs-on: ubuntu-latest-8-cores
-#     strategy:
-#       fail-fast: false
-#       matrix:
-#         include:
-#           - targetPlatform: StandaloneOSX
-#             buildMethod: MacBuilder.BuildForAltTester
-#             buildPath: sample/Builds/MacOS
-#           - targetPlatform: StandaloneWindows64
-#             buildMethod: WindowsBuilder.BuildForAltTester
-#             buildPath: sample/Builds/Windows64
-#           - targetPlatform: Android
-#             buildMethod: MobileBuilder.BuildForAltTester
-#             buildPath: sample/Builds/Android
-#     steps:
-#       - uses: actions/checkout@v3
-#         with:
-#           lfs: true
-#       - uses: actions/cache@v3
-#         with:
-#           path: Library
-#           key: Library-${{ matrix.targetPlatform }}-${{ hashFiles('sample/Assets/**', 'sample/Packages/**', 'sample/ProjectSettings/**') }}
-#           restore-keys: |
-#             Library-${{ matrix.targetPlatform }}
-#             Library-
-#       - name: Build project
-#         uses: game-ci/unity-builder@v4
-#         env:
-#           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-#           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-#           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
-#         with:
-#           targetPlatform: ${{ matrix.targetPlatform }}
-#           projectPath: sample
-#           buildMethod: ${{ matrix.buildMethod }}
-#           customParameters: -logFile logFile.log -quit -batchmode
-#       - name: List build directory
-#         run: ls -R ./
-#       - name: Upload artifact
-#         uses: actions/upload-artifact@v4
-#         if: always()
-#         with:
-#           name: Build-${{ matrix.targetPlatform }}
-#           path: ${{ matrix.buildPath }}
-#   test:
-#     name: Run ${{ matrix.targetPlatform }} UI tests 🧪
-#     needs: build
-#     strategy:
-#       matrix:
-#         include:
-#           - targetPlatform: StandaloneOSX
-#             runs-on: [self-hosted, macOS]
-#             test_script: pytest -xs test/test_mac.py::MacTest
-#           - targetPlatform: StandaloneWindows64
-#             runs-on: [self-hosted, windows]
-#             test_script: pytest -xs test/test_windows.py::WindowsTest
-#           - targetPlatform: Android
-#             runs-on: [ self-hosted, macOS ]
-#             test_script: browserstack-sdk pytest -s ./test/test_android.py --browserstack.config "browserstack.android.yml"
-#     concurrency:
-#       group: test-${{ matrix.targetPlatform }}
-#     runs-on: ${{ matrix.runs-on }}
-#     steps:
-#       - uses: actions/checkout@v3
-#         with:
-#           lfs: true
-#       - uses: actions/download-artifact@v4
-#         with:
-#           name: Build-${{ matrix.targetPlatform }}
-#           path: sample/Tests
-#       - name: Make macOS artifact executable
-#         if: ${{ matrix.targetPlatform == 'StandaloneOSX' }}
-#         run: chmod +x sample/Tests/SampleApp.app/Contents/MacOS/*
-#       - uses: actions/setup-python@v4
-#         with:
-#           python-version: "3.10"
-#       - name: Install dependencies (Windows)
-#         if: ${{ matrix.targetPlatform == 'StandaloneWindows64' }}
-#         run: pip install -r "sample/Tests/requirements-desktop.txt"
-#       - name: Install dependencies (Mac)
-#         if: ${{ matrix.targetPlatform != 'StandaloneWindows64' }}
-#         run: |
-#           if [[ "${{ matrix.targetPlatform }}" == "StandaloneOSX" ]]; then
-#             pip uninstall -y browserstack-sdk || true
-#             pip install -r "sample/Tests/requirements-desktop.txt"
-#           else
-#             pip install -r "sample/Tests/requirements-mobile.txt"
-#           fi
-#       - name: Run UI tests
-#         env:
-#           UNITY_APP_PATH: SampleApp.app
-#           UNITY_APP_NAME: SampleApp
-#           MAILSLURP_API_KEY: ${{ secrets.MAILSLURP_API_KEY }}
-#           BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
-#           BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
-#         working-directory: sample/Tests
-#         run: ${{ matrix.test_script }}
-#   test-ios:
-#     name: Run iOS UI tests 🧪
-#     runs-on: [ self-hosted, macOS ]
-#     steps:
-#       - uses: actions/checkout@v3
-#         with:
-#           lfs: true
-#       - name: Build iOS app
-#         working-directory: sample
-#         run: ./build_ios.sh
-#       - uses: actions/setup-python@v4
-#         with:
-#           python-version: "3.10"
-#       - name: Install dependencies
-#         run: pip install -r "sample/Tests/requirements-mobile.txt"
-#       - name: Run UI tests
-#         env:
-#           MAILSLURP_API_KEY: ${{ secrets.MAILSLURP_API_KEY }}
-#           BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
-#           BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
-#         working-directory: sample/Tests
-#         run: browserstack-sdk pytest -s ./test/test_ios.py --browserstack.config "browserstack.ios.yml"
-      
+jobs:
+  # build:
+  #   name: Build ${{ matrix.targetPlatform }} for AltTester 🛠️
+  #   runs-on: ubuntu-latest-8-cores
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       include:
+  #         - targetPlatform: StandaloneOSX
+  #           buildMethod: MacBuilder.Build
+  #           buildPath: sample/Builds/MacOS
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         lfs: true
+  #     - uses: actions/cache@v3
+  #       with:
+  #         path: Library
+  #         key: Library-${{ matrix.targetPlatform }}-${{ hashFiles('sample/Assets/**', 'sample/Packages/**', 'sample/ProjectSettings/**') }}
+  #         restore-keys: |
+  #           Library-${{ matrix.targetPlatform }}
+  #           Library-
+  #     - name: Build project
+  #       uses: game-ci/unity-builder@v4
+  #       env:
+  #         UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+  #         UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+  #         UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+  #       with:
+  #         targetPlatform: ${{ matrix.targetPlatform }}
+  #         projectPath: sample
+  #         buildMethod: ${{ matrix.buildMethod }}
+  #         customParameters: -logFile logFile.log -quit -batchmode
+  #     - name: List build directory
+  #       run: ls -R ./
+  #     - name: Upload artifact
+  #       uses: actions/upload-artifact@v4
+  #       if: always()
+  #       with:
+  #         name: Build-${{ matrix.targetPlatform }}
+  #         path: ${{ matrix.buildPath }}
+  test:
+    name: Run ${{ matrix.targetPlatform }} UI tests 🧪
+    needs: build
+    strategy:
+      matrix:
+        include:
+          - targetPlatform: StandaloneOSX
+            test_script: pytest -xs test/test_mac_2.py::MacTest2
+    concurrency:
+      group: test-${{ matrix.targetPlatform }}
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          lfs: true
+      # - uses: actions/download-artifact@v4
+      #   with:
+      #     name: Build-${{ matrix.targetPlatform }}
+      #     path: sample/Tests
+      # - name: Make macOS artifact executable
+      #   if: ${{ matrix.targetPlatform == 'StandaloneOSX' }}
+      #   run: chmod +x sample/Tests/SampleApp.app/Contents/MacOS/*
+      # - uses: actions/setup-python@v4
+      #   with:
+      #     python-version: "3.10"
+      - name: Install ChromeDriver via Homebrew
+        run: brew install --cask chromedriver
+      - name: Verify ChromeDriver and Chrome
+        run: |
+          echo "ChromeDriver Version:"
+          chromedriver --version
+          echo "Chrome Version:"
+          "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --version
+      - name: Create Custom Open Script
+        run: |
+          mkdir -p ~/custom-bin
+          echo '#!/bin/bash' > ~/custom-bin/open
+          echo 'if [[ "$1" =~ ^https?:// ]]; then' >> ~/custom-bin/open
+          echo '  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" "$@"' >> ~/custom-bin/open
+          echo 'else' >> ~/custom-bin/open
+          echo '  /usr/bin/open "$@"' >> ~/custom-bin/open
+          echo 'fi' >> ~/custom-bin/open
+          chmod +x ~/custom-bin/open
+
+      # Test Custom Open Command with PATH export
+      - name: Test Custom Open Command
+        shell: bash
+        run: |
+          export PATH="$HOME/custom-bin:$PATH"
+          echo "PATH: $PATH"
+          which open || echo "which command not found"
+          echo "Testing custom open command with Chrome..."
+          open "https://www.google.com"
+
+      # - name: Install dependencies
+      #   run: pip install selenium
+      # - name: Install dependencies (Mac)
+      #   if: ${{ matrix.targetPlatform != 'StandaloneWindows64' }}
+      #   run: |
+      #     if [[ "${{ matrix.targetPlatform }}" == "StandaloneOSX" ]]; then
+      #       pip uninstall -y browserstack-sdk || true
+      #       pip install -r "sample/Tests/requirements-desktop.txt"
+      #     else
+      #       pip install -r "sample/Tests/requirements-mobile.txt"
+      #     fi  
+      - name: Check if Chrome is running
+        run: |
+          if pgrep -x "Google Chrome" > /dev/null
+          then
+              echo "Chrome is running"
+          else
+              echo "Chrome is not running"
+          fi
+      - name: Check if Safari is running
+        run: |
+          if pgrep -x "Safari" > /dev/null
+          then
+              echo "Safari is running"
+          else
+              echo "Safari is not running"
+          fi
+            # - name: Run UI tests
+      #   env:
+      #     UNITY_APP_PATH: SampleApp.app
+      #     UNITY_APP_NAME: SampleApp
+      #     MAILSLURP_API_KEY: ${{ secrets.MAILSLURP_API_KEY }}
+      #   working-directory: sample/Tests
+      #   run: ${{ matrix.test_script }}
