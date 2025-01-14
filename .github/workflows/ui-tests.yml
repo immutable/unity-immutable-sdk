@@ -54,7 +54,7 @@ jobs:
   #         path: ${{ matrix.buildPath }}
   test:
     name: Run ${{ matrix.targetPlatform }} UI tests 🧪
-    needs: build
+    # needs: build
     strategy:
       matrix:
         include:
