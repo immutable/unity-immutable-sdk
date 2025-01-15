@@ -10,13 +10,15 @@ from appium.webdriver.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from alttester import AltDriver, AltReversePortForwarding, By
+from alttester import *
+
+from test import UnityTest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'src'))
 from fetch_otp import EMAIL, fetch_code
 
 # To run this test on an actual Android device: appium --base-path /wd/hub --allow-insecure chromedriver_autodownload
-class TestBase(unittest.TestCase):
+class TestBase(UnityTest):
     altdriver = None
     appium_driver = None
 
@@ -74,3 +76,15 @@ class TestBase(unittest.TestCase):
 
         # Wait for authenticated screen
         self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
+
+    def test_2_other_functions(self):
+        self.test_0_other_functions()
+
+    def test_3_passport_functions(self):
+        self.test_1_passport_functions()
+
+    def test_4_imx_functions(self):
+        self.test_2_imx_functions()
+
+    def test_5_zkevm_functions(self):
+        self.test_3_zkevm_functions()
