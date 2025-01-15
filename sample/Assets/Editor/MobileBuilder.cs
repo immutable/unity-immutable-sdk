@@ -2,9 +2,9 @@ using UnityEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using AltTester.AltTesterUnitySDK.Editor;
-using AltTester.AltTesterUnitySDK;
 using System;
-using System.IO;
+using AltTester.AltTesterUnitySDK.Commands;
+using AltTester.AltTesterUnitySDK.Driver;
 
 public class MobileBuilder
 {

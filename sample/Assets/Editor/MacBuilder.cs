@@ -2,8 +2,9 @@ using UnityEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using AltTester.AltTesterUnitySDK.Editor;
-using AltTester.AltTesterUnitySDK;
 using System;
+using AltTester.AltTesterUnitySDK.Commands;
+using AltTester.AltTesterUnitySDK.Driver;
 
 public class MacBuilder
 {
