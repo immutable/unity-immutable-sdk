@@ -10,6 +10,7 @@ class TestConfig:
     EMAIL = "unity-sdk@mailslurp.net"
     PASSPORT_ID="email|67480492219c150aceeb1f37"
     WALLET_ADDRESS = "0x547044ea95f03651139081241c99ffedbefdc5e8"
+    ANDROID_PACKAGE = "com.immutable.ImmutableSample"
     
 class UnityTest(unittest.TestCase):
 
