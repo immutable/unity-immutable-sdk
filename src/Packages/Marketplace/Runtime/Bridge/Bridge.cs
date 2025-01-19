@@ -34,7 +34,7 @@ namespace Immutable.Marketplace.Bridge
         /// <param name="toTokenAddress">The address of the token being moved to (default is null).</param>
         /// <param name="toChain">The ID of the destination blockchain (default is null).</param>
         /// <returns>A bridge URL.</returns>
-        public string GetLink(string? fromTokenAddress, string? fromChain, string? toTokenAddress, string? toChain)
+        public string GetLink(string? fromTokenAddress = null, string? fromChain = null, string? toTokenAddress = null, string? toChain = null)
         {
             var baseUrl = BaseUrls[_environment];
 
