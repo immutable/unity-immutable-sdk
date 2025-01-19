@@ -35,20 +35,28 @@ namespace Immutable.Marketplace.Swap
         /// <summary>
         /// Generates a link for the swap flow.
         /// </summary>
-        /// <param name="fromTokenAddress">The address of the token being swapped from.</param>
-        /// <param name="toTokenAddress">The address of the token being swapped to.</param>
+        /// <param name="fromTokenAddress">The address of the token being swapped from (default is null).</param>
+        /// <param name="toTokenAddress">The address of the token being swapped to (default is null).</param>
         /// <returns>A swap URL</returns>
-        public string GetLink(string fromTokenAddress, string toTokenAddress)
+        public string GetLink(string? fromTokenAddress = null, string? toTokenAddress = null)
         {
             var baseUrl = BaseUrls[_environment];
             var apiKey = ApiKeys[_environment];
 
             var queryParams = new Dictionary<string, string>
-        {
-            {"publishableKey", apiKey},
-            {"fromTokenAddress", fromTokenAddress},
-            {"toTokenAddress", toTokenAddress}
-        };
+            {
+                {"publishableKey", apiKey}
+            };
+
+            if (!string.IsNullOrEmpty(fromTokenAddress))
+            {
+                queryParams["fromTokenAddress"] = fromTokenAddress;
+            }
+
+            if (!string.IsNullOrEmpty(toTokenAddress))
+            {
+                queryParams["toTokenAddress"] = toTokenAddress;
+            }
 
             var queryString = string.Join("&", queryParams.Select(kvp => $"{kvp.Key}={Uri.EscapeDataString(kvp.Value)}").ToArray());
             return $"{baseUrl}?{queryString}";
