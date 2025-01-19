@@ -47,7 +47,7 @@ namespace Immutable.Marketplace.Bridge
                 queryParams["fromChain"] = fromChain;
 
             if (!string.IsNullOrEmpty(toTokenAddress))
-                queryParams["toTokenAddress"] = toTokenAddress;
+                queryParams["toToken"] = toTokenAddress;
 
             if (!string.IsNullOrEmpty(toChain))
                 queryParams["toChain"] = toChain;
