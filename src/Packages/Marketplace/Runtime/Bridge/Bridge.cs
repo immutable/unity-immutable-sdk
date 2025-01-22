@@ -41,13 +41,13 @@ namespace Immutable.Marketplace.Bridge
             var queryParams = new Dictionary<string, string>();
 
             if (!string.IsNullOrEmpty(fromTokenAddress))
-                queryParams["fromToken"] = fromTokenAddress;
+                queryParams["fromToken"] = fromTokenAddress.ToLower();
 
             if (!string.IsNullOrEmpty(fromChain))
                 queryParams["fromChain"] = fromChain;
 
             if (!string.IsNullOrEmpty(toTokenAddress))
-                queryParams["toToken"] = toTokenAddress;
+                queryParams["toToken"] = toTokenAddress.ToLower();
 
             if (!string.IsNullOrEmpty(toChain))
                 queryParams["toChain"] = toChain;
