@@ -947,6 +947,12 @@ namespace Immutable.Api.ZkEvm.Api
             localVarRequestOptions.PathParameters.Add("chain_name", Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToString(chainName)); // path parameter
             localVarRequestOptions.Data = refreshCollectionMetadataRequest;
 
+            // authentication (BearerAuthWithClient) required
+            // bearer authentication required
+            if (!string.IsNullOrEmpty(this.Configuration.AccessToken) && !localVarRequestOptions.HeaderParameters.ContainsKey("Authorization"))
+            {
+                localVarRequestOptions.HeaderParameters.Add("Authorization", "Bearer " + this.Configuration.AccessToken);
+            }
             // authentication (ImmutableApiKey) required
             if (!string.IsNullOrEmpty(this.Configuration.GetApiKeyWithPrefix("x-immutable-api-key")))
             {
@@ -1037,6 +1043,12 @@ namespace Immutable.Api.ZkEvm.Api
             localVarRequestOptions.PathParameters.Add("chain_name", Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToString(chainName)); // path parameter
             localVarRequestOptions.Data = refreshCollectionMetadataRequest;
 
+            // authentication (BearerAuthWithClient) required
+            // bearer authentication required
+            if (!string.IsNullOrEmpty(this.Configuration.AccessToken) && !localVarRequestOptions.HeaderParameters.ContainsKey("Authorization"))
+            {
+                localVarRequestOptions.HeaderParameters.Add("Authorization", "Bearer " + this.Configuration.AccessToken);
+            }
             // authentication (ImmutableApiKey) required
             if (!string.IsNullOrEmpty(this.Configuration.GetApiKeyWithPrefix("x-immutable-api-key")))
             {

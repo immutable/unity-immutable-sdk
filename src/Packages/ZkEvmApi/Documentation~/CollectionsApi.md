@@ -333,6 +333,8 @@ namespace Example
         {
             Configuration config = new Configuration();
             config.BasePath = "https://api.sandbox.immutable.com";
+            // Configure Bearer token for authorization: BearerAuthWithClient
+            config.AccessToken = "YOUR_BEARER_TOKEN";
             // Configure API key authorization: ImmutableApiKey
             config.AddApiKey("x-immutable-api-key", "YOUR_API_KEY");
             // Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
@@ -396,7 +398,7 @@ catch (ApiException e)
 
 ### Authorization
 
-[ImmutableApiKey](../README.md#ImmutableApiKey), [BearerAuth](../README.md#BearerAuth)
+[BearerAuthWithClient](../README.md#BearerAuthWithClient), [ImmutableApiKey](../README.md#ImmutableApiKey), [BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 

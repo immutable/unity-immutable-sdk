@@ -541,6 +541,8 @@ paths:
       security:
       - ImmutableApiKey:
         - refresh:metadata
+      - BearerAuthWithClient:
+        - refresh:metadata
       - BearerAuth:
         - refresh:metadata
       summary: Refresh collection metadata
@@ -11746,6 +11748,10 @@ components:
       - $ref: '#/components/schemas/MarketPriceNativeToken'
       - $ref: '#/components/schemas/MarketPriceERC20Token'
   securitySchemes:
+    BearerAuthWithClient:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http
     BearerAuth:
       bearerFormat: JWT
       scheme: bearer
@@ -11755,8 +11761,4 @@ components:
       name: x-immutable-api-key
       type: apiKey
       x-go-name: ImmutableApiKey
-    BearerAuthWithClient:
-      bearerFormat: JWT
-      scheme: bearer
-      type: http
 
