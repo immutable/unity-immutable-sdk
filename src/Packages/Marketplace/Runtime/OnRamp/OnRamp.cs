@@ -39,18 +39,18 @@ namespace Immutable.Marketplace.OnRamp
         }
 
         /// <summary>
-        /// Generates a link for the on-ramp flow.
+        /// Generates a URL for the on-ramp flow.
         /// </summary>
-        /// <param name="fiatCurrency">The fiat currency to be used (default is "USD").</param>
-        /// <param name="defaultFiatAmount">The default amount of fiat currency (default is "50").</param>
-        /// <param name="defaultCryptoCurrency">The default cryptocurrency (default is "IMX")..</param>
-        /// <param name="defaultCryptoCurrencyList">A comma-separated list of available cryptocurrencies to purchase (default is "imx,eth,usdc").</param>
-        /// <returns>An on-ramp URL</returns>
+        /// <param name="fiatCurrency">The fiat currency to use (default: "USD").</param>
+        /// <param name="fiatAmount">The amount of fiat currency to spend when purchasing cryptocurrency (default: "50").</param>
+        /// <param name="cryptoCurrency">The cryptocurrency to purchase (default: "IMX").</param>
+        /// <param name="cryptoCurrencyList">A comma-separated list of available cryptocurrencies for purchase (default: "imx,eth,usdc").</param>
+        /// <returns>The generated on-ramp URL.</returns>
         public string GetLink(
             string fiatCurrency = "USD",
-            string defaultFiatAmount = "50",
-            string defaultCryptoCurrency = "IMX",
-            string defaultCryptoCurrencyList = "imx,eth,usdc"
+            string fiatAmount = "50",
+            string cryptoCurrency = "IMX",
+            string cryptoCurrencyList = "imx,eth,usdc"
         )
         {
             var baseUrl = BaseUrls[_environment];
@@ -65,14 +65,14 @@ namespace Immutable.Marketplace.OnRamp
             {"productsAvailed", "buy"},
             {"exchangeScreenTitle", "Buy"},
             {"themeColor", "0D0D0D"},
-            {"defaultCryptoCurrency", defaultCryptoCurrency},
+            {"defaultCryptoCurrency", cryptoCurrency},
             {"email", Uri.EscapeDataString(_email)},
             {"isAutoFillUserData", "true"},
             {"disableWalletAddressForm", "true"},
-            {"defaultFiatAmount", defaultFiatAmount},
+            {"defaultFiatAmount", fiatAmount},
             {"defaultFiatCurrency", fiatCurrency},
             {"walletAddress", _address},
-            {"cryptoCurrencyList", defaultCryptoCurrencyList}
+            {"cryptoCurrencyList", cryptoCurrencyList}
         };
 
             var queryString = string.Join("&", queryParams.Select(kvp => $"{kvp.Key}={Uri.EscapeDataString(kvp.Value)}").ToArray());
