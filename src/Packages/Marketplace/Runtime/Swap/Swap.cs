@@ -11,25 +11,23 @@ namespace Immutable.Marketplace.Swap
     public class Swap
     {
         private readonly string _environment;
+        private readonly string _publishableKey;
         private static readonly Dictionary<string, string> BaseUrls = new()
         {
             { "sandbox", "https://checkout-playground.sandbox.immutable.com/checkout/swap" },
             { "production", "https://toolkit.immutable.com/checkout/swap" }
         };
 
-        private static readonly Dictionary<string, string> ApiKeys = new()
-        {
-            { "sandbox", "pk_imapik-test-7-hfC5T$W$eEDE8Mc5mp" }, // This can be hardcoded as it is a public API key
-            { "production", "pk_imapik-WGd9orNd8mLdtTCTb3CP" }
-        };
-
         /// <summary>
         /// Initialises a new instance of the <see cref="Swap"/> class.
         /// </summary>
-        /// <param name="environment">Specifies the environment (<c>sandbox</c> or <c>production</c>).</param>
-        public Swap(string environment)
+        /// <param name="environment">The environment to use (<c>sandbox</c> or <c>production</c>).</param>
+        /// <param name="publishableKey">The publishable key obtained from <a href="https://hub.immutable.com/">Immutable Hub</a>.  
+        /// See <a href="https://docs.immutable.com/api/zkEVM/apikeys">API keys</a> for more details.</param>
+        public Swap(string environment, string publishableKey)
         {
             _environment = environment;
+            _publishableKey = publishableKey;
         }
 
         /// <summary>
@@ -41,11 +39,10 @@ namespace Immutable.Marketplace.Swap
         public string GetLink(string? fromTokenAddress = null, string? toTokenAddress = null)
         {
             var baseUrl = BaseUrls[_environment];
-            var apiKey = ApiKeys[_environment];
 
             var queryParams = new Dictionary<string, string>
             {
-                {"publishableKey", apiKey}
+                {"publishableKey", _publishableKey}
             };
 
             if (!string.IsNullOrEmpty(fromTokenAddress))
