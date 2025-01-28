@@ -206,8 +206,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 416242725}
   m_HandleRect: {fileID: 416242724}
   m_Direction: 0
-  m_Value: 1
-  m_Size: 0.9999999
+  m_Value: 0
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -1324,7 +1324,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 167431871}
   m_Direction: 2
   m_Value: 1
-  m_Size: 0.99999994
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -1673,8 +1673,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 1222.7355, y: 0}
-  m_SizeDelta: {x: 2405.471, y: 0}
+  m_AnchoredPosition: {x: 1016.24, y: 0}
+  m_SizeDelta: {x: 1992.48, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1661390145
 MonoBehaviour:
@@ -1768,8 +1768,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 1222.7355, y: 0}
-  m_SizeDelta: {x: 2405.471, y: 0}
+  m_AnchoredPosition: {x: 1016.24, y: 0}
+  m_SizeDelta: {x: 1992.48, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1688502349
 MonoBehaviour:
@@ -1822,21 +1822,21 @@ MonoBehaviour:
 
 
     1.
-    Device Code Authorisation Device Code Authorisation is available for all supported
-    platforms. This method opens the player''s default browser and guides them through
-    the authentication flow.
+    Authorisation Code Flow with Proof Key for Code Exchange (PKCE) is available
+    for Android, iOS, macOS and WebGL (not officially supported). This method provides
+    a seamless and secure authentication experience by opening a pop-up window on
+    macOS or an in-app browser on mobile devices. Players are automatically redirected
+    back to the game once authenticated, eliminating manual switching.
 
 
-    2. Authorisation Code Flow with Proof Key for
-    Code Exchange (PKCE) PKCE is available for Android, iOS and macOS. This method
-    simplifies the process by opening a pop-up window on macOS or an in-app browser
-    on mobile devices, guiding users through the authentication flow. Once authenticated,
-    players are automatically redirected back to the game, eliminating the need for
-    manual switching.
+    2. Device
+    Code Authorisation is available for Windows, Android, iOS and macOS. This method
+    opens the player''s default browser and guides them through the authentication
+    flow.
 
 
-    Recommendation: For an optimal gaming experience on Android,
-    iOS, macOS or WebGL, it is recommended to use the PKCE flow.'
+    Recommendation: Whenever possible, use the PKCE flow as it is the
+    most secure and seamless method for authentication on Android, iOS and macOS.'
 --- !u!222 &1688502351
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1912,7 +1912,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 3}
+    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
     m_FontSize: 20
     m_FontStyle: 0
     m_BestFit: 0
