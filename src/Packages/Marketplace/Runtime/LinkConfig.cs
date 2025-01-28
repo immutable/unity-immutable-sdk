@@ -32,21 +32,21 @@ namespace Immutable.Marketplace
         private static string _apiOnRampKeySandbox = "d14b44fb-0f84-4db5-affb-e044040d724b";
         private static string _apiOnRampKeyProduction = "ad1bca70-d917-4628-bb0f-5609537498bc";
 
-        public static string GetBaseUrl(Environment env, Flow flow)
+        public static string GetBaseUrl(Environment environment, Flow flow)
         {
             return flow switch
             {
-                Flow.OnRamp => env == Environment.Sandbox ? _onRampBaseUrlSandbox : _onRampBaseUrlProduction,
-                Flow.Swap => env == Environment.Sandbox ? _swapBaseUrlSandbox : _swapBaseUrlProduction,
-                Flow.Bridge => env == Environment.Sandbox ? _bridgeBaseUrlSandbox : _bridgeBaseUrlProduction,
+                Flow.OnRamp => environment == Environment.Sandbox ? _onRampBaseUrlSandbox : _onRampBaseUrlProduction,
+                Flow.Swap => environment == Environment.Sandbox ? _swapBaseUrlSandbox : _swapBaseUrlProduction,
+                Flow.Bridge => environment == Environment.Sandbox ? _bridgeBaseUrlSandbox : _bridgeBaseUrlProduction,
                 _ => throw new ArgumentException("Invalid flow")
             };
         }
 
-        public static string GetApiKey(Environment env, Flow flow)
+        public static string GetApiKey(Environment environment, Flow flow)
         {
             return flow is Flow.OnRamp ?
-                env == Environment.Sandbox ? _apiOnRampKeySandbox : _apiOnRampKeyProduction :
+                environment == Environment.Sandbox ? _apiOnRampKeySandbox : _apiOnRampKeyProduction :
                 string.Empty;
         }
     }
