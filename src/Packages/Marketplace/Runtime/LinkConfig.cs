@@ -1,10 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Immutable.Marketplace
 {
-    public enum Flow
+    internal enum Flow
     {
         OnRamp,
         Swap,
@@ -17,7 +15,7 @@ namespace Immutable.Marketplace
         Production
     }
 
-    public static class LinkConfig
+    internal static class LinkConfig
     {
         private static string _onRampBaseUrlSandbox = "https://global-stg.transak.com";
         private static string _onRampBaseUrlProduction = "https://global.transak.com";
@@ -32,7 +30,7 @@ namespace Immutable.Marketplace
         private static string _apiOnRampKeySandbox = "d14b44fb-0f84-4db5-affb-e044040d724b";
         private static string _apiOnRampKeyProduction = "ad1bca70-d917-4628-bb0f-5609537498bc";
 
-        public static string GetBaseUrl(Environment environment, Flow flow)
+        internal static string GetBaseUrl(Environment environment, Flow flow)
         {
             return flow switch
             {
@@ -43,7 +41,7 @@ namespace Immutable.Marketplace
             };
         }
 
-        public static string GetApiKey(Environment environment, Flow flow)
+        internal static string GetApiKey(Environment environment, Flow flow)
         {
             return flow is Flow.OnRamp ?
                 environment == Environment.Sandbox ? _apiOnRampKeySandbox : _apiOnRampKeyProduction :
