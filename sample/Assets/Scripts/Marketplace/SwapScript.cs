@@ -44,8 +44,11 @@ public class SwapScript : MonoBehaviour
         var link = LinkFactory.GenerateSwapLink(
             environment: environment,
             publishableKey: publishableKey,
-            fromTokenAddress: FromTokenAddress.text.IsNullOrEmpty() ? null : FromTokenAddress.text,
-            toTokenAddress: ToTokenAddress.text.IsNullOrEmpty() ? null : ToTokenAddress.text
+            queryParams: new SwapQueryParams
+            {
+                FromTokenAddress = FromTokenAddress.text.IsNullOrEmpty() ? null : FromTokenAddress.text,
+                ToTokenAddress = ToTokenAddress.text.IsNullOrEmpty() ? null : ToTokenAddress.text
+            }
         );
 
         Application.OpenURL(link);

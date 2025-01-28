@@ -50,10 +50,13 @@ public class OnRampScript : MonoBehaviour
             environment: environment,
             email: email,
             address: walletAddress,
-            fiatCurrency: FiatCurrencyInput.text.IsNullOrEmpty() ? "USD" : FiatCurrencyInput.text,
-            fiatAmount: FiatAmountInput.text.IsNullOrEmpty() ? "50" : FiatAmountInput.text,
-            cryptoCurrency: CryptoCurrency.text.IsNullOrEmpty() ? "IMX" : CryptoCurrency.text,
-            cryptoCurrencyList: CryptoCurrencyList.text.IsNullOrEmpty() ? "imx,eth,usdc" : CryptoCurrencyList.text
+            queryParams: new OnRampQueryParams
+            {
+                FiatCurrency = FiatCurrencyInput.text.IsNullOrEmpty() ? "USD" : FiatCurrencyInput.text,
+                FiatAmount = FiatAmountInput.text.IsNullOrEmpty() ? "50" : FiatAmountInput.text,
+                CryptoCurrency = CryptoCurrency.text.IsNullOrEmpty() ? "IMX" : CryptoCurrency.text,
+                CryptoCurrencyList = CryptoCurrencyList.text.IsNullOrEmpty() ? "imx,eth,usdc" : CryptoCurrencyList.text
+            }
         );
 
         Application.OpenURL(link);
@@ -66,5 +69,4 @@ public class OnRampScript : MonoBehaviour
     {
         SceneManager.LoadScene("MarketplaceScene");
     }
-
 }

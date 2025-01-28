@@ -27,10 +27,13 @@ public class BridgeScript : MonoBehaviour
 
         var link = LinkFactory.GenerateBridgeLink(
             environment: environment,
-            fromTokenAddress: FromTokenAddress.text.IsNullOrEmpty() ? null : FromTokenAddress.text,
-            fromChainID: FromChain.text.IsNullOrEmpty() ? null : FromChain.text,
-            toTokenAddress: ToTokenAddress.text.IsNullOrEmpty() ? null : ToTokenAddress.text,
-            toChainID: ToChain.text.IsNullOrEmpty() ? null : ToChain.text
+            queryParams: new BridgeQueryParams
+            {
+                FromTokenAddress = FromTokenAddress.text.IsNullOrEmpty() ? null : FromTokenAddress.text,
+                FromChainID = FromChain.text.IsNullOrEmpty() ? null : FromChain.text,
+                ToTokenAddress = ToTokenAddress.text.IsNullOrEmpty() ? null : ToTokenAddress.text,
+                ToChainID = ToChain.text.IsNullOrEmpty() ? null : ToChain.text
+            }
         );
 
         Application.OpenURL(link);
