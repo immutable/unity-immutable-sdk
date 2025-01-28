@@ -1,13 +1,14 @@
+using System;
 using AltWebSocketSharp;
-using Immutable.Marketplace.OnRamp;
-using Immutable.Marketplace.Swap;
+using Immutable.Marketplace;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Environment = Immutable.Marketplace.Environment;
 
 public class SwapScript : MonoBehaviour
 {
-    [SerializeField] private Dropdown Environment;
+    [SerializeField] private Dropdown EnvironmentDropdown;
     [SerializeField] private InputField KeyInput;
 
     [SerializeField] private InputField FromTokenAddress;
@@ -36,12 +37,13 @@ public class SwapScript : MonoBehaviour
     /// </summary>
     public void OpenWidget()
     {
-        var environment = Environment.options[Environment.value].text;
+        var environments = (Environment[])Enum.GetValues(typeof(Environment));
+        var environment = environments[EnvironmentDropdown.value];
         var publishableKey = KeyInput.text;
 
-        var swap = new Swap(environment, publishableKey);
-
-        var link = swap.GetLink(
+        var link = LinkFactory.GenerateSwapLink(
+            environment: environment, 
+            publishableKey: publishableKey,
             fromTokenAddress: FromTokenAddress.text.IsNullOrEmpty() ? null : FromTokenAddress.text,
             toTokenAddress: ToTokenAddress.text.IsNullOrEmpty() ? null : ToTokenAddress.text
         );

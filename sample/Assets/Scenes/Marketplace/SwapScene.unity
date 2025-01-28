@@ -1474,7 +1474,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: sandbox
+  m_Text: Sandbox
 --- !u!222 &827625658
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2288,7 +2288,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 371b71184b3d4a72853fcb8fdb41383d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Environment: {fileID: 1351870715}
+  EnvironmentDropdown: {fileID: 1351870715}
   KeyInput: {fileID: 1142338628822901615}
   FromTokenAddress: {fileID: 949453541}
   ToTokenAddress: {fileID: 1363329117}
@@ -2696,9 +2696,9 @@ MonoBehaviour:
   m_Value: 0
   m_Options:
     m_Options:
-    - m_Text: sandbox
+    - m_Text: Sandbox
       m_Image: {fileID: 0}
-    - m_Text: production
+    - m_Text: Production
       m_Image: {fileID: 0}
   m_OnValueChanged:
     m_PersistentCalls:

@@ -1,14 +1,14 @@
+using System;
 using AltWebSocketSharp;
-using Immutable.Marketplace.Bridge;
-using Immutable.Marketplace.OnRamp;
-using Immutable.Marketplace.Swap;
+using Immutable.Marketplace;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Environment = Immutable.Marketplace.Environment;
 
 public class BridgeScript : MonoBehaviour
 {
-    [SerializeField] private Dropdown Environment;
+    [SerializeField] private Dropdown EnvironmentDropdown;
 
     [SerializeField] private InputField FromTokenAddress;
     [SerializeField] private InputField FromChain;
@@ -22,15 +22,15 @@ public class BridgeScript : MonoBehaviour
     /// </summary>
     public void OpenWidget()
     {
-        var environment = Environment.options[Environment.value].text;
+        var environments = (Environment[])Enum.GetValues(typeof(Environment));
+        var environment = environments[EnvironmentDropdown.value];
 
-        var bridge = new Bridge(environment);
-
-        var link = bridge.GetLink(
+        var link = LinkFactory.GenerateBridgeLink(
+            environment: environment,
             fromTokenAddress: FromTokenAddress.text.IsNullOrEmpty() ? null : FromTokenAddress.text,
-            fromChain: FromChain.text.IsNullOrEmpty() ? null : FromChain.text,
+            fromChainID: FromChain.text.IsNullOrEmpty() ? null : FromChain.text,
             toTokenAddress: ToTokenAddress.text.IsNullOrEmpty() ? null : ToTokenAddress.text,
-            toChain: ToChain.text.IsNullOrEmpty() ? null : ToChain.text
+            toChainID: ToChain.text.IsNullOrEmpty() ? null : ToChain.text
         );
 
         Application.OpenURL(link);
