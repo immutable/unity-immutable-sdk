@@ -6,19 +6,19 @@ namespace Immutable.Marketplace
     public struct OnRampQueryParams
     {
         /// <summary>
-        /// The fiat currency to use (default: "USD").
+        /// The cryptocurrency to purchase (default: "IMX").
         /// </summary>
-        public string FiatCurrency { get; set; }
+        public string DefaultCryptoCurrency { get; set; }
 
         /// <summary>
         /// The amount of fiat currency to spend when purchasing cryptocurrency (default: "50").
         /// </summary>
-        public string FiatAmount { get; set; }
+        public string DefaultFiatAmount { get; set; }
 
         /// <summary>
-        /// The cryptocurrency to purchase (default: "IMX").
+        /// The fiat currency to use (default: "USD").
         /// </summary>
-        public string CryptoCurrency { get; set; }
+        public string DefaultFiatCurrency { get; set; }
 
         /// <summary>
         /// A comma-separated list of available cryptocurrencies for purchase (default: "imx,eth,usdc").

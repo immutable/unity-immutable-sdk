@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using AltWebSocketSharp;
 using Immutable.Marketplace;
 using UnityEngine;
@@ -52,10 +53,13 @@ public class OnRampScript : MonoBehaviour
             address: walletAddress,
             queryParams: new OnRampQueryParams
             {
-                FiatCurrency = FiatCurrencyInput.text.IsNullOrEmpty() ? "USD" : FiatCurrencyInput.text,
-                FiatAmount = FiatAmountInput.text.IsNullOrEmpty() ? "50" : FiatAmountInput.text,
-                CryptoCurrency = CryptoCurrency.text.IsNullOrEmpty() ? "IMX" : CryptoCurrency.text,
+                DefaultFiatCurrency = FiatCurrencyInput.text.IsNullOrEmpty() ? "USD" : FiatCurrencyInput.text,
+                DefaultFiatAmount = FiatAmountInput.text.IsNullOrEmpty() ? "50" : FiatAmountInput.text,
+                DefaultCryptoCurrency = CryptoCurrency.text.IsNullOrEmpty() ? "IMX" : CryptoCurrency.text,
                 CryptoCurrencyList = CryptoCurrencyList.text.IsNullOrEmpty() ? "imx,eth,usdc" : CryptoCurrencyList.text
+            },
+            extraQueryParams: new Dictionary<string, string> {
+                {"themeColor", "000000"}
             }
         );
 

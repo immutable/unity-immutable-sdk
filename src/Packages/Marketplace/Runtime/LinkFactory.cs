@@ -13,12 +13,20 @@ namespace Immutable.Marketplace
         /// <param name="email">The user's email address, pre-filled in the on-ramp flow.</param>
         /// <param name="address">The user's wallet address, where tokens will be sent.</param>
         /// <param name="queryParams">The query parameters for the on-ramp flow. Uses default values if not specified.</param>
+        /// <param name="extraQueryParams">Optional additional query parameters. See <a href="https://docs.transak.com/docs/query-parameters">Transak docs</a> for possible fields.</param>
         /// <returns>The generated on-ramp URL.</returns>
+        /// <remarks>
+        /// If <paramref name="extraQueryParams"/> includes any fields that are already defined in <paramref name="queryParams"/>, 
+        /// the values in <paramref name="queryParams"/> will take precedence. 
+        /// For example, if <paramref name="extraQueryParams"/> contains "defaultFiatAmount", it will be ignored and the value 
+        /// from <paramref name="queryParams.DefaultFiatAmount"/> will be used instead.
+        /// </remarks>
         public static string GenerateOnRampLink(
             Environment environment,
             string email,
             string address,
-            OnRampQueryParams queryParams = default
+            OnRampQueryParams queryParams = default,
+            Dictionary<string, string>? extraQueryParams = null
         )
         {
             var baseUrl = LinkConfig.GetBaseUrl(environment, Flow.OnRamp);
@@ -26,24 +34,74 @@ namespace Immutable.Marketplace
 
             var queryParamsDictionary = new Dictionary<string, string>
             {
-                {"apiKey", apiKey},
-                {"network", "immutablezkevm"},
-                {"defaultPaymentMethod", "credit_debit_card"},
-                {"disablePaymentMethods", ""},
-                {"productsAvailed", "buy"},
-                {"exchangeScreenTitle", "Buy"},
-                {"themeColor", "0D0D0D"},
-                {"defaultCryptoCurrency", queryParams.CryptoCurrency},
-                {"email", Uri.EscapeDataString(email)},
-                {"isAutoFillUserData", "true"},
-                {"disableWalletAddressForm", "true"},
-                {"defaultFiatAmount", queryParams.FiatAmount},
-                {"defaultFiatCurrency", queryParams.FiatCurrency},
-                {"walletAddress", address},
-                {"cryptoCurrencyList", queryParams.CryptoCurrencyList}
+                { "apiKey", apiKey },
+                { "cryptoCurrencyList", queryParams.CryptoCurrencyList },
+                { "defaultCryptoCurrency", queryParams.DefaultCryptoCurrency },
+                { "defaultFiatAmount", queryParams.DefaultFiatAmount },
+                { "defaultFiatCurrency", queryParams.DefaultFiatCurrency },
+                {
+                    "defaultPaymentMethod",
+                    extraQueryParams != null &&
+                    extraQueryParams.TryGetValue("defaultPaymentMethod", out var defaultPaymentMethod)
+                        ? defaultPaymentMethod
+                        : "credit_debit_card"
+                },
+                {
+                    "disablePaymentMethods",
+                    extraQueryParams != null &&
+                    extraQueryParams.TryGetValue("disablePaymentMethods", out var disablePaymentMethods)
+                        ? disablePaymentMethods
+                        : ""
+                },
+                {
+                    "disableWalletAddressForm",
+                    extraQueryParams != null &&
+                    extraQueryParams.TryGetValue("disableWalletAddressForm", out var disableWalletAddressForm)
+                        ? disableWalletAddressForm
+                        : "true"
+                },
+                { "email", Uri.EscapeDataString(email) },
+                {
+                    "exchangeScreenTitle",
+                    extraQueryParams != null &&
+                    extraQueryParams.TryGetValue("exchangeScreenTitle", out var exchangeScreenTitle)
+                        ? exchangeScreenTitle
+                        : "Buy"
+                },
+                {
+                    "isAutoFillUserData",
+                    extraQueryParams != null &&
+                    extraQueryParams.TryGetValue("isAutoFillUserData", out var isAutoFillUserData)
+                        ? isAutoFillUserData
+                        : "true"
+                },
+                { "network", "immutablezkevm" },
+                { "productsAvailed", "buy" },
+                {
+                    "themeColor",
+                    extraQueryParams != null && extraQueryParams.TryGetValue("themeColor", out var themeColor)
+                        ? themeColor
+                        : "0D0D0D"
+                },
+                { "walletAddress", address }
             };
 
-            var queryString = string.Join("&", queryParamsDictionary.Select(kvp => $"{kvp.Key}={Uri.EscapeDataString(kvp.Value)}").ToArray());
+
+            // Add any extra parameters that are not already in the queryParamsDictionary
+            if (extraQueryParams != null)
+            {
+                foreach (var kvp in extraQueryParams)
+                {
+                    // Add to dictionary only if the key is not already in the dictionary
+                    if (!queryParamsDictionary.ContainsKey(kvp.Key))
+                    {
+                        queryParamsDictionary[kvp.Key] = kvp.Value;
+                    }
+                }
+            }
+
+            var queryString = string.Join("&",
+                queryParamsDictionary.Select(kvp => $"{kvp.Key}={Uri.EscapeDataString(kvp.Value)}").ToArray());
             return $"{baseUrl}?{queryString}";
         }
 
@@ -64,20 +122,17 @@ namespace Immutable.Marketplace
 
             var queryParamsDictionary = new Dictionary<string, string>
             {
-                {"publishableKey", publishableKey}
+                { "publishableKey", publishableKey }
             };
 
             if (!string.IsNullOrEmpty(queryParams.FromTokenAddress))
-            {
                 queryParamsDictionary["fromTokenAddress"] = queryParams.FromTokenAddress;
-            }
 
             if (!string.IsNullOrEmpty(queryParams.ToTokenAddress))
-            {
                 queryParamsDictionary["toTokenAddress"] = queryParams.ToTokenAddress;
-            }
 
-            var queryString = string.Join("&", queryParamsDictionary.Select(kvp => $"{kvp.Key}={Uri.EscapeDataString(kvp.Value)}").ToArray());
+            var queryString = string.Join("&",
+                queryParamsDictionary.Select(kvp => $"{kvp.Key}={Uri.EscapeDataString(kvp.Value)}").ToArray());
             return $"{baseUrl}?{queryString}";
         }
 
@@ -108,7 +163,8 @@ namespace Immutable.Marketplace
             if (!string.IsNullOrEmpty(queryParams.ToChainID))
                 queryParamsDictionary["toChain"] = queryParams.ToChainID;
 
-            var queryString = string.Join("&", queryParamsDictionary.Select(kvp => $"{kvp.Key}={Uri.EscapeDataString(kvp.Value)}").ToArray());
+            var queryString = string.Join("&",
+                queryParamsDictionary.Select(kvp => $"{kvp.Key}={Uri.EscapeDataString(kvp.Value)}").ToArray());
             return $"{baseUrl}?{queryString}";
         }
     }
