@@ -1,12 +1,14 @@
+using System;
 using AltWebSocketSharp;
-using Immutable.Marketplace.OnRamp;
+using Immutable.Marketplace;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Environment = Immutable.Marketplace.Environment;
 
 public class OnRampScript : MonoBehaviour
 {
-    [SerializeField] private Dropdown Environment;
+    [SerializeField] private Dropdown EnvironmentDropdown;
     [SerializeField] private InputField EmailInput;
     [SerializeField] private InputField AddressInput;
 
@@ -14,7 +16,7 @@ public class OnRampScript : MonoBehaviour
     [SerializeField] private InputField FiatAmountInput;
     [SerializeField] private InputField CryptoCurrency;
     [SerializeField] private InputField CryptoCurrencyList;
-    
+
     [SerializeField] private Button OpenButton;
 
     private void Start()
@@ -39,13 +41,15 @@ public class OnRampScript : MonoBehaviour
     /// </summary>
     public void OpenWidget()
     {
-        var environment = Environment.options[Environment.value].text;
+        var environments = (Environment[])Enum.GetValues(typeof(Environment));
+        var environment = environments[EnvironmentDropdown.value];
         var email = EmailInput.text;
         var walletAddress = AddressInput.text;
 
-        var onRamp = new OnRamp(environment, email, walletAddress);
-
-        var link = onRamp.GetLink(
+        var link = LinkFactory.GenerateOnRampLink(
+            environment: environment,
+            email: email,
+            address: walletAddress,
             fiatCurrency: FiatCurrencyInput.text.IsNullOrEmpty() ? "USD" : FiatCurrencyInput.text,
             fiatAmount: FiatAmountInput.text.IsNullOrEmpty() ? "50" : FiatAmountInput.text,
             cryptoCurrency: CryptoCurrency.text.IsNullOrEmpty() ? "IMX" : CryptoCurrency.text,
@@ -54,7 +58,7 @@ public class OnRampScript : MonoBehaviour
 
         Application.OpenURL(link);
     }
-    
+
     /// <summary>
     /// Returns to the marketplace scene.
     /// </summary>

@@ -7,12 +7,12 @@ public class MarketplaceScript : MonoBehaviour
     {
         SceneManager.LoadScene("OnRampScene");
     }
-    
+
     public void Swap()
     {
         SceneManager.LoadScene("SwapScene");
     }
-    
+
     public void Bridge()
     {
         SceneManager.LoadScene("BridgeScene");

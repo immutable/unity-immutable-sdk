@@ -94,10 +94,13 @@ jobs:
         sed -i -E "s/[0-9]+\.[0-9]+\.[0-9]+/$NEW_VERSION/g" $FILE
         echo "Updated SDK version in SdkVersionInfoHelpers.cs to $NEW_VERSION"
 
-    - name: Ensure Passport Samples~/SamplesScenesScripts directory exists and clear contents
+    - name: Ensure Samples~/SamplesScenesScripts directory exists and clear contents
       run: |
         mkdir -p ./src/Packages/Passport/Samples~/SamplesScenesScripts
         rm -rf ./src/Packages/Passport/Samples~/SamplesScenesScripts/*
+
+        mkdir -p ./src/Packages/Marketplace/Samples~/SamplesScenesScripts
+        rm -rf ./src/Packages/Marketplace/Samples~/SamplesScenesScripts/*
 
     - name: Install rsync
       run: sudo apt-get install -y rsync
@@ -105,8 +108,11 @@ jobs:
     - name: Copy sample scenes and scripts to Passport package Samples~
       id: copy_sample_scenes_and_scripts
       run: |
-        rsync -av --exclude='*.meta' ./sample/Assets/Scenes/ ./src/Packages/Passport/Samples~/SamplesScenesScripts/Scenes/
-        rsync -av --exclude='*.meta' ./sample/Assets/Scripts/ ./src/Packages/Passport/Samples~/SamplesScenesScripts/Scripts/
+        rsync -av --exclude='*.meta' ./sample/Assets/Scenes/Passport ./src/Packages/Passport/Samples~/SamplesScenesScripts/Scenes/
+        rsync -av --exclude='*.meta' ./sample/Assets/Scripts/Passport ./src/Packages/Passport/Samples~/SamplesScenesScripts/Scripts/
+
+        rsync -av --exclude='*.meta' ./sample/Assets/Scenes/Marketplace ./src/Packages/Marketplace/Samples~/SamplesScenesScripts/Scenes/
+        rsync -av --exclude='*.meta' ./sample/Assets/Scripts/Marketplace ./src/Packages/Marketplace/Samples~/SamplesScenesScripts/Scripts/
 
     - uses: gr2m/create-or-update-pull-request-action@v1
       env:

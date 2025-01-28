@@ -1990,7 +1990,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: sandbox
+  m_Text: Sandbox
 --- !u!222 &827625658
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2887,7 +2887,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 90ea1df5aa4d54e4bbc702d843424073, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Environment: {fileID: 1351870715}
+  EnvironmentDropdown: {fileID: 1351870715}
   EmailInput: {fileID: 1142338628822901615}
   AddressInput: {fileID: 1142338629240194742}
   FiatCurrencyInput: {fileID: 949453541}
@@ -3298,9 +3298,9 @@ MonoBehaviour:
   m_Value: 0
   m_Options:
     m_Options:
-    - m_Text: sandbox
+    - m_Text: Sandbox
       m_Image: {fileID: 0}
-    - m_Text: production
+    - m_Text: Production
       m_Image: {fileID: 0}
   m_OnValueChanged:
     m_PersistentCalls:
