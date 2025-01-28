@@ -48,23 +48,23 @@ namespace Immutable.Marketplace
     public struct BridgeQueryParams
     {
         /// <summary>
-        /// The address of the token being moved from (default is null).
-        /// </summary>
-        public string? FromTokenAddress { get; set; }
-
-        /// <summary>
         /// The ID of the source blockchain (default is null).
         /// </summary>
         public string? FromChainID { get; set; }
 
         /// <summary>
-        /// The address of the token being moved to (default is null).
+        /// The address of the token being moved from (default is null).
         /// </summary>
-        public string? ToTokenAddress { get; set; }
+        public string? FromTokenAddress { get; set; }
 
         /// <summary>
         /// The ID of the destination blockchain (default is null).
         /// </summary>
         public string? ToChainID { get; set; }
+
+        /// <summary>
+        /// The address of the token being moved to (default is null).
+        /// </summary>
+        public string? ToTokenAddress { get; set; }
     }
 }

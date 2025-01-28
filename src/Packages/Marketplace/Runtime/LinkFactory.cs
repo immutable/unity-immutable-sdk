@@ -151,17 +151,17 @@ namespace Immutable.Marketplace
 
             var queryParamsDictionary = new Dictionary<string, string>();
 
-            if (!string.IsNullOrEmpty(queryParams.FromTokenAddress))
-                queryParamsDictionary["fromToken"] = queryParams.FromTokenAddress.ToLower();
-
             if (!string.IsNullOrEmpty(queryParams.FromChainID))
                 queryParamsDictionary["fromChain"] = queryParams.FromChainID;
 
-            if (!string.IsNullOrEmpty(queryParams.ToTokenAddress))
-                queryParamsDictionary["toToken"] = queryParams.ToTokenAddress.ToLower();
+            if (!string.IsNullOrEmpty(queryParams.FromTokenAddress))
+                queryParamsDictionary["fromToken"] = queryParams.FromTokenAddress.ToLower();
 
             if (!string.IsNullOrEmpty(queryParams.ToChainID))
                 queryParamsDictionary["toChain"] = queryParams.ToChainID;
+
+            if (!string.IsNullOrEmpty(queryParams.ToTokenAddress))
+                queryParamsDictionary["toToken"] = queryParams.ToTokenAddress.ToLower();
 
             var queryString = string.Join("&",
                 queryParamsDictionary.Select(kvp => $"{kvp.Key}={Uri.EscapeDataString(kvp.Value)}").ToArray());
