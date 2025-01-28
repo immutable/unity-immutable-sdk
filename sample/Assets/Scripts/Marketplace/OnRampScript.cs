@@ -16,7 +16,7 @@ public class OnRampScript : MonoBehaviour
     [SerializeField] private InputField FiatAmountInput;
     [SerializeField] private InputField CryptoCurrency;
     [SerializeField] private InputField CryptoCurrencyList;
-    
+
     [SerializeField] private Button OpenButton;
 
     private void Start()
@@ -58,7 +58,7 @@ public class OnRampScript : MonoBehaviour
 
         Application.OpenURL(link);
     }
-    
+
     /// <summary>
     /// Returns to the marketplace scene.
     /// </summary>

@@ -13,7 +13,7 @@ public class SwapScript : MonoBehaviour
 
     [SerializeField] private InputField FromTokenAddress;
     [SerializeField] private InputField ToTokenAddress;
-    
+
     [SerializeField] private Button OpenButton;
 
     private void Start()
@@ -42,7 +42,7 @@ public class SwapScript : MonoBehaviour
         var publishableKey = KeyInput.text;
 
         var link = LinkFactory.GenerateSwapLink(
-            environment: environment, 
+            environment: environment,
             publishableKey: publishableKey,
             fromTokenAddress: FromTokenAddress.text.IsNullOrEmpty() ? null : FromTokenAddress.text,
             toTokenAddress: ToTokenAddress.text.IsNullOrEmpty() ? null : ToTokenAddress.text

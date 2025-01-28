@@ -21,10 +21,10 @@ namespace Immutable.Marketplace
     {
         private static string _onRampBaseUrlSandbox = "https://global-stg.transak.com";
         private static string _onRampBaseUrlProduction = "https://global.transak.com";
-        
+
         private static string _swapBaseUrlSandbox = "https://checkout-playground.sandbox.immutable.com/checkout/swap";
         private static string _swapBaseUrlProduction = "https://toolkit.immutable.com/checkout/swap";
-        
+
         private static string _bridgeBaseUrlSandbox = "https://checkout-playground.sandbox.immutable.com/checkout/squid";
         private static string _bridgeBaseUrlProduction = "https://toolkit.immutable.com/checkout/squid";
 
@@ -45,8 +45,8 @@ namespace Immutable.Marketplace
 
         public static string GetApiKey(Environment env, Flow flow)
         {
-            return flow is Flow.OnRamp ? 
-                env == Environment.Sandbox ? _apiOnRampKeySandbox : _apiOnRampKeyProduction : 
+            return flow is Flow.OnRamp ?
+                env == Environment.Sandbox ? _apiOnRampKeySandbox : _apiOnRampKeyProduction :
                 string.Empty;
         }
     }

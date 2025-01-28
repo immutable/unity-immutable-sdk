@@ -14,7 +14,7 @@ public class BridgeScript : MonoBehaviour
     [SerializeField] private InputField FromChain;
     [SerializeField] private InputField ToTokenAddress;
     [SerializeField] private InputField ToChain;
-    
+
     [SerializeField] private Button OpenButton;
 
     /// <summary>

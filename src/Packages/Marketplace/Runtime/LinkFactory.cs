@@ -52,7 +52,7 @@ namespace Immutable.Marketplace
             var queryString = string.Join("&", queryParams.Select(kvp => $"{kvp.Key}={Uri.EscapeDataString(kvp.Value)}").ToArray());
             return $"{baseUrl}?{queryString}";
         }
-        
+
         /// <summary>
         /// Generates a link for the swap flow.
         /// </summary>
@@ -88,7 +88,7 @@ namespace Immutable.Marketplace
             var queryString = string.Join("&", queryParams.Select(kvp => $"{kvp.Key}={Uri.EscapeDataString(kvp.Value)}").ToArray());
             return $"{baseUrl}?{queryString}";
         }
-        
+
         /// <summary>
         /// Generates a link for the bridge flow.
         /// </summary>
