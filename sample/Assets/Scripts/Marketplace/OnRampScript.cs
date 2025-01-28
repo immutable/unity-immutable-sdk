@@ -50,7 +50,7 @@ public class OnRampScript : MonoBehaviour
         var link = LinkFactory.GenerateOnRampLink(
             environment: environment,
             email: email,
-            address: walletAddress,
+            walletAddress: walletAddress,
             queryParams: new OnRampQueryParams
             {
                 DefaultFiatCurrency = FiatCurrencyInput.text.IsNullOrEmpty() ? "USD" : FiatCurrencyInput.text,

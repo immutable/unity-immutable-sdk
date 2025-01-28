@@ -11,7 +11,7 @@ namespace Immutable.Marketplace
         /// </summary>
         /// <param name="environment">Specifies the environment (<c>Sandbox</c> or <c>Production</c>).</param>
         /// <param name="email">The user's email address, pre-filled in the on-ramp flow.</param>
-        /// <param name="address">The user's wallet address, where tokens will be sent.</param>
+        /// <param name="walletAddress">The user's wallet address, where tokens will be sent.</param>
         /// <param name="queryParams">The query parameters for the on-ramp flow. Uses default values if not specified.</param>
         /// <param name="extraQueryParams">Optional additional query parameters. See <a href="https://docs.transak.com/docs/query-parameters">Transak docs</a> for possible fields.</param>
         /// <returns>The generated on-ramp URL.</returns>
@@ -24,7 +24,7 @@ namespace Immutable.Marketplace
         public static string GenerateOnRampLink(
             Environment environment,
             string email,
-            string address,
+            string walletAddress,
             OnRampQueryParams queryParams = default,
             Dictionary<string, string>? extraQueryParams = null
         )
@@ -83,7 +83,7 @@ namespace Immutable.Marketplace
                         ? themeColor
                         : "0D0D0D"
                 },
-                { "walletAddress", address }
+                { "walletAddress", walletAddress }
             };
 
 
