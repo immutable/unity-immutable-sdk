@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using AltWebSocketSharp;
 using Immutable.Marketplace;
 using UnityEngine;
@@ -49,11 +50,17 @@ public class OnRampScript : MonoBehaviour
         var link = LinkFactory.GenerateOnRampLink(
             environment: environment,
             email: email,
-            address: walletAddress,
-            fiatCurrency: FiatCurrencyInput.text.IsNullOrEmpty() ? "USD" : FiatCurrencyInput.text,
-            fiatAmount: FiatAmountInput.text.IsNullOrEmpty() ? "50" : FiatAmountInput.text,
-            cryptoCurrency: CryptoCurrency.text.IsNullOrEmpty() ? "IMX" : CryptoCurrency.text,
-            cryptoCurrencyList: CryptoCurrencyList.text.IsNullOrEmpty() ? "imx,eth,usdc" : CryptoCurrencyList.text
+            walletAddress: walletAddress,
+            queryParams: new OnRampQueryParams
+            {
+                DefaultFiatCurrency = FiatCurrencyInput.text.IsNullOrEmpty() ? "USD" : FiatCurrencyInput.text,
+                DefaultFiatAmount = FiatAmountInput.text.IsNullOrEmpty() ? "50" : FiatAmountInput.text,
+                DefaultCryptoCurrency = CryptoCurrency.text.IsNullOrEmpty() ? "IMX" : CryptoCurrency.text,
+                CryptoCurrencyList = CryptoCurrencyList.text.IsNullOrEmpty() ? "imx,eth,usdc" : CryptoCurrencyList.text
+            },
+            extraQueryParams: new Dictionary<string, string> {
+                {"themeColor", "000000"}
+            }
         );
 
         Application.OpenURL(link);
@@ -66,5 +73,4 @@ public class OnRampScript : MonoBehaviour
     {
         SceneManager.LoadScene("MarketplaceScene");
     }
-
 }
