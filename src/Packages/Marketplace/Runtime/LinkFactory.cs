@@ -111,7 +111,7 @@ namespace Immutable.Marketplace
         /// <param name="environment">Specifies the environment (<c>Sandbox</c> or <c>Production</c>).</param>
         /// <param name="publishableKey">The publishable key obtained from <a href="https://hub.immutable.com/">Immutable Hub</a>. See <a href="https://docs.immutable.com/api/zkEVM/apikeys">API keys</a> for more details.</param>
         /// <param name="queryParams">The query parameters for the swap flow. Uses default values if not specified.</param>
-        /// <returns>A swap URL.</returns>
+        /// <returns>The generated swap URL.</returns>
         public static string GenerateSwapLink(
             Environment environment,
             string publishableKey,
@@ -141,7 +141,7 @@ namespace Immutable.Marketplace
         /// </summary>
         /// <param name="environment">Specifies the environment (<c>Sandbox</c> or <c>Production</c>).</param>
         /// <param name="queryParams">The query parameters for the bridge flow. Uses default values if not specified.</param>
-        /// <returns>A bridge URL.</returns>
+        /// <returns>The generated bridge URL.</returns>
         public static string GenerateBridgeLink(
             Environment environment,
             BridgeQueryParams queryParams = default
