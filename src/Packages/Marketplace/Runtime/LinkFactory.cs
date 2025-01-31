@@ -35,10 +35,24 @@ namespace Immutable.Marketplace
             var queryParamsDictionary = new Dictionary<string, string>
             {
                 { "apiKey", apiKey },
-                { "cryptoCurrencyList", queryParams.CryptoCurrencyList },
-                { "defaultCryptoCurrency", queryParams.DefaultCryptoCurrency },
-                { "defaultFiatAmount", queryParams.DefaultFiatAmount },
-                { "defaultFiatCurrency", queryParams.DefaultFiatCurrency },
+                {
+                    "cryptoCurrencyList",
+                    string.IsNullOrEmpty(queryParams.CryptoCurrencyList)
+                        ? "imx,eth,usdc"
+                        : queryParams.CryptoCurrencyList
+                },
+                {
+                    "defaultCryptoCurrency",
+                    string.IsNullOrEmpty(queryParams.DefaultCryptoCurrency) ? "IMX" : queryParams.DefaultCryptoCurrency
+                },
+                {
+                    "defaultFiatAmount",
+                    string.IsNullOrEmpty(queryParams.DefaultFiatAmount) ? "50" : queryParams.DefaultFiatAmount
+                },
+                {
+                    "defaultFiatCurrency",
+                    string.IsNullOrEmpty(queryParams.DefaultFiatCurrency) ? "USD" : queryParams.DefaultFiatCurrency
+                },
                 {
                     "defaultPaymentMethod",
                     extraQueryParams != null &&
