@@ -56,6 +56,10 @@ class MacTest(UnityTest):
         cls.seleniumdriver.switch_to.window(new_window)
         print("Switched to new window")
 
+        ## Device confirmation
+        contine_button = WebDriverWait(cls.seleniumdriver, 60).until(EC.element_to_be_clickable((By.CLASS_NAME, "Button--primary")))
+        contine_button.click()
+
         # Wait for email input and enter email
         email_field = WebDriverWait(cls.seleniumdriver, 60).until(EC.presence_of_element_located((SeleniumBy.ID, ':r1:')))
         print("Entering email...")
