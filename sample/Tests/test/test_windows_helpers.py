@@ -44,11 +44,17 @@ def login():
     
     wait = WebDriverWait(driver, 60)
 
+    print("Wait for device confirmation...")
+    contine_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[span[text()='Continue']]")))
+    contine_button.click()
+    print("Confirmed device")
+
     print("Wait for email input...")
     email_field = wait.until(EC.presence_of_element_located((By.ID, ':r1:')))
-    print("Enter email")
+    print("Enter email...")
     email_field.send_keys(EMAIL)
     email_field.send_keys(Keys.RETURN)
+    print("Entered email")
 
     # Wait for the OTP to arrive and page to load
     print("Wait for OTP...")
