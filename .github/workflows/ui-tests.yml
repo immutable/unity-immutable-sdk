@@ -50,8 +50,11 @@ jobs:
           projectPath: sample
           buildMethod: ${{ matrix.buildMethod }}
           customParameters: -logFile logFile.log -quit -batchmode
+          artifactsPath: ${{ matrix.buildPath }}
       - name: List build directory
         run: ls -R ./
+      - name: Ensure build path exists
+        run: mkdir -p ${{ matrix.buildPath }}
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         if: always()
