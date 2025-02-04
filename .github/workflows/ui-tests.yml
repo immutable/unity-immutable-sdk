@@ -22,9 +22,9 @@ jobs:
           - targetPlatform: StandaloneOSX
             buildMethod: MacBuilder.BuildForAltTester
             buildPath: sample/Builds/MacOS
-          # - targetPlatform: StandaloneWindows64
-          #   buildMethod: WindowsBuilder.BuildForAltTester
-          #   buildPath: sample/Builds/Windows64
+          - targetPlatform: StandaloneWindows64
+            buildMethod: WindowsBuilder.BuildForAltTester
+            buildPath: sample/Builds/Windows64
           # - targetPlatform: Android
           #   buildMethod: MobileBuilder.BuildForAltTester
           #   buildPath: sample/Builds/Android
@@ -70,9 +70,9 @@ jobs:
           - targetPlatform: StandaloneOSX
             runs-on: [self-hosted, macOS]
             test_script: pytest -xs test/test_mac.py::MacTest
-          # - targetPlatform: StandaloneWindows64
-          #   runs-on: [self-hosted, windows]
-          #   test_script: pytest -xs test/test_windows.py::WindowsTest
+          - targetPlatform: StandaloneWindows64
+            runs-on: [self-hosted, windows]
+            test_script: pytest -xs test/test_windows.py::WindowsTest
           # - targetPlatform: Android
           #   runs-on: [ self-hosted, macOS ]
           #   test_script: browserstack-sdk pytest -s ./test/test_android.py --browserstack.config "browserstack.android.yml"
