@@ -96,17 +96,52 @@ class MacTest(UnityTest):
         # Wait for unauthenticated screen
         self.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
 
-        # Login
-        print("Logging in...")
-        self.setupChrome()
-        bring_sample_app_to_foreground()
-        self.altdriver.wait_for_object(By.NAME, "LoginBtn").tap()
-        self.login()
-        bring_sample_app_to_foreground()
+        for attempt in range(2):
+            try:
+                # Check app state
+                login_button = self.altdriver.find_object(By.NAME, "LoginBtn")
+                print("Found login button, app is in the correct state")
 
-        # Wait for authenticated screen
-        self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
-        print("Logged in")
+                # Login
+                print("Logging in...")
+                self.setupChrome()
+                bring_sample_app_to_foreground()
+                login_button.tap()
+                self.login()
+                bring_sample_app_to_foreground()
+
+                # Wait for authenticated screen
+                self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
+                print("Logged in")
+                return
+            except Exception as err:
+                if attempt == 0:
+                    # Reset app
+
+                    # Relogin
+                    print("Try reset the app and log out once...")
+                    self.altdriver.wait_for_object(By.NAME, "ReloginBtn").tap()
+
+                    # Wait for authenticated screen
+                    self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
+                    print("Re-logged in")
+
+                    # Logout
+                    print("Logging out...")
+                    self.setupChrome()
+                    bring_sample_app_to_foreground()
+                    self.altdriver.find_object(By.NAME, "LogoutBtn").tap()
+                    time.sleep(5)
+                    bring_sample_app_to_foreground()
+                    
+                    # Wait for unauthenticated screen
+                    self.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
+                    self.seleniumdriver.quit()
+                    print("Logged out and successfully reset app")
+
+                    time.sleep(5)
+                else:
+                    raise SystemExit(f"Failed to reset app {err}")
 
     def test_2_other_functions(self):
         self.test_0_other_functions()
