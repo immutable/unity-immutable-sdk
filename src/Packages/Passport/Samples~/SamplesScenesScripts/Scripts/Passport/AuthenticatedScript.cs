@@ -31,6 +31,9 @@ public class AuthenticatedScript : MonoBehaviour
     [SerializeField] private Button GetTransactionReceiptButton;
     [SerializeField] private Button SignTypedDataButton;
 
+    // Other
+    [SerializeField] private Button LaunchBrowserButton;
+
     private Passport Passport;
 #pragma warning restore CS8618
 
@@ -47,6 +50,12 @@ public class AuthenticatedScript : MonoBehaviour
         {
             ShowOutput("Passport instance is null");
         }
+
+#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
+        LaunchBrowserButton.gameObject.SetActive(true);
+#else
+        LaunchBrowserButton.gameObject.SetActive(false);
+#endif
     }
 
     /// <summary>
@@ -156,6 +165,14 @@ public class AuthenticatedScript : MonoBehaviour
         {
             ShowOutput($"Failed to get linked addresses: {ex.Message}");
         }
+    }
+
+    /// <summary>
+    /// Navigates to Link Wallet scene.
+    /// </summary>
+    public void ShowLinkWallet()
+    {
+        SceneManager.LoadScene("LinkWallet");
     }
 
     /// <summary>
@@ -404,6 +421,8 @@ public class AuthenticatedScript : MonoBehaviour
 
     #endregion
 
+    #region Other
+
     /// <summary>
     /// Clears the underlying WebView storage and cache, including any saved credentials.
     /// </summary>
@@ -425,6 +444,16 @@ public class AuthenticatedScript : MonoBehaviour
     {
         SceneManager.LoadScene("SetCallTimeout");
     }
+
+    /// <summary>
+    /// Navigates to Launch Browser scene.
+    /// </summary>
+    public void LaunchBrowser()
+    {
+        SceneManager.LoadScene("LaunchBrowser");
+    }
+
+    #endregion
 
     /// <summary>
     /// Prints the specified <code>message</code> to the output box.
