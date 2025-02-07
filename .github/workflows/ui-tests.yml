@@ -25,9 +25,9 @@ jobs:
           - targetPlatform: StandaloneWindows64
             buildMethod: WindowsBuilder.BuildForAltTester
             buildPath: sample/Builds/Windows64
-          # - targetPlatform: Android
-          #   buildMethod: MobileBuilder.BuildForAltTester
-          #   buildPath: sample/Builds/Android
+          - targetPlatform: Android
+            buildMethod: MobileBuilder.BuildForAltTester
+            buildPath: sample/Builds/Android
     steps:
       - uses: actions/checkout@v3
         with:
@@ -73,9 +73,9 @@ jobs:
           - targetPlatform: StandaloneWindows64
             runs-on: [self-hosted, windows]
             test_script: pytest -xs test/test_windows.py::WindowsTest
-          # - targetPlatform: Android
-          #   runs-on: [ self-hosted, macOS ]
-          #   test_script: browserstack-sdk pytest -s ./test/test_android.py --browserstack.config "browserstack.android.yml"
+          - targetPlatform: Android
+            runs-on: [ self-hosted, macOS ]
+            test_script: browserstack-sdk pytest -s ./test/test_android.py --browserstack.config "browserstack.android.yml"
     concurrency:
       group: test-${{ matrix.targetPlatform }}
     runs-on: ${{ matrix.runs-on }}
