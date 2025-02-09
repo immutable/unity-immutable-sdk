@@ -34,7 +34,9 @@ class UnityTest(unittest.TestCase):
         milliseconds.set_text("600000")
         self.altdriver.find_object(By.NAME, "SetButton").tap()
         output = self.altdriver.find_object(By.NAME, "Output")
-        self.assertEqual("Set call timeout to: 600000ms", output.get_text())
+        text = output.get_text()
+        print(f"CallTimeout output: {text}")
+        self.assertEqual("Set call timeout to: 600000ms", text)
 
         # Go back to authenticated scene
         self.altdriver.find_object(By.NAME, "CancelButton").tap()
@@ -46,24 +48,34 @@ class UnityTest(unittest.TestCase):
 
         # Get access token
         self.altdriver.find_object(By.NAME, "GetAccessTokenBtn").tap()
-        self.assertTrue(len(output.get_text()) > 50)
+        text = output.get_text()
+        print(f"GetAccessTokenBtn output: {text}")
+        self.assertTrue(len(text) > 50)
 
         # Get ID token
         self.altdriver.find_object(By.NAME, "GetIdTokenBtn").tap()
-        self.assertTrue(len(output.get_text()) > 50)
+        text = output.get_text()
+        print(f"GetIdTokenBtn output: {text}")
+        self.assertTrue(len(text) > 50)
 
         # Get email
         self.altdriver.find_object(By.NAME, "GetEmail").tap()
-        self.assertEqual(TestConfig.EMAIL, output.get_text())
+        text = output.get_text()
+        print(f"GetEmail output: {text}")
+        self.assertEqual(TestConfig.EMAIL, text)
 
         # Get Passport ID
         self.altdriver.find_object(By.NAME, "GetPassportId").tap()
-        self.assertEqual(TestConfig.PASSPORT_ID, output.get_text())
+        text = output.get_text()
+        print(f"GetPassportId output: {text}")
+        self.assertEqual(TestConfig.PASSPORT_ID, text)
 
         # Get linked addresses
         self.altdriver.find_object(By.NAME, "GetLinkedAddresses").tap()
         time.sleep(1)
-        self.assertEqual("No linked addresses", output.get_text())
+        text = output.get_text()
+        print(f"GetLinkedAddresses output: {text}")
+        self.assertEqual("No linked addresses", text)
 
     @pytest.mark.skip(reason="Base test should not be executed directly")
     def test_2_imx_functions(self):
@@ -71,19 +83,25 @@ class UnityTest(unittest.TestCase):
 
         # Connect to IMX
         self.altdriver.find_object(By.NAME, "ConnectBtn").tap()
-        self.assertEqual("Connected to IMX", output.get_text())
+        text = output.get_text()
+        print(f"ConnectBtn output: {text}")
+        self.assertEqual("Connected to IMX", text)
 
         # Is registered off-chain
         self.altdriver.wait_for_object(By.NAME, "IsRegisteredOffchainBtn").tap()
         time.sleep(1)
-        self.assertEqual("Registered", output.get_text())
+        text = output.get_text()
+        print(f"IsRegisteredOffchainBtn output: {text}")
+        self.assertEqual("Registered", text)
 
         # Register off-chain
         # Wait up to 3 times for "Passport account already registered" to appear
         attempts = 0
         while attempts < 3:
            self.altdriver.find_object(By.NAME, "RegisterOffchainBtn").tap()
-           self.assertEqual("Registering off-chain...", output.get_text())
+           text = output.get_text()
+           print(f"RegisterOffchainBtn output: {text}")
+           self.assertEqual("Registering off-chain...", text)
            time.sleep(20)
            if "Passport account already registered" in output.get_text():
                break
@@ -97,7 +115,9 @@ class UnityTest(unittest.TestCase):
 
         # Get address
         self.altdriver.find_object(By.NAME, "GetAddressBtn").tap()
-        self.assertEqual(TestConfig.WALLET_ADDRESS, output.get_text())
+        text = output.get_text()
+        print(f"GetAddressBtn output: {text}")
+        self.assertEqual(TestConfig.WALLET_ADDRESS, text)
 
         # Show NFT transfer scene
         self.altdriver.find_object(By.NAME, "NftTransferBtn").tap()
@@ -139,7 +159,9 @@ class UnityTest(unittest.TestCase):
         self.altdriver.find_object(By.NAME, "TransferButton").tap()
         time.sleep(30)
         output = self.altdriver.find_object(By.NAME, "Output")
-        self.assertTrue(output.get_text().startswith("NFT transferred successfully"))
+        text = output.get_text()
+        print(f"Single transfer output: {text}")
+        self.assertTrue(text.startswith("NFT transferred successfully"))
 
         # Batch transfer
         tokenId = self.altdriver.wait_for_object(By.NAME, "TokenId1")
@@ -157,7 +179,9 @@ class UnityTest(unittest.TestCase):
         self.altdriver.find_object(By.NAME, "TransferButton").tap()
         time.sleep(30)
         output = self.altdriver.find_object(By.NAME, "Output")
-        self.assertEqual("Successfully transferred 2 NFTs.", output.get_text())
+        text = output.get_text()
+        print(f"Batch transfer output: {text}")
+        self.assertEqual("Successfully transferred 2 NFTs.", text)
 
         # Go back to authenticated scene
         self.altdriver.find_object(By.NAME, "CancelButton").tap()
@@ -169,12 +193,16 @@ class UnityTest(unittest.TestCase):
 
         # Connect to zkEVM
         self.altdriver.find_object(By.NAME, "ConnectEvmBtn").tap()
-        self.assertEqual("Connected to EVM", output.get_text())
+        text = output.get_text()
+        print(f"ConnectEvmBtn output: {text}")
+        self.assertEqual("Connected to EVM", text)
 
         # Initiliase wallet and get address
         self.altdriver.wait_for_object(By.NAME, "RequestAccountsBtn").tap()
         time.sleep(5)
-        self.assertEqual(TestConfig.WALLET_ADDRESS, output.get_text())
+        text = output.get_text()
+        print(f"RequestAccountsBtn output: {text}")
+        self.assertEqual(TestConfig.WALLET_ADDRESS, text)
 
         # Show get balance scene
         self.altdriver.find_object(By.NAME, "GetBalanceBtn").tap()
@@ -186,7 +214,9 @@ class UnityTest(unittest.TestCase):
         self.altdriver.find_object(By.NAME, "GetBalanceButton").tap()
         time.sleep(2)
         output = self.altdriver.find_object(By.NAME, "Output")
-        self.assertRegex(output.get_text(), r"Balance:\nHex: 0x[0-9a-fA-F]+\nDec: \d+")
+        text = output.get_text()
+        print(f"Get balance output: {text}")
+        self.assertRegex(text, r"Balance:\nHex: 0x[0-9a-fA-F]+\nDec: \d+")
 
         # Go back to authenticated scene
         self.altdriver.find_object(By.NAME, "CancelButton").tap()
@@ -206,21 +236,27 @@ class UnityTest(unittest.TestCase):
         data.set_text("0x1e957f1e")
         self.altdriver.find_object(By.NAME, "SendButton").tap()
         time.sleep(15)
-        self.assertTrue(output.get_text().startswith("Transaction hash"))
-        self.assertTrue(output.get_text().endswith("Status: Success"))
+        text = output.get_text()
+        print(f"Send transaction with confirmation output: {text}")
+        self.assertTrue(text.startswith("Transaction hash"))
+        self.assertTrue(text.endswith("Status: Success"))
 
         # Send transaction without confirmation and get transaction receipt
         self.altdriver.wait_for_object(By.NAME, "WithConfirmationToggle").tap()
         self.altdriver.find_object(By.NAME, "SendButton").tap()
         time.sleep(20)
-        self.assertTrue(output.get_text().startswith("Transaction hash"))
-        self.assertTrue(output.get_text().endswith("Status: Success"))
+        text = output.get_text()
+        print(f"Send transaction without confirmation and get transaction receipt output: {text}")
+        self.assertTrue(text.startswith("Transaction hash"))
+        self.assertTrue(text.endswith("Status: Success"))
 
         # Send transaction without confirmation and don't get transaction receipt
         self.altdriver.wait_for_object(By.NAME, "GetTransactionReceiptToggle").tap()
         self.altdriver.find_object(By.NAME, "SendButton").tap()
         time.sleep(15)
-        self.assertTrue(output.get_text().startswith("Transaction hash"))
+        text = output.get_text()
+        print(f"Send transaction without confirmation and don't get transaction receipt output: {text}")
+        self.assertTrue(text.startswith("Transaction hash"))
 
         # Grab the transaction hash
         match = re.search(r"0x[0-9a-fA-F]+", output.get_text())
@@ -244,7 +280,9 @@ class UnityTest(unittest.TestCase):
         self.altdriver.find_object(By.NAME, "GetReceiptButton").tap()
         time.sleep(2)
         output = self.altdriver.find_object(By.NAME, "Output")
-        self.assertEqual("Status: Success", output.get_text())
+        text = output.get_text()
+        print(f"Get transaction receipt output: {text}")
+        self.assertEqual("Status: Success", text)
 
         # Go back to authenticated scene
         self.altdriver.find_object(By.NAME, "CancelButton").tap()
