@@ -240,6 +240,7 @@ class UnityTest(unittest.TestCase):
         print(f"Send transaction with confirmation output: {text}")
         self.assertTrue(text.startswith("Transaction hash"))
         self.assertTrue(text.endswith("Status: Success"))
+        time.sleep(20)
 
         # Send transaction without confirmation and get transaction receipt
         self.altdriver.wait_for_object(By.NAME, "WithConfirmationToggle").tap()
@@ -249,6 +250,7 @@ class UnityTest(unittest.TestCase):
         print(f"Send transaction without confirmation and get transaction receipt output: {text}")
         self.assertTrue(text.startswith("Transaction hash"))
         self.assertTrue(text.endswith("Status: Success"))
+        time.sleep(20)
 
         # Send transaction without confirmation and don't get transaction receipt
         self.altdriver.wait_for_object(By.NAME, "GetTransactionReceiptToggle").tap()
