@@ -46,7 +46,11 @@ class TestBase(UnityTest):
 
         # Wait for the ASWebAuthenticationSession context to appear
         WebDriverWait(driver, 30).until(lambda d: len(d.contexts) > 2)
+        time.sleep(5) # Refresh contexts by waiting before fetching again
+        print("Available contexts:", driver.contexts)
         contexts = driver.contexts
+        driver.switch_to.context(driver.contexts[-1])
+        print("Current context:", driver.current_context)
 
         target_context = None
 
@@ -89,6 +93,23 @@ class TestBase(UnityTest):
         # If target context was not found, raise an error
         if not target_context:
             raise Exception("Could not find the email field in any webview context.")
+        
+    @classmethod
+    def close_and_open_app(cls):
+        driver = cls.appium_driver
+
+        # Close app
+        time.sleep(5)
+        print("Closing app...")
+        driver.terminate_app(TestConfig.IOS_BUNDLE_ID)
+        time.sleep(5)
+        print("Closed app")
+
+        # Reopen app
+        print("Opening app...")
+        driver.activate_app(TestConfig.IOS_BUNDLE_ID)
+        time.sleep(10)
+        print("Opened app")
 
     def test_1_pkce_login(self):
         # Select use PKCE auth
@@ -117,3 +138,121 @@ class TestBase(UnityTest):
 
     def test_5_zkevm_functions(self):
         self.test_3_zkevm_functions()
+
+    def test_6_pkce_relogin(self):
+        driver = self.appium_driver
+
+        self.close_and_open_app()
+
+        # Restart AltTester
+        self.altdriver.stop()
+        self.altdriver = AltDriver()
+        time.sleep(5)
+
+        # # Select use PKCE auth
+        self.altdriver.find_object(By.NAME, "PKCE").tap()
+        # Wait for unauthenticated screen
+        self.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
+
+        # Relogin
+        print("Re-logging in...")
+        self.altdriver.wait_for_object(By.NAME, "ReloginBtn").tap()
+
+        # Wait for authenticated screen
+        self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
+        print("Re-logged in")
+
+        # Get access token
+        self.altdriver.find_object(By.NAME, "GetAccessTokenBtn").tap()
+        output = self.altdriver.find_object(By.NAME, "Output")
+        self.assertTrue(len(output.get_text()) > 50)
+
+        # Click Connect to IMX button
+        self.altdriver.find_object(By.NAME, "ConnectBtn").tap()
+        self.assertEqual("Connected to IMX", output.get_text())
+
+        self.altdriver.stop()
+
+    def test_7_pkce_reconnect(self):
+        self.close_and_open_app()
+
+        # Restart AltTester
+        self.altdriver.stop()
+        self.altdriver = AltDriver()
+        time.sleep(5)
+
+        # Select use PKCE auth
+        self.altdriver.find_object(By.NAME, "PKCE").tap()
+        # Wait for unauthenticated screen
+        self.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
+        
+        # Reconnect
+        print("Reconnecting...")
+        self.altdriver.wait_for_object(By.NAME, "ReconnectBtn").tap()
+
+        # Wait for authenticated screen
+        self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
+        print("Reconnected")
+
+        # Get access token
+        self.altdriver.find_object(By.NAME, "GetAccessTokenBtn").tap()
+        output = self.altdriver.find_object(By.NAME, "Output")
+        self.assertTrue(len(output.get_text()) > 50)
+
+        # Get address without having to click Connect to IMX button
+        self.altdriver.find_object(By.NAME, "GetAddressBtn").tap()
+        self.assertEqual(TestConfig.WALLET_ADDRESS, output.get_text())
+
+        # Logout
+        print("Logging out...")
+        self.altdriver.find_object(By.NAME, "LogoutBtn").tap()
+        time.sleep(5)
+        
+        # Wait for authenticated screen
+        self.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
+        time.sleep(5)
+        print("Logged out")
+
+        self.altdriver.stop()
+
+    def test_8_pkce_connect_imx(self):
+        self.close_and_open_app()
+
+        # Restart AltTester
+        self.altdriver.stop()
+        self.altdriver = AltDriver()
+        time.sleep(5)
+
+        # Select use PKCE auth
+        self.altdriver.find_object(By.NAME, "PKCE").tap()
+        # Wait for unauthenticated screen
+        self.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
+        
+        # Connect IMX
+        print("Logging in and connecting to IMX...")
+        self.altdriver.wait_for_object(By.NAME, "ConnectBtn").tap()
+
+        self.login()
+
+        # Wait for authenticated screen
+        self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
+        print("Logged in and connected to IMX")
+
+        # Get access token
+        self.altdriver.find_object(By.NAME, "GetAccessTokenBtn").tap()
+        output = self.altdriver.find_object(By.NAME, "Output")
+        self.assertTrue(len(output.get_text()) > 50)
+
+        # Get address without having to click Connect to IMX button
+        self.altdriver.find_object(By.NAME, "GetAddressBtn").tap()
+        self.assertEqual(TestConfig.WALLET_ADDRESS, output.get_text())
+
+        # Logout
+        print("Logging out...")
+        self.altdriver.find_object(By.NAME, "LogoutBtn").tap()
+        time.sleep(5)
+
+        # Wait for authenticated screen
+        self.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
+        time.sleep(5)
+        print("Logged out")
