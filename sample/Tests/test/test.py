@@ -49,13 +49,11 @@ class UnityTest(unittest.TestCase):
         # Get access token
         self.altdriver.find_object(By.NAME, "GetAccessTokenBtn").tap()
         text = output.get_text()
-        print(f"GetAccessTokenBtn output: {text}")
         self.assertTrue(len(text) > 50)
 
         # Get ID token
         self.altdriver.find_object(By.NAME, "GetIdTokenBtn").tap()
         text = output.get_text()
-        print(f"GetIdTokenBtn output: {text}")
         self.assertTrue(len(text) > 50)
 
         # Get email

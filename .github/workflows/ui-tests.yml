@@ -83,6 +83,16 @@ jobs:
       - uses: actions/checkout@v3
         with:
           lfs: true
+      - name: Create temporary keychain
+        if: ${{ matrix.targetPlatform == 'StandaloneOSX' }}
+        run: |
+          security list-keychains
+          security delete-keychain temporary || true
+          security list-keychains
+          security create-keychain -p "" temporary
+          security default-keychain -s temporary
+          security unlock-keychain -p "" temporary
+          security set-keychain-settings -lut 600 temporary
       - uses: actions/download-artifact@v4
         with:
           name: Build-${{ matrix.targetPlatform }}
@@ -114,6 +124,13 @@ jobs:
           BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
         working-directory: sample/Tests
         run: ${{ matrix.test_script }}
+      - name: Remove temporary keychain
+        if: ${{ matrix.targetPlatform == 'StandaloneOSX' }}
+        run: |
+          security list-keychains
+          security default-keychain -s ~/Library/Keychains/login.keychain-db
+          security delete-keychain temporary
+          security list-keychains
 #   test-ios:
 #     name: Run iOS UI tests 🧪
 #     runs-on: [ self-hosted, macOS ]
