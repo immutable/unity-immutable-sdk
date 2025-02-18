@@ -190,8 +190,8 @@ namespace Immutable.Passport
                     throw new PassportException("When 'IMMUTABLE_CUSTOM_BROWSER' is defined in Scripting Define Symbols, " + 
                         " 'windowsWebBrowserClient' must not be null.");
 #else
-                    this.webBrowserClient = new UwbWebView();
-                    await ((UwbWebView)this.webBrowserClient).Init(engineStartupTimeoutMs);
+                    webBrowserClient = gameObject.AddComponent<UwbWebView>();
+                    await ((UwbWebView)webBrowserClient).Init(engineStartupTimeoutMs);
                     readySignalReceived = true;
 #endif
                 }
