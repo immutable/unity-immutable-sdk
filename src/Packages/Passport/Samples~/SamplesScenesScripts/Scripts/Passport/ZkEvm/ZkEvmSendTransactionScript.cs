@@ -13,7 +13,7 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
     [SerializeField] private Text Output;
 
     [SerializeField] private Toggle ConfirmToggle;
-    [SerializeField] private Toggle GetTrasactionReceiptToggle;
+    [SerializeField] private Toggle GetTransactionReceiptToggle;
     [SerializeField] private InputField ToInputField;
     [SerializeField] private InputField ValueInputField;
     [SerializeField] private InputField DataInputField;
@@ -31,7 +31,7 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
             // Show get transaction receipt option if send transaction with confirmation toggle is off
             ConfirmToggle.onValueChanged.AddListener(delegate
             {
-                GetTrasactionReceiptToggle.gameObject.SetActive(!ConfirmToggle.isOn);
+                GetTransactionReceiptToggle.gameObject.SetActive(!ConfirmToggle.isOn);
             });
         }
         else
@@ -73,7 +73,7 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
                 string transactionHash = await Passport.ZkEvmSendTransaction(request);
 
                 // Check if receipt is requested
-                if (GetTrasactionReceiptToggle.isOn)
+                if (GetTransactionReceiptToggle.isOn)
                 {
                     // Poll for the receipt and display transaction status
                     string? status = await PollStatus(transactionHash);
