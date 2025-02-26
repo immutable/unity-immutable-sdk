@@ -1288,7 +1288,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1741513414}
   m_HandleRect: {fileID: 1741513413}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -1368,7 +1368,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 432.63553, y: 0}
+  m_AnchoredPosition: {x: 427.93484, y: 0}
   m_SizeDelta: {x: 0, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &885137217
@@ -2046,7 +2046,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Output: {fileID: 1253661940}
   ConfirmToggle: {fileID: 1782090444}
-  GetTrasactionReceiptToggle: {fileID: 1873101809}
+  GetTransactionReceiptToggle: {fileID: 1873101809}
   ToInputField: {fileID: 649013321}
   ValueInputField: {fileID: 1901422923}
   DataInputField: {fileID: 1391622483}
@@ -3406,8 +3406,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 885.5994, y: 0}
-  m_SizeDelta: {x: 1771.1991, y: 0}
+  m_AnchoredPosition: {x: 1153.199, y: 0}
+  m_SizeDelta: {x: 2306.398, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1833965463
 MonoBehaviour:
@@ -4341,8 +4341,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 885.59955, y: 0}
-  m_SizeDelta: {x: 1771.1991, y: 0}
+  m_AnchoredPosition: {x: 1153.199, y: 0}
+  m_SizeDelta: {x: 2306.398, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2131064088
 MonoBehaviour:
