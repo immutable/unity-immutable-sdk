@@ -34,7 +34,10 @@ mkdir -p "$BUILD_IPA_PATH"
 mkdir -p "$DERIVED_DATA_PATH"
 
 # Unity build command
-UNITY_COMMAND="$PATH_UNITY -projectPath \"$PATH_TO_UNITY_SDK_SAMPLE_APP\" -executeMethod $BUILD_METHOD -logFile logFile.log -quit -batchmode --buildPath \"$BUILD_XCODE_PATH\" --platform iOS --bundleIdentifier com.immutable.Immutable-Sample-GameSDK"
+UNITY_COMMAND="$PATH_UNITY -projectPath \"$PATH_TO_UNITY_SDK_SAMPLE_APP\" -executeMethod $BUILD_METHOD \
+-logFile logFile.log -quit -batchmode --buildPath \"$BUILD_XCODE_PATH\" \
+--platform iOS --bundleIdentifier com.immutable.Immutable-Sample-GameSDK \
+--host \"127.0.0.1\" --ciBuild"
 echo "Running command: $UNITY_COMMAND"
 
 # Execute the Unity build command

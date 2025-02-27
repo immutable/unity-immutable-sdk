@@ -1,7 +1,8 @@
+import os
 import sys
 import time
-import unittest
 from pathlib import Path
+from datetime import datetime
 
 from appium import webdriver
 from appium.options.ios import XCUITestOptions
@@ -14,13 +15,20 @@ from alttester import *
 
 from test import TestConfig, UnityTest
 
+from browserstack.local import Local
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'src'))
 from fetch_otp import fetch_code
+
+BROWSERSTACK_USERNAME = os.environ.get("BROWSERSTACK_USERNAME")
+BROWSERSTACK_ACCESS_KEY = os.environ.get("BROWSERSTACK_ACCESS_KEY")
+APP_URL = os.environ.get("APP_URL")
 
 # To run this test on an actual Android device: appium --base-path /wd/hub --allow-insecure chromedriver_autodownload
 class TestBase(UnityTest):
     altdriver = None
     appium_driver = None
+    browser_stack_local = None
 
     @classmethod
     def setUpClass(cls):
@@ -29,16 +37,41 @@ class TestBase(UnityTest):
         options.show_xcode_log = True
         options.auto_accept_alerts = True
 
+        browserstack_options = {
+            "projectName": "Unity Sample App",
+            "buildName": "Unity Sample App iOS",
+            "sessionName": f"tests - {datetime.now().strftime('%B %d - %H:%M')}",
+            "local": "true",
+            "userName": BROWSERSTACK_USERNAME,
+            "accessKey": BROWSERSTACK_ACCESS_KEY,
+            "idleTimeout": 300
+        }
+
+        # Set capabilities in the options object
+        options.set_capability("bstack:options", browserstack_options)
+        options.set_capability("platformName", "iOS")
+        options.set_capability("platformVersion", "18")
+        options.set_capability("deviceName", "iPhone 14")
+        options.set_capability("app", APP_URL)
+
+        # Start BrowserStack Local
+        browser_stack_local = Local()
+        bs_local_args = {"key": BROWSERSTACK_ACCESS_KEY}
+        browser_stack_local.start(**bs_local_args)
+        print("BrowserStack Local is running:", browser_stack_local.isRunning())
+
         cls.appium_driver = webdriver.Remote('https://hub-cloud.browserstack.com/wd/hub/', options=options)
 
         time.sleep(10)
-        cls.altdriver = AltDriver()
+
+        cls.altdriver = AltDriver(timeout=120)
 
     @classmethod
     def tearDownClass(cls):
         print("\nEnding")
         cls.appium_driver.quit()
         cls.altdriver.stop()
+        cls.browser_stack_local.stop()
 
     @classmethod
     def login(cls):
