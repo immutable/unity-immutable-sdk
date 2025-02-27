@@ -181,5 +181,5 @@ jobs:
           BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
           BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
         working-directory: sample/Tests
-        run: browserstack-sdk pytest -s ./test/test_ios.py --browserstack.config "browserstack.ios.yml"
+        run: pytest -xs ./test/test_ios.py
       
