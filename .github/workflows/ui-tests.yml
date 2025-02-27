@@ -155,16 +155,16 @@ jobs:
           BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
           BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
         run: |
-          curl -u "${{ secrets.BROWSERSTACK_USERNAME }}:${{ secrets.BROWSERSTACK_ACCESS_KEY }}" \
+          response=$(curl -u "${{ secrets.BROWSERSTACK_USERNAME }}:${{ secrets.BROWSERSTACK_ACCESS_KEY }}" \
           -X POST "https://api-cloud.browserstack.com/app-automate/upload" \
-          -F "file=@Payload.ipa"
+          -F "file=@Payload.ipa")
 
           # Extract app_url from the response using jq
           app_url=$(echo "$response" | jq -r '.app_url')
 
           if [ -z "$app_url" ]; then
             echo "Error: app_url is not found in the response"
-            exit 1  # Fail the workflow if app_url is not present
+            exit 1
           fi
 
           echo "app_url: $app_url"
