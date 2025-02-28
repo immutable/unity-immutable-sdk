@@ -50,7 +50,7 @@ class TestBase(UnityTest):
         # Set capabilities in the options object
         options.set_capability("bstack:options", browserstack_options)
         options.set_capability("platformName", "iOS")
-        options.set_capability("platformVersion", "18")
+        options.set_capability("platformVersion", "18.3")
         options.set_capability("deviceName", "iPhone 14")
         options.set_capability("app", APP_URL)
 
