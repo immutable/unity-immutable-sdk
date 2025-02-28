@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 using Immutable.Passport;
 using Immutable.Passport.Model;
 using Cysharp.Threading.Tasks;
+using UnityEngine.Serialization;
 
 public class ZkEvmSendTransactionScript : MonoBehaviour
 {
