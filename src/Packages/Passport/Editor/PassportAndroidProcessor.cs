@@ -24,7 +24,7 @@ namespace Immutable.Passport.Editor
             }
 
             FileHelpers.CopyDirectory(passportWebFilesDir, $"{path}/src/main/assets/ImmutableSDK/Runtime/Passport");
-            Debug.Log($"Sucessfully copied Passport files");
+            Debug.Log($"Successfully copied Passport files");
 
             AddUseAndroidX(path);
         }
