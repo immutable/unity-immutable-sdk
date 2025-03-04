@@ -3239,6 +3239,48 @@ paths:
       summary: Get Ethereum linked addresses for a user
       tags:
       - passport
+  /passport-profile/v1/phone-otp:
+    post:
+      description: Send phone OTP code for user supplied phone number
+      operationId: send-phone-otp
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhoneNumberOTPRequest'
+      responses:
+        "200":
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError400'
+          description: BadRequestError
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError401'
+          description: UnauthorizedError
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError403'
+          description: ForbiddenError
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError500'
+          description: InternalServerError
+      security:
+      - BearerAuth:
+        - openid
+      summary: Send phone OTP code for user supplied phone number
+      tags:
+      - passport profile
   /passport-profile/v2/linked-wallets:
     post:
       description: Link an external EOA wallet to an Immutable Passport account by
@@ -8730,6 +8772,26 @@ components:
       - type
       - updated_at
       type: object
+    PhoneNumberOTPRequest:
+      description: Phone number OTP request
+      example:
+        phone_number: "+61412345678"
+      properties:
+        phone_number:
+          description: Phone number
+          example: "+61412345678"
+          maxLength: 50
+          minLength: 3
+          type: string
+      required:
+      - phone_number
+      type: object
+    PhoneNumber:
+      description: Phone number
+      example: "+61412345678"
+      maxLength: 50
+      minLength: 3
+      type: string
     LinkWalletV2Request:
       description: Link wallet V2 request
       example:
