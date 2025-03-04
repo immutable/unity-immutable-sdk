@@ -6,6 +6,7 @@ All URIs are relative to *https://api.sandbox.immutable.com*
 |--------|--------------|-------------|
 | [**GetUserInfo**](PassportProfileApi.md#getuserinfo) | **GET** /passport-profile/v1/user/info | Get all info for a Passport user |
 | [**LinkWalletV2**](PassportProfileApi.md#linkwalletv2) | **POST** /passport-profile/v2/linked-wallets | Link wallet v2 |
+| [**SendPhoneOtp**](PassportProfileApi.md#sendphoneotp) | **POST** /passport-profile/v1/phone-otp | Send phone OTP code for user supplied phone number |
 
 <a id="getuserinfo"></a>
 # **GetUserInfo**
@@ -175,6 +176,100 @@ catch (ApiException e)
 ### Return type
 
 [**Wallet**](Wallet.md)
+
+### Authorization
+
+[BearerAuth](../README.md#BearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
+| **400** | BadRequestError |  -  |
+| **401** | UnauthorizedError |  -  |
+| **403** | ForbiddenError |  -  |
+| **500** | InternalServerError |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+<a id="sendphoneotp"></a>
+# **SendPhoneOtp**
+> void SendPhoneOtp (PhoneNumberOTPRequest? phoneNumberOTPRequest = null)
+
+Send phone OTP code for user supplied phone number
+
+Send phone OTP code for user supplied phone number
+
+### Example
+```csharp
+using System.Collections.Generic;
+using System.Diagnostics;
+using Immutable.Api.ZkEvm.Api;
+using Immutable.Api.ZkEvm.Client;
+using Immutable.Api.ZkEvm.Model;
+
+namespace Example
+{
+    public class SendPhoneOtpExample
+    {
+        public static void Main()
+        {
+            Configuration config = new Configuration();
+            config.BasePath = "https://api.sandbox.immutable.com";
+            // Configure Bearer token for authorization: BearerAuth
+            config.AccessToken = "YOUR_BEARER_TOKEN";
+
+            var apiInstance = new PassportProfileApi(config);
+            var phoneNumberOTPRequest = new PhoneNumberOTPRequest?(); // PhoneNumberOTPRequest? |  (optional) 
+
+            try
+            {
+                // Send phone OTP code for user supplied phone number
+                apiInstance.SendPhoneOtp(phoneNumberOTPRequest);
+            }
+            catch (ApiException  e)
+            {
+                Debug.Print("Exception when calling PassportProfileApi.SendPhoneOtp: " + e.Message);
+                Debug.Print("Status Code: " + e.ErrorCode);
+                Debug.Print(e.StackTrace);
+            }
+        }
+    }
+}
+```
+
+#### Using the SendPhoneOtpWithHttpInfo variant
+This returns an ApiResponse object which contains the response data, status code and headers.
+
+```csharp
+try
+{
+    // Send phone OTP code for user supplied phone number
+    apiInstance.SendPhoneOtpWithHttpInfo(phoneNumberOTPRequest);
+}
+catch (ApiException e)
+{
+    Debug.Print("Exception when calling PassportProfileApi.SendPhoneOtpWithHttpInfo: " + e.Message);
+    Debug.Print("Status Code: " + e.ErrorCode);
+    Debug.Print(e.StackTrace);
+}
+```
+
+### Parameters
+
+| Name | Type | Description | Notes |
+|------|------|-------------|-------|
+| **phoneNumberOTPRequest** | [**PhoneNumberOTPRequest?**](PhoneNumberOTPRequest?.md) |  | [optional]  |
+
+### Return type
+
+void (empty response body)
 
 ### Authorization
 
