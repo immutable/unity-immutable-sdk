@@ -50,7 +50,7 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "Building app..."
-xcodebuild clean build \
+/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild clean build \
            -project "$(pwd)/build/output/iOS/Xcode/Unity-iPhone.xcodeproj" \
            -scheme Unity-iPhone \
            -destination "generic/platform=iOS" \
