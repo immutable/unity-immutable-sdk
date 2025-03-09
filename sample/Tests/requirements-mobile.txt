@@ -11,3 +11,7 @@ browserstack-sdk
 browserstack-local
 pytest-variables
 pytest-selenium
+jsonmerge
+multiprocess
+paver
+psutil
