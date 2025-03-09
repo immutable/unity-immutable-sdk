@@ -8,3 +8,6 @@ requests==2.32.3
 mailslurp-client==15.19.22
 Appium-Python-Client
 browserstack-sdk
+browserstack-local
+pytest-variables
+pytest-selenium

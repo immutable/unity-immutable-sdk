@@ -64,4 +64,4 @@ mv "$(pwd)/build/output/iOS/DerivedData/Build/Products/ReleaseForRunning-iphoneo
 
 pushd "$(pwd)/build/output/iOS/IPA" && zip -r Payload.zip Payload && popd
 
-mv "$(pwd)/build/output/iOS/IPA/Payload.zip" "$(pwd)/Tests/Payload.ipa"
+mv "$(pwd)/build/output/iOS/IPA/Payload.zip" "$(pwd)/Tests/test/ios/Payload.ipa"
