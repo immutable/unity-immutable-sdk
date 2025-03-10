@@ -1,3 +1,5 @@
+#if UNITY_IPHONE && UNITY_EDITOR_OSX
+
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -81,3 +83,5 @@ public class iOSPostBuildProcessor
         return "com.immutable.Immutable-Sample"; // Default fallback
     }
 }
+
+#endif
