@@ -37,7 +37,7 @@ public class AuthenticatedScript : MonoBehaviour
     private Passport Passport;
 #pragma warning restore CS8618
 
-    async void Start()
+    void Start()
     {
         if (Passport.Instance != null)
         {

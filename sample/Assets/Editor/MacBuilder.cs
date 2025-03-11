@@ -114,7 +114,7 @@ public class MacBuilder
         var sceneToModify = EditorSceneManager.OpenScene(scene);
 
         // Find the AltTesterPrefab instance in the scene
-        var altRunner = GameObject.FindObjectOfType<AltRunner>();
+        var altRunner = GameObject.FindFirstObjectByType<AltRunner>();
 
         if (altRunner != null)
         {

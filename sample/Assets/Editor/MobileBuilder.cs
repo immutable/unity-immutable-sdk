@@ -98,7 +98,7 @@ public class MobileBuilder
         return "com.immutable.Immutable-Sample";
     }
 
-    private static string GetAltTesterHostFromArgs()
+    private static string? GetAltTesterHostFromArgs()
     {
         string[] args = Environment.GetCommandLineArgs();
         for (int i = 0; i < args.Length; i++)
@@ -165,7 +165,7 @@ public class MobileBuilder
         var sceneToModify = EditorSceneManager.OpenScene(scene);
 
         // Find the AltTesterPrefab instance in the scene
-        var altRunner = GameObject.FindObjectOfType<AltRunner>();
+        var altRunner = GameObject.FindFirstObjectByType<AltRunner>();
 
         if (altRunner != null)
         {

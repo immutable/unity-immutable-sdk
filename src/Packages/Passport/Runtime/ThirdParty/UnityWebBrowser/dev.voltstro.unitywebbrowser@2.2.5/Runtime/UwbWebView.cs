@@ -62,26 +62,25 @@ namespace VoltstroStudios.UnityWebBrowser
             webBrowserClient.initialUrl = GameBridge.GetFilePath();
 
             // Set up engine
-            webBrowserClient.engine = new EngineConfiguration
+            EngineConfiguration engineConfig = ScriptableObject.CreateInstance<EngineConfiguration>();
+            engineConfig.engineAppName = "UnityWebBrowser.Engine.Cef";
+            engineConfig.engineFiles = new Engine.EnginePlatformFiles[]
             {
-                engineFiles = new Engine.EnginePlatformFiles[]
+                new Engine.EnginePlatformFiles()
                 {
-                    new()
-                    {
-                        platform = Platform.Windows64,
-                        engineBaseAppLocation = "",
-                        engineRuntimeLocation = "UWB/"
+                    platform = Platform.Windows64,
+                    engineBaseAppLocation = "",
+                    engineRuntimeLocation = "UWB/"
 #if UNITY_EDITOR
-                        ,
-                        engineEditorLocation = "Packages/com.immutable.passport/Runtime/ThirdParty/UnityWebBrowser/dev.voltstro.unitywebbrowser.engine.cef.win.x64@2.2.5-130.1.16/Engine~"
+                    ,
+                    engineEditorLocation = "Packages/com.immutable.passport/Runtime/ThirdParty/UnityWebBrowser/dev.voltstro.unitywebbrowser.engine.cef.win.x64@2.2.5-130.1.16/Engine~"
 #endif
-                    }
-                },
-                engineAppName = "UnityWebBrowser.Engine.Cef"
+                }
             };
+            webBrowserClient.engine = engineConfig;
 
             // Find available ports
-            var tcpCommunicationLayer = new TCPCommunicationLayer();
+            TCPCommunicationLayer tcpCommunicationLayer = ScriptableObject.CreateInstance<TCPCommunicationLayer>();
             var rnd = new System.Random();
             do
             {
