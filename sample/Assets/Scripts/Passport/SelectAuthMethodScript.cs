@@ -81,7 +81,7 @@ public class SelectAuthMethodScript : MonoBehaviour
     /// authorisation has been granted by the user</param>
     /// <param name="logoutRedirectUri">The URL to which auth will redirect the browser
     /// after log out is complete</param>
-    private async void InitialisePassport(string redirectUri = null, string logoutRedirectUri = null)
+    private async void InitialisePassport(string? redirectUri = null, string? logoutRedirectUri = null)
     {
         ShowOutput("Initialising Passport...");
 
