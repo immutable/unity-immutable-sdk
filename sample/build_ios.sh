@@ -34,7 +34,10 @@ mkdir -p "$BUILD_IPA_PATH"
 mkdir -p "$DERIVED_DATA_PATH"
 
 # Unity build command
-UNITY_COMMAND="$PATH_UNITY -projectPath \"$PATH_TO_UNITY_SDK_SAMPLE_APP\" -executeMethod $BUILD_METHOD -logFile logFile.log -quit -batchmode --buildPath \"$BUILD_XCODE_PATH\" --platform iOS --bundleIdentifier com.immutable.Immutable-Sample-GameSDK"
+UNITY_COMMAND="$PATH_UNITY -projectPath \"$PATH_TO_UNITY_SDK_SAMPLE_APP\" -executeMethod $BUILD_METHOD \
+-logFile logFile.log -quit -batchmode --buildPath \"$BUILD_XCODE_PATH\" \
+--platform iOS --bundleIdentifier com.immutable.Immutable-Sample-GameSDK \
+--host \"127.0.0.1\" --ciBuild"
 echo "Running command: $UNITY_COMMAND"
 
 # Execute the Unity build command
@@ -47,7 +50,7 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "Building app..."
-xcodebuild clean build \
+/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild clean build \
            -project "$(pwd)/build/output/iOS/Xcode/Unity-iPhone.xcodeproj" \
            -scheme Unity-iPhone \
            -destination "generic/platform=iOS" \
@@ -61,4 +64,4 @@ mv "$(pwd)/build/output/iOS/DerivedData/Build/Products/ReleaseForRunning-iphoneo
 
 pushd "$(pwd)/build/output/iOS/IPA" && zip -r Payload.zip Payload && popd
 
-mv "$(pwd)/build/output/iOS/IPA/Payload.zip" "$(pwd)/Tests/Payload.ipa"
+mv "$(pwd)/build/output/iOS/IPA/Payload.zip" "$(pwd)/Tests/test/ios/Payload.ipa"
