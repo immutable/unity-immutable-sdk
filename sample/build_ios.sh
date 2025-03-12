@@ -58,6 +58,12 @@ echo "Building app..."
            -allowProvisioningUpdates \
            -derivedDataPath "$(pwd)/build/output/iOS/DerivedData"
 
+# Check if xcodebuild was successful
+if [ $? -ne 0 ]; then
+    echo "Xcode build failed. Exiting script."
+    exit 1
+fi
+
 mkdir -p "$(pwd)/build/output/iOS/IPA/Payload"
 
 mv "$(pwd)/build/output/iOS/DerivedData/Build/Products/ReleaseForRunning-iphoneos/ImmutableSample.app" "$(pwd)/build/output/iOS/IPA/Payload"
@@ -65,3 +71,5 @@ mv "$(pwd)/build/output/iOS/DerivedData/Build/Products/ReleaseForRunning-iphoneo
 pushd "$(pwd)/build/output/iOS/IPA" && zip -r Payload.zip Payload && popd
 
 mv "$(pwd)/build/output/iOS/IPA/Payload.zip" "$(pwd)/Tests/test/ios/Payload.ipa"
+
+echo "Build completed successfully."

@@ -128,8 +128,9 @@ jobs:
         if: ${{ matrix.targetPlatform == 'StandaloneOSX' }}
         run: |
           security list-keychains
-          security default-keychain -s ~/Library/Keychains/login.keychain-db
           security delete-keychain temporary
+          security default-keychain -s ~/Library/Keychains/login.keychain-db
+          security list-keychains -d user -s ~/Library/Keychains/login.keychain-db
           security list-keychains
   test-ios:
     name: Run iOS UI tests 🧪
