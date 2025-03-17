@@ -51,10 +51,8 @@ public class AuthenticatedScript : MonoBehaviour
             ShowOutput("Passport instance is null");
         }
 
-#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
+#if (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
         LaunchBrowserButton.gameObject.SetActive(true);
-#else
-        LaunchBrowserButton.gameObject.SetActive(false);
 #endif
     }
 

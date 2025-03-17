@@ -8,8 +8,8 @@
       "url": "https://package.openupm.com"
     },
     "com.cysharp.unitask": {
-      "version": "2.3.3",
-      "depth": 0,
+      "version": "2.5.10",
+      "depth": 1,
       "source": "registry",
       "dependencies": {},
       "url": "https://package.openupm.com"
@@ -88,7 +88,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.nuget.newtonsoft-json": {
-      "version": "3.2.0",
+      "version": "3.2.1",
       "depth": 1,
       "source": "registry",
       "dependencies": {},
@@ -156,6 +156,50 @@
         "com.unity.modules.jsonserialize": "1.0.0"
       },
       "url": "https://packages.unity.com"
+    },
+    "dev.voltstro.nativearrayspanextensions": {
+      "version": "1.0.1",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://upm-pkgs.voltstro.dev"
+    },
+    "dev.voltstro.unitywebbrowser": {
+      "version": "2.2.6",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "dev.voltstro.nativearrayspanextensions": "1.0.1",
+        "com.unity.nuget.newtonsoft-json": "3.2.1",
+        "com.cysharp.unitask": "2.5.10",
+        "org.nuget.voltrpc": "3.2.1"
+      },
+      "url": "https://upm-pkgs.voltstro.dev"
+    },
+    "dev.voltstro.unitywebbrowser.engine.cef": {
+      "version": "2.2.6",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "dev.voltstro.unitywebbrowser": "2.2.6"
+      },
+      "url": "https://upm-pkgs.voltstro.dev"
+    },
+    "dev.voltstro.unitywebbrowser.engine.cef.win.x64": {
+      "version": "2.2.6",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "dev.voltstro.unitywebbrowser.engine.cef": "2.2.6"
+      },
+      "url": "https://upm-pkgs.voltstro.dev"
+    },
+    "org.nuget.voltrpc": {
+      "version": "3.2.1",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://upm-pkgs.voltstro.dev"
     },
     "com.unity.modules.ai": {
       "version": "1.0.0",

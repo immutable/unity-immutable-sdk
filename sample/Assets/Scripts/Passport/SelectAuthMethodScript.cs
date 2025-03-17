@@ -93,7 +93,7 @@ public class SelectAuthMethodScript : MonoBehaviour
             // Initialise Passport
             string environment = Immutable.Passport.Model.Environment.SANDBOX;
             string clientId = "mp6rxfMDwwZDogcdgNrAaHnG0qMlXuMK";
-            Passport passport = await Passport.Init(clientId, environment, redirectUri, logoutRedirectUri);
+            Passport passport = await Passport.Init(clientId, environment, new UwbWebView(), redirectUri, logoutRedirectUri);
 
             // Navigate to the unauthenticated scene after initialising Passport
             SceneManager.LoadScene("UnauthenticatedScene");

@@ -8,11 +8,7 @@ using Cysharp.Threading.Tasks;
 namespace Immutable.Browser.Core
 {
     /// <summary>
-    /// The interface for implementing a custom Windows web browser client.
-    /// <para>
-    /// To use a custom web browser client, ensure you include <c>IMMUTABLE_CUSTOM_BROWSER</c> in your game's Scripting Define Symbols.
-    /// This will enable the SDK to integrate with your custom browser implementation instead of using the default one.
-    /// </para>
+    /// The interface for implementing a Windows web browser client.
     /// </summary>
     public interface IWindowsWebBrowserClient
     {

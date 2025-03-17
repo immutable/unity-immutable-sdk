@@ -1,12 +1,6 @@
 using System.Collections.Generic;
 using System;
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-#if !IMMUTABLE_CUSTOM_BROWSER
-using VoltstroStudios.UnityWebBrowser;
-using VoltstroStudios.UnityWebBrowser.Core;
-using VoltstroStudios.UnityWebBrowser.Shared;
-#endif
-#elif (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
 using Immutable.Browser.Gree;
 #endif
 using Immutable.Passport.Event;
@@ -35,7 +29,7 @@ namespace Immutable.Passport
         private PassportImpl? passportImpl;
         public string environment { get; private set; }
 
-        private IWebBrowserClient webBrowserClient;
+        private IWebBrowserClient? webBrowserClient;
 
         // Keeps track of the latest received deeplink
         private static string? deeplink;
@@ -45,7 +39,7 @@ namespace Immutable.Passport
         /// Passport auth events
         /// </summary>
         /// <seealso cref="Immutable.Passport.Event.PassportAuthEvent" />
-        public event OnAuthEventDelegate OnAuthEvent;
+        public event OnAuthEventDelegate? OnAuthEvent;
 
         /// <summary>
         /// The log level for the SDK.
@@ -63,10 +57,6 @@ namespace Immutable.Passport
             {
                 _logLevel = value;
                 PassportLogger.CurrentLogLevel = _logLevel;
-
-#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
-                SetDefaultWindowsBrowserLogLevel();
-#endif
             }
         }
 
@@ -100,77 +90,81 @@ namespace Immutable.Passport
         /// </summary>
         /// <param name="clientId">The client ID</param>
         /// <param name="environment">The environment to connect to</param>
+        /// <param name="windowsWebBrowserClient">(Windows only) Custom Windows browser to use instead of the default browser in the SDK.</param>
         /// <param name="redirectUri">(Android, iOS, and macOS only) The URL where the browser will redirect after successful authentication.</param>
         /// <param name="logoutRedirectUri">The URL where the browser will redirect after logout is complete.</param>
-        /// <param name="engineStartupTimeoutMs">(Windows only) Timeout duration in milliseconds to wait for the default Windows browser engine to start.</param>
-        /// <param name="webBrowserClient">(Windows only) Custom Windows browser to use instead of the default browser in the SDK.</param>
         public static UniTask<Passport> Init(
-            string clientId,
-            string environment,
-            string redirectUri = null,
-            string logoutRedirectUri = null
+
+        string clientId,
+        string environment,
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-            , int engineStartupTimeoutMs = 60000,
-            IWindowsWebBrowserClient windowsWebBrowserClient = null
+        IWindowsWebBrowserClient windowsWebBrowserClient,
 #endif
+        string? redirectUri = null,
+        string? logoutRedirectUri = null
         )
         {
-            if (Instance == null)
-            {
-                PassportLogger.Info($"{TAG} Initialising Passport...");
-
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-                var obj = new GameObject("Passport");
-                Instance = obj.AddComponent<Passport>();
-                DontDestroyOnLoad(obj);
-#else
-                Instance = new Passport();
-#endif
-                Instance.environment = environment;
-
-                // Start initialisation process
-                return Instance.Initialise(
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-                        engineStartupTimeoutMs, windowsWebBrowserClient
-#endif
-                    )
-                    .ContinueWith(async () =>
-                    {
-                        // Wait for the ready signal
-                        PassportLogger.Info($"{TAG} Waiting for ready signal...");
-                        await UniTask.WaitUntil(() => readySignalReceived == true);
-                    })
-                    .ContinueWith(async () =>
-                    {
-                        if (readySignalReceived)
-                        {
-                            // Initialise Passport with provided parameters
-                            await Instance.GetPassportImpl().Init(clientId, environment, redirectUri, logoutRedirectUri, deeplink);
-                            return Instance;
-                        }
-                        else
-                        {
-                            PassportLogger.Error($"{TAG} Failed to initialise Passport");
-                            throw new PassportException("Failed to initialise Passport", PassportErrorType.INITALISATION_ERROR);
-                        }
-                    });
-            }
-            else
+            if (Instance != null)
             {
                 // Return the existing instance if already initialised
                 readySignalReceived = true;
                 return UniTask.FromResult(Instance);
             }
+
+            PassportLogger.Info($"{TAG} Initialising Passport...");
+
+            CreateInstance();
+
+            Instance.environment = environment;
+
+            // Start initialisation process
+            return Instance.Initialise(
+#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+                    windowsWebBrowserClient
+#endif
+                )
+                .ContinueWith(async () =>
+                {
+                    // Wait for the ready signal
+                    PassportLogger.Info($"{TAG} Waiting for ready signal...");
+                    await UniTask.WaitUntil(() => readySignalReceived);
+                })
+                .ContinueWith(async () =>
+                {
+                    if (!readySignalReceived)
+                    {
+                        PassportLogger.Error($"{TAG} Failed to initialise Passport");
+                        throw new PassportException("Failed to initialise Passport", PassportErrorType.INITALISATION_ERROR);
+                    }
+
+                    // Initialise Passport with provided parameters
+                    await Instance.GetPassportImpl().Init(clientId, environment, redirectUri, logoutRedirectUri, deeplink);
+
+                    return Instance;
+                });
+        }
+
+        /// <summary>
+        /// Creates and sets up the Passport instance.
+        /// </summary>
+        private static void CreateInstance()
+        {
+#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+            var obj = new GameObject("Passport");
+            Instance = obj.AddComponent<Passport>();
+            DontDestroyOnLoad(obj);
+#else
+            Instance = new Passport();
+#endif
         }
 
         /// <summary>
         /// Initialises the appropriate web browser and sets up browser communication.
         /// </summary>
-        /// <param name="engineStartupTimeoutMs">(Windows only) Timeout duration in milliseconds to wait for the default Windows browser engine to start.</param>
-        /// <param name="webBrowserClient">(Windows only) Custom Windows browser to use instead of the default browser in the SDK.</param>
+        /// <param name="windowsWebBrowserClient">(Windows only) Custom Windows browser to use instead of the default browser in the SDK.</param>
         private async UniTask Initialise(
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-            int engineStartupTimeoutMs, IWindowsWebBrowserClient windowsWebBrowserClient
+            IWindowsWebBrowserClient windowsWebBrowserClient
 #endif
         )
         {
@@ -178,23 +172,8 @@ namespace Immutable.Passport
             {
                 // Initialise the web browser client
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-                if (windowsWebBrowserClient != null)
-                {
-                    // Use the provided custom Windows browser client
-                    this.webBrowserClient = new WindowsWebBrowserClientAdapter(windowsWebBrowserClient);
-                    await ((WindowsWebBrowserClientAdapter)this.webBrowserClient).Init();
-                }
-                else
-                {
-#if IMMUTABLE_CUSTOM_BROWSER
-                    throw new PassportException("When 'IMMUTABLE_CUSTOM_BROWSER' is defined in Scripting Define Symbols, " + 
-                        " 'windowsWebBrowserClient' must not be null.");
-#else
-                    webBrowserClient = gameObject.AddComponent<UwbWebView>();
-                    await ((UwbWebView)webBrowserClient).Init(engineStartupTimeoutMs);
-                    readySignalReceived = true;
-#endif
-                }
+                webBrowserClient = new WindowsWebBrowserClientAdapter(windowsWebBrowserClient);
+                await ((WindowsWebBrowserClientAdapter)webBrowserClient).Init();
 #elif (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
                 // Initialise default browser client for Android, iOS, and macOS
                 webBrowserClient = new GreeBrowserClient();
@@ -203,7 +182,7 @@ namespace Immutable.Passport
 #endif
 
                 // Set up browser communication
-                BrowserCommunicationsManager communicationsManager = new BrowserCommunicationsManager(webBrowserClient);
+                var communicationsManager = new BrowserCommunicationsManager(webBrowserClient);
 
 #if UNITY_WEBGL
                 readySignalReceived = true;
@@ -216,12 +195,12 @@ namespace Immutable.Passport
                 // Subscribe to Passport authentication events
                 passportImpl.OnAuthEvent += OnPassportAuthEvent;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Reset everything on error
                 readySignalReceived = false;
                 Instance = null;
-                throw ex;
+                throw;
             }
         }
 
@@ -538,25 +517,6 @@ namespace Immutable.Passport
         public void ClearStorage()
         {
             GetPassportImpl().ClearStorage();
-        }
-#endif
-
-#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
-        /// <summary>
-        /// Updates the log severity for the default Windows browser based on the current SDK log level.
-        /// </summary>
-        private static void SetDefaultWindowsBrowserLogLevel()
-        {
-            if (Instance?.webBrowserClient is WebBrowserClient browserClient)
-            {
-                browserClient.logSeverity = _logLevel switch
-                {
-                    LogLevel.Debug => LogSeverity.Debug,
-                    LogLevel.Warn => LogSeverity.Warn,
-                    LogLevel.Error => LogSeverity.Error,
-                    _ => LogSeverity.Info
-                };
-            }
         }
 #endif
 
