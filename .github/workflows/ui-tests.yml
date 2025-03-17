@@ -3,6 +3,18 @@ name: UI Tests 🧪
 
 on:
   workflow_dispatch:
+    inputs:
+      targetPlatform:
+        description: "Select the platform to build and test"
+        required: true
+        default: "All"
+        type: choice
+        options:
+          - All
+          - StandaloneOSX
+          - StandaloneWindows64
+          - Android (build only)
+          - iOS (build only)
   push:
     branches: [main]
   pull_request:
@@ -29,6 +41,13 @@ jobs:
             buildMethod: MobileBuilder.BuildForAltTester
             buildPath: sample/Builds/Android
     steps:
+      - name: Filter matrix based on manual trigger
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.targetPlatform != 'All' && github.event.inputs.targetPlatform != 'iOS (build only)'
+        run: |
+          if [[ "${{ github.event.inputs.targetPlatform }}" != "${{ matrix.targetPlatform }}" ]]; then
+            echo "Skipping build for ${{ matrix.targetPlatform }} (not selected)"
+            exit 0
+          fi
       - uses: actions/checkout@v3
         with:
           lfs: true
@@ -132,9 +151,10 @@ jobs:
           security default-keychain -s ~/Library/Keychains/login.keychain-db
           security list-keychains -d user -s ~/Library/Keychains/login.keychain-db
           security list-keychains
-  test-ios:
-    name: Run iOS UI tests 🧪
+  build-ios: #test-ios:
+    name: Run iOS build #UI tests 🧪
     runs-on: [ self-hosted, macOS ]
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'iOS (build only)'
     steps:
       - uses: actions/checkout@v3
         with:
