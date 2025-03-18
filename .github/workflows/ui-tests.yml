@@ -13,8 +13,8 @@ on:
           - All
           - StandaloneOSX
           - StandaloneWindows64
-          - Android (build only)
-          - iOS (build only)
+          - Android
+          - iOS
   push:
     branches: [main]
   pull_request:
@@ -41,17 +41,12 @@ jobs:
             buildMethod: MobileBuilder.BuildForAltTester
             buildPath: sample/Builds/Android
     steps:
-      - name: Filter matrix based on manual trigger
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.targetPlatform != 'All' && github.event.inputs.targetPlatform != 'iOS (build only)'
-        run: |
-          if [[ "${{ github.event.inputs.targetPlatform }}" != "${{ matrix.targetPlatform }}" ]]; then
-            echo "Skipping build for ${{ matrix.targetPlatform }} (not selected)"
-            exit 0
-          fi
       - uses: actions/checkout@v3
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
         with:
           lfs: true
       - uses: actions/cache@v3
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
         with:
           path: Library
           key: Library-${{ matrix.targetPlatform }}-${{ hashFiles('sample/Assets/**', 'sample/Packages/**', 'sample/ProjectSettings/**') }}
@@ -59,6 +54,7 @@ jobs:
             Library-${{ matrix.targetPlatform }}
             Library-
       - name: Build project
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
         uses: game-ci/unity-builder@v4
         env:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
@@ -70,13 +66,12 @@ jobs:
           buildMethod: ${{ matrix.buildMethod }}
           customParameters: -logFile logFile.log -quit -batchmode
           artifactsPath: ${{ matrix.buildPath }}
-      - name: List build directory
-        run: ls -R ./
       - name: Ensure build path exists
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
         run: mkdir -p ${{ matrix.buildPath }}
       - name: Upload artifact
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
         uses: actions/upload-artifact@v4
-        if: always()
         with:
           name: Build-${{ matrix.targetPlatform }}
           path: ${{ matrix.buildPath }}
@@ -100,10 +95,11 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
     steps:
       - uses: actions/checkout@v3
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
         with:
           lfs: true
       - name: Create temporary keychain
-        if: ${{ matrix.targetPlatform == 'StandaloneOSX' }}
+        if: matrix.targetPlatform == 'StandaloneOSX' && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneOSX')
         run: |
           security list-keychains
           security delete-keychain temporary || true
@@ -113,28 +109,25 @@ jobs:
           security unlock-keychain -p "" temporary
           security set-keychain-settings -lut 600 temporary
       - uses: actions/download-artifact@v4
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
         with:
           name: Build-${{ matrix.targetPlatform }}
           path: sample/Tests
       - name: Make macOS artifact executable
-        if: ${{ matrix.targetPlatform == 'StandaloneOSX' }}
+        if: matrix.targetPlatform == 'StandaloneOSX' && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneOSX')
         run: chmod +x sample/Tests/SampleApp.app/Contents/MacOS/*
       - uses: actions/setup-python@v4
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
         with:
           python-version: "3.10"
       - name: Install dependencies (Windows)
-        if: ${{ matrix.targetPlatform == 'StandaloneWindows64' }}
+        if: matrix.targetPlatform == 'StandaloneWindows64' && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneWindows64')
         run: pip install -r "sample/Tests/requirements-desktop.txt"
       - name: Install dependencies (Mac)
-        if: ${{ matrix.targetPlatform != 'StandaloneWindows64' }}
-        run: |
-          if [[ "${{ matrix.targetPlatform }}" == "StandaloneOSX" ]]; then
-            pip uninstall -y browserstack-sdk || true
-            pip install -r "sample/Tests/requirements-desktop.txt"
-          else
-            pip install -r "sample/Tests/requirements-mobile.txt"
-          fi
+        if: matrix.targetPlatform == 'StandaloneOSX' && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneOSX')
+        run: pip install -r "sample/Tests/requirements-desktop.txt"
       - name: Run UI tests
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
         env:
           UNITY_APP_PATH: SampleApp.app
           UNITY_APP_NAME: SampleApp
@@ -144,7 +137,7 @@ jobs:
         working-directory: sample/Tests
         run: ${{ matrix.test_script }}
       - name: Remove temporary keychain
-        if: ${{ matrix.targetPlatform == 'StandaloneOSX' }}
+        if: matrix.targetPlatform == 'StandaloneOSX' && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneOSX')
         run: |
           security list-keychains
           security delete-keychain temporary
@@ -154,7 +147,7 @@ jobs:
   build-ios: #test-ios:
     name: Run iOS build #UI tests 🧪
     runs-on: [ self-hosted, macOS ]
-    if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'iOS (build only)'
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'iOS'
     steps:
       - uses: actions/checkout@v3
         with:
