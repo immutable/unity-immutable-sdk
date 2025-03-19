@@ -36,11 +36,12 @@ public class SelectAuthMethodScript : MonoBehaviour
     /// </summary>
     private bool IsPKCESupported()
     {
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
         return true;
-#else
-        return false;
-#endif
+// #if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
+//         return true;
+// #else
+//         return false;
+// #endif
     }
 
     /// <summary>

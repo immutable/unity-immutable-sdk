@@ -67,16 +67,16 @@ public class UnauthenticatedScript : MonoBehaviour
         try
         {
             // Login using the appropriate login method
-            if (SampleAppManager.SupportsPKCE && SampleAppManager.UsePKCE)
-            {
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
+            // if (SampleAppManager.SupportsPKCE && SampleAppManager.UsePKCE)
+            // {
+// #if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
                 await Passport.LoginPKCE();
-#endif
-            }
-            else
-            {
-                await Passport.Login(timeoutMs: timeoutMs);
-            }
+// #endif
+            // }
+            // else
+            // {
+            //     await Passport.Login(timeoutMs: timeoutMs);
+            // }
 
             // Navigate to the authenticated scene upon successful login
             NavigateToAuthenticatedScene(connectedToImx: false);

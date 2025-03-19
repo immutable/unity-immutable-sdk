@@ -103,7 +103,8 @@ namespace Immutable.Passport
                 Track(PassportAnalytics.EventName.INIT_PASSPORT, success: false);
                 throw new PassportException(initResponse.error ?? "Unable to initialise Passport");
             }
-            else if (deeplink != null)
+
+            if (deeplink != null)
             {
                 OnDeepLinkActivated(deeplink);
             }
@@ -347,6 +348,9 @@ namespace Immutable.Passport
                 UniTaskCompletionSource<bool> task = new UniTaskCompletionSource<bool>();
                 pkceCompletionSource = task;
                 pkceLoginOnly = true;
+                
+                WindowsDeepLink.Initialise(redirectUri, OnDeepLinkActivated);
+                
                 _ = LaunchAuthUrl();
                 return task.Task;
             }
@@ -578,6 +582,9 @@ namespace Immutable.Passport
 
                 UniTaskCompletionSource<bool> task = new UniTaskCompletionSource<bool>();
                 pkceCompletionSource = task;
+                
+                WindowsDeepLink.Initialise(logoutRedirectUri, OnDeepLinkActivated);
+                
                 LaunchLogoutPKCEUrl(hardLogout);
                 return task.Task;
             }
