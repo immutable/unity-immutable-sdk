@@ -293,6 +293,7 @@ catch (ApiException e)
 | **400** | BadRequestError |  -  |
 | **401** | UnauthorizedError |  -  |
 | **403** | ForbiddenError |  -  |
+| **429** | BadRequestError |  -  |
 | **500** | InternalServerError |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
