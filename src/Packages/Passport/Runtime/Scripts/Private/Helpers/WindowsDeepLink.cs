@@ -89,7 +89,7 @@ namespace Immutable.Passport.Helpers
                 "",
                 ":: Get running Unity processes",
                 "for /f \"tokens=2 delims==\" %%A in ('wmic process where \"name='Unity.exe'\" get ProcessId /value') do (",
-                "    for /f \"delims=\" %%B in ('wmic process where \"ProcessId=%%A\" get CommandLine /value ^| findstr /C:\"-projectPath \\\"%PROJECT_PATH%\\\"\"') do (",
+                "    for /f \"delims=\" %%B in ('wmic process where \"ProcessId=%%A\" get CommandLine /value ^| findstr /I /C:\"-projectPath \\\"%PROJECT_PATH%\\\"\"') do (",
                 "        powershell -NoProfile -ExecutionPolicy Bypass -Command ^",
                 "            \"$sig = '[DllImport(\\\"user32.dll\\\")] public static extern bool SetForegroundWindow(IntPtr hWnd);';\" ^",
                 "            \"$type = Add-Type -MemberDefinition $sig -Name User32 -Namespace Win32 -PassThru;\" ^",
