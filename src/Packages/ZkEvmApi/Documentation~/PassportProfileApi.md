@@ -388,6 +388,7 @@ void (empty response body)
 | **400** | BadRequestError |  -  |
 | **401** | UnauthorizedError |  -  |
 | **403** | ForbiddenError |  -  |
+| **429** | TooManyRequestsError |  -  |
 | **500** | InternalServerError |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
