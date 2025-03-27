@@ -3269,6 +3269,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/APIError403'
           description: ForbiddenError
+        "429":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError429'
+          description: TooManyRequestsError
         "500":
           content:
             application/json:
@@ -11917,4 +11923,8 @@ components:
       name: x-immutable-api-key
       type: apiKey
       x-go-name: ImmutableApiKey
+    OktaBearerAuth:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http
 
