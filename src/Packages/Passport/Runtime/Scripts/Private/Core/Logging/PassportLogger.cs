@@ -7,7 +7,7 @@ namespace Immutable.Passport.Core.Logging
         private const string TAG = "[Immutable]";
 
         public static LogLevel CurrentLogLevel { get; set; } = LogLevel.Info;
-        
+
         /// <summary>
         /// A function that defines how sensitive data should be redacted.
         /// If null, no redaction is applied.
@@ -20,7 +20,7 @@ namespace Immutable.Passport.Core.Logging
             {
                 return; // Don't log messages below the current log level
             }
-            
+
             if (RedactionHandler != null)
             {
                 message = RedactionHandler(message);
