@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using VoltstroStudios.UnityWebBrowser;
 using VoltstroStudios.UnityWebBrowser.Core;
 using VoltstroStudios.UnityWebBrowser.Shared;
+using VoltstroStudios.UnityWebBrowser.Logging;
 #endif
 #elif (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
 using Immutable.Browser.Gree;
@@ -17,7 +18,6 @@ using Immutable.Passport.Core;
 using Immutable.Passport.Core.Logging;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using VoltstroStudios.UnityWebBrowser.Logging;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
