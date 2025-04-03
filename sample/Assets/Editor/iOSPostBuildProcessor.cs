@@ -27,7 +27,7 @@ public class iOSPostBuildProcessor
     private static bool IsCommandLineBuild()
     {
         string[] args = System.Environment.GetCommandLineArgs();
-        return args.Contains("--ciBuild"); // Check for the --ciBuild flag
+        return args.Contains("--ciBuild"); // Checks for the --ciBuild flag
     }
 
     private static void ModifyInfoPlist(string pathToBuiltProject)
