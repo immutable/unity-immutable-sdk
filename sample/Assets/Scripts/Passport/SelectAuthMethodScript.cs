@@ -90,6 +90,9 @@ public class SelectAuthMethodScript : MonoBehaviour
             // Set the log level for the SDK
             Passport.LogLevel = LogLevel.Info;
 
+            // Don't redact token values from logs
+            Passport.RedactTokensInLogs = false;
+
             // Initialise Passport
             string environment = Immutable.Passport.Model.Environment.SANDBOX;
             string clientId = "mp6rxfMDwwZDogcdgNrAaHnG0qMlXuMK";

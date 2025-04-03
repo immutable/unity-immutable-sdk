@@ -1,5 +1,6 @@
 #if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
 
+using System;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -15,6 +16,7 @@ using VoltstroStudios.UnityWebBrowser.Core;
 using VoltstroStudios.UnityWebBrowser.Core.Engines;
 using VoltstroStudios.UnityWebBrowser.Core.Js;
 using VoltstroStudios.UnityWebBrowser.Helper;
+using VoltstroStudios.UnityWebBrowser.Logging;
 using VoltstroStudios.UnityWebBrowser.Shared;
 using VoltstroStudios.UnityWebBrowser.Shared.Core;
 
@@ -28,7 +30,7 @@ namespace VoltstroStudios.UnityWebBrowser
 
         private WebBrowserClient? webBrowserClient;
 
-        public async UniTask Init(int engineStartupTimeoutMs)
+        public async UniTask Init(int engineStartupTimeoutMs, bool redactTokensInLogs, Func<string, string> redactionHandler)
         {
             GameObject persistentObject = new GameObject("UWB");
             WebBrowserNoUi browser = persistentObject.AddComponent<WebBrowserNoUi>();
@@ -48,6 +50,9 @@ namespace VoltstroStudios.UnityWebBrowser
                 LogLevel.Error => LogSeverity.Error,
                 _ => LogSeverity.Info
             };
+
+            // Logger
+            webBrowserClient.Logger = new DefaultUnityWebBrowserLogger(redactionHandler: redactTokensInLogs ? redactionHandler : null);
 
             // Js
             webBrowserClient.jsMethodManager = new JsMethodManager { jsMethodsEnable = true };

@@ -1,4 +1,4 @@
-using UnityEngine;
+using System;
 
 namespace Immutable.Passport.Core.Logging
 {
@@ -7,12 +7,23 @@ namespace Immutable.Passport.Core.Logging
         private const string TAG = "[Immutable]";
 
         public static LogLevel CurrentLogLevel { get; set; } = LogLevel.Info;
+        
+        /// <summary>
+        /// A function that defines how sensitive data should be redacted.
+        /// If null, no redaction is applied.
+        /// </summary>
+        public static Func<string, string>? RedactionHandler { get; set; }
 
-        public static void Log(LogLevel level, string message)
+        private static void Log(LogLevel level, string message)
         {
             if (level < CurrentLogLevel)
             {
                 return; // Don't log messages below the current log level
+            }
+            
+            if (RedactionHandler != null)
+            {
+                message = RedactionHandler(message);
             }
 
             switch (level)
@@ -30,7 +41,7 @@ namespace Immutable.Passport.Core.Logging
                     UnityEngine.Debug.LogError($"{TAG} {message}");
                     break;
                 default:
-                    break;
+                    throw new ArgumentOutOfRangeException(nameof(level), level, null);
             }
         }
 
