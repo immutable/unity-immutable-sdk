@@ -5,6 +5,7 @@
 // 
 // This project is under the MIT license. See the LICENSE.md file for more details.
 
+using System;
 using UnityEngine;
 
 namespace VoltstroStudios.UnityWebBrowser.Logging
@@ -17,25 +18,42 @@ namespace VoltstroStudios.UnityWebBrowser.Logging
         private const string LoggingTag = "[UWB]";
 
         private readonly ILogger logger;
+        
+        /// <summary>
+        /// A function that defines how sensitive data should be redacted.
+        /// If null, no redaction is applied.
+        /// </summary>
+        public Func<string, string>? redactionHandler;
 
-        public DefaultUnityWebBrowserLogger()
+        public DefaultUnityWebBrowserLogger(Func<string, string>? redactionHandler = null)
         {
             logger = UnityEngine.Debug.unityLogger;
+            this.redactionHandler = redactionHandler;
         }
 
         public void Debug(object message)
         {
-            logger.Log(LogType.Log, LoggingTag, message);
+            logger.Log(LogType.Log, LoggingTag, redactIfRequired(message));
         }
 
         public void Warn(object message)
         {
-            logger.LogWarning(LoggingTag, message);
+            logger.LogWarning(LoggingTag, redactIfRequired(message));
         }
 
         public void Error(object message)
         {
-            logger.LogError(LoggingTag, message);
+            logger.LogError(LoggingTag, redactIfRequired(message));
+        }
+
+        private object redactIfRequired(object message)
+        {
+            if (redactionHandler != null && message is string)
+            {
+                return redactionHandler((string)message);
+            }
+
+            return message;
         }
     }
 }
