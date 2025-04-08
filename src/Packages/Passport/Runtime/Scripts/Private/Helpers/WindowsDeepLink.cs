@@ -81,8 +81,8 @@ namespace Immutable.Passport.Helpers
 
             string[] scriptLines =
             {
-                $"REG ADD \"HKCU\\Software\\Classes\\{protocolName}\" /v \"{RegistryDeepLinkName}\" /t REG_SZ /d %1 /f",
                 "@echo off",
+                $"REG ADD \"HKCU\\Software\\Classes\\{protocolName}\" /v \"{RegistryDeepLinkName}\" /t REG_SZ /d %1 /f >nul 2>&1",
                 "setlocal",
                 "",
                 $"set \"PROJECT_PATH={projectPath}\"",
@@ -109,10 +109,19 @@ namespace Immutable.Passport.Helpers
             File.WriteAllLines(cmdPath, scriptLines);
             Debug.Log($"Writing script to {cmdPath}");
 #else
+            string pathToUnityGame = GetGameExecutablePath(".exe");
+            string gameExeName = Path.GetFileName(pathToUnityGame);
+
             File.WriteAllLines(cmdPath, new[]
             {
-                $"REG ADD \"HKCU\\Software\\Classes\\{protocolName}\" /v \"{RegistryDeepLinkName}\" /t REG_SZ /d %1 /f",
-                $"start \"\" \"{GetGameExecutablePath(".exe")}\" %1"
+                "@echo off",
+                $"REG ADD \"HKCU\\Software\\Classes\\{protocolName}\" /v \"{RegistryDeepLinkName}\" /t REG_SZ /d %1 /f >nul 2>&1",
+                $"tasklist /FI \"IMAGENAME eq {gameExeName}\" 2>NUL | find /I \"{gameExeName}\" >NUL",
+                "if %ERRORLEVEL%==0 (",
+                "    powershell -Command \"$process = Get-Process -Name '" + Path.GetFileNameWithoutExtension(gameExeName) + "' -ErrorAction SilentlyContinue; if ($process) { $hwnd = $process.MainWindowHandle; if ($hwnd -ne 0) { Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; public class WinAPI { [DllImport(\\\"user32.dll\\\")] public static extern bool SetForegroundWindow(IntPtr hWnd); }' -Language CSharp; [WinAPI]::SetForegroundWindow($hwnd) } }\"",
+                ") else (",
+                $"    start \"\" \"{pathToUnityGame}\" %1",
+                ")"
             });
 #endif
         }
@@ -266,10 +275,10 @@ namespace Immutable.Passport.Helpers
                 Debug.Log("Did not invoke callback so not deleting registry key.");
             }
 
-            var scriptPath = GetGameExecutablePath(".cmd");
-            if (File.Exists(scriptPath))
+            var cmdPath = GetGameExecutablePath(".cmd");
+            if (File.Exists(cmdPath))
             {
-                File.Delete(scriptPath);
+                File.Delete(cmdPath);
             }
 
             Destroy(gameObject);
