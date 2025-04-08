@@ -119,7 +119,7 @@ jobs:
       - uses: actions/setup-python@v4
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
         with:
-          python-version: "3.10"
+          python-version: "3.13"
       - name: Install dependencies (Windows)
         if: matrix.targetPlatform == 'StandaloneWindows64' && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneWindows64')
         run: pip install -r "sample/Tests/requirements-desktop.txt"
@@ -157,7 +157,7 @@ jobs:
         run: ./build_ios.sh
   #     - uses: actions/setup-python@v4
   #       with:
-  #         python-version: "3.10"
+  #         python-version: "3.13"
   #     - name: Install dependencies
   #       run: pip install -r "sample/Tests/requirements-mobile.txt"
   #     - name: Run UI tests
