@@ -146,6 +146,9 @@ jobs:
           security list-keychains
   build-ios: #test-ios:
     name: Run iOS build #UI tests 🧪
+    needs: 
+      - build
+      - test
     runs-on: [ self-hosted, macOS ]
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'iOS'
     steps:
