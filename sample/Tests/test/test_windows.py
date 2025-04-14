@@ -3,7 +3,7 @@ import time
 from alttester import *
 
 from test import TestConfig, UnityTest
-from test_windows_helpers import login, open_sample_app, launch_chrome, bring_sample_app_to_foreground, stop_chrome, stop_sample_app
+from test_windows_helpers import login, open_sample_app, launch_browser, bring_sample_app_to_foreground, stop_browser, stop_sample_app
 
 class WindowsTest(UnityTest):
 
@@ -31,7 +31,7 @@ class WindowsTest(UnityTest):
 
                 # Login
                 print("Logging in...")
-                launch_chrome()
+                launch_browser()
                 bring_sample_app_to_foreground()
                 login_button.tap()
                 login()
@@ -39,11 +39,11 @@ class WindowsTest(UnityTest):
 
                 # Wait for authenticated screen
                 self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
-                stop_chrome()
+                stop_browser()
                 print("Logged in")
                 return
             except Exception as err:
-                stop_chrome()
+                stop_browser()
 
                 if attempt == 0:
                     # Reset app
@@ -58,7 +58,7 @@ class WindowsTest(UnityTest):
 
                     # Logout
                     print("Logging out...")
-                    launch_chrome()
+                    launch_browser()
                     bring_sample_app_to_foreground()
                     self.altdriver.find_object(By.NAME, "LogoutBtn").tap()
                     time.sleep(5)
@@ -66,7 +66,7 @@ class WindowsTest(UnityTest):
                     
                     # Wait for unauthenticated screen
                     self.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
-                    stop_chrome()
+                    stop_browser()
                     print("Logged out and successfully reset app")
 
                     time.sleep(5)
@@ -143,7 +143,7 @@ class WindowsTest(UnityTest):
 
         # Logout
         print("Logging out...")
-        launch_chrome()
+        launch_browser()
         bring_sample_app_to_foreground()
         self.altdriver.find_object(By.NAME, "LogoutBtn").tap()
         time.sleep(5)
@@ -151,12 +151,12 @@ class WindowsTest(UnityTest):
 
         # Wait for authenticated screen
         self.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
-        stop_chrome()
+        stop_browser()
         print("Logged out")
 
         # Connect IMX
         print("Logging in and connecting to IMX...")
-        launch_chrome()
+        launch_browser()
         bring_sample_app_to_foreground()
         self.altdriver.wait_for_object(By.NAME, "ConnectBtn").tap()
         login()
@@ -165,7 +165,7 @@ class WindowsTest(UnityTest):
         # Wait for authenticated screen
         self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
         print("Logged in and connected to IMX")
-        stop_chrome()
+        stop_browser()
 
         # Get access token
         self.altdriver.find_object(By.NAME, "GetAccessTokenBtn").tap()
@@ -177,7 +177,7 @@ class WindowsTest(UnityTest):
         self.assertEqual(TestConfig.WALLET_ADDRESS, output.get_text())
 
         # Logout
-        launch_chrome()
+        launch_browser()
         bring_sample_app_to_foreground()
         print("Logging out...")
         self.altdriver.find_object(By.NAME, "LogoutBtn").tap()
@@ -186,5 +186,5 @@ class WindowsTest(UnityTest):
         
         # Wait for authenticated screen
         self.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
-        stop_chrome()
+        stop_browser()
         print("Logged out")
