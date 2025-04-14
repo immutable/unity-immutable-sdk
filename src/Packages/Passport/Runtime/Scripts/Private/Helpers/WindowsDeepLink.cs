@@ -6,6 +6,7 @@ using UnityEditor;
 using UnityEngine;
 using Immutable.Passport.Core.Logging;
 
+#nullable enable
 namespace Immutable.Passport.Helpers
 {
     public class WindowsDeepLink : MonoBehaviour
@@ -19,7 +20,7 @@ namespace Immutable.Passport.Helpers
         private const uint HKEY_CURRENT_USER = 0x80000001;
         private const uint KEY_READ = 0x20019;
         private const uint KEY_WRITE = 0x20006;
-        private const uint KEY_ALL_ACCESS = 0xF003F;
+        private const uint KEY_READ_WRITE = KEY_READ | KEY_WRITE;
         private const uint REG_SZ = 1;
 
         [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
@@ -62,6 +63,7 @@ namespace Immutable.Passport.Helpers
             if (_instance == null)
             {
                 _instance = new GameObject(nameof(WindowsDeepLink)).AddComponent<WindowsDeepLink>();
+                DontDestroyOnLoad(_instance.gameObject);
             }
 
             if (string.IsNullOrEmpty(redirectUri)) return;
@@ -79,6 +81,7 @@ namespace Immutable.Passport.Helpers
             var cmdPath = GetGameExecutablePath(".cmd");
 #if UNITY_EDITOR_WIN
             var projectPath = Application.dataPath.Replace("/Assets", "").Replace("/", "\\"); // Get the Unity project root path
+            var unityExe = EditorApplication.applicationPath.Replace("/", "\\");
 
             string[] scriptLines =
             {
@@ -104,7 +107,7 @@ namespace Immutable.Passport.Helpers
                 "if %errorlevel% equ 0 exit /b 0",
                 "",
                 ":: If no running instance found, start Unity",
-                "start \"\" \"C:\\Program Files\\Unity\\Hub\\Editor\\2021.3.26f1\\Editor\\Unity.exe\" -projectPath \"%PROJECT_PATH%\""
+                $"start \"\" \"{unityExe}\" -projectPath \"%PROJECT_PATH%\""
             };
             
             File.WriteAllLines(cmdPath, scriptLines);
@@ -145,12 +148,11 @@ namespace Immutable.Passport.Helpers
                 out disposition);
 
             if (result != 0)
-            {
-                PassportLogger.Error($"Failed to create registry key. Error code: {result}");
-                return;
+            {                
+                throw new Exception($"Failed to create PKCE registry key. Error code: {result}");
             }
 
-            RegSetValueEx(hKey, "URL Protocol", 0, REG_SZ, string.Empty, 0);
+            RegSetValueEx(hKey, "URL Protocol", 0, REG_SZ, string.Empty, 2);
 
             UIntPtr commandKey;
             result = RegCreateKeyEx(
@@ -165,10 +167,9 @@ namespace Immutable.Passport.Helpers
                 out disposition);
 
             if (result != 0)
-            {
-                PassportLogger.Error($"Failed to create command registry key. Error code: {result}");
+            {              
                 RegCloseKey(hKey);
-                return;
+                throw new Exception($"Failed to create PKCE command registry key. Error code: {result}");
             }
 
             var scriptLocation = GetGameExecutablePath(".cmd");
@@ -180,7 +181,10 @@ namespace Immutable.Passport.Helpers
             result = RegSetValueEx(commandKey, "", 0, REG_SZ, command, commandSize);
             if (result != 0)
             {
-                PassportLogger.Error($"Failed to set command. Error code: {result}");
+                RegCloseKey(commandKey);
+                RegCloseKey(hKey);
+
+                throw new Exception($"Failed to set PKCE command. Error code: {result}");
             }
 
             RegCloseKey(commandKey);
@@ -191,11 +195,11 @@ namespace Immutable.Passport.Helpers
         {
             var exeName = Application.productName + suffix;
 #if UNITY_EDITOR_WIN
-            return $"{Application.persistentDataPath}/{exeName}".Replace("/", "\\");
+            return Path.Combine(Application.persistentDataPath, exeName).Replace("/", "\\");
 #else
             var exePath = Application.dataPath.Replace("/Data", "").Replace($"/{Application.productName}_Data", "");
             
-            return $"{exePath}/{exeName}".Replace("/", "\\");
+            return Path.Combine(exePath, exeName).Replace("/", "\\");
 #endif
         }
 
@@ -215,7 +219,7 @@ namespace Immutable.Passport.Helpers
                 (UIntPtr)HKEY_CURRENT_USER,
                 registryPath,
                 0,
-                KEY_ALL_ACCESS,
+                KEY_READ_WRITE,
                 out hKey);
 
             if (result != 0)
@@ -225,7 +229,16 @@ namespace Immutable.Passport.Helpers
             }
 
             uint type = 0;
-            uint dataSize = 1024;
+            uint dataSize = 0;
+            result = RegQueryValueEx(hKey, RegistryDeepLinkName, IntPtr.Zero, ref type, null!, ref dataSize);
+
+            if (result != 0)
+            {
+                RegCloseKey(hKey);
+                PassportLogger.Warn($"Failed to get deeplink data size. Error code: {result}");
+                return;
+            }
+
             var data = new byte[dataSize];
             result = RegQueryValueEx(hKey, RegistryDeepLinkName, IntPtr.Zero, ref type, data, ref dataSize);
 
@@ -251,9 +264,9 @@ namespace Immutable.Passport.Helpers
             // Close registry key
             RegCloseKey(hKey);
 
+            // Delete registry key if callback was invoked
             if (callbackInvoked)
             {
-                // Delete registry key
                 result = RegDeleteTree((UIntPtr)HKEY_CURRENT_USER, registryPath);
 
                 if (result != 0)
@@ -270,13 +283,22 @@ namespace Immutable.Passport.Helpers
                 PassportLogger.Debug("Did not invoke callback so not deleting registry key.");
             }
 
+            // Delete command prompt script
             var cmdPath = GetGameExecutablePath(".cmd");
             if (File.Exists(cmdPath))
             {
-                File.Delete(cmdPath);
+                try
+                {
+                    File.Delete(cmdPath);
+                }
+                catch (Exception ex)
+                {
+                    PassportLogger.Warn($"Failed to delete script: {ex.Message}");
+                }
             }
 
             Destroy(gameObject);
+            _instance = null;
         }
 
         [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
