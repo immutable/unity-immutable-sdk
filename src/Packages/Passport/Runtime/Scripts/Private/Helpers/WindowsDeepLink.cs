@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using UnityEditor;
 using UnityEngine;
+using Immutable.Passport.Core.Logging;
 
 namespace Immutable.Passport.Helpers
 {
@@ -107,7 +108,7 @@ namespace Immutable.Passport.Helpers
             };
             
             File.WriteAllLines(cmdPath, scriptLines);
-            Debug.Log($"Writing script to {cmdPath}");
+            PassportLogger.Debug($"Writing script to {cmdPath}");
 #else
             string pathToUnityGame = GetGameExecutablePath(".exe");
             string gameExeName = Path.GetFileName(pathToUnityGame);
@@ -128,7 +129,7 @@ namespace Immutable.Passport.Helpers
 
         private static void RegisterProtocol(string protocolName)
         {
-            Debug.Log($"Register protocol: {protocolName}");
+            PassportLogger.Debug($"Register protocol: {protocolName}");
             
             UIntPtr hKey;
             uint disposition;
@@ -145,15 +146,11 @@ namespace Immutable.Passport.Helpers
 
             if (result != 0)
             {
-                Debug.LogError($"Failed to create registry key. Error code: {result}");
+                PassportLogger.Error($"Failed to create registry key. Error code: {result}");
                 return;
             }
-            
-            Debug.Log($@"Created registry key: Software\Classes\{protocolName}");
 
             RegSetValueEx(hKey, "URL Protocol", 0, REG_SZ, string.Empty, 0);
-            
-            Debug.Log("Added URL Protocol");
 
             UIntPtr commandKey;
             result = RegCreateKeyEx(
@@ -169,12 +166,10 @@ namespace Immutable.Passport.Helpers
 
             if (result != 0)
             {
-                Debug.LogError($"Failed to create command registry key. Error code: {result}");
+                PassportLogger.Error($"Failed to create command registry key. Error code: {result}");
                 RegCloseKey(hKey);
                 return;
             }
-            
-            Debug.Log($@"Created registry key: shell\open\command");
 
             var scriptLocation = GetGameExecutablePath(".cmd");
             
@@ -185,7 +180,7 @@ namespace Immutable.Passport.Helpers
             result = RegSetValueEx(commandKey, "", 0, REG_SZ, command, commandSize);
             if (result != 0)
             {
-                Debug.LogError($"Failed to set command. Error code: {result}");
+                PassportLogger.Error($"Failed to set command. Error code: {result}");
             }
 
             RegCloseKey(commandKey);
@@ -225,7 +220,7 @@ namespace Immutable.Passport.Helpers
 
             if (result != 0)
             {
-                Debug.LogError($"Failed to open registry key. Error code: {result}");
+                PassportLogger.Error($"Failed to open registry key. Error code: {result}");
                 return;
             }
 
@@ -240,7 +235,7 @@ namespace Immutable.Passport.Helpers
                 var uri = System.Text.Encoding.Unicode.GetString(data, 0, (int)dataSize - 2); // Remove null terminator
                 if (_protocolName != null && !uri.StartsWith(_protocolName))
                 {
-                    Debug.LogError($"Incorrect prefix uri {uri}");
+                    PassportLogger.Error($"Incorrect prefix uri {uri}");
                 }
                 else
                 {
@@ -250,7 +245,7 @@ namespace Immutable.Passport.Helpers
             }
             else
             {
-                Debug.LogError($"Failed to get registry key. Error code: {result}");
+                PassportLogger.Warn($"Failed to get registry key. Error code: {result}");
             }
 
             // Close registry key
@@ -263,16 +258,16 @@ namespace Immutable.Passport.Helpers
 
                 if (result != 0)
                 {
-                    Debug.LogError($"Failed to delete registry key. Error code: {result}");
+                    PassportLogger.Warn($"Failed to delete registry key. Error code: {result}");
                 }
                 else
                 {
-                    Debug.Log("Successfully deleted registry key.");
+                    PassportLogger.Debug("Successfully deleted registry key.");
                 }
             }
             else
             {
-                Debug.Log("Did not invoke callback so not deleting registry key.");
+                PassportLogger.Debug("Did not invoke callback so not deleting registry key.");
             }
 
             var cmdPath = GetGameExecutablePath(".cmd");
