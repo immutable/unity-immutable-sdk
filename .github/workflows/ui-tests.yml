@@ -129,11 +129,7 @@ jobs:
       - name: Run UI tests
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
         env:
-          UNITY_APP_PATH: SampleApp.app
-          UNITY_APP_NAME: SampleApp
           MAILSLURP_API_KEY: ${{ secrets.MAILSLURP_API_KEY }}
-          BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
-          BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
         working-directory: sample/Tests
         run: ${{ matrix.test_script }}
       - name: Remove temporary keychain
