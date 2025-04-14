@@ -131,7 +131,16 @@ jobs:
         env:
           MAILSLURP_API_KEY: ${{ secrets.MAILSLURP_API_KEY }}
         working-directory: sample/Tests
-        run: ${{ matrix.test_script }}
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Listing contents:"
+          dir
+          echo "Python version:"
+          python --version
+          echo "Running pytest:"
+          pytest -vv --tb=short test/test_windows.py::WindowsTest || (echo "Pytest failed with code $?" && exit 1)
+        # run: ${{ matrix.test_script }}
       - name: Remove temporary keychain
         if: matrix.targetPlatform == 'StandaloneOSX' && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneOSX')
         run: |
