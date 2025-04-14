@@ -589,7 +589,7 @@ namespace Immutable.Passport
 
                 UniTaskCompletionSource<bool> task = new UniTaskCompletionSource<bool>();
                 pkceCompletionSource = task;
-                
+
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
                 WindowsDeepLink.Initialise(logoutRedirectUri, OnDeepLinkActivated);
 #endif

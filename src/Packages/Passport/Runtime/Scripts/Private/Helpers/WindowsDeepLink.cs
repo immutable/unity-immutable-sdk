@@ -46,10 +46,10 @@ namespace Immutable.Passport.Helpers
 
         [DllImport("advapi32.dll", SetLastError = true)]
         private static extern int RegCloseKey(UIntPtr hKey);
-        
+
         [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         private static extern int RegDeleteTree(UIntPtr hKey, string lpSubKey);
-        
+
         [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         private static extern int RegOpenKeyEx(
             UIntPtr hKey,
@@ -79,6 +79,7 @@ namespace Immutable.Passport.Helpers
         private static void CreateCommandScript(string protocolName)
         {
             var cmdPath = GetGameExecutablePath(".cmd");
+
 #if UNITY_EDITOR_WIN
             var projectPath = Application.dataPath.Replace("/Assets", "").Replace("/", "\\"); // Get the Unity project root path
             var unityExe = EditorApplication.applicationPath.Replace("/", "\\");
@@ -92,13 +93,14 @@ namespace Immutable.Passport.Helpers
                 $"set \"PROJECT_PATH={projectPath}\"",
                 "",
                 ":: Get running Unity processes",
-                "for /f \"tokens=2 delims==\" %%A in ('wmic process where \"name='Unity.exe'\" get ProcessId /value') do (",
-                "    for /f \"delims=\" %%B in ('wmic process where \"ProcessId=%%A\" get CommandLine /value ^| findstr /I /C:\"-projectPath \\\"%PROJECT_PATH%\\\"\"') do (",
+                "for /f \"tokens=2 delims==\" %%A in ('wmic process where \"name='Unity.exe'\" get ProcessId /value 2^>nul') do (",
+                "    for /f \"delims=\" %%B in ('wmic process where \"ProcessId=%%A\" get CommandLine /value 2^>nul ^| findstr /I /C:\"-projectPath \\\"%PROJECT_PATH%\\\"\" 2^>nul') do (",
                 "        powershell -NoProfile -ExecutionPolicy Bypass -Command ^",
                 "            \"$sig = '[DllImport(\\\"user32.dll\\\")] public static extern bool SetForegroundWindow(IntPtr hWnd);';\" ^",
                 "            \"$type = Add-Type -MemberDefinition $sig -Name User32 -Namespace Win32 -PassThru;\" ^",
                 "            \"$process = Get-Process -Id %%A;\" ^",
-                "            \"$type::SetForegroundWindow($process.MainWindowHandle);\"",
+                "            \"$type::SetForegroundWindow($process.MainWindowHandle);\" ^",
+                "        >nul 2>&1",
                 "        exit /b 0",
                 "    )",
                 ")",
@@ -107,12 +109,14 @@ namespace Immutable.Passport.Helpers
                 "if %errorlevel% equ 0 exit /b 0",
                 "",
                 ":: If no running instance found, start Unity",
-                $"start \"\" \"{unityExe}\" -projectPath \"%PROJECT_PATH%\""
+                $"start \"\" \"{unityExe}\" -projectPath \"%PROJECT_PATH%\" >nul 2>&1"
             };
-            
+
             File.WriteAllLines(cmdPath, scriptLines);
             PassportLogger.Debug($"Writing script to {cmdPath}");
+
 #else
+
             string pathToUnityGame = GetGameExecutablePath(".exe");
             string gameExeName = Path.GetFileName(pathToUnityGame);
 
@@ -122,9 +126,15 @@ namespace Immutable.Passport.Helpers
                 $"REG ADD \"HKCU\\Software\\Classes\\{protocolName}\" /v \"{RegistryDeepLinkName}\" /t REG_SZ /d %1 /f >nul 2>&1",
                 $"tasklist /FI \"IMAGENAME eq {gameExeName}\" 2>NUL | find /I \"{gameExeName}\" >NUL",
                 "if %ERRORLEVEL%==0 (",
-                "    powershell -Command \"$process = Get-Process -Name '" + Path.GetFileNameWithoutExtension(gameExeName) + "' -ErrorAction SilentlyContinue; if ($process) { $hwnd = $process.MainWindowHandle; if ($hwnd -ne 0) { Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; public class WinAPI { [DllImport(\\\"user32.dll\\\")] public static extern bool SetForegroundWindow(IntPtr hWnd); }' -Language CSharp; [WinAPI]::SetForegroundWindow($hwnd) } }\"",
+                "    powershell -NoProfile -ExecutionPolicy Bypass -Command ^",
+                "        \"$ErrorActionPreference = 'SilentlyContinue';\" ^",
+                "        \"$wshell = New-Object -ComObject wscript.shell;\" ^",
+                "        \"$process = Get-Process -Name '" + Path.GetFileNameWithoutExtension(gameExeName) + "' -ErrorAction SilentlyContinue;\" ^",
+                "        \"if ($process) { $wshell.AppActivate($process.Id) | Out-Null }\" ^",
+                "    >nul 2>&1 3>&1 4>&1 5>&1",
+                "    exit /b 0",
                 ") else (",
-                $"    start \"\" \"{pathToUnityGame}\" %1",
+                $"    start \"\" /b \"{pathToUnityGame}\" %1 >nul 2>&1",
                 ")"
             });
 #endif
@@ -133,7 +143,7 @@ namespace Immutable.Passport.Helpers
         private static void RegisterProtocol(string protocolName)
         {
             PassportLogger.Debug($"Register protocol: {protocolName}");
-            
+
             UIntPtr hKey;
             uint disposition;
             int result = RegCreateKeyEx(
@@ -148,7 +158,7 @@ namespace Immutable.Passport.Helpers
                 out disposition);
 
             if (result != 0)
-            {                
+            {
                 throw new Exception($"Failed to create PKCE registry key. Error code: {result}");
             }
 
@@ -167,17 +177,17 @@ namespace Immutable.Passport.Helpers
                 out disposition);
 
             if (result != 0)
-            {              
+            {
                 RegCloseKey(hKey);
                 throw new Exception($"Failed to create PKCE command registry key. Error code: {result}");
             }
 
             var scriptLocation = GetGameExecutablePath(".cmd");
-            
+
             string command = $"\"{scriptLocation}\" \"%1\"";
 
             uint commandSize = (uint)((command.Length + 1) * 2);
-            
+
             result = RegSetValueEx(commandKey, "", 0, REG_SZ, command, commandSize);
             if (result != 0)
             {
@@ -312,3 +322,4 @@ namespace Immutable.Passport.Helpers
     }
 }
 #endif
+
