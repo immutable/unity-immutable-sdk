@@ -58,6 +58,20 @@ namespace Immutable.Passport.Helpers
             uint samDesired,
             out UIntPtr phkResult);
 
+        [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern int RegQueryValueEx(
+            UIntPtr hKey,
+            string lpValueName,
+            IntPtr lpReserved,
+            ref uint lpType,
+            byte[] lpData,
+            ref uint lpcbData);
+
+        /// <summary>
+        /// Initialises the Windows deep link handler for a given protocol.
+        /// </summary>
+        /// <param name="redirectUri">The redirect URI containing the protocol to handle (e.g. "immutable://")</param>
+        /// <param name="callback">Callback to invoke when a deep link is received</param>
         public static void Initialise(string redirectUri, Action<string> callback)
         {
             if (_instance == null)
@@ -68,31 +82,36 @@ namespace Immutable.Passport.Helpers
 
             if (string.IsNullOrEmpty(redirectUri)) return;
 
+            // Extract protocol name from URI (e.g. "immutable" from "immutable://")
             var protocolName = redirectUri.Split(new[] { "://" }, StringSplitOptions.None)[0];
             _instance._protocolName = protocolName;
             _instance._callback = callback;
 
+            // Register protocol and create handler script
             RegisterProtocol(protocolName);
             CreateCommandScript(protocolName);
         }
 
         private static void CreateCommandScript(string protocolName)
         {
+            // Get path for the command script file
             var cmdPath = GetGameExecutablePath(".cmd");
 
 #if UNITY_EDITOR_WIN
-            var projectPath = Application.dataPath.Replace("/Assets", "").Replace("/", "\\"); // Get the Unity project root path
+            // Get Unity project and executable paths
+            var projectPath = Application.dataPath.Replace("/Assets", "").Replace("/", "\\");
             var unityExe = EditorApplication.applicationPath.Replace("/", "\\");
 
             string[] scriptLines =
             {
                 "@echo off",
+                // Store deeplink URI in registry
                 $"REG ADD \"HKCU\\Software\\Classes\\{protocolName}\" /v \"{RegistryDeepLinkName}\" /t REG_SZ /d %1 /f >nul 2>&1",
                 "setlocal",
                 "",
                 $"set \"PROJECT_PATH={projectPath}\"",
                 "",
-                ":: Get running Unity processes",
+                // Find running Unity instance with matching project path
                 "for /f \"tokens=2 delims==\" %%A in ('wmic process where \"name='Unity.exe'\" get ProcessId /value 2^>nul') do (",
                 "    for /f \"delims=\" %%B in ('wmic process where \"ProcessId=%%A\" get CommandLine /value 2^>nul ^| findstr /I /C:\"-projectPath \\\"%PROJECT_PATH%\\\"\" 2^>nul') do (",
                 "        powershell -NoProfile -ExecutionPolicy Bypass -Command ^",
@@ -105,27 +124,30 @@ namespace Immutable.Passport.Helpers
                 "    )",
                 ")",
                 "",
-                ":: Exit script if Unity was found",
+                // Exit if Unity instance found
                 "if %errorlevel% equ 0 exit /b 0",
                 "",
-                ":: If no running instance found, start Unity",
+                // Start new Unity instance if none found
                 $"start \"\" \"{unityExe}\" -projectPath \"%PROJECT_PATH%\" >nul 2>&1"
             };
-
+            
             File.WriteAllLines(cmdPath, scriptLines);
             PassportLogger.Debug($"Writing script to {cmdPath}");
 
 #else
-
+            // Get game executable path and name
             string pathToUnityGame = GetGameExecutablePath(".exe");
             string gameExeName = Path.GetFileName(pathToUnityGame);
 
             File.WriteAllLines(cmdPath, new[]
             {
                 "@echo off",
+                // Store deeplink URI in registry
                 $"REG ADD \"HKCU\\Software\\Classes\\{protocolName}\" /v \"{RegistryDeepLinkName}\" /t REG_SZ /d %1 /f >nul 2>&1",
+                // Check if game is already running
                 $"tasklist /FI \"IMAGENAME eq {gameExeName}\" 2>NUL | find /I \"{gameExeName}\" >NUL",
                 "if %ERRORLEVEL%==0 (",
+                // Bring existing game window to foreground
                 "    powershell -NoProfile -ExecutionPolicy Bypass -Command ^",
                 "        \"$ErrorActionPreference = 'SilentlyContinue';\" ^",
                 "        \"$wshell = New-Object -ComObject wscript.shell;\" ^",
@@ -134,6 +156,7 @@ namespace Immutable.Passport.Helpers
                 "    >nul 2>&1 3>&1 4>&1 5>&1",
                 "    exit /b 0",
                 ") else (",
+                // Start new game instance if not running
                 $"    start \"\" /b \"{pathToUnityGame}\" %1 >nul 2>&1",
                 ")"
             });
@@ -143,9 +166,10 @@ namespace Immutable.Passport.Helpers
         private static void RegisterProtocol(string protocolName)
         {
             PassportLogger.Debug($"Register protocol: {protocolName}");
-
+            
             UIntPtr hKey;
             uint disposition;
+            // Create registry key for the protocol
             int result = RegCreateKeyEx(
                 (UIntPtr)HKEY_CURRENT_USER,
                 $@"Software\Classes\{protocolName}",
@@ -158,12 +182,14 @@ namespace Immutable.Passport.Helpers
                 out disposition);
 
             if (result != 0)
-            {
+            {                
                 throw new Exception($"Failed to create PKCE registry key. Error code: {result}");
             }
 
+            // Set URL Protocol value
             RegSetValueEx(hKey, "URL Protocol", 0, REG_SZ, string.Empty, 2);
 
+            // Create command subkey
             UIntPtr commandKey;
             result = RegCreateKeyEx(
                 hKey,
@@ -177,26 +203,25 @@ namespace Immutable.Passport.Helpers
                 out disposition);
 
             if (result != 0)
-            {
+            {              
                 RegCloseKey(hKey);
                 throw new Exception($"Failed to create PKCE command registry key. Error code: {result}");
             }
 
+            // Set command to launch the script with the URI parameter
             var scriptLocation = GetGameExecutablePath(".cmd");
-
             string command = $"\"{scriptLocation}\" \"%1\"";
-
             uint commandSize = (uint)((command.Length + 1) * 2);
-
+            
             result = RegSetValueEx(commandKey, "", 0, REG_SZ, command, commandSize);
             if (result != 0)
             {
                 RegCloseKey(commandKey);
                 RegCloseKey(hKey);
-
                 throw new Exception($"Failed to set PKCE command. Error code: {result}");
             }
 
+            // Clean up registry handles
             RegCloseKey(commandKey);
             RegCloseKey(hKey);
         }
@@ -205,16 +230,18 @@ namespace Immutable.Passport.Helpers
         {
             var exeName = Application.productName + suffix;
 #if UNITY_EDITOR_WIN
+            // Returns the persistent data path in editor
             return Path.Combine(Application.persistentDataPath, exeName).Replace("/", "\\");
 #else
+            // Returns game root directory in build
             var exePath = Application.dataPath.Replace("/Data", "").Replace($"/{Application.productName}_Data", "");
-            
             return Path.Combine(exePath, exeName).Replace("/", "\\");
 #endif
         }
 
         private void OnApplicationFocus(bool hasFocus)
         {
+            // Only handle deeplink when application regains focus
             if (!hasFocus) return;
 
             HandleDeeplink();
@@ -222,8 +249,8 @@ namespace Immutable.Passport.Helpers
 
         private void HandleDeeplink()
         {
+            // Open registry key for the protocol
             string registryPath = $@"Software\Classes\{_protocolName}";
-
             UIntPtr hKey;
             int result = RegOpenKeyEx(
                 (UIntPtr)HKEY_CURRENT_USER,
@@ -238,6 +265,7 @@ namespace Immutable.Passport.Helpers
                 return;
             }
 
+            // Get size of deeplink data
             uint type = 0;
             uint dataSize = 0;
             result = RegQueryValueEx(hKey, RegistryDeepLinkName, IntPtr.Zero, ref type, null!, ref dataSize);
@@ -249,12 +277,14 @@ namespace Immutable.Passport.Helpers
                 return;
             }
 
+            // Read deeplink data
             var data = new byte[dataSize];
             result = RegQueryValueEx(hKey, RegistryDeepLinkName, IntPtr.Zero, ref type, data, ref dataSize);
 
             var callbackInvoked = false;
             if (result == 0 && type == REG_SZ)
             {
+                // Convert and validate URI
                 var uri = System.Text.Encoding.Unicode.GetString(data, 0, (int)dataSize - 2); // Remove null terminator
                 if (_protocolName != null && !uri.StartsWith(_protocolName))
                 {
@@ -262,6 +292,7 @@ namespace Immutable.Passport.Helpers
                 }
                 else
                 {
+                    // Invoke callback with valid URI
                     _callback?.Invoke(uri);
                     callbackInvoked = true;
                 }
@@ -271,7 +302,7 @@ namespace Immutable.Passport.Helpers
                 PassportLogger.Warn($"Failed to get registry key. Error code: {result}");
             }
 
-            // Close registry key
+            // Clean up registry handle
             RegCloseKey(hKey);
 
             // Delete registry key if callback was invoked
@@ -293,7 +324,7 @@ namespace Immutable.Passport.Helpers
                 PassportLogger.Debug("Did not invoke callback so not deleting registry key.");
             }
 
-            // Delete command prompt script
+            // Clean up command script
             var cmdPath = GetGameExecutablePath(".cmd");
             if (File.Exists(cmdPath))
             {
@@ -307,18 +338,10 @@ namespace Immutable.Passport.Helpers
                 }
             }
 
+            // Clean up instance
             Destroy(gameObject);
             _instance = null;
         }
-
-        [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        private static extern int RegQueryValueEx(
-            UIntPtr hKey,
-            string lpValueName,
-            IntPtr lpReserved,
-            ref uint lpType,
-            byte[] lpData,
-            ref uint lpcbData);
     }
 }
 #endif
