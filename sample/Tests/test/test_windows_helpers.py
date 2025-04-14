@@ -114,44 +114,43 @@ def bring_sample_app_to_foreground():
     subprocess.run(command, check=True)
     time.sleep(10)
 
-def launch_chrome():
-    print("Starting Chrome...")
-    chrome_paths = [
-        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+def launch_browser():
+    print("Starting Brave...")
+    browser_paths = [
+        r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
     ]
 
-    chrome_path = None
-    for path in chrome_paths:
+    browser_path = None
+    for path in browser_paths:
         if os.path.exists(path):
-            chrome_path = path
+            browser_path = path
             break
 
-    if not chrome_path:
-        print("Chrome executable not found.")
+    if not browser_path:
+        print("Brave executable not found.")
         exit(1)
 
     subprocess.run([
         "powershell.exe",
         "-Command",
-        f"Start-Process -FilePath '{chrome_path}' -ArgumentList '--remote-debugging-port=9222'"
+        f"Start-Process -FilePath '{browser_path}' -ArgumentList '--remote-debugging-port=9222'"
     ], check=True)
 
     time.sleep(5)
 
-def stop_chrome():
-    print("Stopping Chrome...")
+def stop_browser():
+    print("Stopping Brave...")
     powershell_command = """
-    $process = Get-Process -Name "chrome" -ErrorAction SilentlyContinue
+    $process = Get-Process -Name "brave" -ErrorAction SilentlyContinue
     if ($process) {
         $process | ForEach-Object {
             Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
         }
-        Write-Output "All Chrome processes have been closed."
+        Write-Output "All Brave processes have been closed."
     } else {
-        Write-Output "Chrome is not running."
+        Write-Output "Brave is not running."
     }
     """
     subprocess.run(["powershell.exe", "-Command", powershell_command], check=True)
     time.sleep(5)
-    print("Stopped Chrome.")
+    print("Stopped Brave")

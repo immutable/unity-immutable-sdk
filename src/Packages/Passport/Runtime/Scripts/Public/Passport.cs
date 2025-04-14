@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using System;
+using System.Text.RegularExpressions;
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
 #if !IMMUTABLE_CUSTOM_BROWSER
 using VoltstroStudios.UnityWebBrowser;
 using VoltstroStudios.UnityWebBrowser.Core;
 using VoltstroStudios.UnityWebBrowser.Shared;
+using VoltstroStudios.UnityWebBrowser.Logging;
 #endif
 #elif (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
 using Immutable.Browser.Gree;
@@ -48,13 +50,19 @@ namespace Immutable.Passport
         public event OnAuthEventDelegate OnAuthEvent;
 
         /// <summary>
-        /// The log level for the SDK.
+        /// Gets or sets the log level for the SDK.
         /// </summary>
         /// <remarks>
-        /// The log level determines which messages are recorded based on their severity. The default value is <see cref="LogLevel.Info"/>.
+        /// The log level determines which messages are recorded based on their severity.  
+        /// <para>
+        /// The default value is <see cref="LogLevel.Info"/>.
+        /// </para>
         /// <para>
         /// See <see cref="Immutable.Passport.Core.Logging.LogLevel"/> for valid log levels and their meanings.
         /// </para>
+        /// <example>
+        /// <code>Passport.LogLevel = LogLevel.Debug;</code>
+        /// </example>
         /// </remarks>
         public static LogLevel LogLevel
         {
@@ -71,6 +79,35 @@ namespace Immutable.Passport
         }
 
         private static LogLevel _logLevel = LogLevel.Info;
+
+        /// <summary>
+        /// Determines whether sensitive token values should be redacted from SDK logs.
+        /// </summary>
+        /// <remarks>
+        /// When set to <c>true</c>, access tokens and ID tokens will be replaced with <code>[REDACTED]</code> in log messages to enhance security.
+        /// This setting is useful for preventing sensitive data from appearing in logs, especially when debugging or sharing logs with others.
+        /// <para>
+        /// The default value is <c>false</c>, meaning tokens will be logged in full at appropriate log levels.
+        /// </para>
+        /// <example>
+        /// <code>Passport.RedactTokensInLogs = true;</code>
+        /// </example>
+        /// </remarks>
+        public static bool RedactTokensInLogs
+        {
+            get => _redactTokensInLogs;
+            set
+            {
+                _redactTokensInLogs = value;
+                PassportLogger.RedactionHandler = value ? RedactTokenValues : null;
+
+#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
+                SetWindowsRedactionHandler();
+#endif
+            }
+        }
+
+        private static bool _redactTokensInLogs;
 
         private Passport()
         {
@@ -191,7 +228,7 @@ namespace Immutable.Passport
                         " 'windowsWebBrowserClient' must not be null.");
 #else
                     webBrowserClient = gameObject.AddComponent<UwbWebView>();
-                    await ((UwbWebView)webBrowserClient).Init(engineStartupTimeoutMs);
+                    await ((UwbWebView)webBrowserClient).Init(engineStartupTimeoutMs, _redactTokensInLogs, RedactTokenValues);
                     readySignalReceived = true;
 #endif
                 }
@@ -558,7 +595,42 @@ namespace Immutable.Passport
                 };
             }
         }
+
+        private static void SetWindowsRedactionHandler()
+        {
+            if (Instance?.webBrowserClient is WebBrowserClient browserClient)
+            {
+                browserClient.Logger = new DefaultUnityWebBrowserLogger(redactionHandler: _redactTokensInLogs ? RedactTokenValues : null);
+            }
+        }
 #endif
+
+        /// <summary>
+        /// Redacts access and ID token data from a log message if found.
+        /// </summary>
+        private static string RedactTokenValues(string message)
+        {
+            try
+            {
+                var match = Regex.Match(message, @"({.*})");
+                if (match.Success)
+                {
+                    var jsonPart = match.Groups[1].Value;
+                    var response = JsonUtility.FromJson<StringResponse>(jsonPart);
+                    if (response?.responseFor is PassportFunction.GET_ACCESS_TOKEN or PassportFunction.GET_ID_TOKEN && !string.IsNullOrEmpty(response.result))
+                    {
+                        response.result = "[REDACTED]";
+                        return message.Replace(jsonPart, JsonUtility.ToJson(response));
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+
+            return message;
+        }
 
         private PassportImpl GetPassportImpl()
         {

@@ -28,14 +28,6 @@ jobs:
       - name: Pull LFS
         run: git lfs pull
 
-      - name: Archive Release
-        uses: thedoctor0/zip-release@0.7.5
-        with:
-          type: 'zip'
-          filename: 'Immutable-Passport.zip'
-          directory: './src/Packages'
-          path: './Passport'
-
       - name: Build Changelog
         id: github_release
         uses: mikepenz/release-changelog-builder-action@v3
@@ -97,13 +89,3 @@ jobs:
             Game bridge built from Immutable Typescript SDK version ${{ env.VERSION }}
           draft: false
           prerelease: false
-
-      - name: Upload release asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./src/Packages/Immutable-Passport.zip
-          asset_name: Immutable-Passport.zip
-          asset_content_type: application/zip

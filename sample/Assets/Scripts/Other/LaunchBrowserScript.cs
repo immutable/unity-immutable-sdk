@@ -9,13 +9,13 @@ public class LaunchBrowserScript : MonoBehaviour
 {
     [SerializeField] private WebBrowserUIFull webBrowser;
     [SerializeField] private Button openDevToolsButton;
-    
+
     private WebBrowserClient? webBrowserClient;
 
     public void Start()
     {
         webBrowser.browserClient.OnLoadFinish += OnLoadFinish;
-        
+
         void OnLoadFinish(string url)
         {
             webBrowser.browserClient.OnLoadFinish -= OnLoadFinish;
