@@ -130,17 +130,21 @@ jobs:
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
         env:
           MAILSLURP_API_KEY: ${{ secrets.MAILSLURP_API_KEY }}
-        working-directory: sample/Tests
+        # working-directory: sample/Tests
         run: |
-          Write-Host "Current directory:"
+          Write-Host "Base directory:"
           Get-Location
-
-          Write-Host "Listing contents:"
+          Write-Host "Contents of base dir:"
           Get-ChildItem
 
-          Write-Host "Python version:"
-          python --version
+          Set-Location sample/Tests
 
+          Write-Host "Now in:"
+          Get-Location
+          Write-Host "Tests folder contents:"
+          Get-ChildItem
+
+          python --version
           Write-Host "Running pytest:"
           pytest -vv --tb=short test/test_windows.py::WindowsTest
           if ($LASTEXITCODE -ne 0) {
