@@ -310,7 +310,6 @@ namespace Immutable.Passport
             return await GetPassportImpl().ConnectImx(useCachedSession, timeoutMs);
         }
 
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
         /// <summary>
         /// Connects the user into Passport via PKCE auth.
         /// </summary>
@@ -329,7 +328,6 @@ namespace Immutable.Passport
         {
             return await GetPassportImpl().ConnectImxPKCE();
         }
-#endif
 
         /// <summary>
         /// Gets the wallet address of the logged in user.
@@ -352,7 +350,6 @@ namespace Immutable.Passport
             await GetPassportImpl().Logout(hardLogout);
         }
 
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
         /// <summary>
         /// Logs the user out of Passport and removes any stored credentials.
         /// Recommended to use when logging in using PKCE flow - ConnectImxPKCE()
@@ -362,7 +359,6 @@ namespace Immutable.Passport
         {
             await GetPassportImpl().LogoutPKCE(hardLogout);
         }
-#endif
 
         /// <summary>
         /// Checks if credentials exist but does not check if they're valid
