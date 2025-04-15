@@ -24,60 +24,60 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # build:
-  #   name: Build ${{ matrix.targetPlatform }} for AltTester 🛠️
-  #   runs-on: ubuntu-latest-8-cores
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       include:
-  #         - targetPlatform: StandaloneOSX
-  #           buildMethod: MacBuilder.BuildForAltTester
-  #           buildPath: sample/Builds/MacOS
-  #         - targetPlatform: StandaloneWindows64
-  #           buildMethod: WindowsBuilder.BuildForAltTester
-  #           buildPath: sample/Builds/Windows64
-  #         - targetPlatform: Android
-  #           buildMethod: MobileBuilder.BuildForAltTester
-  #           buildPath: sample/Builds/Android
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #       if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
-  #       with:
-  #         lfs: true
-  #     - uses: actions/cache@v3
-  #       if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
-  #       with:
-  #         path: Library
-  #         key: Library-${{ matrix.targetPlatform }}-${{ hashFiles('sample/Assets/**', 'sample/Packages/**', 'sample/ProjectSettings/**') }}
-  #         restore-keys: |
-  #           Library-${{ matrix.targetPlatform }}
-  #           Library-
-  #     - name: Build project
-  #       if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
-  #       uses: game-ci/unity-builder@v4
-  #       env:
-  #         UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-  #         UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-  #         UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
-  #       with:
-  #         targetPlatform: ${{ matrix.targetPlatform }}
-  #         projectPath: sample
-  #         buildMethod: ${{ matrix.buildMethod }}
-  #         customParameters: -logFile logFile.log -quit -batchmode
-  #         artifactsPath: ${{ matrix.buildPath }}
-  #     - name: Ensure build path exists
-  #       if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
-  #       run: mkdir -p ${{ matrix.buildPath }}
-  #     - name: Upload artifact
-  #       if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: Build-${{ matrix.targetPlatform }}
-  #         path: ${{ matrix.buildPath }}
+  build:
+    name: Build ${{ matrix.targetPlatform }} for AltTester 🛠️
+    runs-on: ubuntu-latest-8-cores
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - targetPlatform: StandaloneOSX
+            buildMethod: MacBuilder.BuildForAltTester
+            buildPath: sample/Builds/MacOS
+          - targetPlatform: StandaloneWindows64
+            buildMethod: WindowsBuilder.BuildForAltTester
+            buildPath: sample/Builds/Windows64
+          - targetPlatform: Android
+            buildMethod: MobileBuilder.BuildForAltTester
+            buildPath: sample/Builds/Android
+    steps:
+      - uses: actions/checkout@v3
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
+        with:
+          lfs: true
+      - uses: actions/cache@v3
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
+        with:
+          path: Library
+          key: Library-${{ matrix.targetPlatform }}-${{ hashFiles('sample/Assets/**', 'sample/Packages/**', 'sample/ProjectSettings/**') }}
+          restore-keys: |
+            Library-${{ matrix.targetPlatform }}
+            Library-
+      - name: Build project
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        with:
+          targetPlatform: ${{ matrix.targetPlatform }}
+          projectPath: sample
+          buildMethod: ${{ matrix.buildMethod }}
+          customParameters: -logFile logFile.log -quit -batchmode
+          artifactsPath: ${{ matrix.buildPath }}
+      - name: Ensure build path exists
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
+        run: mkdir -p ${{ matrix.buildPath }}
+      - name: Upload artifact
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
+        uses: actions/upload-artifact@v4
+        with:
+          name: Build-${{ matrix.targetPlatform }}
+          path: ${{ matrix.buildPath }}
   test:
     name: Run ${{ matrix.targetPlatform }} UI tests 🧪
-    # needs: build
+    needs: build
     strategy:
       matrix:
         include:
@@ -108,11 +108,11 @@ jobs:
           security default-keychain -s temporary
           security unlock-keychain -p "" temporary
           security set-keychain-settings -lut 600 temporary
-      # - uses: actions/download-artifact@v4
-      #   if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
-      #   with:
-      #     name: Build-${{ matrix.targetPlatform }}
-      #     path: sample/Tests
+      - uses: actions/download-artifact@v4
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
+        with:
+          name: Build-${{ matrix.targetPlatform }}
+          path: sample/Tests
       - name: Make macOS artifact executable
         if: matrix.targetPlatform == 'StandaloneOSX' && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneOSX')
         run: chmod +x sample/Tests/SampleApp.app/Contents/MacOS/*
@@ -133,7 +133,7 @@ jobs:
         working-directory: sample/Tests
         run: |
           Get-Location
-        # run: ${{ matrix.test_script }}
+          ${{ matrix.test_script }}
       - name: Remove temporary keychain
         if: matrix.targetPlatform == 'StandaloneOSX' && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneOSX')
         run: |
@@ -142,30 +142,30 @@ jobs:
           security default-keychain -s ~/Library/Keychains/login.keychain-db
           security list-keychains -d user -s ~/Library/Keychains/login.keychain-db
           security list-keychains
-  # build-ios: #test-ios:
-  #   name: Run iOS build #UI tests 🧪
-  #   needs: 
-  #     - build
-  #     - test
-  #   runs-on: [ self-hosted, macOS ]
-  #   if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'iOS'
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         lfs: true
-  #     - name: Build iOS app
-  #       working-directory: sample
-  #       run: ./build_ios.sh
-  #     - uses: actions/setup-python@v4
-  #       with:
-  #         python-version: "3.13"
-  #     - name: Install dependencies
-  #       run: pip install -r "sample/Tests/requirements-mobile.txt"
-  #     - name: Run UI tests
-  #       env:
-  #         MAILSLURP_API_KEY: ${{ secrets.MAILSLURP_API_KEY }}
-  #         BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
-  #         BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
-  #       working-directory: sample/Tests/test/ios
-  #       run: browserstack-sdk pytest -xs ./test_ios.py --browserstack.config "browserstack.ios.yml"
+  build-ios: #test-ios:
+    name: Run iOS build #UI tests 🧪
+    needs: 
+      - build
+      - test
+    runs-on: [ self-hosted, macOS ]
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'iOS'
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          lfs: true
+      - name: Build iOS app
+        working-directory: sample
+        run: ./build_ios.sh
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+      - name: Install dependencies
+        run: pip install -r "sample/Tests/requirements-mobile.txt"
+      - name: Run UI tests
+        env:
+          MAILSLURP_API_KEY: ${{ secrets.MAILSLURP_API_KEY }}
+          BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
+          BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+        working-directory: sample/Tests/test/ios
+        run: browserstack-sdk pytest -xs ./test_ios.py --browserstack.config "browserstack.ios.yml"
       
