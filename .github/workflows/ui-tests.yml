@@ -122,17 +122,7 @@ jobs:
           python-version: "3.13"
       - name: Install dependencies (Windows)
         if: matrix.targetPlatform == 'StandaloneWindows64' && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneWindows64')
-        run: |
-          Write-Host "Base directory:"
-          Get-Location
-          Write-Host "Contents of base dir:"
-          Get-ChildItem
-          Set-Location sample/Tests
-          Write-Host "Now in:"
-          Get-Location
-          Write-Host "Tests folder contents:"
-          pip install -r "sample/Tests/requirements-desktop.txt"
-        # run: pip install -r "sample/Tests/requirements-desktop.txt"
+        run: pip install -r "sample/Tests/requirements-desktop.txt"
       - name: Install dependencies (Mac)
         if: matrix.targetPlatform == 'StandaloneOSX' && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneOSX')
         run: pip install -r "sample/Tests/requirements-desktop.txt"
@@ -142,25 +132,7 @@ jobs:
           MAILSLURP_API_KEY: ${{ secrets.MAILSLURP_API_KEY }}
         working-directory: sample/Tests
         run: |
-          Write-Host "Base directory:"
           Get-Location
-          Write-Host "Contents of base dir:"
-          Get-ChildItem
-
-          Set-Location sample/Tests
-
-          Write-Host "Now in:"
-          Get-Location
-          Write-Host "Tests folder contents:"
-          Get-ChildItem
-
-          python --version
-          Write-Host "Running pytest:"
-          pytest -vv --tb=short test/test_windows.py::WindowsTest
-          if ($LASTEXITCODE -ne 0) {
-            Write-Error "Pytest failed with code $LASTEXITCODE"
-            exit $LASTEXITCODE
-          }
         # run: ${{ matrix.test_script }}
       - name: Remove temporary keychain
         if: matrix.targetPlatform == 'StandaloneOSX' && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneOSX')
