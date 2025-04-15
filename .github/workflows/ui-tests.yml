@@ -134,6 +134,7 @@ jobs:
         run: |
           Get-Location
           python --version
+          pytest --version
           ${{ matrix.test_script }}
       - name: Remove temporary keychain
         if: matrix.targetPlatform == 'StandaloneOSX' && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneOSX')
