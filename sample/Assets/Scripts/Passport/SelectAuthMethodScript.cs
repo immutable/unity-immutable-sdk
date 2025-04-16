@@ -16,30 +16,9 @@ public class SelectAuthMethodScript : MonoBehaviour
 
     void Start()
     {
-        // Determine if PKCE is supported based on the platform
-        SampleAppManager.SupportsPKCE = IsPKCESupported();
-
         // WebGL does not support Device Code Auth, so we'll use PKCE by default instead.
 #if UNITY_WEBGL
         UsePKCE();
-#else
-        // If PKCE is not supported, initialise Passport to use Device Code Auth
-        if (!SampleAppManager.SupportsPKCE)
-        {
-            UseDeviceCodeAuth();
-        }
-#endif
-    }
-
-    /// <summary>
-    /// Checks if the current platform supports PKCE authentication.
-    /// </summary>
-    private bool IsPKCESupported()
-    {
-#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
-        return true;
-#else
-        return false;
 #endif
     }
 
