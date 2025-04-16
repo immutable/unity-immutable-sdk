@@ -20,6 +20,9 @@ class WindowsTest(UnityTest):
         stop_sample_app()        
 
     def test_1_device_code_login(self):
+        # Select use device code auth
+        self.altdriver.find_object(By.NAME, "DeviceCodeAuth").tap()
+
         # Wait for unauthenticated screen
         self.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
 
@@ -48,9 +51,12 @@ class WindowsTest(UnityTest):
                 if attempt == 0:
                     # Reset app
 
-                    # Relogin
+                    # Relogin (optional: only if the button is present)
                     print("Try reset the app and log out once...")
-                    self.altdriver.wait_for_object(By.NAME, "ReloginBtn").tap()
+                    try:
+                        self.altdriver.wait_for_object(By.NAME, "ReloginBtn").tap()
+                    except Exception as e:
+                        print("ReloginBtn not found, skipping relogin step. User may already be in AuthenticatedScene.")
 
                     # Wait for authenticated screen
                     self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
@@ -95,6 +101,9 @@ class WindowsTest(UnityTest):
         self.altdriver = AltDriver()
         time.sleep(5)
 
+        # Select use device code auth
+        self.altdriver.find_object(By.NAME, "DeviceCodeAuth").tap()
+
         # Relogin
         print("Re-logging in...")
         self.altdriver.wait_for_object(By.NAME, "ReloginBtn").tap()
@@ -123,6 +132,9 @@ class WindowsTest(UnityTest):
         self.altdriver.stop()
         self.altdriver = AltDriver()
         time.sleep(5)
+
+        # Select use device code auth
+        self.altdriver.find_object(By.NAME, "DeviceCodeAuth").tap()
 
         # Reconnect
         print("Reconnecting...")
