@@ -32,6 +32,32 @@ namespace Immutable.Api.ZkEvm.Model
     public partial class PhoneNumberOTPRequest
     {
         /// <summary>
+        /// Defines Channel
+        /// </summary>
+        [JsonConverter(typeof(StringEnumConverter))]
+        public enum ChannelEnum
+        {
+            /// <summary>
+            /// Enum Sms for value: sms
+            /// </summary>
+            [EnumMember(Value = "sms")]
+            Sms = 1,
+
+            /// <summary>
+            /// Enum Whatsapp for value: whatsapp
+            /// </summary>
+            [EnumMember(Value = "whatsapp")]
+            Whatsapp = 2
+        }
+
+
+        /// <summary>
+        /// Gets or Sets Channel
+        /// </summary>
+        /// <example>sms</example>
+        [DataMember(Name = "channel", EmitDefaultValue = false)]
+        public ChannelEnum? Channel { get; set; }
+        /// <summary>
         /// Initializes a new instance of the <see cref="PhoneNumberOTPRequest" /> class.
         /// </summary>
         [JsonConstructorAttribute]
@@ -40,7 +66,8 @@ namespace Immutable.Api.ZkEvm.Model
         /// Initializes a new instance of the <see cref="PhoneNumberOTPRequest" /> class.
         /// </summary>
         /// <param name="phoneNumber">Phone number (required).</param>
-        public PhoneNumberOTPRequest(string phoneNumber = default(string))
+        /// <param name="channel">channel.</param>
+        public PhoneNumberOTPRequest(string phoneNumber = default(string), ChannelEnum? channel = default(ChannelEnum?))
         {
             // to ensure "phoneNumber" is required (not null)
             if (phoneNumber == null)
@@ -48,6 +75,7 @@ namespace Immutable.Api.ZkEvm.Model
                 throw new ArgumentNullException("phoneNumber is a required property for PhoneNumberOTPRequest and cannot be null");
             }
             this.PhoneNumber = phoneNumber;
+            this.Channel = channel;
         }
 
         /// <summary>
@@ -67,6 +95,7 @@ namespace Immutable.Api.ZkEvm.Model
             StringBuilder sb = new StringBuilder();
             sb.Append("class PhoneNumberOTPRequest {\n");
             sb.Append("  PhoneNumber: ").Append(PhoneNumber).Append("\n");
+            sb.Append("  Channel: ").Append(Channel).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }

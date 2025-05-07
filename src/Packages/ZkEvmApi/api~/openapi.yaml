@@ -8838,6 +8838,7 @@ components:
     PhoneNumberOTPRequest:
       description: Phone number OTP request
       example:
+        channel: sms
         phone_number: "+61412345678"
       properties:
         phone_number:
@@ -8845,6 +8846,12 @@ components:
           example: "+61412345678"
           maxLength: 50
           minLength: 3
+          type: string
+        channel:
+          enum:
+          - sms
+          - whatsapp
+          example: sms
           type: string
       required:
       - phone_number
