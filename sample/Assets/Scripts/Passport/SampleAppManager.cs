@@ -14,4 +14,4 @@ public static class SampleAppManager
     /// Indicates whether the user is connected to zkEVM.
     /// </summary>
     public static bool IsConnectedToZkEvm { get; set; }
-}
+} 

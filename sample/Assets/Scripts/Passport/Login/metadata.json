@@ -1,0 +1,8 @@
+{
+  "title": "User Login with Passport SDK",
+  "description": "Demonstrates how to authenticate a user using the Immutable Passport SDK's login feature in Unity, supporting both PKCE and device code flows.",
+  "keywords": ["Immutable", "SDK", "Login", "Authentication", "Passport"],
+  "tech_stack": ["Unity", "C#", "Cysharp.Threading.Tasks"],
+  "product": "Passport",
+  "programming_language": "C#"
+} 
