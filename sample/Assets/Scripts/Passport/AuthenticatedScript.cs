@@ -168,14 +168,6 @@ public class AuthenticatedScript : MonoBehaviour
     }
 
     /// <summary>
-    /// Navigates to Link Wallet scene.
-    /// </summary>
-    public void ShowLinkWallet()
-    {
-        SceneManager.LoadScene("LinkWallet");
-    }
-
-    /// <summary>
     /// Logs out of Passport using the selected auth method. 
     /// Defaults to Device Code Auth when running as a Windows Standalone application or in the Unity Editor on Windows.
     /// </summary>
