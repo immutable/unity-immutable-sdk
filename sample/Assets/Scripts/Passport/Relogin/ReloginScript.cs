@@ -1,37 +1,32 @@
-using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using Cysharp.Threading.Tasks;
 using Immutable.Passport;
 
 public class ReloginScript : MonoBehaviour
 {
-#pragma warning disable CS8618
     [SerializeField] private Text Output;
-    private Passport Passport;
-#pragma warning restore CS8618
-
-    void Start()
-    {
-        if (Passport.Instance != null)
-        {
-            Passport = Passport.Instance;
-        }
-        else
-        {
-            ShowOutput("Passport Instance is null");
-        }
-    }
 
     /// <summary>
     /// Uses the existing credentials to re-login to Passport.
     /// </summary>
-    public async void Relogin()
+    public void Relogin()
     {
+        ReloginAsync().Forget();
+    }
+
+    private async UniTaskVoid ReloginAsync()
+    {
+        if (Passport.Instance == null)
+        {
+            ShowOutput("Passport Instance is null");
+            return;
+        }
         ShowOutput("Re-logging into Passport using saved credentials...");
         try
         {
-            bool loggedIn = await Passport.Login(useCachedSession: true);
+            bool loggedIn = await Passport.Instance.Login(useCachedSession: true);
             if (loggedIn)
             {
                 NavigateToAuthenticatedScene();
@@ -41,7 +36,7 @@ public class ReloginScript : MonoBehaviour
                 ShowOutput("Could not re-login using saved credentials");
             }
         }
-        catch (Exception ex)
+        catch (System.Exception ex)
         {
             ShowOutput($"Failed to re-login: {ex.Message}");
         }

@@ -1,37 +1,33 @@
 using System.Globalization;
 using System.Numerics;
-using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using Cysharp.Threading.Tasks;
 using Immutable.Passport;
 
 public class ZkEvmGetBalanceScript : MonoBehaviour
 {
-#pragma warning disable CS8618
     [SerializeField] private Text Output;
     [SerializeField] private InputField AddressInput;
-    private Passport Passport;
-#pragma warning restore CS8618
 
-    void Start()
+    public void GetBalance()
     {
-        if (Passport.Instance != null)
-        {
-            Passport = Passport.Instance;
-        }
-        else
-        {
-            ShowOutput("Passport instance is null");
-        }
+        GetBalanceAsync().Forget();
     }
 
-    public async void GetBalance()
+    private async UniTaskVoid GetBalanceAsync()
     {
+        if (Passport.Instance == null)
+        {
+            ShowOutput("Passport instance is null");
+            return;
+        }
         ShowOutput("Getting account balance...");
         try
         {
-            string balanceHex = await Passport.ZkEvmGetBalance(AddressInput.text);
+            await Passport.Instance.ConnectEvm();
+            string balanceHex = await Passport.Instance.ZkEvmGetBalance(AddressInput.text);
             var balanceDec = BigInteger.Parse(balanceHex.Replace("0x", ""), NumberStyles.HexNumber);
             if (balanceDec < 0)
             {
@@ -39,7 +35,7 @@ public class ZkEvmGetBalanceScript : MonoBehaviour
             }
             ShowOutput($"Balance:\nHex: {balanceHex}\nDec: {balanceDec}");
         }
-        catch (Exception ex)
+        catch (System.Exception ex)
         {
             ShowOutput($"Failed to get balance: {ex.Message}");
         }

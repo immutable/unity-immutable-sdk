@@ -1,39 +1,35 @@
-using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using Cysharp.Threading.Tasks;
 using Immutable.Passport;
 using Immutable.Passport.Model;
 
 public class ZkEvmSignTypedDataScript : MonoBehaviour
 {
-#pragma warning disable CS8618
     [SerializeField] private Text Output;
     [SerializeField] private InputField Payload;
-    private Passport Passport;
-#pragma warning restore CS8618
 
-    void Start()
+    public void SignTypedData()
     {
-        if (Passport.Instance != null)
-        {
-            Passport = Passport.Instance;
-        }
-        else
-        {
-            ShowOutput("Passport instance is null");
-        }
+        SignTypedDataAsync().Forget();
     }
 
-    public async void SignTypedData()
+    private async UniTaskVoid SignTypedDataAsync()
     {
+        if (Passport.Instance == null)
+        {
+            ShowOutput("Passport instance is null");
+            return;
+        }
         ShowOutput("Signing payload...");
         try
         {
-            string signature = await Passport.ZkEvmSignTypedDataV4(Payload.text);
+            await Passport.Instance.ConnectEvm();
+            string signature = await Passport.Instance.ZkEvmSignTypedDataV4(Payload.text);
             ShowOutput(signature);
         }
-        catch (Exception ex)
+        catch (System.Exception ex)
         {
             ShowOutput($"Failed to sign typed data: {ex.Message}");
         }

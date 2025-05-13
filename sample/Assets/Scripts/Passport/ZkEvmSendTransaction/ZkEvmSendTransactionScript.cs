@@ -9,34 +9,49 @@ using Cysharp.Threading.Tasks;
 
 public class ZkEvmSendTransactionScript : MonoBehaviour
 {
-#pragma warning disable CS8618
     [SerializeField] private Text Output;
     [SerializeField] private Toggle ConfirmToggle;
     [SerializeField] private Toggle GetTransactionReceiptToggle;
     [SerializeField] private InputField ToInputField;
     [SerializeField] private InputField ValueInputField;
     [SerializeField] private InputField DataInputField;
-    private Passport Passport;
-#pragma warning restore CS8618
 
     void Start()
     {
-        if (Passport.Instance != null)
-        {
-            Passport = Passport.Instance;
-            ConfirmToggle.onValueChanged.AddListener(delegate
-            {
-                GetTransactionReceiptToggle.gameObject.SetActive(!ConfirmToggle.isOn);
-            });
-        }
-        else
+        if (Passport.Instance == null)
         {
             ShowOutput("Passport instance is null");
+            return;
         }
+        ConfirmToggle.onValueChanged.AddListener(delegate
+        {
+            GetTransactionReceiptToggle.gameObject.SetActive(!ConfirmToggle.isOn);
+        });
     }
 
-    public async void SendTransaction()
+    public void SendTransaction()
     {
+        SendTransactionAsync().Forget();
+    }
+
+    private async UniTaskVoid SendTransactionAsync()
+    {
+        if (Passport.Instance == null)
+        {
+            ShowOutput("Passport instance is null");
+            return;
+        }
+        // Ensure EVM provider is connected
+        try
+        {
+            ShowOutput("Connecting to zkEVM provider...");
+            await Passport.Instance.ConnectEvm();
+        }
+        catch (Exception ex)
+        {
+            ShowOutput($"Failed to connect to zkEVM provider: {ex.Message}");
+            return;
+        }
         ShowOutput("Sending transaction...");
         try
         {
@@ -48,12 +63,12 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
             };
             if (ConfirmToggle.isOn)
             {
-                TransactionReceiptResponse response = await Passport.ZkEvmSendTransactionWithConfirmation(request);
+                TransactionReceiptResponse response = await Passport.Instance.ZkEvmSendTransactionWithConfirmation(request);
                 ShowOutput($"Transaction hash: {response.transactionHash}\nStatus: {GetTransactionStatusString(response.status)}");
             }
             else
             {
-                string transactionHash = await Passport.ZkEvmSendTransaction(request);
+                string transactionHash = await Passport.Instance.ZkEvmSendTransaction(request);
                 if (GetTransactionReceiptToggle.isOn)
                 {
                     string? status = await PollStatus(transactionHash);
