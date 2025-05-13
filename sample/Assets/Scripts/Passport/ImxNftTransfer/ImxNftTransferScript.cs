@@ -1,14 +1,13 @@
 using System.Collections.Generic;
-using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using Cysharp.Threading.Tasks;
 using Immutable.Passport;
 using Immutable.Passport.Model;
 
 public class ImxNftTransferScript : MonoBehaviour
 {
-#pragma warning disable CS8618
     [SerializeField] private Text Output;
     [SerializeField] private InputField TokenIdInput1;
     [SerializeField] private InputField TokenAddressInput1;
@@ -16,26 +15,22 @@ public class ImxNftTransferScript : MonoBehaviour
     [SerializeField] private InputField TokenIdInput2;
     [SerializeField] private InputField TokenAddressInput2;
     [SerializeField] private InputField ReceiverInput2;
-    private Passport Passport;
-#pragma warning restore CS8618
-
-    void Start()
-    {
-        if (Passport.Instance != null)
-        {
-            Passport = Passport.Instance;
-        }
-        else
-        {
-            ShowOutput("Passport instance is null");
-        }
-    }
 
     /// <summary>
     /// Transfers NFTs to the specified receivers based on the provided details.
     /// </summary>
-    public async void Transfer()
+    public void Transfer()
     {
+        TransferAsync().Forget();
+    }
+
+    private async UniTaskVoid TransferAsync()
+    {
+        if (Passport.Instance == null)
+        {
+            ShowOutput("Passport instance is null");
+            return;
+        }
         if (!string.IsNullOrWhiteSpace(TokenIdInput1.text) &&
             !string.IsNullOrWhiteSpace(TokenAddressInput1.text) &&
             !string.IsNullOrWhiteSpace(ReceiverInput1.text))
@@ -46,7 +41,7 @@ public class ImxNftTransferScript : MonoBehaviour
                 List<NftTransferDetails> transferDetails = GetTransferDetails();
                 if (transferDetails.Count > 1)
                 {
-                    CreateBatchTransferResponse response = await Passport.ImxBatchNftTransfer(transferDetails.ToArray());
+                    CreateBatchTransferResponse response = await Passport.Instance.ImxBatchNftTransfer(transferDetails.ToArray());
                     ShowOutput($"Successfully transferred {response.transfer_ids.Length} NFTs.");
                 }
                 else
@@ -57,11 +52,11 @@ public class ImxNftTransferScript : MonoBehaviour
                         nftTransferDetail.tokenId,
                         nftTransferDetail.tokenAddress
                     );
-                    CreateTransferResponseV1 response = await Passport.ImxTransfer(transferRequest);
+                    CreateTransferResponseV1 response = await Passport.Instance.ImxTransfer(transferRequest);
                     ShowOutput($"NFT transferred successfully. Transfer ID: {response.transfer_id}");
                 }
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
                 ShowOutput($"Failed to transfer NFTs: {ex.Message}");
             }

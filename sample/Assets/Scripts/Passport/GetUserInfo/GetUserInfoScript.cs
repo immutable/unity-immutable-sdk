@@ -1,38 +1,33 @@
-using System;
 using UnityEngine;
 using UnityEngine.UI;
+using Cysharp.Threading.Tasks;
 using Immutable.Passport;
 
 public class GetUserInfoScript : MonoBehaviour
 {
-#pragma warning disable CS8618
     [SerializeField] private Text Output;
-    private Passport Passport;
-#pragma warning restore CS8618
-
-    void Start()
-    {
-        if (Passport.Instance != null)
-        {
-            Passport = Passport.Instance;
-        }
-        else
-        {
-            ShowOutput("Passport instance is null");
-        }
-    }
 
     /// <summary>
     /// Retrieves the currently logged-in user's email.
     /// </summary>
-    public async void GetEmail()
+    public void GetEmail()
     {
+        GetEmailAsync().Forget();
+    }
+
+    private async UniTaskVoid GetEmailAsync()
+    {
+        if (Passport.Instance == null)
+        {
+            ShowOutput("Passport instance is null");
+            return;
+        }
         try
         {
-            string email = await Passport.GetEmail();
+            string email = await Passport.Instance.GetEmail();
             ShowOutput(email);
         }
-        catch (Exception ex)
+        catch (System.Exception ex)
         {
             ShowOutput($"Failed to get email: {ex.Message}");
         }
@@ -41,14 +36,24 @@ public class GetUserInfoScript : MonoBehaviour
     /// <summary>
     /// Retrieves the currently logged-in user's Passport ID.
     /// </summary>
-    public async void GetPassportId()
+    public void GetPassportId()
     {
+        GetPassportIdAsync().Forget();
+    }
+
+    private async UniTaskVoid GetPassportIdAsync()
+    {
+        if (Passport.Instance == null)
+        {
+            ShowOutput("Passport instance is null");
+            return;
+        }
         try
         {
-            string passportId = await Passport.GetPassportId();
+            string passportId = await Passport.Instance.GetPassportId();
             ShowOutput(passportId);
         }
-        catch (Exception ex)
+        catch (System.Exception ex)
         {
             ShowOutput($"Failed to get Passport ID: {ex.Message}");
         }

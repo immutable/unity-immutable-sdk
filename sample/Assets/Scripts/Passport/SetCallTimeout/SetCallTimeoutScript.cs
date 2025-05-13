@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
@@ -6,28 +5,28 @@ using Immutable.Passport;
 
 public class SetCallTimeoutScript : MonoBehaviour
 {
-#pragma warning disable CS8618
     [SerializeField] private Text Output;
     [SerializeField] private InputField TimeoutInput;
-    private Passport Passport;
-#pragma warning restore CS8618
-
-    void Start()
-    {
-        if (Passport.Instance != null)
-        {
-            Passport = Passport.Instance;
-        }
-        else
-        {
-            ShowOutput("Passport instance is null");
-        }
-    }
 
     public void SetTimeout()
     {
-        int timeout = Int32.Parse(TimeoutInput.text);
-        Passport.SetCallTimeout(timeout);
+        if (Passport.Instance == null)
+        {
+            ShowOutput("Passport instance is null");
+            return;
+        }
+        if (TimeoutInput == null)
+        {
+            Debug.LogError("[SetCallTimeoutScript] TimeoutInput is not assigned in the Inspector.");
+            ShowOutput("Timeout input field is not assigned.");
+            return;
+        }
+        if (!int.TryParse(TimeoutInput.text, out int timeout))
+        {
+            ShowOutput("Invalid timeout value");
+            return;
+        }
+        Passport.Instance.SetCallTimeout(timeout);
         ShowOutput($"Set call timeout to: {timeout}ms");
     }
 
@@ -41,6 +40,10 @@ public class SetCallTimeoutScript : MonoBehaviour
         if (Output != null)
         {
             Output.text = message;
+        }
+        else
+        {
+            Debug.LogWarning($"[SetCallTimeoutScript] Output Text is not assigned. Message: {message}");
         }
     }
 } 

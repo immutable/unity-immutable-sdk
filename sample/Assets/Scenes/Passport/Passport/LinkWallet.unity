@@ -954,7 +954,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 439428745}
         m_TargetAssemblyTypeName: LinkWalletScript, Assembly-CSharp
         m_MethodName: Cancel
         m_Mode: 1
@@ -1041,6 +1041,55 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: -20, y: -20}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &439428744
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 439428746}
+  - component: {fileID: 439428745}
+  m_Layer: 0
+  m_Name: LinkWallet
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &439428745
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 439428744}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4591d247306346e7a4fb176d6fba645, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Output: {fileID: 1253661940}
+  TypeInput: {fileID: 1142338628823642223}
+  WalletAddressInput: {fileID: 1142338628822901615}
+  SignatureInput: {fileID: 1142338629240194742}
+  NonceInput: {fileID: 133796359}
+--- !u!4 &439428746
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 439428744}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 415.90372, y: 576.16345, z: -10.099511}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -1209,7 +1258,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 439428745}
         m_TargetAssemblyTypeName: LinkWalletScript, Assembly-CSharp
         m_MethodName: LinkWallet
         m_Mode: 1
@@ -1339,6 +1388,54 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 552980001}
   m_CullTransparentMesh: 1
+--- !u!1 &749282597
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 749282599}
+  - component: {fileID: 749282598}
+  m_Layer: 0
+  m_Name: PassportInit
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &749282598
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 749282597}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91b840080cd8945349b79d86957b9d0b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  clientId: MlmMouDKghn1dEbyB7GYaOLMyCLcnWMo
+  environment: sandbox
+  errorOutput: {fileID: 1253661940}
+  featureButtons: []
+--- !u!4 &749282599
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 749282597}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 378.51224, y: 605.75476, z: -10.596302}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &831814472
 GameObject:
   m_ObjectHideFlags: 0
@@ -1693,8 +1790,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 1172.8888, y: 0}
-  m_SizeDelta: {x: 2345.7776, y: 0}
+  m_AnchoredPosition: {x: 835.7824, y: 0}
+  m_SizeDelta: {x: 1671.5648, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1128672539
 MonoBehaviour:
@@ -2755,8 +2852,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 1172.8888, y: 0}
-  m_SizeDelta: {x: 2345.7776, y: 0}
+  m_AnchoredPosition: {x: 835.7824, y: 0}
+  m_SizeDelta: {x: 1671.5648, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2125223059
 MonoBehaviour:

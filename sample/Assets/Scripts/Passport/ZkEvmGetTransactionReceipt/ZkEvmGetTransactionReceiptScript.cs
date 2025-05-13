@@ -1,40 +1,36 @@
-using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using Cysharp.Threading.Tasks;
 using Immutable.Passport;
 using Immutable.Passport.Model;
 
 public class ZkEvmGetTransactionReceiptScript : MonoBehaviour
 {
-#pragma warning disable CS8618
     [SerializeField] private Text Output;
     [SerializeField] private InputField TransactionHash;
-    private Passport Passport;
-#pragma warning restore CS8618
 
-    void Start()
+    public void GetZkEvmTransactionReceipt()
     {
-        if (Passport.Instance != null)
-        {
-            Passport = Passport.Instance;
-        }
-        else
-        {
-            ShowOutput("Passport instance is null");
-        }
+        GetZkEvmTransactionReceiptAsync().Forget();
     }
 
-    public async void GetZkEvmTransactionReceipt()
+    private async UniTaskVoid GetZkEvmTransactionReceiptAsync()
     {
+        if (Passport.Instance == null)
+        {
+            ShowOutput("Passport instance is null");
+            return;
+        }
         ShowOutput("Getting transaction receipt...");
         try
         {
-            TransactionReceiptResponse response = await Passport.ZkEvmGetTransactionReceipt(TransactionHash.text);
+            await Passport.Instance.ConnectEvm();
+            TransactionReceiptResponse response = await Passport.Instance.ZkEvmGetTransactionReceipt(TransactionHash.text);
             string status = $"Status: {GetTransactionStatusString(response.status)}";
             ShowOutput(status);
         }
-        catch (Exception ex)
+        catch (System.Exception ex)
         {
             ShowOutput($"Failed to retrieve transaction receipt: {ex.Message}");
         }

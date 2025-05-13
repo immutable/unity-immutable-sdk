@@ -737,10 +737,10 @@ RectTransform:
   m_Father: {fileID: 1140911600}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 1172.8888, y: -16.642195}
-  m_SizeDelta: {x: 2345.7776, y: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 835.7824, y: 0}
+  m_SizeDelta: {x: 1671.5648, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &410008536
 MonoBehaviour:
@@ -882,6 +882,52 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &722408341
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 722408343}
+  - component: {fileID: 722408342}
+  m_Layer: 0
+  m_Name: ZkEvmGetBalance
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &722408342
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 722408341}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb441184afcbc4e45899def1397f5344, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Output: {fileID: 1253661940}
+  AddressInput: {fileID: 885231615}
+--- !u!4 &722408343
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 722408341}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 415.90372, y: 576.16345, z: -10.099511}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &740387918
 GameObject:
   m_ObjectHideFlags: 0
@@ -966,8 +1012,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: ZkEvmGetBalance, Assembly-CSharp
+      - m_Target: {fileID: 722408342}
+        m_TargetAssemblyTypeName: ZkEvmGetBalanceScript, Assembly-CSharp
         m_MethodName: Cancel
         m_Mode: 1
         m_Arguments:
@@ -1050,10 +1096,10 @@ RectTransform:
   m_Father: {fileID: 1140911600}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 1172.8888, y: -66.3604}
-  m_SizeDelta: {x: 2345.7776, y: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 835.7824, y: 0}
+  m_SizeDelta: {x: 1671.5648, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &783923066
 MonoBehaviour:
@@ -1469,8 +1515,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: ZkEvmGetBalance, Assembly-CSharp
+      - m_Target: {fileID: 722408342}
+        m_TargetAssemblyTypeName: ZkEvmGetBalanceScript, Assembly-CSharp
         m_MethodName: GetBalance
         m_Mode: 1
         m_Arguments:
@@ -1721,6 +1767,54 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1103636973}
   m_CullTransparentMesh: 1
+--- !u!1 &1108512292
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1108512294}
+  - component: {fileID: 1108512293}
+  m_Layer: 0
+  m_Name: PassportInit
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1108512293
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1108512292}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91b840080cd8945349b79d86957b9d0b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  clientId: MlmMouDKghn1dEbyB7GYaOLMyCLcnWMo
+  environment: sandbox
+  errorOutput: {fileID: 1253661940}
+  featureButtons: []
+--- !u!4 &1108512294
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1108512292}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 378.51224, y: 605.75476, z: -10.596302}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1140911599
 GameObject:
   m_ObjectHideFlags: 0

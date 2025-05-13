@@ -1,36 +1,31 @@
-using System;
 using UnityEngine;
 using UnityEngine.UI;
+using Cysharp.Threading.Tasks;
 using Immutable.Passport;
 
 public class ImxConnectScript : MonoBehaviour
 {
-#pragma warning disable CS8618
     [SerializeField] private Text Output;
-    private Passport Passport;
-#pragma warning restore CS8618
-
-    void Start()
-    {
-        if (Passport.Instance != null)
-        {
-            Passport = Passport.Instance;
-        }
-        else
-        {
-            ShowOutput("Passport instance is null");
-        }
-    }
 
     /// <summary>
     /// Initialises the user's wallet and sets up the Immutable X provider using saved credentials if the user is already logged in.
     /// </summary>
-    public async void ConnectImx()
+    public void ConnectImx()
     {
+        ConnectImxAsync().Forget();
+    }
+
+    private async UniTaskVoid ConnectImxAsync()
+    {
+        if (Passport.Instance == null)
+        {
+            ShowOutput("Passport instance is null");
+            return;
+        }
         ShowOutput("Connecting to Passport using saved credentials...");
         try
         {
-            bool isConnected = await Passport.ConnectImx(useCachedSession: true);
+            bool isConnected = await Passport.Instance.ConnectImx(useCachedSession: true);
             if (isConnected)
             {
                 ShowOutput("Connected to IMX");
@@ -40,7 +35,7 @@ public class ImxConnectScript : MonoBehaviour
                 ShowOutput("Could not connect using saved credentials");
             }
         }
-        catch (Exception ex)
+        catch (System.Exception ex)
         {
             ShowOutput($"Error connecting: {ex.Message}");
         }
