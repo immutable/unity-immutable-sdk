@@ -12,7 +12,7 @@ class TestConfig:
     WALLET_ADDRESS = "0x547044ea95f03651139081241c99ffedbefdc5e8"
     ANDROID_PACKAGE = "com.immutable.ImmutableSample"
     IOS_BUNDLE_ID = "com.immutable.Immutable-Sample-GameSDK"
-    
+
 class UnityTest(unittest.TestCase):
 
     altdriver = None
@@ -23,7 +23,18 @@ class UnityTest(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.altdriver.stop()
+        if cls.altdriver:
+            cls.altdriver.stop()
+
+    def get_altdriver(self):
+        return self.__class__.altdriver
+
+    def start_altdriver(self):
+        self.__class__.altdriver = AltDriver()
+
+    def stop_altdriver(self):
+        if self.__class__.altdriver:
+            self.__class__.altdriver.stop()
 
     @pytest.mark.skip(reason="Base test should not be executed directly")
     def test_0_other_functions(self):
@@ -266,7 +277,7 @@ class UnityTest(unittest.TestCase):
             transactionHash = match.group()
         else:
             raise SystemExit(f"Could not find transaction hash")
-        
+
         # Go back to authenticated scene
         self.altdriver.find_object(By.NAME, "CancelButton").tap()
         self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
