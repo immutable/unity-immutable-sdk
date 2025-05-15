@@ -132,8 +132,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2269946}
-  - component: {fileID: 2269945}
   - component: {fileID: 2269947}
+  - component: {fileID: 2269948}
   m_Layer: 0
   m_Name: PassportInit
   m_TagString: Untagged
@@ -141,22 +141,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &2269945
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2269944}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 91b840080cd8945349b79d86957b9d0b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  clientId: mp6rxfMDwwZDogcdgNrAaHnG0qMlXuMK
-  environment: sandbox
-  errorOutput: {fileID: 1690937182}
-  featureButtons: []
 --- !u!4 &2269946
 Transform:
   m_ObjectHideFlags: 0
@@ -185,6 +169,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   altID: ef311053-db3c-46b5-95ce-91de9d804768
+--- !u!114 &2269948
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2269944}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91b840080cd8945349b79d86957b9d0b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  TopPadding: {fileID: 0}
+  Output: {fileID: 1690937182}
+  UseDeviceCodeAuthButton: {fileID: 717484784}
+  UsePKCEButton: {fileID: 1744191472}
 --- !u!1 &27701369
 GameObject:
   m_ObjectHideFlags: 0
@@ -600,7 +600,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1289509568734035852, guid: b513e9e94967f45dbbf2c4e1f36dd77e, type: 3}
       propertyPath: m_RootOrder
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1289509568734035852, guid: b513e9e94967f45dbbf2c4e1f36dd77e, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1067,10 +1067,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 230457912}
-        m_TargetAssemblyTypeName: Immutable.Passport.Sample.PassportFeatures.DeviceCodeLoginScript,
-          Assembly-CSharp
-        m_MethodName: StartDeviceCodeLogin
+      - m_Target: {fileID: 2269948}
+        m_TargetAssemblyTypeName: PassportInitializationScript, Assembly-CSharp
+        m_MethodName: UseDeviceCodeAuth
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2533,10 +2532,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1653741709}
-        m_TargetAssemblyTypeName: Immutable.Passport.Sample.PassportFeatures.PkceAuthScript,
-          Assembly-CSharp
-        m_MethodName: StartPkceAuth
+      - m_Target: {fileID: 2269948}
+        m_TargetAssemblyTypeName: PassportInitializationScript, Assembly-CSharp
+        m_MethodName: UsePKCE
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2654,7 +2652,7 @@ RectTransform:
   m_Children:
   - {fileID: 1238552242}
   m_Father: {fileID: 0}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}

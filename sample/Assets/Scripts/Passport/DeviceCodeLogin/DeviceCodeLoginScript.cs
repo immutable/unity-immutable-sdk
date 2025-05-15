@@ -31,7 +31,6 @@ namespace Immutable.Passport.Sample.PassportFeatures
             var timeoutMs = GetDeviceCodeTimeoutMs();
             string formattedTimeout = timeoutMs != null ? $"{timeoutMs} ms" : "none";
             ShowOutput($"Logging in (timeout: {formattedTimeout})...");
-            AuthenticatedSceneManager.NavigateToUnauthenticatedScene();
             try
             {
                 await Passport.Instance.Login(timeoutMs: timeoutMs);
