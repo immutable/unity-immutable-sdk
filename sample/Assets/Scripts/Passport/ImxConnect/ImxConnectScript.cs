@@ -22,22 +22,31 @@ public class ImxConnectScript : MonoBehaviour
             ShowOutput("Passport instance is null");
             return;
         }
+        // Set the static property for global access
+        SampleAppManager.PassportInstance = Passport.Instance;
         ShowOutput("Connecting to Passport using saved credentials...");
         try
         {
-            bool isConnected = await Passport.Instance.ConnectImx(useCachedSession: true);
-            if (isConnected)
+            await Passport.Instance.ConnectImx();
+            
+            // Add these lines to update connection state and refresh UI
+            SampleAppManager.IsConnectedToImx = true;
+            var sceneManager = FindObjectOfType<AuthenticatedSceneManager>();
+            if (sceneManager != null)
             {
-                ShowOutput("Connected to IMX");
+                sceneManager.UpdateImxButtonStates();
+                Debug.Log("Updated IMX button states after connection");
             }
             else
             {
-                ShowOutput("Could not connect using saved credentials");
+                Debug.LogWarning("Could not find AuthenticatedSceneManager to update button states");
             }
+            
+            ShowOutput("Connected to IMX");
         }
         catch (System.Exception ex)
         {
-            ShowOutput($"Error connecting: {ex.Message}");
+            ShowOutput($"Failed to connect to IMX: {ex.Message}");
         }
     }
 

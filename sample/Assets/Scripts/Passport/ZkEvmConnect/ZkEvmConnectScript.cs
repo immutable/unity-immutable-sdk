@@ -34,16 +34,32 @@ namespace Immutable.Passport.Sample.PassportFeatures
                 ShowOutput("Passport not initialized.");
                 return;
             }
+            // Set the static property for global access
+            SampleAppManager.PassportInstance = Passport.Instance;
 
             ShowOutput("Connecting to zkEVM...");
             try
             {
                 await Passport.Instance.ConnectEvm();
-                ShowOutput("zkEVM connection successful.");
+                
+                // Add these lines to update connection state and refresh UI
+                SampleAppManager.IsConnectedToZkEvm = true;
+                var sceneManager = FindObjectOfType<AuthenticatedSceneManager>();
+                if (sceneManager != null)
+                {
+                    sceneManager.UpdateZkEvmButtonStates();
+                    Debug.Log("Updated zkEVM button states after connection");
+                }
+                else
+                {
+                    Debug.LogWarning("Could not find AuthenticatedSceneManager to update button states");
+                }
+                
+                ShowOutput("Connected to zkEVM");
             }
             catch (System.Exception ex)
             {
-                ShowOutput($"zkEVM connection failed: {ex.Message}");
+                ShowOutput($"Failed to connect to zkEVM: {ex.Message}");
             }
         }
 
