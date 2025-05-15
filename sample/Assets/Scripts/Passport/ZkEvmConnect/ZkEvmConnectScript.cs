@@ -12,16 +12,6 @@ namespace Immutable.Passport.Sample.PassportFeatures
         public Button connectButton;
         public Text output;
 
-        // Optionally remove Start() if wiring up in Inspector
-        // private void Start()
-        // {
-        //     if (connectButton != null)
-        //     {
-        //         connectButton.onClick.RemoveAllListeners();
-        //         connectButton.onClick.AddListener(() => { ConnectZkEvmAsync().Forget(); });
-        //     }
-        // }
-
         public void ConnectZkEvm()
         {
             ConnectZkEvmAsync().Forget();
@@ -55,7 +45,7 @@ namespace Immutable.Passport.Sample.PassportFeatures
                     Debug.LogWarning("Could not find AuthenticatedSceneManager to update button states");
                 }
                 
-                ShowOutput("Connected to zkEVM");
+                ShowOutput("Connected to EVM");
             }
             catch (System.Exception ex)
             {

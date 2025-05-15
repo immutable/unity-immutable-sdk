@@ -38,7 +38,7 @@ namespace Immutable.Passport.Sample.PassportFeatures
                 
                 if (isRegistered)
                 {
-                    ShowOutput("User is registered offchain.");
+                    ShowOutput("Registered");
                 }
                 else
                 {

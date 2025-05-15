@@ -259,7 +259,7 @@ public class AuthenticatedScript : MonoBehaviour
         try
         {
             bool isRegistered = await Passport.IsRegisteredOffchain();
-            ShowOutput(isRegistered ? "Registered" : "Not registered");
+            ShowOutput(isRegistered ? "Registered." : "Not registered");
         }
         catch (PassportException e)
         {

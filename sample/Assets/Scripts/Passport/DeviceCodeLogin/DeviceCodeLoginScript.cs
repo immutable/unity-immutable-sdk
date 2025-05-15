@@ -52,7 +52,7 @@ namespace Immutable.Passport.Sample.PassportFeatures
 
         private long? GetDeviceCodeTimeoutMs()
         {
-            return string.IsNullOrEmpty(deviceCodeTimeoutMs?.text) ? 10000 : long.Parse(deviceCodeTimeoutMs.text); // 10 seconds default
+            return string.IsNullOrEmpty(deviceCodeTimeoutMs?.text) ? 0 : long.Parse(deviceCodeTimeoutMs.text);
         }
 
         private void ShowOutput(string message)

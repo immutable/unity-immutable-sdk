@@ -614,8 +614,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 66309839}
   m_HandleRect: {fileID: 66309838}
   m_Direction: 0
-  m_Value: 1
-  m_Size: 0.99999994
+  m_Value: 0
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -838,8 +838,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 895.1311, y: 0}
-  m_SizeDelta: {x: 1790.2622, y: 0}
+  m_AnchoredPosition: {x: 777.4961, y: 0}
+  m_SizeDelta: {x: 1554.9922, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &410008536
 MonoBehaviour:
@@ -1193,8 +1193,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 895.1311, y: 0}
-  m_SizeDelta: {x: 1790.2622, y: 0}
+  m_AnchoredPosition: {x: 777.4961, y: 0}
+  m_SizeDelta: {x: 1554.9922, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &783923066
 MonoBehaviour:
@@ -1407,7 +1407,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1741513414}
   m_HandleRect: {fileID: 1741513413}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -2484,10 +2484,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 91b840080cd8945349b79d86957b9d0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  clientId: MlmMouDKghn1dEbyB7GYaOLMyCLcnWMo
-  environment: sandbox
-  errorOutput: {fileID: 1253661940}
-  featureButtons: []
+  TopPadding: {fileID: 0}
+  Output: {fileID: 0}
+  UseDeviceCodeAuthButton: {fileID: 0}
+  UsePKCEButton: {fileID: 0}
 --- !u!4 &1258059819
 Transform:
   m_ObjectHideFlags: 0
