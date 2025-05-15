@@ -18,7 +18,7 @@ public class ZkEvmGetBalanceScript : MonoBehaviour
 
     private async UniTaskVoid GetBalanceAsync()
     {
-        if (Passport.Instance == null)
+        if (SampleAppManager.PassportInstance == null)
         {
             ShowOutput("Passport instance is null");
             return;
@@ -26,8 +26,7 @@ public class ZkEvmGetBalanceScript : MonoBehaviour
         ShowOutput("Getting account balance...");
         try
         {
-            await Passport.Instance.ConnectEvm();
-            string balanceHex = await Passport.Instance.ZkEvmGetBalance(AddressInput.text);
+            string balanceHex = await SampleAppManager.PassportInstance.ZkEvmGetBalance(AddressInput.text);
             var balanceDec = BigInteger.Parse(balanceHex.Replace("0x", ""), NumberStyles.HexNumber);
             if (balanceDec < 0)
             {

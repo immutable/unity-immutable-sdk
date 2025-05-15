@@ -76,6 +76,7 @@ public class PassportInitializationScript : MonoBehaviour
             string environment = Immutable.Passport.Model.Environment.SANDBOX;
             string clientId = "mp6rxfMDwwZDogcdgNrAaHnG0qMlXuMK";
             Passport passport = await Passport.Init(clientId, environment, redirectUri, logoutRedirectUri);
+            SampleAppManager.PassportInstance = passport;
 
             // Navigate to the unauthenticated scene after initialising Passport
             SceneManager.LoadScene("UnauthenticatedScene");

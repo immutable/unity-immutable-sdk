@@ -18,7 +18,7 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
 
     void Start()
     {
-        if (Passport.Instance == null)
+        if (SampleAppManager.PassportInstance == null)
         {
             ShowOutput("Passport instance is null");
             return;
@@ -36,7 +36,7 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
 
     private async UniTaskVoid SendTransactionAsync()
     {
-        if (Passport.Instance == null)
+        if (SampleAppManager.PassportInstance == null)
         {
             ShowOutput("Passport instance is null");
             return;
@@ -45,7 +45,7 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
         try
         {
             ShowOutput("Connecting to zkEVM provider...");
-            await Passport.Instance.ConnectEvm();
+            await SampleAppManager.PassportInstance.ConnectEvm();
         }
         catch (Exception ex)
         {
@@ -63,12 +63,12 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
             };
             if (ConfirmToggle.isOn)
             {
-                TransactionReceiptResponse response = await Passport.Instance.ZkEvmSendTransactionWithConfirmation(request);
+                TransactionReceiptResponse response = await SampleAppManager.PassportInstance.ZkEvmSendTransactionWithConfirmation(request);
                 ShowOutput($"Transaction hash: {response.transactionHash}\nStatus: {GetTransactionStatusString(response.status)}");
             }
             else
             {
-                string transactionHash = await Passport.Instance.ZkEvmSendTransaction(request);
+                string transactionHash = await SampleAppManager.PassportInstance.ZkEvmSendTransaction(request);
                 if (GetTransactionReceiptToggle.isOn)
                 {
                     string? status = await PollStatus(transactionHash);
@@ -93,7 +93,7 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
         {
             while (!cancellationTokenSource.Token.IsCancellationRequested)
             {
-                TransactionReceiptResponse response = await Passport.Instance.ZkEvmGetTransactionReceipt(transactionHash);
+                TransactionReceiptResponse response = await SampleAppManager.PassportInstance.ZkEvmGetTransactionReceipt(transactionHash);
                 if (response.status == null)
                 {
                     await UniTask.Delay(delayTimeSpan: TimeSpan.FromSeconds(1), cancellationToken: cancellationTokenSource.Token);
