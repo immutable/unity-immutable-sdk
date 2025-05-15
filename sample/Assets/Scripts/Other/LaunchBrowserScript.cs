@@ -36,7 +36,7 @@ public class LaunchBrowserScript : MonoBehaviour
     /// </summary>
     public void Cancel()
     {
-        SceneManager.LoadScene("AuthenticatedScene");
+        AuthenticatedSceneManager.NavigateToAuthenticatedScene();
     }
 }
 #endif

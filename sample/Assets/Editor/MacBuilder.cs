@@ -14,7 +14,7 @@ public class MacBuilder
     {
         BuildPlayer(DefaultBuildPath, BuildOptions.None);
     }
-
+    [MenuItem("Build/MacOS/Build for AltTester")]
     static void BuildForAltTester()
     {
         BuildPlayer(DefaultBuildPath, BuildOptions.Development | BuildOptions.IncludeTestAssemblies | BuildOptions.AutoRunPlayer, true);
