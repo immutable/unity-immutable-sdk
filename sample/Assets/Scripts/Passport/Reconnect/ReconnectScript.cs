@@ -29,6 +29,16 @@ public class ReconnectScript : MonoBehaviour
             bool connected = await Passport.Instance.ConnectImx(useCachedSession: true);
             if (connected)
             {
+                // Set IMX and zkEVM state and update UI as if user clicked Connect to IMX/EVM
+                SampleAppManager.IsConnectedToImx = true;
+                SampleAppManager.IsConnectedToZkEvm = true;
+                SampleAppManager.PassportInstance = Passport.Instance;
+                var sceneManager = GameObject.FindObjectOfType<AuthenticatedSceneManager>();
+                if (sceneManager != null)
+                {
+                    sceneManager.UpdateImxButtonStates();
+                    sceneManager.UpdateZkEvmButtonStates();
+                }
                 NavigateToAuthenticatedScene();
             }
             else
