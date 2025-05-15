@@ -8,7 +8,7 @@ using AltTester.AltTesterUnitySDK.Driver;
 
 public class WindowsBuilder
 {
-    private const string DefaultBuildPath = "Builds/Windows64/SampleApp.exe";
+    private static readonly string DefaultBuildPath = $"Builds/Windows64/{Application.productName}.exe";
 
     static void Build()
     {
