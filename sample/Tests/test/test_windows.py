@@ -7,29 +7,38 @@ from test_windows_helpers import login, open_sample_app, launch_browser, bring_s
 
 class WindowsTest(UnityTest):
 
-    altdriver = None
-
     @classmethod
     def setUpClass(cls):
         open_sample_app()
-        cls.altdriver = AltDriver()
+        time.sleep(5) # Give time for the app to open
+        super().setUpClass()
 
     @classmethod
     def tearDownClass(cls):
-        cls.altdriver.stop()
-        stop_sample_app()        
+        super().tearDownClass()
+        stop_sample_app()
 
-    def test_1_device_code_login(self):
-        # Select use device code auth
-        self.altdriver.find_object(By.NAME, "DeviceCodeAuth").tap()
+    def restart_app_and_altdriver(self):
+        self.stop_altdriver()
+        stop_sample_app()
+        open_sample_app()
+        time.sleep(5) # Give time for the app to open
+        self.start_altdriver()
+
+    def select_auth_type(self, use_pkce: bool):
+        auth_type = "PKCE" if use_pkce else "DeviceCodeAuth"
+        self.get_altdriver().find_object(By.NAME, auth_type).tap()
+
+    def login(self, use_pkce: bool):
+        self.select_auth_type(use_pkce)
 
         # Wait for unauthenticated screen
-        self.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
+        self.get_altdriver().wait_for_current_scene_to_be("UnauthenticatedScene")
 
         for attempt in range(2):
             try:
                 # Check app state
-                login_button = self.altdriver.find_object(By.NAME, "LoginBtn")
+                login_button = self.get_altdriver().find_object(By.NAME, "LoginBtn")
                 print("Found login button, app is in the correct state")
 
                 # Login
@@ -37,11 +46,11 @@ class WindowsTest(UnityTest):
                 launch_browser()
                 bring_sample_app_to_foreground()
                 login_button.tap()
-                login()
+                login(use_pkce)
                 bring_sample_app_to_foreground()
 
                 # Wait for authenticated screen
-                self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
+                self.get_altdriver().wait_for_current_scene_to_be("AuthenticatedScene")
                 stop_browser()
                 print("Logged in")
                 return
@@ -54,30 +63,37 @@ class WindowsTest(UnityTest):
                     # Relogin (optional: only if the button is present)
                     print("Try reset the app and log out once...")
                     try:
-                        self.altdriver.wait_for_object(By.NAME, "ReloginBtn").tap()
+                        self.get_altdriver().wait_for_object(By.NAME, "ReloginBtn").tap()
                     except Exception as e:
                         print("ReloginBtn not found, skipping relogin step. User may already be in AuthenticatedScene.")
 
                     # Wait for authenticated screen
-                    self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
+                    self.get_altdriver().wait_for_current_scene_to_be("AuthenticatedScene")
                     print("Re-logged in")
 
                     # Logout
                     print("Logging out...")
                     launch_browser()
                     bring_sample_app_to_foreground()
-                    self.altdriver.find_object(By.NAME, "LogoutBtn").tap()
+                    self.get_altdriver().find_object(By.NAME, "LogoutBtn").tap()
                     time.sleep(5)
                     bring_sample_app_to_foreground()
-                    
+
                     # Wait for unauthenticated screen
-                    self.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
+                    self.get_altdriver().wait_for_current_scene_to_be("UnauthenticatedScene")
                     stop_browser()
                     print("Logged out and successfully reset app")
 
                     time.sleep(5)
                 else:
                     raise SystemExit(f"Failed to reset app {err}")
+
+    def test_1a_pkce_login(self):
+        self.login(True)
+
+    def test_1b_device_code_login(self):
+        self.restart_app_and_altdriver()
+        self.login(False)
 
     def test_2_other_functions(self):
         self.test_0_other_functions()
@@ -92,77 +108,61 @@ class WindowsTest(UnityTest):
         self.test_3_zkevm_functions()
 
     def test_6_relogin(self):
-        # Close and reopen app
-        stop_sample_app()
-        open_sample_app()
-
-        # Restart AltTester
-        self.altdriver.stop()
-        self.altdriver = AltDriver()
-        time.sleep(5)
+        self.restart_app_and_altdriver()
 
         # Select use device code auth
-        self.altdriver.find_object(By.NAME, "DeviceCodeAuth").tap()
+        self.select_auth_type(use_pkce=False)
 
         # Relogin
         print("Re-logging in...")
-        self.altdriver.wait_for_object(By.NAME, "ReloginBtn").tap()
+        self.get_altdriver().wait_for_object(By.NAME, "ReloginBtn").tap()
 
         # Wait for authenticated screen
-        self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
+        self.get_altdriver().wait_for_current_scene_to_be("AuthenticatedScene")
         print("Re-logged in")
 
         # Get access token
-        self.altdriver.find_object(By.NAME, "GetAccessTokenBtn").tap()
-        output = self.altdriver.find_object(By.NAME, "Output")
+        self.get_altdriver().find_object(By.NAME, "GetAccessTokenBtn").tap()
+        output = self.get_altdriver().find_object(By.NAME, "Output")
         self.assertTrue(len(output.get_text()) > 50)
 
         # Click Connect to IMX button
-        self.altdriver.find_object(By.NAME, "ConnectBtn").tap()
+        self.get_altdriver().find_object(By.NAME, "ConnectBtn").tap()
         self.assertEqual("Connected to IMX", output.get_text())
 
-        self.altdriver.stop()
-
     def test_7_reconnect_device_code_connect_imx(self):
-        # Close and reopen app
-        stop_sample_app()
-        open_sample_app()
+        self.restart_app_and_altdriver()
 
-        # Restart AltTester
-        self.altdriver.stop()
-        self.altdriver = AltDriver()
-        time.sleep(5)
-
-        # Select use device code auth
-        self.altdriver.find_object(By.NAME, "DeviceCodeAuth").tap()
+        use_pkce = False
+        self.select_auth_type(use_pkce)
 
         # Reconnect
         print("Reconnecting...")
-        self.altdriver.wait_for_object(By.NAME, "ReconnectBtn").tap()
+        self.get_altdriver().wait_for_object(By.NAME, "ReconnectBtn").tap()
 
         # Wait for authenticated screen
-        self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
+        self.get_altdriver().wait_for_current_scene_to_be("AuthenticatedScene")
         print("Reconnected")
 
         # Get access token
-        self.altdriver.find_object(By.NAME, "GetAccessTokenBtn").tap()
-        output = self.altdriver.find_object(By.NAME, "Output")
+        self.get_altdriver().find_object(By.NAME, "GetAccessTokenBtn").tap()
+        output = self.get_altdriver().find_object(By.NAME, "Output")
         self.assertTrue(len(output.get_text()) > 50)
 
         # Get address without having to click Connect to IMX button
-        self.altdriver.find_object(By.NAME, "GetAddressBtn").tap()
+        self.get_altdriver().find_object(By.NAME, "GetAddressBtn").tap()
         self.assertEqual(TestConfig.WALLET_ADDRESS, output.get_text())
 
         # Logout
         print("Logging out...")
         launch_browser()
         bring_sample_app_to_foreground()
-        self.altdriver.find_object(By.NAME, "LogoutBtn").tap()
+        self.get_altdriver().find_object(By.NAME, "LogoutBtn").tap()
         time.sleep(5)
         bring_sample_app_to_foreground()
 
         # Wait for authenticated screen
-        self.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
+        self.get_altdriver().wait_for_current_scene_to_be("UnauthenticatedScene")
         stop_browser()
         print("Logged out")
 
@@ -170,33 +170,33 @@ class WindowsTest(UnityTest):
         print("Logging in and connecting to IMX...")
         launch_browser()
         bring_sample_app_to_foreground()
-        self.altdriver.wait_for_object(By.NAME, "ConnectBtn").tap()
-        login()
+        self.get_altdriver().wait_for_object(By.NAME, "ConnectBtn").tap()
+        login(use_pkce)
         bring_sample_app_to_foreground()
-        
+
         # Wait for authenticated screen
-        self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
+        self.get_altdriver().wait_for_current_scene_to_be("AuthenticatedScene")
         print("Logged in and connected to IMX")
         stop_browser()
 
         # Get access token
-        self.altdriver.find_object(By.NAME, "GetAccessTokenBtn").tap()
-        output = self.altdriver.find_object(By.NAME, "Output")
+        self.get_altdriver().find_object(By.NAME, "GetAccessTokenBtn").tap()
+        output = self.get_altdriver().find_object(By.NAME, "Output")
         self.assertTrue(len(output.get_text()) > 50)
 
         # Get address without having to click Connect to IMX button
-        self.altdriver.find_object(By.NAME, "GetAddressBtn").tap()
+        self.get_altdriver().find_object(By.NAME, "GetAddressBtn").tap()
         self.assertEqual(TestConfig.WALLET_ADDRESS, output.get_text())
 
         # Logout
         launch_browser()
         bring_sample_app_to_foreground()
         print("Logging out...")
-        self.altdriver.find_object(By.NAME, "LogoutBtn").tap()
+        self.get_altdriver().find_object(By.NAME, "LogoutBtn").tap()
         time.sleep(5)
         bring_sample_app_to_foreground()
-        
+
         # Wait for authenticated screen
-        self.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
+        self.get_altdriver().wait_for_current_scene_to_be("UnauthenticatedScene")
         stop_browser()
         print("Logged out")
