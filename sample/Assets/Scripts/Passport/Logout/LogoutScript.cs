@@ -32,7 +32,7 @@ public class LogoutScript : MonoBehaviour
             }
             SampleAppManager.IsConnectedToImx = false;
             SampleAppManager.IsConnectedToZkEvm = false;
-            SceneManager.LoadScene("UnauthenticatedScene");
+            AuthenticatedSceneManager.NavigateToUnauthenticatedScene();
         }
         catch (System.Exception ex)
         {

@@ -32,7 +32,7 @@ public class SetCallTimeoutScript : MonoBehaviour
 
     public void Cancel()
     {
-        SceneManager.LoadScene("AuthenticatedScene");
+        AuthenticatedSceneManager.NavigateToAuthenticatedScene();
     }
 
     private void ShowOutput(string message)

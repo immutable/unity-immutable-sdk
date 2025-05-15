@@ -44,7 +44,7 @@ public class ReconnectScript : MonoBehaviour
 
     private void NavigateToAuthenticatedScene()
     {
-        SceneManager.LoadScene("AuthenticatedScene");
+        AuthenticatedSceneManager.NavigateToAuthenticatedScene();
     }
 
     private void ShowOutput(string message)
