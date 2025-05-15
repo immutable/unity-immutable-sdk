@@ -261,7 +261,8 @@ namespace Immutable.Passport.Helpers
             return Path.Combine(Application.persistentDataPath, exeName).Replace("/", "\\");
 #else
             // Returns game root directory in build
-            var exePath = Application.dataPath.Replace("/Data", "").Replace($"/{Application.productName}_Data", "");
+            var exePath = Path.Combine(Application.dataPath, "../");
+            exePath = exePath.Replace("/Data", "").Replace($"/{Application.productName}_Data", "");
             return Path.Combine(exePath, exeName).Replace("/", "\\");
 #endif
         }
