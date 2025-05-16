@@ -8,7 +8,6 @@
       { "GetIdToken": "GetIdTokenScript.cs" },
       { "GetUserInfo": "GetUserInfoScript.cs" },
       { "GetLinkedAddresses": "GetLinkedAddressesScript.cs" },
-      { "LinkWallet": "LinkWalletScript.cs" },
       { "ImxConnect": "ImxConnectScript.cs" },
       { "ImxRegister": "ImxRegisterScript.cs" },
       { "ImxGetAddress": "ImxGetAddressScript.cs" },

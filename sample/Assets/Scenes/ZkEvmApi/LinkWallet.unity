@@ -1607,7 +1607,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1192763474}
+      - m_Target: {fileID: 1259773353}
         m_TargetAssemblyTypeName: LinkWalletScript, Assembly-CSharp
         m_MethodName: LinkWallet
         m_Mode: 1
@@ -2693,8 +2693,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 1111.8661, y: 0}
-  m_SizeDelta: {x: 2223.7322, y: 0}
+  m_AnchoredPosition: {x: 821.85657, y: 0}
+  m_SizeDelta: {x: 1643.7131, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1128672539
 MonoBehaviour:
@@ -3094,12 +3094,34 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1253661938}
   m_CullTransparentMesh: 1
+<<<<<<< HEAD
 --- !u!114 &1253661942
+=======
+--- !u!1 &1259773352
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1259773354}
+  - component: {fileID: 1259773353}
+  m_Layer: 0
+  m_Name: LinkWallet
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1259773353
+>>>>>>> 5748bbd (chore: move link-wallet into separate app from passport)
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+<<<<<<< HEAD
   m_GameObject: {fileID: 1253661938}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -3107,6 +3129,36 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   altID: 5d9c5ad2-376b-4553-a5dd-88a8c1069f99
+=======
+  m_GameObject: {fileID: 1259773352}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8fdf73edf3f49079fcf50eeb72b816f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Output: {fileID: 1253661940}
+  EnvironmentDropdown: {fileID: 948340005}
+  AccessTokenInput: {fileID: 1946148958}
+  TypeInput: {fileID: 1142338628823642223}
+  WalletAddressInput: {fileID: 1142338628822901615}
+  SignatureInput: {fileID: 1142338629240194742}
+  NonceInput: {fileID: 133796359}
+--- !u!4 &1259773354
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1259773352}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 432.74152, y: 422.8007, z: -14.563688}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+>>>>>>> 5748bbd (chore: move link-wallet into separate app from passport)
 --- !u!1 &1260077984
 GameObject:
   m_ObjectHideFlags: 0
@@ -4791,8 +4843,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 1111.8661, y: 0}
-  m_SizeDelta: {x: 2223.7322, y: 0}
+  m_AnchoredPosition: {x: 821.85657, y: 0}
+  m_SizeDelta: {x: 1643.7131, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2125223059
 MonoBehaviour:
@@ -6672,6 +6724,7 @@ MonoBehaviour:
     m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: 
+<<<<<<< HEAD
 --- !u!114 &9180174496430662405
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6685,3 +6738,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   altID: 0bde2ce4-eb8a-414c-8395-e0b1d5d357c3
+=======
+>>>>>>> 5748bbd (chore: move link-wallet into separate app from passport)

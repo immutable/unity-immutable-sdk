@@ -18,7 +18,6 @@ public class AuthenticatedSceneManager : MonoBehaviour
     [SerializeField] private Button GetBalanceButton;
     [SerializeField] private Button GetTransactionReceiptButton;
     [SerializeField] private Button SignTypedDataButton;
-    [SerializeField] private Button linkWalletButton;
 
     public Action OnImxConnected;
 
@@ -52,7 +51,6 @@ public class AuthenticatedSceneManager : MonoBehaviour
         if (GetBalanceButton != null) GetBalanceButton.gameObject.SetActive(isConnected);
         if (GetTransactionReceiptButton != null) GetTransactionReceiptButton.gameObject.SetActive(isConnected);
         if (SignTypedDataButton != null) SignTypedDataButton.gameObject.SetActive(isConnected);
-        if (linkWalletButton != null) linkWalletButton.gameObject.SetActive(isConnected);
     }
 
     public static void NavigateToAuthenticatedScene()
