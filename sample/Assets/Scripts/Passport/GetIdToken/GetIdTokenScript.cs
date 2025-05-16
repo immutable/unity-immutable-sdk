@@ -12,7 +12,7 @@ public class GetIdTokenScript : MonoBehaviour
     /// </summary>
     public void GetIdToken()
     {
-        GetIdTokenAsync().Forget();
+        GetIdTokenAsync();
     }
 
     private async UniTaskVoid GetIdTokenAsync()

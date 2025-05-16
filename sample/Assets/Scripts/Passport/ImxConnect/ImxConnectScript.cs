@@ -12,7 +12,7 @@ public class ImxConnectScript : MonoBehaviour
     /// </summary>
     public void ConnectImx()
     {
-        ConnectImxAsync().Forget();
+        ConnectImxAsync();
     }
 
     private async UniTaskVoid ConnectImxAsync()
@@ -29,20 +29,24 @@ public class ImxConnectScript : MonoBehaviour
         {
             await Passport.Instance.ConnectImx();
             
-            // Add these lines to update connection state and refresh UI
             SampleAppManager.IsConnectedToImx = true;
-            var sceneManager = FindObjectOfType<AuthenticatedSceneManager>();
-            if (sceneManager != null)
+            ShowOutput("Connected to IMX"); // Show success early
+
+            // Try to find UnauthenticatedSceneManager first
+            var unauthSceneManager = FindObjectOfType<UnauthenticatedSceneManager>();
+            if (unauthSceneManager != null)
             {
-                sceneManager.UpdateImxButtonStates();
-                Debug.Log("Updated IMX button states after connection");
+                unauthSceneManager.OnImxConnected?.Invoke();
+                return; 
             }
-            else
+
+            var authSceneManager = FindObjectOfType<AuthenticatedSceneManager>();
+            if (authSceneManager != null)
             {
-                Debug.LogWarning("Could not find AuthenticatedSceneManager to update button states");
+                authSceneManager.UpdateImxButtonStates();
+                authSceneManager.OnImxConnected?.Invoke(); 
+                return;
             }
-            
-            ShowOutput("Connected to IMX");
         }
         catch (System.Exception ex)
         {

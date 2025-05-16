@@ -12,7 +12,7 @@ public class ZkEvmSignTypedDataScript : MonoBehaviour
 
     public void SignTypedData()
     {
-        SignTypedDataAsync().Forget();
+        SignTypedDataAsync();
     }
 
     private async UniTaskVoid SignTypedDataAsync()

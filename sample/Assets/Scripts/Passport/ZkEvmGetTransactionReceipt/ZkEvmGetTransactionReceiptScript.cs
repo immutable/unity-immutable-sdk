@@ -12,7 +12,7 @@ public class ZkEvmGetTransactionReceiptScript : MonoBehaviour
 
     public void GetZkEvmTransactionReceipt()
     {
-        GetZkEvmTransactionReceiptAsync().Forget();
+        GetZkEvmTransactionReceiptAsync();
     }
 
     private async UniTaskVoid GetZkEvmTransactionReceiptAsync()

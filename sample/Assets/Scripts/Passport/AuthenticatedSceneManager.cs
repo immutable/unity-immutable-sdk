@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System;
 
 public class AuthenticatedSceneManager : MonoBehaviour
 {
@@ -17,6 +18,13 @@ public class AuthenticatedSceneManager : MonoBehaviour
     [SerializeField] private Button GetBalanceButton;
     [SerializeField] private Button GetTransactionReceiptButton;
     [SerializeField] private Button SignTypedDataButton;
+
+    public Action OnImxConnected;
+
+    void Awake()
+    {
+        OnImxConnected = () => { UpdateImxButtonStates(); };
+    }
 
     void Start()
     {

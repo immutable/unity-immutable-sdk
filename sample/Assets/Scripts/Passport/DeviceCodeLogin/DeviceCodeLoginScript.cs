@@ -23,7 +23,7 @@ namespace Immutable.Passport.Sample.PassportFeatures
                 Debug.LogWarning("[DeviceCodeLoginScript] Passport.Instance is null. Initialization must complete before device code login.");
                 return;
             }
-            StartDeviceCodeLoginAsync().Forget();
+            StartDeviceCodeLoginAsync();
         }
 
         private async UniTaskVoid StartDeviceCodeLoginAsync()

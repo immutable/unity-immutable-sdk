@@ -14,7 +14,7 @@ namespace Immutable.Passport.Sample.PassportFeatures
 
         public void CheckIsRegisteredOffchain()
         {
-            CheckIsRegisteredOffchainAsync().Forget();
+            CheckIsRegisteredOffchainAsync();
         }
 
         private async UniTaskVoid CheckIsRegisteredOffchainAsync()

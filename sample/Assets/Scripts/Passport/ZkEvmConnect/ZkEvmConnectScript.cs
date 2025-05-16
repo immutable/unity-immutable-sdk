@@ -14,7 +14,7 @@ namespace Immutable.Passport.Sample.PassportFeatures
 
         public void ConnectZkEvm()
         {
-            ConnectZkEvmAsync().Forget();
+            ConnectZkEvmAsync();
         }
 
         private async UniTaskVoid ConnectZkEvmAsync()

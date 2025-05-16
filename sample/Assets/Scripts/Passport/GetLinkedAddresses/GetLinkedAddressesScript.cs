@@ -13,20 +13,26 @@ public class GetLinkedAddressesScript : MonoBehaviour
     /// </summary>
     public void GetLinkedAddresses()
     {
-        GetLinkedAddressesAsync().Forget();
+        Debug.Log("E2E TEST DEBUG: GetLinkedAddresses() called (public method)");
+        GetLinkedAddressesAsync();
     }
 
     private async UniTaskVoid GetLinkedAddressesAsync()
     {
+        Debug.Log("E2E TEST DEBUG: GetLinkedAddressesAsync() started");
         if (Passport.Instance == null)
         {
+            Debug.Log("E2E TEST DEBUG: Passport instance is null in GetLinkedAddressesAsync");
             ShowOutput("Passport instance is null");
             return;
         }
         try
         {
+            Debug.Log("E2E TEST DEBUG: About to await Passport.Instance.GetLinkedAddresses()");
             List<string> addresses = await Passport.Instance.GetLinkedAddresses();
-            ShowOutput(addresses.Count > 0 ? string.Join(", ", addresses) : "No linked addresses");
+            string outputMessage = addresses.Count > 0 ? string.Join(", ", addresses) : "No linked addresses";
+            Debug.Log($"E2E TEST DEBUG: Got addresses, output will be: {outputMessage}");
+            ShowOutput(outputMessage);
         }
         catch (System.Exception ex)
         {

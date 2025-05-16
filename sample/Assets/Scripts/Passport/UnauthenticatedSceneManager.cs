@@ -2,12 +2,15 @@ using UnityEngine;
 using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
 using Immutable.Passport;
+using System;
 
 public class UnauthenticatedSceneManager : MonoBehaviour
 {
     [SerializeField] private GameObject LoginButtons;
     [SerializeField] private GameObject ReloginButtons;
     [SerializeField] private InputField DeviceCodeTimeoutMs;
+
+    public Action OnImxConnected;
 
     private async void Start()
     {
@@ -22,5 +25,10 @@ public class UnauthenticatedSceneManager : MonoBehaviour
         {
             Debug.LogError("[UnauthenticatedSceneManager] Passport.Instance is null");
         }
+    }
+
+    void Awake()
+    {
+        OnImxConnected = () => { UnityEngine.SceneManagement.SceneManager.LoadScene("AuthenticatedScene"); };
     }
 } 

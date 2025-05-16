@@ -9,7 +9,7 @@ public class ZkEvmRequestAccountsScript : MonoBehaviour
 
     public void RequestAccounts()
     {
-        RequestAccountsAsync().Forget();
+        RequestAccountsAsync();
     }
 
     private async UniTaskVoid RequestAccountsAsync()

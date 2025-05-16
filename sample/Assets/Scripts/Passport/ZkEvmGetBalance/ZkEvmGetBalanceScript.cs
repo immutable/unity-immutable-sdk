@@ -13,7 +13,7 @@ public class ZkEvmGetBalanceScript : MonoBehaviour
 
     public void GetBalance()
     {
-        GetBalanceAsync().Forget();
+        GetBalanceAsync();
     }
 
     private async UniTaskVoid GetBalanceAsync()

@@ -12,7 +12,7 @@ public class GetUserInfoScript : MonoBehaviour
     /// </summary>
     public void GetEmail()
     {
-        GetEmailAsync().Forget();
+        GetEmailAsync();
     }
 
     private async UniTaskVoid GetEmailAsync()
@@ -38,7 +38,7 @@ public class GetUserInfoScript : MonoBehaviour
     /// </summary>
     public void GetPassportId()
     {
-        GetPassportIdAsync().Forget();
+        GetPassportIdAsync();
     }
 
     private async UniTaskVoid GetPassportIdAsync()

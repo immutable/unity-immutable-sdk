@@ -22,7 +22,7 @@ namespace Immutable.Passport.Sample.PassportFeatures
                 Debug.LogWarning("[PkceAuthScript] Passport.Instance is null. Initialization must complete before PKCE auth.");
                 return;
             }
-            StartPkceAuthAsync().Forget();
+            StartPkceAuthAsync();
         }
 
         private async UniTaskVoid StartPkceAuthAsync()

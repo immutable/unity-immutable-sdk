@@ -10,7 +10,7 @@ public class LogoutScript : MonoBehaviour
     /// </summary>
     public void Logout()
     {
-        LogoutAsync().Forget();
+        LogoutAsync();
     }
 
     private async UniTaskVoid LogoutAsync()
