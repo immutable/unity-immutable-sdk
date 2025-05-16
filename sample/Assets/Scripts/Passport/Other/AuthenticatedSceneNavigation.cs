@@ -42,7 +42,7 @@ public class AuthenticatedSceneNavigation : MonoBehaviour
 
     public void ShowLinkWallet()
     {
-        SceneManager.LoadScene("Passport/LinkWallet");
+        SceneManager.LoadScene("LinkWallet");
     }
 
     // Add more navigation methods as needed for other features
