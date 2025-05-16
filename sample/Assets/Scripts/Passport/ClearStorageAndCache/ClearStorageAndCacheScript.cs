@@ -9,12 +9,24 @@ namespace Immutable.Passport.Sample.PassportFeatures
 
         public void ClearStorageAndCache()
         {
-#if (UNITY_IPHONE && !UNITY_EDITOR) || (UNITY_ANDROID && !UNITY_EDITOR)
-            Passport.ClearStorage();
-            Passport.ClearCache(true);
-            ShowOutput("Cleared storage and cache");
+            if (Passport.Instance == null)
+            {
+                ShowOutput("Passport instance is null. Initialize Passport first.");
+                return;
+            }
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+            ShowOutput("Clearing storage and cache...");
+            Passport.Instance.ClearStorage();
+            Passport.Instance.ClearCache(true);
+            ShowOutput("Storage and cache cleared (on Android).");
+#elif UNITY_IPHONE && !UNITY_EDITOR
+            ShowOutput("Clearing storage and cache...");
+            Passport.Instance.ClearStorage();
+            Passport.Instance.ClearCache(true);
+            ShowOutput("Storage and cache cleared (on iOS).");
 #else
-            ShowOutput("Support on Android and iOS devices only");
+            ShowOutput("ClearStorageAndCache is only available on Android and iOS devices.");
 #endif
         }
 
