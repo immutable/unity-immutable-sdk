@@ -31,7 +31,7 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
 
     public void SendTransaction()
     {
-        SendTransactionAsync().Forget();
+        SendTransactionAsync();
     }
 
     private async UniTaskVoid SendTransactionAsync()

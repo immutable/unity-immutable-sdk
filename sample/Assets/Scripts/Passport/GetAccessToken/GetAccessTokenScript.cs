@@ -12,7 +12,7 @@ public class GetAccessTokenScript : MonoBehaviour
     /// </summary>
     public void GetAccessToken()
     {
-        GetAccessTokenAsync().Forget();
+        GetAccessTokenAsync();
     }
 
     private async UniTaskVoid GetAccessTokenAsync()

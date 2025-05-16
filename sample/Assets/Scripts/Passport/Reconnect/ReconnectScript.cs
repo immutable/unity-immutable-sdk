@@ -13,7 +13,7 @@ public class ReconnectScript : MonoBehaviour
     /// </summary>
     public void Reconnect()
     {
-        ReconnectAsync().Forget();
+        ReconnectAsync();
     }
 
     private async UniTaskVoid ReconnectAsync()

@@ -21,7 +21,7 @@ public class ImxNftTransferScript : MonoBehaviour
     /// </summary>
     public void Transfer()
     {
-        TransferAsync().Forget();
+        TransferAsync();
     }
 
     private async UniTaskVoid TransferAsync()

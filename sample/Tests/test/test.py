@@ -71,7 +71,7 @@ class UnityTest(unittest.TestCase):
 
         # Get linked addresses
         self.altdriver.find_object(By.NAME, "GetLinkedAddresses").tap()
-        time.sleep(7)
+        time.sleep(1)
         text = output.get_text()
         print(f"GetLinkedAddresses output: {text}")
         self.assertEqual("No linked addresses", text)

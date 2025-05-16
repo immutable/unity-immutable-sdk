@@ -13,7 +13,7 @@ public class ReloginScript : MonoBehaviour
     /// </summary>
     public void Relogin()
     {
-        ReloginAsync().Forget();
+        ReloginAsync();
     }
 
     private async UniTaskVoid ReloginAsync()
