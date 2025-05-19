@@ -799,7 +799,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1314882729}
-        m_TargetAssemblyTypeName: PassportInitializationScript, Assembly-CSharp
+        m_TargetAssemblyTypeName: PassportInitialisationScript, Assembly-CSharp
         m_MethodName: UseDeviceCodeAuth
         m_Mode: 1
         m_Arguments:
@@ -2055,7 +2055,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1314882729}
-        m_TargetAssemblyTypeName: PassportInitializationScript, Assembly-CSharp
+        m_TargetAssemblyTypeName: PassportInitialisationScript, Assembly-CSharp
         m_MethodName: UsePKCE
         m_Mode: 1
         m_Arguments:
