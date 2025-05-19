@@ -4,10 +4,7 @@
       { "Logout": "LogoutScript.cs" },
       { "Relogin": "ReloginScript.cs" },
       { "Reconnect": "ReconnectScript.cs" },
-      { "GetAccessToken": "GetAccessTokenScript.cs" },
-      { "GetIdToken": "GetIdTokenScript.cs" },
       { "GetUserInfo": "GetUserInfoScript.cs" },
-      { "GetLinkedAddresses": "GetLinkedAddressesScript.cs" },
       { "ImxConnect": "ImxConnectScript.cs" },
       { "ImxRegister": "ImxRegisterScript.cs" },
       { "ImxGetAddress": "ImxGetAddressScript.cs" },
@@ -18,7 +15,8 @@
       { "ZkEvmGetTransactionReceipt": "ZkEvmGetTransactionReceiptScript.cs" },
       { "ZkEvmSignTypedData": "ZkEvmSignTypedDataScript.cs" },
       { "SetCallTimeout": "SetCallTimeoutScript.cs" },
-      { "SelectAuthMethod": "SelectAuthMethodScript.cs" },
-      { "ClearStorageAndCache": "ClearStorageAndCacheScript.cs" }
+      { "ClearStorageAndCache": "ClearStorageAndCacheScript.cs" },
+      { "ImxIsRegisteredOffchain": "ImxIsRegisteredOffchainScript.cs" },
+      { "ZkEvmRequestAccounts": "ZkEvmRequestAccountsScript.cs" }
     ]
   }
