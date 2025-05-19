@@ -1,0 +1,8 @@
+{
+  "title": "IMX Get Address",
+  "description": "Retrieve the Immutable wallet address of the currently logged-in user",
+  "keywords": ["Immutable", "SDK", "Passport", "Wallet", "Address", "IMX"],
+  "tech_stack": ["Unity", "C#"],
+  "product": "Passport",
+  "programming_language": "C#"
+} 

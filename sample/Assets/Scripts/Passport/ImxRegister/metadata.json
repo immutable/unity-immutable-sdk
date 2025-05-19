@@ -1,0 +1,8 @@
+{
+  "title": "IMX Register",
+  "description": "Register users with Immutable X to enable interaction with the IMX blockchain",
+  "keywords": ["Immutable", "SDK", "Passport", "IMX", "Register", "Blockchain", "Layer2"],
+  "tech_stack": ["Unity", "C#", "Immutable Passport"],
+  "product": "Passport",
+  "programming_language": "C#"
+} 

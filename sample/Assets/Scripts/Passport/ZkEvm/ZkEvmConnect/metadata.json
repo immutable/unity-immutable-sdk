@@ -1,0 +1,8 @@
+{
+  "title": "Connect to zkEVM",
+  "description": "Connect your Unity game to the Immutable zkEVM network using Passport SDK",
+  "keywords": ["Immutable", "SDK", "Passport", "zkEVM", "Blockchain", "Web3", "Connect"],
+  "tech_stack": ["Unity", "C#", "Passport SDK", "zkEVM"],
+  "product": "Passport",
+  "programming_language": "C#"
+} 

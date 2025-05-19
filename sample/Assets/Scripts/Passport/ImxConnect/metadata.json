@@ -1,0 +1,8 @@
+{
+  "title": "IMX Connect",
+  "description": "Connect to Immutable X, initializing the user's wallet and setting up the Immutable X provider",
+  "keywords": ["Immutable", "SDK", "Passport", "IMX", "Connect", "Authentication"],
+  "tech_stack": ["Unity", "C#", "Immutable X"],
+  "product": "Passport",
+  "programming_language": "C#"
+} 

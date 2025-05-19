@@ -1,0 +1,8 @@
+{
+  "title": "Clear Storage and Cache",
+  "description": "Clears the WebView storage and cache on mobile platforms, removing any locally stored data and credentials",
+  "keywords": ["Immutable", "SDK", "Passport", "Storage", "Cache", "Mobile", "Android", "iOS"],
+  "tech_stack": ["Unity", "C#", "WebView"],
+  "product": "Passport",
+  "programming_language": "C#"
+} 

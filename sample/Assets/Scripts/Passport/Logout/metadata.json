@@ -1,0 +1,8 @@
+{
+  "title": "Passport Logout",
+  "description": "Demonstrates how to implement user logout functionality in the Immutable Passport SDK",
+  "keywords": ["Immutable", "SDK", "Passport", "Logout", "Authentication"],
+  "tech_stack": ["Unity", "C#", "Immutable SDK"],
+  "product": "Passport",
+  "programming_language": "C#"
+} 

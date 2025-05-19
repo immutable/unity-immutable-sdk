@@ -1,0 +1,8 @@
+{
+  "title": "Set Call Timeout",
+  "description": "Configure the timeout duration for API calls made through the Passport SDK",
+  "keywords": ["Immutable", "SDK", "Passport", "Timeout", "Network", "Configuration"],
+  "tech_stack": ["Unity", "C#"],
+  "product": "Passport",
+  "programming_language": "C#"
+} 

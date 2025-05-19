@@ -1,0 +1,8 @@
+{
+  "title": "Passport Initialisation",
+  "description": "Initialize the Immutable Passport SDK with the appropriate configuration settings for both Device Code Auth and PKCE authentication methods",
+  "keywords": ["Immutable", "SDK", "Passport", "Initialisation", "Authentication", "PKCE", "Device Code Auth"],
+  "tech_stack": ["Unity", "C#", "Immutable SDK"],
+  "product": "Passport",
+  "programming_language": "C#"
+} 

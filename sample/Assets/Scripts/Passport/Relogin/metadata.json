@@ -1,0 +1,8 @@
+{
+  "title": "Relogin with Cached Credentials",
+  "description": "Demonstrates how to use cached credentials to seamlessly re-login users to Passport without requiring re-authentication",
+  "keywords": ["Immutable", "SDK", "Passport", "Relogin", "Authentication", "Cached Credentials"],
+  "tech_stack": ["Unity", "C#", "UniTask"],
+  "product": "Passport",
+  "programming_language": "C#"
+} 

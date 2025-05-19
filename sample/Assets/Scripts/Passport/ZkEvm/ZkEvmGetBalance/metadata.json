@@ -1,0 +1,8 @@
+{
+  "title": "Get Account Balance from zkEVM",
+  "description": "Learn how to query Ethereum account balances on the Immutable zkEVM blockchain using the Passport SDK",
+  "keywords": ["Immutable", "SDK", "zkEVM", "Balance", "Ethereum", "Blockchain", "Web3"],
+  "tech_stack": ["Unity", "C#", "Immutable Passport SDK", "zkEVM"],
+  "product": "Passport",
+  "programming_language": "C#"
+} 

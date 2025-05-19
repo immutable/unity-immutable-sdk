@@ -1,0 +1,8 @@
+{
+  "title": "Check Immutable X off-chain Registration Status",
+  "description": "Check if a user's wallet is registered off-chain with Immutable X using Passport SDK",
+  "keywords": ["Immutable", "SDK", "Passport", "Immutable X", "Off-chain", "Registration"],
+  "tech_stack": ["Unity", "C#", "Immutable Passport"],
+  "product": "Passport",
+  "programming_language": "C#"
+} 
