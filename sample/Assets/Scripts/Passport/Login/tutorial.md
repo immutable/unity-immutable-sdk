@@ -4,7 +4,7 @@
 
 </div>
 
-Passport Login enables users to authenticate with the Immutable Passport service. This feature demonstrates how to implement user authentication in your Unity game using two different authentication methods: PKCE (Proof Key for Code Exchange) and Device Code Auth.
+Passport Login enables users to authenticate with the Immutable Passport service. This feature demonstrates how to implement user authentication in your Unity game using two different authentication methods: PKCE (Proof Key for Code Exchange) and Device Code Auth
 
 <div class="button-component">
 
