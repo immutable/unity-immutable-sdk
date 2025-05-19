@@ -1,0 +1,298 @@
+name: Publish Passport Tutorials
+
+on:
+  # Run when changes are pushed to Passport tutorials or metadata
+  push:
+    branches:
+      # - main
+      - chore/sample-app-tutorial
+    paths:
+      - 'sample/Assets/Scripts/Passport/**/tutorial.md'
+      - 'sample/Assets/Scripts/Passport/**/metadata.json'
+      - 'sample/Assets/Scripts/Passport/features.json'
+      - '.github/scripts/aggregate-passport-metadata.js'
+      - '.github/scripts/process-passport-tutorials.sh'
+      - '.github/workflows/publish-passport-tutorials.yml'
+  # Allow manual triggering
+  workflow_dispatch:
+
+concurrency:
+  group: passport-tutorials
+  cancel-in-progress: false
+
+jobs:
+  PublishPassportTutorials:
+    name: Process and Publish Passport Tutorials
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Unity SDK Repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+
+      - name: Create Script Directories
+        run: |
+          mkdir -p .github/scripts
+          mkdir -p _parsed
+
+      - name: Create Aggregation Script
+        run: |
+          cat > .github/scripts/aggregate-passport-metadata.js << 'EOF'
+          #!/usr/bin/env node
+
+          const fs = require('fs');
+          const path = require('path');
+          const { execSync } = require('child_process');
+
+          // Configuration
+          const PASSPORT_ROOT = './sample/Assets/Scripts/Passport';
+          const OUTPUT_DIR = './_parsed';
+          const OUTPUT_FILE = path.join(OUTPUT_DIR, 'passport-features.json');
+          const FEATURES_JSON_PATH = path.join(PASSPORT_ROOT, 'features.json');
+
+          // Ensure output directory exists
+          if (!fs.existsSync(OUTPUT_DIR)) {
+            fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+          }
+
+          console.log('Processing Passport features metadata...');
+
+          // Load features.json to map script files to feature names
+          let featuresMap = {};
+          try {
+            const featuresContent = fs.readFileSync(FEATURES_JSON_PATH, 'utf8');
+            const featuresJson = JSON.parse(featuresContent);
+            
+            // Create mapping of script filename to feature name
+            featuresJson.features.forEach(feature => {
+              const [featureName, scriptFile] = Object.entries(feature)[0];
+              featuresMap[scriptFile] = featureName;
+            });
+          } catch (error) {
+            console.error(`Error reading features.json: ${error.message}`);
+            process.exit(1);
+          }
+
+          // Find all metadata.json files
+          const findMetadataFiles = () => {
+            const result = execSync(`find "${PASSPORT_ROOT}" -name "metadata.json" -type f`).toString().trim();
+            return result.split('\n').filter(Boolean);
+          };
+
+          // Process metadata files
+          const processMetadataFiles = (metadataFiles) => {
+            const features = [];
+            
+            metadataFiles.forEach(metadataFile => {
+              console.log(`Processing ${metadataFile}`);
+              
+              // Extract feature directory
+              const featureDir = path.dirname(metadataFile);
+              
+              // Find script file in this directory
+              let featureName = '';
+              try {
+                const dirFiles = fs.readdirSync(featureDir);
+                const scriptFiles = dirFiles.filter(file => file.endsWith('.cs'));
+                
+                if (scriptFiles.length > 0) {
+                  // Look up the feature name in featuresMap
+                  const scriptFile = scriptFiles[0];
+                  featureName = featuresMap[scriptFile] || '';
+                }
+                
+                // If not found in features.json, fallback to directory name
+                if (!featureName) {
+                  console.warn(`Feature for script in ${featureDir} not found in features.json, using directory name`);
+                  featureName = path.basename(featureDir);
+                }
+              } catch (error) {
+                console.warn(`Error processing directory ${featureDir}: ${error.message}`);
+                featureName = path.basename(featureDir);
+              }
+              
+              console.log(`Feature name: ${featureName}`);
+              
+              // Read and process metadata
+              try {
+                const metadataContent = fs.readFileSync(metadataFile, 'utf8');
+                const metadata = JSON.parse(metadataContent);
+                
+                // Add feature name to metadata
+                metadata.name = featureName;
+                features.push(metadata);
+              } catch (error) {
+                console.error(`Error processing metadata file ${metadataFile}: ${error.message}`);
+              }
+            });
+            
+            return features;
+          };
+
+          // Main execution
+          const metadataFiles = findMetadataFiles();
+          const features = processMetadataFiles(metadataFiles);
+
+          // Create the final passport-features.json
+          const passportFeatures = { features };
+          fs.writeFileSync(OUTPUT_FILE, JSON.stringify(passportFeatures, null, 2));
+
+          console.log(`Created ${OUTPUT_FILE}`);
+          EOF
+          chmod +x .github/scripts/aggregate-passport-metadata.js
+
+      - name: Create Tutorial Processing Script
+        run: |
+          cat > .github/scripts/process-passport-tutorials.sh << 'EOF'
+          #!/bin/bash
+
+          set -e
+          set -x
+
+          # Directory where docs repo is cloned
+          DOCS_REPO_DIR=${CLONE_DIR:-"./imx-docs"}
+
+          # Root of the Passport features
+          PASSPORT_ROOT="./sample/Assets/Scripts/Passport"
+
+          echo "Processing Passport tutorials..."
+
+          # Load features.json to map script files to feature names
+          FEATURES_JSON="$PASSPORT_ROOT/features.json"
+          if [ ! -f "$FEATURES_JSON" ]; then
+            echo "Error: features.json not found at $FEATURES_JSON"
+            exit 1
+          fi
+
+          # Check and create required directories in docs repo
+          BASE_DIR="$DOCS_REPO_DIR/docs/main/example/zkevm"
+          
+          # Create unity directory if it doesn't exist
+          UNITY_DIR="$BASE_DIR/unity"
+          if [ ! -d "$UNITY_DIR" ]; then
+            echo "Creating unity directory at $UNITY_DIR"
+            mkdir -p "$UNITY_DIR"
+          fi
+          
+          # Create passport directory if it doesn't exist
+          PASSPORT_DIR="$UNITY_DIR/passport"
+          if [ ! -d "$PASSPORT_DIR" ]; then
+            echo "Creating passport directory at $PASSPORT_DIR"
+            mkdir -p "$PASSPORT_DIR"
+          fi
+          
+          # Create _tutorials directory
+          TUTORIALS_DIR="$PASSPORT_DIR/_tutorials"
+          mkdir -p "$TUTORIALS_DIR"
+
+          # Find all tutorial.md files
+          TUTORIAL_FILES=$(find "$PASSPORT_ROOT" -name "tutorial.md" -type f)
+
+          for TUTORIAL_FILE in $TUTORIAL_FILES; do
+            echo "Processing $TUTORIAL_FILE"
+            
+            # Extract feature directory
+            FEATURE_DIR=$(dirname "$TUTORIAL_FILE")
+            
+            # Try to find script file in this directory
+            SCRIPT_FILE=$(find "$FEATURE_DIR" -name "*.cs" -type f | head -n 1)
+            if [ -z "$SCRIPT_FILE" ]; then
+              echo "Warning: No script file found in $FEATURE_DIR, using directory name"
+              FEATURE_NAME=$(basename "$FEATURE_DIR")
+            else
+              # Extract script filename
+              SCRIPT_FILENAME=$(basename "$SCRIPT_FILE")
+              
+              # Look up the feature name in features.json
+              FEATURE_NAME=$(jq -r ".features[] | to_entries[] | select(.value == \"$SCRIPT_FILENAME\") | .key" "$FEATURES_JSON")
+              
+              # If not found in features.json, fallback to directory name
+              if [ -z "$FEATURE_NAME" ] || [ "$FEATURE_NAME" == "null" ]; then
+                echo "Warning: Feature for script $SCRIPT_FILENAME not found in features.json, using directory name"
+                FEATURE_NAME=$(basename "$FEATURE_DIR")
+              fi
+            fi
+            
+            echo "Feature name: $FEATURE_NAME"
+            
+            # Copy and rename tutorial file
+            cp "$TUTORIAL_FILE" "$TUTORIALS_DIR/${FEATURE_NAME}.md"
+            echo "Copied $TUTORIAL_FILE to $TUTORIALS_DIR/${FEATURE_NAME}.md"
+          done
+
+          # Copy the generated JSON file
+          JSON_FILE="./_parsed/passport-features.json"
+          if [ -f "$JSON_FILE" ]; then
+            # Copy JSON file to the passport directory
+            cp "$JSON_FILE" "$PASSPORT_DIR/passport-features.json"
+            echo "Copied $JSON_FILE to $PASSPORT_DIR/passport-features.json"
+          else
+            echo "Warning: No passport-features.json found at $JSON_FILE"
+          fi
+
+          echo "Passport tutorial processing complete."
+          EOF
+          chmod +x .github/scripts/process-passport-tutorials.sh
+
+      - name: Checkout Docs Repo
+        uses: actions/checkout@v3
+        with:
+          repository: immutable/imx-docs
+          token: ${{ secrets.DOCS_REPO_PAT }}
+          path: imx-docs
+          ref: 'DVR-425-unity-sample-app-tutorial'
+
+      - name: Setup environment variables
+        run: |
+          echo "CLONE_DIR=./imx-docs" >> $GITHUB_ENV
+
+      - name: Setup Github
+        run: |
+          git config --global user.name "${GITHUB_ACTOR}"
+          git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Generate Passport Features JSON
+        run: |
+          node ./.github/scripts/aggregate-passport-metadata.js
+        shell: bash
+
+      - name: Process Passport Tutorials
+        run: |
+          ./.github/scripts/process-passport-tutorials.sh
+        shell: bash
+
+      - name: List Generated Files
+        run: |
+          echo "Generated passport-features.json:"
+          ls -la _parsed/
+          
+          echo "Generated tutorial files:"
+          ls -la imx-docs/docs/main/example/zkevm/unity/passport/_tutorials/
+          
+          echo "Content of passport-features.json:"
+          cat _parsed/passport-features.json | jq .
+
+      - name: Commit and Push Changes to Docs Repo
+        run: |
+          cd "$CLONE_DIR"
+          # Check if there are changes to commit
+          if git status --porcelain | grep -q .; then
+            # Add all changes
+            git add .
+            
+            # Commit the changes
+            git commit -m "Update Passport tutorials from Unity SDK repo"
+            
+            # Push to the target branch (always DVR-425-unity-sample-app-tutorial for now)
+            git push -u origin DVR-425-unity-sample-app-tutorial
+            echo "Successfully pushed Passport tutorial changes to docs repo"
+          else
+            echo "No changes to commit"
+          fi
+        shell: bash 
