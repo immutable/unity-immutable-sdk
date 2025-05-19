@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 using Immutable.Passport;
 using Immutable.Passport.Core.Logging;
 
-public class PassportInitializationScript : MonoBehaviour
+public class PassportInitialisationScript : MonoBehaviour
 {
 #pragma warning disable CS8618
     [SerializeField] private GameObject TopPadding;
