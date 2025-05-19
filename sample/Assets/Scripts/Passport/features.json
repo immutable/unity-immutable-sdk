@@ -17,6 +17,7 @@
       { "SetCallTimeout": "SetCallTimeoutScript.cs" },
       { "ClearStorageAndCache": "ClearStorageAndCacheScript.cs" },
       { "ImxIsRegisteredOffchain": "ImxIsRegisteredOffchainScript.cs" },
-      { "ZkEvmRequestAccounts": "ZkEvmRequestAccountsScript.cs" }
+      { "ZkEvmRequestAccounts": "ZkEvmRequestAccountsScript.cs" },
+      { "PassportInitialisation": "PassportInitializationScript.cs" }
     ]
   }
