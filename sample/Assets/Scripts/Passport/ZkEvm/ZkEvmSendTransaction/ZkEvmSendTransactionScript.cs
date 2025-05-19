@@ -23,10 +23,15 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
             ShowOutput("Passport instance is null");
             return;
         }
-        ConfirmToggle.onValueChanged.AddListener(delegate
+        
+        // Make sure UI elements are initialized
+        if (ConfirmToggle != null && GetTransactionReceiptToggle != null)
         {
-            GetTransactionReceiptToggle.gameObject.SetActive(!ConfirmToggle.isOn);
-        });
+            ConfirmToggle.onValueChanged.AddListener(delegate
+            {
+                GetTransactionReceiptToggle.gameObject.SetActive(!ConfirmToggle.isOn);
+            });
+        }
     }
 
     public void SendTransaction()
@@ -57,11 +62,12 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
         {
             TransactionRequest request = new TransactionRequest
             {
-                to = ToInputField.text,
-                value = ValueInputField.text,
-                data = DataInputField.text
+                to = ToInputField != null ? ToInputField.text : "",
+                value = ValueInputField != null ? ValueInputField.text : "",
+                data = DataInputField != null ? DataInputField.text : ""
             };
-            if (ConfirmToggle.isOn)
+            
+            if (ConfirmToggle != null && ConfirmToggle.isOn)
             {
                 TransactionReceiptResponse response = await SampleAppManager.PassportInstance.ZkEvmSendTransactionWithConfirmation(request);
                 ShowOutput($"Transaction hash: {response.transactionHash}\nStatus: {GetTransactionStatusString(response.status)}");
@@ -69,7 +75,8 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
             else
             {
                 string transactionHash = await SampleAppManager.PassportInstance.ZkEvmSendTransaction(request);
-                if (GetTransactionReceiptToggle.isOn)
+                
+                if (GetTransactionReceiptToggle != null && GetTransactionReceiptToggle.isOn)
                 {
                     string? status = await PollStatus(transactionHash);
                     ShowOutput($"Transaction hash: {transactionHash}\nStatus: {GetTransactionStatusString(status)}");
@@ -137,6 +144,10 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
         if (Output != null)
         {
             Output.text = message;
+        }
+        else
+        {
+            Debug.Log($"ZkEvmSendTransactionScript: {message}");
         }
     }
 } 

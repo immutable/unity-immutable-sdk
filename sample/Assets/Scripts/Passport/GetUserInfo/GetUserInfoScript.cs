@@ -117,13 +117,11 @@ public class GetUserInfoScript : MonoBehaviour
     /// </summary>
     public void GetLinkedAddresses()
     {
-        Debug.Log("E2E TEST DEBUG: GetLinkedAddresses() called (public method)");
         GetLinkedAddressesAsync();
     }
 
     private async UniTaskVoid GetLinkedAddressesAsync()
     {
-        Debug.Log("E2E TEST DEBUG: GetLinkedAddressesAsync() started");
         if (Passport.Instance == null)
         {
             ShowOutput("Passport instance is null");
