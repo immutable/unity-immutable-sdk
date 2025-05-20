@@ -16,7 +16,7 @@ public class ZkEvmRequestAccountsScript : MonoBehaviour
     {
         if (SampleAppManager.PassportInstance == null)
         {
-            ShowOutput("Passport not initialized.");
+            ShowOutput("Passport not initialised.");
             return;
         }
 
