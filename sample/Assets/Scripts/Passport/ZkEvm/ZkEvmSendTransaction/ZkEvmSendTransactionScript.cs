@@ -24,7 +24,7 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
             return;
         }
         
-        // Make sure UI elements are initialized
+        // Make sure UI elements are initialised
         if (ConfirmToggle != null && GetTransactionReceiptToggle != null)
         {
             ConfirmToggle.onValueChanged.AddListener(delegate

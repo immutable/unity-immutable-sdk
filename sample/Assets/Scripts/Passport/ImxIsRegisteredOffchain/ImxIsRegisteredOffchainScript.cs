@@ -21,7 +21,7 @@ namespace Immutable.Passport.Sample.PassportFeatures
         {
             if (Passport.Instance == null)
             {
-                ShowOutput("Passport not initialized.");
+                ShowOutput("Passport not initialised.");
                 return;
             }
 
