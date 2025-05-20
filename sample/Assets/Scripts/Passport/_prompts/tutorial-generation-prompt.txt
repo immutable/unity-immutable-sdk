@@ -1,0 +1,99 @@
+# Passport Feature Tutorial Generator
+## Task Overview
+Analyze the sample/Assets/Scripts/Passport/{FeatureName}/ directory and create documentation files for the atomic Passport feature example. For the specified feature, you will create:
+1. A comprehensive tutorial.md file
+2. A metadata.json file
+
+## Preparation
+Before starting:
+- Read through all SDK documentation (in the /src/Packages and /src/Packages folders)
+- Understand the SDK's key features, functionality, and integration patterns
+- Focus on the Passport SDK the most. That's your area of specialty.
+
+## Process for Each Atomic Feature Example
+For the specified atomic feature in sample/Assets/Scripts/Passport/{FeatureName}/ that doesn't already have both tutorial.md and metadata.json:
+
+### 1. Analysis Phase
+- Read all C# code files in the feature directory
+- Identify the Passport feature being demonstrated. Reference features.json at the Passport root for the feature name and order.
+- Understand the feature's architecture, components, and data flow
+- Note all frameworks, libraries, and dependencies used
+- IMPORTANT: Focus only on the logic for this atomic feature, not on unrelated features or SDK initialization.
+
+### 2. Create tutorial.md
+Create a tutorial.md file in the feature's root with the following structure:
+
+#### Introduction
+- Brief overview of the feature's purpose
+- Which specific SDK capability it demonstrates
+- Link to the feature's GitHub repository. (The Github repository MUST BE linked to this message: "View feature on Github")
+
+IMPORTANT: The TITLE (the text that starts with #) of the feature that comes before the "View feature on Github" link must be wrapped in a <div class="display-none"> tag. Ensure that the format looks like this:
+<div class="display-none">
+
+# Title
+
+</div>
+
+IMPORTANT: The "View feature on Github" link must be wrapped in a <div class="button-component"> tag. Ensure that the format looks like this:
+<div class="button-component">
+
+[View feature on Github](<link to the github repo>) <span class="button-component-arrow">→</span>
+
+</div>
+
+IMPORTANT: The feature's description will come before the "View feature on Github" link.
+
+#### Feature Overview
+- State the single Passport feature demonstrated in this atomic example
+
+> IMPORTANT: Focus on how this atomic feature is implemented. Do NOT include Passport SDK initialization or unrelated features—focus only on the feature-specific implementation details.
+#### SDK Integration Details
+For this Passport feature:
+- Brief description of what the feature does. 
+- Code snippets showing how the feature is implemented (CodeBlock should be linked to the relevant github repo) IMPORTANT: related snippets should be under a single code block rather than dividing them across multiple codeblocks. Only include the relevant snippets (method calls, etc) and not Unity-specific boilerplate (such as Start, Update, etc, when it's irrelevant) to ensure that the focus is on the most important code snippet relevant to the feature.
+    - Example structure: ```csharp title="<feature name>" manualLink="<github repo link containing the code snippet(don't specify the line, just the file's link)>"
+                                <code snippet>
+                        ```
+- Clear explanation of how the code works
+
+
+#### Running the Feature Example
+- Prerequisites (including a link to Immutable Hub for environment setup)
+- Step-by-step instructions to run the feature example locally (using Unity Editor)
+
+#### Summary
+- Concise recap of what was demonstrated
+- Any key takeaways for developers
+
+#### Formatting Requirements
+- Use proper Markdown syntax throughout
+- Use heading levels (H1, H2, H3) appropriately
+- Format all code with proper syntax highlighting
+- Use bulleted lists for features and steps
+
+### 3. Create metadata.json
+IMPORTANT: UI LIBRARY IS NOT A FEATURE OR TECH STACK.. IN GENERAL, NEVER INCLUDE UI LIBRARY IN THE METADATA.JSON FILE.
+Create a metadata.json file in the feature's root with the following structure:
+{
+"title": "[Descriptive title of the atomic feature]",
+"description": "[Concise overview of what the atomic feature demonstrates]",
+"keywords": ["Immutable", "SDK", "[Feature]", ...],
+"tech_stack": ["Unity", "C#", "[Library]", ...],
+"product": "Passport",
+"programming_language": "C#"
+}
+
+
+### 4. Handling Existing Files
+If either tutorial.md or metadata.json already exists but is incomplete:
+- Enhance the content while preserving any accurate existing information
+- Ensure it meets all the format requirements specified above
+
+## Final Verification for Each Atomic Feature Example
+- The Passport feature is documented in tutorial.md
+- The tutorial is free of generic SDK initialization boilerplate
+- All links to GitHub repositories are correct
+- metadata.json contains accurate and comprehensive information
+- Both files are properly formatted
+

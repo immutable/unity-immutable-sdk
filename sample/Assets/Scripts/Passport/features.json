@@ -1,0 +1,22 @@
+{
+    "features": [
+      { "Login": "LoginScript.cs" },
+      { "Logout": "LogoutScript.cs" },
+      { "Relogin": "ReloginScript.cs" },
+      { "Reconnect": "ReconnectScript.cs" },
+      { "GetUserInfo": "GetUserInfoScript.cs" },
+      { "ImxConnect": "ImxConnectScript.cs" },
+      { "ImxRegister": "ImxRegisterScript.cs" },
+      { "ImxGetAddress": "ImxGetAddressScript.cs" },
+      { "ImxNftTransfer": "ImxNftTransferScript.cs" },
+      { "ZkEvmConnect": "ZkEvmConnectScript.cs" },
+      { "ZkEvmSendTransaction": "ZkEvmSendTransactionScript.cs" },
+      { "ZkEvmGetBalance": "ZkEvmGetBalanceScript.cs" },
+      { "ZkEvmGetTransactionReceipt": "ZkEvmGetTransactionReceiptScript.cs" },
+      { "ZkEvmSignTypedData": "ZkEvmSignTypedDataScript.cs" },
+      { "SetCallTimeout": "SetCallTimeoutScript.cs" },
+      { "ClearStorageAndCache": "ClearStorageAndCacheScript.cs" },
+      { "ImxIsRegisteredOffchain": "ImxIsRegisteredOffchainScript.cs" },
+      { "ZkEvmRequestAccounts": "ZkEvmRequestAccountsScript.cs" }
+    ]
+  }
