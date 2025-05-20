@@ -18,6 +18,6 @@
       { "ClearStorageAndCache": "ClearStorageAndCacheScript.cs" },
       { "ImxIsRegisteredOffchain": "ImxIsRegisteredOffchainScript.cs" },
       { "ZkEvmRequestAccounts": "ZkEvmRequestAccountsScript.cs" },
-      { "PassportInitialisation": "PassportInitializationScript.cs" }
+      { "PassportInitialisation": "PassportInitialisationScript.cs" }
     ]
   }
