@@ -25,14 +25,15 @@ mkdir -p "$TUTORIALS_DIR"
 # Find all tutorial.md files
 TUTORIAL_FILES=$(find "$PASSPORT_ROOT" -name "tutorial.md" -type f)
 
-for TUTORIAL_FILE in $TUTORIAL_FILES; do
+ # Process null-delimited filenames
+ find "$PASSPORT_ROOT" -name "tutorial.md" -type f -print0 | while IFS= read -r -d '' TUTORIAL_FILE; do
   echo "Processing $TUTORIAL_FILE"
   
   # Extract feature directory
   FEATURE_DIR=$(dirname "$TUTORIAL_FILE")
   
   # Try to find script file in this directory
-  SCRIPT_FILE=$(find "$FEATURE_DIR" -name "*.cs" -type f | head -n 1)
+  SCRIPT_FILE=$(find "$FEATURE_DIR" -name "*.cs" -type f -print0 | xargs -0 -n1 echo | head -n 1)
   if [ -z "$SCRIPT_FILE" ]; then
     echo "Warning: No script file found in $FEATURE_DIR, using directory name"
     FEATURE_NAME=$(basename "$FEATURE_DIR")
@@ -41,7 +42,11 @@ for TUTORIAL_FILE in $TUTORIAL_FILES; do
     SCRIPT_FILENAME=$(basename "$SCRIPT_FILE")
     
     # Look up the feature name in features.json
-    FEATURE_NAME=$(jq -r ".features[] | to_entries[] | select(.value == \"$SCRIPT_FILENAME\") | .key" "$FEATURES_JSON")
+    # Extract feature name with error handling
+    if ! FEATURE_NAME=$(jq -r ".features[] | to_entries[] | select(.value == \"$SCRIPT_FILENAME\") | .key" "$FEATURES_JSON" 2>/dev/null); then
+      echo "Warning: Error parsing features.json with jq, using directory name"
+      FEATURE_NAME=$(basename "$FEATURE_DIR")
+    fi
     
     # If not found in features.json, fallback to directory name
     if [ -z "$FEATURE_NAME" ] || [ "$FEATURE_NAME" == "null" ]; then
