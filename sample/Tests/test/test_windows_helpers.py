@@ -1,6 +1,7 @@
 import os
-import sys
+import re
 import subprocess
+import sys
 import time
 from pathlib import Path
 
@@ -18,7 +19,27 @@ from fetch_otp import EMAIL, fetch_code
 # Add chrome.exe to environment variable
 # Download chrome driver and add to environment variable
 
-def login():
+def get_product_name():
+    """Get the product name from ProjectSettings.asset"""
+    project_settings_path = Path(__file__).resolve().parent.parent.parent / 'ProjectSettings' / 'ProjectSettings.asset'
+
+    if not project_settings_path.exists():
+        print(f"Warning: ProjectSettings.asset not found at {project_settings_path}")
+        return "SampleApp"  # Fallback to default
+
+    with open(project_settings_path, 'r') as f:
+        content = f.read()
+
+    # Extract productName using regex
+    match = re.search(r'productName: (.+)', content)
+    if match:
+        product_name = match.group(1).strip()
+        return product_name
+
+    # If regex fails, return default
+    return "SampleApp"
+
+def login(use_pkce: bool):
     print("Connect to Chrome")
     # Set up Chrome options to connect to the existing Chrome instance
     chrome_options = Options()
@@ -41,13 +62,14 @@ def login():
 
     print("Switch to the new window")
     driver.switch_to.window(new_window)
-    
+
     wait = WebDriverWait(driver, 60)
 
-    print("Wait for device confirmation...")
-    contine_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[span[text()='Continue']]")))
-    contine_button.click()
-    print("Confirmed device")
+    if not use_pkce:
+        print("Wait for device confirmation...")
+        contine_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[span[text()='Continue']]")))
+        contine_button.click()
+        print("Confirmed device")
 
     print("Wait for email input...")
     email_field = wait.until(EC.presence_of_element_located((By.ID, ':r1:')))
@@ -74,43 +96,47 @@ def login():
     otp_field.send_keys(code)
 
     print("Wait for success page...")
-    success = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'h1[data-testid="device_success_title"]')))
+    success_title = 'h1[data-testid="checking_title"]' if use_pkce else 'h1[data-testid="device_success_title"]'
+    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, success_title)))
     print("Connected to Passport!")
 
     driver.quit()
 
 def open_sample_app():
-    print("Opening Unity sample app...")
-    subprocess.Popen(["SampleApp.exe"], shell=True)
+    product_name = get_product_name()
+    print(f"Opening {product_name}...")
+    subprocess.Popen([f"{product_name}.exe"], shell=True)
     time.sleep(10)
-    print("Unity sample app opened successfully.")
+    print(f"{product_name} opened successfully.")
 
 def stop_sample_app():
-    print("Stopping sample app...")
-    powershell_command = """
-    $process = Get-Process -Name "SampleApp" -ErrorAction SilentlyContinue
-    if ($process) {
+    product_name = get_product_name()
+    print(f"Stopping {product_name}...")
+    powershell_command = f"""
+    $process = Get-Process -Name "{product_name}" -ErrorAction SilentlyContinue
+    if ($process) {{
         Stop-Process -Id $process.Id
-        Write-Output "SampleApp.exe has been closed."
-    } else {
-        Write-Output "SampleApp.exe is not running."
-    }
+        Write-Output "{product_name}.exe has been closed."
+    }} else {{
+        Write-Output "{product_name}.exe is not running."
+    }}
     """
     subprocess.run(["powershell.exe", "-Command", powershell_command], check=True)
     time.sleep(5)
-    print("Stopped sample app.")
+    print(f"{product_name} stopped successfully.")
 
 def bring_sample_app_to_foreground():
+    product_name = get_product_name()
     powershell_script_path = "./switch-app.ps1"
-    
-    print("Bring Unity sample app to the foreground.")
-    
+
+    print(f"Bring {product_name} to the foreground.")
+
     command = [
-        "powershell.exe", 
-        "-Command", 
-        f"Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process; & '{powershell_script_path}' -appName 'Immutable Sample'"
+        "powershell.exe",
+        "-Command",
+        f"Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process; & '{powershell_script_path}' -appName '{product_name}'"
     ]
-    
+
     subprocess.run(command, check=True)
     time.sleep(10)
 
