@@ -1,8 +1,0 @@
-{
-  "title": "Request Wallet Accounts",
-  "description": "Retrieve Ethereum addresses associated with the user's Immutable Passport account",
-  "keywords": ["Immutable", "SDK", "Passport", "ZkEvm", "Accounts", "Wallet", "Ethereum", "Unity"],
-  "tech_stack": ["Unity", "C#", "Immutable SDK", "Passport"],
-  "product": "Passport",
-  "programming_language": "C#"
-} 

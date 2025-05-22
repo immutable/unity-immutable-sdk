@@ -1,8 +1,0 @@
-{
-  "title": "Get User Information",
-  "description": "Retrieve user data such as email, Passport ID, access token, ID token, and linked wallet addresses from the Immutable Passport",
-  "keywords": ["Immutable", "SDK", "Passport", "User Info", "Authentication", "Identity"],
-  "tech_stack": ["Unity", "C#", "Cysharp UniTask"],
-  "product": "Passport",
-  "programming_language": "C#"
-} 

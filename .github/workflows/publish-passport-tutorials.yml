@@ -7,9 +7,8 @@ on:
       # - main
       - chore/sample-app-tutorial
     paths:
-      - 'sample/Assets/Scripts/Passport/**/tutorial.md'
-      - 'sample/Assets/Scripts/Passport/**/metadata.json'
       - 'sample/Assets/Scripts/Passport/features.json'
+      - 'sample/Assets/Scripts/Passport/_tutorials/**/*'
 
   # Allow manual triggering
   workflow_dispatch:

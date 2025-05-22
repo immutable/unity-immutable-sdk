@@ -1,8 +1,0 @@
-{
-  "title": "Passport Authentication",
-  "description": "Demonstrates how to implement user authentication with Immutable Passport using PKCE and Device Code Auth methods",
-  "keywords": ["Immutable", "SDK", "Login", "Authentication", "PKCE", "Device Code Auth", "Passport"],
-  "tech_stack": ["Unity", "C#", "Passport SDK"],
-  "product": "Passport",
-  "programming_language": "C#"
-} 

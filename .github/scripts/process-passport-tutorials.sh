@@ -8,10 +8,11 @@ DOCS_REPO_DIR="${CLONE_DIR:-"./imx-docs"}"
 
 # Root of the Passport features
 PASSPORT_ROOT="./sample/Assets/Scripts/Passport"
+TUTORIALS_DIR="${PASSPORT_ROOT}/_tutorials"
 
 echo "Processing Passport tutorials..."
 
-# Load features.json to map script files to feature names
+# Load features.json to get feature groups
 FEATURES_JSON="${PASSPORT_ROOT}/features.json"
 if [ ! -f "${FEATURES_JSON}" ]; then
   echo "Error: features.json not found at ${FEATURES_JSON}"
@@ -19,46 +20,37 @@ if [ ! -f "${FEATURES_JSON}" ]; then
 fi
 
 # Create _tutorials directory in docs repo
-TUTORIALS_DIR="${DOCS_REPO_DIR}/docs/main/example/zkEVM/unity/passport-examples/_tutorials"
-mkdir -p "${TUTORIALS_DIR}"
+DOCS_TUTORIALS_DIR="${DOCS_REPO_DIR}/docs/main/example/zkEVM/unity/passport-examples/_tutorials"
+mkdir -p "${DOCS_TUTORIALS_DIR}"
 
-# Process null-delimited filenames
-find "${PASSPORT_ROOT}" -name "tutorial.md" -type f -print0 | while IFS= read -r -d '' TUTORIAL_FILE; do
-  echo "Processing ${TUTORIAL_FILE}"
-  
-  # Extract feature directory
-  FEATURE_DIR=$(dirname "${TUTORIAL_FILE}")
-  
-  # Try to find script file in this directory
-  SCRIPT_FILE=$(find "${FEATURE_DIR}" -name "*.cs" -type f -print0 | xargs -0 -n1 echo | head -n 1)
-  
-  if [ -z "${SCRIPT_FILE}" ]; then
-    echo "Warning: No script file found in ${FEATURE_DIR}, using directory name"
-    FEATURE_NAME=$(basename "${FEATURE_DIR}")
-  else
-    # Extract script filename
-    SCRIPT_FILENAME=$(basename "${SCRIPT_FILE}")
+# Check if _tutorials directory exists
+if [ ! -d "${TUTORIALS_DIR}" ]; then
+  echo "Warning: _tutorials directory not found at ${TUTORIALS_DIR}"
+else
+  # Process each feature group directory in _tutorials
+  find "${TUTORIALS_DIR}" -mindepth 1 -maxdepth 1 -type d -print0 | while IFS= read -r -d '' GROUP_DIR; do
+    echo "Processing feature group: ${GROUP_DIR}"
     
-    # Look up the feature name in features.json
-    # Extract feature name with error handling
-    if ! FEATURE_NAME=$(jq -r ".features[] | to_entries[] | select(.value == \"${SCRIPT_FILENAME}\") | .key" "${FEATURES_JSON}" 2>/dev/null); then
-      echo "Warning: Error parsing features.json with jq, using directory name"
-      FEATURE_NAME=$(basename "${FEATURE_DIR}")
-    fi
+    # Extract feature group name from directory
+    GROUP_NAME=$(basename "${GROUP_DIR}")
     
-    # If not found in features.json, fallback to directory name
-    if [ -z "${FEATURE_NAME}" ] || [ "${FEATURE_NAME}" == "null" ]; then
-      echo "Warning: Feature for script ${SCRIPT_FILENAME} not found in features.json, using directory name"
-      FEATURE_NAME=$(basename "${FEATURE_DIR}")
+    # Tutorial file path
+    TUTORIAL_FILE="${GROUP_DIR}/tutorial.md"
+    
+    if [ -f "${TUTORIAL_FILE}" ]; then
+      echo "Found tutorial for ${GROUP_NAME}"
+      
+      # Convert feature group name to kebab-case for the destination filename
+      KEBAB_NAME=$(echo "${GROUP_NAME}" | sed -E 's/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
+      
+      # Copy the tutorial file
+      cp "${TUTORIAL_FILE}" "${DOCS_TUTORIALS_DIR}/${KEBAB_NAME}.md"
+      echo "Copied ${TUTORIAL_FILE} to ${DOCS_TUTORIALS_DIR}/${KEBAB_NAME}.md"
+    else
+      echo "Warning: No tutorial.md found for feature group ${GROUP_NAME}"
     fi
-  fi
-  
-  echo "Feature name: ${FEATURE_NAME}"
-  
-  # Copy and rename tutorial file
-  cp "${TUTORIAL_FILE}" "${TUTORIALS_DIR}/${FEATURE_NAME}.md"
-  echo "Copied ${TUTORIAL_FILE} to ${TUTORIALS_DIR}/${FEATURE_NAME}.md"
-done
+  done
+fi
 
 # Copy the generated JSON file
 JSON_FILE="./_parsed/passport-features.json"

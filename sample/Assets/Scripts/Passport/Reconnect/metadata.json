@@ -1,8 +1,0 @@
-{
-  "title": "Passport Reconnect",
-  "description": "Demonstrates how to reconnect users to Passport using previously saved credentials without requiring re-authentication",
-  "keywords": ["Immutable", "SDK", "Passport", "Reconnect", "Authentication"],
-  "tech_stack": ["Unity", "C#", "Immutable SDK"],
-  "product": "Passport",
-  "programming_language": "C#"
-} 

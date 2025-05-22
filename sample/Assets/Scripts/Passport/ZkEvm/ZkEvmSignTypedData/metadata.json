@@ -1,8 +1,0 @@
-{
-  "title": "ZkEVM Sign Typed Data",
-  "description": "Sign EIP-712 structured data messages using Passport SDK to enable secure and user-friendly off-chain signing for on-chain use",
-  "keywords": ["Immutable", "SDK", "Passport", "ZkEVM", "EIP-712", "Sign Typed Data", "Web3"],
-  "tech_stack": ["Unity", "C#", "Passport SDK", "ZkEVM"],
-  "product": "Passport",
-  "programming_language": "C#"
-} 

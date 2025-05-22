@@ -7,6 +7,7 @@ const path = require('path');
 
 // Configuration
 const PASSPORT_ROOT = './sample/Assets/Scripts/Passport';
+const TUTORIALS_DIR = path.join(PASSPORT_ROOT, '_tutorials');
 const OUTPUT_DIR = './_parsed';
 const OUTPUT_FILE = path.join(OUTPUT_DIR, 'passport-features.json');
 const FEATURES_JSON_PATH = path.join(PASSPORT_ROOT, 'features.json');
@@ -23,130 +24,97 @@ try {
 
 console.log('Processing Passport features metadata...');
 
-// Load features.json to map script files to feature names
-const featuresMap = {};
+// Load features.json to get feature groups and their features
+let featureGroups = {};
 try {
   const featuresContent = fs.readFileSync(FEATURES_JSON_PATH, 'utf8');
   const featuresJson = JSON.parse(featuresContent);
-  
-  // Create mapping of script filename to feature name
-  featuresJson.features.forEach((feature) => {
-    const [featureName, scriptFile] = Object.entries(feature)[0];
-    // Store both the full filename and just the filename without path
-    featuresMap[scriptFile] = featureName;
-    featuresMap[path.basename(scriptFile)] = featureName;
-  });
+  featureGroups = featuresJson.features || {};
 } catch (error) {
   console.error(`Error reading features.json: ${error.message}`);
   process.exit(1);
 }
 
-// Platform-independent recursive file search
-const findMetadataFiles = () => {
-  const metadataFiles = [];
+// Find all feature group directories in _tutorials
+const findFeatureGroupDirectories = () => {
+  const featureGroupDirs = [];
+
+  if (!fs.existsSync(TUTORIALS_DIR)) {
+    console.warn(`Tutorials directory does not exist: ${TUTORIALS_DIR}`);
+    return featureGroupDirs;
+  }
   
-  const walkDir = (dir) => {
-    if (!fs.existsSync(dir)) {
-      console.warn(`Directory does not exist: ${dir}`);
-      return;
-    }
+  try {
+    const dirs = fs.readdirSync(TUTORIALS_DIR, { withFileTypes: true });
     
-    try {
-      const files = fs.readdirSync(dir);
-      
-      files.forEach((file) => {
-        const filePath = path.join(dir, file);
-        
-        try {
-          const stat = fs.statSync(filePath);
-          
-          if (stat.isDirectory()) {
-            walkDir(filePath);
-          } else if (file === 'metadata.json') {
-            metadataFiles.push(filePath);
-          }
-        } catch (err) {
-          console.warn(`Error accessing file ${filePath}: ${err.message}`);
-        }
-      });
-    } catch (err) {
-      console.warn(`Error reading directory ${dir}: ${err.message}`);
-    }
-  };
+    dirs.forEach((dirent) => {
+      if (dirent.isDirectory()) {
+        featureGroupDirs.push(path.join(TUTORIALS_DIR, dirent.name));
+      }
+    });
+  } catch (err) {
+    console.warn(`Error reading tutorials directory ${TUTORIALS_DIR}: ${err.message}`);
+  }
   
-  walkDir(PASSPORT_ROOT);
-  return metadataFiles;
+  return featureGroupDirs;
 };
 
 // Process metadata files
-const processMetadataFiles = (metadataFiles) => {
+const processFeatureGroups = (featureGroupDirs) => {
   const featuresObject = {};
   
-  metadataFiles.forEach((metadataFile) => {
-    console.log(`Processing ${metadataFile}`);
+  featureGroupDirs.forEach((groupDir) => {
+    const groupName = path.basename(groupDir);
+    console.log(`Processing feature group: ${groupName}`);
     
-    // Extract feature directory
-    const featureDir = path.dirname(metadataFile);
-    
-    // Get directory name as fallback feature name
-    const dirName = path.basename(featureDir);
-    
-    // Try to find feature name in feature map, fallback to directory name
-    let featureName = '';
-    try {
-      // Look for any script file in this directory
-      const dirFiles = fs.readdirSync(featureDir);
-      const scriptFiles = dirFiles.filter((file) => file.endsWith('.cs'));
-      
-      // Try to match any script file to our feature map
-      let found = false;
-      for (const scriptFile of scriptFiles) {
-        if (featuresMap[scriptFile]) {
-          featureName = featuresMap[scriptFile];
-          found = true;
-          break;
-        }
-      }
-      
-      if (!found) {
-        console.warn(`No feature found in features.json for ${featureDir}, using directory name`);
-        featureName = dirName;
-      }
-    } catch (error) {
-      console.warn(`Error processing directory ${featureDir}: ${error.message}`);
-      featureName = dirName;
+    // Check if this group exists in features.json
+    if (!featureGroups[groupName]) {
+      console.warn(`Feature group ${groupName} not found in features.json, skipping`);
+      return;
     }
     
-    // Create feature key (kebab-case)
-    const featureKey = featureName
+    // Path to metadata.json in this feature group directory
+    const metadataPath = path.join(groupDir, 'metadata.json');
+    if (!fs.existsSync(metadataPath)) {
+      console.warn(`No metadata.json found for feature group ${groupName} in ${groupDir}`);
+      return;
+    }
+    
+    // Path to tutorial.md in this feature group directory
+    const tutorialPath = path.join(groupDir, 'tutorial.md');
+    const tutorialExists = fs.existsSync(tutorialPath);
+    
+    // Create the feature key (kebab-case)
+    const featureKey = groupName
       .replace(/([a-z])([A-Z])/g, '$1-$2')
       .replace(/\s+/g, '-')
       .replace(/[^a-z0-9-]/gi, '')
       .toLowerCase();
     
     if (!featureKey) {
-      console.warn(`Generated empty feature key for ${featureDir}, skipping`);
+      console.warn(`Generated empty feature key for ${groupName}, skipping`);
       return;
     }
     
-    // Check for tutorial.md in the same directory
-    const tutorialPath = path.join(featureDir, 'tutorial.md');
-    const tutorialExists = fs.existsSync(tutorialPath);
     const tutorialFile = tutorialExists ? `${featureKey}.md` : null;
     
     if (!tutorialExists) {
-      console.warn(`No tutorial.md found for feature ${featureName} in ${featureDir}`);
+      console.warn(`No tutorial.md found for feature group ${groupName} in ${groupDir}`);
     }
     
     // Read and process metadata
     try {
-      const metadataContent = fs.readFileSync(metadataFile, 'utf8');
+      const metadataContent = fs.readFileSync(metadataPath, 'utf8');
       const metadata = JSON.parse(metadataContent);
       
       // Add additional fields
-      metadata.title = metadata.title || featureName;
+      metadata.title = metadata.title || groupName;
       metadata.sidebar_order = metadata.sidebar_order || 0;
       metadata.deprecated = metadata.deprecated || false;
+      
+      // Add feature group information
+      metadata.feature_group = groupName;
+      metadata.features = Object.keys(featureGroups[groupName] || {});
       
       // Create the feature entry
       featuresObject[featureKey] = {
@@ -154,7 +122,7 @@ const processMetadataFiles = (metadataFiles) => {
         metadata: metadata
       };
     } catch (error) {
-      console.error(`Error processing metadata file ${metadataFile}: ${error.message}`);
+      console.error(`Error processing metadata file ${metadataPath}: ${error.message}`);
     }
   });
   
@@ -163,13 +131,13 @@ const processMetadataFiles = (metadataFiles) => {
 
 try {
   // Main execution
-  const metadataFiles = findMetadataFiles();
+  const featureGroupDirs = findFeatureGroupDirectories();
   
-  if (metadataFiles.length === 0) {
-    console.warn('No metadata files found. Output file will be empty.');
+  if (featureGroupDirs.length === 0) {
+    console.warn('No feature group directories found. Output file will be empty.');
   }
   
-  const features = processMetadataFiles(metadataFiles);
+  const features = processFeatureGroups(featureGroupDirs);
 
   // Create the final passport-features.json
   fs.writeFileSync(OUTPUT_FILE, JSON.stringify(features, null, 2));

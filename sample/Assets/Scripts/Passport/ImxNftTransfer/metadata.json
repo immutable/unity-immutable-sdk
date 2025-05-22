@@ -1,8 +1,0 @@
-{
-  "title": "IMX NFT Transfer",
-  "description": "Transfer NFTs on Immutable X to other addresses with single and batch operations",
-  "keywords": ["Immutable", "SDK", "NFT", "Transfer", "Immutable X", "Passport", "ERC721", "Batch Transfer"],
-  "tech_stack": ["Unity", "C#", "Immutable X"],
-  "product": "Passport",
-  "programming_language": "C#"
-} 
