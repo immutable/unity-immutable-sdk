@@ -16,7 +16,7 @@ The Set Call Timeout feature allows developers to configure the timeout duration
 
 ### Feature: SetCallTimeout
 
-The Set Call Timeout feature provides a simple way to adjust the timeout duration for network calls made through the Passport SDK. When making API calls to blockchain networks or authentication services, network latency can sometimes cause delays. This feature gives developers control over how long their application should wait before considering a request as failed due to timeout.
+The Set Call Timeout feature provides a simple way to adjust the timeout duration for network calls made through the Passport SDK. When making API calls to blockchain networks or authentication services, network latency can sometimes cause delays. This feature gives developers control over how long their application should wait before considering a request as failed due to timeout
 
 ```csharp title="SetCallTimeoutScript" manualLink="https://github.com/immutable/unity-immutable-sdk/blob/main/sample/Assets/Scripts/Passport/Other/SetCallTimeout/SetCallTimeoutScript.cs"
 using UnityEngine;
