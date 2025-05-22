@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+'use strict';
+
 const fs = require('fs');
 const path = require('path');
 
@@ -10,20 +12,25 @@ const OUTPUT_FILE = path.join(OUTPUT_DIR, 'passport-features.json');
 const FEATURES_JSON_PATH = path.join(PASSPORT_ROOT, 'features.json');
 
 // Ensure output directory exists
-if (!fs.existsSync(OUTPUT_DIR)) {
-  fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+try {
+  if (!fs.existsSync(OUTPUT_DIR)) {
+    fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+  }
+} catch (error) {
+  console.error(`Error creating output directory: ${error.message}`);
+  process.exit(1);
 }
 
 console.log('Processing Passport features metadata...');
 
 // Load features.json to map script files to feature names
-let featuresMap = {};
+const featuresMap = {};
 try {
   const featuresContent = fs.readFileSync(FEATURES_JSON_PATH, 'utf8');
   const featuresJson = JSON.parse(featuresContent);
   
   // Create mapping of script filename to feature name
-  featuresJson.features.forEach(feature => {
+  featuresJson.features.forEach((feature) => {
     const [featureName, scriptFile] = Object.entries(feature)[0];
     // Store both the full filename and just the filename without path
     featuresMap[scriptFile] = featureName;
@@ -47,7 +54,7 @@ const findMetadataFiles = () => {
     try {
       const files = fs.readdirSync(dir);
       
-      files.forEach(file => {
+      files.forEach((file) => {
         const filePath = path.join(dir, file);
         
         try {
@@ -75,7 +82,7 @@ const findMetadataFiles = () => {
 const processMetadataFiles = (metadataFiles) => {
   const featuresObject = {};
   
-  metadataFiles.forEach(metadataFile => {
+  metadataFiles.forEach((metadataFile) => {
     console.log(`Processing ${metadataFile}`);
     
     // Extract feature directory
@@ -89,7 +96,7 @@ const processMetadataFiles = (metadataFiles) => {
     try {
       // Look for any script file in this directory
       const dirFiles = fs.readdirSync(featureDir);
-      const scriptFiles = dirFiles.filter(file => file.endsWith('.cs'));
+      const scriptFiles = dirFiles.filter((file) => file.endsWith('.cs'));
       
       // Try to match any script file to our feature map
       let found = false;
@@ -154,11 +161,20 @@ const processMetadataFiles = (metadataFiles) => {
   return featuresObject;
 };
 
-// Main execution
-const metadataFiles = findMetadataFiles();
-const features = processMetadataFiles(metadataFiles);
+try {
+  // Main execution
+  const metadataFiles = findMetadataFiles();
+  
+  if (metadataFiles.length === 0) {
+    console.warn('No metadata files found. Output file will be empty.');
+  }
+  
+  const features = processMetadataFiles(metadataFiles);
 
-// Create the final passport-features.json
-fs.writeFileSync(OUTPUT_FILE, JSON.stringify(features, null, 2));
-
-console.log(`Created ${OUTPUT_FILE}`);
+  // Create the final passport-features.json
+  fs.writeFileSync(OUTPUT_FILE, JSON.stringify(features, null, 2));
+  console.log(`Created ${OUTPUT_FILE}`);
+} catch (error) {
+  console.error(`Fatal error: ${error.message}`);
+  process.exit(1);
+}
