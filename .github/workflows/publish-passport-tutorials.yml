@@ -37,7 +37,7 @@ jobs:
           repository: immutable/docs
           token: ${{ secrets.UNITY_SDK_DOCS_WORKFLOW }}
           path: imx-docs
-          ref: 'DVR-425-unity-sample-app-tutorial'
+          ref: 'DVR-425-unity-sample-app-tutorial-v2'
 
       - name: Setup environment variables
         run: echo "CLONE_DIR=./imx-docs" >> $GITHUB_ENV
@@ -76,7 +76,7 @@ jobs:
             git commit -m "$COMMIT_MSG"
             
             # Push to the target branch
-            git push -u origin DVR-425-unity-sample-app-tutorial
+            git push -u origin DVR-425-unity-sample-app-tutorial-v2
             echo "Successfully pushed Passport tutorial changes to docs repo"
           else
             echo "No changes to commit"

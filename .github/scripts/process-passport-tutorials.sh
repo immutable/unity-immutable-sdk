@@ -19,7 +19,7 @@ if [ ! -f "${FEATURES_JSON}" ]; then
 fi
 
 # Create _tutorials directory in docs repo
-TUTORIALS_DIR="${DOCS_REPO_DIR}/docs/main/example/zkEVM/passport-examples/_tutorials"
+TUTORIALS_DIR="${DOCS_REPO_DIR}/docs/main/example/zkEVM/unity/passport-examples/_tutorials"
 mkdir -p "${TUTORIALS_DIR}"
 
 # Process null-delimited filenames
@@ -64,7 +64,7 @@ done
 JSON_FILE="./_parsed/passport-features.json"
 if [ -f "${JSON_FILE}" ]; then
   # Create directory for JSON file if it doesn't exist
-  JSON_DIR="${DOCS_REPO_DIR}/docs/main/example/zkEVM/passport-examples"
+  JSON_DIR="${DOCS_REPO_DIR}/docs/main/example/zkEVM/unity/passport-examples"
   mkdir -p "${JSON_DIR}"
   
   # Copy JSON file
