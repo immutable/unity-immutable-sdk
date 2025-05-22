@@ -35,7 +35,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: immutable/docs
-          token: ${{ secrets.UNITY_IMMUTABLE_SDK_GITHUB_TOKEN }}
+          token: ${{ secrets.UNITY_SDK_DOCS_WORKFLOW }}
           path: imx-docs
           ref: 'DVR-425-unity-sample-app-tutorial'
 
