@@ -40,12 +40,12 @@ else
     if [ -f "${TUTORIAL_FILE}" ]; then
       echo "Found tutorial for ${GROUP_NAME}"
       
-      # Convert feature group name to kebab-case for the destination filename
-      KEBAB_NAME=$(echo "${GROUP_NAME}" | sed -E 's/([a-z])([A-Z])/\1-\2/g' | tr '[:upper:]' '[:lower:]')
+      # Use the folder name directly for the destination filename
+      OUTPUT_FILENAME="${GROUP_NAME}.md"
       
       # Copy the tutorial file
-      cp "${TUTORIAL_FILE}" "${DOCS_TUTORIALS_DIR}/${KEBAB_NAME}.md"
-      echo "Copied ${TUTORIAL_FILE} to ${DOCS_TUTORIALS_DIR}/${KEBAB_NAME}.md"
+      cp "${TUTORIAL_FILE}" "${DOCS_TUTORIALS_DIR}/${OUTPUT_FILENAME}"
+      echo "Copied ${TUTORIAL_FILE} to ${DOCS_TUTORIALS_DIR}/${OUTPUT_FILENAME}"
     else
       echo "Warning: No tutorial.md found for feature group ${GROUP_NAME}"
     fi

@@ -67,8 +67,12 @@ const processFeatureGroups = (featureGroupDirs) => {
     const groupName = path.basename(groupDir);
     console.log(`Processing feature group: ${groupName}`);
     
-    // Check if this group exists in features.json
-    if (!featureGroups[groupName]) {
+    // Check if this group exists in features.json (case-insensitive)
+    const matchingGroup = Object.keys(featureGroups).find(
+      key => key.toLowerCase() === groupName.toLowerCase()
+    );
+    
+    if (!matchingGroup) {
       console.warn(`Feature group ${groupName} not found in features.json, skipping`);
       return;
     }
@@ -84,15 +88,11 @@ const processFeatureGroups = (featureGroupDirs) => {
     const tutorialPath = path.join(groupDir, 'tutorial.md');
     const tutorialExists = fs.existsSync(tutorialPath);
     
-    // Create the feature key (kebab-case)
-    const featureKey = groupName
-      .replace(/([a-z])([A-Z])/g, '$1-$2')
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/gi, '')
-      .toLowerCase();
+    // Use the folder name directly as the feature key
+    const featureKey = groupName;
     
     if (!featureKey) {
-      console.warn(`Generated empty feature key for ${groupName}, skipping`);
+      console.warn(`Generated empty feature key for ${groupDir}, skipping`);
       return;
     }
     
@@ -108,13 +108,13 @@ const processFeatureGroups = (featureGroupDirs) => {
       const metadata = JSON.parse(metadataContent);
       
       // Add additional fields
-      metadata.title = metadata.title || groupName;
+      metadata.title = metadata.title || matchingGroup;
       metadata.sidebar_order = metadata.sidebar_order || 0;
       metadata.deprecated = metadata.deprecated || false;
       
       // Add feature group information
-      metadata.feature_group = groupName;
-      metadata.features = Object.keys(featureGroups[groupName] || {});
+      metadata.feature_group = matchingGroup;
+      metadata.features = Object.keys(featureGroups[matchingGroup] || {});
       
       // Create the feature entry
       featuresObject[featureKey] = {
