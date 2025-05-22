@@ -51,8 +51,6 @@ tags:
 - description: team gamefi
   name: gamefi
   x-displayName: gamefi
-- name: oas_other
-  x-displayName: other
 - description: Passport Profile endpoints
   name: passport profile
   x-displayName: passport profile
