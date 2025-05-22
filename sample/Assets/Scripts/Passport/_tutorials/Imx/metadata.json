@@ -1,0 +1,8 @@
+{
+  "title": "Immutable X Integration with Passport SDK",
+  "description": "How to integrate Immutable X features in your Unity game, including connecting to IMX, registering users, retrieving wallet addresses, and transferring NFTs",
+  "keywords": ["Immutable", "SDK", "Imx", "ImxConnect", "ImxRegister", "ImxGetAddress", "ImxNftTransfer", "ImxIsRegisteredOffchain", "NFT", "Blockchain"],
+  "tech_stack": ["Unity", "C#", "Passport SDK", "Immutable X", "Blockchain"],
+  "product": "Passport",
+  "programming_language": "C#"
+} 

@@ -1,0 +1,8 @@
+{
+  "title": "Retrieving User Information from Passport",
+  "description": "Learn how to retrieve authenticated user information including email, Passport ID, access token, ID token, and linked wallet addresses using Immutable Passport SDK.",
+  "keywords": ["Immutable", "SDK", "GetUserInfo", "Passport", "Authentication", "User Information", "Access Token", "ID Token"],
+  "tech_stack": ["Unity", "C#", "Cysharp.Threading.Tasks"],
+  "product": "Passport",
+  "programming_language": "C#"
+} 

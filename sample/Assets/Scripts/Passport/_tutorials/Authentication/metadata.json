@@ -1,0 +1,8 @@
+{
+  "title": "Immutable Passport Authentication",
+  "description": "Implement user authentication in Unity games with Immutable Passport SDK, supporting both Device Code and PKCE flows",
+  "keywords": ["Immutable", "SDK", "Authentication", "Login", "Logout", "Relogin", "Reconnect", "Passport", "Unity"],
+  "tech_stack": ["Unity", "C#", "UniTask", "Immutable Passport SDK"],
+  "product": "Passport",
+  "programming_language": "C#"
+} 

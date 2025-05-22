@@ -1,0 +1,83 @@
+name: Publish Passport Tutorials
+
+on:
+  # Run when changes are pushed to Passport tutorials or metadata
+  push:
+    branches:
+      # - main
+      - chore/sample-app-tutorial
+    paths:
+      - 'sample/Assets/Scripts/Passport/features.json'
+      - 'sample/Assets/Scripts/Passport/_tutorials/**/*'
+
+  # Allow manual triggering
+  workflow_dispatch:
+
+concurrency:
+  group: passport-tutorials
+  cancel-in-progress: false
+
+jobs:
+  PublishPassportTutorials:
+    name: Process and Publish Passport Tutorials
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Unity SDK Repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+
+      - name: Create Parsed Directory
+        run: mkdir -p _parsed
+
+      - name: Checkout Docs Repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: immutable/docs
+          token: ${{ secrets.UNITY_SDK_DOCS_WORKFLOW }}
+          path: imx-docs
+          ref: 'main'
+
+      - name: Setup environment variables
+        run: echo "CLONE_DIR=./imx-docs" >> $GITHUB_ENV
+
+      - name: Setup Git
+        run: |
+          git config --global user.name "${GITHUB_ACTOR}"
+          git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Process Passport Tutorials
+        run: |
+          # Make scripts executable
+          chmod +x .github/scripts/aggregate-passport-metadata.js
+          chmod +x .github/scripts/process-passport-tutorials.sh
+          
+          # Generate aggregated JSON file
+          node .github/scripts/aggregate-passport-metadata.js
+          
+          # Process tutorials and copy to docs repo
+          .github/scripts/process-passport-tutorials.sh
+        shell: bash
+
+      - name: Commit and Push Changes to Docs Repo
+        run: |
+          cd "$CLONE_DIR"
+          if git status --porcelain | grep -q .; then
+            git add .
+            
+            # Commit with reference to source commit
+            COMMIT_MSG="docs: Update Passport tutorials from Unity SDK (Ref: ${GITHUB_SHA::8})"
+            git commit -m "$COMMIT_MSG"
+            
+            # Push to the target branch
+            git push -u origin main
+            echo "Successfully pushed Passport tutorial changes to docs repo"
+          else
+            echo "No changes to commit"
+          fi
+        shell: bash
