@@ -13,7 +13,7 @@
         "ImxNftTransfer": "ImxNftTransferScript.cs",
         "ImxIsRegisteredOffchain": "ImxIsRegisteredOffchainScript.cs"
       },
-      "ZkEvm": {
+      "Zkevm": {
         "ZkEvmConnect": "ZkEvmConnectScript.cs",
         "ZkEvmSendTransaction": "ZkEvmSendTransactionScript.cs",
         "ZkEvmGetBalance": "ZkEvmGetBalanceScript.cs",
