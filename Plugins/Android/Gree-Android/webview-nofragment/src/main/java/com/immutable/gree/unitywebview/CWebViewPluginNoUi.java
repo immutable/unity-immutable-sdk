@@ -86,6 +86,9 @@ public class CWebViewPluginNoUi {
     }
 
     public CWebViewPluginNoUi() {
+        if (Looper.myLooper() == null) {
+            Looper.prepare();
+        }
         unityHandler = new Handler(Looper.myLooper());
     }
 
