@@ -4,8 +4,7 @@ on:
   # Run when changes are pushed to Passport tutorials or metadata
   push:
     branches:
-      # - main
-      - chore/sample-app-tutorial
+      - main
     paths:
       - 'sample/Assets/Scripts/Passport/**/tutorial.md'
       - 'sample/Assets/Scripts/Passport/**/metadata.json'

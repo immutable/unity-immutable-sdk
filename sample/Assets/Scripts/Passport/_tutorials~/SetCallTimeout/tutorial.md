@@ -4,7 +4,7 @@
 
 </div>
 
-The Set Call Timeout feature allows developers to configure the timeout duration for API calls within the Immutable Passport SDK. This enables greater control over network operations, allowing customization of how long the application should wait for responses before timing out
+The Set Call Timeout feature allows developers to configure the timeout duration for API calls within the Immutable Passport SDK. This enables greater control over network operations, allowing customization of how long the application should wait for responses before timing out.
 
 <div class="button-component">
 
