@@ -1,0 +1,156 @@
+# Passport Feature Group Tutorial Generator
+## Task Overview
+Analyze the specified {FEATURE_GROUP} from sample/Assets/Scripts/Passport/features.json and create comprehensive documentation for it. You will create:
+1. A comprehensive tutorial.md file covering all features in the specified group
+2. A metadata.json file for the feature group
+
+## Input Required
+- FEATURE_GROUP: The exact name of the specific feature group to document, as it appears in features.json
+
+## Structure of features.json
+The features.json file has the following structure:
+```json
+{
+  "features": {
+    "{FEATURE_GROUP}": {
+      "feature1": { ... },
+      "feature2": { ... },
+      ...
+    },
+    "anotherFeatureGroup": {
+      ...
+    }
+  }
+}
+```
+
+You will be analyzing one specific {FEATURE_GROUP} and all features contained within it.
+
+## Special Case: Single-Feature Groups
+IMPORTANT: If the specified {FEATURE_GROUP} contains only one feature, treat it as a standalone feature rather than a feature group. This means:
+- Do not refer to it as a "feature group" in the documentation
+- Skip the "Feature Group Overview" section that discusses relationships between features
+- Focus solely on documenting the single feature in depth
+- Adjust headings and terminology accordingly to avoid references to a "group"
+- For the "Running the Feature Example" section (note: not "Examples"), provide steps specific to this single feature
+
+## Preparation
+Before starting:
+- Read through all SDK documentation (in the /src/Packages folders)
+- Understand the SDK's key features, functionality, and integration patterns
+- Focus on the Passport SDK the most. That's your area of specialty.
+- Familiarize yourself with the specified feature group defined in features.json
+
+## Process for the Specified Feature Group
+
+### 1. Analysis Phase
+- Identify the specified {FEATURE_GROUP} and all member features from features.json
+- For each feature in the group, read all C# code files in the feature's directory (sample/Assets/Scripts/Passport/{FeatureName}/)
+- Understand how the features in the group relate to each other
+- Identify the common patterns, architecture, components, and data flow across the feature group
+- Note all frameworks, libraries, and dependencies used
+- IMPORTANT: Focus on the logical connections between features in the group while maintaining focus on each feature's specific implementation details.
+
+### 2. Create tutorial.md in sample/Assets/Scripts/Passport/_tutorials~/{FEATURE_GROUP}/
+Create a tutorial.md file for the feature group with the following structure:
+
+#### Group Introduction
+- Brief overview of the feature group's purpose and importance
+- Which specific SDK capabilities the group demonstrates
+- Link to the sample app GitHub repository. (The Github repository MUST BE linked with this message: "View feature group on Github")
+
+Note: For single-feature cases, rename this section to "Feature Introduction" and adjust the link text to "View feature on Github"
+
+IMPORTANT: The TITLE (the text that starts with #) of the feature group that comes before the "View feature group on Github" link must be wrapped in a <div class="display-none"> tag. Ensure that the format looks like this:
+<div class="display-none">
+
+# Group Title
+
+</div>
+
+IMPORTANT: The "View feature group on Github" link must be wrapped in a <div class="button-component"> tag. Ensure that the format looks like this:
+<div class="button-component">
+
+[View feature group on Github](<link to the github repo>) <span class="button-component-arrow">→</span>
+
+</div>
+
+IMPORTANT: The feature group's description will come before the "View feature group on Github" link.
+
+#### {FeatureGroup} Overview
+- List all features included in this group
+- Explain how these features work together and their relationships
+- High-level description of common patterns across features in this group
+
+Note: For single-feature cases, skip this section entirely.
+
+#### Unity SDK {FeatureGroup} Features
+For each feature in the group, create a section with:
+
+Note: For single-feature cases, rename this section to "Unity SDK {feature} Implementation" and adjust content accordingly.
+
+##### Feature: [Feature Name]
+- Brief description of what the specific feature does
+- Code snippets showing how the feature is implemented (CodeBlock should be linked to the relevant github repo)
+- IMPORTANT: related snippets should be under a single code block rather than dividing them across multiple codeblocks. Only include the relevant snippets (method calls, etc) and not Unity-specific boilerplate (such as Start, Update, etc, when it's irrelevant) to ensure that the focus is on the most important code snippet relevant to the feature.
+    - Example structure: ```csharp title="<feature name>" manualLink="<github repo link containing the code snippet(don't specify the line, just the file's link)>"
+                                <code snippet>
+                        ```
+- Clear explanation of how the code works
+- When relevant, note how this feature connects with others in the group
+
+#### Running the Feature Group Examples
+- Prerequisites (including a link to Immutable Hub for environment setup)
+- Step-by-step instructions to run all features in the group locally (using Unity Editor)
+- Note any sequence dependencies (if certain features should be run before others)
+
+Note: For single-feature cases, rename this section to "Running the Feature Example" and adjust the content accordingly.
+
+#### Summary
+- Concise recap of what the feature group demonstrates
+- Best practices when using these features together
+- Any key takeaways for developers
+
+#### Formatting Requirements
+- Use proper Markdown syntax throughout
+- Use heading levels (H1, H2, H3, H4) appropriately
+- Format all code with proper syntax highlighting
+- Use bulleted lists for features and steps
+- Include clear transitions between different features in the group
+
+### 3. Create metadata.json in sample/Assets/Scripts/Passport/_tutorials~/{FEATURE_GROUP}/
+IMPORTANT: UI LIBRARY IS NOT A FEATURE OR TECH STACK. IN GENERAL, NEVER INCLUDE UI LIBRARY IN THE METADATA.JSON FILE.
+Create a metadata.json file for the feature group with the following structure:
+{
+"title": "[Descriptive title of the feature group]",
+"description": "[Concise overview of what the feature group demonstrates]",
+"keywords": ["Immutable", "SDK", "[Feature Group]", "[Feature 1]", "[Feature 2]", ...],
+"tech_stack": ["Unity", "C#", "[Library]", ...],
+"product": "Passport",
+"programming_language": "C#"
+}
+
+For single-feature cases, use this structure instead:
+{
+"title": "[Descriptive title of the feature]",
+"description": "[Concise overview of what the feature demonstrates]",
+"keywords": ["Immutable", "SDK", "[Feature Name]", ...],
+"tech_stack": ["Unity", "C#", "[Library]", ...],
+"product": "Passport",
+"programming_language": "C#"
+}
+
+### 4. Handling Existing Files
+If the feature group already has tutorial.md or metadata.json but is incomplete:
+- Enhance the content while preserving any accurate existing information
+- Ensure it meets all the format requirements specified above
+- Update to include all features in the group according to the latest features.json
+
+## Final Verification
+- All features in the specified feature group are documented thoroughly in tutorial.md
+- The tutorial shows the logical connections between features in the group
+- The tutorial is free of generic SDK initialization boilerplate
+- All links to GitHub repositories are correct
+- metadata.json contains accurate and comprehensive information covering all features in the group
+- Both files are properly formatted and placed in the correct directory structure
+
