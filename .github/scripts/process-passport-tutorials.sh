@@ -8,7 +8,7 @@ DOCS_REPO_DIR="${CLONE_DIR:-"./imx-docs"}"
 
 # Root of the Passport features
 PASSPORT_ROOT="./sample/Assets/Scripts/Passport"
-TUTORIALS_DIR="${PASSPORT_ROOT}/_tutorials"
+TUTORIALS_DIR="${PASSPORT_ROOT}/_tutorials~"
 
 echo "Processing Passport tutorials..."
 
@@ -23,11 +23,11 @@ fi
 DOCS_TUTORIALS_DIR="${DOCS_REPO_DIR}/docs/main/example/zkEVM/unity/passport-examples/_tutorials"
 mkdir -p "${DOCS_TUTORIALS_DIR}"
 
-# Check if _tutorials directory exists
+# Check if _tutorials~ directory exists
 if [ ! -d "${TUTORIALS_DIR}" ]; then
-  echo "Warning: _tutorials directory not found at ${TUTORIALS_DIR}"
+  echo "Warning: _tutorials~ directory not found at ${TUTORIALS_DIR}"
 else
-  # Process each feature group directory in _tutorials
+  # Process each feature group directory in _tutorials~
   find "${TUTORIALS_DIR}" -mindepth 1 -maxdepth 1 -type d -print0 | while IFS= read -r -d '' GROUP_DIR; do
     echo "Processing feature group: ${GROUP_DIR}"
     
