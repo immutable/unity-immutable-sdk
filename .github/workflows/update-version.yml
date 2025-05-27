@@ -119,7 +119,7 @@ jobs:
       id: copy_sample_scenes_and_scripts
       run: |
         rsync -av --exclude='*.meta' ./sample/Assets/Scenes/Passport ./src/Packages/Passport/Samples~/SamplesScenesScripts/Scenes/
-        rsync -av --exclude='*.meta' ./sample/Assets/Scripts/Passport ./src/Packages/Passport/Samples~/SamplesScenesScripts/Scripts/
+        rsync -av --exclude='*.meta' --exclude='./sample/Assets/Scripts/Passport/_prompts~' --exclude='./sample/Assets/Scripts/Passport/_tutorials~' ./sample/Assets/Scripts/Passport ./src/Packages/Passport/Samples~/SamplesScenesScripts/Scripts/
 
         rsync -av --exclude='*.meta' ./sample/Assets/Scenes/Marketplace ./src/Packages/Marketplace/Samples~/SamplesScenesScripts/Scenes/
         rsync -av --exclude='*.meta' ./sample/Assets/Scripts/Marketplace ./src/Packages/Marketplace/Samples~/SamplesScenesScripts/Scripts/
