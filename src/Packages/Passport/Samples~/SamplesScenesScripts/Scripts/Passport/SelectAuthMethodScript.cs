@@ -56,7 +56,7 @@ public class SelectAuthMethodScript : MonoBehaviour
     /// <summary>
     /// Initialises Passport.
     /// </summary>
-    /// <param name="redirectUri">(Android, iOS and macOS only) The URL to which auth will redirect the browser after 
+    /// <param name="redirectUri">The URL to which auth will redirect the browser after 
     /// authorisation has been granted by the user</param>
     /// <param name="logoutRedirectUri">The URL to which auth will redirect the browser
     /// after log out is complete</param>

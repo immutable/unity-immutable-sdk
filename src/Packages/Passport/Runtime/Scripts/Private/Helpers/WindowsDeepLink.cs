@@ -137,11 +137,12 @@ namespace Immutable.Passport.Helpers
                 "        powershell -NoProfile -ExecutionPolicy Bypass -Command ^",
                 "            \"$ErrorActionPreference = 'Continue';\" ^",
                 "            \"$wshell = New-Object -ComObject wscript.shell;\" ^",
-                "            \"echo [$(Get-Date)] Attempting to activate process ID: %%A >> \\\"{logPath}\\\";\" ^",
+                "            \"Add-Content -Path \\\"{logPath}\\\" -Value ('[' + (Get-Date) + '] Attempting to activate process ID: ' + %%A);\" ^",
                 "            \"Start-Sleep -Milliseconds 100;\" ^",
                 "            \"$result = $wshell.AppActivate(%%A);\" ^",
-                "            \"echo [$(Get-Date)] AppActivate result: $result >> \\\"{logPath}\\\";\" ^",
-                "            \"if (-not $result) { echo [$(Get-Date)] Failed to activate window >> \\\"{logPath}\\\" }\"",
+                "            \"Add-Content -Path \\\"{logPath}\\\" -Value ('[' + (Get-Date) + '] AppActivate result: ' + $result);\" ^",
+                "            \"if (-not $result) { Add-Content -Path \\\"{logPath}\\\" -Value ('[' + (Get-Date) + '] Failed to activate window') }\" ^",
+                "        >nul 2>&1",
                 "        if errorlevel 1 echo [%date% %time%] PowerShell error: %errorlevel% >> \"%LOG_PATH%\"",
                 "        endlocal",
                 "        exit /b 0",
@@ -213,8 +214,19 @@ namespace Immutable.Passport.Helpers
                 throw new Exception($"Failed to create PKCE registry key. Error code: {result}");
             }
 
+            // Set the default value for the protocol key to Application.productName
+            // This is often used by Windows as the display name for the protocol
+            string appProductName = Application.productName;
+            uint productNameDataSize = (uint)((appProductName.Length + 1) * Marshal.SystemDefaultCharSize); 
+            int setDefaultResult = RegSetValueEx(hKey, null, 0, REG_SZ, appProductName, productNameDataSize);
+
+            if (setDefaultResult != 0)
+            {
+                PassportLogger.Warn($"Failed to set default display name for protocol '{protocolName}'. Error code: {setDefaultResult}");
+            }
+
             // Set URL Protocol value
-            RegSetValueEx(hKey, "URL Protocol", 0, REG_SZ, string.Empty, 2);
+            RegSetValueEx(hKey, "URL Protocol", 0, REG_SZ, string.Empty, (uint)(1 * Marshal.SystemDefaultCharSize)); 
 
             // Create command subkey
             UIntPtr commandKey;
