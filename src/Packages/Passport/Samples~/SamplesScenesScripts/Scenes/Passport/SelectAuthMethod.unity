@@ -1822,15 +1822,14 @@ MonoBehaviour:
 
 
     1.
-    Authorisation Code Flow with Proof Key for Code Exchange (PKCE) is available
-    for Android, iOS, macOS and WebGL (not officially supported). This method provides
+    Authorisation Code Flow with Proof Key for Code Exchange (PKCE): This method provides
     a seamless and secure authentication experience by opening a pop-up window on
     macOS or an in-app browser on mobile devices. Players are automatically redirected
     back to the game once authenticated, eliminating manual switching.
 
 
     2. Device
-    Code Authorisation is available for Windows, Android, iOS and macOS. This method
+    Code Authorisation: This method
     opens the player''s default browser and guides them through the authentication
     flow.
 

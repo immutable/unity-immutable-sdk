@@ -137,7 +137,7 @@ namespace Immutable.Passport
         /// </summary>
         /// <param name="clientId">The client ID</param>
         /// <param name="environment">The environment to connect to</param>
-        /// <param name="redirectUri">(Android, iOS, and macOS only) The URL where the browser will redirect after successful authentication.</param>
+        /// <param name="redirectUri">The URL where the browser will redirect after successful authentication.</param>
         /// <param name="logoutRedirectUri">The URL where the browser will redirect after logout is complete.</param>
         /// <param name="engineStartupTimeoutMs">(Windows only) Timeout duration in milliseconds to wait for the default Windows browser engine to start.</param>
         /// <param name="webBrowserClient">(Windows only) Custom Windows browser to use instead of the default browser in the SDK.</param>

@@ -75,7 +75,7 @@ For PKCE authentication, the redirect URIs must be configured correctly based on
 ### Prerequisites
 - Create an Immutable Hub account and get your client ID from [Immutable Hub](https://hub.immutable.com)
 - Set up the Unity project with the Immutable Passport SDK
-- Configure your project for the appropriate platform (WebGL, Android, iOS, macOS, Windows)
+- Configure your project for the appropriate platform
 
 ### Steps to Run the Example
 1. Open the Unity project and load the sample scene for Passport Initialisation
