@@ -739,8 +739,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 885.59955, y: 0}
-  m_SizeDelta: {x: 1771.1991, y: 0}
+  m_AnchoredPosition: {x: 777.1642, y: 0}
+  m_SizeDelta: {x: 1554.3284, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &410008536
 MonoBehaviour:
@@ -882,6 +882,52 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &722408341
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 722408343}
+  - component: {fileID: 722408342}
+  m_Layer: 0
+  m_Name: ZkEvmGetBalance
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &722408342
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 722408341}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb441184afcbc4e45899def1397f5344, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Output: {fileID: 1253661940}
+  AddressInput: {fileID: 885231615}
+--- !u!4 &722408343
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 722408341}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 415.90372, y: 576.16345, z: -10.099511}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &740387918
 GameObject:
   m_ObjectHideFlags: 0
@@ -966,8 +1012,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1192763474}
-        m_TargetAssemblyTypeName: ZkEvmGetBalance, Assembly-CSharp
+      - m_Target: {fileID: 722408342}
+        m_TargetAssemblyTypeName: ZkEvmGetBalanceScript, Assembly-CSharp
         m_MethodName: Cancel
         m_Mode: 1
         m_Arguments:
@@ -1052,8 +1098,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 885.59955, y: 0}
-  m_SizeDelta: {x: 1771.1991, y: 0}
+  m_AnchoredPosition: {x: 777.1642, y: 0}
+  m_SizeDelta: {x: 1554.3284, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &783923066
 MonoBehaviour:
@@ -1195,7 +1241,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1741513413}
   m_Direction: 2
   m_Value: 1
-  m_Size: 1
+  m_Size: 0.99999994
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -1469,8 +1515,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1192763474}
-        m_TargetAssemblyTypeName: ZkEvmGetBalance, Assembly-CSharp
+      - m_Target: {fileID: 722408342}
+        m_TargetAssemblyTypeName: ZkEvmGetBalanceScript, Assembly-CSharp
         m_MethodName: GetBalance
         m_Mode: 1
         m_Arguments:
@@ -1861,7 +1907,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1192763473}
-  - component: {fileID: 1192763474}
   m_Layer: 0
   m_Name: Script
   m_TagString: Untagged
@@ -1884,20 +1929,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1192763474
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1192763471}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 276ae4e0b60934fa3bc6164abe9468b6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Output: {fileID: 1253661940}
-  AddressInput: {fileID: 885231615}
 --- !u!1 &1227009912
 GameObject:
   m_ObjectHideFlags: 0
