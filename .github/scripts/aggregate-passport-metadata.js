@@ -7,7 +7,7 @@ const path = require('path');
 
 // Configuration
 const PASSPORT_ROOT = './sample/Assets/Scripts/Passport';
-const TUTORIALS_DIR = path.join(PASSPORT_ROOT, '_tutorials');
+const TUTORIALS_DIR = path.join(PASSPORT_ROOT, '_tutorials~');
 const OUTPUT_DIR = './_parsed';
 const OUTPUT_FILE = path.join(OUTPUT_DIR, 'passport-features.json');
 const FEATURES_JSON_PATH = path.join(PASSPORT_ROOT, 'features.json');

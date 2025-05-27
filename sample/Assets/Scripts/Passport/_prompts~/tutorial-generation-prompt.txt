@@ -51,7 +51,7 @@ Before starting:
 - Note all frameworks, libraries, and dependencies used
 - IMPORTANT: Focus on the logical connections between features in the group while maintaining focus on each feature's specific implementation details.
 
-### 2. Create tutorial.md in sample/Assets/Scripts/Passport/_tutorials/{FEATURE_GROUP}/
+### 2. Create tutorial.md in sample/Assets/Scripts/Passport/_tutorials~/{FEATURE_GROUP}/
 Create a tutorial.md file for the feature group with the following structure:
 
 #### Group Introduction
@@ -118,7 +118,7 @@ Note: For single-feature cases, rename this section to "Running the Feature Exam
 - Use bulleted lists for features and steps
 - Include clear transitions between different features in the group
 
-### 3. Create metadata.json in sample/Assets/Scripts/Passport/_tutorials/{FEATURE_GROUP}/
+### 3. Create metadata.json in sample/Assets/Scripts/Passport/_tutorials~/{FEATURE_GROUP}/
 IMPORTANT: UI LIBRARY IS NOT A FEATURE OR TECH STACK. IN GENERAL, NEVER INCLUDE UI LIBRARY IN THE METADATA.JSON FILE.
 Create a metadata.json file for the feature group with the following structure:
 {
