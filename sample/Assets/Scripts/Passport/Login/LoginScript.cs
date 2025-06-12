@@ -1,5 +1,4 @@
 using System;
-using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
@@ -9,11 +8,10 @@ public class LoginScript : MonoBehaviour
 {
 #pragma warning disable CS8618
     [SerializeField] private Text Output;
-    [SerializeField] private InputField DeviceCodeTimeoutMs;
     private Passport Passport;
 #pragma warning restore CS8618
 
-    async void Start()
+    void Start()
     {
         if (Passport.Instance != null)
         {
@@ -30,20 +28,10 @@ public class LoginScript : MonoBehaviour
     /// </summary>
     public async void Login()
     {
-        var timeoutMs = GetDeviceCodeTimeoutMs();
-        string formattedTimeout = timeoutMs != null ? $"{timeoutMs} ms" : "none";
-        ShowOutput($"Logging in (timeout: {formattedTimeout})...");
         try
         {
-            if (SampleAppManager.UsePKCE)
-            {
-                await Passport.LoginPKCE();
-            }
-            else
-            {
-                await Passport.Login(timeoutMs: timeoutMs);
-            }
-            NavigateToAuthenticatedScene();
+            await Passport.Login();
+            SceneManager.LoadScene("AuthenticatedScene");
         }
         catch (OperationCanceledException)
         {
@@ -55,16 +43,6 @@ public class LoginScript : MonoBehaviour
         }
     }
 
-    private long? GetDeviceCodeTimeoutMs()
-    {
-        return string.IsNullOrEmpty(DeviceCodeTimeoutMs.text) ? null : long.Parse(DeviceCodeTimeoutMs.text);
-    }
-
-    private void NavigateToAuthenticatedScene()
-    {
-        SceneManager.LoadScene("AuthenticatedScene");
-    }
-
     private void ShowOutput(string message)
     {
         if (Output != null)
@@ -72,4 +50,4 @@ public class LoginScript : MonoBehaviour
             Output.text = message;
         }
     }
-} 
+}

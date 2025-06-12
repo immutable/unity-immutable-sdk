@@ -21,43 +21,39 @@ namespace Immutable.Passport
 #endif
     {
         private const string TAG = "[Passport Implementation]";
-        public readonly IBrowserCommunicationsManager communicationsManager;
-        private PassportAnalytics analytics = new();
+        private readonly IBrowserCommunicationsManager _communicationsManager;
+        private readonly PassportAnalytics _analytics = new();
 
-        // Used for device code auth
-        private DeviceConnectResponse? deviceConnectResponse;
-
-        // Used for PKCE
-        private bool pkceLoginOnly; // Used to differentiate between a login and connect
-        private UniTaskCompletionSource<bool>? pkceCompletionSource;
-        private string? redirectUri;
-        private string? logoutRedirectUri;
+        private bool _pkceLoginOnly; // Used to differentiate between a login and connect
+        private UniTaskCompletionSource<bool>? _pkceCompletionSource;
+        private string _redirectUri;
+        private string _logoutRedirectUri;
 
 #if UNITY_ANDROID
         // Used for the PKCE callback
-        internal static bool completingPKCE = false;
+        internal static bool completingPKCE;
         internal static string loginPKCEUrl;
 #endif
 
         // Used to prevent calling login/connect functions multiple times
-        private bool isLoggedIn = false;
+        private bool _isLoggedIn;
 
         public event OnAuthEventDelegate? OnAuthEvent;
 
         public PassportImpl(IBrowserCommunicationsManager communicationsManager)
         {
-            this.communicationsManager = communicationsManager;
+            _communicationsManager = communicationsManager;
         }
 
-        public async UniTask Init(string clientId, string environment, string? redirectUri = null,
-            string? logoutRedirectUri = null, string? deeplink = null)
+        public async UniTask Init(string clientId, string environment, string redirectUri,
+            string logoutRedirectUri, string? deeplink = null)
         {
-            this.redirectUri = redirectUri;
-            this.logoutRedirectUri = logoutRedirectUri;
+            _redirectUri = redirectUri;
+            _logoutRedirectUri = logoutRedirectUri;
 
 #if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
-            this.communicationsManager.OnAuthPostMessage += OnDeepLinkActivated;
-            this.communicationsManager.OnPostMessageError += OnPostMessageError;
+            _communicationsManager.OnAuthPostMessage += OnDeepLinkActivated;
+            _communicationsManager.OnPostMessageError += OnPostMessageError;
 #endif
 
             var versionInfo = new VersionInfo
@@ -70,35 +66,19 @@ namespace Immutable.Passport
                 deviceModel = SystemInfo.deviceModel
             };
 
-            string initRequest;
-            if (redirectUri != null)
+            var initRequest = JsonUtility.ToJson(new InitRequestWithRedirectUri
             {
-                InitRequestWithRedirectUri requestWithRedirectUri = new InitRequestWithRedirectUri()
-                {
-                    clientId = clientId,
-                    environment = environment,
-                    redirectUri = redirectUri,
-                    logoutRedirectUri = logoutRedirectUri,
-                    engineVersion = versionInfo
-                };
-                initRequest = JsonUtility.ToJson(requestWithRedirectUri);
-            }
-            else
-            {
-                InitRequest request = new InitRequest
-                {
-                    clientId = clientId,
-                    environment = environment,
-                    logoutRedirectUri = logoutRedirectUri,
-                    engineVersion = versionInfo
-                };
-                initRequest = JsonUtility.ToJson(request);
-            }
+                clientId = clientId,
+                environment = environment,
+                redirectUri = redirectUri,
+                logoutRedirectUri = logoutRedirectUri,
+                engineVersion = versionInfo
+            });
 
-            string response = await communicationsManager.Call(PassportFunction.INIT, initRequest);
-            BrowserResponse initResponse = response.OptDeserializeObject<BrowserResponse>();
+            var response = await _communicationsManager.Call(PassportFunction.INIT, initRequest);
+            var initResponse = response.OptDeserializeObject<BrowserResponse>();
 
-            if (initResponse.success == false)
+            if (initResponse?.success == false)
             {
                 Track(PassportAnalytics.EventName.INIT_PASSPORT, success: false);
                 throw new PassportException(initResponse.error ?? "Unable to initialise Passport");
@@ -112,34 +92,40 @@ namespace Immutable.Passport
             Track(PassportAnalytics.EventName.INIT_PASSPORT, success: true);
         }
 
-        public async UniTask<bool> Login(bool useCachedSession = false, Nullable<long> timeoutMs = null)
+        public void SetCallTimeout(int ms)
+        {
+            _communicationsManager.SetCallTimeout(ms);
+        }
+
+        public UniTask<bool> Login(bool useCachedSession = false)
         {
             if (useCachedSession)
             {
-                return await Relogin();
+                return Relogin();
             }
 
             try
             {
-                const string functionName = "Login";
-                Track(PassportAnalytics.EventName.START_LOGIN);
-                SendAuthEvent(PassportAuthEvent.LoggingIn);
+                Track(PassportAnalytics.EventName.START_LOGIN_PKCE);
+                SendAuthEvent(PassportAuthEvent.LoggingInPKCE);
 
-                await InitialiseDeviceCodeAuth(functionName);
-                await ConfirmCode(
-                    PassportAuthEvent.LoginOpeningBrowser, PassportAuthEvent.PendingBrowserLogin, functionName,
-                    PassportFunction.LOGIN_CONFIRM_CODE, timeoutMs);
-
-                Track(PassportAnalytics.EventName.COMPLETE_LOGIN, success: true);
-                SendAuthEvent(PassportAuthEvent.LoginSuccess);
-                isLoggedIn = true;
-                return true;
+                var task = new UniTaskCompletionSource<bool>();
+                _pkceCompletionSource = task;
+                _pkceLoginOnly = true;
+#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+                WindowsDeepLink.Initialise(redirectUri, OnDeepLinkActivated);
+#endif
+                _ = LaunchAuthUrl();
+                return task.Task;
             }
             catch (Exception ex)
             {
-                Track(PassportAnalytics.EventName.COMPLETE_LOGIN, success: false);
-                SendAuthEvent(PassportAuthEvent.LoginFailed);
-                throw ex;
+                var errorMessage = $"Failed to log in using PKCE flow: {ex.Message}";
+                PassportLogger.Error($"{TAG} {errorMessage}");
+
+                Track(PassportAnalytics.EventName.COMPLETE_LOGIN_PKCE, success: false);
+                SendAuthEvent(PassportAuthEvent.LoginPKCEFailed);
+                throw new PassportException(errorMessage, PassportErrorType.AUTHENTICATION_ERROR);
             }
         }
 
@@ -155,10 +141,10 @@ namespace Immutable.Passport
             {
                 SendAuthEvent(PassportAuthEvent.ReloggingIn);
 
-                string callResponse = await communicationsManager.Call(PassportFunction.RELOGIN);
+                string callResponse = await _communicationsManager.Call(PassportFunction.RELOGIN);
                 Track(PassportAnalytics.EventName.COMPLETE_RELOGIN, success: true);
                 SendAuthEvent(PassportAuthEvent.ReloginSuccess);
-                isLoggedIn = true;
+                _isLoggedIn = true;
 
                 return true;
             }
@@ -167,7 +153,7 @@ namespace Immutable.Passport
                 // Log a warning if re-login fails.
                 PassportLogger.Warn($"{TAG} Failed to login using saved credentials. " +
                     $"Please check if user has saved credentials first by calling HasCredentialsSaved() : {ex.Message}");
-                isLoggedIn = false;
+                _isLoggedIn = false;
             }
 
             Track(PassportAnalytics.EventName.COMPLETE_RELOGIN, success: false);
@@ -175,47 +161,48 @@ namespace Immutable.Passport
             return false;
         }
 
-        public async UniTask<bool> ConnectImx(bool useCachedSession = false, long? timeoutMs = null)
+        public async UniTask<bool> ConnectImx(bool useCachedSession = false)
         {
             if (useCachedSession)
             {
                 return await Reconnect();
             }
 
-            // If the user called Login before and then ConnectImx, there is no point triggering device flow again
-            bool hasCredsSaved = await HasCredentialsSaved();
-            if (hasCredsSaved)
+            // If the user called Login before and then ConnectImx, there is no point triggering full login flow again
+            if (await HasCredentialsSaved())
             {
-                bool reconnected = await Reconnect();
-                if (reconnected)
+                var reconnected = await Reconnect();
+                if (await Reconnect())
                 {
                     // Successfully reconnected
                     return reconnected;
                 }
-                // Otherwise fallback to device code flow
+                // Otherwise fallback to login
             }
 
             try
             {
-                const string functionName = "ConnectImx";
-                Track(PassportAnalytics.EventName.START_CONNECT_IMX);
-                SendAuthEvent(PassportAuthEvent.ConnectingImx);
+                Track(PassportAnalytics.EventName.START_CONNECT_IMX_PKCE);
+                SendAuthEvent(PassportAuthEvent.ConnectingImxPKCE);
+                UniTaskCompletionSource<bool> task = new UniTaskCompletionSource<bool>();
+                _pkceCompletionSource = task;
+                _pkceLoginOnly = false;
 
-                await InitialiseDeviceCodeAuth(functionName);
-                await ConfirmCode(
-                    PassportAuthEvent.ConnectImxOpeningBrowser, PassportAuthEvent.PendingBrowserLoginAndProviderSetup,
-                    functionName, PassportFunction.CONNECT_CONFIRM_CODE, timeoutMs);
+#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+                WindowsDeepLink.Initialise(redirectUri, OnDeepLinkActivated);
+#endif
 
-                Track(PassportAnalytics.EventName.COMPLETE_CONNECT_IMX, success: true);
-                SendAuthEvent(PassportAuthEvent.ConnectImxSuccess);
-                isLoggedIn = true;
-                return true;
+                _ = LaunchAuthUrl();
+                return await task.Task;
             }
             catch (Exception ex)
             {
-                Track(PassportAnalytics.EventName.COMPLETE_CONNECT_IMX, success: false);
-                SendAuthEvent(PassportAuthEvent.ConnectImxFailed);
-                throw ex;
+                var errorMessage = $"Failed to connect using PKCE flow: {ex.Message}";
+                PassportLogger.Error($"{TAG} {errorMessage}");
+
+                Track(PassportAnalytics.EventName.COMPLETE_CONNECT_IMX_PKCE, success: false);
+                SendAuthEvent(PassportAuthEvent.ConnectImxPKCEFailed);
+                throw new PassportException(errorMessage, PassportErrorType.AUTHENTICATION_ERROR);
             }
         }
 
@@ -229,11 +216,11 @@ namespace Immutable.Passport
             {
                 SendAuthEvent(PassportAuthEvent.Reconnecting);
 
-                string callResponse = await communicationsManager.Call(PassportFunction.RECONNECT);
+                string callResponse = await _communicationsManager.Call(PassportFunction.RECONNECT);
 
                 Track(PassportAnalytics.EventName.COMPLETE_RECONNECT, success: true);
                 SendAuthEvent(PassportAuthEvent.ReconnectSuccess);
-                isLoggedIn = true;
+                _isLoggedIn = true;
                 return true;
             }
             catch (Exception ex)
@@ -242,69 +229,12 @@ namespace Immutable.Passport
                 PassportLogger.Warn($"{TAG} Failed to connect using saved credentials. " +
                     $"Please check if user has saved credentials first by calling HasCredentialsSaved() : {ex.Message}");
 
-                isLoggedIn = false;
+                _isLoggedIn = false;
             }
 
             Track(PassportAnalytics.EventName.COMPLETE_RECONNECT, success: false);
             SendAuthEvent(PassportAuthEvent.ReconnectFailed);
             return false;
-        }
-
-        private async UniTask<ConnectResponse> InitialiseDeviceCodeAuth(string callingFunction)
-        {
-            string callResponse = await communicationsManager.Call(PassportFunction.INIT_DEVICE_FLOW);
-            deviceConnectResponse = callResponse.OptDeserializeObject<DeviceConnectResponse>();
-            if (deviceConnectResponse != null && deviceConnectResponse.success == true)
-            {
-                return new ConnectResponse()
-                {
-                    url = deviceConnectResponse.url,
-                    code = deviceConnectResponse.code
-                };
-            }
-
-            throw new PassportException(
-                    deviceConnectResponse?.error ?? $"Something went wrong, please call {callingFunction} again",
-                    PassportErrorType.AUTHENTICATION_ERROR
-                );
-        }
-
-        private async UniTask ConfirmCode(
-            PassportAuthEvent openingBrowserAuthEvent, PassportAuthEvent pendingAuthEvent,
-            string callingFunction, string functionToCall, long? timeoutMs)
-        {
-            if (deviceConnectResponse != null)
-            {
-                long intervalMs = deviceConnectResponse.interval * 1000;
-                if (timeoutMs != null && timeoutMs < intervalMs)
-                {
-                    throw new ArgumentException($"timeoutMs should be longer than {intervalMs}ms");
-                }
-
-                // Open URL for user to confirm
-                SendAuthEvent(openingBrowserAuthEvent);
-                OpenUrl(deviceConnectResponse.url);
-
-                // Start polling for token
-                SendAuthEvent(pendingAuthEvent);
-                ConfirmCodeRequest request = new ConfirmCodeRequest()
-                {
-                    deviceCode = deviceConnectResponse.deviceCode,
-                    interval = deviceConnectResponse.interval,
-                    timeoutMs = timeoutMs
-                };
-
-                string callResponse = await communicationsManager.Call(
-                    functionToCall,
-                    JsonUtility.ToJson(request),
-                    ignoreTimeout: timeoutMs == null,
-                    timeoutMs);
-            }
-            else
-            {
-                throw new PassportException($"Unable to confirm code, call {callingFunction} again",
-                    PassportErrorType.AUTHENTICATION_ERROR);
-            }
         }
 
         public async void OnDeepLinkActivated(string url)
@@ -323,11 +253,11 @@ namespace Immutable.Passport
                     domain = domain.Remove(domain.Length - 1);
                 }
 
-                if (domain.Equals(logoutRedirectUri))
+                if (domain.Equals(_logoutRedirectUri))
                 {
-                    HandleLogoutPKCESuccess();
+                    HandleLogoutPkceSuccess();
                 }
-                else if (domain.Equals(redirectUri))
+                else if (domain.Equals(_redirectUri))
                 {
                     await CompleteLoginPKCEFlow(url);
                 }
@@ -338,66 +268,11 @@ namespace Immutable.Passport
             }
         }
 
-        public UniTask<bool> LoginPKCE()
-        {
-            try
-            {
-                Track(PassportAnalytics.EventName.START_LOGIN_PKCE);
-                SendAuthEvent(PassportAuthEvent.LoggingInPKCE);
-
-                UniTaskCompletionSource<bool> task = new UniTaskCompletionSource<bool>();
-                pkceCompletionSource = task;
-                pkceLoginOnly = true;
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-                WindowsDeepLink.Initialise(redirectUri, OnDeepLinkActivated);
-#endif
-                _ = LaunchAuthUrl();
-                return task.Task;
-            }
-            catch (Exception ex)
-            {
-                string errorMessage = $"Failed to log in using PKCE flow: {ex.Message}";
-                PassportLogger.Error($"{TAG} {errorMessage}");
-
-                Track(PassportAnalytics.EventName.COMPLETE_LOGIN_PKCE, success: false);
-                SendAuthEvent(PassportAuthEvent.LoginPKCEFailed);
-                throw new PassportException(errorMessage, PassportErrorType.AUTHENTICATION_ERROR);
-            }
-        }
-
-        public UniTask<bool> ConnectImxPKCE()
-        {
-            try
-            {
-                Track(PassportAnalytics.EventName.START_CONNECT_IMX_PKCE);
-                SendAuthEvent(PassportAuthEvent.ConnectingImxPKCE);
-                UniTaskCompletionSource<bool> task = new UniTaskCompletionSource<bool>();
-                pkceCompletionSource = task;
-                pkceLoginOnly = false;
-
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-                WindowsDeepLink.Initialise(redirectUri, OnDeepLinkActivated);
-#endif
-
-                _ = LaunchAuthUrl();
-                return task.Task;
-            }
-            catch (Exception ex)
-            {
-                string errorMessage = $"Failed to connect using PKCE flow: {ex.Message}";
-                PassportLogger.Error($"{TAG} {errorMessage}");
-
-                Track(PassportAnalytics.EventName.COMPLETE_CONNECT_IMX_PKCE, success: false);
-                SendAuthEvent(PassportAuthEvent.ConnectImxPKCEFailed);
-                throw new PassportException(errorMessage, PassportErrorType.AUTHENTICATION_ERROR);
-            }
-        }
-
         private async UniTask LaunchAuthUrl()
         {
             try
             {
-                string callResponse = await communicationsManager.Call(PassportFunction.GET_PKCE_AUTH_URL);
+                string callResponse = await _communicationsManager.Call(PassportFunction.GET_PKCE_AUTH_URL);
                 StringResponse response = callResponse.OptDeserializeObject<StringResponse>();
 
                 if (response != null && response.success == true && response.result != null)
@@ -408,24 +283,24 @@ namespace Immutable.Passport
                     SendAuthEvent(pkceLoginOnly ? PassportAuthEvent.LoginPKCELaunchingCustomTabs : PassportAuthEvent.ConnectImxPKCELaunchingCustomTabs);
                     LaunchAndroidUrl(url);
 #else
-                    SendAuthEvent(pkceLoginOnly ? PassportAuthEvent.LoginPKCEOpeningWebView : PassportAuthEvent.ConnectImxPKCEOpeningWebView);
-                    communicationsManager.LaunchAuthURL(url, redirectUri);
+                    SendAuthEvent(_pkceLoginOnly ? PassportAuthEvent.LoginPKCEOpeningWebView : PassportAuthEvent.ConnectImxPKCEOpeningWebView);
+                    _communicationsManager.LaunchAuthURL(url, _redirectUri);
 #endif
                     return;
                 }
                 else
                 {
-                    PassportLogger.Error($"{TAG} Failed to get PKCE Auth URL");
+                    PassportLogger.Error($"{TAG} Failed to get the Auth URL");
                 }
             }
             catch (Exception e)
             {
-                PassportLogger.Error($"{TAG} Get PKCE Auth URL error: {e.Message}");
+                PassportLogger.Error($"{TAG} Get the Auth URL error: {e.Message}");
             }
 
             await UniTask.SwitchToMainThread();
-            TrySetPKCEException(new PassportException(
-                "Something went wrong, please call LoginPKCE() or ConnectImxPKCE() again",
+            TrySetPkceException(new PassportException(
+                "Something went wrong, please call Login() or ConnectImx() again",
                 PassportErrorType.AUTHENTICATION_ERROR
             ));
         }
@@ -437,80 +312,80 @@ namespace Immutable.Passport
 #endif
             try
             {
-                SendAuthEvent(pkceLoginOnly ? PassportAuthEvent.CompletingLoginPKCE : PassportAuthEvent.CompletingConnectImxPKCE);
-                Uri uri = new Uri(uriString);
-                string state = uri.GetQueryParameter("state");
-                string authCode = uri.GetQueryParameter("code");
+                SendAuthEvent(_pkceLoginOnly ? PassportAuthEvent.CompletingLoginPKCE : PassportAuthEvent.CompletingConnectImxPKCE);
+                var uri = new Uri(uriString);
+                var state = uri.GetQueryParameter("state");
+                var authCode = uri.GetQueryParameter("code");
 
-                if (String.IsNullOrEmpty(state) || String.IsNullOrEmpty(authCode))
+                if (string.IsNullOrEmpty(state) || string.IsNullOrEmpty(authCode))
                 {
                     Track(
-                        pkceLoginOnly ? PassportAnalytics.EventName.COMPLETE_LOGIN_PKCE : PassportAnalytics.EventName.COMPLETE_CONNECT_IMX_PKCE,
+                        _pkceLoginOnly ? PassportAnalytics.EventName.COMPLETE_LOGIN_PKCE : PassportAnalytics.EventName.COMPLETE_CONNECT_IMX_PKCE,
                         success: false
                     );
-                    SendAuthEvent(pkceLoginOnly ? PassportAuthEvent.LoginPKCEFailed : PassportAuthEvent.ConnectImxPKCEFailed);
+                    SendAuthEvent(_pkceLoginOnly ? PassportAuthEvent.LoginPKCEFailed : PassportAuthEvent.ConnectImxPKCEFailed);
                     await UniTask.SwitchToMainThread();
-                    TrySetPKCEException(new PassportException(
+                    TrySetPkceException(new PassportException(
                         "Uri was missing state and/or code. Please call ConnectImxPKCE() again",
                         PassportErrorType.AUTHENTICATION_ERROR
                     ));
                 }
                 else
                 {
-                    ConnectPKCERequest request = new ConnectPKCERequest()
+                    var request = new ConnectPKCERequest()
                     {
                         authorizationCode = authCode,
                         state = state
                     };
 
-                    string callResponse = await communicationsManager.Call(
-                            pkceLoginOnly ? PassportFunction.LOGIN_PKCE : PassportFunction.CONNECT_PKCE,
+                    var callResponse = await _communicationsManager.Call(
+                            _pkceLoginOnly ? PassportFunction.LOGIN_PKCE : PassportFunction.CONNECT_PKCE,
                             JsonUtility.ToJson(request)
                         );
 
-                    BrowserResponse response = callResponse.OptDeserializeObject<BrowserResponse>();
+                    var response = callResponse.OptDeserializeObject<BrowserResponse>();
                     await UniTask.SwitchToMainThread();
 
                     if (response != null && response.success != true)
                     {
                         Track(
-                            pkceLoginOnly ? PassportAnalytics.EventName.COMPLETE_LOGIN_PKCE : PassportAnalytics.EventName.COMPLETE_CONNECT_IMX_PKCE,
+                            _pkceLoginOnly ? PassportAnalytics.EventName.COMPLETE_LOGIN_PKCE : PassportAnalytics.EventName.COMPLETE_CONNECT_IMX_PKCE,
                             success: false
                         );
-                        SendAuthEvent(pkceLoginOnly ? PassportAuthEvent.LoginPKCEFailed : PassportAuthEvent.ConnectImxPKCEFailed);
-                        TrySetPKCEException(new PassportException(
-                            response.error ?? "Something went wrong, please call ConnectImxPKCE() again",
+                        SendAuthEvent(_pkceLoginOnly ? PassportAuthEvent.LoginPKCEFailed : PassportAuthEvent.ConnectImxPKCEFailed);
+                        TrySetPkceException(new PassportException(
+                            response.error ?? "Something went wrong, please call ConnectImx() again",
                             PassportErrorType.AUTHENTICATION_ERROR
                         ));
                     }
                     else
                     {
-                        if (!isLoggedIn)
+                        if (!_isLoggedIn)
                         {
-                            TrySetPKCEResult(true);
+                            TrySetPkceResult(true);
                         }
 
                         Track(
-                            pkceLoginOnly ? PassportAnalytics.EventName.COMPLETE_LOGIN_PKCE : PassportAnalytics.EventName.COMPLETE_CONNECT_IMX_PKCE,
+                            _pkceLoginOnly ? PassportAnalytics.EventName.COMPLETE_LOGIN_PKCE : PassportAnalytics.EventName.COMPLETE_CONNECT_IMX_PKCE,
                             success: true
                         );
-                        SendAuthEvent(pkceLoginOnly ? PassportAuthEvent.LoginPKCESuccess : PassportAuthEvent.ConnectImxPKCESuccess);
-                        isLoggedIn = true;
+                        SendAuthEvent(_pkceLoginOnly ? PassportAuthEvent.LoginPKCESuccess : PassportAuthEvent.ConnectImxPKCESuccess);
+                        _isLoggedIn = true;
                     }
                 }
             }
             catch (Exception ex)
             {
                 Track(
-                    pkceLoginOnly ? PassportAnalytics.EventName.COMPLETE_LOGIN_PKCE : PassportAnalytics.EventName.COMPLETE_CONNECT_IMX_PKCE,
+                    _pkceLoginOnly ? PassportAnalytics.EventName.COMPLETE_LOGIN_PKCE : PassportAnalytics.EventName.COMPLETE_CONNECT_IMX_PKCE,
                     success: false
                 );
-                SendAuthEvent(pkceLoginOnly ? PassportAuthEvent.LoginPKCEFailed : PassportAuthEvent.ConnectImxPKCEFailed);
+                SendAuthEvent(_pkceLoginOnly ? PassportAuthEvent.LoginPKCEFailed : PassportAuthEvent.ConnectImxPKCEFailed);
                 // Ensure any failure results in completing the flow regardless.
-                TrySetPKCEException(ex);
+                TrySetPkceException(ex);
             }
 
-            pkceCompletionSource = null;
+            _pkceCompletionSource = null;
 #if UNITY_ANDROID
             completingPKCE = false;
 #endif
@@ -519,11 +394,11 @@ namespace Immutable.Passport
 #if UNITY_ANDROID
         public void OnLoginPKCEDismissed(bool completing)
         {
-            if (!completing && !isLoggedIn)
+            if (!completing && !_isLoggedIn)
             {
                 // User hasn't entered all required details (e.g. email address) into Passport yet
                 PassportLogger.Info($"{TAG} Login PKCE dismissed before completing the flow");
-                TrySetPKCECanceled();
+                TrySetPkceCanceled();
             }
             else
             {
@@ -538,64 +413,35 @@ namespace Immutable.Passport
         }
 #endif
 
-        public async UniTask<string> GetLogoutUrl()
+        private async UniTask<string> GetLogoutUrl()
         {
-            string response = await communicationsManager.Call(PassportFunction.LOGOUT);
-            string logoutUrl = response.GetStringResult();
+            var response = await _communicationsManager.Call(PassportFunction.LOGOUT);
+            var logoutUrl = response.GetStringResult();
             if (string.IsNullOrEmpty(logoutUrl))
             {
                 throw new PassportException("Failed to get logout URL", PassportErrorType.AUTHENTICATION_ERROR);
             }
-            else
-            {
-                return response.GetStringResult();
-            }
+
+            return logoutUrl;
         }
 
-        public async UniTask Logout(bool hardLogout = true)
-        {
-            try
-            {
-                SendAuthEvent(PassportAuthEvent.LoggingOut);
-
-                if (hardLogout)
-                {
-                    var logoutUrl = await GetLogoutUrl();
-                    OpenUrl(logoutUrl);
-                }
-
-                Track(PassportAnalytics.EventName.COMPLETE_LOGOUT, success: true);
-                SendAuthEvent(PassportAuthEvent.LogoutSuccess);
-                isLoggedIn = false;
-            }
-            catch (Exception ex)
-            {
-                string errorMessage = $"Failed to log out: {ex.Message}";
-                PassportLogger.Error($"{TAG} {errorMessage}");
-
-                Track(PassportAnalytics.EventName.COMPLETE_LOGOUT, success: false);
-                SendAuthEvent(PassportAuthEvent.LogoutFailed);
-                throw new PassportException(errorMessage, PassportErrorType.AUTHENTICATION_ERROR);
-            }
-        }
-
-        public UniTask LogoutPKCE(bool hardLogout = true)
+        public async UniTask<bool> Logout(bool hardLogout = true)
         {
             try
             {
                 SendAuthEvent(PassportAuthEvent.LoggingOutPKCE);
 
-                UniTaskCompletionSource<bool> task = new UniTaskCompletionSource<bool>();
-                pkceCompletionSource = task;
+                var task = new UniTaskCompletionSource<bool>();
+                _pkceCompletionSource = task;
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
                 WindowsDeepLink.Initialise(logoutRedirectUri, OnDeepLinkActivated);
 #endif
-                LaunchLogoutPKCEUrl(hardLogout);
-                return task.Task;
+                LaunchLogoutPkceUrl(hardLogout);
+                return await task.Task;
             }
             catch (Exception ex)
             {
-                string errorMessage = $"Failed to log out: {ex.Message}";
+                var errorMessage = $"Failed to log out: {ex.Message}";
                 PassportLogger.Error($"{TAG} {errorMessage}");
 
                 Track(PassportAnalytics.EventName.COMPLETE_LOGOUT_PKCE, success: false);
@@ -604,33 +450,33 @@ namespace Immutable.Passport
             }
         }
 
-        private async void HandleLogoutPKCESuccess()
+        private async void HandleLogoutPkceSuccess()
         {
             await UniTask.SwitchToMainThread();
-            if (isLoggedIn)
+            if (_isLoggedIn)
             {
-                TrySetPKCEResult(true);
+                TrySetPkceResult(true);
             }
             Track(PassportAnalytics.EventName.COMPLETE_LOGOUT_PKCE, success: true);
             SendAuthEvent(PassportAuthEvent.LogoutPKCESuccess);
-            isLoggedIn = false;
-            pkceCompletionSource = null;
+            _isLoggedIn = false;
+            _pkceCompletionSource = null;
         }
 
-        private async void LaunchLogoutPKCEUrl(bool hardLogout)
+        private async void LaunchLogoutPkceUrl(bool hardLogout)
         {
-            string logoutUrl = await GetLogoutUrl();
+            var logoutUrl = await GetLogoutUrl();
             if (hardLogout)
             {
 #if UNITY_ANDROID && !UNITY_EDITOR
                 LaunchAndroidUrl(logoutUrl);
 #else
-                communicationsManager.LaunchAuthURL(logoutUrl, logoutRedirectUri);
+                _communicationsManager.LaunchAuthURL(logoutUrl, _logoutRedirectUri);
 #endif
             }
             else
             {
-                HandleLogoutPKCESuccess();
+                HandleLogoutPkceSuccess();
             }
         }
 
@@ -639,89 +485,89 @@ namespace Immutable.Passport
             try
             {
                 SendAuthEvent(PassportAuthEvent.CheckingForSavedCredentials);
-                string accessToken = await GetAccessToken();
-                string idToken = await GetIdToken();
+                var accessToken = await GetAccessToken();
+                var idToken = await GetIdToken();
                 SendAuthEvent(PassportAuthEvent.CheckForSavedCredentialsSuccess);
                 return accessToken != null && idToken != null;
             }
             catch (Exception ex)
             {
-                string errorMessage = $"Failed to check if there are credentials saved: {ex.Message}";
+                var errorMessage = $"Failed to check if there are credentials saved: {ex.Message}";
                 PassportLogger.Debug($"{TAG} {errorMessage}");
                 SendAuthEvent(PassportAuthEvent.CheckForSavedCredentialsFailed);
                 return false;
             }
         }
 
-        public async UniTask<string> GetAddress()
+        public async UniTask<string?> GetAddress()
         {
-            string response = await communicationsManager.Call(PassportFunction.IMX.GET_ADDRESS);
+            var response = await _communicationsManager.Call(PassportFunction.IMX.GET_ADDRESS);
             return response.GetStringResult();
         }
 
         public async UniTask<bool> IsRegisteredOffchain()
         {
-            string response = await communicationsManager.Call(PassportFunction.IMX.IS_REGISTERED_OFFCHAIN);
+            var response = await _communicationsManager.Call(PassportFunction.IMX.IS_REGISTERED_OFFCHAIN);
             return response.GetBoolResponse() ?? false;
         }
 
-        public async UniTask<RegisterUserResponse> RegisterOffchain()
+        public async UniTask<RegisterUserResponse?> RegisterOffchain()
         {
-            string callResponse = await communicationsManager.Call(PassportFunction.IMX.REGISTER_OFFCHAIN);
+            var callResponse = await _communicationsManager.Call(PassportFunction.IMX.REGISTER_OFFCHAIN);
             return callResponse.OptDeserializeObject<RegisterUserResponse>();
         }
 
-        public async UniTask<string> GetEmail()
+        public async UniTask<string?> GetEmail()
         {
-            string response = await communicationsManager.Call(PassportFunction.GET_EMAIL);
+            var response = await _communicationsManager.Call(PassportFunction.GET_EMAIL);
             return response.GetStringResult();
         }
 
-        public async UniTask<string> GetPassportId()
+        public async UniTask<string?> GetPassportId()
         {
-            string response = await communicationsManager.Call(PassportFunction.GET_PASSPORT_ID);
+            var response = await _communicationsManager.Call(PassportFunction.GET_PASSPORT_ID);
             return response.GetStringResult();
         }
 
-        public async UniTask<string> GetAccessToken()
+        public async UniTask<string?> GetAccessToken()
         {
-            string response = await communicationsManager.Call(PassportFunction.GET_ACCESS_TOKEN);
+            var response = await _communicationsManager.Call(PassportFunction.GET_ACCESS_TOKEN);
             return response.GetStringResult();
         }
 
 
-        public async UniTask<string> GetIdToken()
+        public async UniTask<string?> GetIdToken()
         {
-            string response = await communicationsManager.Call(PassportFunction.GET_ID_TOKEN);
+            var response = await _communicationsManager.Call(PassportFunction.GET_ID_TOKEN);
             return response.GetStringResult();
         }
 
         public async UniTask<List<string>> GetLinkedAddresses()
         {
-            string response = await communicationsManager.Call(PassportFunction.GET_LINKED_ADDRESSES);
-            string[] addresses = response.GetStringListResult();
+            var response = await _communicationsManager.Call(PassportFunction.GET_LINKED_ADDRESSES);
+            var addresses = response.GetStringListResult();
             return addresses != null ? addresses.ToList() : new List<string>();
         }
 
         // Imx
-        public async UniTask<CreateTransferResponseV1> ImxTransfer(UnsignedTransferRequest request)
+        public async UniTask<CreateTransferResponseV1?> ImxTransfer(UnsignedTransferRequest request)
         {
-            string json = JsonUtility.ToJson(request);
-            string callResponse = await communicationsManager.Call(PassportFunction.IMX.TRANSFER, json);
+            var json = JsonUtility.ToJson(request);
+            var callResponse = await _communicationsManager.Call(PassportFunction.IMX.TRANSFER, json);
             return callResponse.OptDeserializeObject<CreateTransferResponseV1>();
         }
 
-        public async UniTask<CreateBatchTransferResponse> ImxBatchNftTransfer(NftTransferDetails[] details)
+        public async UniTask<CreateBatchTransferResponse?> ImxBatchNftTransfer(NftTransferDetails[] details)
         {
-            string json = details.ToJson();
-            string callResponse = await communicationsManager.Call(PassportFunction.IMX.BATCH_NFT_TRANSFER, json);
+            var json = details.ToJson();
+            var callResponse = await _communicationsManager.Call(PassportFunction.IMX.BATCH_NFT_TRANSFER, json);
             return callResponse.OptDeserializeObject<CreateBatchTransferResponse>();
         }
 
         // ZkEvm
         public async UniTask ConnectEvm()
         {
-            await communicationsManager.Call(PassportFunction.ZK_EVM.CONNECT_EVM);
+            await _communicationsManager.Call(PassportFunction.ZK_EVM.CONNECT_EVM);
         }
 
         private string SerialiseTransactionRequest(TransactionRequest request)
@@ -729,7 +575,7 @@ namespace Immutable.Passport
             string json;
             // Nulls are serialised as empty strings when using JsonUtility
             // so we need to use another model that doesn't have the 'data' field instead
-            if (String.IsNullOrEmpty(request.data))
+            if (string.IsNullOrEmpty(request.data))
             {
                 json = JsonUtility.ToJson(new TransactionRequestNoData()
                 {
@@ -744,57 +590,57 @@ namespace Immutable.Passport
             return json;
         }
 
-        public async UniTask<string> ZkEvmSendTransaction(TransactionRequest request)
+        public async UniTask<string?> ZkEvmSendTransaction(TransactionRequest request)
         {
-            string json = SerialiseTransactionRequest(request);
-            string callResponse = await communicationsManager.Call(PassportFunction.ZK_EVM.SEND_TRANSACTION, json);
+            var json = SerialiseTransactionRequest(request);
+            var callResponse = await _communicationsManager.Call(PassportFunction.ZK_EVM.SEND_TRANSACTION, json);
             return callResponse.GetStringResult();
         }
 
-        public async UniTask<TransactionReceiptResponse> ZkEvmSendTransactionWithConfirmation(TransactionRequest request)
+        public async UniTask<TransactionReceiptResponse?> ZkEvmSendTransactionWithConfirmation(TransactionRequest request)
         {
-            string json = SerialiseTransactionRequest(request);
-            string callResponse = await communicationsManager.Call(PassportFunction.ZK_EVM.SEND_TRANSACTION_WITH_CONFIRMATION, json);
+            var json = SerialiseTransactionRequest(request);
+            var callResponse = await _communicationsManager.Call(PassportFunction.ZK_EVM.SEND_TRANSACTION_WITH_CONFIRMATION, json);
             return callResponse.OptDeserializeObject<TransactionReceiptResponse>();
         }
 
-        public async UniTask<TransactionReceiptResponse> ZkEvmGetTransactionReceipt(string hash)
+        public async UniTask<TransactionReceiptResponse?> ZkEvmGetTransactionReceipt(string hash)
         {
-            string json = JsonUtility.ToJson(new TransactionReceiptRequest()
+            var json = JsonUtility.ToJson(new TransactionReceiptRequest()
             {
                 txHash = hash
             });
-            string jsonResponse = await communicationsManager.Call(PassportFunction.ZK_EVM.GET_TRANSACTION_RECEIPT, json);
+            var jsonResponse = await _communicationsManager.Call(PassportFunction.ZK_EVM.GET_TRANSACTION_RECEIPT, json);
             return jsonResponse.OptDeserializeObject<TransactionReceiptResponse>();
         }
 
-        public async UniTask<string> ZkEvmSignTypedDataV4(string payload)
+        public async UniTask<string?> ZkEvmSignTypedDataV4(string payload)
         {
-            var callResponse = await communicationsManager.Call(PassportFunction.ZK_EVM.SIGN_TYPED_DATA_V4, payload);
+            var callResponse = await _communicationsManager.Call(PassportFunction.ZK_EVM.SIGN_TYPED_DATA_V4, payload);
             return callResponse.GetStringResult();
         }
 
         public async UniTask<List<string>> ZkEvmRequestAccounts()
         {
-            string callResponse = await communicationsManager.Call(PassportFunction.ZK_EVM.REQUEST_ACCOUNTS);
-            RequestAccountsResponse accountsResponse = callResponse.OptDeserializeObject<RequestAccountsResponse>();
+            var callResponse = await _communicationsManager.Call(PassportFunction.ZK_EVM.REQUEST_ACCOUNTS);
+            var accountsResponse = callResponse.OptDeserializeObject<RequestAccountsResponse>();
             return accountsResponse != null ? accountsResponse.accounts.ToList() : new List<string>();
         }
 
         public async UniTask<string> ZkEvmGetBalance(string address, string blockNumberOrTag)
         {
-            string json = JsonUtility.ToJson(new GetBalanceRequest()
+            var json = JsonUtility.ToJson(new GetBalanceRequest()
             {
                 address = address,
                 blockNumberOrTag = blockNumberOrTag
             });
-            string callResponse = await communicationsManager.Call(PassportFunction.ZK_EVM.GET_BALANCE, json);
+            var callResponse = await _communicationsManager.Call(PassportFunction.ZK_EVM.GET_BALANCE, json);
             return callResponse.GetStringResult() ?? "0x0";
         }
 
         private async void OnPostMessageError(string id, string message)
         {
-            if (id == "CallFromAuthCallbackError" && pkceCompletionSource != null)
+            if (id == "CallFromAuthCallbackError" && _pkceCompletionSource != null)
             {
                 await CallFromAuthCallbackError(id, message);
             }
@@ -811,26 +657,26 @@ namespace Immutable.Passport
             if (message == "")
             {
                 PassportLogger.Warn($"{TAG} Get PKCE Auth URL user cancelled");
-                TrySetPKCECanceled();
+                TrySetPkceCanceled();
             }
             else
             {
                 PassportLogger.Error($"{TAG} Get PKCE Auth URL error: {message}");
-                TrySetPKCEException(new PassportException(
+                TrySetPkceException(new PassportException(
                     "Something went wrong, please call LoginPKCE() or ConnectPKCEImx() again",
                     PassportErrorType.AUTHENTICATION_ERROR
                 ));
             }
 
-            pkceCompletionSource = null;
+            _pkceCompletionSource = null;
         }
 
-        private void TrySetPKCEResult(bool result)
+        private void TrySetPkceResult(bool result)
         {
             PassportLogger.Debug($"{TAG} Trying to set PKCE result to {result}...");
-            if (pkceCompletionSource != null)
+            if (_pkceCompletionSource != null)
             {
-                pkceCompletionSource.TrySetResult(result);
+                _pkceCompletionSource.TrySetResult(result);
             }
             else
             {
@@ -838,12 +684,12 @@ namespace Immutable.Passport
             }
         }
 
-        private void TrySetPKCEException(Exception exception)
+        private void TrySetPkceException(Exception exception)
         {
             PassportLogger.Debug($"{TAG} Trying to set PKCE exception...");
-            if (pkceCompletionSource != null)
+            if (_pkceCompletionSource != null)
             {
-                pkceCompletionSource.TrySetException(exception);
+                _pkceCompletionSource.TrySetException(exception);
             }
             else
             {
@@ -851,12 +697,12 @@ namespace Immutable.Passport
             }
         }
 
-        private void TrySetPKCECanceled()
+        private void TrySetPkceCanceled()
         {
             PassportLogger.Debug($"{TAG} Trying to set PKCE canceled...");
-            if (pkceCompletionSource != null)
+            if (_pkceCompletionSource != null)
             {
-                pkceCompletionSource.TrySetCanceled();
+                _pkceCompletionSource.TrySetCanceled();
             }
             else
             {
@@ -899,7 +745,7 @@ namespace Immutable.Passport
 
         protected virtual async void Track(string eventName, bool? success = null, Dictionary<string, object> properties = null)
         {
-            await analytics.Track(communicationsManager, eventName, success, properties);
+            await _analytics.Track(_communicationsManager, eventName, success, properties);
         }
     }
 

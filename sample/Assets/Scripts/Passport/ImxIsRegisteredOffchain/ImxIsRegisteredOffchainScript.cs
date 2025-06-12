@@ -1,8 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
-using Immutable.Passport;
-using System;
 
 namespace Immutable.Passport.Sample.PassportFeatures
 {
@@ -35,7 +33,7 @@ namespace Immutable.Passport.Sample.PassportFeatures
             try
             {
                 bool isRegistered = await SampleAppManager.PassportInstance.IsRegisteredOffchain();
-                
+
                 if (isRegistered)
                 {
                     ShowOutput("Registered");

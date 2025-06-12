@@ -146,4 +146,4 @@ public class GetUserInfoScript : MonoBehaviour
             Output.text = message;
         }
     }
-} 
+}

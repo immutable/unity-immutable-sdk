@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 using Cysharp.Threading.Tasks;
 using Immutable.Passport;
 
@@ -64,4 +63,4 @@ public class ReconnectScript : MonoBehaviour
             Output.text = message;
         }
     }
-} 
+}

@@ -65,4 +65,4 @@ public class ZkEvmGetTransactionReceiptScript : MonoBehaviour
             Output.text = message;
         }
     }
-} 
+}
