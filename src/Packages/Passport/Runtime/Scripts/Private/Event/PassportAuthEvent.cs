@@ -4,65 +4,6 @@ namespace Immutable.Passport.Event
 
     public enum PassportAuthEvent
     {
-        #region Device Code Authorisation
-
-        /// <summary>
-        /// Started the login process using Device Code Authorisation flow
-        /// </summary>
-        LoggingIn,
-        /// <summary>
-        /// Failed to log in using Device Code Authorisation flow
-        /// </summary>
-        LoginFailed,
-        /// <summary>
-        /// Successfully logged in using Device Code Authorisation flow
-        /// </summary>
-        LoginSuccess,
-        /// <summary>
-        /// Opening Passport login in an external browser for login via Device Code Authorisation flow
-        /// </summary>
-        LoginOpeningBrowser,
-        /// <summary>
-        /// Waiting for user to complete Passport login in an external browser
-        /// </summary>
-        PendingBrowserLogin,
-
-        /// <summary>
-        /// Started the login and set up IMX provider process using Device Code Authorisation flow
-        /// </summary>
-        ConnectingImx,
-        /// <summary>
-        /// Failed to login and set up IMX provider using Device Code Authorisation flow
-        /// </summary>
-        ConnectImxFailed,
-        /// <summary>
-        /// Successfully logged in and set up IMX provider using Device Code Authorisation flow
-        /// </summary>
-        ConnectImxSuccess,
-        /// <summary>
-        /// Opening Passport login in an external browser for connect IMX via Device Code Authorisation flow
-        /// </summary>
-        ConnectImxOpeningBrowser,
-        /// <summary>
-        /// Waiting for user to complete Passport login in the browser and the IMX provider to be set up
-        /// </summary>
-        PendingBrowserLoginAndProviderSetup,
-
-        /// <summary>
-        /// Started the log out process using an external browser
-        /// </summary>
-        LoggingOut,
-        /// <summary>
-        /// Failed to log out using an external browser
-        /// </summary>
-        LogoutFailed,
-        /// <summary>
-        /// Successfully logged out using an external browser
-        /// </summary>
-        LogoutSuccess,
-
-        #endregion
-
         #region PKCE
 
         /// <summary>

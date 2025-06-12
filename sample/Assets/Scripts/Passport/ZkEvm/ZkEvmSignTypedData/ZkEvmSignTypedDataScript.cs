@@ -47,4 +47,4 @@ public class ZkEvmSignTypedDataScript : MonoBehaviour
             Output.text = message;
         }
     }
-} 
+}

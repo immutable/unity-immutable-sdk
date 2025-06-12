@@ -58,4 +58,4 @@ public class ImxRegisterScript : MonoBehaviour
             Output.text = message;
         }
     }
-} 
+}

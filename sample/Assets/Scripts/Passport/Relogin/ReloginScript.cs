@@ -54,4 +54,4 @@ public class ReloginScript : MonoBehaviour
             Output.text = message;
         }
     }
-} 
+}

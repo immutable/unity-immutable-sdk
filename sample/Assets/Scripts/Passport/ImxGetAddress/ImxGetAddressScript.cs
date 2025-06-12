@@ -31,7 +31,7 @@ public class ImxGetAddressScript : MonoBehaviour
         ShowOutput("Retrieving wallet address...");
         try
         {
-            string address = await Passport.GetAddress();
+            var address = await Passport.GetAddress();
             ShowOutput(string.IsNullOrEmpty(address) ? "No address found" : address);
         }
         catch (PassportException e)
@@ -51,4 +51,4 @@ public class ImxGetAddressScript : MonoBehaviour
             Output.text = message;
         }
     }
-} 
+}

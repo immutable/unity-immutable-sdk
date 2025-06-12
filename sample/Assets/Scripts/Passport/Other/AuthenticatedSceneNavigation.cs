@@ -46,4 +46,4 @@ public class AuthenticatedSceneNavigation : MonoBehaviour
     }
 
     // Add more navigation methods as needed for other features
-} 
+}

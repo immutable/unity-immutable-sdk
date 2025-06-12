@@ -52,4 +52,4 @@ public class ZkEvmGetBalanceScript : MonoBehaviour
             Output.text = message;
         }
     }
-} 
+}

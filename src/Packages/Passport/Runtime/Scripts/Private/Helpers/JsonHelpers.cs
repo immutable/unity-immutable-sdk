@@ -12,7 +12,7 @@ namespace Immutable.Passport.Helpers
         /// <summary>
         /// Return null if the deserialisation fails.
         /// </summary> 
-        public static T OptDeserializeObject<T>(this string json) where T : class
+        public static T? OptDeserializeObject<T>(this string json) where T : class
         {
             try
             {
