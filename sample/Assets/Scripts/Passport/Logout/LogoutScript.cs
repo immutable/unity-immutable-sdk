@@ -22,14 +22,7 @@ public class LogoutScript : MonoBehaviour
         }
         try
         {
-            if (SampleAppManager.UsePKCE)
-            {
-                await Passport.Instance.LogoutPKCE();
-            }
-            else
-            {
-                await Passport.Instance.Logout();
-            }
+            await Passport.Instance.Logout();
             SampleAppManager.IsConnectedToImx = false;
             SampleAppManager.IsConnectedToZkEvm = false;
             AuthenticatedSceneManager.NavigateToUnauthenticatedScene();
