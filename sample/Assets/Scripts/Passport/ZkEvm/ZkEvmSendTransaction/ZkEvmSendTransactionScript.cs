@@ -3,7 +3,6 @@ using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-using Immutable.Passport;
 using Immutable.Passport.Model;
 using Cysharp.Threading.Tasks;
 
