@@ -37,7 +37,7 @@ namespace Immutable.Passport
         private PassportImpl? _passportImpl;
         public string Environment { get; private set; }
 
-        private IWebBrowserClient _webBrowserClient;
+        private IWebBrowserClient? _webBrowserClient;
 
         // Keeps track of the latest received deeplink
         private static string? _deeplink;
@@ -140,7 +140,7 @@ namespace Immutable.Passport
         /// <param name="redirectUri">The URL where the browser will redirect after successful authentication.</param>
         /// <param name="logoutRedirectUri">The URL where the browser will redirect after logout is complete.</param>
         /// <param name="engineStartupTimeoutMs">(Windows only) Timeout duration in milliseconds to wait for the default Windows browser engine to start.</param>
-        /// <param name="webBrowserClient">(Windows only) Custom Windows browser to use instead of the default browser in the SDK.</param>
+        /// <param name="windowsWebBrowserClient">(Windows only) Custom Windows browser to use instead of the default browser in the SDK.</param>
         public static UniTask<Passport> Init(
             string clientId,
             string environment,
@@ -148,7 +148,7 @@ namespace Immutable.Passport
             string logoutRedirectUri
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
             , int engineStartupTimeoutMs = 60000,
-            IWindowsWebBrowserClient windowsWebBrowserClient = null
+            IWindowsWebBrowserClient? windowsWebBrowserClient = null
 #endif
         )
         {
@@ -202,10 +202,10 @@ namespace Immutable.Passport
         /// Initialises the appropriate web browser and sets up browser communication.
         /// </summary>
         /// <param name="engineStartupTimeoutMs">(Windows only) Timeout duration in milliseconds to wait for the default Windows browser engine to start.</param>
-        /// <param name="webBrowserClient">(Windows only) Custom Windows browser to use instead of the default browser in the SDK.</param>
+        /// <param name="windowsWebBrowserClient">(Windows only) Custom Windows browser to use instead of the default browser in the SDK.</param>
         private async UniTask Initialise(
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-            int engineStartupTimeoutMs, IWindowsWebBrowserClient windowsWebBrowserClient
+            int engineStartupTimeoutMs, IWindowsWebBrowserClient? windowsWebBrowserClient
 #endif
         )
         {
@@ -216,8 +216,8 @@ namespace Immutable.Passport
                 if (windowsWebBrowserClient != null)
                 {
                     // Use the provided custom Windows browser client
-                    this.webBrowserClient = new WindowsWebBrowserClientAdapter(windowsWebBrowserClient);
-                    await ((WindowsWebBrowserClientAdapter)this.webBrowserClient).Init();
+                    _webBrowserClient = new WindowsWebBrowserClientAdapter(windowsWebBrowserClient);
+                    await ((WindowsWebBrowserClientAdapter)_webBrowserClient).Init();
                 }
                 else
                 {
@@ -225,9 +225,9 @@ namespace Immutable.Passport
                     throw new PassportException("When 'IMMUTABLE_CUSTOM_BROWSER' is defined in Scripting Define Symbols, " + 
                         " 'windowsWebBrowserClient' must not be null.");
 #else
-                    webBrowserClient = gameObject.AddComponent<UwbWebView>();
-                    await ((UwbWebView)webBrowserClient).Init(engineStartupTimeoutMs, _redactTokensInLogs, RedactTokenValues);
-                    readySignalReceived = true;
+                    _webBrowserClient = gameObject.AddComponent<UwbWebView>();
+                    await ((UwbWebView)_webBrowserClient).Init(engineStartupTimeoutMs, _redactTokensInLogs, RedactTokenValues);
+                    _readySignalReceived = true;
 #endif
                 }
 #elif (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
@@ -543,7 +543,7 @@ namespace Immutable.Passport
         /// </summary>
         private static void SetDefaultWindowsBrowserLogLevel()
         {
-            if (Instance?.webBrowserClient is WebBrowserClient browserClient)
+            if (Instance?._webBrowserClient is WebBrowserClient browserClient)
             {
                 browserClient.logSeverity = _logLevel switch
                 {
@@ -557,7 +557,7 @@ namespace Immutable.Passport
 
         private static void SetWindowsRedactionHandler()
         {
-            if (Instance?.webBrowserClient is WebBrowserClient browserClient)
+            if (Instance?._webBrowserClient is WebBrowserClient browserClient)
             {
                 browserClient.Logger = new DefaultUnityWebBrowserLogger(redactionHandler: _redactTokensInLogs ? RedactTokenValues : null);
             }
@@ -651,10 +651,10 @@ namespace Immutable.Passport
         {
             // Dispose of the web browser client for Windows only
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-            if (webBrowserClient != null)
+            if (_webBrowserClient != null)
             {
-                webBrowserClient.Dispose();
-                webBrowserClient = null;
+                _webBrowserClient.Dispose();
+                _webBrowserClient = null;
             }
 #endif
 
