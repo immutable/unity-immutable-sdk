@@ -38,6 +38,12 @@ public class MacBuilder
             {
                 // Clean up AltTester settings after build
                 AltBuilder.RemoveAltTesterFromScriptingDefineSymbols(BuildTargetGroup.Standalone);
+
+                // Clean up custom e2e testing define
+                var defineSymbols = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone);
+                defineSymbols = defineSymbols.Replace("IMMUTABLE_E2E_TESTING;", "").Replace(";IMMUTABLE_E2E_TESTING", "").Replace("IMMUTABLE_E2E_TESTING", "");
+                PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone, defineSymbols);
+
                 RemoveAltFromScene(buildPlayerOptions.scenes[0]);
             }
         }
@@ -66,7 +72,7 @@ public class MacBuilder
         {
             scenes = new[]
             {
-                "Assets/Scenes/Passport/SelectAuthMethod.unity",
+                "Assets/Scenes/Passport/Initialisation.unity",
                 "Assets/Scenes/Passport/UnauthenticatedScene.unity",
                 "Assets/Scenes/Passport/AuthenticatedScene.unity",
                 "Assets/Scenes/Passport/ZkEvm/ZkEvmGetBalance.unity",
@@ -85,6 +91,15 @@ public class MacBuilder
     private static void SetupAltTester(BuildPlayerOptions buildPlayerOptions)
     {
         AltBuilder.AddAltTesterInScriptingDefineSymbolsGroup(BuildTargetGroup.Standalone);
+
+        // Add custom define for e2e testing to enable default browser behavior
+        var defineSymbols = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone);
+        if (!defineSymbols.Contains("IMMUTABLE_E2E_TESTING"))
+        {
+            defineSymbols += ";IMMUTABLE_E2E_TESTING";
+            PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone, defineSymbols);
+        }
+
         AltBuilder.CreateJsonFileForInputMappingOfAxis();
 
         var instrumentationSettings = new AltInstrumentationSettings();

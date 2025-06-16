@@ -33,9 +33,9 @@ public class LoginScript : MonoBehaviour
             await Passport.Login();
             SceneManager.LoadScene("AuthenticatedScene");
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException ex)
         {
-            ShowOutput("Failed to login: cancelled");
+            ShowOutput($"Failed to login: cancelled {ex.Message}\\n{ex.StackTrace}");
         }
         catch (Exception ex)
         {
