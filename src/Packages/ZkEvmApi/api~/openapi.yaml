@@ -54,6 +54,8 @@ tags:
 - description: Passport Profile endpoints
   name: passport profile
   x-displayName: passport profile
+- name: feed-items
+  x-displayName: feed-items
 - description: Guardian endpoints
   name: guardian
   x-displayName: guardian
@@ -8971,6 +8973,148 @@ components:
       required:
       - linked_addresses
       - sub
+      type: object
+    FeedItemBase:
+      properties:
+        id:
+          description: Feed item ID
+          type: string
+        quest_id:
+          description: Quest ID
+          type: string
+        priority:
+          description: Feed item priority
+          type: integer
+        type:
+          description: Feed item type
+          type: string
+        gems_earnable:
+          description: Amount of gems earnable when user completes the quest
+          type: integer
+        bypass:
+          description: "If the quest is bypassed, the user will not be able to see\
+            \ it on the feed"
+          type: boolean
+        day_zero:
+          description: If the quest is a day0 quest
+          type: boolean
+        game_id:
+          description: Game ID
+          type: string
+        game_name:
+          description: Game name
+          type: string
+        quest_completed_popup_text:
+          description: Text to display when the quest is completed in an onboarding
+            experience
+          type: string
+        tags:
+          description: The tags for the feed item
+          items:
+            type: string
+          type: array
+        categories:
+          description: The categories for the feed item
+          items:
+            type: string
+          type: array
+        onboarding_experience:
+          description: The onboarding experience for the feed item
+          type: string
+      required:
+      - gems_earnable
+      - id
+      - priority
+      - quest_id
+      - type
+      type: object
+    FeedItemVideo:
+      allOf:
+      - $ref: '#/components/schemas/FeedItemBase'
+      properties:
+        video_title:
+          description: Title of the video
+          type: string
+        video_url:
+          description: URL of the video
+          type: string
+      required:
+      - video_title
+      - video_url
+      type: object
+    FeedItemQuiz:
+      allOf:
+      - $ref: '#/components/schemas/FeedItemBase'
+      properties:
+        quiz_header_video_url:
+          description: URL of the quiz header video
+          type: string
+        quiz_logo:
+          description: URL of the quiz logo
+          type: string
+        quiz_question:
+          description: The quiz question
+          type: string
+        quiz_answers:
+          description: Quiz answers to display
+          items:
+            type: string
+          type: array
+        quiz_correct_answers:
+          description: Quiz correct answers
+          items:
+            type: integer
+          type: array
+        quiz_correct_answer_text:
+          description: The text to display when the user answers the quiz correctly
+          type: string
+        quiz_header_initial_image:
+          description: The initial image for the quiz header
+          type: string
+        quiz_header_answered_image:
+          description: The image to display when the user answers the quiz correctly
+          type: string
+      required:
+      - quiz_answers
+      - quiz_correct_answers
+      - quiz_question
+      type: object
+    FeedItemCTA:
+      allOf:
+      - $ref: '#/components/schemas/FeedItemBase'
+      properties:
+        cta_label:
+          description: The label for the CTA button
+          type: string
+        cta_description:
+          description: The description for the CTA button
+          type: string
+        cta_url:
+          description: The URL for the CTA button
+          type: string
+        cta_image:
+          description: The image for the CTA background
+          type: string
+      required:
+      - cta_description
+      - cta_image
+      - cta_label
+      - cta_url
+      type: object
+    FeedItemSignIn:
+      allOf:
+      - $ref: '#/components/schemas/FeedItemCTA'
+      properties:
+        sign_in_redirect_url:
+          description: The URL to redirect to when the user completes the sign in
+            quest
+          type: string
+        sign_in_background:
+          description: The background for the sign in quest
+          type: string
+      required:
+      - sign_in_background
+      - sign_in_redirect_url
       type: object
     FilterValue:
       example:
