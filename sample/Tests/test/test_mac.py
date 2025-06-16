@@ -23,7 +23,6 @@ from fetch_otp import fetch_code
 class MacTest(UnityTest):
 
     altdriver = None
-    seleniumdriver = None
 
     @classmethod
     def setUpClass(cls):
@@ -97,12 +96,13 @@ class MacTest(UnityTest):
         cls.seleniumdriver = webdriver.Chrome(options=chrome_options)
 
         print("Open a window on Chrome")
+<<<<<<< HEAD
 
         wait = WebDriverWait(cls.seleniumdriver, 60)
+=======
+>>>>>>> ddbff678 (test: mac pkce ui test)
 
-        ## Device confirmation
-        contine_button = WebDriverWait(cls.seleniumdriver, 60).until(EC.element_to_be_clickable((SeleniumBy.XPATH, "//button[span[text()='Continue']]")))
-        contine_button.click()
+        wait = WebDriverWait(cls.seleniumdriver, 60)
 
         # Wait for email input and enter email
         email_field = WebDriverWait(cls.seleniumdriver, 60).until(EC.presence_of_element_located((SeleniumBy.ID, ':r1:')))
@@ -127,12 +127,17 @@ class MacTest(UnityTest):
         print("Entering OTP...")
         otp_field.send_keys(code)
 
+<<<<<<< HEAD
         # Wait for success page and confirm
         success = WebDriverWait(cls.seleniumdriver, 60).until(EC.presence_of_element_located((SeleniumBy.CSS_SELECTOR, 'h1[data-testid="device_success_title"]')))
         print("Connected to Passport!")
 
         time.sleep(5)
         
+=======
+        time.sleep(5)
+
+>>>>>>> ddbff678 (test: mac pkce ui test)
         cls.seleniumdriver.quit()
 
     @classmethod
@@ -142,16 +147,23 @@ class MacTest(UnityTest):
         bring_sample_app_to_foreground()
         cls.altdriver.find_object(By.NAME, "LogoutBtn").tap()
         time.sleep(5)
+<<<<<<< HEAD
         bring_sample_app_to_foreground()
+=======
+>>>>>>> ddbff678 (test: mac pkce ui test)
         cls.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
         time.sleep(2)
         cls.stop_browser()
         print("Logged out")
+<<<<<<< HEAD
 
     def test_1_device_code_login(self):
         # Select use device code auth
         self.altdriver.find_object(By.NAME, "DeviceCodeAuth").tap()
+=======
+>>>>>>> ddbff678 (test: mac pkce ui test)
 
+    def test_1_login(self):
         # Wait for unauthenticated screen
         self.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
 
@@ -167,12 +179,15 @@ class MacTest(UnityTest):
                 bring_sample_app_to_foreground()
                 login_button.tap()
                 self.login()
-                bring_sample_app_to_foreground()
 
                 # Wait for authenticated screen
                 self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
                 print("Logged in")
+<<<<<<< HEAD
 
+=======
+                
+>>>>>>> ddbff678 (test: mac pkce ui test)
                 self.stop_browser()
                 return
             except Exception as err:
@@ -209,7 +224,7 @@ class MacTest(UnityTest):
     def test_5_zkevm_functions(self):
         self.test_3_zkevm_functions()
 
-    def test_6_device_code_relogin(self):
+    def test_6_relogin(self):
         # Close and reopen app
         stop_sample_app()
         open_sample_app()
@@ -219,8 +234,6 @@ class MacTest(UnityTest):
         self.__class__.altdriver = AltDriver()
         time.sleep(5)
 
-        # Select use device code auth
-        self.altdriver.find_object(By.NAME, "DeviceCodeAuth").tap()
         # Wait for unauthenticated screen
         self.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
 
@@ -244,7 +257,7 @@ class MacTest(UnityTest):
 
         self.altdriver.stop()
 
-    def test_7_reconnect_device_code_connect_imx(self):
+    def test_7_reconnect_connect_imx(self):
         # Close and reopen app
         stop_sample_app()
         open_sample_app()
@@ -254,8 +267,6 @@ class MacTest(UnityTest):
         self.__class__.altdriver = AltDriver()
         time.sleep(5)
 
-        # Select use device code auth
-        self.altdriver.find_object(By.NAME, "DeviceCodeAuth").tap()
         # Wait for unauthenticated screen
         self.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
         
@@ -286,11 +297,9 @@ class MacTest(UnityTest):
         bring_sample_app_to_foreground()
         self.altdriver.wait_for_object(By.NAME, "ConnectBtn").tap()
         self.login()
-        bring_sample_app_to_foreground()
 
-        # Wait for authenticated screen
         self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
-
+        
         self.stop_browser()
         print("Logged in and connected to IMX")
 
