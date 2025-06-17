@@ -39,7 +39,7 @@ def get_product_name():
     # If regex fails, return default
     return "SampleApp"
 
-def login(use_pkce: bool):
+def login():
     print("Connect to Chrome")
     # Set up Chrome options to connect to the existing Chrome instance
     chrome_options = Options()
@@ -91,12 +91,6 @@ def login(use_pkce: bool):
 
     wait = WebDriverWait(driver, 60)
 
-    if not use_pkce:
-        print("Wait for device confirmation...")
-        contine_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[span[text()='Continue']]")))
-        contine_button.click()
-        print("Confirmed device")
-
     print("Wait for email input...")
     email_field = wait.until(EC.presence_of_element_located((By.ID, ':r1:')))
     print("Enter email...")
@@ -122,8 +116,7 @@ def login(use_pkce: bool):
     otp_field.send_keys(code)
 
     print("Wait for success page...")
-    success_title = 'h1[data-testid="checking_title"]' if use_pkce else 'h1[data-testid="device_success_title"]'
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, success_title)))
+    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'h1[data-testid="checking_title"]')))
     print("Connected to Passport!")
 
     driver.quit()
