@@ -241,7 +241,7 @@ namespace Immutable.Passport
                 BrowserCommunicationsManager communicationsManager = new BrowserCommunicationsManager(_webBrowserClient);
 
 #if UNITY_WEBGL
-                readySignalReceived = true;
+                _readySignalReceived = true;
 #else
                 // Mark ready when browser is initialised and game bridge file is loaded
                 communicationsManager.OnReady += () => _readySignalReceived = true;
