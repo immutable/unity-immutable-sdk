@@ -25,13 +25,7 @@ class WindowsTest(UnityTest):
         time.sleep(5) # Give time for the app to open
         self.start_altdriver()
 
-    def select_auth_type(self, use_pkce: bool):
-        auth_type = "PKCE" if use_pkce else "DeviceCodeAuth"
-        self.get_altdriver().find_object(By.NAME, auth_type).tap()
-
-    def login(self, use_pkce: bool):
-        self.select_auth_type(use_pkce)
-
+    def login(self):
         # Wait for unauthenticated screen
         self.get_altdriver().wait_for_current_scene_to_be("UnauthenticatedScene")
 
@@ -46,7 +40,7 @@ class WindowsTest(UnityTest):
                 launch_browser()
                 bring_sample_app_to_foreground()
                 login_button.tap()
-                login(use_pkce)
+                login()
                 bring_sample_app_to_foreground()
 
                 # Wait for authenticated screen
@@ -88,12 +82,8 @@ class WindowsTest(UnityTest):
                 else:
                     raise SystemExit(f"Failed to reset app {err}")
 
-    def test_1a_pkce_login(self):
-        self.login(True)
-
-    def test_1b_device_code_login(self):
-        self.restart_app_and_altdriver()
-        self.login(False)
+    def test_1_login(self):
+        self.login()
 
     def test_2_other_functions(self):
         self.test_0_other_functions()
@@ -109,9 +99,6 @@ class WindowsTest(UnityTest):
 
     def test_6_relogin(self):
         self.restart_app_and_altdriver()
-
-        # Select use device code auth
-        self.select_auth_type(use_pkce=False)
 
         # Relogin
         print("Re-logging in...")
@@ -130,11 +117,8 @@ class WindowsTest(UnityTest):
         self.get_altdriver().find_object(By.NAME, "ConnectBtn").tap()
         self.assertEqual("Connected to IMX", output.get_text())
 
-    def test_7_reconnect_device_code_connect_imx(self):
+    def test_7_reconnect_connect_imx(self):
         self.restart_app_and_altdriver()
-
-        use_pkce = False
-        self.select_auth_type(use_pkce)
 
         # Reconnect
         print("Reconnecting...")
@@ -171,7 +155,7 @@ class WindowsTest(UnityTest):
         launch_browser()
         bring_sample_app_to_foreground()
         self.get_altdriver().wait_for_object(By.NAME, "ConnectBtn").tap()
-        login(use_pkce)
+        login()
         bring_sample_app_to_foreground()
 
         # Wait for authenticated screen
