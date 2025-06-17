@@ -280,7 +280,7 @@ namespace Immutable.Passport
                     string url = response.result.Replace(" ", "+");
 #if UNITY_ANDROID && !UNITY_EDITOR
                     loginPKCEUrl = url;
-                    SendAuthEvent(pkceLoginOnly ? PassportAuthEvent.LoginPKCELaunchingCustomTabs : PassportAuthEvent.ConnectImxPKCELaunchingCustomTabs);
+                    SendAuthEvent(_pkceLoginOnly ? PassportAuthEvent.LoginPKCELaunchingCustomTabs : PassportAuthEvent.ConnectImxPKCELaunchingCustomTabs);
                     LaunchAndroidUrl(url);
 #else
                     SendAuthEvent(_pkceLoginOnly ? PassportAuthEvent.LoginPKCEOpeningWebView : PassportAuthEvent.ConnectImxPKCEOpeningWebView);
@@ -734,12 +734,12 @@ namespace Immutable.Passport
 #if (UNITY_IPHONE && !UNITY_EDITOR) || (UNITY_ANDROID && !UNITY_EDITOR)
         public void ClearCache(bool includeDiskFiles)
         {
-            communicationsManager.ClearCache(includeDiskFiles);
+            _communicationsManager.ClearCache(includeDiskFiles);
         }
 
         public void ClearStorage()
         {
-            communicationsManager.ClearStorage();
+            _communicationsManager.ClearStorage();
         }
 #endif
 
