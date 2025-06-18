@@ -424,5 +424,5 @@ void _CImmutableWebViewPlugin_LaunchAuthURL(void *instance, const char *url, con
     if (instance == NULL)
         return;
     CWebViewPlugin *webViewPlugin = (__bridge CWebViewPlugin *)instance;
-    [webViewPlugin launchAuthURL:url redirectUri: redirectUri];
+    [webViewPlugin launchAuthURL:url redirectUri:redirectUri];
 }

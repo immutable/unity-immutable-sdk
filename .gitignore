@@ -108,3 +108,5 @@ sample/Assets/Vuplex*
 __pycache__/
 *.pyc
 .pytest_cache/
+
+xcuserdata/

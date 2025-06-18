@@ -6,4 +6,3 @@ mkdir -p $DSTDIR
 
 cp -r DerivedData/ImmutableWebView.bundle $DSTDIR
 rm -rf DerivedData
-cp *.bundle.meta $DSTDIR

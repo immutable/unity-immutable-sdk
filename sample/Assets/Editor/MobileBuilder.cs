@@ -117,7 +117,7 @@ public class MobileBuilder
         {
             scenes = new[]
             {
-                "Assets/Scenes/Passport/SelectAuthMethod.unity",
+                "Assets/Scenes/Passport/Initialisation.unity",
                 "Assets/Scenes/Passport/UnauthenticatedScene.unity",
                 "Assets/Scenes/Passport/AuthenticatedScene.unity",
                 "Assets/Scenes/Passport/ZkEvm/ZkEvmGetBalance.unity",
