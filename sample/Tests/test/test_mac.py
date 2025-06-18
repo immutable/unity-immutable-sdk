@@ -221,6 +221,7 @@ class MacTest(UnityTest):
 
         # Click Connect to IMX button
         self.altdriver.find_object(By.NAME, "ConnectBtn").tap()
+        time.sleep(5)
         self.assertEqual("Connected to IMX", output.get_text())
 
         self.altdriver.stop()

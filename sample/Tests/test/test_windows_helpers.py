@@ -56,12 +56,30 @@ def login():
 
     # Get all window handles
     all_windows = driver.window_handles
-
-    print("Find the new window")
-    new_window = [window for window in all_windows if window != driver.current_window_handle][0]
-
-    print("Switch to the new window")
-    driver.switch_to.window(new_window)
+    
+    print(f"Found {len(all_windows)} new windows to check: {all_windows}")
+    
+    # Find the window with email input
+    target_window = None
+    for window in all_windows:
+        try:
+            print(f"Checking window: {window}")
+            driver.switch_to.window(window)
+            driver.find_element(By.ID, ':r1:')
+            target_window = window
+            print(f"Found email input in window: {window}")
+            break
+        except:
+            print(f"Email input not found in window: {window}, trying next...")
+            continue
+    
+    if not target_window:
+        print("Could not find email input field in any window!")
+        driver.quit()
+        return
+    
+    print("Switch to the target window")
+    driver.switch_to.window(target_window)
 
     wait = WebDriverWait(driver, 60)
 
@@ -126,8 +144,9 @@ def bring_sample_app_to_foreground():
 
     command = [
         "powershell.exe",
-        "-Command",
-        f"Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process; & '{powershell_script_path}' -appName '{product_name}'"
+        "-ExecutionPolicy", "Bypass",
+        "-File", powershell_script_path,
+        "-appName", product_name
     ]
 
     subprocess.run(command, check=True)
