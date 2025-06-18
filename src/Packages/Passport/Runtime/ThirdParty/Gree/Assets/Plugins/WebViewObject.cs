@@ -311,7 +311,7 @@ namespace Immutable.Browser.Gree
 
         public void LaunchAuthURL(string url, string redirectUri)
         {
-#if UNITY_STANDALONE_OSX || (UNITY_ANDROID && UNITY_EDITOR_OSX) || (UNITY_IPHONE && UNITY_EDITOR_OSX)
+#if !IMMUTABLE_E2E_TESTING && (UNITY_STANDALONE_OSX || (UNITY_ANDROID && UNITY_EDITOR_OSX) || (UNITY_IPHONE && UNITY_EDITOR_OSX))
             if (webView == IntPtr.Zero)
                 return;
             _CImmutableWebViewPlugin_LaunchAuthURL(webView, url, redirectUri != null ? redirectUri : "");

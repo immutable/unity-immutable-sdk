@@ -1,5 +1,3 @@
-using System;
-using UnityEngine;
 using Immutable.Passport.Helpers;
 
 namespace Immutable.Passport.Core
@@ -32,53 +30,32 @@ namespace Immutable.Passport.Core
     {
         /// <summary>
         /// Deserialises the json to StringResponse and returns the result
-        /// See <see cref="Immutable.Passport.Core.BrowserResponse.StringResponse"></param>
+        /// See <see cref="Immutable.Passport.Core.StringResponse" />
         /// </summary>
-        public static string GetStringResult(this string json)
+        public static string? GetStringResult(this string json)
         {
-            StringResponse stringResponse = json.OptDeserializeObject<StringResponse>();
-            if (stringResponse != null)
-            {
-                return stringResponse.result;
-            }
-            else
-            {
-                return null;
-            }
+            var stringResponse = json.OptDeserializeObject<StringResponse>();
+            return stringResponse?.result;
         }
 
         /// <summary>
         /// Deserialises the json to StringListResponse and returns the result
-        /// See <see cref="Immutable.Passport.Core.BrowserResponse.StringListResponse"></param>
+        /// See <see cref="Immutable.Passport.Core.StringListResponse" />
         /// </summary>
-        public static string[] GetStringListResult(this string json)
+        public static string[]? GetStringListResult(this string json)
         {
-            StringListResponse stringResponse = json.OptDeserializeObject<StringListResponse>();
-            if (stringResponse != null)
-            {
-                return stringResponse.result;
-            }
-            else
-            {
-                return null;
-            }
+            var stringResponse = json.OptDeserializeObject<StringListResponse>();
+            return stringResponse?.result;
         }
 
         /// <summary>
         /// Deserialises the json to BoolResponse and returns the result
-        /// See <see cref="Immutable.Passport.Core.BrowserResponse.BoolResponse"></param>
+        /// See <see cref="Immutable.Passport.Core.BoolResponse" />
         /// </summary>
-        public static Nullable<bool> GetBoolResponse(this string json)
+        public static bool? GetBoolResponse(this string json)
         {
-            BoolResponse boolResponse = json.OptDeserializeObject<BoolResponse>();
-            if (boolResponse != null)
-            {
-                return boolResponse.result;
-            }
-            else
-            {
-                return null;
-            }
+            var boolResponse = json.OptDeserializeObject<BoolResponse>();
+            return boolResponse?.result;
         }
     }
 }

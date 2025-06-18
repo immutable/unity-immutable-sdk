@@ -10,59 +10,35 @@ public class PassportInitialisationScript : MonoBehaviour
 #pragma warning disable CS8618
     [SerializeField] private GameObject TopPadding;
     [SerializeField] private Text Output;
-    [SerializeField] private Button UseDeviceCodeAuthButton;
-    [SerializeField] private Button UsePKCEButton;
 #pragma warning restore CS8618
 
     void Start()
     {
-        // WebGL does not support Device Code Auth, so we'll use PKCE by default instead.
-#if UNITY_WEBGL
-        UsePKCE();
-#endif
+        InitialisePassport();
     }
 
-    /// <summary>
-    /// Initialises Passport to use Device Code Auth
-    /// </summary>
-    public void UseDeviceCodeAuth()
-    {
-        SampleAppManager.UsePKCE = false;
-        InitialisePassport(logoutRedirectUri: "https://www.immutable.com");
-    }
-
-    /// <summary>
-    /// Initialises Passport to use PKCE with the specified redirect URIs.
-    /// </summary>
-    public void UsePKCE()
-    {
-        SampleAppManager.UsePKCE = true;
-#if UNITY_WEBGL
-        string url = Application.absoluteURL;
-        Uri uri = new Uri(url);
-        string scheme = uri.Scheme;
-        string hostWithPort = uri.IsDefaultPort ? uri.Host : $"{uri.Host}:{uri.Port}";
-        string fullPath = uri.AbsolutePath.EndsWith("/") ? uri.AbsolutePath : uri.AbsolutePath.Substring(0, uri.AbsolutePath.LastIndexOf('/') + 1);
-
-        string redirectUri = $"{scheme}://{hostWithPort}{fullPath}callback.html";
-        string logoutRedirectUri = $"{scheme}://{hostWithPort}{fullPath}logout.html";
-        
-        InitialisePassport(redirectUri: redirectUri, logoutRedirectUri: logoutRedirectUri);
-#else
-        InitialisePassport(redirectUri: "immutablerunner://callback", logoutRedirectUri: "immutablerunner://logout");
-#endif
-    }
-
-    /// <summary>
-    /// Initialises Passport.
-    /// </summary>
-    /// <param name="redirectUri">The URL to which auth will redirect the browser after 
-    /// authorisation has been granted by the user</param>
-    /// <param name="logoutRedirectUri">The URL to which auth will redirect the browser
-    /// after log out is complete</param>
-    private async void InitialisePassport(string? redirectUri = null, string? logoutRedirectUri = null)
+    private async void InitialisePassport()
     {
         ShowOutput("Initialising Passport...");
+
+        string redirectUri;
+        string logoutRedirectUri;
+
+#if UNITY_WEBGL
+            var url = Application.absoluteURL;
+            var uri = new Uri(url);
+            var scheme = uri.Scheme;
+            var hostWithPort = uri.IsDefaultPort ? uri.Host : $"{uri.Host}:{uri.Port}";
+            var fullPath = uri.AbsolutePath.EndsWith("/")
+                ? uri.AbsolutePath
+                : uri.AbsolutePath.Substring(0, uri.AbsolutePath.LastIndexOf('/') + 1);
+
+            redirectUri = $"{scheme}://{hostWithPort}{fullPath}callback.html";
+            logoutRedirectUri = $"{scheme}://{hostWithPort}{fullPath}logout.html";
+#else
+        redirectUri = "immutablerunner://callback";
+        logoutRedirectUri = "immutablerunner://logout";
+#endif
 
         try
         {
@@ -73,9 +49,9 @@ public class PassportInitialisationScript : MonoBehaviour
             Passport.RedactTokensInLogs = false;
 
             // Initialise Passport
-            string environment = Immutable.Passport.Model.Environment.SANDBOX;
-            string clientId = "mp6rxfMDwwZDogcdgNrAaHnG0qMlXuMK";
-            Passport passport = await Passport.Init(clientId, environment, redirectUri, logoutRedirectUri);
+            const string environment = Immutable.Passport.Model.Environment.SANDBOX;
+            const string clientId = "mp6rxfMDwwZDogcdgNrAaHnG0qMlXuMK";
+            var passport = await Passport.Init(clientId, environment, redirectUri, logoutRedirectUri);
             SampleAppManager.PassportInstance = passport;
 
             // Navigate to the unauthenticated scene after initialising Passport

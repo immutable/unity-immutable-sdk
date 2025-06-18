@@ -39,7 +39,7 @@ def get_product_name():
     # If regex fails, return default
     return "SampleApp"
 
-def login(use_pkce: bool):
+def login():
     print("Connect to Chrome")
     # Set up Chrome options to connect to the existing Chrome instance
     chrome_options = Options()
@@ -56,20 +56,32 @@ def login(use_pkce: bool):
 
     # Get all window handles
     all_windows = driver.window_handles
-
-    print("Find the new window")
-    new_window = [window for window in all_windows if window != driver.current_window_handle][0]
-
-    print("Switch to the new window")
-    driver.switch_to.window(new_window)
+    
+    print(f"Found {len(all_windows)} new windows to check: {all_windows}")
+    
+    # Find the window with email input
+    target_window = None
+    for window in all_windows:
+        try:
+            print(f"Checking window: {window}")
+            driver.switch_to.window(window)
+            driver.find_element(By.ID, ':r1:')
+            target_window = window
+            print(f"Found email input in window: {window}")
+            break
+        except:
+            print(f"Email input not found in window: {window}, trying next...")
+            continue
+    
+    if not target_window:
+        print("Could not find email input field in any window!")
+        driver.quit()
+        return
+    
+    print("Switch to the target window")
+    driver.switch_to.window(target_window)
 
     wait = WebDriverWait(driver, 60)
-
-    if not use_pkce:
-        print("Wait for device confirmation...")
-        contine_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[span[text()='Continue']]")))
-        contine_button.click()
-        print("Confirmed device")
 
     print("Wait for email input...")
     email_field = wait.until(EC.presence_of_element_located((By.ID, ':r1:')))
@@ -96,8 +108,7 @@ def login(use_pkce: bool):
     otp_field.send_keys(code)
 
     print("Wait for success page...")
-    success_title = 'h1[data-testid="checking_title"]' if use_pkce else 'h1[data-testid="device_success_title"]'
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, success_title)))
+    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'h1[data-testid="checking_title"]')))
     print("Connected to Passport!")
 
     driver.quit()
@@ -133,8 +144,9 @@ def bring_sample_app_to_foreground():
 
     command = [
         "powershell.exe",
-        "-Command",
-        f"Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process; & '{powershell_script_path}' -appName '{product_name}'"
+        "-ExecutionPolicy", "Bypass",
+        "-File", powershell_script_path,
+        "-appName", product_name
     ]
 
     subprocess.run(command, check=True)

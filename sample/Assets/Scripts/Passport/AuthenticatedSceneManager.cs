@@ -62,4 +62,4 @@ public class AuthenticatedSceneManager : MonoBehaviour
     {
         UnityEngine.SceneManagement.SceneManager.LoadScene("UnauthenticatedScene");
     }
-} 
+}
