@@ -96,11 +96,6 @@ class MacTest(UnityTest):
         cls.seleniumdriver = webdriver.Chrome(options=chrome_options)
 
         print("Open a window on Chrome")
-<<<<<<< HEAD
-
-        wait = WebDriverWait(cls.seleniumdriver, 60)
-=======
->>>>>>> ddbff678 (test: mac pkce ui test)
 
         wait = WebDriverWait(cls.seleniumdriver, 60)
 
@@ -127,17 +122,8 @@ class MacTest(UnityTest):
         print("Entering OTP...")
         otp_field.send_keys(code)
 
-<<<<<<< HEAD
-        # Wait for success page and confirm
-        success = WebDriverWait(cls.seleniumdriver, 60).until(EC.presence_of_element_located((SeleniumBy.CSS_SELECTOR, 'h1[data-testid="device_success_title"]')))
-        print("Connected to Passport!")
-
-        time.sleep(5)
-        
-=======
         time.sleep(5)
 
->>>>>>> ddbff678 (test: mac pkce ui test)
         cls.seleniumdriver.quit()
 
     @classmethod
@@ -147,21 +133,10 @@ class MacTest(UnityTest):
         bring_sample_app_to_foreground()
         cls.altdriver.find_object(By.NAME, "LogoutBtn").tap()
         time.sleep(5)
-<<<<<<< HEAD
-        bring_sample_app_to_foreground()
-=======
->>>>>>> ddbff678 (test: mac pkce ui test)
         cls.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
         time.sleep(2)
         cls.stop_browser()
         print("Logged out")
-<<<<<<< HEAD
-
-    def test_1_device_code_login(self):
-        # Select use device code auth
-        self.altdriver.find_object(By.NAME, "DeviceCodeAuth").tap()
-=======
->>>>>>> ddbff678 (test: mac pkce ui test)
 
     def test_1_login(self):
         # Wait for unauthenticated screen
@@ -183,11 +158,7 @@ class MacTest(UnityTest):
                 # Wait for authenticated screen
                 self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
                 print("Logged in")
-<<<<<<< HEAD
-
-=======
                 
->>>>>>> ddbff678 (test: mac pkce ui test)
                 self.stop_browser()
                 return
             except Exception as err:
