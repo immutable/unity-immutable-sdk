@@ -28,7 +28,7 @@ public class ImxConnectScript : MonoBehaviour
         try
         {
             await Passport.Instance.ConnectImx();
-            
+
             SampleAppManager.IsConnectedToImx = true;
             ShowOutput("Connected to IMX"); // Show success early
 
@@ -37,14 +37,14 @@ public class ImxConnectScript : MonoBehaviour
             if (unauthSceneManager != null)
             {
                 unauthSceneManager.OnImxConnected?.Invoke();
-                return; 
+                return;
             }
 
             var authSceneManager = FindObjectOfType<AuthenticatedSceneManager>();
             if (authSceneManager != null)
             {
                 authSceneManager.UpdateImxButtonStates();
-                authSceneManager.OnImxConnected?.Invoke(); 
+                authSceneManager.OnImxConnected?.Invoke();
                 return;
             }
         }
@@ -61,4 +61,4 @@ public class ImxConnectScript : MonoBehaviour
             Output.text = message;
         }
     }
-} 
+}

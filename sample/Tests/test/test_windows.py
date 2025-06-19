@@ -128,6 +128,7 @@ class WindowsTest(UnityTest):
 
         # Click Connect to IMX button
         self.get_altdriver().find_object(By.NAME, "ConnectBtn").tap()
+        time.sleep(5)
         self.assertEqual("Connected to IMX", output.get_text())
 
     def test_7_reconnect_device_code_connect_imx(self):

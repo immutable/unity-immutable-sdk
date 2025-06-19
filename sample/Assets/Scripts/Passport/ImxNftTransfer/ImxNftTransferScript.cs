@@ -105,4 +105,4 @@ public class ImxNftTransferScript : MonoBehaviour
             Output.text = message;
         }
     }
-} 
+}

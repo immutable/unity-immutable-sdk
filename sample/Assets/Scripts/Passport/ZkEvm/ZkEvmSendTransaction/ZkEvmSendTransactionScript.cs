@@ -23,7 +23,7 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
             ShowOutput("Passport instance is null");
             return;
         }
-        
+
         // Make sure UI elements are initialised
         if (ConfirmToggle != null && GetTransactionReceiptToggle != null)
         {
@@ -66,16 +66,16 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
                 value = ValueInputField != null ? ValueInputField.text : "",
                 data = DataInputField != null ? DataInputField.text : ""
             };
-            
+
             if (ConfirmToggle != null && ConfirmToggle.isOn)
             {
                 TransactionReceiptResponse response = await SampleAppManager.PassportInstance.ZkEvmSendTransactionWithConfirmation(request);
-                ShowOutput($"Transaction hash: {response.transactionHash}\nStatus: {GetTransactionStatusString(response.status)}");
+                ShowOutput($"Transaction hash: {response.hash}\nStatus: {GetTransactionStatusString(response.status)}");
             }
             else
             {
                 string transactionHash = await SampleAppManager.PassportInstance.ZkEvmSendTransaction(request);
-                
+
                 if (GetTransactionReceiptToggle != null && GetTransactionReceiptToggle.isOn)
                 {
                     string? status = await PollStatus(transactionHash);
@@ -150,4 +150,4 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
             Debug.Log($"ZkEvmSendTransactionScript: {message}");
         }
     }
-} 
+}

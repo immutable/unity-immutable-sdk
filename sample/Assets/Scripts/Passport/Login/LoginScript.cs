@@ -72,4 +72,4 @@ public class LoginScript : MonoBehaviour
             Output.text = message;
         }
     }
-} 
+}

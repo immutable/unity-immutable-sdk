@@ -19,4 +19,4 @@ public static class SampleAppManager
     /// Holds the Passport instance for IMX operations.
     /// </summary>
     public static Immutable.Passport.Passport PassportInstance { get; set; }
-} 
+}

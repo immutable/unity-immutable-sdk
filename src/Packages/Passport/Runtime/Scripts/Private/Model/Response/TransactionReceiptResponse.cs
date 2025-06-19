@@ -34,7 +34,7 @@ namespace Immutable.Passport.Model
 
         public string to;
 
-        public string transactionHash;
+        public string hash;
 
         public string transactionIndex;
 
