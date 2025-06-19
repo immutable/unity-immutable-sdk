@@ -39,4 +39,4 @@ public class LogoutScript : MonoBehaviour
             Debug.LogError($"Failed to logout: {ex.Message}");
         }
     }
-} 
+}

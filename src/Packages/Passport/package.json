@@ -1,6 +1,6 @@
 {
   "name": "com.immutable.passport",
-  "version": "1.33.2",
+  "version": "1.34.0",
   "description": "The Immutable SDK for Unity helps you integrate your game with Immutable Passport.\n\nFor a complete working example, please visit https://github.com/immutable/unity-immutable-sdk/tree/main/sample.",
   "displayName": "Immutable Passport",
   "author": {

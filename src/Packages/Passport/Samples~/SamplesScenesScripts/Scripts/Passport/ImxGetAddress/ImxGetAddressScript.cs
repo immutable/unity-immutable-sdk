@@ -51,4 +51,4 @@ public class ImxGetAddressScript : MonoBehaviour
             Output.text = message;
         }
     }
-} 
+}
