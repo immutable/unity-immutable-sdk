@@ -753,8 +753,8 @@ namespace Immutable.Passport
 
         public async UniTask<TransactionReceiptResponse> ZkEvmSendTransactionWithConfirmation(TransactionRequest request)
         {
-            string json = SerialiseTransactionRequest(request);
-            string callResponse = await communicationsManager.Call(PassportFunction.ZK_EVM.SEND_TRANSACTION_WITH_CONFIRMATION, json);
+            var json = SerialiseTransactionRequest(request);
+            var callResponse = await communicationsManager.Call(PassportFunction.ZK_EVM.SEND_TRANSACTION_WITH_CONFIRMATION, json);
             return callResponse.OptDeserializeObject<TransactionReceiptResponse>();
         }
 

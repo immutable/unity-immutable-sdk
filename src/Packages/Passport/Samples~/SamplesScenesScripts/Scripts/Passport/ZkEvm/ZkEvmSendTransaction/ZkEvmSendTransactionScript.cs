@@ -70,7 +70,7 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
             if (ConfirmToggle != null && ConfirmToggle.isOn)
             {
                 TransactionReceiptResponse response = await SampleAppManager.PassportInstance.ZkEvmSendTransactionWithConfirmation(request);
-                ShowOutput($"Transaction hash: {response.transactionHash}\nStatus: {GetTransactionStatusString(response.status)}");
+                ShowOutput($"Transaction hash: {response.hash}\nStatus: {GetTransactionStatusString(response.status)}");
             }
             else
             {

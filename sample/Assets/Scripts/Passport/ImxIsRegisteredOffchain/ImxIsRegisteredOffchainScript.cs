@@ -35,7 +35,7 @@ namespace Immutable.Passport.Sample.PassportFeatures
             try
             {
                 bool isRegistered = await SampleAppManager.PassportInstance.IsRegisteredOffchain();
-                
+
                 if (isRegistered)
                 {
                     ShowOutput("Registered");

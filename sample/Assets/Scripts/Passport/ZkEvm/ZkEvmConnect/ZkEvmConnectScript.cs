@@ -31,7 +31,7 @@ namespace Immutable.Passport.Sample.PassportFeatures
             try
             {
                 await Passport.Instance.ConnectEvm();
-                
+
                 // Add these lines to update connection state and refresh UI
                 SampleAppManager.IsConnectedToZkEvm = true;
                 var sceneManager = FindObjectOfType<AuthenticatedSceneManager>();
@@ -44,7 +44,7 @@ namespace Immutable.Passport.Sample.PassportFeatures
                 {
                     Debug.LogWarning("Could not find AuthenticatedSceneManager to update button states");
                 }
-                
+
                 ShowOutput("Connected to EVM");
             }
             catch (System.Exception ex)
@@ -60,4 +60,4 @@ namespace Immutable.Passport.Sample.PassportFeatures
                 output.text = message;
         }
     }
-} 
+}

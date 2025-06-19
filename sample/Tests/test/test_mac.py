@@ -1,5 +1,7 @@
 import sys
 import time
+import os
+import subprocess
 from pathlib import Path
 
 from selenium import webdriver
@@ -27,34 +29,76 @@ class MacTest(UnityTest):
     def setUpClass(cls):
         open_sample_app()
         cls.altdriver = AltDriver()
+        cls.stop_browser()
 
     @classmethod
     def tearDownClass(cls):
         stop_sample_app()
         cls.altdriver.stop()
+        cls.stop_browser()
 
     @classmethod
-    def setupChrome(cls):
-        print("Connect to Chrome")
-        chrome_options = Options()
-        chrome_options.add_argument('--remote-debugging-port=9222')
+    def launch_browser(cls):
+        print("Starting Browser...")
+        browser_paths = [
+            "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
+        ]
 
-        # Initialise Chrome driver
-        cls.seleniumdriver = webdriver.Chrome(options=chrome_options)
+        browser_path = None
+        for path in browser_paths:
+            if os.path.exists(path):
+                browser_path = path
+                break
 
-        print("Open a window on Chrome")
-        cls.seleniumdriver.current_window_handle
+        if not browser_path:
+            print("Brave executable not found.")
+            exit(1)
+
+        subprocess.Popen([
+            browser_path,
+            "--remote-debugging-port=9222"
+        ])
+
+        time.sleep(5)
+
+    @classmethod
+    def stop_browser(cls):
+        print("Stopping Brave...")
+        try:
+            # First try graceful shutdown using AppleScript
+            subprocess.run([
+                "osascript", "-e", 
+                'tell application "Brave Browser" to quit'
+            ], check=False, capture_output=True)
+            time.sleep(2)
+            
+            # Check if still running, then force kill
+            result = subprocess.run(["pgrep", "-f", "Brave Browser"], 
+                                  capture_output=True, text=True)
+            if result.returncode == 0:
+                # Still running, force kill
+                subprocess.run(["pkill", "-f", "Brave Browser"], 
+                             check=False, capture_output=True)
+            
+            print("All Brave processes have been closed.")
+        except Exception as e:
+            print("Brave might not be running.")
+        
+        time.sleep(3)
+        print("Stopped Brave")
 
     @classmethod
     def login(cls):
-        print("Waiting for new window...")
-        WebDriverWait(cls.seleniumdriver, 30).until(EC.number_of_windows_to_be(2))
+        print("Connect to Chrome")
+        # Set up Chrome options to connect to the existing Chrome instance
+        chrome_options = Options()
+        chrome_options.add_experimental_option("debuggerAddress", "localhost:9222")
+        # Connect to the existing Chrome instance
+        cls.seleniumdriver = webdriver.Chrome(options=chrome_options)
 
-        # Switch to the new window
-        all_windows = cls.seleniumdriver.window_handles
-        new_window = [window for window in all_windows if window != cls.seleniumdriver.current_window_handle][0]
-        cls.seleniumdriver.switch_to.window(new_window)
-        print("Switched to new window")
+        print("Open a window on Chrome")
+
+        wait = WebDriverWait(cls.seleniumdriver, 60)
 
         ## Device confirmation
         contine_button = WebDriverWait(cls.seleniumdriver, 60).until(EC.element_to_be_clickable((SeleniumBy.XPATH, "//button[span[text()='Continue']]")))
@@ -86,8 +130,23 @@ class MacTest(UnityTest):
         # Wait for success page and confirm
         success = WebDriverWait(cls.seleniumdriver, 60).until(EC.presence_of_element_located((SeleniumBy.CSS_SELECTOR, 'h1[data-testid="device_success_title"]')))
         print("Connected to Passport!")
+
+        time.sleep(5)
         
         cls.seleniumdriver.quit()
+
+    @classmethod
+    def logout(cls):
+        print("Logging out...")
+        cls.launch_browser()
+        bring_sample_app_to_foreground()
+        cls.altdriver.find_object(By.NAME, "LogoutBtn").tap()
+        time.sleep(5)
+        bring_sample_app_to_foreground()
+        cls.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
+        time.sleep(2)
+        cls.stop_browser()
+        print("Logged out")
 
     def test_1_device_code_login(self):
         # Select use device code auth
@@ -104,7 +163,7 @@ class MacTest(UnityTest):
 
                 # Login
                 print("Logging in...")
-                self.setupChrome()
+                self.launch_browser()
                 bring_sample_app_to_foreground()
                 login_button.tap()
                 self.login()
@@ -113,6 +172,8 @@ class MacTest(UnityTest):
                 # Wait for authenticated screen
                 self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
                 print("Logged in")
+
+                self.stop_browser()
                 return
             except Exception as err:
                 if attempt == 0:
@@ -127,17 +188,10 @@ class MacTest(UnityTest):
                     print("Re-logged in")
 
                     # Logout
-                    print("Logging out...")
-                    self.setupChrome()
-                    bring_sample_app_to_foreground()
-                    self.altdriver.find_object(By.NAME, "LogoutBtn").tap()
-                    time.sleep(5)
-                    bring_sample_app_to_foreground()
-                    
-                    # Wait for unauthenticated screen
-                    self.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
-                    self.seleniumdriver.quit()
+                    self.logout()
                     print("Logged out and successfully reset app")
+                    time.sleep(2)
+                    bring_sample_app_to_foreground()
 
                     time.sleep(5)
                 else:
@@ -162,7 +216,7 @@ class MacTest(UnityTest):
 
         # Restart AltTester
         self.altdriver.stop()
-        self.altdriver = AltDriver()
+        self.__class__.altdriver = AltDriver()
         time.sleep(5)
 
         # Select use device code auth
@@ -185,6 +239,7 @@ class MacTest(UnityTest):
 
         # Click Connect to IMX button
         self.altdriver.find_object(By.NAME, "ConnectBtn").tap()
+        time.sleep(5)
         self.assertEqual("Connected to IMX", output.get_text())
 
         self.altdriver.stop()
@@ -196,7 +251,7 @@ class MacTest(UnityTest):
 
         # Restart AltTester
         self.altdriver.stop()
-        self.altdriver = AltDriver()
+        self.__class__.altdriver = AltDriver()
         time.sleep(5)
 
         # Select use device code auth
@@ -222,21 +277,12 @@ class MacTest(UnityTest):
         self.assertEqual(TestConfig.WALLET_ADDRESS, output.get_text())
 
         # Logout
-        print("Logging out...")
-        self.setupChrome()
-        bring_sample_app_to_foreground()
-        self.altdriver.find_object(By.NAME, "LogoutBtn").tap()
-        time.sleep(5)
-        bring_sample_app_to_foreground()
-        
-        # Wait for authenticated screen
-        self.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
-        self.seleniumdriver.quit()
-        print("Logged out")
+        self.logout()
         
         # Connect IMX
+        time.sleep(5)
         print("Logging in and connecting to IMX...")
-        self.setupChrome()
+        self.launch_browser()
         bring_sample_app_to_foreground()
         self.altdriver.wait_for_object(By.NAME, "ConnectBtn").tap()
         self.login()
@@ -244,6 +290,8 @@ class MacTest(UnityTest):
 
         # Wait for authenticated screen
         self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
+
+        self.stop_browser()
         print("Logged in and connected to IMX")
 
         # Get access token
@@ -256,14 +304,4 @@ class MacTest(UnityTest):
         self.assertEqual(TestConfig.WALLET_ADDRESS, output.get_text())
 
         # Logout
-        print("Logging out...")
-        self.setupChrome()
-        bring_sample_app_to_foreground()
-        self.altdriver.find_object(By.NAME, "LogoutBtn").tap()
-        time.sleep(5)
-        bring_sample_app_to_foreground()
-
-        # Wait for authenticated screen
-        self.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
-        self.seleniumdriver.quit()
-        print("Logged out")
+        self.logout()

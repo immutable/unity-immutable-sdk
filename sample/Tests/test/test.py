@@ -93,6 +93,7 @@ class UnityTest(unittest.TestCase):
 
         # Connect to IMX
         self.altdriver.find_object(By.NAME, "ConnectBtn").tap()
+        time.sleep(5)
         text = output.get_text()
         print(f"ConnectBtn output: {text}")
         self.assertEqual("Connected to IMX", text)
