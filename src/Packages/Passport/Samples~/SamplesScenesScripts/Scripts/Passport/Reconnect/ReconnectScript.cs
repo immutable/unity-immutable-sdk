@@ -64,4 +64,4 @@ public class ReconnectScript : MonoBehaviour
             Output.text = message;
         }
     }
-} 
+}

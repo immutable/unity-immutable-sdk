@@ -31,4 +31,4 @@ public class UnauthenticatedSceneManager : MonoBehaviour
     {
         OnImxConnected = () => { UnityEngine.SceneManagement.SceneManager.LoadScene("AuthenticatedScene"); };
     }
-} 
+}

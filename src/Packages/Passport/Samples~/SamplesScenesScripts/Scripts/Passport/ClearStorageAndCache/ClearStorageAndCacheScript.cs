@@ -38,4 +38,4 @@ namespace Immutable.Passport.Sample.PassportFeatures
             }
         }
     }
-} 
+}

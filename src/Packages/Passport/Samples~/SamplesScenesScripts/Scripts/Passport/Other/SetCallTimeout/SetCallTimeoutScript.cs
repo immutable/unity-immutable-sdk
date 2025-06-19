@@ -46,4 +46,4 @@ public class SetCallTimeoutScript : MonoBehaviour
             Debug.LogWarning($"[SetCallTimeoutScript] Output Text is not assigned. Message: {message}");
         }
     }
-} 
+}
