@@ -55,15 +55,15 @@ else
 fi
 
 # Copy the generated JSON file
-JSON_FILE="./_parsed/passport-examples.json"
+JSON_FILE="./_parsed/passport-features.json"
 if [ -f "${JSON_FILE}" ]; then
   # Create directory for JSON file if it doesn't exist
   JSON_DIR="${DOCS_REPO_DIR}/docs/main/build/unity/usage-guides/passport"
   mkdir -p "${JSON_DIR}"
   
   # Copy JSON file
-  cp "${JSON_FILE}" "${JSON_DIR}/passport-features.json"
-  echo "Copied ${JSON_FILE} to ${JSON_DIR}/passport-features.json"
+  cp "${JSON_FILE}" "${JSON_DIR}/passport-examples.json"
+  echo "Copied ${JSON_FILE} to ${JSON_DIR}/passport-examples.json"
 else
   echo "Warning: No passport-features.json found at ${JSON_FILE}"
 fi
