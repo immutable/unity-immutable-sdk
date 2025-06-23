@@ -19,7 +19,7 @@ if [ ! -f "${FEATURES_JSON}" ]; then
 fi
 
 # Base directory for usage guides in the docs repo
-DOCS_USAGE_GUIDES_DIR="${DOCS_REPO_DIR}/docs/main/build/unity/usage-guides"
+DOCS_USAGE_GUIDES_DIR="${DOCS_REPO_DIR}/docs/main/build/unity/usage-guides/passport"
 
 # Check if _tutorials~ directory exists
 if [ ! -d "${TUTORIALS_DIR}" ]; then
@@ -39,7 +39,7 @@ else
       echo "Found tutorial for ${GROUP_NAME}"
       
       # Define the destination directory for this feature group
-      DEST_GROUP_DIR="${DOCS_USAGE_GUIDES_DIR}/${GROUP_NAME}"
+      DEST_GROUP_DIR="${DOCS_USAGE_GUIDES_DIR}/_tutorials"
       mkdir -p "${DEST_GROUP_DIR}"
       
       # Use the folder name directly for the destination filename
@@ -55,10 +55,10 @@ else
 fi
 
 # Copy the generated JSON file
-JSON_FILE="./_parsed/passport-features.json"
+JSON_FILE="./_parsed/passport-examples.json"
 if [ -f "${JSON_FILE}" ]; then
   # Create directory for JSON file if it doesn't exist
-  JSON_DIR="${DOCS_REPO_DIR}/docs/main/build/unity/usage-guides"
+  JSON_DIR="${DOCS_REPO_DIR}/docs/main/build/unity/usage-guides/passport"
   mkdir -p "${JSON_DIR}"
   
   # Copy JSON file
