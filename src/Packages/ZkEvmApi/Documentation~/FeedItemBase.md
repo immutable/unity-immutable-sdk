@@ -5,10 +5,12 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Id** | **string** | Feed item ID | 
+**Name** | **string** | Feed item name | 
 **QuestId** | **string** | Quest ID | 
 **Priority** | **int** | Feed item priority | 
 **Type** | **string** | Feed item type | 
 **GemsEarnable** | **int** | Amount of gems earnable when user completes the quest | 
+**Status** | **string** | Feed item status, e.g., enabled, disabled, archived, deleted | 
 **Bypass** | **bool** | If the quest is bypassed, the user will not be able to see it on the feed | [optional] 
 **DayZero** | **bool** | If the quest is a day0 quest | [optional] 
 **GameId** | **string** | Game ID | [optional] 
