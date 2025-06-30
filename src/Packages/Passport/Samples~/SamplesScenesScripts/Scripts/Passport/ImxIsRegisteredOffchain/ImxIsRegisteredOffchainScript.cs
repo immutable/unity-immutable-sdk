@@ -1,8 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
-using Immutable.Passport;
-using System;
 
 namespace Immutable.Passport.Sample.PassportFeatures
 {
