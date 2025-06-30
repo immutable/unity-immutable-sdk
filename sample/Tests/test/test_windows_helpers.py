@@ -56,40 +56,15 @@ def login():
 
     # Get all window handles
     all_windows = driver.window_handles
-<<<<<<< HEAD
-
-    print(f"Found {len(all_windows)} new windows to check: {all_windows}")
-
-    # Find the window with the expected element
-=======
     
     print(f"Found {len(all_windows)} new windows to check: {all_windows}")
     
     # Find the window with email input
->>>>>>> 8cb65d08 (test: fix windows login tab)
     target_window = None
     for window in all_windows:
         try:
             print(f"Checking window: {window}")
             driver.switch_to.window(window)
-<<<<<<< HEAD
-            
-            if use_pkce:
-                driver.find_element(By.ID, ':r1:')
-                target_window = window
-                print(f"Found email input in window: {window}")
-            else:
-                driver.find_element(By.XPATH, "//button[span[text()='Continue']]")
-                target_window = window
-                print(f"Found continue button in window: {window}")
-            
-            break
-        except:
-            expected_element = "Email input" if use_pkce else "Continue button"
-            print(f"{expected_element} not found in window: {window}, trying next...")
-            continue
-
-=======
             driver.find_element(By.ID, ':r1:')
             target_window = window
             print(f"Found email input in window: {window}")
@@ -98,16 +73,11 @@ def login():
             print(f"Email input not found in window: {window}, trying next...")
             continue
     
->>>>>>> 8cb65d08 (test: fix windows login tab)
     if not target_window:
         print("Could not find email input field in any window!")
         driver.quit()
         return
-<<<<<<< HEAD
-
-=======
     
->>>>>>> 8cb65d08 (test: fix windows login tab)
     print("Switch to the target window")
     driver.switch_to.window(target_window)
 
