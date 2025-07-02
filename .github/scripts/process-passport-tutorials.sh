@@ -19,7 +19,7 @@ if [ ! -f "${FEATURES_JSON}" ]; then
 fi
 
 # Base directory for usage guides in the docs repo
-DOCS_USAGE_GUIDES_DIR="${DOCS_REPO_DIR}/docs/main/build/unity/usage-guides/passport"
+DOCS_USAGE_GUIDES_DIR="${DOCS_REPO_DIR}/docs/main/build/unity/usage/passport"
 
 # Check if _tutorials~ directory exists
 if [ ! -d "${TUTORIALS_DIR}" ]; then
@@ -58,7 +58,7 @@ fi
 JSON_FILE="./_parsed/passport-features.json"
 if [ -f "${JSON_FILE}" ]; then
   # Create directory for JSON file if it doesn't exist
-  JSON_DIR="${DOCS_REPO_DIR}/docs/main/build/unity/usage-guides/passport"
+  JSON_DIR="${DOCS_REPO_DIR}/docs/main/build/unity/usage/passport"
   mkdir -p "${JSON_DIR}"
   
   # Copy JSON file
