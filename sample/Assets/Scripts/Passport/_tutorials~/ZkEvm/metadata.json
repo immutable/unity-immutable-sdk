@@ -1,8 +1,8 @@
 {
-  "title": "ZkEvm Integration for Unity Games",
-  "description": "Learn how to integrate Immutable's ZkEvm blockchain with Unity games, including connecting to the network, sending transactions, checking balances, and more.",
-  "keywords": ["Immutable", "SDK", "ZkEvm", "Blockchain", "Unity", "Smart Contracts", "Transactions", "Web3"],
-  "tech_stack": ["Unity", "C#", "Immutable ZkEvm", "Passport SDK", "Cysharp UniTask"],
+  "title": "Unity ZkEvm Integration with Passport SDK",
+  "description": "Comprehensive demonstration of zkEVM blockchain functionality including provider connection, transaction management, balance checking, receipt verification, message signing, and account management using Immutable Passport SDK",
+  "keywords": ["Immutable", "SDK", "ZkEvm", "ZkEvmConnect", "ZkEvmSendTransaction", "ZkEvmGetBalance", "ZkEvmGetTransactionReceipt", "ZkEvmSignTypedData", "ZkEvmRequestAccounts", "Blockchain", "Ethereum", "zkEVM", "Unity", "Passport"],
+  "tech_stack": ["Unity", "C#", "UniTask", "Immutable Passport SDK", "zkEVM", "Ethereum", "EIP-712"],
   "product": "Passport",
   "programming_language": "C#"
 } 

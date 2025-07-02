@@ -4,7 +4,7 @@
 
 </div>
 
-The Authentication feature group provides essential tools for integrating user authentication into your Unity application using the Immutable Passport SDK. These features allow players to log in, log out, and maintain their authentication state across sessions, which is fundamental for any blockchain application.
+The Authentication feature group demonstrates the core authentication capabilities of the Immutable Passport SDK. These features enable secure user authentication and session management in Unity games, providing seamless login experiences across different platforms and maintaining user sessions between game sessions.
 
 <div class="button-component">
 
@@ -14,42 +14,32 @@ The Authentication feature group provides essential tools for integrating user a
 
 ## Authentication Overview
 
-The Authentication feature group contains four key features:
+The Authentication feature group includes four essential features that work together to provide a complete authentication system:
 
-- **Login**: Authenticate users using Device Code Auth or PKCE flow
-- **Logout**: End a user's authenticated session
-- **Relogin**: Restore a previously authenticated session using cached credentials
-- **Reconnect**: Restore authentication and blockchain connections in a single operation
+- **Login**: Primary authentication using PKCE (Proof Key for Code Exchange) flow
+- **Logout**: Secure session termination and credential cleanup  
+- **Relogin**: Silent re-authentication using cached credentials
+- **Reconnect**: Re-authentication with automatic IMX provider setup
 
-These features work together to create a complete authentication flow for your application. The Login and Logout features handle the primary authentication process, while Relogin and Reconnect provide convenience methods for maintaining session state across application restarts or network interruptions.
+These features work together to create a seamless authentication experience. Login establishes the initial session, Relogin provides quick re-authentication without user interaction, Reconnect combines re-authentication with IMX connectivity, and Logout ensures secure session cleanup.
 
 ## Unity SDK Authentication Features
 
 ### Feature: Login
 
-The Login feature allows users to authenticate with Immutable Passport using either Device Code Auth or PKCE (Proof Key for Code Exchange) authentication flows.
+The Login feature implements the primary authentication flow using PKCE (Proof Key for Code Exchange), which opens the user's default browser on desktop or an in-app browser on mobile platforms for secure authentication.
 
-```csharp title="Login" manualLink="https://github.com/immutable/unity-immutable-sdk/blob/main/sample/Assets/Scripts/Passport/Login/LoginScript.cs"
+```csharp title="Login Implementation" manualLink="https://github.com/immutable/unity-immutable-sdk/blob/main/sample/Assets/Scripts/Passport/Login/LoginScript.cs"
 public async void Login()
 {
-    var timeoutMs = GetDeviceCodeTimeoutMs();
-    string formattedTimeout = timeoutMs != null ? $"{timeoutMs} ms" : "none";
-    ShowOutput($"Logging in (timeout: {formattedTimeout})...");
     try
     {
-        if (SampleAppManager.UsePKCE)
-        {
-            await Passport.LoginPKCE();
-        }
-        else
-        {
-            await Passport.Login(timeoutMs: timeoutMs);
-        }
-        NavigateToAuthenticatedScene();
+        await Passport.Login();
+        SceneManager.LoadScene("AuthenticatedScene");
     }
-    catch (OperationCanceledException)
+    catch (OperationCanceledException ex)
     {
-        ShowOutput("Failed to login: cancelled");
+        ShowOutput($"Failed to login: cancelled {ex.Message}\\n{ex.StackTrace}");
     }
     catch (Exception ex)
     {
@@ -58,13 +48,18 @@ public async void Login()
 }
 ```
 
-This implementation checks which authentication method to use based on the `SampleAppManager.UsePKCE` flag. For Device Code Auth (the default on non-WebGL platforms), it calls `Passport.Login()` with an optional timeout parameter. For PKCE auth (required for WebGL), it calls `Passport.LoginPKCE()`. Upon successful login, it navigates to the authenticated scene.
+The Login method uses the Passport SDK's PKCE authentication flow, which provides enhanced security by generating a code verifier and challenge. When successful, the user is automatically navigated to the authenticated scene where they can access protected features.
 
 ### Feature: Logout
 
-The Logout feature ends the user's authenticated session with Immutable Passport.
+The Logout feature securely terminates the user's session and cleans up stored credentials, ensuring proper session management and security.
 
-```csharp title="Logout" manualLink="https://github.com/immutable/unity-immutable-sdk/blob/main/sample/Assets/Scripts/Passport/Logout/LogoutScript.cs"
+```csharp title="Logout Implementation" manualLink="https://github.com/immutable/unity-immutable-sdk/blob/main/sample/Assets/Scripts/Passport/Logout/LogoutScript.cs"
+public void Logout()
+{
+    LogoutAsync();
+}
+
 private async UniTaskVoid LogoutAsync()
 {
     if (Passport.Instance == null)
@@ -74,14 +69,7 @@ private async UniTaskVoid LogoutAsync()
     }
     try
     {
-        if (SampleAppManager.UsePKCE)
-        {
-            await Passport.Instance.LogoutPKCE();
-        }
-        else
-        {
-            await Passport.Instance.Logout();
-        }
+        await Passport.Instance.Logout();
         SampleAppManager.IsConnectedToImx = false;
         SampleAppManager.IsConnectedToZkEvm = false;
         AuthenticatedSceneManager.NavigateToUnauthenticatedScene();
@@ -93,13 +81,18 @@ private async UniTaskVoid LogoutAsync()
 }
 ```
 
-Similar to the Login feature, Logout checks the authentication method and calls the appropriate logout function (`LogoutPKCE()` or `Logout()`). It also resets the connection states for IMX and zkEVM before navigating back to the unauthenticated scene.
+The Logout implementation not only calls the Passport logout method but also resets the application's connection states for both IMX and zkEVM, ensuring a clean slate for the next authentication session.
 
 ### Feature: Relogin
 
-The Relogin feature allows users to authenticate again using cached credentials, providing a smoother user experience for returning users.
+The Relogin feature enables silent re-authentication using previously stored credentials, providing a smooth user experience by avoiding repeated login prompts when credentials are still valid.
 
-```csharp title="Relogin" manualLink="https://github.com/immutable/unity-immutable-sdk/blob/main/sample/Assets/Scripts/Passport/Relogin/ReloginScript.cs"
+```csharp title="Relogin Implementation" manualLink="https://github.com/immutable/unity-immutable-sdk/blob/main/sample/Assets/Scripts/Passport/Relogin/ReloginScript.cs"
+public void Relogin()
+{
+    ReloginAsync();
+}
+
 private async UniTaskVoid ReloginAsync()
 {
     if (Passport.Instance == null)
@@ -127,13 +120,13 @@ private async UniTaskVoid ReloginAsync()
 }
 ```
 
-The Relogin feature calls `Passport.Instance.Login()` with the `useCachedSession` parameter set to `true`, which attempts to restore the user's previous session without requiring them to go through the full authentication flow again. If successful, it navigates to the authenticated scene.
+The Relogin feature uses the `useCachedSession: true` parameter to attempt authentication with stored credentials. This provides a seamless experience for returning users while gracefully handling cases where credentials may have expired.
 
 ### Feature: Reconnect
 
-The Reconnect feature combines re-authentication with reconnecting to blockchain services (IMX) in a single operation.
+The Reconnect feature combines re-authentication with automatic IMX provider setup, streamlining the process of restoring both authentication state and blockchain connectivity.
 
-```csharp title="Reconnect" manualLink="https://github.com/immutable/unity-immutable-sdk/blob/main/sample/Assets/Scripts/Passport/Reconnect/ReconnectScript.cs"
+```csharp title="Reconnect Implementation" manualLink="https://github.com/immutable/unity-immutable-sdk/blob/main/sample/Assets/Scripts/Passport/Reconnect/ReconnectScript.cs"
 private async UniTaskVoid ReconnectAsync()
 {
     if (Passport.Instance == null)
@@ -147,7 +140,6 @@ private async UniTaskVoid ReconnectAsync()
         bool connected = await Passport.Instance.ConnectImx(useCachedSession: true);
         if (connected)
         {
-            // Set IMX and zkEVM state and update UI as if user clicked Connect to IMX/EVM
             SampleAppManager.IsConnectedToImx = true;
             SampleAppManager.IsConnectedToZkEvm = true;
             SampleAppManager.PassportInstance = Passport.Instance;
@@ -171,50 +163,75 @@ private async UniTaskVoid ReconnectAsync()
 }
 ```
 
-The Reconnect feature calls `Passport.Instance.ConnectImx()` with the `useCachedSession` parameter set to `true`, which not only tries to reestablish the authentication session but also reconnects to the IMX blockchain. If successful, it updates the connection states for both IMX and zkEVM, updates the UI, and navigates to the authenticated scene.
+The Reconnect feature uses `ConnectImx(useCachedSession: true)` to both authenticate the user and establish the IMX connection in a single operation. It also updates the UI state to reflect the successful connection to both IMX and zkEVM networks.
 
-## Running the Authentication Examples
+## Running the Feature Group Examples
 
 ### Prerequisites
 
-Before running the authentication examples, you need to:
+Before running the authentication examples, ensure you have:
 
-1. Set up an Immutable Hub account at [Immutable Hub](https://hub.immutable.com/)
-2. Clone the Unity Immutable SDK repository
-3. Open the sample app in Unity Editor (2022.3 LTS or newer recommended)
-4. Ensure you have the required packages installed (UniTask, TextMeshPro)
+- Unity 2021.3 or later installed
+- The Immutable Unity SDK properly configured in your project
+- Access to [Immutable Hub](https://hub.immutable.com/) for environment setup and configuration
+- A valid Passport client ID configured in your project
 
 ### Step-by-Step Instructions
 
-1. Open the sample app scene located at `sample/Assets/Scenes/Passport/InitialisationScene.unity`
-2. Enter Play mode in the Unity Editor
-3. In the Initialisation Scene:
-   - For non-WebGL builds, choose between "Use Device Code Auth" or "Use PKCE"
-   - For WebGL builds, PKCE is automatically selected
-4. After initialization, you'll be taken to the Unauthenticated Scene where you can:
-   - Use "Login" to authenticate with a new session
-   - Use "Relogin" to try authenticating with cached credentials
-   - Use "Reconnect" to authenticate and reconnect to blockchain services
+1. **Open the Sample Project**
+   - Navigate to the `sample` directory in the Unity Immutable SDK
+   - Open the project in Unity Editor
 
-### Authentication Flow Sequence
+2. **Configure Passport Settings**
+   - Ensure your Passport client ID is properly set in the `PassportInitialisationScript.cs`
+   - Verify the redirect URIs match your application configuration
 
-For optimal testing:
-1. Start with "Login" to create a new authenticated session
-2. Use the "Logout" button on the Authenticated Scene to end your session
-3. Try "Relogin" to test session restoration
-4. If you previously connected to IMX, try "Reconnect" to test combined authentication and blockchain reconnection
+3. **Run the Authentication Flow**
+   - Start with the PassportInitialisation scene to initialize the SDK
+   - The application will automatically navigate to the UnauthenticatedScene
+   - Test the Login feature by clicking the "Login" button
+   - After successful authentication, you'll be redirected to the AuthenticatedScene
+
+4. **Test Session Management**
+   - Use the Logout feature to terminate your session
+   - Return to the UnauthenticatedScene and test the Relogin feature
+   - Test the Reconnect feature to verify IMX connectivity restoration
+
+5. **Verify State Management**
+   - Check that connection states (IMX/zkEVM) are properly updated
+   - Ensure UI elements reflect the current authentication and connection status
+
+### Sequence Dependencies
+
+The authentication features should be tested in this recommended sequence:
+1. **Login** - Establish initial authentication
+2. **Logout** - Test session termination
+3. **Relogin** - Test cached credential authentication
+4. **Reconnect** - Test authentication with IMX connectivity
 
 ## Summary
 
-The Authentication feature group provides a comprehensive set of tools for handling user authentication in your Unity application with Immutable Passport. It supports both Device Code Auth and PKCE authentication methods, allowing for cross-platform compatibility including WebGL builds.
+The Authentication feature group provides a comprehensive authentication system for Unity games using the Immutable Passport SDK. The four features work together to cover all aspects of user session management:
+
+- **Login** handles initial user authentication using secure PKCE flow
+- **Logout** ensures proper session cleanup and security
+- **Relogin** provides seamless re-authentication for returning users
+- **Reconnect** combines authentication with blockchain connectivity setup
 
 ### Best Practices
 
-- Initialize Passport before attempting any authentication operations
-- Handle authentication exceptions appropriately in your implementation
-- For WebGL applications, always use PKCE authentication
-- For returning users, try the Relogin or Reconnect features before falling back to a full Login
-- Always check if the Passport instance exists before attempting operations
-- Clear connection states when logging out to maintain proper application state
+When implementing these authentication features:
 
-These authentication features provide the foundation for all other Immutable operations in your Unity application, as users must be authenticated before interacting with blockchain services like IMX and zkEVM. 
+- Always check for null Passport instances before making authentication calls
+- Implement proper error handling for network issues and authentication failures
+- Update application state consistently after authentication state changes
+- Use the cached session options appropriately to improve user experience
+- Ensure UI state reflects the current authentication and connection status
+
+### Key Takeaways
+
+- The PKCE authentication flow provides enhanced security for OAuth 2.0 authentication
+- Cached sessions enable seamless re-authentication without user interaction
+- Proper state management is crucial for maintaining consistent application behavior
+- The Reconnect feature streamlines the process of restoring both authentication and blockchain connectivity
+- All authentication operations are asynchronous and require proper exception handling 
