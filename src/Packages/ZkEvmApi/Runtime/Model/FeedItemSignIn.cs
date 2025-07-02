@@ -32,6 +32,27 @@ namespace Immutable.Api.ZkEvm.Model
     public partial class FeedItemSignIn
     {
         /// <summary>
+        /// Feed item type
+        /// </summary>
+        /// <value>Feed item type</value>
+        [JsonConverter(typeof(StringEnumConverter))]
+        public enum TypeEnum
+        {
+            /// <summary>
+            /// Enum Signin for value: signin
+            /// </summary>
+            [EnumMember(Value = "signin")]
+            Signin = 1
+        }
+
+
+        /// <summary>
+        /// Feed item type
+        /// </summary>
+        /// <value>Feed item type</value>
+        [DataMember(Name = "type", IsRequired = true, EmitDefaultValue = true)]
+        public TypeEnum Type { get; set; }
+        /// <summary>
         /// Initializes a new instance of the <see cref="FeedItemSignIn" /> class.
         /// </summary>
         [JsonConstructorAttribute]
@@ -43,9 +64,7 @@ namespace Immutable.Api.ZkEvm.Model
         /// <param name="name">Feed item name (required).</param>
         /// <param name="questId">Quest ID (required).</param>
         /// <param name="priority">Feed item priority (required).</param>
-        /// <param name="type">Feed item type (required).</param>
         /// <param name="gemsEarnable">Amount of gems earnable when user completes the quest (required).</param>
-        /// <param name="status">Feed item status, e.g., enabled, disabled, archived, deleted (required).</param>
         /// <param name="bypass">If the quest is bypassed, the user will not be able to see it on the feed.</param>
         /// <param name="dayZero">If the quest is a day0 quest.</param>
         /// <param name="gameId">Game ID.</param>
@@ -54,13 +73,14 @@ namespace Immutable.Api.ZkEvm.Model
         /// <param name="tags">The tags for the feed item.</param>
         /// <param name="categories">The categories for the feed item.</param>
         /// <param name="onboardingExperience">The onboarding experience for the feed item.</param>
+        /// <param name="type">Feed item type (required).</param>
         /// <param name="ctaLabel">The label for the CTA button (required).</param>
         /// <param name="ctaDescription">The description for the CTA button (required).</param>
         /// <param name="ctaUrl">The URL for the CTA button (required).</param>
         /// <param name="ctaImage">The image for the CTA background (required).</param>
         /// <param name="signInRedirectUrl">The URL to redirect to when the user completes the sign in quest (required).</param>
         /// <param name="signInBackground">The background for the sign in quest (required).</param>
-        public FeedItemSignIn(string id = default(string), string name = default(string), string questId = default(string), int priority = default(int), string type = default(string), int gemsEarnable = default(int), string status = default(string), bool bypass = default(bool), bool dayZero = default(bool), string gameId = default(string), string gameName = default(string), string questCompletedPopupText = default(string), List<string> tags = default(List<string>), List<string> categories = default(List<string>), string onboardingExperience = default(string), string ctaLabel = default(string), string ctaDescription = default(string), string ctaUrl = default(string), string ctaImage = default(string), string signInRedirectUrl = default(string), string signInBackground = default(string))
+        public FeedItemSignIn(string id = default(string), string name = default(string), string questId = default(string), int priority = default(int), int gemsEarnable = default(int), bool bypass = default(bool), bool dayZero = default(bool), string gameId = default(string), string gameName = default(string), string questCompletedPopupText = default(string), List<string> tags = default(List<string>), List<string> categories = default(List<string>), string onboardingExperience = default(string), TypeEnum type = default(TypeEnum), string ctaLabel = default(string), string ctaDescription = default(string), string ctaUrl = default(string), string ctaImage = default(string), string signInRedirectUrl = default(string), string signInBackground = default(string))
         {
             // to ensure "id" is required (not null)
             if (id == null)
@@ -81,19 +101,8 @@ namespace Immutable.Api.ZkEvm.Model
             }
             this.QuestId = questId;
             this.Priority = priority;
-            // to ensure "type" is required (not null)
-            if (type == null)
-            {
-                throw new ArgumentNullException("type is a required property for FeedItemSignIn and cannot be null");
-            }
-            this.Type = type;
             this.GemsEarnable = gemsEarnable;
-            // to ensure "status" is required (not null)
-            if (status == null)
-            {
-                throw new ArgumentNullException("status is a required property for FeedItemSignIn and cannot be null");
-            }
-            this.Status = status;
+            this.Type = type;
             // to ensure "ctaLabel" is required (not null)
             if (ctaLabel == null)
             {
@@ -169,25 +178,11 @@ namespace Immutable.Api.ZkEvm.Model
         public int Priority { get; set; }
 
         /// <summary>
-        /// Feed item type
-        /// </summary>
-        /// <value>Feed item type</value>
-        [DataMember(Name = "type", IsRequired = true, EmitDefaultValue = true)]
-        public string Type { get; set; }
-
-        /// <summary>
         /// Amount of gems earnable when user completes the quest
         /// </summary>
         /// <value>Amount of gems earnable when user completes the quest</value>
         [DataMember(Name = "gems_earnable", IsRequired = true, EmitDefaultValue = true)]
         public int GemsEarnable { get; set; }
-
-        /// <summary>
-        /// Feed item status, e.g., enabled, disabled, archived, deleted
-        /// </summary>
-        /// <value>Feed item status, e.g., enabled, disabled, archived, deleted</value>
-        [DataMember(Name = "status", IsRequired = true, EmitDefaultValue = true)]
-        public string Status { get; set; }
 
         /// <summary>
         /// If the quest is bypassed, the user will not be able to see it on the feed
@@ -299,9 +294,7 @@ namespace Immutable.Api.ZkEvm.Model
             sb.Append("  Name: ").Append(Name).Append("\n");
             sb.Append("  QuestId: ").Append(QuestId).Append("\n");
             sb.Append("  Priority: ").Append(Priority).Append("\n");
-            sb.Append("  Type: ").Append(Type).Append("\n");
             sb.Append("  GemsEarnable: ").Append(GemsEarnable).Append("\n");
-            sb.Append("  Status: ").Append(Status).Append("\n");
             sb.Append("  Bypass: ").Append(Bypass).Append("\n");
             sb.Append("  DayZero: ").Append(DayZero).Append("\n");
             sb.Append("  GameId: ").Append(GameId).Append("\n");
@@ -310,6 +303,7 @@ namespace Immutable.Api.ZkEvm.Model
             sb.Append("  Tags: ").Append(Tags).Append("\n");
             sb.Append("  Categories: ").Append(Categories).Append("\n");
             sb.Append("  OnboardingExperience: ").Append(OnboardingExperience).Append("\n");
+            sb.Append("  Type: ").Append(Type).Append("\n");
             sb.Append("  CtaLabel: ").Append(CtaLabel).Append("\n");
             sb.Append("  CtaDescription: ").Append(CtaDescription).Append("\n");
             sb.Append("  CtaUrl: ").Append(CtaUrl).Append("\n");

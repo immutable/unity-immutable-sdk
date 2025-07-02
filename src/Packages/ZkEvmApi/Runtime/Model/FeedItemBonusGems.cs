@@ -26,18 +26,39 @@ using OpenAPIDateConverter = Immutable.Api.ZkEvm.Client.OpenAPIDateConverter;
 namespace Immutable.Api.ZkEvm.Model
 {
     /// <summary>
-    /// FeedItemBase
+    /// FeedItemBonusGems
     /// </summary>
-    [DataContract(Name = "FeedItemBase")]
-    public partial class FeedItemBase
+    [DataContract(Name = "FeedItemBonusGems")]
+    public partial class FeedItemBonusGems
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="FeedItemBase" /> class.
+        /// Feed item type
+        /// </summary>
+        /// <value>Feed item type</value>
+        [JsonConverter(typeof(StringEnumConverter))]
+        public enum TypeEnum
+        {
+            /// <summary>
+            /// Enum Bonusgems for value: bonusgems
+            /// </summary>
+            [EnumMember(Value = "bonusgems")]
+            Bonusgems = 1
+        }
+
+
+        /// <summary>
+        /// Feed item type
+        /// </summary>
+        /// <value>Feed item type</value>
+        [DataMember(Name = "type", IsRequired = true, EmitDefaultValue = true)]
+        public TypeEnum Type { get; set; }
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FeedItemBonusGems" /> class.
         /// </summary>
         [JsonConstructorAttribute]
-        protected FeedItemBase() { }
+        protected FeedItemBonusGems() { }
         /// <summary>
-        /// Initializes a new instance of the <see cref="FeedItemBase" /> class.
+        /// Initializes a new instance of the <see cref="FeedItemBonusGems" /> class.
         /// </summary>
         /// <param name="id">Feed item ID (required).</param>
         /// <param name="name">Feed item name (required).</param>
@@ -52,28 +73,30 @@ namespace Immutable.Api.ZkEvm.Model
         /// <param name="tags">The tags for the feed item.</param>
         /// <param name="categories">The categories for the feed item.</param>
         /// <param name="onboardingExperience">The onboarding experience for the feed item.</param>
-        public FeedItemBase(string id = default(string), string name = default(string), string questId = default(string), int priority = default(int), int gemsEarnable = default(int), bool bypass = default(bool), bool dayZero = default(bool), string gameId = default(string), string gameName = default(string), string questCompletedPopupText = default(string), List<string> tags = default(List<string>), List<string> categories = default(List<string>), string onboardingExperience = default(string))
+        /// <param name="type">Feed item type (required).</param>
+        public FeedItemBonusGems(string id = default(string), string name = default(string), string questId = default(string), int priority = default(int), int gemsEarnable = default(int), bool bypass = default(bool), bool dayZero = default(bool), string gameId = default(string), string gameName = default(string), string questCompletedPopupText = default(string), List<string> tags = default(List<string>), List<string> categories = default(List<string>), string onboardingExperience = default(string), TypeEnum type = default(TypeEnum))
         {
             // to ensure "id" is required (not null)
             if (id == null)
             {
-                throw new ArgumentNullException("id is a required property for FeedItemBase and cannot be null");
+                throw new ArgumentNullException("id is a required property for FeedItemBonusGems and cannot be null");
             }
             this.Id = id;
             // to ensure "name" is required (not null)
             if (name == null)
             {
-                throw new ArgumentNullException("name is a required property for FeedItemBase and cannot be null");
+                throw new ArgumentNullException("name is a required property for FeedItemBonusGems and cannot be null");
             }
             this.Name = name;
             // to ensure "questId" is required (not null)
             if (questId == null)
             {
-                throw new ArgumentNullException("questId is a required property for FeedItemBase and cannot be null");
+                throw new ArgumentNullException("questId is a required property for FeedItemBonusGems and cannot be null");
             }
             this.QuestId = questId;
             this.Priority = priority;
             this.GemsEarnable = gemsEarnable;
+            this.Type = type;
             this.Bypass = bypass;
             this.DayZero = dayZero;
             this.GameId = gameId;
@@ -182,7 +205,7 @@ namespace Immutable.Api.ZkEvm.Model
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append("class FeedItemBase {\n");
+            sb.Append("class FeedItemBonusGems {\n");
             sb.Append("  Id: ").Append(Id).Append("\n");
             sb.Append("  Name: ").Append(Name).Append("\n");
             sb.Append("  QuestId: ").Append(QuestId).Append("\n");
@@ -196,6 +219,7 @@ namespace Immutable.Api.ZkEvm.Model
             sb.Append("  Tags: ").Append(Tags).Append("\n");
             sb.Append("  Categories: ").Append(Categories).Append("\n");
             sb.Append("  OnboardingExperience: ").Append(OnboardingExperience).Append("\n");
+            sb.Append("  Type: ").Append(Type).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
