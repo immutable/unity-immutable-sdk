@@ -1,6 +1,4 @@
 using UnityEngine;
-using UnityEngine.UI;
-using Cysharp.Threading.Tasks;
 using Immutable.Passport;
 using System;
 
@@ -8,7 +6,6 @@ public class UnauthenticatedSceneManager : MonoBehaviour
 {
     [SerializeField] private GameObject LoginButtons;
     [SerializeField] private GameObject ReloginButtons;
-    [SerializeField] private InputField DeviceCodeTimeoutMs;
 
     public Action OnImxConnected;
 
@@ -16,10 +13,9 @@ public class UnauthenticatedSceneManager : MonoBehaviour
     {
         if (Passport.Instance != null)
         {
-            bool hasCredsSaved = await Passport.Instance.HasCredentialsSaved();
-            ReloginButtons.SetActive(hasCredsSaved);
-            LoginButtons.SetActive(!hasCredsSaved);
-            DeviceCodeTimeoutMs.gameObject.SetActive(!hasCredsSaved && !SampleAppManager.UsePKCE);
+            var hasCredentialsSaved = await Passport.Instance.HasCredentialsSaved();
+            ReloginButtons.SetActive(hasCredentialsSaved);
+            LoginButtons.SetActive(!hasCredentialsSaved);
         }
         else
         {
