@@ -4,5 +4,6 @@
   "keywords": ["Immutable", "SDK", "Authentication", "Login", "Logout", "Relogin", "Reconnect", "PKCE", "OAuth", "Passport", "Session Management"],
   "tech_stack": ["Unity", "C#", "UniTask", "PKCE", "OAuth 2.0"],
   "product": "Passport",
-  "programming_language": "C#"
+  "programming_language": "C#",
+  "sidebar_order": 2
 } 
