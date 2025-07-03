@@ -133,6 +133,33 @@ namespace Immutable.Api.ZkEvm.Api
         /// <param name="refreshCollectionMetadataRequest">The request body</param>
         /// <returns>ApiResponse of RefreshCollectionMetadataResult</returns>
         ApiResponse<RefreshCollectionMetadataResult> RefreshCollectionMetadataWithHttpInfo(string contractAddress, string chainName, RefreshCollectionMetadataRequest refreshCollectionMetadataRequest);
+        /// <summary>
+        /// Refresh collection metadata internal
+        /// </summary>
+        /// <remarks>
+        /// Refresh collection metadata internal
+        /// </remarks>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="contractAddress">The address contract</param>
+        /// <param name="chainName">The name of chain</param>
+        /// <param name="environment">The environment of the collection</param>
+        /// <param name="refreshCollectionMetadataRequest">The request body</param>
+        /// <returns>RefreshCollectionMetadataResult</returns>
+        RefreshCollectionMetadataResult RefreshCollectionMetadataInternal(string contractAddress, string chainName, string environment, RefreshCollectionMetadataRequest refreshCollectionMetadataRequest);
+
+        /// <summary>
+        /// Refresh collection metadata internal
+        /// </summary>
+        /// <remarks>
+        /// Refresh collection metadata internal
+        /// </remarks>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="contractAddress">The address contract</param>
+        /// <param name="chainName">The name of chain</param>
+        /// <param name="environment">The environment of the collection</param>
+        /// <param name="refreshCollectionMetadataRequest">The request body</param>
+        /// <returns>ApiResponse of RefreshCollectionMetadataResult</returns>
+        ApiResponse<RefreshCollectionMetadataResult> RefreshCollectionMetadataInternalWithHttpInfo(string contractAddress, string chainName, string environment, RefreshCollectionMetadataRequest refreshCollectionMetadataRequest);
         #endregion Synchronous Operations
     }
 
@@ -256,6 +283,35 @@ namespace Immutable.Api.ZkEvm.Api
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (RefreshCollectionMetadataResult)</returns>
         System.Threading.Tasks.Task<ApiResponse<RefreshCollectionMetadataResult>> RefreshCollectionMetadataWithHttpInfoAsync(string contractAddress, string chainName, RefreshCollectionMetadataRequest refreshCollectionMetadataRequest, System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
+        /// <summary>
+        /// Refresh collection metadata internal
+        /// </summary>
+        /// <remarks>
+        /// Refresh collection metadata internal
+        /// </remarks>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="contractAddress">The address contract</param>
+        /// <param name="chainName">The name of chain</param>
+        /// <param name="environment">The environment of the collection</param>
+        /// <param name="refreshCollectionMetadataRequest">The request body</param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of RefreshCollectionMetadataResult</returns>
+        System.Threading.Tasks.Task<RefreshCollectionMetadataResult> RefreshCollectionMetadataInternalAsync(string contractAddress, string chainName, string environment, RefreshCollectionMetadataRequest refreshCollectionMetadataRequest, System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
+
+        /// <summary>
+        /// Refresh collection metadata internal
+        /// </summary>
+        /// <remarks>
+        /// Refresh collection metadata internal
+        /// </remarks>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="contractAddress">The address contract</param>
+        /// <param name="chainName">The name of chain</param>
+        /// <param name="environment">The environment of the collection</param>
+        /// <param name="refreshCollectionMetadataRequest">The request body</param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of ApiResponse (RefreshCollectionMetadataResult)</returns>
+        System.Threading.Tasks.Task<ApiResponse<RefreshCollectionMetadataResult>> RefreshCollectionMetadataInternalWithHttpInfoAsync(string contractAddress, string chainName, string environment, RefreshCollectionMetadataRequest refreshCollectionMetadataRequest, System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
         #endregion Asynchronous Operations
     }
 
@@ -1074,6 +1130,188 @@ namespace Immutable.Api.ZkEvm.Api
             if (this.ExceptionFactory != null)
             {
                 Exception _exception = this.ExceptionFactory("RefreshCollectionMetadata", localVarResponse);
+                if (_exception != null) throw _exception;
+            }
+
+            return localVarResponse;
+        }
+
+        /// <summary>
+        /// Refresh collection metadata internal Refresh collection metadata internal
+        /// </summary>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="contractAddress">The address contract</param>
+        /// <param name="chainName">The name of chain</param>
+        /// <param name="environment">The environment of the collection</param>
+        /// <param name="refreshCollectionMetadataRequest">The request body</param>
+        /// <returns>RefreshCollectionMetadataResult</returns>
+        public RefreshCollectionMetadataResult RefreshCollectionMetadataInternal(string contractAddress, string chainName, string environment, RefreshCollectionMetadataRequest refreshCollectionMetadataRequest)
+        {
+            Immutable.Api.ZkEvm.Client.ApiResponse<RefreshCollectionMetadataResult> localVarResponse = RefreshCollectionMetadataInternalWithHttpInfo(contractAddress, chainName, environment, refreshCollectionMetadataRequest);
+            return localVarResponse.Data;
+        }
+
+        /// <summary>
+        /// Refresh collection metadata internal Refresh collection metadata internal
+        /// </summary>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="contractAddress">The address contract</param>
+        /// <param name="chainName">The name of chain</param>
+        /// <param name="environment">The environment of the collection</param>
+        /// <param name="refreshCollectionMetadataRequest">The request body</param>
+        /// <returns>ApiResponse of RefreshCollectionMetadataResult</returns>
+        public Immutable.Api.ZkEvm.Client.ApiResponse<RefreshCollectionMetadataResult> RefreshCollectionMetadataInternalWithHttpInfo(string contractAddress, string chainName, string environment, RefreshCollectionMetadataRequest refreshCollectionMetadataRequest)
+        {
+            // verify the required parameter 'contractAddress' is set
+            if (contractAddress == null)
+                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'contractAddress' when calling CollectionsApi->RefreshCollectionMetadataInternal");
+
+            // verify the required parameter 'chainName' is set
+            if (chainName == null)
+                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'chainName' when calling CollectionsApi->RefreshCollectionMetadataInternal");
+
+            // verify the required parameter 'environment' is set
+            if (environment == null)
+                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'environment' when calling CollectionsApi->RefreshCollectionMetadataInternal");
+
+            // verify the required parameter 'refreshCollectionMetadataRequest' is set
+            if (refreshCollectionMetadataRequest == null)
+                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'refreshCollectionMetadataRequest' when calling CollectionsApi->RefreshCollectionMetadataInternal");
+
+            Immutable.Api.ZkEvm.Client.RequestOptions localVarRequestOptions = new Immutable.Api.ZkEvm.Client.RequestOptions();
+
+            string[] _contentTypes = new string[] {
+                "application/json"
+            };
+
+            // to determine the Accept header
+            string[] _accepts = new string[] {
+                "application/json"
+            };
+
+            var localVarContentType = Immutable.Api.ZkEvm.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
+            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
+
+            var localVarAccept = Immutable.Api.ZkEvm.Client.ClientUtils.SelectHeaderAccept(_accepts);
+            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
+
+            localVarRequestOptions.PathParameters.Add("contract_address", Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToString(contractAddress)); // path parameter
+            localVarRequestOptions.PathParameters.Add("chain_name", Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToString(chainName)); // path parameter
+            localVarRequestOptions.PathParameters.Add("environment", Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToString(environment)); // path parameter
+            localVarRequestOptions.Data = refreshCollectionMetadataRequest;
+
+            // authentication (BearerAuthWithClient) required
+            // bearer authentication required
+            if (!string.IsNullOrEmpty(this.Configuration.AccessToken) && !localVarRequestOptions.HeaderParameters.ContainsKey("Authorization"))
+            {
+                localVarRequestOptions.HeaderParameters.Add("Authorization", "Bearer " + this.Configuration.AccessToken);
+            }
+
+            // make the HTTP request
+            var localVarResponse = this.Client.Post<RefreshCollectionMetadataResult>("/v1/internal/chains/{chain_name}/environment/{environment}/collections/{contract_address}/refresh-metadata", localVarRequestOptions, this.Configuration);
+
+            if (this.ExceptionFactory != null)
+            {
+                Exception _exception = this.ExceptionFactory("RefreshCollectionMetadataInternal", localVarResponse);
+                if (_exception != null) throw _exception;
+            }
+
+            return localVarResponse;
+        }
+
+        /// <summary>
+        /// Refresh collection metadata internal Refresh collection metadata internal
+        /// </summary>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="contractAddress">The address contract</param>
+        /// <param name="chainName">The name of chain</param>
+        /// <param name="environment">The environment of the collection</param>
+        /// <param name="refreshCollectionMetadataRequest">The request body</param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of RefreshCollectionMetadataResult</returns>
+        public async System.Threading.Tasks.Task<RefreshCollectionMetadataResult> RefreshCollectionMetadataInternalAsync(string contractAddress, string chainName, string environment, RefreshCollectionMetadataRequest refreshCollectionMetadataRequest, System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+        {
+            var task = RefreshCollectionMetadataInternalWithHttpInfoAsync(contractAddress, chainName, environment, refreshCollectionMetadataRequest, cancellationToken);
+#if UNITY_EDITOR || !UNITY_WEBGL
+            Immutable.Api.ZkEvm.Client.ApiResponse<RefreshCollectionMetadataResult> localVarResponse = await task.ConfigureAwait(false);
+#else
+            Immutable.Api.ZkEvm.Client.ApiResponse<RefreshCollectionMetadataResult> localVarResponse = await task;
+#endif
+            return localVarResponse.Data;
+        }
+
+        /// <summary>
+        /// Refresh collection metadata internal Refresh collection metadata internal
+        /// </summary>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="contractAddress">The address contract</param>
+        /// <param name="chainName">The name of chain</param>
+        /// <param name="environment">The environment of the collection</param>
+        /// <param name="refreshCollectionMetadataRequest">The request body</param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of ApiResponse (RefreshCollectionMetadataResult)</returns>
+        public async System.Threading.Tasks.Task<Immutable.Api.ZkEvm.Client.ApiResponse<RefreshCollectionMetadataResult>> RefreshCollectionMetadataInternalWithHttpInfoAsync(string contractAddress, string chainName, string environment, RefreshCollectionMetadataRequest refreshCollectionMetadataRequest, System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+        {
+            // verify the required parameter 'contractAddress' is set
+            if (contractAddress == null)
+                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'contractAddress' when calling CollectionsApi->RefreshCollectionMetadataInternal");
+
+            // verify the required parameter 'chainName' is set
+            if (chainName == null)
+                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'chainName' when calling CollectionsApi->RefreshCollectionMetadataInternal");
+
+            // verify the required parameter 'environment' is set
+            if (environment == null)
+                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'environment' when calling CollectionsApi->RefreshCollectionMetadataInternal");
+
+            // verify the required parameter 'refreshCollectionMetadataRequest' is set
+            if (refreshCollectionMetadataRequest == null)
+                throw new Immutable.Api.ZkEvm.Client.ApiException(400, "Missing required parameter 'refreshCollectionMetadataRequest' when calling CollectionsApi->RefreshCollectionMetadataInternal");
+
+
+            Immutable.Api.ZkEvm.Client.RequestOptions localVarRequestOptions = new Immutable.Api.ZkEvm.Client.RequestOptions();
+
+            string[] _contentTypes = new string[] {
+                "application/json"
+            };
+
+            // to determine the Accept header
+            string[] _accepts = new string[] {
+                "application/json"
+            };
+
+
+            var localVarContentType = Immutable.Api.ZkEvm.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
+            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
+
+            var localVarAccept = Immutable.Api.ZkEvm.Client.ClientUtils.SelectHeaderAccept(_accepts);
+            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
+
+            localVarRequestOptions.PathParameters.Add("contract_address", Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToString(contractAddress)); // path parameter
+            localVarRequestOptions.PathParameters.Add("chain_name", Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToString(chainName)); // path parameter
+            localVarRequestOptions.PathParameters.Add("environment", Immutable.Api.ZkEvm.Client.ClientUtils.ParameterToString(environment)); // path parameter
+            localVarRequestOptions.Data = refreshCollectionMetadataRequest;
+
+            // authentication (BearerAuthWithClient) required
+            // bearer authentication required
+            if (!string.IsNullOrEmpty(this.Configuration.AccessToken) && !localVarRequestOptions.HeaderParameters.ContainsKey("Authorization"))
+            {
+                localVarRequestOptions.HeaderParameters.Add("Authorization", "Bearer " + this.Configuration.AccessToken);
+            }
+
+            // make the HTTP request
+
+            var task = this.AsynchronousClient.PostAsync<RefreshCollectionMetadataResult>("/v1/internal/chains/{chain_name}/environment/{environment}/collections/{contract_address}/refresh-metadata", localVarRequestOptions, this.Configuration, cancellationToken);
+
+#if UNITY_EDITOR || !UNITY_WEBGL
+            var localVarResponse = await task.ConfigureAwait(false);
+#else
+            var localVarResponse = await task;
+#endif
+
+            if (this.ExceptionFactory != null)
+            {
+                Exception _exception = this.ExceptionFactory("RefreshCollectionMetadataInternal", localVarResponse);
                 if (_exception != null) throw _exception;
             }
 

@@ -2131,6 +2131,90 @@ paths:
       summary: Sign a crafting payload
       tags:
       - crafting
+  /v1/internal/chains/{chain_name}/environment/{environment}/collections/{contract_address}/refresh-metadata:
+    post:
+      description: Refresh collection metadata internal
+      operationId: RefreshCollectionMetadataInternal
+      parameters:
+      - description: The address contract
+        example: 0x8a90cab2b38dba80c64b7734e58ee1db38b8992e
+        explode: false
+        in: path
+        name: contract_address
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: The name of chain
+        examples:
+          testnet:
+            summary: Immutable zkEVM Public Testnet
+            value: imtbl-zkevm-testnet
+        explode: false
+        in: path
+        name: chain_name
+        required: true
+        schema:
+          $ref: '#/components/schemas/ChainName'
+        style: simple
+      - description: The environment of the collection
+        explode: false
+        in: path
+        name: environment
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshCollectionMetadataRequest'
+        description: The request body
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshCollectionMetadataResult'
+          description: 200 response
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError400'
+          description: Bad Request (400)
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError401'
+          description: Unauthorised Request (401)
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError403'
+          description: Forbidden Request (403)
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError404'
+          description: The specified resource was not found (404)
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError500'
+          description: Internal Server Error (500)
+      security:
+      - BearerAuthWithClient:
+        - refresh:metadata
+      summary: Refresh collection metadata internal
+      tags:
+      - collections
   /v1/chains/{chain_name}/orders/cancel:
     post:
       description: Cancel one or more orders
@@ -8988,15 +9072,9 @@ components:
         priority:
           description: Feed item priority
           type: integer
-        type:
-          description: Feed item type
-          type: string
         gems_earnable:
           description: Amount of gems earnable when user completes the quest
           type: integer
-        status:
-          description: "Feed item status, e.g., enabled, disabled, archived, deleted"
-          type: string
         bypass:
           description: "If the quest is bypassed, the user will not be able to see\
             \ it on the feed"
@@ -9033,7 +9111,6 @@ components:
       - name
       - priority
       - quest_id
-      - status
       - type
       type: object
     FeedItemVideo:
@@ -9041,13 +9118,20 @@ components:
       - $ref: '#/components/schemas/FeedItemBase'
       - type: object
       - properties:
+          type:
+            description: Feed item type
+            enum:
+            - video
+            type: string
           video_title:
             description: Title of the video
             type: string
           video_url:
             description: URL of the video
+            format: uri
             type: string
         required:
+        - type
         - video_title
         - video_url
     FeedItemQuiz:
@@ -9055,11 +9139,18 @@ components:
       - $ref: '#/components/schemas/FeedItemBase'
       - type: object
       - properties:
+          type:
+            description: Feed item type
+            enum:
+            - quiz
+            type: string
           quiz_header_video_url:
             description: URL of the quiz header video
+            format: uri
             type: string
           quiz_logo:
             description: URL of the quiz logo
+            format: uri
             type: string
           quiz_question:
             description: The quiz question
@@ -9079,19 +9170,27 @@ components:
             type: string
           quiz_header_initial_image:
             description: The initial image for the quiz header
+            format: uri
             type: string
           quiz_header_answered_image:
             description: The image to display when the user answers the quiz correctly
+            format: uri
             type: string
         required:
         - quiz_answers
         - quiz_correct_answers
         - quiz_question
+        - type
     FeedItemCTA:
       allOf:
       - $ref: '#/components/schemas/FeedItemBase'
       - type: object
       - properties:
+          type:
+            description: Feed item type
+            enum:
+            - cta
+            type: string
           cta_label:
             description: The label for the CTA button
             type: string
@@ -9103,27 +9202,107 @@ components:
             type: string
           cta_image:
             description: The image for the CTA background
+            format: uri
             type: string
         required:
         - cta_description
         - cta_image
         - cta_label
         - cta_url
+        - type
     FeedItemSignIn:
       allOf:
       - $ref: '#/components/schemas/FeedItemCTA'
       - type: object
       - properties:
+          type:
+            description: Feed item type
+            enum:
+            - signin
+            type: string
           sign_in_redirect_url:
             description: The URL to redirect to when the user completes the sign in
               quest
+            format: uri
             type: string
           sign_in_background:
             description: The background for the sign in quest
+            format: uri
             type: string
         required:
         - sign_in_background
         - sign_in_redirect_url
+        - type
+    FeedItemReward:
+      allOf:
+      - $ref: '#/components/schemas/FeedItemSignIn'
+      - type: object
+      - properties:
+          type:
+            description: Feed item type
+            enum:
+            - reward
+            type: string
+    FeedItemLanding:
+      allOf:
+      - $ref: '#/components/schemas/FeedItemBase'
+      - type: object
+      - properties:
+          type:
+            description: Feed item type
+            enum:
+            - landing
+            type: string
+        required:
+        - type
+    FeedItemPinToHome:
+      allOf:
+      - $ref: '#/components/schemas/FeedItemBase'
+      - type: object
+      - properties:
+          type:
+            description: Feed item type
+            enum:
+            - pintohome
+            type: string
+        required:
+        - type
+    FeedItemDailyGems:
+      allOf:
+      - $ref: '#/components/schemas/FeedItemBase'
+      - type: object
+      - properties:
+          type:
+            description: Feed item type
+            enum:
+            - dailygems
+            type: string
+        required:
+        - type
+    FeedItemBonusGems:
+      allOf:
+      - $ref: '#/components/schemas/FeedItemBase'
+      - type: object
+      - properties:
+          type:
+            description: Feed item type
+            enum:
+            - bonusgems
+            type: string
+        required:
+        - type
+    FeedItemReferral:
+      allOf:
+      - $ref: '#/components/schemas/FeedItemBase'
+      - type: object
+      - properties:
+          type:
+            description: Feed item type
+            enum:
+            - referral
+            type: string
+        required:
+        - type
     FilterValue:
       example:
       - value: Common
