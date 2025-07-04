@@ -1,4 +1,4 @@
-# Immutable.Api.ZkEvm.Model.FeedItemBase
+# Immutable.Api.ZkEvm.Model.FeedItemReferral
 
 ## Properties
 
@@ -17,6 +17,7 @@ Name | Type | Description | Notes
 **Tags** | **List&lt;string&gt;** | The tags for the feed item | [optional] 
 **Categories** | **List&lt;string&gt;** | The categories for the feed item | [optional] 
 **OnboardingExperience** | **string** | The onboarding experience for the feed item | [optional] 
+**Type** | **string** | Feed item type | 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 
