@@ -1,103 +1,138 @@
 <div class="display-none">
 
-# Get User Info
+# Unity SDK User Information Retrieval
 
 </div>
 
-The Passport GetUserInfo feature group provides methods to access authenticated user information from Immutable Passport. This feature group enables developers to retrieve important user identifiers, authentication tokens, and linked wallet addresses that can be used for user management, authentication verification, and integration with other systems.
+The GetUserInfo feature demonstrates how to retrieve various types of user information from Immutable Passport, including email addresses, Passport IDs, authentication tokens, and linked wallet addresses. This feature is essential for games that need to access user profile data and manage user accounts effectively.
 
 <div class="button-component">
 
-[View feature group on Github](https://github.com/immutable/unity-immutable-sdk/tree/main/sample/Assets/Scripts/Passport/GetUserInfo) <span class="button-component-arrow">→</span>
+[View feature on Github](https://github.com/immutable/unity-immutable-sdk/tree/main/sample/Assets/Scripts/Passport/GetUserInfo) <span class="button-component-arrow">→</span>
 
 </div>
 
-## GetUserInfo Overview
+## Unity SDK GetUserInfo Implementation
 
-The GetUserInfo feature group consists of a single feature that provides multiple methods to retrieve different pieces of user information:
-
-- Get user email
-- Get Passport ID
-- Get access token
-- Get ID token
-- Get linked addresses
-
-These methods help developers access authenticated user data that can be used for user management, displaying user information, or integrating with other systems that require authentication tokens.
-
-## Unity SDK GetUserInfo Features
+The GetUserInfo feature provides five core methods for retrieving different types of user information from Passport:
 
 ### Feature: GetUserInfo
 
-The GetUserInfo feature provides several methods to retrieve authenticated user information from Immutable Passport.
+The GetUserInfo feature enables developers to access comprehensive user information from authenticated Passport accounts. This includes personal details, authentication credentials, and linked external wallet addresses, making it a crucial component for user profile management and account verification.
 
-```csharp title="GetUserInfo" manualLink="https://github.com/immutable/unity-immutable-sdk/blob/main/sample/Assets/Scripts/Passport/GetUserInfo/GetUserInfoScript.cs"
-// Retrieving the user's email
-string email = await Passport.Instance.GetEmail();
+```csharp title="GetUserInfo Methods" manualLink="https://github.com/immutable/unity-immutable-sdk/blob/main/sample/Assets/Scripts/Passport/GetUserInfo/GetUserInfoScript.cs"
+// Get user's email address
+public async void GetEmail()
+{
+    try
+    {
+        string email = await Passport.Instance.GetEmail();
+        ShowOutput(email);
+    }
+    catch (System.Exception ex)
+    {
+        ShowOutput($"Failed to get email: {ex.Message}");
+    }
+}
 
-// Retrieving the user's Passport ID
-string passportId = await Passport.Instance.GetPassportId();
+// Get user's Passport ID
+public async void GetPassportId()
+{
+    try
+    {
+        string passportId = await Passport.Instance.GetPassportId();
+        ShowOutput(passportId);
+    }
+    catch (System.Exception ex)
+    {
+        ShowOutput($"Failed to get Passport ID: {ex.Message}");
+    }
+}
 
-// Retrieving the user's access token
-string accessToken = await Passport.Instance.GetAccessToken();
+// Get user's access token
+public async void GetAccessToken()
+{
+    try
+    {
+        string accessToken = await Passport.Instance.GetAccessToken();
+        ShowOutput(accessToken);
+    }
+    catch (System.Exception ex)
+    {
+        ShowOutput($"Failed to get access token: {ex.Message}");
+    }
+}
 
-// Retrieving the user's ID token
-string idToken = await Passport.Instance.GetIdToken();
+// Get user's ID token
+public async void GetIdToken()
+{
+    try
+    {
+        string idToken = await Passport.Instance.GetIdToken();
+        ShowOutput(idToken);
+    }
+    catch (System.Exception ex)
+    {
+        ShowOutput($"Failed to get ID token: {ex.Message}");
+    }
+}
 
-// Retrieving the user's linked external wallets
-List<string> addresses = await Passport.Instance.GetLinkedAddresses();
+// Get user's linked external wallet addresses
+public async void GetLinkedAddresses()
+{
+    try
+    {
+        List<string> addresses = await Passport.Instance.GetLinkedAddresses();
+        string outputMessage = addresses.Count > 0 ? string.Join(", ", addresses) : "No linked addresses";
+        ShowOutput(outputMessage);
+    }
+    catch (System.Exception ex)
+    {
+        ShowOutput($"Failed to get linked addresses: {ex.Message}");
+    }
+}
 ```
 
-#### How It Works
+The implementation uses async/await patterns with UniTask for non-blocking operations and includes comprehensive error handling. Each method checks for Passport instance availability before making API calls, ensuring robust operation. The GetLinkedAddresses method specifically handles both populated and empty address lists, providing clear feedback to users about their linked wallet status.
 
-The GetUserInfo feature provides a simple interface to access user information from the authenticated Passport session:
-
-1. **GetEmail()**: Retrieves the email address associated with the user's Passport account. This is useful for user identification and communication purposes.
-
-2. **GetPassportId()**: Returns the unique identifier for the user's Passport account. This ID can be used to uniquely identify users in your application.
-
-3. **GetAccessToken()**: Provides the OAuth access token that can be used to make authenticated API calls to Immutable services or your own backend services. This token proves the user's identity and authorization.
-
-4. **GetIdToken()**: Returns the ID token containing the user's identity information in JWT format. This token can be decoded to access additional user profile information.
-
-5. **GetLinkedAddresses()**: Retrieves a list of external wallet addresses that the user has linked to their Passport account. This is useful for identifying which external wallets the user has associated with their account.
-
-All methods are asynchronous and return `UniTask` results, which can be awaited in async methods. Each method performs validation checks on the Passport instance before attempting to retrieve information, and proper error handling is implemented to catch and report any exceptions.
-
-## Running the GetUserInfo Example
+## Running the Feature Example
 
 ### Prerequisites
 
-- Unity Editor (2020.3 LTS or later)
-- Immutable SDK imported into your project
-- Configured Immutable Hub environment ([Configure Immutable Hub](https://docs.immutable.com/docs/x/sdks/unity))
+- Unity 2021.3 or newer
+- Immutable Unity SDK installed
+- [Immutable Hub](https://hub.immutable.com) account for environment configuration
+- Active Passport authentication session
 
-### Steps to Run the Example
+### Step-by-Step Instructions
 
-1. Open the sample app in Unity Editor.
-2. Ensure you have already set up and initialized Passport. You must be logged in to retrieve user information.
-3. Navigate to the GetUserInfo scene or component in the sample app.
-4. Each user information method can be tested by clicking the corresponding button in the UI:
-   - Click "Get Email" to retrieve the user's email address
-   - Click "Get Passport ID" to retrieve the user's Passport ID
-   - Click "Get Access Token" to retrieve the user's access token
-   - Click "Get ID Token" to retrieve the user's ID token
-   - Click "Get Linked Addresses" to retrieve the user's linked wallet addresses
-5. The retrieved information will be displayed in the output text field.
+1. **Open the Sample Project**
+   - Navigate to the Unity sample project in the SDK
+   - Open the `AuthenticatedScene` scene
 
-Note: You must successfully authenticate (log in) with Passport before you can retrieve user information. If not logged in, the methods will return appropriate error messages.
+2. **Ensure Passport Authentication**
+   - The user must be logged in through Passport before accessing user information
+   - Use the Authentication features to log in if not already authenticated
+
+3. **Test User Information Retrieval**
+   - Click the "Get Email" button to retrieve the user's email address
+   - Click the "Get Passport ID" button to get the unique Passport identifier
+   - Click the "Get Access Token" button to retrieve the current access token
+   - Click the "Get ID Token" button to get the ID token
+   - Click the "Get Linked Addresses" button to view connected external wallets
+
+4. **Verify Results**
+   - Check the output display for successful data retrieval
+   - Observe error messages if the user is not authenticated or if network issues occur
+   - Test with different authentication states to understand the feature's behavior
 
 ## Summary
 
-The GetUserInfo feature group provides essential functionality for accessing authenticated user information from Immutable Passport. With these methods, developers can:
+The GetUserInfo feature provides comprehensive access to user profile information and authentication credentials within Immutable Passport. It demonstrates best practices for async API calls, error handling, and user data management in Unity games. Developers can use these methods to create personalized user experiences, implement account verification systems, and manage user profiles effectively.
 
-- Access user identifiers for account management
-- Retrieve authentication tokens for API requests
-- Get linked wallet addresses for blockchain interactions
-
-Best practices when using the GetUserInfo feature:
-
-1. Always check if the user is authenticated before attempting to retrieve user information
-2. Implement proper error handling for cases where retrieving information fails
-3. Store sensitive information (like access tokens) securely, following security best practices
-4. Use the appropriate method for your specific needs rather than retrieving all information unnecessarily
-5. Consider caching non-sensitive information to reduce API calls 
+Key takeaways for developers:
+- Always verify Passport instance availability before making API calls
+- Implement proper error handling for network and authentication failures
+- Use async/await patterns to maintain responsive UI during API operations
+- Handle empty or null responses gracefully to provide clear user feedback
+- Consider user privacy when displaying sensitive information like tokens and email addresses 
