@@ -82,7 +82,7 @@ namespace Immutable.Api.ZkEvm.Model
         /// <param name="quizCorrectAnswerText">The text to display when the user answers the quiz correctly.</param>
         /// <param name="quizHeaderInitialImage">The initial image for the quiz header.</param>
         /// <param name="quizHeaderAnsweredImage">The image to display when the user answers the quiz correctly.</param>
-        public FeedItemQuiz(string id = default(string), string name = default(string), string questId = default(string), int priority = default(int), int gemsEarnable = default(int), bool bypass = default(bool), bool dayZero = default(bool), string gameId = default(string), string gameName = default(string), string questCompletedPopupText = default(string), List<string> tags = default(List<string>), List<string> categories = default(List<string>), string onboardingExperience = default(string), TypeEnum type = default(TypeEnum), string quizHeaderVideoUrl = default(string), string quizLogo = default(string), string quizQuestion = default(string), List<string> quizAnswers = default(List<string>), List<int> quizCorrectAnswers = default(List<int>), string quizCorrectAnswerText = default(string), string quizHeaderInitialImage = default(string), string quizHeaderAnsweredImage = default(string))
+        public FeedItemQuiz(string id = default(string), string name = default(string), string questId = default(string), int priority = default(int), int gemsEarnable = default(int), bool bypass = default(bool), bool dayZero = default(bool), Guid gameId = default(Guid), string gameName = default(string), string questCompletedPopupText = default(string), List<string> tags = default(List<string>), List<string> categories = default(List<string>), string onboardingExperience = default(string), TypeEnum type = default(TypeEnum), string quizHeaderVideoUrl = default(string), string quizLogo = default(string), string quizQuestion = default(string), List<string> quizAnswers = default(List<string>), List<int> quizCorrectAnswers = default(List<int>), string quizCorrectAnswerText = default(string), string quizHeaderInitialImage = default(string), string quizHeaderAnsweredImage = default(string))
         {
             // to ensure "id" is required (not null)
             if (id == null)
@@ -192,7 +192,7 @@ namespace Immutable.Api.ZkEvm.Model
         /// </summary>
         /// <value>Game ID</value>
         [DataMember(Name = "game_id", EmitDefaultValue = false)]
-        public string GameId { get; set; }
+        public Guid GameId { get; set; }
 
         /// <summary>
         /// Game name
