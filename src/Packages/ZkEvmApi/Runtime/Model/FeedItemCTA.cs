@@ -78,7 +78,7 @@ namespace Immutable.Api.ZkEvm.Model
         /// <param name="ctaDescription">The description for the CTA button (required).</param>
         /// <param name="ctaUrl">The URL for the CTA button (required).</param>
         /// <param name="ctaImage">The image for the CTA background (required).</param>
-        public FeedItemCTA(string id = default(string), string name = default(string), string questId = default(string), int priority = default(int), int gemsEarnable = default(int), bool bypass = default(bool), bool dayZero = default(bool), string gameId = default(string), string gameName = default(string), string questCompletedPopupText = default(string), List<string> tags = default(List<string>), List<string> categories = default(List<string>), string onboardingExperience = default(string), TypeEnum type = default(TypeEnum), string ctaLabel = default(string), string ctaDescription = default(string), string ctaUrl = default(string), string ctaImage = default(string))
+        public FeedItemCTA(string id = default(string), string name = default(string), string questId = default(string), int priority = default(int), int gemsEarnable = default(int), bool bypass = default(bool), bool dayZero = default(bool), Guid gameId = default(Guid), string gameName = default(string), string questCompletedPopupText = default(string), List<string> tags = default(List<string>), List<string> categories = default(List<string>), string onboardingExperience = default(string), TypeEnum type = default(TypeEnum), string ctaLabel = default(string), string ctaDescription = default(string), string ctaUrl = default(string), string ctaImage = default(string))
         {
             // to ensure "id" is required (not null)
             if (id == null)
@@ -189,7 +189,7 @@ namespace Immutable.Api.ZkEvm.Model
         /// </summary>
         /// <value>Game ID</value>
         [DataMember(Name = "game_id", EmitDefaultValue = false)]
-        public string GameId { get; set; }
+        public Guid GameId { get; set; }
 
         /// <summary>
         /// Game name

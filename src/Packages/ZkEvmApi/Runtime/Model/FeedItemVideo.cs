@@ -76,7 +76,7 @@ namespace Immutable.Api.ZkEvm.Model
         /// <param name="type">Feed item type (required).</param>
         /// <param name="videoTitle">Title of the video (required).</param>
         /// <param name="videoUrl">URL of the video (required).</param>
-        public FeedItemVideo(string id = default(string), string name = default(string), string questId = default(string), int priority = default(int), int gemsEarnable = default(int), bool bypass = default(bool), bool dayZero = default(bool), string gameId = default(string), string gameName = default(string), string questCompletedPopupText = default(string), List<string> tags = default(List<string>), List<string> categories = default(List<string>), string onboardingExperience = default(string), TypeEnum type = default(TypeEnum), string videoTitle = default(string), string videoUrl = default(string))
+        public FeedItemVideo(string id = default(string), string name = default(string), string questId = default(string), int priority = default(int), int gemsEarnable = default(int), bool bypass = default(bool), bool dayZero = default(bool), Guid gameId = default(Guid), string gameName = default(string), string questCompletedPopupText = default(string), List<string> tags = default(List<string>), List<string> categories = default(List<string>), string onboardingExperience = default(string), TypeEnum type = default(TypeEnum), string videoTitle = default(string), string videoUrl = default(string))
         {
             // to ensure "id" is required (not null)
             if (id == null)
@@ -175,7 +175,7 @@ namespace Immutable.Api.ZkEvm.Model
         /// </summary>
         /// <value>Game ID</value>
         [DataMember(Name = "game_id", EmitDefaultValue = false)]
-        public string GameId { get; set; }
+        public Guid GameId { get; set; }
 
         /// <summary>
         /// Game name
