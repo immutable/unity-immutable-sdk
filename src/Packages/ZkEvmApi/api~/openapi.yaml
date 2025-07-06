@@ -9068,6 +9068,9 @@ components:
           type: string
         quest_id:
           description: Quest ID
+          maxLength: 100
+          minLength: 1
+          pattern: "^[a-z0-9-]+$"
           type: string
         priority:
           description: Feed item priority
@@ -9084,6 +9087,7 @@ components:
           type: boolean
         game_id:
           description: Game ID
+          format: uuid
           type: string
         game_name:
           description: Game name
