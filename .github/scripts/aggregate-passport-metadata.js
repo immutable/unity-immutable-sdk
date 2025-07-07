@@ -38,23 +38,23 @@ try {
 // Find all feature group directories in _tutorials
 const findFeatureGroupDirectories = () => {
   const featureGroupDirs = [];
-
+  
   if (!fs.existsSync(TUTORIALS_DIR)) {
     console.warn(`Tutorials directory does not exist: ${TUTORIALS_DIR}`);
     return featureGroupDirs;
-  }
-  
-  try {
+    }
+    
+    try {
     const dirs = fs.readdirSync(TUTORIALS_DIR, { withFileTypes: true });
     
     dirs.forEach((dirent) => {
       if (dirent.isDirectory()) {
         featureGroupDirs.push(path.join(TUTORIALS_DIR, dirent.name));
-      }
-    });
-  } catch (err) {
+        }
+      });
+    } catch (err) {
     console.warn(`Error reading tutorials directory ${TUTORIALS_DIR}: ${err.message}`);
-  }
+    }
   
   return featureGroupDirs;
 };
@@ -82,7 +82,7 @@ const processFeatureGroups = (featureGroupDirs) => {
     if (!fs.existsSync(metadataPath)) {
       console.warn(`No metadata.json found for feature group ${groupName} in ${groupDir}`);
       return;
-    }
+      }
     
     // Path to tutorial.md in this feature group directory
     const tutorialPath = path.join(groupDir, 'tutorial.md');
