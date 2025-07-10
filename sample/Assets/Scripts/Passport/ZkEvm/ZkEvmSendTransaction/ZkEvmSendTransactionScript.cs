@@ -1,4 +1,7 @@
+#nullable enable
+
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,12 +11,12 @@ using Cysharp.Threading.Tasks;
 
 public class ZkEvmSendTransactionScript : MonoBehaviour
 {
-    [SerializeField] private Text Output;
-    [SerializeField] private Toggle ConfirmToggle;
-    [SerializeField] private Toggle GetTransactionReceiptToggle;
-    [SerializeField] private InputField ToInputField;
-    [SerializeField] private InputField ValueInputField;
-    [SerializeField] private InputField DataInputField;
+    [SerializeField] private Text? output;
+    [SerializeField] private Toggle? confirmToggle;
+    [SerializeField] private Toggle? getTransactionReceiptToggle;
+    [SerializeField] private InputField? toInputField;
+    [SerializeField] private InputField? valueInputField;
+    [SerializeField] private InputField? dataInputField;
 
     void Start()
     {
@@ -24,21 +27,16 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
         }
 
         // Make sure UI elements are initialised
-        if (ConfirmToggle != null && GetTransactionReceiptToggle != null)
+        if (confirmToggle != null && getTransactionReceiptToggle != null)
         {
-            ConfirmToggle.onValueChanged.AddListener(delegate
+            confirmToggle.onValueChanged.AddListener(delegate
             {
-                GetTransactionReceiptToggle.gameObject.SetActive(!ConfirmToggle.isOn);
+                getTransactionReceiptToggle.gameObject.SetActive(!confirmToggle.isOn);
             });
         }
     }
 
-    public void SendTransaction()
-    {
-        SendTransactionAsync();
-    }
-
-    private async UniTaskVoid SendTransactionAsync()
+    public async void SendTransaction()
     {
         if (SampleAppManager.PassportInstance == null)
         {
@@ -59,31 +57,36 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
         ShowOutput("Sending transaction...");
         try
         {
-            TransactionRequest request = new TransactionRequest
+            var request = new TransactionRequest
             {
-                to = ToInputField != null ? ToInputField.text : "",
-                value = ValueInputField != null ? ValueInputField.text : "",
-                data = DataInputField != null ? DataInputField.text : ""
+                to = toInputField != null ? toInputField.text : "",
+                value = valueInputField != null ? valueInputField.text : "",
+                data = dataInputField != null ? dataInputField.text : ""
             };
 
-            if (ConfirmToggle != null && ConfirmToggle.isOn)
+            if (confirmToggle != null && confirmToggle.isOn)
             {
-                TransactionReceiptResponse response = await SampleAppManager.PassportInstance.ZkEvmSendTransactionWithConfirmation(request);
-                ShowOutput($"Transaction hash: {response.hash}\nStatus: {GetTransactionStatusString(response.status)}");
+                var response = await SampleAppManager.PassportInstance.ZkEvmSendTransactionWithConfirmation(request);
+                ShowOutput($"Transaction hash: {response?.hash}\nStatus: {GetTransactionStatusString(response?.status)}");
             }
             else
             {
-                string transactionHash = await SampleAppManager.PassportInstance.ZkEvmSendTransaction(request);
+                var transactionHash = await SampleAppManager.PassportInstance.ZkEvmSendTransaction(request);
 
-                if (GetTransactionReceiptToggle != null && GetTransactionReceiptToggle.isOn)
+                if (transactionHash == null)
                 {
-                    string? status = await PollStatus(transactionHash);
+                    ShowOutput("No transaction hash");
+                    return;
+                }
+
+                if (getTransactionReceiptToggle != null && getTransactionReceiptToggle.isOn)
+                {
+                    var status = await PollStatus(transactionHash);
                     ShowOutput($"Transaction hash: {transactionHash}\nStatus: {GetTransactionStatusString(status)}");
+                    return;
                 }
-                else
-                {
-                    ShowOutput($"Transaction hash: {transactionHash}");
-                }
+
+                ShowOutput($"Transaction hash: {transactionHash}");
             }
         }
         catch (Exception ex)
@@ -92,15 +95,15 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
         }
     }
 
-    static async UniTask<string?> PollStatus(string transactionHash)
+    private static async UniTask<string?> PollStatus(string transactionHash)
     {
         var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
         try
         {
             while (!cancellationTokenSource.Token.IsCancellationRequested)
             {
-                TransactionReceiptResponse response = await SampleAppManager.PassportInstance.ZkEvmGetTransactionReceipt(transactionHash);
-                if (response.status == null)
+                var response = await SampleAppManager.PassportInstance.ZkEvmGetTransactionReceipt(transactionHash);
+                if (response?.status == null)
                 {
                     await UniTask.Delay(delayTimeSpan: TimeSpan.FromSeconds(1), cancellationToken: cancellationTokenSource.Token);
                 }
@@ -116,7 +119,7 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
         return null;
     }
 
-    private string GetTransactionStatusString(string? status)
+    private static string GetTransactionStatusString(string? status)
     {
         switch (status)
         {
@@ -140,13 +143,8 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
 
     private void ShowOutput(string message)
     {
-        if (Output != null)
-        {
-            Output.text = message;
-        }
-        else
-        {
-            Debug.Log($"ZkEvmSendTransactionScript: {message}");
-        }
+        if (output != null)
+            output.text = message;
+        Debug.Log($"[ZkEvmSendTransactionScript] {message}");
     }
 }
