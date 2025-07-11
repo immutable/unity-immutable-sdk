@@ -1,3 +1,5 @@
+#nullable enable
+
 using System.Globalization;
 using System.Numerics;
 using UnityEngine;
@@ -8,15 +10,10 @@ using Immutable.Passport;
 
 public class ZkEvmGetBalanceScript : MonoBehaviour
 {
-    [SerializeField] private Text Output;
-    [SerializeField] private InputField AddressInput;
+    [SerializeField] private Text? output;
+    [SerializeField] private InputField? addressInput;
 
-    public void GetBalance()
-    {
-        GetBalanceAsync();
-    }
-
-    private async UniTaskVoid GetBalanceAsync()
+    public async void GetBalance()
     {
         if (SampleAppManager.PassportInstance == null)
         {
@@ -26,7 +23,14 @@ public class ZkEvmGetBalanceScript : MonoBehaviour
         ShowOutput("Getting account balance...");
         try
         {
-            string balanceHex = await SampleAppManager.PassportInstance.ZkEvmGetBalance(AddressInput.text);
+            var address = addressInput?.text;
+            if (address == null)
+            {
+                ShowOutput("No address");
+                return;
+            }
+
+            var balanceHex = await SampleAppManager.PassportInstance.ZkEvmGetBalance(address);
             var balanceDec = BigInteger.Parse(balanceHex.Replace("0x", ""), NumberStyles.HexNumber);
             if (balanceDec < 0)
             {
@@ -47,9 +51,8 @@ public class ZkEvmGetBalanceScript : MonoBehaviour
 
     private void ShowOutput(string message)
     {
-        if (Output != null)
-        {
-            Output.text = message;
-        }
+        if (output != null)
+            output.text = message;
+        Debug.Log($"[ZkEvmGetBalanceScript] {message}");
     }
 }

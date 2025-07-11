@@ -1,21 +1,15 @@
+#nullable enable
+
 using UnityEngine;
 using UnityEngine.UI;
-using Cysharp.Threading.Tasks;
 
 namespace Immutable.Passport.Sample.PassportFeatures
 {
     public class ZkEvmConnectScript : MonoBehaviour
     {
-        [Header("zkEVM Connect UI")]
-        public Button connectButton;
-        public Text output;
+        [SerializeField] public Text? output;
 
-        public void ConnectZkEvm()
-        {
-            ConnectZkEvmAsync();
-        }
-
-        private async UniTaskVoid ConnectZkEvmAsync()
+        public async void ConnectZkEvm()
         {
             if (Passport.Instance == null)
             {
