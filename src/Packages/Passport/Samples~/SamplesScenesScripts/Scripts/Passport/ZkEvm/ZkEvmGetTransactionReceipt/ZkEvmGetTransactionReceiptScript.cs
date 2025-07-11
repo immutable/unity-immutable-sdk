@@ -1,21 +1,16 @@
+#nullable enable
+
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-using Cysharp.Threading.Tasks;
 using Immutable.Passport;
-using Immutable.Passport.Model;
 
 public class ZkEvmGetTransactionReceiptScript : MonoBehaviour
 {
-    [SerializeField] private Text Output;
-    [SerializeField] private InputField TransactionHash;
+    [SerializeField] private Text? output;
+    [SerializeField] private InputField? transactionHashInputField;
 
-    public void GetZkEvmTransactionReceipt()
-    {
-        GetZkEvmTransactionReceiptAsync();
-    }
-
-    private async UniTaskVoid GetZkEvmTransactionReceiptAsync()
+    public async void GetZkEvmTransactionReceipt()
     {
         if (Passport.Instance == null)
         {
@@ -25,9 +20,16 @@ public class ZkEvmGetTransactionReceiptScript : MonoBehaviour
         ShowOutput("Getting transaction receipt...");
         try
         {
+            var transactionHash = transactionHashInputField?.text;
+            if (transactionHash == null)
+            {
+                ShowOutput("No transaction hash");
+                return;
+            }
+
             await Passport.Instance.ConnectEvm();
-            TransactionReceiptResponse response = await Passport.Instance.ZkEvmGetTransactionReceipt(TransactionHash.text);
-            string status = $"Status: {GetTransactionStatusString(response.status)}";
+            var response = await Passport.Instance.ZkEvmGetTransactionReceipt(transactionHash);
+            var status = $"Status: {GetTransactionStatusString(response?.status)}";
             ShowOutput(status);
         }
         catch (System.Exception ex)
@@ -36,7 +38,7 @@ public class ZkEvmGetTransactionReceiptScript : MonoBehaviour
         }
     }
 
-    private string GetTransactionStatusString(string status)
+    private static string GetTransactionStatusString(string? status)
     {
         switch (status)
         {
@@ -60,9 +62,8 @@ public class ZkEvmGetTransactionReceiptScript : MonoBehaviour
 
     private void ShowOutput(string message)
     {
-        if (Output != null)
-        {
-            Output.text = message;
-        }
+        if (output != null)
+            output.text = message;
+        Debug.Log($"[ZkEvmGetTransactionReceiptScript] {message}");
     }
 }
