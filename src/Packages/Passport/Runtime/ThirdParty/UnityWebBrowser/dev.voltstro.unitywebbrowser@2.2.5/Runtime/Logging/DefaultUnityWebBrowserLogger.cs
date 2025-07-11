@@ -7,6 +7,7 @@
 
 using System;
 using UnityEngine;
+using VoltstroStudios.UnityWebBrowser.Shared;
 
 namespace VoltstroStudios.UnityWebBrowser.Logging
 {
@@ -18,6 +19,8 @@ namespace VoltstroStudios.UnityWebBrowser.Logging
         private const string LoggingTag = "[UWB]";
 
         private readonly ILogger logger;
+
+        private LogSeverity logSeverity;
         
         /// <summary>
         /// A function that defines how sensitive data should be redacted.
@@ -25,25 +28,34 @@ namespace VoltstroStudios.UnityWebBrowser.Logging
         /// </summary>
         public Func<string, string>? redactionHandler;
 
-        public DefaultUnityWebBrowserLogger(Func<string, string>? redactionHandler = null)
+        public DefaultUnityWebBrowserLogger(LogSeverity logSeverity = LogSeverity.Info, Func<string, string>? redactionHandler = null)
         {
             logger = UnityEngine.Debug.unityLogger;
+            this.logSeverity = logSeverity;
             this.redactionHandler = redactionHandler;
         }
 
         public void Debug(object message)
         {
-            logger.Log(LogType.Log, LoggingTag, redactIfRequired(message));
+            if (ShouldLog(LogSeverity.Debug))
+                logger.Log(LogType.Log, LoggingTag, redactIfRequired(message));
         }
 
         public void Warn(object message)
         {
-            logger.LogWarning(LoggingTag, redactIfRequired(message));
+            if (ShouldLog(LogSeverity.Warn))
+                logger.LogWarning(LoggingTag, redactIfRequired(message));
         }
 
         public void Error(object message)
         {
-            logger.LogError(LoggingTag, redactIfRequired(message));
+            if (ShouldLog(LogSeverity.Error))
+                logger.LogError(LoggingTag, redactIfRequired(message));
+        }
+        
+        private bool ShouldLog(LogSeverity severity)
+        {
+            return severity >= logSeverity;
         }
 
         private object redactIfRequired(object message)

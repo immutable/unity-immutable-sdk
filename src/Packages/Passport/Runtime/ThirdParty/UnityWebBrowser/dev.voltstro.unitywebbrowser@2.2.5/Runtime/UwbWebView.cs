@@ -43,16 +43,17 @@ namespace VoltstroStudios.UnityWebBrowser
             webBrowserClient.noSandbox = true;
 
             // Log level
-            webBrowserClient.logSeverity = PassportLogger.CurrentLogLevel switch
+            var logSeverity = PassportLogger.CurrentLogLevel switch
             {
                 LogLevel.Debug => LogSeverity.Debug,
                 LogLevel.Warn => LogSeverity.Warn,
                 LogLevel.Error => LogSeverity.Error,
                 _ => LogSeverity.Info
             };
+            webBrowserClient.logSeverity = logSeverity;
 
             // Logger
-            webBrowserClient.Logger = new DefaultUnityWebBrowserLogger(redactionHandler: redactTokensInLogs ? redactionHandler : null);
+            webBrowserClient.Logger = new DefaultUnityWebBrowserLogger(logSeverity: logSeverity, redactionHandler: redactTokensInLogs ? redactionHandler : null);
 
             // Js
             webBrowserClient.jsMethodManager = new JsMethodManager { jsMethodsEnable = true };
