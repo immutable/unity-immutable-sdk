@@ -1,21 +1,16 @@
+#nullable enable
+
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-using Cysharp.Threading.Tasks;
 using Immutable.Passport;
-using Immutable.Passport.Model;
 
 public class ZkEvmSignTypedDataScript : MonoBehaviour
 {
-    [SerializeField] private Text Output;
-    [SerializeField] private InputField Payload;
+    [SerializeField] private Text? output;
+    [SerializeField] private InputField? payloadInputField;
 
-    public void SignTypedData()
-    {
-        SignTypedDataAsync();
-    }
-
-    private async UniTaskVoid SignTypedDataAsync()
+    public async void SignTypedData()
     {
         if (Passport.Instance == null)
         {
@@ -25,9 +20,16 @@ public class ZkEvmSignTypedDataScript : MonoBehaviour
         ShowOutput("Signing payload...");
         try
         {
+            var payload = payloadInputField?.text;
+            if (payload == null)
+            {
+                ShowOutput("No payload");
+                return;
+            }
+
             await Passport.Instance.ConnectEvm();
-            string signature = await Passport.Instance.ZkEvmSignTypedDataV4(Payload.text);
-            ShowOutput(signature);
+            var signature = await Passport.Instance.ZkEvmSignTypedDataV4(payload);
+            ShowOutput(signature ?? "No signature");
         }
         catch (System.Exception ex)
         {
@@ -42,9 +44,8 @@ public class ZkEvmSignTypedDataScript : MonoBehaviour
 
     private void ShowOutput(string message)
     {
-        if (Output != null)
-        {
-            Output.text = message;
-        }
+        if (output != null)
+            output.text = message;
+        Debug.Log($"[ZkEvmSignTypedDataScript] {message}");
     }
 }

@@ -1371,7 +1371,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 033bac63c98e94dbd8324bca7d37ed2b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  connectButton: {fileID: 1144767401}
   output: {fileID: 1253661940}
 --- !u!4 &144103476
 Transform:
@@ -2881,7 +2880,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cf838bde5a84143489a17922798f3b75, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Output: {fileID: 1253661940}
+  output: {fileID: 1253661940}
 --- !u!1 &723321857
 GameObject:
   m_ObjectHideFlags: 0

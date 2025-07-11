@@ -43,7 +43,7 @@ public class PassportInitialisationScript : MonoBehaviour
         try
         {
             // Set the log level for the SDK
-            Passport.LogLevel = LogLevel.Info;
+            Passport.LogLevel = LogLevel.Debug;
 
             // Don't redact token values from logs
             Passport.RedactTokensInLogs = false;

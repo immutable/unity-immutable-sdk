@@ -1,18 +1,13 @@
+#nullable enable
+
 using UnityEngine;
 using UnityEngine.UI;
-using Cysharp.Threading.Tasks;
-using System.Collections.Generic;
 
 public class ZkEvmRequestAccountsScript : MonoBehaviour
 {
-    [SerializeField] private Text Output;
+    [SerializeField] private Text? output;
 
-    public void RequestAccounts()
-    {
-        RequestAccountsAsync();
-    }
-
-    private async UniTaskVoid RequestAccountsAsync()
+    public async void RequestAccounts()
     {
         if (SampleAppManager.PassportInstance == null)
         {
@@ -23,7 +18,7 @@ public class ZkEvmRequestAccountsScript : MonoBehaviour
         ShowOutput("Requesting wallet accounts...");
         try
         {
-            List<string> accounts = await SampleAppManager.PassportInstance.ZkEvmRequestAccounts();
+            var accounts = await SampleAppManager.PassportInstance.ZkEvmRequestAccounts();
             ShowOutput(accounts.Count > 0 ? string.Join(", ", accounts) : "No accounts found.");
         }
         catch (System.Exception ex)
@@ -34,8 +29,8 @@ public class ZkEvmRequestAccountsScript : MonoBehaviour
 
     private void ShowOutput(string message)
     {
-        if (Output != null)
-            Output.text = message;
+        if (output != null)
+            output.text = message;
         Debug.Log($"[ZkEvmRequestAccountsScript] {message}");
     }
 }
