@@ -43,10 +43,8 @@ namespace VoltstroStudios.UnityWebBrowser.Helper
         {
 #if UNITY_EDITOR
             return Path.GetFullPath(Path.Combine(Directory.GetParent(Application.dataPath)!.FullName, "Library"));
-#elif UNITY_STANDALONE_OSX
-            return Application.persistentDataPath;
 #else
-			return Application.dataPath;
+			return Application.persistentDataPath;
 #endif
         }
 
