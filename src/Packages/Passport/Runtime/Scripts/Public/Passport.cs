@@ -288,23 +288,25 @@ namespace Immutable.Passport
         /// Logs into Passport using Authorisation Code Flow with Proof Key for Code Exchange (PKCE).
         /// This opens the user's default browser on desktop or an in-app browser on mobile.
         /// <param name="useCachedSession">If true, Passport will attempt to re-authenticate the player using stored credentials. If re-authentication fails, it won't automatically prompt the user to log in again.</param>
+        /// <param name="directLoginMethod">Optional direct login method to use (google, apple, facebook). If None, the user will see the standard login page.
         /// </summary>
         /// <returns>
         /// Returns true if login is successful, otherwise false.
         /// </returns>
-        public async UniTask<bool> Login(bool useCachedSession = false)
+        public async UniTask<bool> Login(bool useCachedSession = false, DirectLoginMethod directLoginMethod = DirectLoginMethod.None)
         {
-            return await GetPassportImpl().Login(useCachedSession);
+            return await GetPassportImpl().Login(useCachedSession, directLoginMethod);
         }
 
         /// <summary>
         /// Logs the user into Passport using Authorisation Code Flow with Proof Key for Code Exchange (PKCE) and sets up the Immutable X provider.
         /// This opens the user's default browser on desktop or an in-app browser on mobile.
         /// <param name="useCachedSession">If true, Passport will attempt to re-authenticate the player using stored credentials. If re-authentication fails, it won't automatically prompt the user to log in again.</param>
+        /// <param name="directLoginMethod">Optional direct login method to use (google, apple, facebook). If None, the user will see the standard login page.
         /// </summary>
-        public async UniTask<bool> ConnectImx(bool useCachedSession = false)
+        public async UniTask<bool> ConnectImx(bool useCachedSession = false, DirectLoginMethod directLoginMethod = DirectLoginMethod.None)
         {
-            return await GetPassportImpl().ConnectImx(useCachedSession);
+            return await GetPassportImpl().ConnectImx(useCachedSession, directLoginMethod);
         }
 
         /// <summary>
