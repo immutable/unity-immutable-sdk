@@ -80,7 +80,9 @@ namespace Immutable.Passport.Helpers
         [Serializable]
         private class Wrapper<T>
         {
+#pragma warning disable CS8618
             public T[] Items;
+#pragma warning restore CS8618
         }
     }
 }

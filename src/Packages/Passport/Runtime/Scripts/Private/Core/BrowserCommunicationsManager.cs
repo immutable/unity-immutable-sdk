@@ -21,7 +21,7 @@ namespace Immutable.Passport.Core
 #endif
         void SetCallTimeout(int ms);
         void LaunchAuthURL(string url, string redirectUri);
-        UniTask<string> Call(string fxName, string data = null, bool ignoreTimeout = false, Nullable<long> timeoutMs = null);
+        UniTask<string> Call(string fxName, string? data = null, bool ignoreTimeout = false, Nullable<long> timeoutMs = null);
 #if (UNITY_IPHONE && !UNITY_EDITOR) || (UNITY_ANDROID && !UNITY_EDITOR)
         void ClearCache(bool includeDiskFiles);
         void ClearStorage();
@@ -39,14 +39,14 @@ namespace Immutable.Passport.Core
 
         private readonly IDictionary<string, UniTaskCompletionSource<string>> requestTaskMap = new Dictionary<string, UniTaskCompletionSource<string>>();
         private readonly IWebBrowserClient webBrowserClient;
-        public event OnBrowserReadyDelegate OnReady;
+        public event OnBrowserReadyDelegate? OnReady;
 
         /// <summary>
         ///  PKCE in some platforms such as iOS and macOS will not trigger a deeplink and a proper callback needs to be
         ///  setup.
         /// </summary>
-        public event OnUnityPostMessageDelegate OnAuthPostMessage;
-        public event OnUnityPostMessageErrorDelegate OnPostMessageError;
+        public event OnUnityPostMessageDelegate? OnAuthPostMessage;
+        public event OnUnityPostMessageErrorDelegate? OnPostMessageError;
 
         /// <summary>
         ///     Timeout time for waiting for each call to respond in milliseconds
@@ -71,31 +71,23 @@ namespace Immutable.Passport.Core
             callTimeout = ms;
         }
 
-        public UniTask<string> Call(string fxName, string data = null, bool ignoreTimeout = false, Nullable<long> timeoutMs = null)
+        public UniTask<string> Call(string fxName, string? data = null, bool ignoreTimeout = false, long? timeoutMs = null)
         {
             var t = new UniTaskCompletionSource<string>();
-            string requestId = Guid.NewGuid().ToString();
+            var requestId = Guid.NewGuid().ToString();
             // Add task completion source to the map so we can return the response
             requestTaskMap.Add(requestId, t);
             CallFunction(requestId, fxName, data);
-            if (ignoreTimeout)
-                return t.Task;
-            else
-                return t.Task.Timeout(TimeSpan.FromMilliseconds(timeoutMs ?? callTimeout));
+            return ignoreTimeout ? t.Task : t.Task.Timeout(TimeSpan.FromMilliseconds(timeoutMs ?? callTimeout));
         }
 
-        private void CallFunction(string requestId, string fxName, string data = null)
+        private void CallFunction(string requestId, string fxName, string? data = null)
         {
-            BrowserRequest request = new BrowserRequest()
-            {
-                fxName = fxName,
-                requestId = requestId,
-                data = data
-            };
-            string requestJson = JsonUtility.ToJson(request).Replace("\\", "\\\\").Replace("\"", "\\\"");
+            var request = new BrowserRequest(fxName, requestId, data);
+            var requestJson = JsonUtility.ToJson(request).Replace("\\", "\\\\").Replace("\"", "\\\"");
 
             // Call the function on the JS side
-            string js = $"callFunction(\"{requestJson}\")";
+            var js = $"callFunction(\"{requestJson}\")";
 
             if (fxName != PassportAnalytics.TRACK)
             {
@@ -140,25 +132,19 @@ namespace Immutable.Passport.Core
         private void InvokeOnAuthPostMessage(string message)
         {
             PassportLogger.Info($"{TAG} Auth message received: {message}");
-            if (OnAuthPostMessage != null)
-            {
-                OnAuthPostMessage.Invoke(message);
-            }
+            OnAuthPostMessage?.Invoke(message);
         }
 
         private void InvokeOnPostMessageError(string id, string message)
         {
             PassportLogger.Info($"{TAG} Error message received ({id}): {message}");
-            if (OnPostMessageError != null)
-            {
-                OnPostMessageError.Invoke(id, message);
-            }
+            OnPostMessageError?.Invoke(id, message);
         }
 
         private void HandleResponse(string message)
         {
             PassportLogger.Debug($"{TAG} Handle response message: " + message);
-            BrowserResponse response = message.OptDeserializeObject<BrowserResponse>();
+            var response = message.OptDeserializeObject<BrowserResponse>();
 
             // Validate the deserialised response object
             if (response == null || string.IsNullOrEmpty(response.responseFor) || string.IsNullOrEmpty(response.requestId))
@@ -181,10 +167,7 @@ namespace Immutable.Passport.Core
             if (response.responseFor == INIT && response.requestId == INIT_REQUEST_ID)
             {
                 PassportLogger.Info($"{TAG} Browser is ready");
-                if (OnReady != null)
-                {
-                    OnReady.Invoke();
-                }
+                OnReady?.Invoke();
                 return;
             }
 
@@ -230,13 +213,13 @@ namespace Immutable.Passport.Core
 
         private void NotifyRequestResult(string requestId, string result)
         {
-            BrowserResponse response = result.OptDeserializeObject<BrowserResponse>();
-            UniTaskCompletionSource<string> completion = requestTaskMap[requestId] as UniTaskCompletionSource<string>;
+            var response = result.OptDeserializeObject<BrowserResponse>();
+            var completion = requestTaskMap[requestId] as UniTaskCompletionSource<string>;
             try
             {
-                if (response.success == false || !String.IsNullOrEmpty(response.error))
+                if (response?.success == false || !string.IsNullOrEmpty(response?.error))
                 {
-                    PassportException exception = ParseError(response);
+                    var exception = ParseError(response);
                     if (!completion.TrySetException(exception))
                         throw new PassportException($"Unable to set exception for for request id {requestId}. Task has already been completed.");
                 }

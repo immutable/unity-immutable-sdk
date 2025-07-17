@@ -276,12 +276,12 @@ namespace Immutable.Passport
             try
             {
                 var request = new GetPKCEAuthUrlRequest(!_pkceLoginOnly, _directLoginMethod);
-                string callResponse = await _communicationsManager.Call(PassportFunction.GET_PKCE_AUTH_URL, JsonUtility.ToJson(request));
-                StringResponse response = callResponse.OptDeserializeObject<StringResponse>();
+                var callResponse = await _communicationsManager.Call(PassportFunction.GET_PKCE_AUTH_URL, JsonUtility.ToJson(request));
+                var response = callResponse.OptDeserializeObject<StringResponse>();
 
                 if (response != null && response.success == true && response.result != null)
                 {
-                    string url = response.result.Replace(" ", "+");
+                    var url = response.result.Replace(" ", "+");
 #if UNITY_ANDROID && !UNITY_EDITOR
                     loginPKCEUrl = url;
                     SendAuthEvent(_pkceLoginOnly ? PassportAuthEvent.LoginPKCELaunchingCustomTabs : PassportAuthEvent.ConnectImxPKCELaunchingCustomTabs);
@@ -747,7 +747,7 @@ namespace Immutable.Passport
         }
 #endif
 
-        protected virtual async void Track(string eventName, bool? success = null, Dictionary<string, object> properties = null)
+        protected virtual async void Track(string eventName, bool? success = null, Dictionary<string, object>? properties = null)
         {
             await _analytics.Track(_communicationsManager, eventName, success, properties);
         }

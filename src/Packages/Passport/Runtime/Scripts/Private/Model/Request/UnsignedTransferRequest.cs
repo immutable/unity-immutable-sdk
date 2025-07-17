@@ -23,19 +23,19 @@ namespace Immutable.Passport.Model
         /**
         * The token ID
         */
-        public string tokenId;
+        public string? tokenId;
 
         /**
         * The token address
         */
-        public string tokenAddress;
+        public string? tokenAddress;
 
         public UnsignedTransferRequest(
             string type,
             string amount,
             string receiver,
-            string tokenId = null,
-            string tokenAddress = null
+            string? tokenId = null,
+            string? tokenAddress = null
             )
         {
             this.type = type;

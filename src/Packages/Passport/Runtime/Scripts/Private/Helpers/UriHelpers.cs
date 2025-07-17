@@ -8,7 +8,7 @@ namespace Immutable.Passport.Helpers
         /// <summary>
         /// Gets the specified query parameter from the given URI
         /// </summary> 
-        public static string GetQueryParameter(this Uri uri, string key)
+        public static string? GetQueryParameter(this Uri uri, string key)
         {
             try
             {

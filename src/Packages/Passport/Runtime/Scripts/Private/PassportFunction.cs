@@ -3,14 +3,11 @@ namespace Immutable.Passport
     public static class PassportFunction
     {
         public const string INIT = "init";
-        public const string INIT_DEVICE_FLOW = "initDeviceFlow";
         public const string RELOGIN = "relogin";
         public const string RECONNECT = "reconnect";
         public const string LOGIN_PKCE = "loginPKCE";
         public const string CONNECT_PKCE = "connectPKCE";
         public const string GET_PKCE_AUTH_URL = "getPKCEAuthUrl";
-        public const string LOGIN_CONFIRM_CODE = "loginConfirmCode";
-        public const string CONNECT_CONFIRM_CODE = "connectConfirmCode";
         public const string GET_ACCESS_TOKEN = "getAccessToken";
         public const string GET_ID_TOKEN = "getIdToken";
         public const string LOGOUT = "logout";
