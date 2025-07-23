@@ -310,6 +310,18 @@ namespace Immutable.Passport
         }
 
         /// <summary>
+        /// Completes the login process by storing the token. This is required for the login to be complete.
+        /// </summary>
+        /// <param name="request">The token request</param>
+        /// <returns>
+        /// True if successful, otherwise false.
+        /// </returns>
+        public async UniTask<bool> CompleteLogin(TokenResponse request)
+        {
+            return await GetPassportImpl().CompleteLogin(request);
+        }
+
+        /// <summary>
         /// Gets the wallet address of the logged in user.
         /// <returns>
         /// The wallet address
