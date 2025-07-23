@@ -8,12 +8,12 @@ namespace Immutable.Passport.Core
         public string requestId;
         public bool success;
         public string errorType;
-        public string error;
+        public string? error;
     }
 
     public class StringResponse : BrowserResponse
     {
-        public string result;
+        public string? result;
     }
 
     public class StringListResponse : BrowserResponse
