@@ -137,8 +137,8 @@ namespace Immutable.Passport
         /// </summary>
         /// <param name="clientId">The client ID</param>
         /// <param name="environment">The environment to connect to</param>
-        /// <param name="redirectUri">The URL where the browser will redirect after successful authentication.</param>
-        /// <param name="logoutRedirectUri">The URL where the browser will redirect after logout is complete.</param>
+        /// <param name="redirectUri">The URL where the browser will redirect after successful authentication. On Windows, this must use a custom protocol (e.g., 'mygame://callback') instead of http/https.</param>
+        /// <param name="logoutRedirectUri">The URL where the browser will redirect after logout is complete. On Windows, this must use a custom protocol (e.g., 'mygame://logout') instead of http/https.</param>
         /// <param name="engineStartupTimeoutMs">(Windows only) Timeout duration in milliseconds to wait for the default Windows browser engine to start.</param>
         /// <param name="windowsWebBrowserClient">(Windows only) Custom Windows browser to use instead of the default browser in the SDK.</param>
         public static UniTask<Passport> Init(
@@ -152,6 +152,10 @@ namespace Immutable.Passport
 #endif
         )
         {
+#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+            ValidateWindowsProtocols(redirectUri, logoutRedirectUri);
+#endif
+
             if (Instance == null)
             {
                 PassportLogger.Info($"{TAG} Initialising Passport...");
@@ -681,5 +685,41 @@ namespace Immutable.Passport
             _deeplink = null;
             _readySignalReceived = false;
         }
+
+#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+        /// <summary>
+        /// Validates that custom protocols are used for Windows platforms instead of http/https.
+        /// Windows uses registry-based deep linking which requires custom protocols.
+        /// </summary>
+        private static void ValidateWindowsProtocols(string redirectUri, string logoutRedirectUri)
+        {
+            if (IsHttpProtocol(redirectUri))
+            {
+                throw new PassportException(
+                    $"Invalid redirectUri for Windows: '{redirectUri}'. " +
+                    "Windows requires custom protocols (e.g., 'mygame://callback') instead of http/https. " +
+                    "This is because Windows uses registry-based deep linking that cannot redirect http/https URLs back to your game.",
+                    PassportErrorType.INITALISATION_ERROR);
+            }
+
+            if (IsHttpProtocol(logoutRedirectUri))
+            {
+                throw new PassportException(
+                    $"Invalid logoutRedirectUri for Windows: '{logoutRedirectUri}'. " +
+                    "Windows requires custom protocols (e.g., 'mygame://logout') instead of http/https. " +
+                    "This is because Windows uses registry-based deep linking that cannot redirect http/https URLs back to your game.",
+                    PassportErrorType.INITALISATION_ERROR);
+            }
+        }
+
+        /// <summary>
+        /// Checks if a URI uses http or https protocol.
+        /// </summary>
+        private static bool IsHttpProtocol(string uri)
+        {
+            return uri.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                   uri.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+        }
+#endif
     }
 }
