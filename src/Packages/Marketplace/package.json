@@ -1,6 +1,6 @@
 {
   "name": "com.immutable.marketplace",
-  "version": "1.36.1",
+  "version": "1.36.2",
   "description": "Marketplace package for the Immutable SDK for Unity",
   "displayName": "Immutable Marketplace",
   "author": {
