@@ -74,12 +74,12 @@ namespace Immutable.Api.ZkEvm.Model
         /// <param name="categories">The categories for the feed item.</param>
         /// <param name="onboardingExperience">The onboarding experience for the feed item.</param>
         /// <param name="type">Feed item type (required).</param>
-        /// <param name="ctaImage">URL of the CTA image (required).</param>
-        /// <param name="ctaLabel">Label of the CTA button (required).</param>
-        /// <param name="ctaDescription">Description of the CTA button (required).</param>
-        /// <param name="quizLogo">URL of the quiz logo (required).</param>
-        /// <param name="videoTitle">Title of the video (required).</param>
-        public FeedItemFollowGame(string id = default(string), string name = default(string), string questId = default(string), int priority = default(int), int gemsEarnable = default(int), bool bypass = default(bool), bool dayZero = default(bool), Guid gameId = default(Guid), string gameName = default(string), string questCompletedPopupText = default(string), List<string> tags = default(List<string>), List<string> categories = default(List<string>), string onboardingExperience = default(string), TypeEnum type = default(TypeEnum), string ctaImage = default(string), string ctaLabel = default(string), string ctaDescription = default(string), string quizLogo = default(string), string videoTitle = default(string))
+        /// <param name="image">URL of the CTA image (required).</param>
+        /// <param name="label">Label of the CTA button (required).</param>
+        /// <param name="description">Description of the CTA button (required).</param>
+        /// <param name="logo">URL of the quiz logo (required).</param>
+        /// <param name="title">Title of the video (required).</param>
+        public FeedItemFollowGame(string id = default(string), string name = default(string), string questId = default(string), int priority = default(int), int gemsEarnable = default(int), bool bypass = default(bool), bool dayZero = default(bool), Guid gameId = default(Guid), string gameName = default(string), string questCompletedPopupText = default(string), List<string> tags = default(List<string>), List<string> categories = default(List<string>), string onboardingExperience = default(string), TypeEnum type = default(TypeEnum), string image = default(string), string label = default(string), string description = default(string), string logo = default(string), string title = default(string))
         {
             // to ensure "id" is required (not null)
             if (id == null)
@@ -102,36 +102,36 @@ namespace Immutable.Api.ZkEvm.Model
             this.Priority = priority;
             this.GemsEarnable = gemsEarnable;
             this.Type = type;
-            // to ensure "ctaImage" is required (not null)
-            if (ctaImage == null)
+            // to ensure "image" is required (not null)
+            if (image == null)
             {
-                throw new ArgumentNullException("ctaImage is a required property for FeedItemFollowGame and cannot be null");
+                throw new ArgumentNullException("image is a required property for FeedItemFollowGame and cannot be null");
             }
-            this.CtaImage = ctaImage;
-            // to ensure "ctaLabel" is required (not null)
-            if (ctaLabel == null)
+            this.Image = image;
+            // to ensure "label" is required (not null)
+            if (label == null)
             {
-                throw new ArgumentNullException("ctaLabel is a required property for FeedItemFollowGame and cannot be null");
+                throw new ArgumentNullException("label is a required property for FeedItemFollowGame and cannot be null");
             }
-            this.CtaLabel = ctaLabel;
-            // to ensure "ctaDescription" is required (not null)
-            if (ctaDescription == null)
+            this.Label = label;
+            // to ensure "description" is required (not null)
+            if (description == null)
             {
-                throw new ArgumentNullException("ctaDescription is a required property for FeedItemFollowGame and cannot be null");
+                throw new ArgumentNullException("description is a required property for FeedItemFollowGame and cannot be null");
             }
-            this.CtaDescription = ctaDescription;
-            // to ensure "quizLogo" is required (not null)
-            if (quizLogo == null)
+            this.Description = description;
+            // to ensure "logo" is required (not null)
+            if (logo == null)
             {
-                throw new ArgumentNullException("quizLogo is a required property for FeedItemFollowGame and cannot be null");
+                throw new ArgumentNullException("logo is a required property for FeedItemFollowGame and cannot be null");
             }
-            this.QuizLogo = quizLogo;
-            // to ensure "videoTitle" is required (not null)
-            if (videoTitle == null)
+            this.Logo = logo;
+            // to ensure "title" is required (not null)
+            if (title == null)
             {
-                throw new ArgumentNullException("videoTitle is a required property for FeedItemFollowGame and cannot be null");
+                throw new ArgumentNullException("title is a required property for FeedItemFollowGame and cannot be null");
             }
-            this.VideoTitle = videoTitle;
+            this.Title = title;
             this.Bypass = bypass;
             this.DayZero = dayZero;
             this.GameId = gameId;
@@ -237,36 +237,36 @@ namespace Immutable.Api.ZkEvm.Model
         /// URL of the CTA image
         /// </summary>
         /// <value>URL of the CTA image</value>
-        [DataMember(Name = "cta_image", IsRequired = true, EmitDefaultValue = true)]
-        public string CtaImage { get; set; }
+        [DataMember(Name = "image", IsRequired = true, EmitDefaultValue = true)]
+        public string Image { get; set; }
 
         /// <summary>
         /// Label of the CTA button
         /// </summary>
         /// <value>Label of the CTA button</value>
-        [DataMember(Name = "cta_label", IsRequired = true, EmitDefaultValue = true)]
-        public string CtaLabel { get; set; }
+        [DataMember(Name = "label", IsRequired = true, EmitDefaultValue = true)]
+        public string Label { get; set; }
 
         /// <summary>
         /// Description of the CTA button
         /// </summary>
         /// <value>Description of the CTA button</value>
-        [DataMember(Name = "cta_description", IsRequired = true, EmitDefaultValue = true)]
-        public string CtaDescription { get; set; }
+        [DataMember(Name = "description", IsRequired = true, EmitDefaultValue = true)]
+        public string Description { get; set; }
 
         /// <summary>
         /// URL of the quiz logo
         /// </summary>
         /// <value>URL of the quiz logo</value>
-        [DataMember(Name = "quiz_logo", IsRequired = true, EmitDefaultValue = true)]
-        public string QuizLogo { get; set; }
+        [DataMember(Name = "logo", IsRequired = true, EmitDefaultValue = true)]
+        public string Logo { get; set; }
 
         /// <summary>
         /// Title of the video
         /// </summary>
         /// <value>Title of the video</value>
-        [DataMember(Name = "video_title", IsRequired = true, EmitDefaultValue = true)]
-        public string VideoTitle { get; set; }
+        [DataMember(Name = "title", IsRequired = true, EmitDefaultValue = true)]
+        public string Title { get; set; }
 
         /// <summary>
         /// Returns the string presentation of the object
@@ -290,11 +290,11 @@ namespace Immutable.Api.ZkEvm.Model
             sb.Append("  Categories: ").Append(Categories).Append("\n");
             sb.Append("  OnboardingExperience: ").Append(OnboardingExperience).Append("\n");
             sb.Append("  Type: ").Append(Type).Append("\n");
-            sb.Append("  CtaImage: ").Append(CtaImage).Append("\n");
-            sb.Append("  CtaLabel: ").Append(CtaLabel).Append("\n");
-            sb.Append("  CtaDescription: ").Append(CtaDescription).Append("\n");
-            sb.Append("  QuizLogo: ").Append(QuizLogo).Append("\n");
-            sb.Append("  VideoTitle: ").Append(VideoTitle).Append("\n");
+            sb.Append("  Image: ").Append(Image).Append("\n");
+            sb.Append("  Label: ").Append(Label).Append("\n");
+            sb.Append("  Description: ").Append(Description).Append("\n");
+            sb.Append("  Logo: ").Append(Logo).Append("\n");
+            sb.Append("  Title: ").Append(Title).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
