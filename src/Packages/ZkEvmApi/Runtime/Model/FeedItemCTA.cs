@@ -74,11 +74,11 @@ namespace Immutable.Api.ZkEvm.Model
         /// <param name="categories">The categories for the feed item.</param>
         /// <param name="onboardingExperience">The onboarding experience for the feed item.</param>
         /// <param name="type">Feed item type (required).</param>
-        /// <param name="ctaLabel">The label for the CTA button (required).</param>
-        /// <param name="ctaDescription">The description for the CTA button (required).</param>
-        /// <param name="ctaUrl">The URL for the CTA button (required).</param>
-        /// <param name="ctaImage">The image for the CTA background (required).</param>
-        public FeedItemCTA(string id = default(string), string name = default(string), string questId = default(string), int priority = default(int), int gemsEarnable = default(int), bool bypass = default(bool), bool dayZero = default(bool), Guid gameId = default(Guid), string gameName = default(string), string questCompletedPopupText = default(string), List<string> tags = default(List<string>), List<string> categories = default(List<string>), string onboardingExperience = default(string), TypeEnum type = default(TypeEnum), string ctaLabel = default(string), string ctaDescription = default(string), string ctaUrl = default(string), string ctaImage = default(string))
+        /// <param name="label">The label for the CTA button (required).</param>
+        /// <param name="description">The description for the CTA button (required).</param>
+        /// <param name="url">The URL for the CTA button (required).</param>
+        /// <param name="image">The image for the CTA background (required).</param>
+        public FeedItemCTA(string id = default(string), string name = default(string), string questId = default(string), int priority = default(int), int gemsEarnable = default(int), bool bypass = default(bool), bool dayZero = default(bool), Guid gameId = default(Guid), string gameName = default(string), string questCompletedPopupText = default(string), List<string> tags = default(List<string>), List<string> categories = default(List<string>), string onboardingExperience = default(string), TypeEnum type = default(TypeEnum), string label = default(string), string description = default(string), string url = default(string), string image = default(string))
         {
             // to ensure "id" is required (not null)
             if (id == null)
@@ -101,30 +101,30 @@ namespace Immutable.Api.ZkEvm.Model
             this.Priority = priority;
             this.GemsEarnable = gemsEarnable;
             this.Type = type;
-            // to ensure "ctaLabel" is required (not null)
-            if (ctaLabel == null)
+            // to ensure "label" is required (not null)
+            if (label == null)
             {
-                throw new ArgumentNullException("ctaLabel is a required property for FeedItemCTA and cannot be null");
+                throw new ArgumentNullException("label is a required property for FeedItemCTA and cannot be null");
             }
-            this.CtaLabel = ctaLabel;
-            // to ensure "ctaDescription" is required (not null)
-            if (ctaDescription == null)
+            this.Label = label;
+            // to ensure "description" is required (not null)
+            if (description == null)
             {
-                throw new ArgumentNullException("ctaDescription is a required property for FeedItemCTA and cannot be null");
+                throw new ArgumentNullException("description is a required property for FeedItemCTA and cannot be null");
             }
-            this.CtaDescription = ctaDescription;
-            // to ensure "ctaUrl" is required (not null)
-            if (ctaUrl == null)
+            this.Description = description;
+            // to ensure "url" is required (not null)
+            if (url == null)
             {
-                throw new ArgumentNullException("ctaUrl is a required property for FeedItemCTA and cannot be null");
+                throw new ArgumentNullException("url is a required property for FeedItemCTA and cannot be null");
             }
-            this.CtaUrl = ctaUrl;
-            // to ensure "ctaImage" is required (not null)
-            if (ctaImage == null)
+            this.Url = url;
+            // to ensure "image" is required (not null)
+            if (image == null)
             {
-                throw new ArgumentNullException("ctaImage is a required property for FeedItemCTA and cannot be null");
+                throw new ArgumentNullException("image is a required property for FeedItemCTA and cannot be null");
             }
-            this.CtaImage = ctaImage;
+            this.Image = image;
             this.Bypass = bypass;
             this.DayZero = dayZero;
             this.GameId = gameId;
@@ -230,29 +230,29 @@ namespace Immutable.Api.ZkEvm.Model
         /// The label for the CTA button
         /// </summary>
         /// <value>The label for the CTA button</value>
-        [DataMember(Name = "cta_label", IsRequired = true, EmitDefaultValue = true)]
-        public string CtaLabel { get; set; }
+        [DataMember(Name = "label", IsRequired = true, EmitDefaultValue = true)]
+        public string Label { get; set; }
 
         /// <summary>
         /// The description for the CTA button
         /// </summary>
         /// <value>The description for the CTA button</value>
-        [DataMember(Name = "cta_description", IsRequired = true, EmitDefaultValue = true)]
-        public string CtaDescription { get; set; }
+        [DataMember(Name = "description", IsRequired = true, EmitDefaultValue = true)]
+        public string Description { get; set; }
 
         /// <summary>
         /// The URL for the CTA button
         /// </summary>
         /// <value>The URL for the CTA button</value>
-        [DataMember(Name = "cta_url", IsRequired = true, EmitDefaultValue = true)]
-        public string CtaUrl { get; set; }
+        [DataMember(Name = "url", IsRequired = true, EmitDefaultValue = true)]
+        public string Url { get; set; }
 
         /// <summary>
         /// The image for the CTA background
         /// </summary>
         /// <value>The image for the CTA background</value>
-        [DataMember(Name = "cta_image", IsRequired = true, EmitDefaultValue = true)]
-        public string CtaImage { get; set; }
+        [DataMember(Name = "image", IsRequired = true, EmitDefaultValue = true)]
+        public string Image { get; set; }
 
         /// <summary>
         /// Returns the string presentation of the object
@@ -276,10 +276,10 @@ namespace Immutable.Api.ZkEvm.Model
             sb.Append("  Categories: ").Append(Categories).Append("\n");
             sb.Append("  OnboardingExperience: ").Append(OnboardingExperience).Append("\n");
             sb.Append("  Type: ").Append(Type).Append("\n");
-            sb.Append("  CtaLabel: ").Append(CtaLabel).Append("\n");
-            sb.Append("  CtaDescription: ").Append(CtaDescription).Append("\n");
-            sb.Append("  CtaUrl: ").Append(CtaUrl).Append("\n");
-            sb.Append("  CtaImage: ").Append(CtaImage).Append("\n");
+            sb.Append("  Label: ").Append(Label).Append("\n");
+            sb.Append("  Description: ").Append(Description).Append("\n");
+            sb.Append("  Url: ").Append(Url).Append("\n");
+            sb.Append("  Image: ").Append(Image).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
