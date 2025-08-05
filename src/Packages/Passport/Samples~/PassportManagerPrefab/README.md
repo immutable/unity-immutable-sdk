@@ -59,7 +59,7 @@ Want authentication with zero scripting? Here's how:
 1. **Create UI**: Add Canvas → Button (Login), Button (Logout), Text (Status)
 2. **Drag Components**: In PassportUIController Inspector, drag the **COMPONENTS** (not GameObjects) to the UI fields:
    - Expand the GameObject in hierarchy
-   - Drag the **Button** component (not the GameObject) 
+   - Drag the **Button** component (not the GameObject)
    - For text: Drag **Text** component OR **TextMeshPro - Text (UI)** component (not the GameObject)
    - PassportUIController supports both text types - use whichever your project uses
 3. **Configure**: Set your Client ID and redirect URIs
@@ -119,7 +119,7 @@ Check out the included example script:
 
 The `PassportUIController` uses **aggressive cursor management** designed for demos and prototypes. It continuously unlocks the cursor to ensure UI remains clickable.
 
-### For Production Games:
+### For Production Games
 
 1. **Disable `forceCursorAlwaysAvailable`** in PassportUIController Inspector
 2. **Implement custom cursor logic** based on your game's needs:
