@@ -18,11 +18,11 @@ Name | Type | Description | Notes
 **Categories** | **List&lt;string&gt;** | The categories for the feed item | [optional] 
 **OnboardingExperience** | **string** | The onboarding experience for the feed item | [optional] 
 **Type** | **string** | Feed item type | 
-**CtaImage** | **string** | URL of the CTA image | 
-**CtaLabel** | **string** | Label of the CTA button | 
-**CtaDescription** | **string** | Description of the CTA button | 
-**QuizLogo** | **string** | URL of the quiz logo | 
-**VideoTitle** | **string** | Title of the video | 
+**Image** | **string** | URL of the CTA image | 
+**Label** | **string** | Label of the CTA button | 
+**Description** | **string** | Description of the CTA button | 
+**Logo** | **string** | URL of the quiz logo | 
+**Title** | **string** | Title of the video | 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

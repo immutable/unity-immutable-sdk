@@ -74,15 +74,15 @@ namespace Immutable.Api.ZkEvm.Model
         /// <param name="categories">The categories for the feed item.</param>
         /// <param name="onboardingExperience">The onboarding experience for the feed item.</param>
         /// <param name="type">Feed item type (required).</param>
-        /// <param name="quizHeaderVideoUrl">URL of the quiz header video.</param>
-        /// <param name="quizLogo">URL of the quiz logo.</param>
-        /// <param name="quizQuestion">The quiz question (required).</param>
-        /// <param name="quizAnswers">Quiz answers to display (required).</param>
-        /// <param name="quizCorrectAnswers">Quiz correct answers (required).</param>
-        /// <param name="quizCorrectAnswerText">The text to display when the user answers the quiz correctly.</param>
-        /// <param name="quizHeaderInitialImage">The initial image for the quiz header.</param>
-        /// <param name="quizHeaderAnsweredImage">The image to display when the user answers the quiz correctly.</param>
-        public FeedItemQuiz(string id = default(string), string name = default(string), string questId = default(string), int priority = default(int), int gemsEarnable = default(int), bool bypass = default(bool), bool dayZero = default(bool), Guid gameId = default(Guid), string gameName = default(string), string questCompletedPopupText = default(string), List<string> tags = default(List<string>), List<string> categories = default(List<string>), string onboardingExperience = default(string), TypeEnum type = default(TypeEnum), string quizHeaderVideoUrl = default(string), string quizLogo = default(string), string quizQuestion = default(string), List<string> quizAnswers = default(List<string>), List<int> quizCorrectAnswers = default(List<int>), string quizCorrectAnswerText = default(string), string quizHeaderInitialImage = default(string), string quizHeaderAnsweredImage = default(string))
+        /// <param name="headerVideoUrl">URL of the quiz header video.</param>
+        /// <param name="logo">URL of the quiz logo.</param>
+        /// <param name="question">The quiz question (required).</param>
+        /// <param name="answers">Quiz answers to display (required).</param>
+        /// <param name="correctAnswers">Quiz correct answers (required).</param>
+        /// <param name="correctAnswerText">The text to display when the user answers the quiz correctly.</param>
+        /// <param name="headerInitialImage">The initial image for the quiz header.</param>
+        /// <param name="headerAnsweredImage">The image to display when the user answers the quiz correctly.</param>
+        public FeedItemQuiz(string id = default(string), string name = default(string), string questId = default(string), int priority = default(int), int gemsEarnable = default(int), bool bypass = default(bool), bool dayZero = default(bool), Guid gameId = default(Guid), string gameName = default(string), string questCompletedPopupText = default(string), List<string> tags = default(List<string>), List<string> categories = default(List<string>), string onboardingExperience = default(string), TypeEnum type = default(TypeEnum), string headerVideoUrl = default(string), string logo = default(string), string question = default(string), List<string> answers = default(List<string>), List<int> correctAnswers = default(List<int>), string correctAnswerText = default(string), string headerInitialImage = default(string), string headerAnsweredImage = default(string))
         {
             // to ensure "id" is required (not null)
             if (id == null)
@@ -105,24 +105,24 @@ namespace Immutable.Api.ZkEvm.Model
             this.Priority = priority;
             this.GemsEarnable = gemsEarnable;
             this.Type = type;
-            // to ensure "quizQuestion" is required (not null)
-            if (quizQuestion == null)
+            // to ensure "question" is required (not null)
+            if (question == null)
             {
-                throw new ArgumentNullException("quizQuestion is a required property for FeedItemQuiz and cannot be null");
+                throw new ArgumentNullException("question is a required property for FeedItemQuiz and cannot be null");
             }
-            this.QuizQuestion = quizQuestion;
-            // to ensure "quizAnswers" is required (not null)
-            if (quizAnswers == null)
+            this.Question = question;
+            // to ensure "answers" is required (not null)
+            if (answers == null)
             {
-                throw new ArgumentNullException("quizAnswers is a required property for FeedItemQuiz and cannot be null");
+                throw new ArgumentNullException("answers is a required property for FeedItemQuiz and cannot be null");
             }
-            this.QuizAnswers = quizAnswers;
-            // to ensure "quizCorrectAnswers" is required (not null)
-            if (quizCorrectAnswers == null)
+            this.Answers = answers;
+            // to ensure "correctAnswers" is required (not null)
+            if (correctAnswers == null)
             {
-                throw new ArgumentNullException("quizCorrectAnswers is a required property for FeedItemQuiz and cannot be null");
+                throw new ArgumentNullException("correctAnswers is a required property for FeedItemQuiz and cannot be null");
             }
-            this.QuizCorrectAnswers = quizCorrectAnswers;
+            this.CorrectAnswers = correctAnswers;
             this.Bypass = bypass;
             this.DayZero = dayZero;
             this.GameId = gameId;
@@ -131,11 +131,11 @@ namespace Immutable.Api.ZkEvm.Model
             this.Tags = tags;
             this.Categories = categories;
             this.OnboardingExperience = onboardingExperience;
-            this.QuizHeaderVideoUrl = quizHeaderVideoUrl;
-            this.QuizLogo = quizLogo;
-            this.QuizCorrectAnswerText = quizCorrectAnswerText;
-            this.QuizHeaderInitialImage = quizHeaderInitialImage;
-            this.QuizHeaderAnsweredImage = quizHeaderAnsweredImage;
+            this.HeaderVideoUrl = headerVideoUrl;
+            this.Logo = logo;
+            this.CorrectAnswerText = correctAnswerText;
+            this.HeaderInitialImage = headerInitialImage;
+            this.HeaderAnsweredImage = headerAnsweredImage;
         }
 
         /// <summary>
@@ -233,57 +233,57 @@ namespace Immutable.Api.ZkEvm.Model
         /// URL of the quiz header video
         /// </summary>
         /// <value>URL of the quiz header video</value>
-        [DataMember(Name = "quiz_header_video_url", EmitDefaultValue = false)]
-        public string QuizHeaderVideoUrl { get; set; }
+        [DataMember(Name = "header_video_url", EmitDefaultValue = false)]
+        public string HeaderVideoUrl { get; set; }
 
         /// <summary>
         /// URL of the quiz logo
         /// </summary>
         /// <value>URL of the quiz logo</value>
-        [DataMember(Name = "quiz_logo", EmitDefaultValue = false)]
-        public string QuizLogo { get; set; }
+        [DataMember(Name = "logo", EmitDefaultValue = false)]
+        public string Logo { get; set; }
 
         /// <summary>
         /// The quiz question
         /// </summary>
         /// <value>The quiz question</value>
-        [DataMember(Name = "quiz_question", IsRequired = true, EmitDefaultValue = true)]
-        public string QuizQuestion { get; set; }
+        [DataMember(Name = "question", IsRequired = true, EmitDefaultValue = true)]
+        public string Question { get; set; }
 
         /// <summary>
         /// Quiz answers to display
         /// </summary>
         /// <value>Quiz answers to display</value>
-        [DataMember(Name = "quiz_answers", IsRequired = true, EmitDefaultValue = true)]
-        public List<string> QuizAnswers { get; set; }
+        [DataMember(Name = "answers", IsRequired = true, EmitDefaultValue = true)]
+        public List<string> Answers { get; set; }
 
         /// <summary>
         /// Quiz correct answers
         /// </summary>
         /// <value>Quiz correct answers</value>
-        [DataMember(Name = "quiz_correct_answers", IsRequired = true, EmitDefaultValue = true)]
-        public List<int> QuizCorrectAnswers { get; set; }
+        [DataMember(Name = "correct_answers", IsRequired = true, EmitDefaultValue = true)]
+        public List<int> CorrectAnswers { get; set; }
 
         /// <summary>
         /// The text to display when the user answers the quiz correctly
         /// </summary>
         /// <value>The text to display when the user answers the quiz correctly</value>
-        [DataMember(Name = "quiz_correct_answer_text", EmitDefaultValue = false)]
-        public string QuizCorrectAnswerText { get; set; }
+        [DataMember(Name = "correct_answer_text", EmitDefaultValue = false)]
+        public string CorrectAnswerText { get; set; }
 
         /// <summary>
         /// The initial image for the quiz header
         /// </summary>
         /// <value>The initial image for the quiz header</value>
-        [DataMember(Name = "quiz_header_initial_image", EmitDefaultValue = false)]
-        public string QuizHeaderInitialImage { get; set; }
+        [DataMember(Name = "header_initial_image", EmitDefaultValue = false)]
+        public string HeaderInitialImage { get; set; }
 
         /// <summary>
         /// The image to display when the user answers the quiz correctly
         /// </summary>
         /// <value>The image to display when the user answers the quiz correctly</value>
-        [DataMember(Name = "quiz_header_answered_image", EmitDefaultValue = false)]
-        public string QuizHeaderAnsweredImage { get; set; }
+        [DataMember(Name = "header_answered_image", EmitDefaultValue = false)]
+        public string HeaderAnsweredImage { get; set; }
 
         /// <summary>
         /// Returns the string presentation of the object
@@ -307,14 +307,14 @@ namespace Immutable.Api.ZkEvm.Model
             sb.Append("  Categories: ").Append(Categories).Append("\n");
             sb.Append("  OnboardingExperience: ").Append(OnboardingExperience).Append("\n");
             sb.Append("  Type: ").Append(Type).Append("\n");
-            sb.Append("  QuizHeaderVideoUrl: ").Append(QuizHeaderVideoUrl).Append("\n");
-            sb.Append("  QuizLogo: ").Append(QuizLogo).Append("\n");
-            sb.Append("  QuizQuestion: ").Append(QuizQuestion).Append("\n");
-            sb.Append("  QuizAnswers: ").Append(QuizAnswers).Append("\n");
-            sb.Append("  QuizCorrectAnswers: ").Append(QuizCorrectAnswers).Append("\n");
-            sb.Append("  QuizCorrectAnswerText: ").Append(QuizCorrectAnswerText).Append("\n");
-            sb.Append("  QuizHeaderInitialImage: ").Append(QuizHeaderInitialImage).Append("\n");
-            sb.Append("  QuizHeaderAnsweredImage: ").Append(QuizHeaderAnsweredImage).Append("\n");
+            sb.Append("  HeaderVideoUrl: ").Append(HeaderVideoUrl).Append("\n");
+            sb.Append("  Logo: ").Append(Logo).Append("\n");
+            sb.Append("  Question: ").Append(Question).Append("\n");
+            sb.Append("  Answers: ").Append(Answers).Append("\n");
+            sb.Append("  CorrectAnswers: ").Append(CorrectAnswers).Append("\n");
+            sb.Append("  CorrectAnswerText: ").Append(CorrectAnswerText).Append("\n");
+            sb.Append("  HeaderInitialImage: ").Append(HeaderInitialImage).Append("\n");
+            sb.Append("  HeaderAnsweredImage: ").Append(HeaderAnsweredImage).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }

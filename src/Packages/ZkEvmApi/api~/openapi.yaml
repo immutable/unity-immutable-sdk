@@ -9129,17 +9129,17 @@ components:
             enum:
             - video
             type: string
-          video_title:
+          title:
             description: Title of the video
             type: string
-          video_url:
+          url:
             description: URL of the video
             format: uri
             type: string
         required:
+        - title
         - type
-        - video_title
-        - video_url
+        - url
     FeedItemFollowGame:
       allOf:
       - $ref: '#/components/schemas/FeedItemBase'
@@ -9150,30 +9150,30 @@ components:
             enum:
             - followgame
             type: string
-          cta_image:
+          image:
             description: URL of the CTA image
             format: uri
             type: string
-          cta_label:
+          label:
             description: Label of the CTA button
             type: string
-          cta_description:
+          description:
             description: Description of the CTA button
             type: string
-          quiz_logo:
+          logo:
             description: URL of the quiz logo
             format: uri
             type: string
-          video_title:
+          title:
             description: Title of the video
             type: string
         required:
-        - cta_description
-        - cta_image
-        - cta_label
-        - quiz_logo
+        - description
+        - image
+        - label
+        - logo
+        - title
         - type
-        - video_title
     FeedItemQuiz:
       allOf:
       - $ref: '#/components/schemas/FeedItemBase'
@@ -9184,42 +9184,42 @@ components:
             enum:
             - quiz
             type: string
-          quiz_header_video_url:
+          header_video_url:
             description: URL of the quiz header video
             format: uri
             type: string
-          quiz_logo:
+          logo:
             description: URL of the quiz logo
             format: uri
             type: string
-          quiz_question:
+          question:
             description: The quiz question
             type: string
-          quiz_answers:
+          answers:
             description: Quiz answers to display
             items:
               type: string
             type: array
-          quiz_correct_answers:
+          correct_answers:
             description: Quiz correct answers
             items:
               type: integer
             type: array
-          quiz_correct_answer_text:
+          correct_answer_text:
             description: The text to display when the user answers the quiz correctly
             type: string
-          quiz_header_initial_image:
+          header_initial_image:
             description: The initial image for the quiz header
             format: uri
             type: string
-          quiz_header_answered_image:
+          header_answered_image:
             description: The image to display when the user answers the quiz correctly
             format: uri
             type: string
         required:
-        - quiz_answers
-        - quiz_correct_answers
-        - quiz_question
+        - answers
+        - correct_answers
+        - question
         - type
     FeedItemCTA:
       allOf:
@@ -9231,25 +9231,25 @@ components:
             enum:
             - cta
             type: string
-          cta_label:
+          label:
             description: The label for the CTA button
             type: string
-          cta_description:
+          description:
             description: The description for the CTA button
             type: string
-          cta_url:
+          url:
             description: The URL for the CTA button
             type: string
-          cta_image:
+          image:
             description: The image for the CTA background
             format: uri
             type: string
         required:
-        - cta_description
-        - cta_image
-        - cta_label
-        - cta_url
+        - description
+        - image
+        - label
         - type
+        - url
     FeedItemSignIn:
       allOf:
       - $ref: '#/components/schemas/FeedItemCTA'
@@ -9260,18 +9260,18 @@ components:
             enum:
             - signin
             type: string
-          sign_in_redirect_url:
+          redirect_url:
             description: The URL to redirect to when the user completes the sign in
               quest
             format: uri
             type: string
-          sign_in_background:
+          background:
             description: The background for the sign in quest
             format: uri
             type: string
         required:
-        - sign_in_background
-        - sign_in_redirect_url
+        - background
+        - redirect_url
         - type
     FeedItemReward:
       allOf:

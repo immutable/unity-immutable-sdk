@@ -74,9 +74,9 @@ namespace Immutable.Api.ZkEvm.Model
         /// <param name="categories">The categories for the feed item.</param>
         /// <param name="onboardingExperience">The onboarding experience for the feed item.</param>
         /// <param name="type">Feed item type (required).</param>
-        /// <param name="videoTitle">Title of the video (required).</param>
-        /// <param name="videoUrl">URL of the video (required).</param>
-        public FeedItemVideo(string id = default(string), string name = default(string), string questId = default(string), int priority = default(int), int gemsEarnable = default(int), bool bypass = default(bool), bool dayZero = default(bool), Guid gameId = default(Guid), string gameName = default(string), string questCompletedPopupText = default(string), List<string> tags = default(List<string>), List<string> categories = default(List<string>), string onboardingExperience = default(string), TypeEnum type = default(TypeEnum), string videoTitle = default(string), string videoUrl = default(string))
+        /// <param name="title">Title of the video (required).</param>
+        /// <param name="url">URL of the video (required).</param>
+        public FeedItemVideo(string id = default(string), string name = default(string), string questId = default(string), int priority = default(int), int gemsEarnable = default(int), bool bypass = default(bool), bool dayZero = default(bool), Guid gameId = default(Guid), string gameName = default(string), string questCompletedPopupText = default(string), List<string> tags = default(List<string>), List<string> categories = default(List<string>), string onboardingExperience = default(string), TypeEnum type = default(TypeEnum), string title = default(string), string url = default(string))
         {
             // to ensure "id" is required (not null)
             if (id == null)
@@ -99,18 +99,18 @@ namespace Immutable.Api.ZkEvm.Model
             this.Priority = priority;
             this.GemsEarnable = gemsEarnable;
             this.Type = type;
-            // to ensure "videoTitle" is required (not null)
-            if (videoTitle == null)
+            // to ensure "title" is required (not null)
+            if (title == null)
             {
-                throw new ArgumentNullException("videoTitle is a required property for FeedItemVideo and cannot be null");
+                throw new ArgumentNullException("title is a required property for FeedItemVideo and cannot be null");
             }
-            this.VideoTitle = videoTitle;
-            // to ensure "videoUrl" is required (not null)
-            if (videoUrl == null)
+            this.Title = title;
+            // to ensure "url" is required (not null)
+            if (url == null)
             {
-                throw new ArgumentNullException("videoUrl is a required property for FeedItemVideo and cannot be null");
+                throw new ArgumentNullException("url is a required property for FeedItemVideo and cannot be null");
             }
-            this.VideoUrl = videoUrl;
+            this.Url = url;
             this.Bypass = bypass;
             this.DayZero = dayZero;
             this.GameId = gameId;
@@ -216,15 +216,15 @@ namespace Immutable.Api.ZkEvm.Model
         /// Title of the video
         /// </summary>
         /// <value>Title of the video</value>
-        [DataMember(Name = "video_title", IsRequired = true, EmitDefaultValue = true)]
-        public string VideoTitle { get; set; }
+        [DataMember(Name = "title", IsRequired = true, EmitDefaultValue = true)]
+        public string Title { get; set; }
 
         /// <summary>
         /// URL of the video
         /// </summary>
         /// <value>URL of the video</value>
-        [DataMember(Name = "video_url", IsRequired = true, EmitDefaultValue = true)]
-        public string VideoUrl { get; set; }
+        [DataMember(Name = "url", IsRequired = true, EmitDefaultValue = true)]
+        public string Url { get; set; }
 
         /// <summary>
         /// Returns the string presentation of the object
@@ -248,8 +248,8 @@ namespace Immutable.Api.ZkEvm.Model
             sb.Append("  Categories: ").Append(Categories).Append("\n");
             sb.Append("  OnboardingExperience: ").Append(OnboardingExperience).Append("\n");
             sb.Append("  Type: ").Append(Type).Append("\n");
-            sb.Append("  VideoTitle: ").Append(VideoTitle).Append("\n");
-            sb.Append("  VideoUrl: ").Append(VideoUrl).Append("\n");
+            sb.Append("  Title: ").Append(Title).Append("\n");
+            sb.Append("  Url: ").Append(Url).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
