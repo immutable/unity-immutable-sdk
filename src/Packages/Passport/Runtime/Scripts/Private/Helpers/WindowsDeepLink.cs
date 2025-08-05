@@ -137,13 +137,15 @@ namespace Immutable.Passport.Helpers
                 "        powershell -NoProfile -ExecutionPolicy Bypass -Command ^",
                 "            \"$ErrorActionPreference = 'Continue';\" ^",
                 "            \"$wshell = New-Object -ComObject wscript.shell;\" ^",
-                "            \"Add-Content -Path \\\"{logPath}\\\" -Value ('[' + (Get-Date) + '] Attempting to activate process ID: ' + %%A);\" ^",
+                $"            \"Add-Content -Path \\\"{logPath}\\\" -Value ('[' + (Get-Date) + '] Attempting to activate process ID: ' + %%A);\" ^",
                 "            \"Start-Sleep -Milliseconds 100;\" ^",
                 "            \"$result = $wshell.AppActivate(%%A);\" ^",
-                "            \"Add-Content -Path \\\"{logPath}\\\" -Value ('[' + (Get-Date) + '] AppActivate result: ' + $result);\" ^",
-                "            \"if (-not $result) { Add-Content -Path \\\"{logPath}\\\" -Value ('[' + (Get-Date) + '] Failed to activate window') }\" ^",
+                $"            \"Add-Content -Path \\\"{logPath}\\\" -Value ('[' + (Get-Date) + '] AppActivate result: ' + $result);\" ^",
+                $"            \"if (-not $result) {{ Add-Content -Path \\\"{logPath}\\\" -Value ('[' + (Get-Date) + '] Failed to activate window') }}\" ^",
                 "        >nul 2>&1",
                 "        if errorlevel 1 echo [%date% %time%] PowerShell error: %errorlevel% >> \"%LOG_PATH%\"",
+                "        echo [%date% %time%] Unity activated, self-deleting >> \"%LOG_PATH%\"",
+                $"        del \"%~f0\" >nul 2>&1",
                 "        endlocal",
                 "        exit /b 0",
                 "    )",
@@ -155,7 +157,11 @@ namespace Immutable.Passport.Helpers
                 "",
                 // Start new Unity instance if none found
                 $"echo [%date% %time%] Starting new Unity instance >> \"%LOG_PATH%\"",
-                $"start \"\" \"{unityExe}\" -projectPath \"%PROJECT_PATH%\" >nul 2>&1"
+                $"start \"\" \"{unityExe}\" -projectPath \"%PROJECT_PATH%\" >nul 2>&1",
+                "",
+                // Self-delete the batch file when done
+                "echo [%date% %time%] Script completed, self-deleting >> \"%LOG_PATH%\"",
+                $"del \"%~f0\" >nul 2>&1"
             };
             
             File.WriteAllLines(cmdPath, scriptLines);
@@ -249,6 +255,7 @@ namespace Immutable.Passport.Helpers
 
             // Set command to launch the script with the URI parameter
             var scriptLocation = GetGameExecutablePath(".cmd");
+            //string command = $"cmd.exe /c \"\"{scriptLocation}\" \"%1\"\"";
             string command = $"\"{scriptLocation}\" \"%1\"";
             uint commandSize = (uint)((command.Length + 1) * 2);
             
@@ -357,18 +364,22 @@ namespace Immutable.Passport.Helpers
             }
 
             // Clean up command script
+            // Note: Batch file will self-delete, no need to delete here
+            // This prevents race condition where Unity deletes the file
+            // while Windows is still trying to execute it
             var cmdPath = GetGameExecutablePath(".cmd");
-            if (File.Exists(cmdPath))
-            {
-                try
-                {
-                    File.Delete(cmdPath);
-                }
-                catch (Exception ex)
-                {
-                    PassportLogger.Warn($"Failed to delete script: {ex.Message}");
-                }
-            }
+            // Commented out to prevent race condition
+            // if (File.Exists(cmdPath))
+            // {
+            //     try
+            //     {
+            //         File.Delete(cmdPath);
+            //     }
+            //     catch (Exception ex)
+            //     {
+            //         PassportLogger.Warn($"Failed to delete script: {ex.Message}");
+            //     }
+            // }
 
             // Clean up instance
             Destroy(gameObject);
