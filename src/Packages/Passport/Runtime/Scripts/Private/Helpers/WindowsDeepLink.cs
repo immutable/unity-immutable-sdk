@@ -2,6 +2,10 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 using UnityEditor;
 using UnityEngine;
 using Immutable.Passport.Core.Logging;
@@ -173,7 +177,7 @@ namespace Immutable.Passport.Helpers
                 // Store deeplink URI in registry
                 $"REG ADD \"HKCU\\Software\\Classes\\{protocolName}\" /v \"{REGISTRY_DEEP_LINK_NAME}\" /t REG_SZ /d %1 /f >nul 2>&1",
                 // Check if game is already running
-                $"tasklist /FI \"IMAGENAME eq {gameExeName}\" 2>NUL | find /I \"{gameExeName}\" >NUL",
+                $"tasklist /FI \"IMAGENAME eq {gameExeName}\" >nul 2>&1",
                 "if %ERRORLEVEL%==0 (",
                 // Bring existing game window to foreground
                 "    powershell -NoProfile -ExecutionPolicy Bypass -Command ^",
@@ -264,11 +268,45 @@ namespace Immutable.Passport.Helpers
             RegCloseKey(commandKey);
             RegCloseKey(hKey);
         }
-
+        
         private static string GetGameExecutablePath(string suffix)
         {
-            var exeName = Application.productName + suffix;
-            return Path.Combine(Application.persistentDataPath, exeName).Replace("/", "\\");
+#if !UNITY_EDITOR_WIN
+            if (suffix == ".exe")
+            {
+                // Get the path of the currently running executable
+                try
+                {
+                    var process = System.Diagnostics.Process.GetCurrentProcess();
+                    if (process?.MainModule?.FileName != null)
+                    {
+                        return process.MainModule.FileName.Replace("/", "\\");
+                    }
+                }
+                catch (System.ComponentModel.Win32Exception ex)
+                {
+                    PassportLogger.Warn($"Failed to get process MainModule: {ex.Message}. Using fallback method.");
+                }
+                catch (System.InvalidOperationException ex)
+                {
+                    PassportLogger.Warn($"Process inaccessible: {ex.Message}. Using fallback method.");
+                }
+
+                // Fallback: Use command line args
+                var args = System.Environment.GetCommandLineArgs();
+                if (args.Length > 0 && !string.IsNullOrEmpty(args[0]))
+                {
+                    var exePath = Path.GetFullPath(args[0]);
+                    if (File.Exists(exePath))
+                    {
+                        return exePath.Replace("/", "\\");
+                    }
+                }
+            }
+#endif
+            // For the editor, or for .cmd files in a build, use persistentDataPath as it's a writable location
+            var fileName = Application.productName + suffix;
+            return Path.Combine(Application.persistentDataPath, fileName).Replace("/", "\\");
         }
 
         private void OnApplicationFocus(bool hasFocus)
