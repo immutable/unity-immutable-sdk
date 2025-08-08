@@ -27,11 +27,11 @@ public class LoginScript : MonoBehaviour
             ShowOutput("Passport Instance is null");
         }
 
-        // Set up button listeners if buttons are assigned
-        if (DefaultLoginButton != null) DefaultLoginButton.onClick.AddListener(() => Login(DirectLoginMethod.None));
-        if (GoogleLoginButton != null) GoogleLoginButton.onClick.AddListener(() => Login(DirectLoginMethod.Google));
-        if (AppleLoginButton != null) AppleLoginButton.onClick.AddListener(() => Login(DirectLoginMethod.Apple));
-        if (FacebookLoginButton != null) FacebookLoginButton.onClick.AddListener(() => Login(DirectLoginMethod.Facebook));
+        // Set up button listeners using DirectLoginOptions
+        if (DefaultLoginButton != null) DefaultLoginButton.onClick.AddListener(() => Login(new DirectLoginOptions()));
+        if (GoogleLoginButton != null) GoogleLoginButton.onClick.AddListener(() => Login(new DirectLoginOptions(DirectLoginMethod.Google)));
+        if (AppleLoginButton != null) AppleLoginButton.onClick.AddListener(() => Login(new DirectLoginOptions(DirectLoginMethod.Apple)));
+        if (FacebookLoginButton != null) FacebookLoginButton.onClick.AddListener(() => Login(new DirectLoginOptions(DirectLoginMethod.Facebook)));
     }
 
     /// <summary>
@@ -39,39 +39,40 @@ public class LoginScript : MonoBehaviour
     /// </summary>
     public async void Login()
     {
-        await LoginAsync(DirectLoginMethod.None);
+        await LoginAsync(new DirectLoginOptions());
     }
 
     /// <summary>
-    /// Logs into Passport using the specified direct login method.
+    /// Logs into Passport using the specified direct login options.
     /// </summary>
-    /// <param name="directLoginMethod">The direct login method to use (Google, Apple, Facebook, or None for default)</param>
-    public async void Login(DirectLoginMethod directLoginMethod)
+    /// <param name="directLoginOptions">The direct login options</param>
+    public async void Login(DirectLoginOptions directLoginOptions)
     {
-        await LoginAsync(directLoginMethod);
+        await LoginAsync(directLoginOptions);
     }
 
     /// <summary>
     /// Internal async method that performs the actual login logic.
     /// </summary>
-    /// <param name="directLoginMethod">The direct login method to use</param>
-    private async System.Threading.Tasks.Task LoginAsync(DirectLoginMethod directLoginMethod)
+    /// <param name="directLoginOptions">The direct login options</param>
+    private async System.Threading.Tasks.Task LoginAsync(DirectLoginOptions directLoginOptions)
     {
         try
         {
-            string methodName = directLoginMethod == DirectLoginMethod.None ? "default" : directLoginMethod.ToString();
-            ShowOutput($"Logging in with {methodName} method...");
+            string directLoginMethod = directLoginOptions.directLoginMethod.ToString().ToLower();
 
-            bool success = await Passport.Login(useCachedSession: false, directLoginMethod: directLoginMethod);
+            ShowOutput($"Logging in with {directLoginMethod} method...");
+
+            bool success = await Passport.Login(useCachedSession: false, directLoginOptions: directLoginOptions);
 
             if (success)
             {
-                ShowOutput($"Successfully logged in with {methodName}");
+                ShowOutput($"Successfully logged in with {directLoginMethod}");
                 SceneManager.LoadScene("AuthenticatedScene");
             }
             else
             {
-                ShowOutput($"Failed to log in with {methodName}");
+                ShowOutput($"Failed to log in with {directLoginMethod}");
             }
         }
         catch (OperationCanceledException ex)
