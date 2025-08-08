@@ -25,7 +25,7 @@ namespace Immutable.Passport
         private readonly PassportAnalytics _analytics = new();
 
         private bool _pkceLoginOnly; // Used to differentiate between a login and connect
-        private DirectLoginMethod _directLoginMethod; // Store the direct login method for current operation
+        private DirectLoginOptions _directLoginOptions; // Store the direct login options for current operation
         private UniTaskCompletionSource<bool>? _pkceCompletionSource;
         private string _redirectUri;
         private string _logoutRedirectUri;
@@ -98,7 +98,7 @@ namespace Immutable.Passport
             _communicationsManager.SetCallTimeout(ms);
         }
 
-        public UniTask<bool> Login(bool useCachedSession = false, DirectLoginMethod directLoginMethod = DirectLoginMethod.None)
+        public UniTask<bool> Login(bool useCachedSession = false, DirectLoginOptions directLoginOptions = null)
         {
             if (useCachedSession)
             {
@@ -113,7 +113,7 @@ namespace Immutable.Passport
                 var task = new UniTaskCompletionSource<bool>();
                 _pkceCompletionSource = task;
                 _pkceLoginOnly = true;
-                _directLoginMethod = directLoginMethod;
+                _directLoginOptions = directLoginOptions ?? new DirectLoginOptions();
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
                 WindowsDeepLink.Initialise(_redirectUri, OnDeepLinkActivated);
 #endif
@@ -163,7 +163,7 @@ namespace Immutable.Passport
             return false;
         }
 
-        public async UniTask<bool> ConnectImx(bool useCachedSession = false, DirectLoginMethod directLoginMethod = DirectLoginMethod.None)
+        public async UniTask<bool> ConnectImx(bool useCachedSession = false, DirectLoginOptions directLoginOptions = null)
         {
             if (useCachedSession)
             {
@@ -189,7 +189,7 @@ namespace Immutable.Passport
                 UniTaskCompletionSource<bool> task = new UniTaskCompletionSource<bool>();
                 _pkceCompletionSource = task;
                 _pkceLoginOnly = false;
-                _directLoginMethod = directLoginMethod;
+                _directLoginOptions = directLoginOptions ?? new DirectLoginOptions();
 
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
                 WindowsDeepLink.Initialise(_redirectUri, OnDeepLinkActivated);
@@ -275,8 +275,18 @@ namespace Immutable.Passport
         {
             try
             {
-                var request = new GetPKCEAuthUrlRequest(!_pkceLoginOnly, _directLoginMethod);
-                var callResponse = await _communicationsManager.Call(PassportFunction.GET_PKCE_AUTH_URL, JsonUtility.ToJson(request));
+                        // Create the request JSON manually to ensure proper serialization
+        var requestJson = $"{{\"isConnectImx\":{(!_pkceLoginOnly).ToString().ToLower()},\"directLoginOptions\":{{\"directLoginMethod\":\"{_directLoginOptions.directLoginMethod.ToString().ToLower()}\"";
+        
+        // Add email field if it's valid
+        if (_directLoginOptions.IsEmailValid())
+        {
+            requestJson += $",\"email\":\"{_directLoginOptions.email}\"";
+        }
+        
+        requestJson += "}}";
+
+                var callResponse = await _communicationsManager.Call(PassportFunction.GET_PKCE_AUTH_URL, requestJson);
                 var response = callResponse.OptDeserializeObject<StringResponse>();
 
                 if (response != null && response.success == true && response.result != null)
