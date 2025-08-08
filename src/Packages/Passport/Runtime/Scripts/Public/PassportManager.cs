@@ -77,6 +77,9 @@ namespace Immutable.Passport
         public bool IsInitialized { get; private set; }
         public bool IsLoggedIn { get; private set; }
         
+        // UI Builder integration
+        private PassportUIBuilder uiBuilder;
+        
         private void Awake()
         {
             // Singleton pattern
@@ -94,6 +97,9 @@ namespace Immutable.Passport
         
         private void Start()
         {
+            // Find UI Builder if present
+            uiBuilder = GetComponent<PassportUIBuilder>();
+            
             // Configure UI elements if provided
             ConfigureUIElements();
             
@@ -237,6 +243,12 @@ namespace Immutable.Passport
                     
                     // Update UI state after successful login
                     UpdateUIState();
+                    
+                    // Switch to logged-in panel if UI builder is present
+                    if (uiBuilder != null)
+                    {
+                        uiBuilder.ShowLoggedInPanel();
+                    }
                 }
                 else
                 {
@@ -278,6 +290,12 @@ namespace Immutable.Passport
                 
                 // Update UI state after logout
                 UpdateUIState();
+                
+                // Switch back to login panel if UI builder is present
+                if (uiBuilder != null)
+                {
+                    uiBuilder.ShowLoginPanel();
+                }
             }
             catch (Exception ex)
             {
@@ -294,35 +312,45 @@ namespace Immutable.Passport
         /// </summary>
         private void ConfigureUIElements()
         {
-            // Set up button listeners
+            // Set up button listeners (clear existing first to prevent duplicates)
             if (loginButton != null)
             {
+                loginButton.onClick.RemoveAllListeners();
                 loginButton.onClick.AddListener(() => Login());
                 loginButton.interactable = IsInitialized && !IsLoggedIn;
+                Debug.Log("[PassportManager] Configured login button");
             }
             
             if (googleLoginButton != null)
             {
+                googleLoginButton.onClick.RemoveAllListeners();
                 googleLoginButton.onClick.AddListener(() => Login(DirectLoginMethod.Google));
                 googleLoginButton.interactable = IsInitialized && !IsLoggedIn;
+                Debug.Log("[PassportManager] Configured Google login button");
             }
             
             if (appleLoginButton != null)
             {
+                appleLoginButton.onClick.RemoveAllListeners();
                 appleLoginButton.onClick.AddListener(() => Login(DirectLoginMethod.Apple));
                 appleLoginButton.interactable = IsInitialized && !IsLoggedIn;
+                Debug.Log("[PassportManager] Configured Apple login button");
             }
             
             if (facebookLoginButton != null)
             {
+                facebookLoginButton.onClick.RemoveAllListeners();
                 facebookLoginButton.onClick.AddListener(() => Login(DirectLoginMethod.Facebook));
                 facebookLoginButton.interactable = IsInitialized && !IsLoggedIn;
+                Debug.Log("[PassportManager] Configured Facebook login button");
             }
             
             if (logoutButton != null)
             {
+                logoutButton.onClick.RemoveAllListeners();
                 logoutButton.onClick.AddListener(() => Logout());
                 logoutButton.interactable = IsInitialized && IsLoggedIn;
+                Debug.Log("[PassportManager] Configured logout button");
             }
             
             // Update initial UI state
@@ -437,6 +465,27 @@ namespace Immutable.Passport
             {
                 userInfoTextTMP.text = message;
             }
+        }
+        
+        #endregion
+        
+        #region UI Builder Integration
+        
+        /// <summary>
+        /// Set UI references from the UI Builder (used internally)
+        /// </summary>
+        public void SetUIReferences(Button login, Button google, Button apple, Button facebook, Button logout, Text status, Text userInfo)
+        {
+            loginButton = login;
+            googleLoginButton = google;
+            appleLoginButton = apple;
+            facebookLoginButton = facebook;
+            logoutButton = logout;
+            statusText = status;
+            userInfoText = userInfo;
+            
+            // Re-configure UI elements with new references
+            ConfigureUIElements();
         }
         
         #endregion

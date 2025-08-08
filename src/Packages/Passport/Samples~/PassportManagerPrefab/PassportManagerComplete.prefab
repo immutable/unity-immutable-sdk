@@ -1,0 +1,110 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2471608869895950180
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2471608869895950181}
+  - component: {fileID: 2471608869895950182}
+  - component: {fileID: 2471608869895950183}
+  m_Layer: 0
+  m_Name: PassportManagerComplete
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2471608869895950181
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2471608869895950180}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2471608869895950182
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2471608869895950180}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 249e79783e53ea54185c0766985a05ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  clientId: your-client-id-here
+  environment: SANDBOX
+  redirectUri: 
+  logoutRedirectUri: 
+  autoInitialize: 1
+  autoLogin: 0
+  directLoginMethod: 0
+  logLevel: 3
+  redactTokensInLogs: 1
+  loginButton: {fileID: 0}
+  googleLoginButton: {fileID: 0}
+  appleLoginButton: {fileID: 0}
+  facebookLoginButton: {fileID: 0}
+  logoutButton: {fileID: 0}
+  statusText: {fileID: 0}
+  statusTextTMP: {fileID: 0}
+  userInfoText: {fileID: 0}
+  userInfoTextTMP: {fileID: 0}
+  OnPassportInitialized:
+    m_PersistentCalls:
+      m_Calls: []
+  OnPassportError:
+    m_PersistentCalls:
+      m_Calls: []
+  OnLoginSucceeded:
+    m_PersistentCalls:
+      m_Calls: []
+  OnLoginFailed:
+    m_PersistentCalls:
+      m_Calls: []
+  OnLogoutSucceeded:
+    m_PersistentCalls:
+      m_Calls: []
+  OnLogoutFailed:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &2471608869895950183
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2471608869895950180}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abcdef1234567890abcdef1234567890, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  passportManager: {fileID: 2471608869895950182}
+  canvasOrder: 100
+  panelSize: {x: 300, y: 400}
+  buttonSize: {x: 280, y: 45}
+  elementSpacing: 10
+  uiCanvas: {fileID: 0}
+  loginPanel: {fileID: 0}
+  loggedInPanel: {fileID: 0}
+  loginButton: {fileID: 0}
+  googleLoginButton: {fileID: 0}
+  appleLoginButton: {fileID: 0}
+  facebookLoginButton: {fileID: 0}
+  logoutButton: {fileID: 0}
+  statusText: {fileID: 0}
+  userInfoText: {fileID: 0}
