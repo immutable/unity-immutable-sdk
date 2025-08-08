@@ -14,19 +14,19 @@ namespace Immutable.Passport.Model
         public bool isConnectImx;
 
         /// <summary>
-        /// The direct login method to use for authentication.
+        /// The direct login options for authentication.
         /// </summary>
-        public string directLoginMethod;
+        public DirectLoginOptions directLoginOptions;
 
         /// <summary>
-        /// Creates a new GetPKCEAuthUrlRequest.
+        /// Creates a new GetPKCEAuthUrlRequest with DirectLoginOptions.
         /// </summary>
         /// <param name="isConnectImx">Whether this is a connect to IMX operation</param>
-        /// <param name="directLoginMethod">The direct login method to use</param>
-        public GetPKCEAuthUrlRequest(bool isConnectImx, DirectLoginMethod directLoginMethod)
+        /// <param name="directLoginOptions">The direct login options to use</param>
+        public GetPKCEAuthUrlRequest(bool isConnectImx, DirectLoginOptions directLoginOptions)
         {
             this.isConnectImx = isConnectImx;
-            this.directLoginMethod = directLoginMethod == DirectLoginMethod.None ? null : directLoginMethod.ToString().ToLower();
+            this.directLoginOptions = directLoginOptions;
         }
     }
 }
