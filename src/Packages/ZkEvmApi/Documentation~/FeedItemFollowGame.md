@@ -1,4 +1,4 @@
-# Immutable.Api.ZkEvm.Model.FeedItemReward
+# Immutable.Api.ZkEvm.Model.FeedItemFollowGame
 
 ## Properties
 
@@ -18,12 +18,11 @@ Name | Type | Description | Notes
 **Categories** | **List&lt;string&gt;** | The categories for the feed item | [optional] 
 **OnboardingExperience** | **string** | The onboarding experience for the feed item | [optional] 
 **Type** | **string** | Feed item type | 
-**Label** | **string** | The label for the CTA button | 
-**Description** | **string** | The description for the CTA button | 
-**Url** | **string** | The URL for the CTA button | 
-**Image** | **string** | The image for the CTA background | 
-**RedirectUrl** | **string** | The URL to redirect to when the user completes the sign in quest | 
-**Background** | **string** | The background for the sign in quest | 
+**Image** | **string** | URL of the CTA image | 
+**Label** | **string** | Label of the CTA button | 
+**Description** | **string** | Description of the CTA button | 
+**Logo** | **string** | URL of the quiz logo | 
+**Title** | **string** | Title of the video | 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

@@ -18,8 +18,8 @@ Name | Type | Description | Notes
 **Categories** | **List&lt;string&gt;** | The categories for the feed item | [optional] 
 **OnboardingExperience** | **string** | The onboarding experience for the feed item | [optional] 
 **Type** | **string** | Feed item type | 
-**VideoTitle** | **string** | Title of the video | 
-**VideoUrl** | **string** | URL of the video | 
+**Title** | **string** | Title of the video | 
+**Url** | **string** | URL of the video | 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

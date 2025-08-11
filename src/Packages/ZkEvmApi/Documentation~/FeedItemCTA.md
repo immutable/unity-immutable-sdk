@@ -18,10 +18,10 @@ Name | Type | Description | Notes
 **Categories** | **List&lt;string&gt;** | The categories for the feed item | [optional] 
 **OnboardingExperience** | **string** | The onboarding experience for the feed item | [optional] 
 **Type** | **string** | Feed item type | 
-**CtaLabel** | **string** | The label for the CTA button | 
-**CtaDescription** | **string** | The description for the CTA button | 
-**CtaUrl** | **string** | The URL for the CTA button | 
-**CtaImage** | **string** | The image for the CTA background | 
+**Label** | **string** | The label for the CTA button | 
+**Description** | **string** | The description for the CTA button | 
+**Url** | **string** | The URL for the CTA button | 
+**Image** | **string** | The image for the CTA background | 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

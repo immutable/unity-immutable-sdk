@@ -137,8 +137,8 @@ namespace Immutable.Passport
         /// </summary>
         /// <param name="clientId">The client ID</param>
         /// <param name="environment">The environment to connect to</param>
-        /// <param name="redirectUri">The URL where the browser will redirect after successful authentication.</param>
-        /// <param name="logoutRedirectUri">The URL where the browser will redirect after logout is complete.</param>
+        /// <param name="redirectUri">The URL where the browser will redirect after successful authentication. On Windows, this must use a custom protocol (e.g., 'mygame://callback') instead of http/https.</param>
+        /// <param name="logoutRedirectUri">The URL where the browser will redirect after logout is complete. On Windows, this must use a custom protocol (e.g., 'mygame://logout') instead of http/https.</param>
         /// <param name="engineStartupTimeoutMs">(Windows only) Timeout duration in milliseconds to wait for the default Windows browser engine to start.</param>
         /// <param name="windowsWebBrowserClient">(Windows only) Custom Windows browser to use instead of the default browser in the SDK.</param>
         public static UniTask<Passport> Init(
@@ -152,6 +152,10 @@ namespace Immutable.Passport
 #endif
         )
         {
+#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+            ValidateWindowsProtocols(redirectUri, logoutRedirectUri);
+#endif
+
             if (Instance == null)
             {
                 PassportLogger.Info($"{TAG} Initialising Passport...");
@@ -288,25 +292,25 @@ namespace Immutable.Passport
         /// Logs into Passport using Authorisation Code Flow with Proof Key for Code Exchange (PKCE).
         /// This opens the user's default browser on desktop or an in-app browser on mobile.
         /// <param name="useCachedSession">If true, Passport will attempt to re-authenticate the player using stored credentials. If re-authentication fails, it won't automatically prompt the user to log in again.</param>
-        /// <param name="directLoginMethod">Optional direct login method to use (google, apple, facebook). If None, the user will see the standard login page.
+        /// <param name="directLoginOptions">Direct login options for authentication (defaults to email method).
         /// </summary>
         /// <returns>
         /// Returns true if login is successful, otherwise false.
         /// </returns>
-        public async UniTask<bool> Login(bool useCachedSession = false, DirectLoginMethod directLoginMethod = DirectLoginMethod.None)
+        public async UniTask<bool> Login(bool useCachedSession = false, DirectLoginOptions directLoginOptions = null)
         {
-            return await GetPassportImpl().Login(useCachedSession, directLoginMethod);
+            return await GetPassportImpl().Login(useCachedSession, directLoginOptions);
         }
 
         /// <summary>
         /// Logs the user into Passport using Authorisation Code Flow with Proof Key for Code Exchange (PKCE) and sets up the Immutable X provider.
         /// This opens the user's default browser on desktop or an in-app browser on mobile.
         /// <param name="useCachedSession">If true, Passport will attempt to re-authenticate the player using stored credentials. If re-authentication fails, it won't automatically prompt the user to log in again.</param>
-        /// <param name="directLoginMethod">Optional direct login method to use (google, apple, facebook). If None, the user will see the standard login page.
+        /// <param name="directLoginOptions">Direct login options for authentication (defaults to email method).
         /// </summary>
-        public async UniTask<bool> ConnectImx(bool useCachedSession = false, DirectLoginMethod directLoginMethod = DirectLoginMethod.None)
+        public async UniTask<bool> ConnectImx(bool useCachedSession = false, DirectLoginOptions directLoginOptions = null)
         {
-            return await GetPassportImpl().ConnectImx(useCachedSession, directLoginMethod);
+            return await GetPassportImpl().ConnectImx(useCachedSession, directLoginOptions);
         }
 
         /// <summary>
@@ -681,5 +685,41 @@ namespace Immutable.Passport
             _deeplink = null;
             _readySignalReceived = false;
         }
+
+#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+        /// <summary>
+        /// Validates that custom protocols are used for Windows platforms instead of http/https.
+        /// Windows uses registry-based deep linking which requires custom protocols.
+        /// </summary>
+        private static void ValidateWindowsProtocols(string redirectUri, string logoutRedirectUri)
+        {
+            if (IsHttpProtocol(redirectUri))
+            {
+                throw new PassportException(
+                    $"Invalid redirectUri for Windows: '{redirectUri}'. " +
+                    "Windows requires custom protocols (e.g., 'mygame://callback') instead of http/https. " +
+                    "This is because Windows uses registry-based deep linking that cannot redirect http/https URLs back to your game.",
+                    PassportErrorType.INITALISATION_ERROR);
+            }
+
+            if (IsHttpProtocol(logoutRedirectUri))
+            {
+                throw new PassportException(
+                    $"Invalid logoutRedirectUri for Windows: '{logoutRedirectUri}'. " +
+                    "Windows requires custom protocols (e.g., 'mygame://logout') instead of http/https. " +
+                    "This is because Windows uses registry-based deep linking that cannot redirect http/https URLs back to your game.",
+                    PassportErrorType.INITALISATION_ERROR);
+            }
+        }
+
+        /// <summary>
+        /// Checks if a URI uses http or https protocol.
+        /// </summary>
+        private static bool IsHttpProtocol(string uri)
+        {
+            return uri.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                   uri.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+        }
+#endif
     }
 }

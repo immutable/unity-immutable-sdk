@@ -26,10 +26,10 @@ using OpenAPIDateConverter = Immutable.Api.ZkEvm.Client.OpenAPIDateConverter;
 namespace Immutable.Api.ZkEvm.Model
 {
     /// <summary>
-    /// FeedItemVideo
+    /// FeedItemFollowGame
     /// </summary>
-    [DataContract(Name = "FeedItemVideo")]
-    public partial class FeedItemVideo
+    [DataContract(Name = "FeedItemFollowGame")]
+    public partial class FeedItemFollowGame
     {
         /// <summary>
         /// Feed item type
@@ -39,10 +39,10 @@ namespace Immutable.Api.ZkEvm.Model
         public enum TypeEnum
         {
             /// <summary>
-            /// Enum Video for value: video
+            /// Enum Followgame for value: followgame
             /// </summary>
-            [EnumMember(Value = "video")]
-            Video = 1
+            [EnumMember(Value = "followgame")]
+            Followgame = 1
         }
 
 
@@ -53,12 +53,12 @@ namespace Immutable.Api.ZkEvm.Model
         [DataMember(Name = "type", IsRequired = true, EmitDefaultValue = true)]
         public TypeEnum Type { get; set; }
         /// <summary>
-        /// Initializes a new instance of the <see cref="FeedItemVideo" /> class.
+        /// Initializes a new instance of the <see cref="FeedItemFollowGame" /> class.
         /// </summary>
         [JsonConstructorAttribute]
-        protected FeedItemVideo() { }
+        protected FeedItemFollowGame() { }
         /// <summary>
-        /// Initializes a new instance of the <see cref="FeedItemVideo" /> class.
+        /// Initializes a new instance of the <see cref="FeedItemFollowGame" /> class.
         /// </summary>
         /// <param name="id">Feed item ID (required).</param>
         /// <param name="name">Feed item name (required).</param>
@@ -74,43 +74,64 @@ namespace Immutable.Api.ZkEvm.Model
         /// <param name="categories">The categories for the feed item.</param>
         /// <param name="onboardingExperience">The onboarding experience for the feed item.</param>
         /// <param name="type">Feed item type (required).</param>
+        /// <param name="image">URL of the CTA image (required).</param>
+        /// <param name="label">Label of the CTA button (required).</param>
+        /// <param name="description">Description of the CTA button (required).</param>
+        /// <param name="logo">URL of the quiz logo (required).</param>
         /// <param name="title">Title of the video (required).</param>
-        /// <param name="url">URL of the video (required).</param>
-        public FeedItemVideo(string id = default(string), string name = default(string), string questId = default(string), int priority = default(int), int gemsEarnable = default(int), bool bypass = default(bool), bool dayZero = default(bool), Guid gameId = default(Guid), string gameName = default(string), string questCompletedPopupText = default(string), List<string> tags = default(List<string>), List<string> categories = default(List<string>), string onboardingExperience = default(string), TypeEnum type = default(TypeEnum), string title = default(string), string url = default(string))
+        public FeedItemFollowGame(string id = default(string), string name = default(string), string questId = default(string), int priority = default(int), int gemsEarnable = default(int), bool bypass = default(bool), bool dayZero = default(bool), Guid gameId = default(Guid), string gameName = default(string), string questCompletedPopupText = default(string), List<string> tags = default(List<string>), List<string> categories = default(List<string>), string onboardingExperience = default(string), TypeEnum type = default(TypeEnum), string image = default(string), string label = default(string), string description = default(string), string logo = default(string), string title = default(string))
         {
             // to ensure "id" is required (not null)
             if (id == null)
             {
-                throw new ArgumentNullException("id is a required property for FeedItemVideo and cannot be null");
+                throw new ArgumentNullException("id is a required property for FeedItemFollowGame and cannot be null");
             }
             this.Id = id;
             // to ensure "name" is required (not null)
             if (name == null)
             {
-                throw new ArgumentNullException("name is a required property for FeedItemVideo and cannot be null");
+                throw new ArgumentNullException("name is a required property for FeedItemFollowGame and cannot be null");
             }
             this.Name = name;
             // to ensure "questId" is required (not null)
             if (questId == null)
             {
-                throw new ArgumentNullException("questId is a required property for FeedItemVideo and cannot be null");
+                throw new ArgumentNullException("questId is a required property for FeedItemFollowGame and cannot be null");
             }
             this.QuestId = questId;
             this.Priority = priority;
             this.GemsEarnable = gemsEarnable;
             this.Type = type;
+            // to ensure "image" is required (not null)
+            if (image == null)
+            {
+                throw new ArgumentNullException("image is a required property for FeedItemFollowGame and cannot be null");
+            }
+            this.Image = image;
+            // to ensure "label" is required (not null)
+            if (label == null)
+            {
+                throw new ArgumentNullException("label is a required property for FeedItemFollowGame and cannot be null");
+            }
+            this.Label = label;
+            // to ensure "description" is required (not null)
+            if (description == null)
+            {
+                throw new ArgumentNullException("description is a required property for FeedItemFollowGame and cannot be null");
+            }
+            this.Description = description;
+            // to ensure "logo" is required (not null)
+            if (logo == null)
+            {
+                throw new ArgumentNullException("logo is a required property for FeedItemFollowGame and cannot be null");
+            }
+            this.Logo = logo;
             // to ensure "title" is required (not null)
             if (title == null)
             {
-                throw new ArgumentNullException("title is a required property for FeedItemVideo and cannot be null");
+                throw new ArgumentNullException("title is a required property for FeedItemFollowGame and cannot be null");
             }
             this.Title = title;
-            // to ensure "url" is required (not null)
-            if (url == null)
-            {
-                throw new ArgumentNullException("url is a required property for FeedItemVideo and cannot be null");
-            }
-            this.Url = url;
             this.Bypass = bypass;
             this.DayZero = dayZero;
             this.GameId = gameId;
@@ -213,18 +234,39 @@ namespace Immutable.Api.ZkEvm.Model
         public string OnboardingExperience { get; set; }
 
         /// <summary>
+        /// URL of the CTA image
+        /// </summary>
+        /// <value>URL of the CTA image</value>
+        [DataMember(Name = "image", IsRequired = true, EmitDefaultValue = true)]
+        public string Image { get; set; }
+
+        /// <summary>
+        /// Label of the CTA button
+        /// </summary>
+        /// <value>Label of the CTA button</value>
+        [DataMember(Name = "label", IsRequired = true, EmitDefaultValue = true)]
+        public string Label { get; set; }
+
+        /// <summary>
+        /// Description of the CTA button
+        /// </summary>
+        /// <value>Description of the CTA button</value>
+        [DataMember(Name = "description", IsRequired = true, EmitDefaultValue = true)]
+        public string Description { get; set; }
+
+        /// <summary>
+        /// URL of the quiz logo
+        /// </summary>
+        /// <value>URL of the quiz logo</value>
+        [DataMember(Name = "logo", IsRequired = true, EmitDefaultValue = true)]
+        public string Logo { get; set; }
+
+        /// <summary>
         /// Title of the video
         /// </summary>
         /// <value>Title of the video</value>
         [DataMember(Name = "title", IsRequired = true, EmitDefaultValue = true)]
         public string Title { get; set; }
-
-        /// <summary>
-        /// URL of the video
-        /// </summary>
-        /// <value>URL of the video</value>
-        [DataMember(Name = "url", IsRequired = true, EmitDefaultValue = true)]
-        public string Url { get; set; }
 
         /// <summary>
         /// Returns the string presentation of the object
@@ -233,7 +275,7 @@ namespace Immutable.Api.ZkEvm.Model
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append("class FeedItemVideo {\n");
+            sb.Append("class FeedItemFollowGame {\n");
             sb.Append("  Id: ").Append(Id).Append("\n");
             sb.Append("  Name: ").Append(Name).Append("\n");
             sb.Append("  QuestId: ").Append(QuestId).Append("\n");
@@ -248,8 +290,11 @@ namespace Immutable.Api.ZkEvm.Model
             sb.Append("  Categories: ").Append(Categories).Append("\n");
             sb.Append("  OnboardingExperience: ").Append(OnboardingExperience).Append("\n");
             sb.Append("  Type: ").Append(Type).Append("\n");
+            sb.Append("  Image: ").Append(Image).Append("\n");
+            sb.Append("  Label: ").Append(Label).Append("\n");
+            sb.Append("  Description: ").Append(Description).Append("\n");
+            sb.Append("  Logo: ").Append(Logo).Append("\n");
             sb.Append("  Title: ").Append(Title).Append("\n");
-            sb.Append("  Url: ").Append(Url).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
