@@ -1,21 +1,42 @@
 # PassportManager Prefab
 
-The **PassportManager** is a drag-and-drop prefab that provides an easy way to integrate Immutable Passport authentication into your Unity game.
+The **PassportManager** provides multiple drag-and-drop prefabs for easy Immutable Passport authentication integration into your Unity game.
 
 ## 🚀 Quick Start
 
-### Option 1: Just Authentication (Code-based)
+### Option 1: Complete UI (Zero Config! 🎯)
+
+**Perfect for:** Quick prototyping, testing, or developers who want instant authentication UI
 
 1. **Import the Sample**: In Unity Package Manager, find "Immutable Passport" and import the "PassportManager Prefab" sample
-2. **Drag the Prefab**: Drag `PassportManager.prefab` from the Samples folder into your scene
+2. **Drag the Complete Prefab**: Drag `PassportManagerComplete.prefab` into your scene
+3. **Configure Settings**: Set Client ID and redirect URIs (e.g., `mygame://callback`, `mygame://logout`)
+4. **Test**: Hit Play - you'll see a complete login UI with Google, Apple, Facebook, and default login buttons!
+
+**What you get:**
+
+- ✅ Mobile-first responsive UI that works on all screen sizes
+- ✅ Pre-styled social login buttons (Google red, Apple black, Facebook blue)
+- ✅ Automatic panel switching (login → logged-in state)  
+- ✅ Status messages and user info display
+- ✅ Zero code required - just configure and play!
+
+### Option 2: Authentication Only (Code-based)
+
+**Perfect for:** Developers with custom UI who want just the authentication logic
+
+1. **Import the Sample**: Same as above
+2. **Drag the Minimal Prefab**: Drag `PassportManager.prefab` from the Samples folder into your scene
 3. **Configure Settings**: In the Inspector, set your Client ID and redirect URIs
 4. **Use Events or Code**: Subscribe to events or call methods directly
 5. **Test**: Hit Play - the prefab will automatically initialize Passport!
 
-### Option 2: Complete UI Integration (No Code Required!)
+### Option 3: Custom UI Integration (Advanced)
+
+**Perfect for:** Developers who want their own UI but with helper scripts
 
 1. **Import the Sample**: Same as above
-2. **Drag the Prefab**: Same as above  
+2. **Drag the Minimal Prefab**: Use `PassportManager.prefab`
 3. **Configure Settings**: Same as above
 4. **Add PassportUIController**: Add the `PassportUIController` script to a GameObject and assign your UI elements (supports both Legacy Text and TextMeshPro)
 5. **Wire Events**: In PassportManager Inspector, connect the events to PassportUIController methods
@@ -38,7 +59,33 @@ The **PassportManager** is a drag-and-drop prefab that provides an easy way to i
 - **Direct Login Method**: Pre-select login method (None, Google, Apple, Facebook)
 - **Log Level**: Control debug output verbosity
 
-### UI Integration (Optional - No Code Required!)
+### UI Customization (PassportManagerComplete)
+
+The complete prefab creates UI at runtime, which means you can customize the appearance:
+
+**Runtime Customization:**
+
+- The UI is built using Unity's default UI style
+- All UI elements can be accessed and modified after creation
+- Button colors, text, and layout are easily customizable via code
+- Mobile-responsive design automatically adapts to screen size
+
+**Layout Configuration:**
+
+- Panel Size: 300x400 (adjustable in PassportUIBuilder)
+- Button Size: 280x45 (adjustable)
+- Element Spacing: 10px (adjustable)
+- Canvas Order: 100 (prevents UI conflicts)
+
+**Color Scheme:**
+
+- Google Button: Red (#DB4437) with white text
+- Apple Button: Black with white text  
+- Facebook Button: Blue (#4267B2) with white text
+- Default Button: White with black text
+- Background Panel: Semi-transparent dark (10% opacity)
+
+### UI Integration (Option 3 - Custom UI)
 
 Simply drag UI elements from your scene into these fields and they'll be automatically configured:
 
