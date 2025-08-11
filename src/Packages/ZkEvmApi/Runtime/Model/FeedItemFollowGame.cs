@@ -79,7 +79,8 @@ namespace Immutable.Api.ZkEvm.Model
         /// <param name="description">Description of the CTA button (required).</param>
         /// <param name="logo">URL of the quiz logo (required).</param>
         /// <param name="title">Title of the video (required).</param>
-        public FeedItemFollowGame(string id = default(string), string name = default(string), string questId = default(string), int priority = default(int), int gemsEarnable = default(int), bool bypass = default(bool), bool dayZero = default(bool), Guid gameId = default(Guid), string gameName = default(string), string questCompletedPopupText = default(string), List<string> tags = default(List<string>), List<string> categories = default(List<string>), string onboardingExperience = default(string), TypeEnum type = default(TypeEnum), string image = default(string), string label = default(string), string description = default(string), string logo = default(string), string title = default(string))
+        /// <param name="similarGames">Similar games to display.</param>
+        public FeedItemFollowGame(string id = default(string), string name = default(string), string questId = default(string), int priority = default(int), int gemsEarnable = default(int), bool bypass = default(bool), bool dayZero = default(bool), Guid gameId = default(Guid), string gameName = default(string), string questCompletedPopupText = default(string), List<string> tags = default(List<string>), List<string> categories = default(List<string>), string onboardingExperience = default(string), TypeEnum type = default(TypeEnum), string image = default(string), string label = default(string), string description = default(string), string logo = default(string), string title = default(string), List<string> similarGames = default(List<string>))
         {
             // to ensure "id" is required (not null)
             if (id == null)
@@ -140,6 +141,7 @@ namespace Immutable.Api.ZkEvm.Model
             this.Tags = tags;
             this.Categories = categories;
             this.OnboardingExperience = onboardingExperience;
+            this.SimilarGames = similarGames;
         }
 
         /// <summary>
@@ -269,6 +271,13 @@ namespace Immutable.Api.ZkEvm.Model
         public string Title { get; set; }
 
         /// <summary>
+        /// Similar games to display
+        /// </summary>
+        /// <value>Similar games to display</value>
+        [DataMember(Name = "similar_games", EmitDefaultValue = false)]
+        public List<string> SimilarGames { get; set; }
+
+        /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
         /// <returns>String presentation of the object</returns>
@@ -295,6 +304,7 @@ namespace Immutable.Api.ZkEvm.Model
             sb.Append("  Description: ").Append(Description).Append("\n");
             sb.Append("  Logo: ").Append(Logo).Append("\n");
             sb.Append("  Title: ").Append(Title).Append("\n");
+            sb.Append("  SimilarGames: ").Append(SimilarGames).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }

@@ -9167,6 +9167,11 @@ components:
           title:
             description: Title of the video
             type: string
+          similar_games:
+            description: Similar games to display
+            items:
+              type: string
+            type: array
         required:
         - description
         - image
