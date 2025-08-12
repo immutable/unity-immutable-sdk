@@ -8,6 +8,7 @@ namespace Immutable.Passport.Model
     [Serializable]
     public enum DirectLoginMethod
     {
+        None,
         Email,
         Google,
         Apple,

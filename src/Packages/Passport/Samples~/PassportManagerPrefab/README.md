@@ -57,6 +57,7 @@ The **PassportManager** provides multiple drag-and-drop prefabs for easy Immutab
 - **Auto Initialize**: Automatically initialize on Start (default: true)
 - **Auto Login**: Automatically attempt login after initialization (default: false)
 - **Direct Login Method**: Pre-select login method (None, Google, Apple, Facebook)
+- **Default Marketing Consent**: Default consent status for marketing communications (Unsubscribed, OptedIn)
 - **Log Level**: Control debug output verbosity
 
 ### UI Customization (PassportManagerComplete)
@@ -149,12 +150,56 @@ if (manager.IsInitialized && manager.IsLoggedIn)
     // var address = await manager.PassportInstance.GetAddress();
 }
 
-// Manual login with specific method
-manager.Login(DirectLoginMethod.Google);
+// Manual login with specific method and marketing consent
+var loginOptions = new DirectLoginOptions(DirectLoginMethod.Google, marketingConsentStatus: MarketingConsentStatus.Unsubscribed);
+manager.Login(loginOptions);
+
+// Or use the simpler method (uses default marketing consent from Inspector)
+manager.Login(); // Uses configured directLoginMethod
 
 // Manual logout
 manager.Logout();
 ```
+
+## 📧 Marketing Consent
+
+The PassportManager supports marketing consent for compliance with privacy regulations (GDPR, etc.):
+
+### Default Marketing Consent
+
+Configure the default marketing consent status in the Inspector:
+
+- **Unsubscribed** (default): Users are not subscribed to marketing communications by default
+- **OptedIn**: Users are opted into marketing communications by default
+
+This setting is used when:
+
+- Users authenticate via direct login methods (Google, Apple, Facebook)
+- No explicit marketing consent is provided in code
+
+### Advanced Marketing Consent
+
+For programmatic control over marketing consent:
+
+```csharp
+// Create login options with specific marketing consent
+var loginOptions = new DirectLoginOptions(
+    DirectLoginMethod.Google,
+    marketingConsentStatus: MarketingConsentStatus.Unsubscribed
+);
+
+// Login with explicit marketing consent
+await PassportManager.Instance.LoginAsync(loginOptions);
+```
+
+### Marketing Consent Flow
+
+1. **Unity Game**: Sets marketing consent via `DirectLoginOptions` or uses default from Inspector
+2. **Authentication Server**: Receives and processes the marketing consent preference
+3. **User Profile**: Marketing consent status is stored and applied to user's profile
+4. **Compliance**: Ensures proper consent handling for marketing communications
+
+**Note**: Marketing consent is automatically handled during the authentication flow and integrated with Immutable's user profile system.
 
 ## 📁 Sample Scripts
 
@@ -181,14 +226,6 @@ The `PassportUIController` uses **aggressive cursor management** designed for de
        Cursor.lockState = YourGame.GetDesiredCursorMode();
    }
    ```
-
-## 🔗 Deep Linking Setup
-
-For native platforms (Windows/Mac), you'll need to register your custom URL scheme:
-
-### Windows
-
-The SDK automatically handles Windows deep linking registration.
 
 ## 🆘 Troubleshooting
 

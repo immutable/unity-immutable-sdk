@@ -32,6 +32,7 @@ namespace Immutable.Passport
         [SerializeField] private bool autoInitialize = true;
         [SerializeField] private bool autoLogin = false;
         [SerializeField] private DirectLoginMethod directLoginMethod = DirectLoginMethod.None;
+        [SerializeField] private MarketingConsentStatus defaultMarketingConsent = MarketingConsentStatus.Unsubscribed;
         [SerializeField] private LogLevel logLevel = LogLevel.Info;
         [SerializeField] private bool redactTokensInLogs = true;
         
@@ -206,19 +207,19 @@ namespace Immutable.Passport
         }
         
         /// <summary>
-        /// Login with a specific direct login method
+        /// Login with custom direct login options
         /// </summary>
-        /// <param name="loginMethod">The login method to use (Google, Apple, Facebook, or None for default)</param>
-        public async void Login(DirectLoginMethod loginMethod)
+        /// <param name="directLoginOptions">Custom direct login options including method, email, and marketing consent</param>
+        public async void Login(DirectLoginOptions directLoginOptions)
         {
-            await LoginAsync(loginMethod);
+            await LoginAsync(directLoginOptions: directLoginOptions);
         }
         
         /// <summary>
         /// Internal async login method
         /// </summary>
-        /// <param name="loginMethod">Optional login method override. If not provided, uses the configured directLoginMethod</param>
-        private async UniTask LoginAsync(DirectLoginMethod? loginMethod = null)
+        /// <param name="directLoginOptions">Optional direct login options. If null, uses the configured directLoginMethod</param>
+        private async UniTask LoginAsync(DirectLoginOptions directLoginOptions = null)
         {
             if (!IsInitialized || PassportInstance == null)
             {
@@ -228,13 +229,44 @@ namespace Immutable.Passport
             
             try
             {
-                DirectLoginMethod methodToUse = loginMethod ?? directLoginMethod;
-                string loginMethodText = methodToUse == DirectLoginMethod.None 
-                    ? "default method" 
-                    : methodToUse.ToString();
+                // Determine final DirectLoginOptions to use
+                DirectLoginOptions finalDirectLoginOptions;
+                string loginMethodText;
+                
+                if (directLoginOptions != null)
+                {
+                    // Use provided DirectLoginOptions (marketing consent already set by developer)
+                    finalDirectLoginOptions = directLoginOptions;
+                    loginMethodText = directLoginOptions.directLoginMethod.ToString();
+                }
+                else
+                {
+                    // Use configured directLoginMethod from Inspector
+                    loginMethodText = directLoginMethod == DirectLoginMethod.None 
+                        ? "default method" 
+                        : directLoginMethod.ToString();
+                    
+                    if (directLoginMethod == DirectLoginMethod.None)
+                    {
+                        // Standard auth flow
+                        finalDirectLoginOptions = null;
+                    }
+                    else
+                    {
+                        // Direct login with configured default marketing consent
+                        finalDirectLoginOptions = new DirectLoginOptions(directLoginMethod, marketingConsentStatus: defaultMarketingConsent);
+                    }
+                }
+                
                 Debug.Log($"[PassportManager] Attempting login with {loginMethodText}...");
                 
-                bool loginSuccess = await PassportInstance.Login(useCachedSession: false, directLoginMethod: methodToUse);
+                // Debug log marketing consent if present
+                if (finalDirectLoginOptions?.marketingConsentStatus != null)
+                {
+                    Debug.Log($"[PassportManager] Marketing consent: {finalDirectLoginOptions.marketingConsentStatus}");
+                }
+                
+                bool loginSuccess = await PassportInstance.Login(useCachedSession: false, directLoginOptions: finalDirectLoginOptions);
                 if (loginSuccess)
                 {
                     IsLoggedIn = true;
@@ -324,15 +356,15 @@ namespace Immutable.Passport
             if (googleLoginButton != null)
             {
                 googleLoginButton.onClick.RemoveAllListeners();
-                googleLoginButton.onClick.AddListener(() => Login(DirectLoginMethod.Google));
+                googleLoginButton.onClick.AddListener(() => Login(new DirectLoginOptions(DirectLoginMethod.Google, marketingConsentStatus: defaultMarketingConsent)));
                 googleLoginButton.interactable = IsInitialized && !IsLoggedIn;
-                Debug.Log("[PassportManager] Configured Google login button");
+                Debug.Log($"[PassportManager] Configured Google login button with defaultMarketingConsent: {defaultMarketingConsent}");
             }
             
             if (appleLoginButton != null)
             {
                 appleLoginButton.onClick.RemoveAllListeners();
-                appleLoginButton.onClick.AddListener(() => Login(DirectLoginMethod.Apple));
+                appleLoginButton.onClick.AddListener(() => Login(new DirectLoginOptions(DirectLoginMethod.Apple, marketingConsentStatus: defaultMarketingConsent)));
                 appleLoginButton.interactable = IsInitialized && !IsLoggedIn;
                 Debug.Log("[PassportManager] Configured Apple login button");
             }
@@ -340,7 +372,7 @@ namespace Immutable.Passport
             if (facebookLoginButton != null)
             {
                 facebookLoginButton.onClick.RemoveAllListeners();
-                facebookLoginButton.onClick.AddListener(() => Login(DirectLoginMethod.Facebook));
+                facebookLoginButton.onClick.AddListener(() => Login(new DirectLoginOptions(DirectLoginMethod.Facebook, marketingConsentStatus: defaultMarketingConsent)));
                 facebookLoginButton.interactable = IsInitialized && !IsLoggedIn;
                 Debug.Log("[PassportManager] Configured Facebook login button");
             }

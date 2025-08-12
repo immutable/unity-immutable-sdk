@@ -259,7 +259,6 @@ namespace Immutable.Passport.Helpers
 
             // Set command to launch the script with the URI parameter
             var scriptLocation = GetGameExecutablePath(".cmd");
-            //string command = $"cmd.exe /c \"\"{scriptLocation}\" \"%1\"\"";
             string command = $"\"{scriptLocation}\" \"%1\"";
             uint commandSize = (uint)((command.Length + 1) * 2);
             

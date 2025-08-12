@@ -287,11 +287,22 @@ namespace Immutable.Passport
                         requestJson += $",\"email\":\"{_directLoginOptions.email}\"";
                     }
 
+                    if (_directLoginOptions.marketingConsentStatus != null)
+                    {
+                        var consentValue = _directLoginOptions.marketingConsentStatus.Value.ToApiString();
+                        requestJson += $",\"marketingConsentStatus\":\"{consentValue}\"";
+                    }
+
                     requestJson += "}";
+                }
+                else
+                {
+                    PassportLogger.Debug($"{TAG} No direct login options provided (standard auth flow)");
                 }
 
                 requestJson += "}";
-
+                
+                PassportLogger.Debug($"{TAG} Sending auth URL request: {requestJson}");
                 var callResponse = await _communicationsManager.Call(PassportFunction.GET_PKCE_AUTH_URL, requestJson);
                 var response = callResponse.OptDeserializeObject<StringResponse>();
 
