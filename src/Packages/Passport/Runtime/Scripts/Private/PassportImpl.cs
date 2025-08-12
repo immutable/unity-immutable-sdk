@@ -301,7 +301,7 @@ namespace Immutable.Passport
                 }
 
                 requestJson += "}";
-                
+
                 PassportLogger.Debug($"{TAG} Sending auth URL request: {requestJson}");
                 var callResponse = await _communicationsManager.Call(PassportFunction.GET_PKCE_AUTH_URL, requestJson);
                 var response = callResponse.OptDeserializeObject<StringResponse>();
@@ -785,7 +785,7 @@ namespace Immutable.Passport
     {
 
         /// <summary>
-        /// Called when the Android Chrome Custom Tabs is hidden. 
+        /// Called when the Android Chrome Custom Tabs is hidden.
         /// Note that you won't be able to tell whether it was closed by the user or the SDK.
         /// <param name="completing">True if the user has entered everything required (e.g. email address),
         /// Chrome Custom Tabs have closed, and the SDK is trying to complete the PKCE flow.

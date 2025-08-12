@@ -17,17 +17,17 @@ namespace Immutable.Passport
     {
         [Header("Passport Configuration")]
         [SerializeField] private string clientId = "your-client-id-here";
-        
+
         [SerializeField] private string environment = Immutable.Passport.Model.Environment.SANDBOX;
-        
+
         [Header("Redirect URIs (required for authentication)")]
-        [SerializeField] 
+        [SerializeField]
         [Tooltip("The redirect URI for successful login (e.g., 'mygame://callback')")]
         private string redirectUri = "";
-        [SerializeField] 
+        [SerializeField]
         [Tooltip("The redirect URI for logout (e.g., 'mygame://logout')")]
         private string logoutRedirectUri = "";
-        
+
         [Header("Settings")]
         [SerializeField] private bool autoInitialize = true;
         [SerializeField] private bool autoLogin = false;
@@ -35,36 +35,36 @@ namespace Immutable.Passport
         [SerializeField] private MarketingConsentStatus defaultMarketingConsent = MarketingConsentStatus.Unsubscribed;
         [SerializeField] private LogLevel logLevel = LogLevel.Info;
         [SerializeField] private bool redactTokensInLogs = true;
-        
+
         [Header("UI Integration (Optional)")]
-        [SerializeField] 
+        [SerializeField]
         [Tooltip("Button to trigger default login (will be automatically configured)")]
         private Button loginButton;
-        [SerializeField] 
+        [SerializeField]
         [Tooltip("Button to trigger Google login (will be automatically configured)")]
         private Button googleLoginButton;
-        [SerializeField] 
+        [SerializeField]
         [Tooltip("Button to trigger Apple login (will be automatically configured)")]
         private Button appleLoginButton;
-        [SerializeField] 
+        [SerializeField]
         [Tooltip("Button to trigger Facebook login (will be automatically configured)")]
         private Button facebookLoginButton;
-        [SerializeField] 
+        [SerializeField]
         [Tooltip("Button to trigger logout (will be automatically configured)")]
         private Button logoutButton;
-        [SerializeField] 
+        [SerializeField]
         [Tooltip("Legacy Text component to display authentication status. Use this OR TextMeshPro Status Text below.")]
         private Text statusText;
-        [SerializeField] 
+        [SerializeField]
         [Tooltip("TextMeshPro component to display authentication status. Use this OR Legacy Status Text above.")]
         private TextMeshProUGUI statusTextTMP;
-        [SerializeField] 
+        [SerializeField]
         [Tooltip("Legacy Text component to display user information after login. Use this OR TextMeshPro User Info Text below.")]
         private Text userInfoText;
-        [SerializeField] 
+        [SerializeField]
         [Tooltip("TextMeshPro component to display user information after login. Use this OR Legacy User Info Text above.")]
         private TextMeshProUGUI userInfoTextTMP;
-        
+
         [Header("Events")]
         public UnityEngine.Events.UnityEvent OnPassportInitialized;
         public UnityEngine.Events.UnityEvent<string> OnPassportError;
@@ -72,15 +72,15 @@ namespace Immutable.Passport
         public UnityEngine.Events.UnityEvent<string> OnLoginFailed;
         public UnityEngine.Events.UnityEvent OnLogoutSucceeded;
         public UnityEngine.Events.UnityEvent<string> OnLogoutFailed;
-        
+
         public static PassportManager Instance { get; private set; }
         public Passport PassportInstance { get; private set; }
         public bool IsInitialized { get; private set; }
         public bool IsLoggedIn { get; private set; }
-        
+
         // UI Builder integration
         private PassportUIBuilder uiBuilder;
-        
+
         private void Awake()
         {
             // Singleton pattern
@@ -95,21 +95,21 @@ namespace Immutable.Passport
                 return;
             }
         }
-        
+
         private void Start()
         {
             // Find UI Builder if present
             uiBuilder = GetComponent<PassportUIBuilder>();
-            
+
             // Configure UI elements if provided
             ConfigureUIElements();
-            
+
             if (autoInitialize)
             {
                 InitializePassport();
             }
         }
-        
+
         /// <summary>
         /// Initialize Passport with the configured settings
         /// </summary>
@@ -120,7 +120,7 @@ namespace Immutable.Passport
                 Debug.LogWarning("[PassportManager] Passport is already initialized.");
                 return;
             }
-            
+
             if (string.IsNullOrEmpty(clientId) || clientId == "your-client-id-here")
             {
                 string error = "Please set a valid Client ID in the PassportManager component";
@@ -128,29 +128,29 @@ namespace Immutable.Passport
                 OnPassportError?.Invoke(error);
                 return;
             }
-            
+
             try
             {
                 // Configure logging
                 Passport.LogLevel = logLevel;
                 Passport.RedactTokensInLogs = redactTokensInLogs;
-                
+
                 // Auto-configure redirect URIs if not set
                 string finalRedirectUri = GetRedirectUri();
                 string finalLogoutRedirectUri = GetLogoutRedirectUri();
-                
+
                 Debug.Log($"[PassportManager] Initializing Passport with Client ID: {clientId}");
-                
+
                 // Initialize Passport
                 PassportInstance = await Passport.Init(clientId, environment, finalRedirectUri, finalLogoutRedirectUri);
-                
+
                 IsInitialized = true;
                 Debug.Log("[PassportManager] Passport initialized successfully!");
                 OnPassportInitialized?.Invoke();
-                
+
                 // Update UI state after initialization
                 UpdateUIState();
-                
+
                 // Auto-login if enabled
                 if (autoLogin)
                 {
@@ -167,7 +167,7 @@ namespace Immutable.Passport
                 OnPassportError?.Invoke(error);
             }
         }
-        
+
         /// <summary>
         /// Get the redirect URI - must be configured in Inspector
         /// </summary>
@@ -179,10 +179,10 @@ namespace Immutable.Passport
                     "Redirect URI must be configured in the PassportManager Inspector. " +
                     "Example: 'yourapp://callback'");
             }
-            
+
             return redirectUri;
         }
-        
+
         /// <summary>
         /// Get the logout redirect URI - must be configured in Inspector
         /// </summary>
@@ -194,10 +194,10 @@ namespace Immutable.Passport
                     "Logout Redirect URI must be configured in the PassportManager Inspector. " +
                     "Example: 'yourapp://logout'");
             }
-            
+
             return logoutRedirectUri;
         }
-        
+
         /// <summary>
         /// Quick access to login functionality using the configured direct login method
         /// </summary>
@@ -205,7 +205,7 @@ namespace Immutable.Passport
         {
             await LoginAsync();
         }
-        
+
         /// <summary>
         /// Login with custom direct login options
         /// </summary>
@@ -214,7 +214,7 @@ namespace Immutable.Passport
         {
             await LoginAsync(directLoginOptions: directLoginOptions);
         }
-        
+
         /// <summary>
         /// Internal async login method
         /// </summary>
@@ -226,13 +226,13 @@ namespace Immutable.Passport
                 Debug.LogError("[PassportManager] Passport not initialized. Call InitializePassport() first.");
                 return;
             }
-            
+
             try
             {
                 // Determine final DirectLoginOptions to use
                 DirectLoginOptions finalDirectLoginOptions;
                 string loginMethodText;
-                
+
                 if (directLoginOptions != null)
                 {
                     // Use provided DirectLoginOptions (marketing consent already set by developer)
@@ -242,10 +242,10 @@ namespace Immutable.Passport
                 else
                 {
                     // Use configured directLoginMethod from Inspector
-                    loginMethodText = directLoginMethod == DirectLoginMethod.None 
-                        ? "default method" 
+                    loginMethodText = directLoginMethod == DirectLoginMethod.None
+                        ? "default method"
                         : directLoginMethod.ToString();
-                    
+
                     if (directLoginMethod == DirectLoginMethod.None)
                     {
                         // Standard auth flow
@@ -257,25 +257,25 @@ namespace Immutable.Passport
                         finalDirectLoginOptions = new DirectLoginOptions(directLoginMethod, marketingConsentStatus: defaultMarketingConsent);
                     }
                 }
-                
+
                 Debug.Log($"[PassportManager] Attempting login with {loginMethodText}...");
-                
+
                 // Debug log marketing consent if present
                 if (finalDirectLoginOptions?.marketingConsentStatus != null)
                 {
                     Debug.Log($"[PassportManager] Marketing consent: {finalDirectLoginOptions.marketingConsentStatus}");
                 }
-                
+
                 bool loginSuccess = await PassportInstance.Login(useCachedSession: false, directLoginOptions: finalDirectLoginOptions);
                 if (loginSuccess)
                 {
                     IsLoggedIn = true;
                     Debug.Log("[PassportManager] Login successful!");
                     OnLoginSucceeded?.Invoke();
-                    
+
                     // Update UI state after successful login
                     UpdateUIState();
-                    
+
                     // Switch to logged-in panel if UI builder is present
                     if (uiBuilder != null)
                     {
@@ -287,7 +287,7 @@ namespace Immutable.Passport
                     string failureMessage = "Login was cancelled or failed";
                     Debug.LogWarning($"[PassportManager] {failureMessage}");
                     OnLoginFailed?.Invoke(failureMessage);
-                    
+
                     // Update UI state after failed login
                     UpdateUIState();
                 }
@@ -299,7 +299,7 @@ namespace Immutable.Passport
                 OnLoginFailed?.Invoke(errorMessage);
             }
         }
-        
+
         /// <summary>
         /// Quick access to logout functionality
         /// </summary>
@@ -312,17 +312,17 @@ namespace Immutable.Passport
                 OnLogoutFailed?.Invoke(errorMessage);
                 return;
             }
-            
+
             try
             {
                 await PassportInstance.Logout();
                 IsLoggedIn = false;
                 Debug.Log("[PassportManager] Logout successful!");
                 OnLogoutSucceeded?.Invoke();
-                
+
                 // Update UI state after logout
                 UpdateUIState();
-                
+
                 // Switch back to login panel if UI builder is present
                 if (uiBuilder != null)
                 {
@@ -336,9 +336,9 @@ namespace Immutable.Passport
                 OnLogoutFailed?.Invoke(errorMessage);
             }
         }
-        
+
         #region UI Integration
-        
+
         /// <summary>
         /// Configure UI elements if they have been assigned
         /// </summary>
@@ -352,7 +352,7 @@ namespace Immutable.Passport
                 loginButton.interactable = IsInitialized && !IsLoggedIn;
                 Debug.Log("[PassportManager] Configured login button");
             }
-            
+
             if (googleLoginButton != null)
             {
                 googleLoginButton.onClick.RemoveAllListeners();
@@ -360,7 +360,7 @@ namespace Immutable.Passport
                 googleLoginButton.interactable = IsInitialized && !IsLoggedIn;
                 Debug.Log($"[PassportManager] Configured Google login button with defaultMarketingConsent: {defaultMarketingConsent}");
             }
-            
+
             if (appleLoginButton != null)
             {
                 appleLoginButton.onClick.RemoveAllListeners();
@@ -368,7 +368,7 @@ namespace Immutable.Passport
                 appleLoginButton.interactable = IsInitialized && !IsLoggedIn;
                 Debug.Log("[PassportManager] Configured Apple login button");
             }
-            
+
             if (facebookLoginButton != null)
             {
                 facebookLoginButton.onClick.RemoveAllListeners();
@@ -376,7 +376,7 @@ namespace Immutable.Passport
                 facebookLoginButton.interactable = IsInitialized && !IsLoggedIn;
                 Debug.Log("[PassportManager] Configured Facebook login button");
             }
-            
+
             if (logoutButton != null)
             {
                 logoutButton.onClick.RemoveAllListeners();
@@ -384,11 +384,11 @@ namespace Immutable.Passport
                 logoutButton.interactable = IsInitialized && IsLoggedIn;
                 Debug.Log("[PassportManager] Configured logout button");
             }
-            
+
             // Update initial UI state
             UpdateUIState();
         }
-        
+
         /// <summary>
         /// Update the state of UI elements based on current authentication status
         /// </summary>
@@ -396,7 +396,7 @@ namespace Immutable.Passport
         {
             bool isInitialized = IsInitialized;
             bool isLoggedIn = IsLoggedIn;
-            
+
             // Update button states
             if (loginButton != null)
                 loginButton.interactable = isInitialized && !isLoggedIn;
@@ -408,11 +408,11 @@ namespace Immutable.Passport
                 facebookLoginButton.interactable = isInitialized && !isLoggedIn;
             if (logoutButton != null)
                 logoutButton.interactable = isInitialized && isLoggedIn;
-            
+
             // Update status text (supports both Legacy Text and TextMeshPro)
             string statusMessage;
             Color statusColor;
-            
+
             if (!isInitialized)
             {
                 statusMessage = "Initializing Passport...";
@@ -428,9 +428,9 @@ namespace Immutable.Passport
                 statusMessage = "Ready to login";
                 statusColor = Color.white;
             }
-            
+
             SetStatusText(statusMessage, statusColor);
-            
+
             // Update user info (supports both Legacy Text and TextMeshPro)
             if (isLoggedIn)
             {
@@ -441,7 +441,7 @@ namespace Immutable.Passport
                 SetUserInfoText("");
             }
         }
-        
+
         /// <summary>
         /// Update the user info display with current user data
         /// </summary>
@@ -464,7 +464,7 @@ namespace Immutable.Passport
                 }
             }
         }
-        
+
         /// <summary>
         /// Set status text on both Legacy Text and TextMeshPro components
         /// </summary>
@@ -475,14 +475,14 @@ namespace Immutable.Passport
                 statusText.text = message;
                 statusText.color = color;
             }
-            
+
             if (statusTextTMP != null)
             {
                 statusTextTMP.text = message;
                 statusTextTMP.color = color;
             }
         }
-        
+
         /// <summary>
         /// Set user info text on both Legacy Text and TextMeshPro components
         /// </summary>
@@ -492,17 +492,17 @@ namespace Immutable.Passport
             {
                 userInfoText.text = message;
             }
-            
+
             if (userInfoTextTMP != null)
             {
                 userInfoTextTMP.text = message;
             }
         }
-        
+
         #endregion
-        
+
         #region UI Builder Integration
-        
+
         /// <summary>
         /// Set UI references from the UI Builder (used internally)
         /// </summary>
@@ -515,11 +515,11 @@ namespace Immutable.Passport
             logoutButton = logout;
             statusText = status;
             userInfoText = userInfo;
-            
+
             // Re-configure UI elements with new references
             ConfigureUIElements();
         }
-        
+
         #endregion
     }
-} 
+}
