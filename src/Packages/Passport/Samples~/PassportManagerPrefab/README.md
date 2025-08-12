@@ -2,6 +2,21 @@
 
 The **PassportManager** provides multiple drag-and-drop prefabs for easy Immutable Passport authentication integration into your Unity game.
 
+## 🎯 No-Code Setup Example
+
+Want authentication with zero scripting? Here's how:
+
+1. **Create UI**: Add Canvas → Button (Login), Button (Logout), Text (Status)
+2. **Drag Components**: In PassportUIController Inspector, drag the **COMPONENTS** (not GameObjects) to the UI fields:
+   - Expand the GameObject in hierarchy
+   - Drag the **Button** component (not the GameObject)
+   - For text: Drag **Text** component OR **TextMeshPro - Text (UI)** component (not the GameObject)
+   - PassportUIController supports both text types - use whichever your project uses
+3. **Configure**: Set your Client ID and redirect URIs
+4. **Done!**: Hit Play - your buttons now handle authentication automatically
+
+That's it! No scripts, no event handling, no code. Pure drag-and-drop! 🚀
+
 ## 🚀 Quick Start
 
 ### Option 1: Complete UI (Zero Config! 🎯)
@@ -29,7 +44,7 @@ The **PassportManager** provides multiple drag-and-drop prefabs for easy Immutab
 2. **Drag the Minimal Prefab**: Drag `PassportManager.prefab` from the Samples folder into your scene
 3. **Configure Settings**: In the Inspector, set your Client ID and redirect URIs
 4. **Use Events or Code**: Subscribe to events or call methods directly
-5. **Test**: Hit Play - the prefab will automatically initialize Passport!
+5. **Test**: Hit Play - the prefab will automatically initialise Passport!
 
 ### Option 3: Custom UI Integration (Advanced)
 
@@ -54,7 +69,7 @@ The **PassportManager** provides multiple drag-and-drop prefabs for easy Immutab
 ### Optional Settings
 
 - **Environment**: `SANDBOX` (default) or `PRODUCTION`
-- **Auto Initialize**: Automatically initialize on Start (default: true)
+- **Auto Initialise**: Automatically initialise on Start (default: true)
 - **Auto Login**: Automatically attempt login after initialization (default: false)
 - **Direct Login Method**: Pre-select login method (None, Google, Apple, Facebook)
 - **Default Marketing Consent**: Default consent status for marketing communications (Unsubscribed, OptedIn)
@@ -62,13 +77,13 @@ The **PassportManager** provides multiple drag-and-drop prefabs for easy Immutab
 
 ### UI Customization (PassportManagerComplete)
 
-The complete prefab creates UI at runtime, which means you can customize the appearance:
+The complete prefab creates UI at runtime, which means you can customise the appearance:
 
 **Runtime Customization:**
 
 - The UI is built using Unity's default UI style
 - All UI elements can be accessed and modified after creation
-- Button colors, text, and layout are easily customizable via code
+- Button colours, text, and layout are easily customisable via code
 - Mobile-responsive design automatically adapts to screen size
 
 **Layout Configuration:**
@@ -78,7 +93,7 @@ The complete prefab creates UI at runtime, which means you can customize the app
 - Element Spacing: 10px (adjustable)
 - Canvas Order: 100 (prevents UI conflicts)
 
-**Color Scheme:**
+**Colour Scheme:**
 
 - Google Button: Red (#DB4437) with white text
 - Apple Button: Black with white text  
@@ -99,21 +114,6 @@ Simply drag UI elements from your scene into these fields and they'll be automat
 - **User Info Text**: Shows logged-in user's access token preview (Legacy Text OR TextMeshPro)
 
 **✨ Magic**: Buttons are automatically enabled/disabled based on authentication state!
-
-## 🎯 No-Code Setup Example
-
-Want authentication with zero scripting? Here's how:
-
-1. **Create UI**: Add Canvas → Button (Login), Button (Logout), Text (Status)
-2. **Drag Components**: In PassportUIController Inspector, drag the **COMPONENTS** (not GameObjects) to the UI fields:
-   - Expand the GameObject in hierarchy
-   - Drag the **Button** component (not the GameObject)
-   - For text: Drag **Text** component OR **TextMeshPro - Text (UI)** component (not the GameObject)
-   - PassportUIController supports both text types - use whichever your project uses
-3. **Configure**: Set your Client ID and redirect URIs
-4. **Done!**: Hit Play - your buttons now handle authentication automatically
-
-That's it! No scripts, no event handling, no code. Pure drag-and-drop! 🚀
 
 ## 🎮 Using Events
 
@@ -222,7 +222,7 @@ The `PassportUIController` uses **aggressive cursor management** designed for de
 
    ```csharp
    void OnLoginSucceeded() {
-       // Your game-specific cursor behavior
+       // Your game-specific cursor behaviour
        Cursor.lockState = YourGame.GetDesiredCursorMode();
    }
    ```
@@ -297,7 +297,7 @@ void RestoreInput() {
 }
 ```
 
-### "Cursor behavior conflicts with my game"
+### "Cursor behaviour conflicts with my game"
 
 **Issue**: PassportUIController's aggressive cursor management interferes with game controls.
 

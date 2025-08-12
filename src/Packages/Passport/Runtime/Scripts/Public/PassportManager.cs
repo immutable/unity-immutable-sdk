@@ -16,9 +16,13 @@ namespace Immutable.Passport
     public class PassportManager : MonoBehaviour
     {
         [Header("Passport Configuration")]
-        [SerializeField] private string clientId = "your-client-id-here";
+        [SerializeField]
+        [Tooltip("Your Immutable Passport client ID")]
+        private string clientId = "your-client-id-here";
 
-        [SerializeField] private string environment = Immutable.Passport.Model.Environment.SANDBOX;
+        [SerializeField]
+        [Tooltip("Environment: SANDBOX (default) or PRODUCTION")]
+        private string environment = Immutable.Passport.Model.Environment.SANDBOX;
 
         [Header("Redirect URIs (required for authentication)")]
         [SerializeField]
@@ -29,12 +33,24 @@ namespace Immutable.Passport
         private string logoutRedirectUri = "";
 
         [Header("Settings")]
-        [SerializeField] private bool autoInitialize = true;
-        [SerializeField] private bool autoLogin = false;
-        [SerializeField] private DirectLoginMethod directLoginMethod = DirectLoginMethod.None;
-        [SerializeField] private MarketingConsentStatus defaultMarketingConsent = MarketingConsentStatus.Unsubscribed;
-        [SerializeField] private LogLevel logLevel = LogLevel.Info;
-        [SerializeField] private bool redactTokensInLogs = true;
+        [SerializeField]
+        [Tooltip("Automatically initialise on Start (default: true)")]
+        private bool autoInitialize = true;
+        [SerializeField]
+        [Tooltip("Automatically attempt login after initialisation (default: false)")]
+        private bool autoLogin = false;
+        [SerializeField]
+        [Tooltip("Pre-select login method (None, Google, Apple, Facebook)")]
+        private DirectLoginMethod directLoginMethod = DirectLoginMethod.None;
+        [SerializeField]
+        [Tooltip("Default consent status for marketing communications (Unsubscribed, OptedIn)")]
+        private MarketingConsentStatus defaultMarketingConsent = MarketingConsentStatus.Unsubscribed;
+        [SerializeField]
+        [Tooltip("Control debug output verbosity")]
+        private LogLevel logLevel = LogLevel.Info;
+        [SerializeField]
+        [Tooltip("Hide sensitive token information in debug logs for security")]
+        private bool redactTokensInLogs = true;
 
         [Header("UI Integration (Optional)")]
         [SerializeField]
