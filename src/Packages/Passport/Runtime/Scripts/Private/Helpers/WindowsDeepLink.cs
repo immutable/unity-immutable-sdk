@@ -405,18 +405,6 @@ namespace Immutable.Passport.Helpers
             // This prevents race condition where Unity deletes the file
             // while Windows is still trying to execute it
             var cmdPath = GetGameExecutablePath(".cmd");
-            // Commented out to prevent race condition
-            // if (File.Exists(cmdPath))
-            // {
-            //     try
-            //     {
-            //         File.Delete(cmdPath);
-            //     }
-            //     catch (Exception ex)
-            //     {
-            //         PassportLogger.Warn($"Failed to delete script: {ex.Message}");
-            //     }
-            // }
 
             // Clean up instance
             Destroy(gameObject);
@@ -425,4 +413,3 @@ namespace Immutable.Passport.Helpers
     }
 }
 #endif
-
