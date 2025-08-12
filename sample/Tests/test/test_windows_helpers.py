@@ -56,9 +56,9 @@ def login():
 
     # Get all window handles
     all_windows = driver.window_handles
-    
+
     print(f"Found {len(all_windows)} new windows to check: {all_windows}")
-    
+
     # Find the window with email input
     target_window = None
     for window in all_windows:
@@ -72,12 +72,12 @@ def login():
         except:
             print(f"Email input not found in window: {window}, trying next...")
             continue
-    
+
     if not target_window:
         print("Could not find email input field in any window!")
         driver.quit()
         return
-    
+
     print("Switch to the target window")
     driver.switch_to.window(target_window)
 
@@ -111,7 +111,8 @@ def login():
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'h1[data-testid="checking_title"]')))
     print("Connected to Passport!")
 
-    driver.quit()
+    # Keep browser alive for Unity deep link redirect
+    # driver.quit()
 
 def open_sample_app():
     product_name = get_product_name()
