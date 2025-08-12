@@ -40,7 +40,7 @@ namespace Immutable.Passport
         [Tooltip("Automatically attempt login after initialisation (default: false)")]
         private bool autoLogin = false;
         [SerializeField]
-        [Tooltip("Pre-select login method (None, Google, Apple, Facebook)")]
+        [Tooltip("Default login method for auto-login and generic login button (None, Google, Apple, Facebook)")]
         private DirectLoginMethod directLoginMethod = DirectLoginMethod.None;
         [SerializeField]
         [Tooltip("Default consent status for marketing communications (Unsubscribed, OptedIn)")]

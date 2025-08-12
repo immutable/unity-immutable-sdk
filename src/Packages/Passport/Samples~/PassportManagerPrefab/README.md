@@ -71,7 +71,7 @@ That's it! No scripts, no event handling, no code. Pure drag-and-drop! 🚀
 - **Environment**: `SANDBOX` (default) or `PRODUCTION`
 - **Auto Initialise**: Automatically initialise on Start (default: true)
 - **Auto Login**: Automatically attempt login after initialization (default: false)
-- **Direct Login Method**: Pre-select login method (None, Google, Apple, Facebook)
+- **Direct Login Method**: Default login method for auto-login and generic login button (None, Google, Apple, Facebook)
 - **Default Marketing Consent**: Default consent status for marketing communications (Unsubscribed, OptedIn)
 - **Log Level**: Control debug output verbosity
 
