@@ -12,7 +12,8 @@ namespace Immutable.Passport
     public class PassportUIBuilder : MonoBehaviour
     {
         [Header("UI Configuration")]
-        [SerializeField] [Tooltip("The PassportManager to connect this UI to")]
+        [SerializeField]
+        [Tooltip("The PassportManager to connect this UI to")]
         private PassportManager passportManager;
 
         [Header("Layout Settings")]
@@ -22,7 +23,8 @@ namespace Immutable.Passport
         [SerializeField] private float elementSpacing = 10f;
 
         [Header("Cursor Management (Demo Feature)")]
-        [SerializeField] [Tooltip("WARNING: Aggressive cursor management for demo purposes. May conflict with game cursor logic.")]
+        [SerializeField]
+        [Tooltip("WARNING: Aggressive cursor management for demo purposes. May conflict with game cursor logic.")]
         private bool forceCursorAlwaysAvailable = true;
 
         [Header("Generated UI References (Auto-populated)")]
