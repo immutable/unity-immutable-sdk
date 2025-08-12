@@ -23,6 +23,7 @@ Name | Type | Description | Notes
 **Description** | **string** | Description of the CTA button | 
 **Logo** | **string** | URL of the quiz logo | 
 **Title** | **string** | Title of the video | 
+**SimilarGames** | **List&lt;string&gt;** | Similar games to display | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 
