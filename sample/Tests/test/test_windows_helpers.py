@@ -65,7 +65,7 @@ def login():
         try:
             print(f"Checking window: {window}")
             driver.switch_to.window(window)
-            driver.find_element(By.CSS_SELECTOR, '[data-testid="TextInput__input"]')
+            driver.find_element(By.ID, ':r1:')
             target_window = window
             print(f"Found email input in window: {window}")
             break
@@ -84,7 +84,7 @@ def login():
     wait = WebDriverWait(driver, 60)
 
     print("Wait for email input...")
-    email_field = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, '[data-testid="TextInput__input"]')))
+    email_field = wait.until(EC.presence_of_element_located((By.ID, ':r1:')))
     print("Enter email...")
     email_field.send_keys(EMAIL)
     email_field.send_keys(Keys.RETURN)
