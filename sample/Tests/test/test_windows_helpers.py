@@ -111,6 +111,17 @@ def login():
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'h1[data-testid="checking_title"]')))
     print("Connected to Passport!")
 
+    # Handle deep link permission dialog
+    print("Waiting for deep link permission dialog...")
+    try:
+        # Wait for the deep link dialog to appear and click "Open Immutable Sample.cmd"
+        deep_link_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Open Immutable Sample.cmd')]")))
+        deep_link_button.click()
+        print("Clicked deep link permission dialog - Unity should receive redirect")
+    except Exception as e:
+        print(f"Deep link dialog not found or failed to click: {e}")
+        print("This may cause the test to timeout waiting for scene change")
+
     # Keep browser alive for Unity deep link redirect
     # driver.quit()
 
