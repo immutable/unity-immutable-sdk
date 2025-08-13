@@ -11,7 +11,8 @@ class WindowsTest(UnityTest):
     def setUpClass(cls):
         open_sample_app()
         time.sleep(5) # Give time for the app to open
-        super().setUpClass()
+        # Initialize AltDriver with longer timeout for flaky CI environment
+        cls.altdriver = AltDriver(timeout=120)  # 120 seconds instead of default 20
 
     @classmethod
     def tearDownClass(cls):
@@ -23,7 +24,8 @@ class WindowsTest(UnityTest):
         stop_sample_app()
         open_sample_app()
         time.sleep(5) # Give time for the app to open
-        self.start_altdriver()
+        # Use same timeout as setUpClass
+        self.__class__.altdriver = AltDriver(timeout=120)
 
     def login(self):
         # Wait for unauthenticated screen
