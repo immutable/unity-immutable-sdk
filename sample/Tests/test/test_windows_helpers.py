@@ -86,6 +86,53 @@ def get_auth_url_from_unity_logs():
     print("No auth URL found in Unity logs")
     return None
 
+def handle_cached_authentication(driver):
+    """Handle scenarios where user is already authenticated (cached session)"""
+    print("Handling cached authentication scenario...")
+    print(f"Current URL: {driver.current_url}")
+    print(f"Page title: {driver.title}")
+    
+    # Give a moment for any page transitions to complete
+    time.sleep(3)
+    
+    # Handle deep link processing based on environment
+    is_ci = os.getenv('CI') or os.getenv('GITHUB_ACTIONS') or os.getenv('BUILD_ID')
+    
+    if is_ci:
+        print("CI environment - checking if authentication completed automatically")
+        print("Monitoring Unity logs for authentication completion...")
+        
+        auth_success = False
+        for check_attempt in range(30):  # Check for 30 seconds
+            try:
+                with open("C:\\Users\\WindowsBuildsdkServi\\AppData\\LocalLow\\Immutable\\Immutable Sample\\Player.log", 'r', encoding='utf-8', errors='ignore') as f:
+                    content = f.read()
+                    # Look for signs of successful authentication
+                    if any(phrase in content for phrase in [
+                        "AuthenticatedScene", 
+                        "authentication successful", 
+                        "logged in successfully",
+                        "Passport token received"
+                    ]):
+                        print("Authentication success detected in Unity logs!")
+                        auth_success = True
+                        break
+            except:
+                pass
+            time.sleep(1)
+        
+        if not auth_success:
+            print("No authentication success detected - attempting automated dialog handling")
+            # Add automated dialog clicking here if needed
+            
+    else:
+        print("Local environment - cached authentication should work automatically")
+        print("Waiting for Unity to receive the deep link callback...")
+        time.sleep(5)
+        print("Cached authentication processing complete")
+    
+    return  # Exit since cached auth is complete
+
 def login():
     print("Connect to Chrome")
     # Set up Chrome options to connect to the existing Chrome instance
@@ -94,136 +141,27 @@ def login():
     # Connect to the existing Chrome instance
     driver = webdriver.Chrome(options=chrome_options)
 
-    print("Looking for auth URL in Unity logs...")
-    # Try to get the auth URL from Unity logs instead of waiting for new window
-    auth_url = None
-    for attempt in range(30):  # Try for 30 seconds
-        auth_url = get_auth_url_from_unity_logs()
-        if auth_url:
-            break
-        time.sleep(1)
+    # HYBRID APPROACH: Try multi-window detection first (proven to work in CI), 
+    # then fall back to Unity log monitoring if needed
     
-    if auth_url:
-        print(f"Navigating to captured auth URL: {auth_url}")
-        driver.get(auth_url)
-        # We're already on the auth page, no need to find windows
-        target_window = driver.current_window_handle
-        
-        # Debug: Check what page we landed on
-        time.sleep(3)  # Let page load
-        print(f"After navigation - URL: {driver.current_url}")
-        print(f"After navigation - Title: {driver.title}")
-        
-        # Check if we have email field (login page) or if we skipped to redirect
-        email_fields = driver.find_elements(By.ID, ':r1:')
-        if not email_fields:
-            print("No email field found - likely skipped to auth complete, looking for deep link dialog...")
-            # Skip directly to deep link handling
-            # Handle deep link permission dialog
-            print("Waiting for deep link permission dialog...")
-            print(f"Current URL: {driver.current_url}")
-            print(f"Page title: {driver.title}")
-            
-            # Give a moment for any page transitions to complete
-            time.sleep(3)
-            
-            # Handle deep link processing based on environment
-            is_ci = os.getenv('CI') or os.getenv('GITHUB_ACTIONS') or os.getenv('BUILD_ID')
-            
-            if is_ci:
-                print("CI environment - checking if authentication completed automatically")
-                # In CI, the browser window may close immediately if auth succeeds
-                # Check Unity logs to see if authentication was successful
-                print("Monitoring Unity logs for authentication completion...")
-                
-                auth_success = False
-                for check_attempt in range(30):  # Check for 30 seconds
-                    try:
-                        with open("C:\\Users\\WindowsBuildsdkServi\\AppData\\LocalLow\\Immutable\\Immutable Sample\\Player.log", 'r', encoding='utf-8', errors='ignore') as f:
-                            content = f.read()
-                            # Look for signs of successful authentication
-                            if any(phrase in content for phrase in [
-                                "AuthenticatedScene", 
-                                "authentication successful", 
-                                "logged in successfully",
-                                "Passport token received"
-                            ]):
-                                print("Authentication success detected in Unity logs!")
-                                auth_success = True
-                                break
-                    except:
-                        pass
-                    time.sleep(1)
-                
-                if not auth_success:
-                    print("No authentication success detected - attempting automated dialog handling")
-                    print("Looking for protocol permission dialog to click automatically...")
-                    
-                    # Try to find and click the protocol dialog automatically
-                    try:
-                        ps_script = '''
-                        for ($i = 0; $i -lt 10; $i++) {
-                            $windows = Get-Process | Where-Object { $_.MainWindowTitle -like "*auth.immutable.com*" -or $_.MainWindowTitle -like "*Open*" }
-                            foreach ($window in $windows) {
-                                try {
-                                    Add-Type -AssemblyName UIAutomationClient
-                                    $element = [Windows.Automation.AutomationElement]::FromHandle($window.MainWindowHandle)
-                                    if ($element) {
-                                        $buttons = $element.FindAll([Windows.Automation.TreeScope]::Descendants, 
-                                            [Windows.Automation.Condition]::new([Windows.Automation.AutomationElement]::ControlTypeProperty, 
-                                            [Windows.Automation.ControlType]::Button))
-                                        foreach ($button in $buttons) {
-                                            $buttonText = $button.Current.Name
-                                            if ($buttonText -like "*Open*" -or $buttonText -like "*Allow*" -or $buttonText -like "*Yes*") {
-                                                $button.GetCurrentPattern([Windows.Automation.InvokePattern]::Pattern).Invoke()
-                                                Write-Host "Clicked protocol dialog button: $buttonText"
-                                                exit 0
-                                            }
-                                        }
-                                    }
-                                } catch {}
-                            }
-                            Start-Sleep 1
-                        }
-                        Write-Host "No protocol dialog found"
-                        '''
-                        
-                        result = subprocess.run(["powershell", "-Command", ps_script], 
-                                              capture_output=True, text=True, timeout=15)
-                        if "Clicked protocol dialog" in result.stdout:
-                            print("Successfully automated protocol dialog click in CI!")
-                            # Wait a bit more for Unity to process
-                            time.sleep(5)
-                        else:
-                            print("Could not find protocol dialog to automate")
-                    except Exception as e:
-                        print(f"CI dialog automation error: {e}")
-                        print("Protocol dialog may require manual setup in CI environment")
-                    
-            else:
-                print("Local environment - protocol association should work automatically")
-                print("Waiting for Unity to receive the deep link callback...")
-                time.sleep(5)
-                print("Deep link processing complete - authentication should be successful")
-            
-            return  # Exit function since we're done
-    else:
-        print("Could not find auth URL in Unity logs, falling back to window waiting...")
-        # Fallback to original approach
+    print("Attempting multi-window detection (primary method - proven to work)...")
+    try:
+        # Wait for Unity to open auth URL in new browser window
         print("Waiting for new window...")
-        WebDriverWait(driver, 60).until(EC.number_of_windows_to_be(2))
-
+        WebDriverWait(driver, 15).until(EC.number_of_windows_to_be(2))
+        
         # Get all window handles
         all_windows = driver.window_handles
-        print(f"Found {len(all_windows)} new windows to check: {all_windows}")
-
+        print(f"Found {len(all_windows)} windows to check: {all_windows}")
+        
         # Find the window with email input
         target_window = None
         for window in all_windows:
             try:
                 print(f"Checking window: {window}")
                 driver.switch_to.window(window)
-                driver.find_element(By.ID, ':r1:')
+                # Try to find email input in this window
+                email_field = driver.find_element(By.CSS_SELECTOR, '[data-testid="TextInput__input"]')
                 target_window = window
                 print(f"Found email input in window: {window}")
                 break
@@ -231,18 +169,51 @@ def login():
                 print(f"Email input not found in window: {window}, trying next...")
                 continue
 
-        if not target_window:
-            print("Could not find email input field in any window!")
+        if target_window:
+            print("Switch to the target window")
+            driver.switch_to.window(target_window)
+            print("Multi-window detection successful - proceeding with login flow")
+        else:
+            raise Exception("No window with email input found")
+            
+    except Exception as e:
+        print(f"Multi-window detection failed: {e}")
+        print("Falling back to Unity log monitoring method...")
+        
+        # FALLBACK: Unity log monitoring approach
+        print("Looking for auth URL in Unity logs...")
+        auth_url = None
+        for attempt in range(30):  # Try for 30 seconds
+            auth_url = get_auth_url_from_unity_logs()
+            if auth_url:
+                break
+            time.sleep(1)
+        
+        if auth_url:
+            print(f"Navigating to captured auth URL: {auth_url}")
+            driver.get(auth_url)
+            
+            # Debug: Check what page we landed on
+            time.sleep(3)  # Let page load
+            print(f"After navigation - URL: {driver.current_url}")
+            print(f"After navigation - Title: {driver.title}")
+            
+            # Check if we have email field (login page) or if we skipped to redirect
+            try:
+                email_field = driver.find_element(By.CSS_SELECTOR, '[data-testid="TextInput__input"]')
+                print("Found email field via Unity log method - proceeding with login flow")
+            except:
+                print("No email field found - likely cached session, handling deep link...")
+                return handle_cached_authentication(driver)
+        else:
+            print("Could not find auth URL in Unity logs either!")
             driver.quit()
             return
-
-        print("Switch to the target window")
-        driver.switch_to.window(target_window)
 
     wait = WebDriverWait(driver, 60)
 
     print("Wait for email input...")
-    email_field = wait.until(EC.presence_of_element_located((By.ID, ':r1:')))
+    email_field = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, '[data-testid="TextInput__input"]')))
     print("Enter email...")
     email_field.send_keys(EMAIL)
     
