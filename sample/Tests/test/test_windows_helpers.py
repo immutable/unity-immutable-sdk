@@ -39,6 +39,53 @@ def get_product_name():
     # If regex fails, return default
     return "SampleApp"
 
+def get_auth_url_from_unity_logs():
+    """Monitor Unity logs to capture the PASSPORT_AUTH_URL."""
+    import tempfile
+    import os
+    
+    # Unity log file locations on Windows
+    log_paths = [
+        os.path.join(os.path.expanduser("~"), "AppData", "LocalLow", "Immutable", "Immutable Sample", "Player.log"),
+        os.path.join(tempfile.gettempdir(), "UnityPlayer.log"),
+        "Player.log"  # Current directory
+    ]
+    
+    for log_path in log_paths:
+        if os.path.exists(log_path):
+            print(f"Monitoring Unity log: {log_path}")
+            # Read the log file and look for PASSPORT_AUTH_URL
+            try:
+                with open(log_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    content = f.read()
+                    # Look for either our custom message or the existing LaunchAuthURL message
+                    # Get the LAST occurrence (most recent) and make sure it's a login URL, not logout
+                    matches = re.findall(r'(?:PASSPORT_AUTH_URL: |LaunchAuthURL : )(https?://[^\s]+)', content)
+                    if matches:
+                        # Get the last URL and make sure it's not a logout URL
+                        for url in reversed(matches):
+                            if 'im-logged-out' not in url and 'logout' not in url:
+                                match = type('obj', (object,), {'group': lambda x, n: url if n == 1 else None})()
+                                break
+                        else:
+                            # All URLs were logout URLs, take the last one anyway
+                            if matches:
+                                match = type('obj', (object,), {'group': lambda x, n: matches[-1] if n == 1 else None})()
+                            else:
+                                match = None
+                    else:
+                        match = None
+                    if match:
+                        url = match.group(1)
+                        print(f"Found auth URL in Unity logs: {url}")
+                        return url
+            except Exception as e:
+                print(f"Error reading log file {log_path}: {e}")
+                continue
+    
+    print("No auth URL found in Unity logs")
+    return None
+
 def login():
     print("Connect to Chrome")
     # Set up Chrome options to connect to the existing Chrome instance
@@ -47,39 +94,79 @@ def login():
     # Connect to the existing Chrome instance
     driver = webdriver.Chrome(options=chrome_options)
 
-    print("Open a window on Chrome")
-    # Get the original window handle
-    original_window = driver.current_window_handle
-
-    print("Waiting for new window...")
-    WebDriverWait(driver, 60).until(EC.number_of_windows_to_be(2))
-
-    # Get all window handles
-    all_windows = driver.window_handles
-
-    print(f"Found {len(all_windows)} new windows to check: {all_windows}")
-
-    # Find the window with email input
-    target_window = None
-    for window in all_windows:
-        try:
-            print(f"Checking window: {window}")
-            driver.switch_to.window(window)
-            driver.find_element(By.ID, ':r1:')
-            target_window = window
-            print(f"Found email input in window: {window}")
+    print("Looking for auth URL in Unity logs...")
+    # Try to get the auth URL from Unity logs instead of waiting for new window
+    auth_url = None
+    for attempt in range(30):  # Try for 30 seconds
+        auth_url = get_auth_url_from_unity_logs()
+        if auth_url:
             break
-        except:
-            print(f"Email input not found in window: {window}, trying next...")
-            continue
+        time.sleep(1)
+    
+    if auth_url:
+        print(f"Navigating to captured auth URL: {auth_url}")
+        driver.get(auth_url)
+        # We're already on the auth page, no need to find windows
+        target_window = driver.current_window_handle
+        
+        # Debug: Check what page we landed on
+        time.sleep(3)  # Let page load
+        print(f"After navigation - URL: {driver.current_url}")
+        print(f"After navigation - Title: {driver.title}")
+        
+        # Check if we have email field (login page) or if we skipped to redirect
+        email_fields = driver.find_elements(By.ID, ':r1:')
+        if not email_fields:
+            print("No email field found - likely skipped to auth complete, looking for deep link dialog...")
+            # Skip directly to deep link handling
+            # Handle deep link permission dialog
+            print("Waiting for deep link permission dialog...")
+            print(f"Current URL: {driver.current_url}")
+            print(f"Page title: {driver.title}")
+            
+            # Give a moment for any page transitions to complete
+            time.sleep(3)
+            
+            # With protocol association configured, deep link should execute automatically
+            print("Protocol association configured - deep link should execute automatically")
+            print("Waiting for Unity to receive the deep link callback...")
+            
+            # Give Unity time to receive and process the deep link
+            time.sleep(5)
+            print("Deep link processing complete - authentication should be successful")
+            
+            return  # Exit function since we're done
+    else:
+        print("Could not find auth URL in Unity logs, falling back to window waiting...")
+        # Fallback to original approach
+        print("Waiting for new window...")
+        WebDriverWait(driver, 60).until(EC.number_of_windows_to_be(2))
 
-    if not target_window:
-        print("Could not find email input field in any window!")
-        driver.quit()
-        return
+        # Get all window handles
+        all_windows = driver.window_handles
+        print(f"Found {len(all_windows)} new windows to check: {all_windows}")
 
-    print("Switch to the target window")
-    driver.switch_to.window(target_window)
+        # Find the window with email input
+        target_window = None
+        for window in all_windows:
+            try:
+                print(f"Checking window: {window}")
+                driver.switch_to.window(window)
+                driver.find_element(By.ID, ':r1:')
+                target_window = window
+                print(f"Found email input in window: {window}")
+                break
+            except:
+                print(f"Email input not found in window: {window}, trying next...")
+                continue
+
+        if not target_window:
+            print("Could not find email input field in any window!")
+            driver.quit()
+            return
+
+        print("Switch to the target window")
+        driver.switch_to.window(target_window)
 
     wait = WebDriverWait(driver, 60)
 
@@ -87,8 +174,18 @@ def login():
     email_field = wait.until(EC.presence_of_element_located((By.ID, ':r1:')))
     print("Enter email...")
     email_field.send_keys(EMAIL)
-    email_field.send_keys(Keys.RETURN)
-    print("Entered email")
+    
+    # Try to find and click the submit button (arrow button)
+    try:
+        print("Looking for submit button...")
+        submit_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[type="submit"], button[data-testid*="submit"], .submit-button, button:has(svg)')))
+        submit_button.click()
+        print("Clicked submit button")
+    except:
+        print("Submit button not found, trying Enter key...")
+        email_field.send_keys(Keys.RETURN)
+    
+    print("Submitted email")
 
     # Wait for the OTP to arrive and page to load
     print("Wait for OTP...")
@@ -111,11 +208,40 @@ def login():
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'h1[data-testid="checking_title"]')))
     print("Connected to Passport!")
 
+    # Handle optional consent screen (shouldn't appear normally but sometimes does)
+    try:
+        print("Checking for consent screen...")
+        consent_yes_button = WebDriverWait(driver, 5).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[text()='Yes' or contains(text(), 'Yes')]"))
+        )
+        consent_yes_button.click()
+        print("Clicked 'Yes' on consent screen")
+    except:
+        print("No consent screen found (expected behavior)")
+
     # Handle deep link permission dialog
     print("Waiting for deep link permission dialog...")
+    print(f"Current URL: {driver.current_url}")
+    print(f"Page title: {driver.title}")
+    
+    # Give a moment for any page transitions to complete
+    time.sleep(3)
+    
     try:
+        # Check what's actually on the page
+        buttons = driver.find_elements(By.TAG_NAME, "button")
+        print(f"Found {len(buttons)} buttons on page:")
+        for i, btn in enumerate(buttons[:5]):  # Show first 5 buttons
+            try:
+                text = btn.text.strip()
+                if text:
+                    print(f"  Button {i}: '{text}'")
+            except:
+                pass
+        
         # Wait for the deep link dialog to appear and click "Open Immutable Sample.cmd"
-        deep_link_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Open Immutable Sample.cmd')]")))
+        # Use more specific selector to avoid clicking "Restore" button
+        deep_link_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[text()='Open Immutable Sample.cmd']")))
         deep_link_button.click()
         print("Clicked deep link permission dialog - Unity should receive redirect")
     except Exception as e:
@@ -164,8 +290,91 @@ def bring_sample_app_to_foreground():
     subprocess.run(command, check=True)
     time.sleep(10)
 
+def setup_browser_permissions():
+    """Set up browser permissions to allow auth.immutable.com to open external applications"""
+    print("Setting up browser permissions for auth.immutable.com...")
+    
+    # Create a browser preferences file to pre-allow the domain
+    user_data_dir = "C:\\temp\\brave_debug"
+    if not os.path.exists(user_data_dir):
+        os.makedirs(user_data_dir, exist_ok=True)
+    
+    # Create preferences file that allows auth.immutable.com to open external apps
+    preferences = {
+        "profile": {
+            "content_settings": {
+                "exceptions": {
+                    "protocol_handler": {
+                        "https://auth.immutable.com,*": {
+                            "setting": 1,
+                            "last_modified": "13000000000000000"
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    import json
+    prefs_file = os.path.join(user_data_dir, "Default", "Preferences")
+    os.makedirs(os.path.dirname(prefs_file), exist_ok=True)
+    
+    try:
+        with open(prefs_file, 'w') as f:
+            json.dump(preferences, f, indent=2)
+        print("Browser permissions configured to allow auth.immutable.com")
+    except Exception as e:
+        print(f"Browser permission setup error: {e}")
+
+def setup_protocol_association():
+    """Set up immutablerunner:// protocol association to avoid permission dialogs"""
+    print("Setting up protocol association for immutablerunner://...")
+    
+    # PowerShell script to register the protocol
+    ps_script = '''
+    # Register immutablerunner protocol
+    $protocolKey = "HKCU:\\Software\\Classes\\immutablerunner"
+    $commandKey = "$protocolKey\\shell\\open\\command"
+    
+    # Create the registry keys
+    if (!(Test-Path $protocolKey)) {
+        New-Item -Path $protocolKey -Force | Out-Null
+    }
+    if (!(Test-Path $commandKey)) {
+        New-Item -Path $commandKey -Force | Out-Null
+    }
+    
+    # Set the protocol values
+    Set-ItemProperty -Path $protocolKey -Name "(Default)" -Value "URL:immutablerunner Protocol"
+    Set-ItemProperty -Path $protocolKey -Name "URL Protocol" -Value ""
+    
+    # Find the Unity sample app executable
+    $sampleAppPath = "C:\\Immutable\\unity-immutable-sdk\\sample\\build\\Immutable Sample.exe"
+    if (Test-Path $sampleAppPath) {
+        Set-ItemProperty -Path $commandKey -Name "(Default)" -Value "`"$sampleAppPath`" `"%1`""
+        Write-Host "Protocol association set up successfully"
+    } else {
+        Write-Host "Sample app not found at expected path"
+    }
+    '''
+    
+    try:
+        result = subprocess.run(["powershell", "-Command", ps_script], 
+                              capture_output=True, text=True, timeout=10)
+        if "successfully" in result.stdout:
+            print("Protocol association configured - dialog should not appear!")
+        else:
+            print("Protocol setup may have failed, dialog might still appear")
+    except Exception as e:
+        print(f"Protocol setup error: {e}")
+
 def launch_browser():
     print("Starting Brave...")
+    
+    # Set up browser permissions and protocol association first
+    setup_browser_permissions()
+    setup_protocol_association()
+    
     browser_paths = [
         r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
     ]
@@ -180,11 +389,17 @@ def launch_browser():
         print("Brave executable not found.")
         exit(1)
 
-    subprocess.run([
+    # Launch Brave with additional flags to allow external protocol handling
+    result = subprocess.run([
         "powershell.exe",
         "-Command",
-        f"Start-Process -FilePath '{browser_path}' -ArgumentList '--remote-debugging-port=9222'"
-    ], check=True)
+        f"$process = Start-Process -FilePath '{browser_path}' -ArgumentList '--remote-debugging-port=9222', '--disable-web-security', '--allow-running-insecure-content', '--disable-features=VizDisplayCompositor', '--external-auth-disable-prompt' -PassThru; Write-Output $process.Id"
+    ], capture_output=True, text=True, check=True)
+    
+    # Store the debug browser process ID globally for later use
+    global debug_browser_pid
+    debug_browser_pid = result.stdout.strip()
+    print(f"Debug browser launched with PID: {debug_browser_pid}")
 
     time.sleep(5)
 

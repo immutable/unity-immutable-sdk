@@ -50,6 +50,8 @@ namespace Immutable.Browser.Core
 
         public void LaunchAuthURL(string url, string? redirectUri)
         {
+            // Log the auth URL for test automation to capture
+            Debug.Log($"PASSPORT_AUTH_URL: {url}");
             Application.OpenURL(url);
         }
 
