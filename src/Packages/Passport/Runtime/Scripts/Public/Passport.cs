@@ -22,6 +22,8 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
+// this is a test...
+
 namespace Immutable.Passport
 {
 
@@ -53,7 +55,7 @@ namespace Immutable.Passport
         /// Gets or sets the log level for the SDK.
         /// </summary>
         /// <remarks>
-        /// The log level determines which messages are recorded based on their severity.  
+        /// The log level determines which messages are recorded based on their severity.
         /// <para>
         /// The default value is <see cref="LogLevel.Info"/>.
         /// </para>
@@ -132,7 +134,7 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Initialises Passport with the specified parameters. 
+        /// Initialises Passport with the specified parameters.
         /// This sets up the Passport instance, configures the web browser, and waits for the ready signal.
         /// </summary>
         /// <param name="clientId">The client ID</param>
@@ -226,7 +228,7 @@ namespace Immutable.Passport
                 else
                 {
 #if IMMUTABLE_CUSTOM_BROWSER
-                    throw new PassportException("When 'IMMUTABLE_CUSTOM_BROWSER' is defined in Scripting Define Symbols, " + 
+                    throw new PassportException("When 'IMMUTABLE_CUSTOM_BROWSER' is defined in Scripting Define Symbols, " +
                         " 'windowsWebBrowserClient' must not be null.");
 #else
                     _webBrowserClient = gameObject.AddComponent<UwbWebView>();
@@ -408,7 +410,7 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Gets the list of external wallets the user has linked to their Passport account via the 
+        /// Gets the list of external wallets the user has linked to their Passport account via the
         /// <see href="https://passport.immutable.com/">Dashboard</see>.
         /// <returns>
         /// Linked addresses
@@ -533,7 +535,7 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Clears all the underlying WebView storage currently being used by the JavaScript storage APIs. 
+        /// Clears all the underlying WebView storage currently being used by the JavaScript storage APIs.
         /// This includes Web SQL Database and the HTML5 Web Storage APIs.
         /// </summary>
         /// <returns></returns>
@@ -664,7 +666,7 @@ namespace Immutable.Passport
             }
 #endif
 
-            // Unsubscribe from Passport authentication events 
+            // Unsubscribe from Passport authentication events
             // and dispose of the Passport implementation
             if (_passportImpl != null)
             {
