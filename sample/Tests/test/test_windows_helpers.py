@@ -127,13 +127,84 @@ def login():
             # Give a moment for any page transitions to complete
             time.sleep(3)
             
-            # With protocol association configured, deep link should execute automatically
-            print("Protocol association configured - deep link should execute automatically")
-            print("Waiting for Unity to receive the deep link callback...")
+            # Handle deep link processing based on environment
+            is_ci = os.getenv('CI') or os.getenv('GITHUB_ACTIONS') or os.getenv('BUILD_ID')
             
-            # Give Unity time to receive and process the deep link
-            time.sleep(5)
-            print("Deep link processing complete - authentication should be successful")
+            if is_ci:
+                print("CI environment - checking if authentication completed automatically")
+                # In CI, the browser window may close immediately if auth succeeds
+                # Check Unity logs to see if authentication was successful
+                print("Monitoring Unity logs for authentication completion...")
+                
+                auth_success = False
+                for check_attempt in range(30):  # Check for 30 seconds
+                    try:
+                        with open("C:\\Users\\WindowsBuildsdkServi\\AppData\\LocalLow\\Immutable\\Immutable Sample\\Player.log", 'r', encoding='utf-8', errors='ignore') as f:
+                            content = f.read()
+                            # Look for signs of successful authentication
+                            if any(phrase in content for phrase in [
+                                "AuthenticatedScene", 
+                                "authentication successful", 
+                                "logged in successfully",
+                                "Passport token received"
+                            ]):
+                                print("Authentication success detected in Unity logs!")
+                                auth_success = True
+                                break
+                    except:
+                        pass
+                    time.sleep(1)
+                
+                if not auth_success:
+                    print("No authentication success detected - attempting automated dialog handling")
+                    print("Looking for protocol permission dialog to click automatically...")
+                    
+                    # Try to find and click the protocol dialog automatically
+                    try:
+                        ps_script = '''
+                        for ($i = 0; $i -lt 10; $i++) {
+                            $windows = Get-Process | Where-Object { $_.MainWindowTitle -like "*auth.immutable.com*" -or $_.MainWindowTitle -like "*Open*" }
+                            foreach ($window in $windows) {
+                                try {
+                                    Add-Type -AssemblyName UIAutomationClient
+                                    $element = [Windows.Automation.AutomationElement]::FromHandle($window.MainWindowHandle)
+                                    if ($element) {
+                                        $buttons = $element.FindAll([Windows.Automation.TreeScope]::Descendants, 
+                                            [Windows.Automation.Condition]::new([Windows.Automation.AutomationElement]::ControlTypeProperty, 
+                                            [Windows.Automation.ControlType]::Button))
+                                        foreach ($button in $buttons) {
+                                            $buttonText = $button.Current.Name
+                                            if ($buttonText -like "*Open*" -or $buttonText -like "*Allow*" -or $buttonText -like "*Yes*") {
+                                                $button.GetCurrentPattern([Windows.Automation.InvokePattern]::Pattern).Invoke()
+                                                Write-Host "Clicked protocol dialog button: $buttonText"
+                                                exit 0
+                                            }
+                                        }
+                                    }
+                                } catch {}
+                            }
+                            Start-Sleep 1
+                        }
+                        Write-Host "No protocol dialog found"
+                        '''
+                        
+                        result = subprocess.run(["powershell", "-Command", ps_script], 
+                                              capture_output=True, text=True, timeout=15)
+                        if "Clicked protocol dialog" in result.stdout:
+                            print("Successfully automated protocol dialog click in CI!")
+                            # Wait a bit more for Unity to process
+                            time.sleep(5)
+                        else:
+                            print("Could not find protocol dialog to automate")
+                    except Exception as e:
+                        print(f"CI dialog automation error: {e}")
+                        print("Protocol dialog may require manual setup in CI environment")
+                    
+            else:
+                print("Local environment - protocol association should work automatically")
+                print("Waiting for Unity to receive the deep link callback...")
+                time.sleep(5)
+                print("Deep link processing complete - authentication should be successful")
             
             return  # Exit function since we're done
     else:
@@ -389,11 +460,41 @@ def launch_browser():
         print("Brave executable not found.")
         exit(1)
 
-    # Launch Brave with additional flags to allow external protocol handling
+    # Launch Brave with CI-friendly flags to handle protocol dialogs automatically
+    browser_args = [
+        '--remote-debugging-port=9222',
+        '--disable-web-security', 
+        '--allow-running-insecure-content',
+        '--disable-features=VizDisplayCompositor',
+        '--disable-popup-blocking',
+        '--no-first-run',
+        '--disable-default-apps',
+        '--disable-extensions',
+        '--disable-component-extensions-with-background-pages',
+        '--autoplay-policy=no-user-gesture-required',
+        '--allow-external-protocol-handlers',
+        '--enable-automation',
+        '--disable-background-timer-throttling',
+        '--disable-backgrounding-occluded-windows',
+        '--disable-renderer-backgrounding'
+    ]
+    
+    # Check if we're in CI environment
+    is_ci = os.getenv('CI') or os.getenv('GITHUB_ACTIONS') or os.getenv('BUILD_ID')
+    if is_ci:
+        print("CI environment detected - adding additional protocol handling flags")
+        browser_args.extend([
+            '--disable-prompt-on-repost',
+            '--disable-hang-monitor',
+            '--disable-ipc-flooding-protection',
+            '--force-permission-policy-unload-default-enabled'
+        ])
+    
+    args_string = "', '".join(browser_args)
     result = subprocess.run([
         "powershell.exe",
         "-Command",
-        f"$process = Start-Process -FilePath '{browser_path}' -ArgumentList '--remote-debugging-port=9222', '--disable-web-security', '--allow-running-insecure-content', '--disable-features=VizDisplayCompositor', '--external-auth-disable-prompt' -PassThru; Write-Output $process.Id"
+        f"$process = Start-Process -FilePath '{browser_path}' -ArgumentList '{args_string}' -PassThru; Write-Output $process.Id"
     ], capture_output=True, text=True, check=True)
     
     # Store the debug browser process ID globally for later use
