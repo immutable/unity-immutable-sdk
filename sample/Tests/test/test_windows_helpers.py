@@ -271,7 +271,36 @@ def login():
         driver.quit()
 
     print("Find OTP input...")
-    otp_field = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[data-testid="passwordless_passcode__TextInput--0__input"]')))
+    print(f"Current URL after email submission: {driver.current_url}")
+    print(f"Page title after email submission: {driver.title}")
+    
+    # Try multiple selectors for OTP input field
+    otp_selectors = [
+        'input[data-testid="passwordless_passcode__TextInput--0__input"]',  # Original
+        'input[placeholder*="verification"]',  # By placeholder text
+        'input[type="text"][maxlength="6"]',   # By input type and length
+        'input[autocomplete="one-time-code"]', # By autocomplete attribute
+        '.otp-input input',                    # By class
+        'input[data-testid*="passcode"]',      # Partial testid match
+        'input[name*="otp"]',                  # By name attribute
+        'input[id*="otp"]'                     # By id attribute
+    ]
+    
+    otp_field = None
+    for selector in otp_selectors:
+        try:
+            print(f"Trying OTP selector: {selector}")
+            otp_field = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CSS_SELECTOR, selector)))
+            print(f"Found OTP field with selector: {selector}")
+            break
+        except:
+            continue
+    
+    if not otp_field:
+        print("Could not find OTP input field with any selector!")
+        print("Page source snippet:")
+        print(driver.page_source[:2000])  # First 2000 chars for debugging
+        raise Exception("OTP input field not found")
     print("Enter OTP")
     otp_field.send_keys(code)
 
