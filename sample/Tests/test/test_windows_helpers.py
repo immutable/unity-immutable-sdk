@@ -273,16 +273,41 @@ def login():
     email_field.send_keys(EMAIL)
     
     # Try to find and click the submit button (arrow button)
-    try:
-        print("Looking for submit button...")
-        submit_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[type="submit"], button[data-testid*="submit"], .submit-button, button:has(svg)')))
-        submit_button.click()
-        print("Clicked submit button")
-    except:
-        print("Submit button not found, trying Enter key...")
-        email_field.send_keys(Keys.RETURN)
+    submit_selectors = [
+        'button[type="submit"]',                    # Standard submit button
+        'button[data-testid*="submit"]',           # Submit button with testid
+        'button:has(svg)',                         # Button containing SVG (arrow)
+        '.submit-button',                          # Submit button class
+        'button[aria-label*="submit"]',            # Submit button with aria-label
+        'button[aria-label*="continue"]',          # Continue button
+        'form button',                             # Any button in form
+        'button'                                   # Any button as last resort
+    ]
     
-    print("Submitted email")
+    button_clicked = False
+    for selector in submit_selectors:
+        try:
+            print(f"Looking for submit button with selector: {selector}")
+            submit_button = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.CSS_SELECTOR, selector)))
+            print(f"Found button with selector: {selector}")
+            print(f"Button text: '{submit_button.text}'")
+            print(f"Button HTML: {submit_button.get_attribute('outerHTML')[:200]}...")
+            
+            # Click the button
+            submit_button.click()
+            print(f"Successfully clicked submit button with selector: {selector}")
+            button_clicked = True
+            break
+        except Exception as e:
+            print(f"Selector {selector} failed: {e}")
+            continue
+    
+    if not button_clicked:
+        print("No submit button found with any selector, trying Enter key...")
+        email_field.send_keys(Keys.RETURN)
+        print("Pressed Enter key")
+    
+    print("Email submission attempted")
 
     # Wait for the OTP to arrive and page to load
     print("Wait for OTP...")
@@ -293,8 +318,30 @@ def login():
     if code:
         print(f"Successfully fetched OTP: {code}")
     else:
-        print("Failed to fetch OTP from MailSlurp")
-        driver.quit()
+        print("Failed to fetch OTP from MailSlurp - checking if authentication completed anyway...")
+        
+        # Sometimes Auth0 doesn't send OTP emails in test environments
+        # Check if we can proceed anyway or if this is a cached session scenario
+        try:
+            # Check if we're already past the OTP stage
+            current_url = driver.current_url
+            print(f"Current URL after OTP timeout: {current_url}")
+            
+            # If we're at a success/callback page, authentication may have completed
+            if any(keyword in current_url.lower() for keyword in ['success', 'callback', 'complete', 'checking']):
+                print("Already at success page - proceeding without OTP")
+                print("Waiting for Unity to receive the callback...")
+                time.sleep(10)
+                return
+            
+            # Otherwise this is a real OTP failure
+            print("No OTP received and not at success page - authentication failed")
+            driver.quit()
+            return
+        except Exception as e:
+            print(f"Error checking page state after OTP timeout: {e}")
+            driver.quit()
+            return
 
     print("Find OTP input...")
     print(f"Current URL after email submission: {driver.current_url}")
