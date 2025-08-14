@@ -23,7 +23,7 @@ def extract_otp_from_email(email_body):
 
 def fetch_code():
     waitfor_controller = get_mailslurp_client()
-    email = waitfor_controller.wait_for_latest_email(inbox_id=INBOX_ID, timeout=30000, unread_only=True)
+    email = waitfor_controller.wait_for_latest_email(inbox_id=INBOX_ID, timeout=60000, unread_only=True)
     if email:
         otp = extract_otp_from_email(email.body)
         return otp
