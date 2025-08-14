@@ -145,11 +145,11 @@ class WindowsTest(UnityTest):
         launch_browser()
         bring_sample_app_to_foreground()
         self.get_altdriver().find_object(By.NAME, "LogoutBtn").tap()
-        time.sleep(5)
+        time.sleep(10)  # Give more time for logout browser process
         bring_sample_app_to_foreground()
 
-        # Wait for authenticated screen
-        self.get_altdriver().wait_for_current_scene_to_be("UnauthenticatedScene")
+        # Wait for authenticated screen with longer timeout for logout
+        self.get_altdriver().wait_for_current_scene_to_be("UnauthenticatedScene", timeout=60)
         stop_browser()
         print("Logged out")
 
