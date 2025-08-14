@@ -9,6 +9,8 @@ EMAIL = "unity-sdk@mailslurp.net"
 def get_mailslurp_client():
     configuration = mailslurp_client.Configuration()
     configuration.api_key['x-api-key'] = os.getenv('MAILSLURP_API_KEY')
+    # Use the correct API base URL as per official docs
+    configuration.host = "https://api.mailslurp.com"
     api_client = mailslurp_client.ApiClient(configuration)
     waitfor_controller = WaitForControllerApi(api_client)
     return waitfor_controller
