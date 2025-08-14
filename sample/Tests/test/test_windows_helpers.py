@@ -253,9 +253,33 @@ def login():
                     print("The immutablerunner:// callback was triggered but browser couldn't handle it")
                     print("This means authentication was successful, just need to wait for Unity to process it")
                     
-                    # Give Unity time to process the deep link callback that already happened
-                    time.sleep(10)
-                    print("Cached authentication should be complete - Unity should have received the callback")
+                    # Wait and check Unity logs for authentication success instead of relying on scene changes
+                    auth_success = False
+                    for check_attempt in range(20):  # Check for 20 seconds
+                        try:
+                            with open("C:\\Users\\WindowsBuildsdkServi\\AppData\\LocalLow\\Immutable\\Immutable Sample\\Player.log", 'r', encoding='utf-8', errors='ignore') as f:
+                                content = f.read()
+                                # Look for signs of successful authentication in logs
+                                if any(phrase in content for phrase in [
+                                    "AuthenticatedScene", 
+                                    "COMPLETE_LOGIN_PKCE", 
+                                    "LoginPKCESuccess",
+                                    "HandleLoginPkceSuccess",
+                                    "authentication successful",
+                                    "logged in successfully"
+                                ]):
+                                    print("Authentication success detected in Unity logs!")
+                                    auth_success = True
+                                    break
+                        except:
+                            pass
+                        time.sleep(1)
+                    
+                    if auth_success:
+                        print("Cached authentication confirmed successful via Unity logs")
+                    else:
+                        print("Could not confirm authentication success in Unity logs")
+                    
                     return
                 else:
                     print("Unexpected page state - handling as cached session...")
