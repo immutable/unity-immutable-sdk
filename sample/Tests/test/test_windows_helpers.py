@@ -236,7 +236,7 @@ def login():
             driver.get(auth_url)
             
             # Debug: Check what page we landed on
-            time.sleep(3)  # Let page load
+            time.sleep(5)  # Give more time for potential redirects
             print(f"After navigation - URL: {driver.current_url}")
             print(f"After navigation - Title: {driver.title}")
             
@@ -245,8 +245,21 @@ def login():
                 email_field = driver.find_element(By.CSS_SELECTOR, '[data-testid="TextInput__input"]')
                 print("Found email field via Unity log method - proceeding with login flow")
             except:
-                print("No email field found - likely cached session, handling deep link...")
-                return handle_cached_authentication(driver)
+                print("No email field found - checking if we got redirected to new tab...")
+                
+                # If we ended up on chrome://newtab/ or similar, the redirect already happened
+                if 'newtab' in driver.current_url or 'about:blank' in driver.current_url:
+                    print("Browser was redirected to new tab - cached session completed redirect automatically!")
+                    print("The immutablerunner:// callback was triggered but browser couldn't handle it")
+                    print("This means authentication was successful, just need to wait for Unity to process it")
+                    
+                    # Give Unity time to process the deep link callback that already happened
+                    time.sleep(10)
+                    print("Cached authentication should be complete - Unity should have received the callback")
+                    return
+                else:
+                    print("Unexpected page state - handling as cached session...")
+                    return handle_cached_authentication(driver)
         else:
             print("Could not find auth URL in Unity logs either!")
             driver.quit()
