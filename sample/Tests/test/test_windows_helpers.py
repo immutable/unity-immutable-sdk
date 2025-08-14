@@ -123,7 +123,48 @@ def handle_cached_authentication(driver):
         
         if not auth_success:
             print("No authentication success detected - attempting automated dialog handling")
-            # Add automated dialog clicking here if needed
+            print("Looking for protocol permission dialog to click automatically...")
+            
+            # Try to find and click the protocol dialog automatically
+            try:
+                ps_script = '''
+                for ($i = 0; $i -lt 10; $i++) {
+                    $windows = Get-Process | Where-Object { $_.MainWindowTitle -like "*auth.immutable.com*" -or $_.MainWindowTitle -like "*Open*" }
+                    foreach ($window in $windows) {
+                        try {
+                            Add-Type -AssemblyName UIAutomationClient
+                            $element = [Windows.Automation.AutomationElement]::FromHandle($window.MainWindowHandle)
+                            if ($element) {
+                                $buttons = $element.FindAll([Windows.Automation.TreeScope]::Descendants, 
+                                    [Windows.Automation.Condition]::new([Windows.Automation.AutomationElement]::ControlTypeProperty, 
+                                    [Windows.Automation.ControlType]::Button))
+                                foreach ($button in $buttons) {
+                                    $buttonText = $button.Current.Name
+                                    if ($buttonText -like "*Open*" -or $buttonText -like "*Allow*" -or $buttonText -like "*Yes*") {
+                                        $button.GetCurrentPattern([Windows.Automation.InvokePattern]::Pattern).Invoke()
+                                        Write-Host "Clicked protocol dialog button: $buttonText"
+                                        exit 0
+                                    }
+                                }
+                            }
+                        } catch {}
+                    }
+                    Start-Sleep 1
+                }
+                Write-Host "No protocol dialog found"
+                '''
+                
+                result = subprocess.run(["powershell", "-Command", ps_script], 
+                                      capture_output=True, text=True, timeout=15)
+                if "Clicked protocol dialog" in result.stdout:
+                    print("Successfully automated protocol dialog click in CI!")
+                    # Wait a bit more for Unity to process
+                    time.sleep(5)
+                else:
+                    print("Could not find protocol dialog to automate")
+            except Exception as e:
+                print(f"CI dialog automation error: {e}")
+                print("Protocol dialog may require manual setup in CI environment")
             
     else:
         print("Local environment - cached authentication should work automatically")
@@ -134,11 +175,12 @@ def handle_cached_authentication(driver):
     return  # Exit since cached auth is complete
 
 def login():
-    print("Connect to Chrome")
-    # Set up Chrome options to connect to the existing Chrome instance
+    print("Connect to Brave via Chrome WebDriver")
+    # Set up Chrome WebDriver options to connect to the existing Brave instance
+    # (Brave uses Chromium engine so Chrome WebDriver works)
     chrome_options = Options()
     chrome_options.add_experimental_option("debuggerAddress", "localhost:9222")
-    # Connect to the existing Chrome instance
+    # Connect to the existing Brave browser instance
     driver = webdriver.Chrome(options=chrome_options)
 
     # HYBRID APPROACH: Try multi-window detection first (proven to work in CI), 
