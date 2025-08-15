@@ -86,6 +86,82 @@ def get_auth_url_from_unity_logs():
     print("No auth URL found in Unity logs")
     return None
 
+def get_logout_url_from_unity_logs():
+    """Monitor Unity logs to capture logout URLs."""
+    import tempfile
+    import os
+    
+    # Unity log file locations on Windows
+    log_paths = [
+        os.path.join(os.path.expanduser("~"), "AppData", "LocalLow", "Immutable", "Immutable Sample", "Player.log"),
+        os.path.join(tempfile.gettempdir(), "UnityPlayer.log"),
+        "Player.log"  # Current directory
+    ]
+    
+    for log_path in log_paths:
+        if os.path.exists(log_path):
+            print(f"Monitoring Unity log for logout URL: {log_path}")
+            try:
+                with open(log_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    content = f.read()
+                    # Look for logout URLs in Unity logs
+                    matches = re.findall(r'(?:PASSPORT_LOGOUT_URL: |LaunchAuthURL : )(https?://[^\s]+)', content)
+                    if matches:
+                        # Get the last URL and make sure it's a logout URL
+                        for url in reversed(matches):
+                            if 'logout' in url or 'im-logged-out' in url:
+                                print(f"Found logout URL: {url}")
+                                return url
+            except Exception as e:
+                print(f"Error reading log file {log_path}: {e}")
+                continue
+    
+    print("No logout URL found in Unity logs")
+    return None
+
+def logout_with_controlled_browser():
+    """Handle logout using the controlled browser instance instead of letting Unity open its own browser."""
+    print("Starting controlled logout process...")
+    
+    # Set up Chrome WebDriver options to connect to the existing browser instance
+    chrome_options = Options()
+    chrome_options.add_experimental_option("debuggerAddress", "localhost:9222")
+    
+    try:
+        # Connect to the existing browser instance
+        driver = webdriver.Chrome(options=chrome_options)
+        print("Connected to existing browser for logout")
+        
+        # Monitor Unity logs for logout URL
+        print("Monitoring Unity logs for logout URL...")
+        logout_url = None
+        for attempt in range(15):  # Try for 15 seconds (shorter timeout)
+            logout_url = get_logout_url_from_unity_logs()
+            if logout_url:
+                break
+            time.sleep(1)
+        
+        if logout_url:
+            print(f"Navigating controlled browser to logout URL: {logout_url}")
+            driver.get(logout_url)
+            
+            # Wait for logout to complete (protocol is already configured, no dialogs expected)
+            time.sleep(3)
+            print("Logout completed in controlled browser")
+            
+            # Check final page
+            current_url = driver.current_url
+            print(f"Final logout URL: {current_url}")
+            
+        else:
+            print("Could not find logout URL in Unity logs - logout may complete without browser interaction")
+        
+    except Exception as e:
+        print(f"Error during controlled logout: {e}")
+        print("Logout may need to be handled by Unity directly")
+    
+    print("Controlled logout process completed")
+
 def handle_cached_authentication(driver):
     """Handle scenarios where user is already authenticated (cached session)"""
     print("Handling cached authentication scenario...")

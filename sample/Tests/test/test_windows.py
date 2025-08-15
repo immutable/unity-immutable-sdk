@@ -3,7 +3,7 @@ import time
 from alttester import *
 
 from test import TestConfig, UnityTest
-from test_windows_helpers import login, open_sample_app, launch_browser, bring_sample_app_to_foreground, stop_browser, stop_sample_app
+from test_windows_helpers import login, open_sample_app, launch_browser, bring_sample_app_to_foreground, stop_browser, stop_sample_app, logout_with_controlled_browser
 
 class WindowsTest(UnityTest):
 
@@ -179,11 +179,17 @@ class WindowsTest(UnityTest):
         launch_browser()
         bring_sample_app_to_foreground()
         self.get_altdriver().find_object(By.NAME, "LogoutBtn").tap()
-        time.sleep(10)  # Give more time for logout browser process
+        
+        # Use controlled browser logout instead of waiting for scene change
+        logout_with_controlled_browser()
+        
+        # Give Unity time to process the logout callback
+        time.sleep(5)
         bring_sample_app_to_foreground()
 
         # Wait for authenticated screen
         self.get_altdriver().wait_for_current_scene_to_be("UnauthenticatedScene")
+        
         stop_browser()
         print("Logged out")
 
@@ -227,6 +233,7 @@ class WindowsTest(UnityTest):
         bring_sample_app_to_foreground()
         print("Logging out...")
         self.get_altdriver().find_object(By.NAME, "LogoutBtn").tap()
+        logout_with_controlled_browser()
         time.sleep(5)
         bring_sample_app_to_foreground()
 
