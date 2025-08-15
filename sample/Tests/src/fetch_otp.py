@@ -9,6 +9,8 @@ EMAIL = "unity-sdk@mailslurp.net"
 def get_mailslurp_client():
     configuration = mailslurp_client.Configuration()
     configuration.api_key['x-api-key'] = os.getenv('MAILSLURP_API_KEY')
+    # Use the correct API base URL as per official docs
+    configuration.host = "https://api.mailslurp.com"
     api_client = mailslurp_client.ApiClient(configuration)
     waitfor_controller = WaitForControllerApi(api_client)
     return waitfor_controller
@@ -23,7 +25,7 @@ def extract_otp_from_email(email_body):
 
 def fetch_code():
     waitfor_controller = get_mailslurp_client()
-    email = waitfor_controller.wait_for_latest_email(inbox_id=INBOX_ID, timeout=30000, unread_only=True)
+    email = waitfor_controller.wait_for_latest_email(inbox_id=INBOX_ID, timeout=60000, unread_only=True)
     if email:
         otp = extract_otp_from_email(email.body)
         return otp

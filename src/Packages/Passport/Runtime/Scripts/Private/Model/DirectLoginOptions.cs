@@ -20,12 +20,18 @@ namespace Immutable.Passport.Model
         public string email;
 
         /// <summary>
+        /// Marketing consent status (optional).
+        /// </summary>
+        public MarketingConsentStatus? marketingConsentStatus;
+
+        /// <summary>
         /// Default constructor.
         /// </summary>
         public DirectLoginOptions()
         {
             directLoginMethod = DirectLoginMethod.Email;
             email = null;
+            marketingConsentStatus = null;
         }
 
         /// <summary>
@@ -33,10 +39,12 @@ namespace Immutable.Passport.Model
         /// </summary>
         /// <param name="loginMethod">The direct login method</param>
         /// <param name="emailAddress">The email address (optional)</param>
-        public DirectLoginOptions(DirectLoginMethod loginMethod, string emailAddress = null)
+        /// <param name="marketingConsentStatus">The marketing consent status (optional)</param>
+        public DirectLoginOptions(DirectLoginMethod loginMethod, string emailAddress = null, MarketingConsentStatus? marketingConsentStatus = null)
         {
             directLoginMethod = loginMethod;
             email = emailAddress;
+            this.marketingConsentStatus = marketingConsentStatus;
         }
 
         /// <summary>

@@ -3,7 +3,7 @@ import time
 from alttester import *
 
 from test import TestConfig, UnityTest
-from test_windows_helpers import login, open_sample_app, launch_browser, bring_sample_app_to_foreground, stop_browser, stop_sample_app
+from test_windows_helpers import login, open_sample_app, launch_browser, bring_sample_app_to_foreground, stop_browser, stop_sample_app, logout_with_controlled_browser
 
 class WindowsTest(UnityTest):
 
@@ -11,7 +11,8 @@ class WindowsTest(UnityTest):
     def setUpClass(cls):
         open_sample_app()
         time.sleep(5) # Give time for the app to open
-        super().setUpClass()
+        # Initialize AltDriver with longer timeout for flaky CI environment
+        cls.altdriver = AltDriver(timeout=120)  # 120 seconds instead of default 20
 
     @classmethod
     def tearDownClass(cls):
@@ -23,7 +24,8 @@ class WindowsTest(UnityTest):
         stop_sample_app()
         open_sample_app()
         time.sleep(5) # Give time for the app to open
-        self.start_altdriver()
+        # Use same timeout as setUpClass
+        self.__class__.altdriver = AltDriver(timeout=120)
 
     def login(self):
         # Wait for unauthenticated screen
@@ -83,21 +85,49 @@ class WindowsTest(UnityTest):
                     raise SystemExit(f"Failed to reset app {err}")
 
     def test_1_login(self):
+        print("=" * 60)
+        print("STARTING TEST: test_1_login")
+        print("=" * 60)
         self.login()
+        print("COMPLETED TEST: test_1_login")
+        print("=" * 60)
 
     def test_2_other_functions(self):
+        print("=" * 60)
+        print("STARTING TEST: test_2_other_functions")
+        print("=" * 60)
         self.test_0_other_functions()
+        print("COMPLETED TEST: test_2_other_functions")
+        print("=" * 60)
 
     def test_3_passport_functions(self):
+        print("=" * 60)
+        print("STARTING TEST: test_3_passport_functions")
+        print("=" * 60)
         self.test_1_passport_functions()
+        print("COMPLETED TEST: test_3_passport_functions")
+        print("=" * 60)
 
     def test_4_imx_functions(self):
+        print("=" * 60)
+        print("STARTING TEST: test_4_imx_functions")
+        print("=" * 60)
         self.test_2_imx_functions()
+        print("COMPLETED TEST: test_4_imx_functions")
+        print("=" * 60)
 
     def test_5_zkevm_functions(self):
+        print("=" * 60)
+        print("STARTING TEST: test_5_zkevm_functions")
+        print("=" * 60)
         self.test_3_zkevm_functions()
+        print("COMPLETED TEST: test_5_zkevm_functions")
+        print("=" * 60)
 
     def test_6_relogin(self):
+        print("=" * 60)
+        print("STARTING TEST: test_6_relogin")
+        print("=" * 60)
         self.restart_app_and_altdriver()
 
         # Relogin
@@ -117,8 +147,14 @@ class WindowsTest(UnityTest):
         self.get_altdriver().find_object(By.NAME, "ConnectBtn").tap()
         time.sleep(5)
         self.assertEqual("Connected to IMX", output.get_text())
+        
+        print("COMPLETED TEST: test_6_relogin")
+        print("=" * 60)
 
     def test_7_reconnect_connect_imx(self):
+        print("=" * 60)
+        print("STARTING TEST: test_7_reconnect_connect_imx")
+        print("=" * 60)
         self.restart_app_and_altdriver()
 
         # Reconnect
@@ -143,13 +179,32 @@ class WindowsTest(UnityTest):
         launch_browser()
         bring_sample_app_to_foreground()
         self.get_altdriver().find_object(By.NAME, "LogoutBtn").tap()
+        
+        # Use controlled browser logout instead of waiting for scene change
+        logout_with_controlled_browser()
+        
+        # Give Unity time to process the logout callback
         time.sleep(5)
         bring_sample_app_to_foreground()
 
         # Wait for authenticated screen
         self.get_altdriver().wait_for_current_scene_to_be("UnauthenticatedScene")
+        
         stop_browser()
         print("Logged out")
+
+        print("COMPLETED TEST: test_7_reconnect_connect_imx")
+        print("=" * 60)
+
+    def test_8_connect_imx(self):
+        print("=" * 60)
+        print("STARTING TEST: test_8_connect_imx")
+        print("=" * 60)
+        # Ensure clean state regardless of previous tests
+        self.restart_app_and_altdriver()
+    
+        # Wait for initial scene
+        self.get_altdriver().wait_for_current_scene_to_be("UnauthenticatedScene")
 
         # Connect IMX
         print("Logging in and connecting to IMX...")
@@ -178,6 +233,7 @@ class WindowsTest(UnityTest):
         bring_sample_app_to_foreground()
         print("Logging out...")
         self.get_altdriver().find_object(By.NAME, "LogoutBtn").tap()
+        logout_with_controlled_browser()
         time.sleep(5)
         bring_sample_app_to_foreground()
 
@@ -185,3 +241,5 @@ class WindowsTest(UnityTest):
         self.get_altdriver().wait_for_current_scene_to_be("UnauthenticatedScene")
         stop_browser()
         print("Logged out")
+        print("COMPLETED TEST: test_8_connect_imx")
+        print("=" * 60)
