@@ -1,3 +1,23 @@
+"""
+Windows Test Helpers for Unity Passport Authentication
+
+CRITICAL WORKAROUND IMPLEMENTED:
+This module implements browser process isolation workarounds for Unity Passport authentication.
+
+PROBLEM:
+Unity's Application.OpenURL() opens authentication URLs in separate browser processes that 
+automated testing tools (Selenium) cannot control. This breaks authentication flows in CI.
+
+SOLUTION:
+1. Launch browser with remote debugging enabled (port 9222)
+2. Monitor Unity logs to capture auth/logout URLs that Unity wants to open
+3. Navigate controlled browser to captured URLs instead of relying on Unity's browser
+4. Complete authentication/logout in controlled browser
+5. Unity receives callbacks properly due to protocol association setup
+
+This approach enables reliable automated testing of Passport authentication flows.
+"""
+
 import os
 import re
 import subprocess
@@ -374,32 +394,21 @@ def login():
     
     # Try to find and click the submit button (arrow button)
     submit_selectors = [
-        'button[type="submit"]',                    # Standard submit button
-        'button[data-testid*="submit"]',           # Submit button with testid
-        'button:has(svg)',                         # Button containing SVG (arrow)
-        '.submit-button',                          # Submit button class
-        'button[aria-label*="submit"]',            # Submit button with aria-label
-        'button[aria-label*="continue"]',          # Continue button
-        'form button',                             # Any button in form
-        'button'                                   # Any button as last resort
+        'button[type="submit"]',                    # Primary - always works
+        'button[data-testid*="submit"]',           # Fallback with testid
+        'form button'                              # Last resort - any form button
     ]
     
     button_clicked = False
     for selector in submit_selectors:
         try:
-            print(f"Looking for submit button with selector: {selector}")
             submit_button = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.CSS_SELECTOR, selector)))
-            print(f"Found button with selector: {selector}")
-            print(f"Button text: '{submit_button.text}'")
-            print(f"Button HTML: {submit_button.get_attribute('outerHTML')[:200]}...")
-            
-            # Click the button
             submit_button.click()
             print(f"Successfully clicked submit button with selector: {selector}")
             button_clicked = True
             break
         except Exception as e:
-            print(f"Selector {selector} failed: {e}")
+            print(f"Submit button selector {selector} failed: {e}")
             continue
     
     if not button_clicked:
@@ -449,20 +458,14 @@ def login():
     
     # Try multiple selectors for OTP input field
     otp_selectors = [
-        'input[data-testid="passwordless_passcode__TextInput--0__input"]',  # Original
-        'input[placeholder*="verification"]',  # By placeholder text
-        'input[type="text"][maxlength="6"]',   # By input type and length
-        'input[autocomplete="one-time-code"]', # By autocomplete attribute
-        '.otp-input input',                    # By class
-        'input[data-testid*="passcode"]',      # Partial testid match
-        'input[name*="otp"]',                  # By name attribute
-        'input[id*="otp"]'                     # By id attribute
+        'input[data-testid="passwordless_passcode__TextInput--0__input"]',  # Primary - always works
+        'input[data-testid*="passcode"]',      # Fallback - partial testid match
+        'input[type="text"][maxlength="6"]'    # Last resort - by input characteristics
     ]
     
     otp_field = None
     for selector in otp_selectors:
         try:
-            print(f"Trying OTP selector: {selector}")
             otp_field = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CSS_SELECTOR, selector)))
             print(f"Found OTP field with selector: {selector}")
             break
