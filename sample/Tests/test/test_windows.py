@@ -9,7 +9,8 @@ class WindowsTest(UnityTest):
 
     @classmethod
     def setUpClass(cls):
-        open_sample_app()
+        # Clear cached login state at the start of the test suite
+        open_sample_app(clear_data=True)
         time.sleep(5) # Give time for the app to open
         # Initialize AltDriver with longer timeout for flaky CI environment
         cls.altdriver = AltDriver(timeout=120)  # 120 seconds instead of default 20
@@ -22,7 +23,7 @@ class WindowsTest(UnityTest):
     def restart_app_and_altdriver(self):
         self.stop_altdriver()
         stop_sample_app()
-        open_sample_app()
+        open_sample_app()  # Normal restart without clearing data
         time.sleep(5) # Give time for the app to open
         # Use same timeout as setUpClass
         self.__class__.altdriver = AltDriver(timeout=120)

@@ -527,8 +527,51 @@ def login():
     # Keep browser alive for Unity deep link redirect
     # driver.quit()
 
-def open_sample_app():
+def clear_unity_data():
+    """Clear Unity's persistent data to force fresh start"""
+    print("Clearing Unity persistent data...")
+    
+    # Clear PlayerPrefs from Windows Registry
+    try:
+        import winreg
+        registry_path = r"SOFTWARE\Immutable\Immutable Sample"
+        
+        # Try both HKEY_CURRENT_USER and HKEY_LOCAL_MACHINE
+        for root_key in [winreg.HKEY_CURRENT_USER, winreg.HKEY_LOCAL_MACHINE]:
+            try:
+                winreg.DeleteKey(root_key, registry_path)
+                print(f"Cleared PlayerPrefs from registry: {root_key}")
+            except FileNotFoundError:
+                pass  # Key doesn't exist, that's fine
+            except Exception as e:
+                print(f"Could not clear registry {root_key}: {e}")
+                
+    except ImportError:
+        print("Windows registry module not available")
+    except Exception as e:
+        print(f"Error clearing registry: {e}")
+    
+    # Clear Application.persistentDataPath
+    try:
+        data_path = os.path.join(os.path.expanduser("~"), "AppData", "LocalLow", "Immutable", "Immutable Sample")
+        if os.path.exists(data_path):
+            import shutil
+            shutil.rmtree(data_path)
+            print(f"Cleared persistent data folder: {data_path}")
+        else:
+            print(f"No persistent data folder found at: {data_path}")
+    except Exception as e:
+        print(f"Error clearing persistent data: {e}")
+    
+    print("Unity data cleanup complete")
+
+def open_sample_app(clear_data=False):
     product_name = get_product_name()
+    
+    # Clear any cached login state before opening (only when requested)
+    if clear_data:
+        clear_unity_data()
+    
     print(f"Opening {product_name}...")
     subprocess.Popen([f"{product_name}.exe"], shell=True)
     time.sleep(10)
