@@ -72,6 +72,32 @@ class WindowsTest(UnityTest):
     def _perform_login(self):
         """Perform normal login flow when app is in UnauthenticatedScene"""
         try:
+            # Debug: Check what scene we're actually in and what objects exist
+            try:
+                current_scene = self.get_altdriver().get_current_scene()
+                print(f"DEBUG: _perform_login - current scene: {current_scene}")
+            except Exception as e:
+                print(f"DEBUG: Could not get current scene: {e}")
+            
+            # Wait a moment for UI to stabilize and check if app is still running
+            time.sleep(3)
+            
+            # Debug: Check if we can still communicate with the app
+            try:
+                connection_test = self.get_altdriver().get_current_scene()
+                print(f"DEBUG: App still responsive, scene: {connection_test}")
+            except Exception as e:
+                print(f"DEBUG: App may have crashed or lost connection: {e}")
+                raise SystemExit("App connection lost during login attempt")
+            
+            # Debug: Try to find any buttons to see what's available
+            try:
+                all_objects = self.get_altdriver().get_all_elements()
+                button_objects = [obj for obj in all_objects if 'btn' in obj.name.lower() or 'button' in obj.name.lower()]
+                print(f"DEBUG: Found button-like objects: {[obj.name for obj in button_objects]}")
+            except Exception as e:
+                print(f"DEBUG: Could not get all objects: {e}")
+            
             # Check for login button
             login_button = self.get_altdriver().find_object(By.NAME, "LoginBtn")
             print("Found login button - performing login")
