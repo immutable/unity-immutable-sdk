@@ -28,61 +28,114 @@ class WindowsTest(UnityTest):
         self.__class__.altdriver = AltDriver(timeout=120)
 
     def login(self):
-        # Wait for unauthenticated screen
-        self.get_altdriver().wait_for_current_scene_to_be("UnauthenticatedScene")
+        """
+        Smart login method that handles different app states:
+        - UnauthenticatedScene: Proceed with normal login
+        - AuthenticatedScene: Logout first, then login
+        - Other scenes: Wait for proper state
+        """
+        print("=== SMART LOGIN: Checking app state ===")
+        
+        # Check what scene we're starting in
+        try:
+            current_scene = self.get_altdriver().get_current_scene()
+            print(f"Current scene: {current_scene}")
+        except Exception as e:
+            print(f"Could not get current scene: {e}")
+            raise SystemExit("Failed to determine app state")
+        
+        # Handle different starting states
+        if current_scene == "UnauthenticatedScene":
+            print("[OK] App is already unauthenticated - proceeding with login")
+            self._perform_login()
+            
+        elif current_scene == "AuthenticatedScene":
+            print("[WARNING] App is already authenticated - need to logout first")
+            self._logout_and_login()
+            
+        else:
+            print(f"[ERROR] Unexpected scene: {current_scene}")
+            # Try to wait for a known state
+            print("Waiting for app to reach a known state...")
+            for wait_attempt in range(3):
+                try:
+                    current_scene = self.get_altdriver().get_current_scene()
+                    if current_scene in ["UnauthenticatedScene", "AuthenticatedScene"]:
+                        print(f"App reached known state: {current_scene}")
+                        return self.login()  # Recursive call with known state
+                    time.sleep(5)
+                except Exception as e:
+                    print(f"Wait attempt {wait_attempt + 1} failed: {e}")
+                    
+            raise SystemExit(f"App stuck in unknown scene: {current_scene}")
 
-        for attempt in range(2):
+    def _perform_login(self):
+        """Perform normal login flow when app is in UnauthenticatedScene"""
+        try:
+            # Check for login button
+            login_button = self.get_altdriver().find_object(By.NAME, "LoginBtn")
+            print("Found login button - performing login")
+
+            # Login
+            launch_browser()
+            bring_sample_app_to_foreground()
+            login_button.tap()
+            login()
+            bring_sample_app_to_foreground()
+
+            # Wait for authenticated screen
+            self.get_altdriver().wait_for_current_scene_to_be("AuthenticatedScene")
+            stop_browser()
+            print("[SUCCESS] Login successful")
+            
+        except Exception as err:
+            stop_browser()
+            raise SystemExit(f"Login failed: {err}")
+
+    def _logout_and_login(self):
+        """Handle logout and then login when app starts authenticated"""
+        print("Attempting logout to reset to unauthenticated state...")
+        
+        try:
+            # Use our improved logout method
+            print("Using controlled browser logout...")
+            logout_with_controlled_browser()
+            
+            # Wait for unauthenticated state
+            print("Waiting for UnauthenticatedScene after logout...")
+            self.get_altdriver().wait_for_current_scene_to_be("UnauthenticatedScene", timeout=30)
+            print("[SUCCESS] Successfully logged out")
+            
+            # Now perform normal login
+            self._perform_login()
+            
+        except Exception as logout_err:
+            print(f"Controlled logout failed: {logout_err}")
+            print("Trying fallback logout method...")
+            
             try:
-                # Check app state
-                login_button = self.get_altdriver().find_object(By.NAME, "LoginBtn")
-                print("Found login button, app is in the correct state")
-
-                # Login
-                print("Logging in...")
+                # Fallback: Direct logout button approach
                 launch_browser()
                 bring_sample_app_to_foreground()
-                login_button.tap()
-                login()
+                logout_button = self.get_altdriver().find_object(By.NAME, "LogoutBtn")
+                logout_button.tap()
+                time.sleep(10)  # Give more time for logout
                 bring_sample_app_to_foreground()
-
-                # Wait for authenticated screen
-                self.get_altdriver().wait_for_current_scene_to_be("AuthenticatedScene")
+                
+                # Wait for unauthenticated screen
+                self.get_altdriver().wait_for_current_scene_to_be("UnauthenticatedScene", timeout=30)
                 stop_browser()
-                print("Logged in")
-                return
-            except Exception as err:
+                print("[SUCCESS] Fallback logout successful")
+                
+                # Now perform normal login
+                self._perform_login()
+                
+            except Exception as fallback_err:
                 stop_browser()
-
-                if attempt == 0:
-                    # Reset app
-
-                    # Relogin (optional: only if the button is present)
-                    print("Try reset the app and log out once...")
-                    try:
-                        self.get_altdriver().wait_for_object(By.NAME, "ReloginBtn").tap()
-                    except Exception as e:
-                        print("ReloginBtn not found, skipping relogin step. User may already be in AuthenticatedScene.")
-
-                    # Wait for authenticated screen
-                    self.get_altdriver().wait_for_current_scene_to_be("AuthenticatedScene")
-                    print("Re-logged in")
-
-                    # Logout
-                    print("Logging out...")
-                    launch_browser()
-                    bring_sample_app_to_foreground()
-                    self.get_altdriver().find_object(By.NAME, "LogoutBtn").tap()
-                    time.sleep(5)
-                    bring_sample_app_to_foreground()
-
-                    # Wait for unauthenticated screen
-                    self.get_altdriver().wait_for_current_scene_to_be("UnauthenticatedScene")
-                    stop_browser()
-                    print("Logged out and successfully reset app")
-
-                    time.sleep(5)
-                else:
-                    raise SystemExit(f"Failed to reset app {err}")
+                print(f"[ERROR] Both logout methods failed:")
+                print(f"  - Controlled logout: {logout_err}")
+                print(f"  - Fallback logout: {fallback_err}")
+                raise SystemExit("Could not logout to reset app state")
 
     def test_1_login(self):
         print("=" * 60)
