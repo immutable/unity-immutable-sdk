@@ -91,7 +91,7 @@ jobs:
           #   runs-on: [ self-hosted, macOS ]
           #   test_script: browserstack-sdk pytest -s ./test/test_android.py --browserstack.config "browserstack.android.yml"
     concurrency:
-      group: test-${{ matrix.targetPlatform }}
+      group: ui-tests-email-inbox
     runs-on: ${{ matrix.runs-on }}
     steps:
       - uses: actions/checkout@v3
