@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TMPro;
+using Immutable.Passport.Model;
 
 namespace Immutable.Passport
 {
@@ -346,18 +347,164 @@ namespace Immutable.Passport
             if (passportManager == null) return;
 
             // Set UI references using the public method
-            passportManager.SetUIReferences(
-                loginButton,
-                googleLoginButton,
-                appleLoginButton,
-                facebookLoginButton,
-                logoutButton,
-                statusText,
-                userInfoText
-            );
+            // Wire up generated UI elements to PassportManager directly
+            ConfigureUIButtons();
 
             Debug.Log("[PassportUIBuilder] UI wired to PassportManager successfully!");
             Debug.Log($"[PassportUIBuilder] Button click listeners: Google={googleLoginButton.onClick.GetPersistentEventCount()}");
+        }
+
+        /// <summary>
+        /// Configure UI button listeners to call PassportManager methods
+        /// </summary>
+        private void ConfigureUIButtons()
+        {
+            if (passportManager == null) return;
+
+            // Clear existing listeners to prevent duplicates
+            if (loginButton != null)
+            {
+                loginButton.onClick.RemoveAllListeners();
+                loginButton.onClick.AddListener(() => passportManager.Login());
+                Debug.Log("[PassportUIBuilder] Configured login button");
+            }
+
+            if (googleLoginButton != null)
+            {
+                googleLoginButton.onClick.RemoveAllListeners();
+                googleLoginButton.onClick.AddListener(() => passportManager.Login(new DirectLoginOptions(DirectLoginMethod.Google)));
+                Debug.Log("[PassportUIBuilder] Configured Google login button");
+            }
+
+            if (appleLoginButton != null)
+            {
+                appleLoginButton.onClick.RemoveAllListeners();
+                appleLoginButton.onClick.AddListener(() => passportManager.Login(new DirectLoginOptions(DirectLoginMethod.Apple)));
+                Debug.Log("[PassportUIBuilder] Configured Apple login button");
+            }
+
+            if (facebookLoginButton != null)
+            {
+                facebookLoginButton.onClick.RemoveAllListeners();
+                facebookLoginButton.onClick.AddListener(() => passportManager.Login(new DirectLoginOptions(DirectLoginMethod.Facebook)));
+                Debug.Log("[PassportUIBuilder] Configured Facebook login button");
+            }
+
+            if (logoutButton != null)
+            {
+                logoutButton.onClick.RemoveAllListeners();
+                logoutButton.onClick.AddListener(() => passportManager.Logout());
+                Debug.Log("[PassportUIBuilder] Configured logout button");
+            }
+
+            // Subscribe to PassportManager events for UI state management
+            if (passportManager.OnPassportInitialized != null)
+                passportManager.OnPassportInitialized.AddListener(UpdateUIState);
+            if (passportManager.OnLoginSucceeded != null)
+                passportManager.OnLoginSucceeded.AddListener(OnLoginSuccess);
+            if (passportManager.OnLogoutSucceeded != null)
+                passportManager.OnLogoutSucceeded.AddListener(OnLogoutSuccess);
+
+            // Initial UI state update
+            UpdateUIState();
+        }
+
+        /// <summary>
+        /// Handle successful login
+        /// </summary>
+        private void OnLoginSuccess()
+        {
+            ShowLoggedInPanel();
+            UpdateUIState();
+        }
+
+        /// <summary>
+        /// Handle successful logout
+        /// </summary>
+        private void OnLogoutSuccess()
+        {
+            ShowLoginPanel();
+            UpdateUIState();
+        }
+
+        /// <summary>
+        /// Update UI state based on PassportManager status
+        /// </summary>
+        private void UpdateUIState()
+        {
+            if (passportManager == null) return;
+
+            bool isInitialized = passportManager.IsInitialized;
+            bool isLoggedIn = passportManager.IsLoggedIn;
+
+            // Update button states
+            if (loginButton != null)
+                loginButton.interactable = isInitialized && !isLoggedIn;
+            if (googleLoginButton != null)
+                googleLoginButton.interactable = isInitialized && !isLoggedIn;
+            if (appleLoginButton != null)
+                appleLoginButton.interactable = isInitialized && !isLoggedIn;
+            if (facebookLoginButton != null)
+                facebookLoginButton.interactable = isInitialized && !isLoggedIn;
+            if (logoutButton != null)
+                logoutButton.interactable = isInitialized && isLoggedIn;
+
+            // Update status text
+            string statusMessage;
+            Color statusColor;
+
+            if (!isInitialized)
+            {
+                statusMessage = "Initializing Passport...";
+                statusColor = Color.yellow;
+            }
+            else if (isLoggedIn)
+            {
+                statusMessage = "✅ Logged In Successfully";
+                statusColor = Color.green;
+            }
+            else
+            {
+                statusMessage = "Ready to login";
+                statusColor = Color.white;
+            }
+
+            if (statusText != null)
+            {
+                statusText.text = statusMessage;
+                statusText.color = statusColor;
+            }
+
+            // Update user info
+            if (isLoggedIn)
+            {
+                UpdateUserInfoDisplay();
+            }
+            else if (userInfoText != null)
+            {
+                userInfoText.text = "";
+            }
+        }
+
+        /// <summary>
+        /// Update user info display with token preview
+        /// </summary>
+        private async void UpdateUserInfoDisplay()
+        {
+            if (userInfoText != null && passportManager != null && passportManager.PassportInstance != null)
+            {
+                try
+                {
+                    string accessToken = await passportManager.PassportInstance.GetAccessToken();
+                    string tokenPreview = accessToken.Length > 20 ? accessToken.Substring(0, 20) + "..." : accessToken;
+                    userInfoText.text = $"Token: {tokenPreview}";
+                }
+                catch (System.Exception ex)
+                {
+                    userInfoText.text = $"Error: {ex.Message}";
+                    Debug.LogWarning($"[PassportUIBuilder] Failed to load user info: {ex.Message}");
+                }
+            }
         }
 
         /// <summary>

@@ -1,0 +1,29 @@
+{
+    "name": "Immutable.Passport.Samples",
+    "rootNamespace": "Immutable.Passport",
+    "references": [
+        "Immutable.Passport.Runtime.Public",
+        "Immutable.Passport.Runtime.Private", 
+        "Immutable.Passport.Core.Logging",
+        "Immutable.Browser.Core",
+        "UniTask",
+        "Unity.Modules.UI",
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [
+        "Android",
+        "Editor",
+        "iOS",
+        "macOSStandalone",
+        "WebGL", 
+        "WindowsStandalone64"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

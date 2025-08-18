@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2471608869895950181}
   - component: {fileID: 2471608869895950182}
-  - component: {fileID: 2471608869895950183}
+  - component: {fileID: 8072342326407231330}
   m_Layer: 0
   m_Name: PassportManagerComplete
   m_TagString: Untagged
@@ -52,6 +52,7 @@ MonoBehaviour:
   autoInitialize: 1
   autoLogin: 0
   directLoginMethod: 0
+  defaultMarketingConsent: 1
   logLevel: 3
   redactTokensInLogs: 1
   loginButton: {fileID: 0}
@@ -81,7 +82,7 @@ MonoBehaviour:
   OnLogoutFailed:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &2471608869895950183
+--- !u!114 &8072342326407231330
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -90,14 +91,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 2471608869895950180}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: abcdef1234567890abcdef1234567890, type: 3}
+  m_Script: {fileID: 11500000, guid: ef72a80840b41d54aa0117a1694f72b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  passportManager: {fileID: 2471608869895950182}
+  passportManager: {fileID: 0}
   canvasOrder: 100
   panelSize: {x: 300, y: 400}
   buttonSize: {x: 280, y: 45}
   elementSpacing: 10
+  forceCursorAlwaysAvailable: 1
   uiCanvas: {fileID: 0}
   loginPanel: {fileID: 0}
   loggedInPanel: {fileID: 0}

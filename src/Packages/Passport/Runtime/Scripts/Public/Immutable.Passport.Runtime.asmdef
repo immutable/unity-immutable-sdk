@@ -11,9 +11,7 @@
         "Unity.Modules.UnityWebRequest",
         "Unity.Modules.AndroidJNI",
         "Unity.Modules.JSONSerialize",
-        "Unity.Modules.Core",
-        "Unity.Modules.UI",
-        "Unity.TextMeshPro"
+        "Unity.Modules.Core"
     ],
     "includePlatforms": [
         "Android",
