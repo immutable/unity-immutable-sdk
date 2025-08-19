@@ -1,3 +1,12 @@
+"""
+Unity Passport Windows UI Tests
+
+For test setup and configuration requirements (especially Passport SDK log level),
+see: sample/Tests/README.md
+
+These tests require proper authentication URL logging to work correctly.
+"""
+
 import time
 
 from alttester import *
@@ -192,8 +201,8 @@ class WindowsTest(UnityTest):
         print("=" * 60)
         print("STARTING TEST: test_4_imx_functions")
         print("=" * 60)
-        # self.test_2_imx_functions() # TODO: Fix this test - needs NFTs to pass the test
-        print("SKIPPING TEST: test_4_imx_functions")
+        self.test_2_imx_functions()
+        print("COMPLETED TEST: test_4_imx_functions")
         print("=" * 60)
 
     def test_5_zkevm_functions(self):

@@ -80,7 +80,8 @@ def get_auth_url_from_unity_logs():
                     content = f.read()
                     # Look for either our custom message or the existing LaunchAuthURL message
                     # Get the LAST occurrence (most recent) and make sure it's a login URL, not logout
-                    matches = re.findall(r'(?:PASSPORT_AUTH_URL: |LaunchAuthURL : )(https?://[^\s]+)', content)
+                    # Now includes [Immutable] tag from PassportLogger
+                    matches = re.findall(r'(?:\[Immutable\] PASSPORT_AUTH_URL: |PASSPORT_AUTH_URL: |LaunchAuthURL : )(https?://[^\s]+)', content)
                     if matches:
                         # Get the last URL and make sure it's not a logout URL
                         for url in reversed(matches):
@@ -124,8 +125,9 @@ def get_logout_url_from_unity_logs():
             try:
                 with open(log_path, 'r', encoding='utf-8', errors='ignore') as f:
                     content = f.read()
-                    # Look for logout URLs in Unity logs
-                    matches = re.findall(r'(?:PASSPORT_LOGOUT_URL: |LaunchAuthURL : )(https?://[^\s]+)', content)
+                    # Look for logout URLs in Unity logs (uses same PASSPORT_AUTH_URL pattern)
+                    # Now includes [Immutable] tag from PassportLogger
+                    matches = re.findall(r'(?:\[Immutable\] PASSPORT_AUTH_URL: |PASSPORT_AUTH_URL: |LaunchAuthURL : )(https?://[^\s]+)', content)
                     if matches:
                         # Get the last URL and make sure it's a logout URL
                         for url in reversed(matches):
@@ -573,7 +575,28 @@ def open_sample_app(clear_data=False):
         clear_unity_data()
     
     print(f"Opening {product_name}...")
-    subprocess.Popen([f"{product_name}.exe"], shell=True)
+    
+    # Look for the executable in build folder first, then current directory
+    exe_paths = [
+        f"../build/{product_name}.exe",  # Relative to Tests folder
+        f"{product_name}.exe"  # Current directory (fallback)
+    ]
+    
+    exe_launched = False
+    for exe_path in exe_paths:
+        if os.path.exists(exe_path):
+            print(f"Found executable at: {exe_path}")
+            subprocess.Popen([exe_path], shell=True)
+            exe_launched = True
+            break
+    
+    if not exe_launched:
+        print(f"ERROR: Could not find {product_name}.exe in any of these locations:")
+        for path in exe_paths:
+            abs_path = os.path.abspath(path)
+            print(f"  - {abs_path} (exists: {os.path.exists(abs_path)})")
+        raise FileNotFoundError(f"Unity executable not found")
+    
     time.sleep(10)
     print(f"{product_name} opened successfully.")
 

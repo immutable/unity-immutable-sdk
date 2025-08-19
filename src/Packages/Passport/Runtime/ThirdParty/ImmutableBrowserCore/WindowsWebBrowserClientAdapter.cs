@@ -3,6 +3,7 @@
 using System.IO;
 using UnityEngine;
 using Immutable.Browser.Core;
+using Immutable.Passport.Core.Logging;
 using Cysharp.Threading.Tasks;
 
 namespace Immutable.Browser.Core
@@ -51,7 +52,7 @@ namespace Immutable.Browser.Core
         public void LaunchAuthURL(string url, string? redirectUri)
         {
             // Log the auth URL for test automation to capture
-            Debug.Log($"PASSPORT_AUTH_URL: {url}");
+            PassportLogger.Info($"PASSPORT_AUTH_URL: {url}");
             Application.OpenURL(url);
         }
 
