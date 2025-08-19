@@ -1,3 +1,12 @@
+"""
+Unity Passport Windows UI Tests
+
+For test setup and configuration requirements (especially Passport SDK log level),
+see: sample/Tests/README.md
+
+These tests require proper authentication URL logging to work correctly.
+"""
+
 import time
 
 from alttester import *
