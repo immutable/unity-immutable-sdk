@@ -91,7 +91,8 @@ jobs:
           #   runs-on: [ self-hosted, macOS ]
           #   test_script: browserstack-sdk pytest -s ./test/test_android.py --browserstack.config "browserstack.android.yml"
     concurrency:
-      group: test-${{ matrix.targetPlatform }}
+      group: ui-tests-email-inbox
+      cancel-in-progress: false  # Let tests complete rather than canceling
     runs-on: ${{ matrix.runs-on }}
     steps:
       - uses: actions/checkout@v3
@@ -146,7 +147,7 @@ jobs:
           security list-keychains
   build-ios: #test-ios:
     name: Run iOS build #UI tests 🧪
-    needs: 
+    needs:
       - build
       - test
     runs-on: [ self-hosted, macOS ]
@@ -170,4 +171,3 @@ jobs:
   #         BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
   #       working-directory: sample/Tests/test/ios
   #       run: browserstack-sdk pytest -xs ./test_ios.py --browserstack.config "browserstack.ios.yml"
-      
