@@ -18,10 +18,7 @@
   ],
   "dependencies": {
     "com.unity.nuget.newtonsoft-json": "3.2.0",
-    "com.cysharp.unitask": "2.3.1",
-    "com.unity.modules.unitywebrequest": "1.0.0",
-    "com.unity.modules.jsonserialize": "1.0.0",
-    "com.unity.modules.androidjni": "1.0.0"
+    "com.cysharp.unitask": "2.3.1"
   },
   "keywords": [
     "unity",
