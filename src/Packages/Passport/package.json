@@ -37,7 +37,7 @@
     },
     {
       "displayName": "Sample Scenes and Scripts",
-      "description": "Complete sample scenes and scripts demonstrating Passport SDK features.",
+      "description": "Includes sample scenes and scripts for the Immutable Unity SDK.",
       "path": "Samples~/SamplesScenesScripts"
     }
   ]

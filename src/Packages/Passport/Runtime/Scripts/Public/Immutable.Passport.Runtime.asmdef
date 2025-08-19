@@ -7,11 +7,7 @@
         "Immutable.Browser.Gree",
         "Immutable.Passport.Runtime.Private",
         "Immutable.Passport.Core.Logging",
-        "VoltstroStudios.UnityWebBrowser",
-        "Unity.Modules.UnityWebRequest",
-        "Unity.Modules.AndroidJNI",
-        "Unity.Modules.JSONSerialize",
-        "Unity.Modules.Core"
+        "VoltstroStudios.UnityWebBrowser"
     ],
     "includePlatforms": [
         "Android",

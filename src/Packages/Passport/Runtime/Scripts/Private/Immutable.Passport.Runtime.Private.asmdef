@@ -6,9 +6,7 @@
         "UniTask",
         "Immutable.Browser.Core",
         "Immutable.Browser.Gree",
-        "Immutable.Passport.Core.Logging",
-        "Unity.Modules.JSONSerialize",
-        "Unity.Modules.Core"
+        "Immutable.Passport.Core.Logging"
     ],
     "includePlatforms": [
         "Android",

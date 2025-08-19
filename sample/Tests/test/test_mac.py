@@ -190,8 +190,7 @@ class MacTest(UnityTest):
         self.test_1_passport_functions()
 
     def test_4_imx_functions(self):
-        # self.test_2_imx_functions()
-        print("SKIPPING TEST: test_4_imx_functions") # TODO: Fix this test - needs NFTs to pass the test
+        self.test_2_imx_functions()
 
     def test_5_zkevm_functions(self):
         self.test_3_zkevm_functions()
