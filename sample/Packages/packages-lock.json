@@ -36,7 +36,7 @@
       "source": "local",
       "dependencies": {
         "com.unity.nuget.newtonsoft-json": "3.2.0",
-        "com.cysharp.unitask": "2.3.1"
+        "com.cysharp.unitask": "2.3.3"
       }
     },
     "com.unity.ai.navigation": {
