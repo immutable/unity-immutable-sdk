@@ -32,7 +32,7 @@ That's it! No scripts, no event handling, no code. Pure drag-and-drop! 🚀
 
 - ✅ Mobile-first responsive UI that works on all screen sizes
 - ✅ Pre-styled social login buttons (Google red, Apple black, Facebook blue)
-- ✅ Automatic panel switching (login → logged-in state)  
+- ✅ Automatic panel switching (login → logged-in state)
 - ✅ Status messages and user info display
 - ✅ Zero code required - just configure and play!
 
@@ -70,16 +70,16 @@ That's it! No scripts, no event handling, no code. Pure drag-and-drop! 🚀
 
 - **Environment**: `SANDBOX` (default) or `PRODUCTION`
 - **Auto Initialise**: Automatically initialise on Start (default: true)
-- **Auto Login**: Automatically attempt login after initialization (default: false)
+- **Auto Login**: Automatically attempt login after initialisation (default: false)
 - **Direct Login Method**: Default login method for auto-login and generic login button (None, Google, Apple, Facebook)
 - **Default Marketing Consent**: Default consent status for marketing communications (Unsubscribed, OptedIn)
 - **Log Level**: Control debug output verbosity
 
-### UI Customization (PassportManagerComplete)
+### UI Customisation (PassportManagerComplete)
 
 The complete prefab creates UI at runtime, which means you can customise the appearance:
 
-**Runtime Customization:**
+**Runtime Customisation:**
 
 - The UI is built using Unity's default UI style
 - All UI elements can be accessed and modified after creation
@@ -96,7 +96,7 @@ The complete prefab creates UI at runtime, which means you can customise the app
 **Colour Scheme:**
 
 - Google Button: Red (#DB4437) with white text
-- Apple Button: Black with white text  
+- Apple Button: Black with white text
 - Facebook Button: Blue (#4267B2) with white text
 - Default Button: White with black text
 - Background Panel: Semi-transparent dark (10% opacity)
@@ -107,7 +107,7 @@ Simply drag UI elements from your scene into these fields and they'll be automat
 
 - **Login Button**: Triggers default login method
 - **Google Login Button**: Triggers Google-specific login
-- **Apple Login Button**: Triggers Apple-specific login  
+- **Apple Login Button**: Triggers Apple-specific login
 - **Facebook Login Button**: Triggers Facebook-specific login
 - **Logout Button**: Triggers logout
 - **Status Text**: Shows current authentication status (Legacy Text OR TextMeshPro)
@@ -119,10 +119,10 @@ Simply drag UI elements from your scene into these fields and they'll be automat
 
 The prefab exposes Unity Events that you can wire up in the Inspector:
 
-### Initialization Events
+### Initialisation Events
 
 - `OnPassportInitialized`: Fired when Passport is ready
-- `OnPassportError`: Fired if initialization fails
+- `OnPassportError`: Fired if initialisation fails
 
 ### Authentication Events
 
@@ -145,7 +145,7 @@ if (manager.IsInitialized && manager.IsLoggedIn)
     // Access the underlying Passport instance
     var email = await manager.PassportInstance.GetEmail();
     var accessToken = await manager.PassportInstance.GetAccessToken();
-    
+
     // Note: GetAddress() requires IMX connection via ConnectImx()
     // var address = await manager.PassportInstance.GetAddress();
 }
@@ -288,10 +288,10 @@ void Start() {
 void RestoreInput() {
     // For FPS games:
     Cursor.lockState = CursorLockMode.Locked;
-    
+
     // For menu-driven games:
     Cursor.lockState = CursorLockMode.None;
-    
+
     // Ensure cursor is visible for UI
     Cursor.visible = true;
 }
