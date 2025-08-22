@@ -1,0 +1,19 @@
+{
+    "name": "Immutable.Passport.WebViewTesting",
+    "rootNamespace": "Immutable.Passport.WebViewTesting",
+    "references": [
+        "Unity.TextMeshPro",
+        "Immutable.Passport.Runtime.Public",
+        "Immutable.Passport.Runtime.Private",
+        "VoltstroStudios.UnityWebBrowser"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

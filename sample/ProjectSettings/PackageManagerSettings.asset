@@ -50,11 +50,11 @@ MonoBehaviour:
     m_IsDefault: 0
     m_Capabilities: 0
     m_ConfigSource: 4
-  m_UserSelectedRegistryName: package.openupm.com
-  m_UserAddingNewScopedRegistry: 0
+  m_UserSelectedRegistryName: npmjs
+  m_UserAddingNewScopedRegistry: 1
   m_RegistryInfoDraft:
     m_Modified: 0
     m_ErrorMessage: 
-    m_UserModificationsInstanceId: -828
-    m_OriginalInstanceId: -832
+    m_UserModificationsInstanceId: -824
+    m_OriginalInstanceId: -828
   m_LoadAssets: 0
