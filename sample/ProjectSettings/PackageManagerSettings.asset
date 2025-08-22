@@ -51,10 +51,10 @@ MonoBehaviour:
     m_Capabilities: 0
     m_ConfigSource: 4
   m_UserSelectedRegistryName: npmjs
-  m_UserAddingNewScopedRegistry: 1
+  m_UserAddingNewScopedRegistry: 0
   m_RegistryInfoDraft:
     m_Modified: 0
     m_ErrorMessage: 
-    m_UserModificationsInstanceId: -824
-    m_OriginalInstanceId: -828
+    m_UserModificationsInstanceId: -842
+    m_OriginalInstanceId: -846
   m_LoadAssets: 0

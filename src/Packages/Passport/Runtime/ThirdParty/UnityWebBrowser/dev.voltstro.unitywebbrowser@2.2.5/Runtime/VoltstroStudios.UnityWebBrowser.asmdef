@@ -5,13 +5,15 @@
         "VoltstroStudios.NativeArraySpanExtensions",
         "Unity.TextMeshPro",
         "Unity.InputSystem",
+        "Unity.ugui",
         "UniTask",
         "Immutable.Browser.Core",
         "Immutable.Passport.Core.Logging"
     ],
     "includePlatforms": [
         "Editor",
-        "WindowsStandalone64"
+        "WindowsStandalone64",
+        "macOSStandalone"
     ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

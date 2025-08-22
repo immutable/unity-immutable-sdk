@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEngine;
@@ -9,6 +10,7 @@ using VoltstroStudios.UnityWebBrowser;
 using VoltstroStudios.UnityWebBrowser.Core;
 using VoltstroStudios.UnityWebBrowser.Core.Engines;
 using VoltstroStudios.UnityWebBrowser.Communication;
+using VoltstroStudios.UnityWebBrowser.Helper;
 using VoltstroStudios.UnityWebBrowser.Shared;
 using VoltstroStudios.UnityWebBrowser.Shared.Core;
 using VoltstroStudios.UnityWebBrowser.Shared.Popups;
@@ -51,6 +53,11 @@ namespace Immutable.Passport.WebViewTesting
         {
             try
             {
+#if UNITY_EDITOR
+                // Enable native collection leak detection with full stack traces
+                Unity.Collections.NativeLeakDetection.Mode = Unity.Collections.NativeLeakDetectionMode.EnabledWithStackTrace;
+#endif
+                
                 // Start timing the initialization
                 initializationTimer = System.Diagnostics.Stopwatch.StartNew();
                 initStartTime = Time.realtimeSinceStartup;
@@ -333,17 +340,76 @@ namespace Immutable.Passport.WebViewTesting
             {
                 if (isInitialized)
                 {
-                    // TODO: Implement proper disposal
-                    // webBrowserClient?.Dispose();
+                    Debug.Log("[VoltUWBAdapter] 🧹 Starting UWB disposal...");
+                    
+#if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX
+                    // Unsubscribe from events first
+                    if (webBrowserClient != null)
+                    {
+                        try
+                        {
+                            webBrowserClient.OnLoadFinish -= OnLoadFinishHandler;
+                            webBrowserClient.OnLoadStart -= OnLoadStartHandler;
+                            Debug.Log("[VoltUWBAdapter] ✅ Event handlers unsubscribed");
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.LogWarning($"[VoltUWBAdapter] ⚠️ Error unsubscribing events: {ex.Message}");
+                        }
+                    }
+                    
+                    // Dispose WebBrowser components
+                    if (webBrowserUI != null)
+                    {
+                        try
+                        {
+                            // WebBrowserUIFull should handle its own disposal
+                            UnityEngine.Object.DestroyImmediate(webBrowserUI);
+                            Debug.Log("[VoltUWBAdapter] ✅ WebBrowserUIFull destroyed");
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.LogWarning($"[VoltUWBAdapter] ⚠️ Error destroying WebBrowserUIFull: {ex.Message}");
+                        }
+                    }
+                    
+                    // Destroy GameObject
+                    if (uwbGameObject != null)
+                    {
+                        try
+                        {
+                            UnityEngine.Object.DestroyImmediate(uwbGameObject);
+                            Debug.Log("[VoltUWBAdapter] ✅ UWB GameObject destroyed");
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.LogWarning($"[VoltUWBAdapter] ⚠️ Error destroying GameObject: {ex.Message}");
+                        }
+                    }
+                    
+                    // Clear references
+                    webBrowserClient = null;
+                    webBrowserUI = null;
+                    uwbGameObject = null;
+#endif
+                    
+                    // Stop timers
+                    initializationTimer?.Stop();
+                    navigationTimer?.Stop();
                     
                     IsActive = false;
                     isInitialized = false;
-                    Debug.Log("[VoltUWBAdapter] Volt Unity Web Browser disposed");
+                    Debug.Log("[VoltUWBAdapter] ✅ Volt Unity Web Browser disposed successfully");
+                }
+                else
+                {
+                    Debug.Log("[VoltUWBAdapter] 💡 UWB already disposed or not initialized");
                 }
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[VoltUWBAdapter] Disposal error: {ex.Message}");
+                Debug.LogError($"[VoltUWBAdapter] ❌ Disposal error: {ex.Message}");
+                Debug.LogError($"[VoltUWBAdapter] Stack trace: {ex.StackTrace}");
             }
         }
         
@@ -589,28 +655,56 @@ namespace Immutable.Passport.WebViewTesting
             {
                 Debug.Log("[VoltUWBAdapter] 🔧 Configuring UWB CEF Engine for UI instance...");
                 
+                var detectedPlatform = WebBrowserUtils.GetRunningPlatform();
+                
                 // Create engine configuration (same as SDK but for UI instance)
                 var engineConfig = ScriptableObject.CreateInstance<EngineConfiguration>();
                 engineConfig.engineAppName = "UnityWebBrowser.Engine.Cef";
-                engineConfig.engineFiles = new Engine.EnginePlatformFiles[]
+                
+                var engineFiles = new List<Engine.EnginePlatformFiles>();
+                
+                // Windows engine configuration
+                engineFiles.Add(new Engine.EnginePlatformFiles()
                 {
-                    new Engine.EnginePlatformFiles()
-                    {
-                        platform = Platform.Windows64,
-                        engineBaseAppLocation = "",
-                        engineRuntimeLocation = "UWB/"
+                    platform = Platform.Windows64,
+                    engineBaseAppLocation = "",
+                    engineRuntimeLocation = "UWB/"
 #if UNITY_EDITOR
-                        ,
-                        engineEditorLocation = "Packages/com.immutable.passport/Runtime/ThirdParty/UnityWebBrowser/dev.voltstro.unitywebbrowser.engine.cef.win.x64@2.2.5-130.1.16/Engine~"
+                    ,
+                    engineEditorLocation = "Packages/com.immutable.passport/Runtime/ThirdParty/UnityWebBrowser/dev.voltstro.unitywebbrowser.engine.cef.win.x64@2.2.5-130.1.16/Engine~"
 #endif
-                    }
-                };
+                });
+                
+                // macOS engine configuration (Intel)
+                engineFiles.Add(new Engine.EnginePlatformFiles()
+                {
+                    platform = Platform.MacOS,
+                    engineBaseAppLocation = "UnityWebBrowser.Engine.Cef.app/Contents/MacOS",
+                    engineRuntimeLocation = "UWB/"
+#if UNITY_EDITOR
+                    ,
+                    engineEditorLocation = "Packages/com.immutable.passport/Runtime/ThirdParty/UnityWebBrowser/dev.voltstro.unitywebbrowser.engine.cef.macos.x64@2.2.5-130.1.16/Engine~"
+#endif
+                });
+                
+                // macOS engine configuration (ARM64 - Apple Silicon)
+                engineFiles.Add(new Engine.EnginePlatformFiles()
+                {
+                    platform = Platform.MacOSArm64,
+                    engineBaseAppLocation = "UnityWebBrowser.Engine.Cef.app/Contents/MacOS",
+                    engineRuntimeLocation = "UWB/"
+#if UNITY_EDITOR
+                    ,
+                    engineEditorLocation = "Packages/com.immutable.passport/Runtime/ThirdParty/UnityWebBrowser/dev.voltstro.unitywebbrowser.engine.cef.macos.arm64@2.2.5-130.1.16/Engine~"
+#endif
+                });
+                
+                engineConfig.engineFiles = engineFiles.ToArray();
                 
                 // Assign engine to our UI instance
                 webBrowserClient.engine = engineConfig;
                 
                 Debug.Log("[VoltUWBAdapter] ✅ CEF Engine configured successfully for UI instance");
-                Debug.Log("[VoltUWBAdapter] 🎯 Engine path: Packages/com.immutable.passport/Runtime/ThirdParty/UnityWebBrowser/dev.voltstro.unitywebbrowser.engine.cef.win.x64@2.2.5-130.1.16/Engine~");
             }
             catch (System.Exception ex)
             {

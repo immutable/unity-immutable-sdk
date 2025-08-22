@@ -1,4 +1,4 @@
-#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
+#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
 
 // UnityWebBrowser (UWB)
 // Copyright (c) 2021-2022 Voltstro-Studios
@@ -13,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Unity.Collections;
+using VoltstroStudios.UnityWebBrowser.Shared.Core;
 using Unity.Profiling;
 using UnityEngine;
 using VoltstroStudios.UnityWebBrowser.Communication;
@@ -323,9 +324,12 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             }
             
             //Get the path to the UWB process we are using and make sure it exists
-            string browserEnginePath = engine.GetEngineAppPath(WebBrowserUtils.GetRunningPlatform());
+            Platform detectedPlatform = WebBrowserUtils.GetRunningPlatform();
+            string browserEnginePath = engine.GetEngineAppPath(detectedPlatform);
             logger.Debug($"Starting browser engine process from '{browserEnginePath}'...");
+            
 
+            
             if (!File.Exists(browserEnginePath))
             {
                 logger.Error("The engine process could not be found!");
@@ -431,6 +435,13 @@ namespace VoltstroStudios.UnityWebBrowser.Core
             {
                 argsBuilder.AppendArgument("no-sandbox", true);
             }
+            
+            //Single-process mode for macOS stability
+#if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
+            // Use single-process mode to prevent separate GPU process crashes on macOS
+            argsBuilder.AppendFlag("single-process");
+            // Note: Testing without disable-web-security to minimize security impact
+#endif
 
             //Final built arguments
             string arguments = argsBuilder.ToString();
