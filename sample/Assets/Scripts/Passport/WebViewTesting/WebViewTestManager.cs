@@ -3,7 +3,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+#if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX
 using VoltstroStudios.UnityWebBrowser;
 #endif
 
@@ -45,23 +45,28 @@ namespace Immutable.Passport.WebViewTesting
         public int webViewHeight = 768;
         public bool fullScreenMode = true;
         
+        [Header("UI Layout")]
+        public GameObject webViewContainer;  // Green area where WebView will be displayed
+        
         private IWebViewAdapter currentWebView;
         private float startTime;
         private int frameCount;
         
         public enum WebViewPackage
         {
-            VoltUnityWebBrowser,  // Add Volt UWB as first option
-            Alacrity,
-            UWebView2,
-            ZenFulcrum,
-            Vuplex3D
+            VoltUnityWebBrowser
         }
         
         void Start()
         {
             SetupUI();
-            ShowOutput("WebView Test Manager initialized. Select a package to test.");
+            
+#if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX
+            ShowOutput("WebView Test Manager initialized. Volt Unity Web Browser ready for testing.");
+#else
+            ShowOutput("⚠️ Platform not supported. Volt Unity Web Browser only supports Windows and Mac.");
+            Debug.LogWarning("[WebViewTestManager] Current platform not supported. UWB requires Windows or Mac.");
+#endif
         }
         
         void Update()
@@ -77,6 +82,22 @@ namespace Immutable.Passport.WebViewTesting
                     ShowPerformance($"FPS: {fps:F1} | Memory: {GetMemoryUsage():F1}MB");
                     frameCount = 0;
                     startTime = Time.time;
+                }
+            }
+            
+            // Debug: Show WebView container dimensions (Press D key)
+            if (webViewContainer != null && Input.GetKeyDown(KeyCode.D))
+            {
+                RectTransform rect = webViewContainer.GetComponent<RectTransform>();
+                if (rect != null)
+                {
+                    Vector2 size = rect.rect.size;
+                    Vector2 screenSize = new Vector2(Screen.width, Screen.height);
+                    float widthPercent = (size.x / screenSize.x) * 100f;
+                    float heightPercent = (size.y / screenSize.y) * 100f;
+                    
+                    ShowOutput($"WebView Area: {size.x:F0}x{size.y:F0} px ({widthPercent:F1}% x {heightPercent:F1}%)");
+                    Debug.Log($"[WebViewTestManager] WebView dimensions: {size.x}x{size.y} pixels, {widthPercent:F1}% x {heightPercent:F1}% of screen");
                 }
             }
         }
@@ -256,7 +277,7 @@ namespace Immutable.Passport.WebViewTesting
         {
             ShowOutput("Searching for WebView components in scene...");
             
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+#if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX
             // Find WebView GameObjects in the scene
             var webViewObjects = FindObjectsOfType<WebBrowserUIFull>();
             if (webViewObjects.Length > 0)
@@ -361,21 +382,12 @@ namespace Immutable.Passport.WebViewTesting
         
         private IWebViewAdapter CreateWebViewAdapter(WebViewPackage package)
         {
-            switch (package)
-            {
-                case WebViewPackage.VoltUnityWebBrowser:
-                    return new VoltUnityWebBrowserAdapter();
-                case WebViewPackage.Alacrity:
-                    return new AlacrityWebViewAdapter();
-                case WebViewPackage.UWebView2:
-                    return new UWebView2Adapter();
-                case WebViewPackage.ZenFulcrum:
-                    return new ZenFulcrumWebViewAdapter();
-                case WebViewPackage.Vuplex3D:
-                    return new Vuplex3DWebViewAdapter();
-                default:
-                    throw new NotSupportedException($"WebView package {package} not supported");
-            }
+#if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX
+            return new VoltUnityWebBrowserAdapter();
+#else
+            ShowOutput("❌ Cannot create WebView - platform not supported");
+            throw new System.PlatformNotSupportedException("Volt Unity Web Browser only supports Windows and Mac platforms");
+#endif
         }
         
         private void OnLoginPageLoaded(string url)

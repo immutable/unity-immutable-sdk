@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+#if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX
 using VoltstroStudios.UnityWebBrowser;
 using VoltstroStudios.UnityWebBrowser.Core;
 using VoltstroStudios.UnityWebBrowser.Core.Engines;
@@ -29,7 +29,7 @@ namespace Immutable.Passport.WebViewTesting
         
         public bool IsActive { get; private set; }
         
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+#if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX
         private GameObject uwbGameObject;
         private WebBrowserUIFull webBrowserUI;
         private WebBrowserClient webBrowserClient;
@@ -58,7 +58,7 @@ namespace Immutable.Passport.WebViewTesting
                 Debug.Log($"[VoltUWBAdapter] 🚀 Creating SEPARATE UWB instance for UI testing (isolated from SDK bridge)");
                 Debug.Log($"[VoltUWBAdapter] Initializing Volt Unity Web Browser {width}x{height} - Timer started");
                 
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+#if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX
                 // Find or create Canvas for WebView display
                 Canvas canvas = FindOrCreateCanvas();
                 
@@ -87,6 +87,8 @@ namespace Immutable.Passport.WebViewTesting
                 
                 // Get the browser client and configure for UI display
                 webBrowserClient = webBrowserUI.browserClient;
+
+                webBrowserClient.initialUrl = "https://passport.immutable.com/sdk-sample-app";
                 
                 Debug.Log("[VoltUWBAdapter] 🔧 Configuring UI instance (headless=false, separate from SDK bridge)");
                 webBrowserClient.headless = false; // CRITICAL: SDK uses headless=true, we need UI
@@ -138,7 +140,7 @@ namespace Immutable.Passport.WebViewTesting
                 
                 Debug.Log($"[VoltUWBAdapter] 🚀 Navigating to: {url}");
                 
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+#if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX
                 // Check if engine is ready before navigating
                 if (webBrowserClient != null && webBrowserClient.ReadySignalReceived)
                 {
@@ -174,7 +176,7 @@ namespace Immutable.Passport.WebViewTesting
             {
                 Debug.Log($"[VoltUWBAdapter] Executing JavaScript: {script.Substring(0, Math.Min(100, script.Length))}...");
                 
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+#if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX
                 webBrowserClient?.ExecuteJs(script);
 #else
                 OnError?.Invoke("JavaScript execution not supported on this platform");
@@ -235,7 +237,7 @@ namespace Immutable.Passport.WebViewTesting
         
         public void SetPopupAction(PopupAction action)
         {
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+#if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX
             if (webBrowserClient != null)
             {
                 webBrowserClient.popupAction = action;
@@ -250,7 +252,7 @@ namespace Immutable.Passport.WebViewTesting
         
         public PopupAction GetPopupAction()
         {
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+#if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX
             return webBrowserClient?.popupAction ?? PopupAction.Ignore;
 #else
             return PopupAction.Ignore;
@@ -280,7 +282,7 @@ namespace Immutable.Passport.WebViewTesting
         
         public void Show()
         {
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+#if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX
             if (uwbGameObject != null)
             {
                 uwbGameObject.SetActive(true);
@@ -300,7 +302,7 @@ namespace Immutable.Passport.WebViewTesting
         
         public void Hide()
         {
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+#if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX
             if (uwbGameObject != null)
             {
                 uwbGameObject.SetActive(false);
@@ -346,7 +348,7 @@ namespace Immutable.Passport.WebViewTesting
         }
         
         // Event handlers for UWB
-#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+#if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX
         private void OnLoadFinishHandler(string url)
         {
             Debug.Log($"[VoltUWBAdapter] 🏁 Load finished: {url}");
@@ -459,7 +461,34 @@ namespace Immutable.Passport.WebViewTesting
         
         private Canvas FindOrCreateCanvas()
         {
-            // Try to find existing Canvas
+            // Try to find WebView container from the test manager
+            var testManager = UnityEngine.Object.FindObjectOfType<WebViewTestManager>();
+            if (testManager != null && testManager.webViewContainer != null)
+            {
+                Debug.Log($"[VoltUWBAdapter] Using WebView container: {testManager.webViewContainer.name}");
+                
+                // Check if container already has a Canvas
+                Canvas containerCanvas = testManager.webViewContainer.GetComponent<Canvas>();
+                if (containerCanvas == null)
+                {
+                    // Add Canvas to the container
+                    containerCanvas = testManager.webViewContainer.AddComponent<Canvas>();
+                    containerCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                    containerCanvas.sortingOrder = 100;
+                    
+                    // Add required components
+                    if (testManager.webViewContainer.GetComponent<UnityEngine.UI.CanvasScaler>() == null)
+                        testManager.webViewContainer.AddComponent<UnityEngine.UI.CanvasScaler>();
+                    if (testManager.webViewContainer.GetComponent<UnityEngine.UI.GraphicRaycaster>() == null)
+                        testManager.webViewContainer.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+                    
+                    Debug.Log($"[VoltUWBAdapter] Added Canvas to WebView container");
+                }
+                
+                return containerCanvas;
+            }
+            
+            // Fallback: Try to find existing Canvas
             Canvas existingCanvas = UnityEngine.Object.FindObjectOfType<Canvas>();
             if (existingCanvas != null)
             {

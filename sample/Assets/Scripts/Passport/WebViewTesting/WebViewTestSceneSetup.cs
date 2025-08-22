@@ -71,8 +71,9 @@ namespace Immutable.Passport.WebViewTesting
             RectTransform rectTransform = panelGO.AddComponent<RectTransform>();
             rectTransform.anchorMin = Vector2.zero;
             rectTransform.anchorMax = Vector2.one;
-            rectTransform.offsetMin = new Vector2(50, 50);
-            rectTransform.offsetMax = new Vector2(-50, -50);
+            rectTransform.offsetMin = new Vector2(0, 0);
+            rectTransform.offsetMax = new Vector2(0, 0);
+            rectTransform.pivot = new Vector2(0, 0);
             
             Image image = panelGO.AddComponent<Image>();
             image.color = new Color(0.1f, 0.1f, 0.1f, 0.8f);
@@ -82,55 +83,17 @@ namespace Immutable.Passport.WebViewTesting
         
         private static void CreateTestUI(Transform parent, WebViewTestManager manager)
         {
-            // Title
-            CreateText(parent, "WebView Testing Framework", new Vector2(0, 200), 24, TextAnchor.MiddleCenter);
+            // Create control panel (red section - always visible)
+            GameObject controlPanel = CreateControlPanel(parent);
             
-            // Package Selection
-            CreateText(parent, "Select WebView Package:", new Vector2(-200, 150), 16, TextAnchor.MiddleLeft);
-            CreateDropdown(parent, new Vector2(100, 150), manager);
+            // Create WebView area (green section - for WebView display)
+            GameObject webViewArea = CreateWebViewArea(parent);
             
-            // Test Buttons
-            GameObject testLoginBtn = CreateButton(parent, "Test Login Page", new Vector2(-100, 100));
-            GameObject testMsgBtn = CreateButton(parent, "Test Messaging", new Vector2(100, 100));
-            GameObject closeBtn = CreateButton(parent, "Close WebView", new Vector2(0, 50));
+            // Setup controls in the control panel
+            CreateControlsInPanel(controlPanel.transform, manager);
             
-            // Navigation Controls Section
-            CreateText(parent, "Navigation Controls:", new Vector2(0, 0), 16, TextAnchor.MiddleCenter);
-            
-            // URL Input Field
-            GameObject urlInputGO = CreateInputField(parent, "Enter URL...", new Vector2(0, -30));
-            
-            // Navigation Buttons
-            GameObject navigateBtn = CreateButton(parent, "Navigate", new Vector2(-150, -70));
-            GameObject backBtn = CreateButton(parent, "Back", new Vector2(-50, -70));
-            GameObject forwardBtn = CreateButton(parent, "Forward", new Vector2(50, -70));
-            GameObject refreshBtn = CreateButton(parent, "Refresh", new Vector2(150, -70));
-            
-            // Debug/Test Buttons
-            GameObject testInputBtn = CreateButton(parent, "Test Input", new Vector2(-100, -110));
-            GameObject findWebViewBtn = CreateButton(parent, "Find WebView", new Vector2(0, -110));
-            GameObject testPopupBtn = CreateButton(parent, "Test Popup", new Vector2(100, -110));
-            
-            // Status Output
-            CreateText(parent, "Status: Ready", new Vector2(0, -150), 14, TextAnchor.MiddleCenter, "StatusOutput");
-            
-            // Performance Output
-            CreateText(parent, "Performance: -", new Vector2(0, -200), 12, TextAnchor.MiddleCenter, "PerformanceOutput");
-            
-            // Wire up manager references
-            manager.testLoginButton = testLoginBtn.GetComponent<Button>();
-            manager.testMessagingButton = testMsgBtn.GetComponent<Button>();
-            manager.closeWebViewButton = closeBtn.GetComponent<Button>();
-            manager.urlInputField = urlInputGO.GetComponent<InputField>();
-            manager.navigateButton = navigateBtn.GetComponent<Button>();
-            manager.backButton = backBtn.GetComponent<Button>();
-            manager.forwardButton = forwardBtn.GetComponent<Button>();
-            manager.refreshButton = refreshBtn.GetComponent<Button>();
-            manager.testInputButton = testInputBtn.GetComponent<Button>();
-            manager.findWebViewButton = findWebViewBtn.GetComponent<Button>();
-            manager.testPopupButton = testPopupBtn.GetComponent<Button>();
-            manager.statusOutput = GameObject.Find("StatusOutput")?.GetComponent<Text>();
-            manager.performanceOutput = GameObject.Find("PerformanceOutput")?.GetComponent<Text>();
+            // Store reference to WebView area for the manager
+            manager.webViewContainer = webViewArea;
         }
         
         private static GameObject CreateButton(Transform parent, string text, Vector2 position)
@@ -140,7 +103,7 @@ namespace Immutable.Passport.WebViewTesting
             
             RectTransform rectTransform = buttonGO.AddComponent<RectTransform>();
             rectTransform.anchoredPosition = position;
-            rectTransform.sizeDelta = new Vector2(180, 40);
+            rectTransform.sizeDelta = new Vector2(90, 25);
             
             Image image = buttonGO.AddComponent<Image>();
             image.color = new Color(0.2f, 0.6f, 1f, 1f);
@@ -161,7 +124,7 @@ namespace Immutable.Passport.WebViewTesting
             Text textComponent = textGO.AddComponent<Text>();
             textComponent.text = text;
             textComponent.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            textComponent.fontSize = 14;
+            textComponent.fontSize = 11;
             textComponent.color = Color.white;
             textComponent.alignment = TextAnchor.MiddleCenter;
             
@@ -194,7 +157,7 @@ namespace Immutable.Passport.WebViewTesting
             
             RectTransform rectTransform = inputFieldGO.AddComponent<RectTransform>();
             rectTransform.anchoredPosition = position;
-            rectTransform.sizeDelta = new Vector2(400, 30);
+            rectTransform.sizeDelta = new Vector2(140, 25);
             
             Image image = inputFieldGO.AddComponent<Image>();
             image.color = new Color(1f, 1f, 1f, 0.8f);
@@ -241,176 +204,257 @@ namespace Immutable.Passport.WebViewTesting
             return inputFieldGO;
         }
         
-        private static GameObject CreateDropdown(Transform parent, Vector2 position, WebViewTestManager manager)
+        private static GameObject CreateControlPanel(Transform parent)
         {
-            GameObject dropdownGO = new GameObject("PackageDropdown");
-            dropdownGO.transform.SetParent(parent, false);
+            GameObject controlPanel = new GameObject("ControlPanel");
+            controlPanel.transform.SetParent(parent, false);
+            RectTransform rectTransform = controlPanel.AddComponent<RectTransform>();
+            rectTransform.anchorMin = new Vector2(0, 0);
+            rectTransform.anchorMax = new Vector2(1, 0);
+            rectTransform.offsetMin = Vector2.zero;
+            rectTransform.offsetMax = Vector2.zero;
+            rectTransform.pivot = new Vector2(0, 0);
+            rectTransform.sizeDelta = new Vector2(0, 50);
+            rectTransform.anchoredPosition = new Vector2(0, 1030);
+
+            Image background = controlPanel.AddComponent<Image>();
+            background.color = new Color(0.247f, 0.247f, 0.247f, 0.9f); // Grey background
             
-            RectTransform rectTransform = dropdownGO.AddComponent<RectTransform>();
-            rectTransform.anchoredPosition = position;
-            rectTransform.sizeDelta = new Vector2(200, 30);
+            // Add vertical layout group for proper spacing
+            VerticalLayoutGroup layoutGroup = controlPanel.AddComponent<VerticalLayoutGroup>();
+            layoutGroup.spacing = 5f;
+            layoutGroup.padding = new RectOffset(10, 10, 10, 10);
+            layoutGroup.childAlignment = TextAnchor.UpperLeft;
+            layoutGroup.childControlWidth = false;
+            layoutGroup.childControlHeight = false;
+            layoutGroup.childForceExpandWidth = false;
+            layoutGroup.childForceExpandHeight = false;
             
-            Image background = dropdownGO.AddComponent<Image>();
-            background.color = new Color(1f, 1f, 1f, 0.9f);
-            
-            UnityEngine.UI.Dropdown dropdown = dropdownGO.AddComponent<UnityEngine.UI.Dropdown>();
-            dropdown.targetGraphic = background;
-            
-            // Create dropdown template
-            CreateDropdownTemplate(dropdownGO, dropdown);
-            
-            // Add options
-            dropdown.options.Clear();
-            dropdown.options.Add(new UnityEngine.UI.Dropdown.OptionData("Volt Unity Web Browser"));
-            dropdown.options.Add(new UnityEngine.UI.Dropdown.OptionData("Alacrity WebView"));
-            dropdown.options.Add(new UnityEngine.UI.Dropdown.OptionData("UWebView2"));
-            dropdown.options.Add(new UnityEngine.UI.Dropdown.OptionData("ZenFulcrum Browser"));
-            dropdown.options.Add(new UnityEngine.UI.Dropdown.OptionData("Vuplex 3D WebView"));
-            
-            // Set initial value (Volt Unity Web Browser = index 0)
-            dropdown.value = 0;
-            dropdown.RefreshShownValue();
-            
-            // Wire up event
-            dropdown.onValueChanged.AddListener((int index) => {
-                manager.selectedPackage = (WebViewTestManager.WebViewPackage)index;
-                Debug.Log($"Selected WebView package: {manager.selectedPackage}");
-            });
-            
-            return dropdownGO;
+            return controlPanel;
         }
         
-        private static void CreateDropdownTemplate(GameObject dropdownGO, UnityEngine.UI.Dropdown dropdown)
+        private static GameObject CreateWebViewArea(Transform parent)
         {
-            // Create label (caption text)
-            GameObject labelGO = new GameObject("Label");
-            labelGO.transform.SetParent(dropdownGO.transform, false);
+            GameObject webViewArea = new GameObject("WebViewArea");
+            webViewArea.transform.SetParent(parent, false);
+            
+            RectTransform rectTransform = webViewArea.AddComponent<RectTransform>();
+            rectTransform.anchorMin = new Vector2(0, 0);
+            rectTransform.anchorMax = new Vector2(1, 1);
+            rectTransform.offsetMin = Vector2.zero;
+            rectTransform.offsetMax = Vector2.zero;
+            rectTransform.pivot = new Vector2(0, 0);
+            rectTransform.sizeDelta = new Vector2(0, -45);
+            
+            Image background = webViewArea.AddComponent<Image>();
+            background.color = new Color(0.2f, 0.8f, 0.2f, 0.9f); // Green background
+            
+            // Add label (positioned properly within the area)
+            GameObject labelGO = new GameObject("WebViewLabel");
+            labelGO.transform.SetParent(webViewArea.transform, false);
             
             RectTransform labelRect = labelGO.AddComponent<RectTransform>();
-            labelRect.anchorMin = Vector2.zero;
-            labelRect.anchorMax = Vector2.one;
-            labelRect.offsetMin = new Vector2(10, 2);
-            labelRect.offsetMax = new Vector2(-25, -2);
+            labelRect.anchorMin = new Vector2(0, 0.9f);
+            labelRect.anchorMax = new Vector2(1, 1f);
+            labelRect.offsetMin = Vector2.zero;
+            labelRect.offsetMax = Vector2.zero;
             
             Text labelText = labelGO.AddComponent<Text>();
-            labelText.text = "Volt Unity Web Browser";
+            labelText.text = "WebView Display Area (Press D to see dimensions)";
             labelText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            labelText.fontSize = 12;
-            labelText.color = Color.black;
-            labelText.alignment = TextAnchor.MiddleLeft;
+            labelText.fontSize = 14;
+            labelText.color = Color.white;
+            labelText.alignment = TextAnchor.MiddleCenter;
             
-            dropdown.captionText = labelText;
+            return webViewArea;
+        }
+        
+        private static void CreateControlsInPanel(Transform parent, WebViewTestManager manager)
+        {          
+            GameObject buttonRow1 = CreateHorizontalRow(parent);
+            GameObject testLoginBtn = CreateLayoutButton(buttonRow1.transform, "Test Login");
+            GameObject testMsgBtn = CreateLayoutButton(buttonRow1.transform, "Test Messaging");
+            GameObject closeBtn = CreateLayoutButton(buttonRow1.transform, "Close WebView");
+            GameObject findWebViewBtn = CreateLayoutButton(buttonRow1.transform, "Find WebView");
+            GameObject urlLabel = CreateLayoutText(buttonRow1.transform, "URL:", 12);
+            GameObject urlInputGO = CreateLayoutInputField(buttonRow1.transform, "Enter URL...");
+            GameObject navigateBtn = CreateLayoutButton(buttonRow1.transform, "Go");
+            GameObject refreshBtn = CreateLayoutButton(buttonRow1.transform, "Refresh");
+            GameObject backBtn = CreateLayoutButton(buttonRow1.transform, "Back");
+            GameObject forwardBtn = CreateLayoutButton(buttonRow1.transform, "Forward");
+            GameObject testInputBtn = CreateLayoutButton(buttonRow1.transform, "Test Input");
+            GameObject testPopupBtn = CreateLayoutButton(buttonRow1.transform, "Test Popup");
+            GameObject statusOutput = CreateLayoutText(buttonRow1.transform, "Status: Ready", 10, "StatusOutput");
+            GameObject performanceOutput = CreateLayoutText(buttonRow1.transform, "Performance: -", 10, "PerformanceOutput");
             
-            // Create arrow
-            GameObject arrowGO = new GameObject("Arrow");
-            arrowGO.transform.SetParent(dropdownGO.transform, false);
+            // Wire up manager references
+            manager.testLoginButton = testLoginBtn.GetComponent<Button>();
+            manager.testMessagingButton = testMsgBtn.GetComponent<Button>();
+            manager.closeWebViewButton = closeBtn.GetComponent<Button>();
+            manager.urlInputField = urlInputGO.GetComponent<InputField>();
+            manager.navigateButton = navigateBtn.GetComponent<Button>();
+            manager.backButton = backBtn.GetComponent<Button>();
+            manager.forwardButton = forwardBtn.GetComponent<Button>();
+            manager.refreshButton = refreshBtn.GetComponent<Button>();
+            manager.testInputButton = testInputBtn.GetComponent<Button>();
+            manager.findWebViewButton = findWebViewBtn.GetComponent<Button>();
+            manager.testPopupButton = testPopupBtn.GetComponent<Button>();
+            manager.statusOutput = statusOutput.GetComponent<Text>();
+            manager.performanceOutput = performanceOutput.GetComponent<Text>();
             
-            RectTransform arrowRect = arrowGO.AddComponent<RectTransform>();
-            arrowRect.anchorMin = new Vector2(1, 0.5f);
-            arrowRect.anchorMax = new Vector2(1, 0.5f);
-            arrowRect.sizeDelta = new Vector2(20, 20);
-            arrowRect.anchoredPosition = new Vector2(-15, 0);
+            // Set to UWB (only option)
+            manager.selectedPackage = WebViewTestManager.WebViewPackage.VoltUnityWebBrowser;
+        }
+        
+        private static GameObject CreateHorizontalRow(Transform parent)
+        {
+            GameObject row = new GameObject("Row");
+            row.transform.SetParent(parent, false);
             
-            Text arrowText = arrowGO.AddComponent<Text>();
-            arrowText.text = "▼";
-            arrowText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            arrowText.fontSize = 12;
-            arrowText.color = Color.black;
-            arrowText.alignment = TextAnchor.MiddleCenter;
+            RectTransform rectTransform = row.AddComponent<RectTransform>();
+            rectTransform.anchorMin = new Vector2(0, 0);
+            rectTransform.anchorMax = new Vector2(1, 0);
+            rectTransform.pivot = new Vector2(0.5f, 0.5f);
             
-            // Create proper template with Toggle component
-            GameObject templateGO = new GameObject("Template");
-            templateGO.transform.SetParent(dropdownGO.transform, false);
-            templateGO.SetActive(false);
+            HorizontalLayoutGroup layoutGroup = row.AddComponent<HorizontalLayoutGroup>();
+            layoutGroup.spacing = 10f;
+            layoutGroup.padding = new RectOffset(5, 5, 0, 0);
+            layoutGroup.childAlignment = TextAnchor.UpperLeft;
+            layoutGroup.childControlWidth = false;
+            layoutGroup.childControlHeight = false;
+            layoutGroup.childForceExpandWidth = false;
+            layoutGroup.childForceExpandHeight = false;
             
-            RectTransform templateRect = templateGO.AddComponent<RectTransform>();
-            templateRect.anchorMin = new Vector2(0, 0);
-            templateRect.anchorMax = new Vector2(1, 0);
-            templateRect.pivot = new Vector2(0.5f, 1);
-            templateRect.anchoredPosition = new Vector2(0, 2);
-            templateRect.sizeDelta = new Vector2(0, 150);
+            LayoutElement layoutElement = row.AddComponent<LayoutElement>();
+            layoutElement.preferredHeight = 30f;
             
-            Image templateImage = templateGO.AddComponent<Image>();
-            templateImage.color = new Color(1f, 1f, 1f, 0.95f);
+            return row;
+        }
+        
+        private static GameObject CreateLayoutButton(Transform parent, string text)
+        {
+            GameObject buttonGO = new GameObject($"Button_{text.Replace(" ", "")}");
+            buttonGO.transform.SetParent(parent, false);
             
-            // Create Viewport
-            GameObject viewportGO = new GameObject("Viewport");
-            viewportGO.transform.SetParent(templateGO.transform, false);
+            RectTransform rectTransform = buttonGO.AddComponent<RectTransform>();
+            rectTransform.sizeDelta = new Vector2(90, 25);
             
-            RectTransform viewportRect = viewportGO.AddComponent<RectTransform>();
-            viewportRect.anchorMin = Vector2.zero;
-            viewportRect.anchorMax = Vector2.one;
-            viewportRect.sizeDelta = Vector2.zero;
-            viewportRect.anchoredPosition = Vector2.zero;
+            Image image = buttonGO.AddComponent<Image>();
+            image.color = new Color(0.2f, 0.6f, 1f, 1f);
             
-            Image viewportImage = viewportGO.AddComponent<Image>();
-            viewportImage.color = new Color(1f, 1f, 1f, 0f); // Transparent
-            viewportImage.raycastTarget = false;
+            Button button = buttonGO.AddComponent<Button>();
+            button.targetGraphic = image;
             
-            UnityEngine.UI.Mask viewportMask = viewportGO.AddComponent<UnityEngine.UI.Mask>();
-            viewportMask.showMaskGraphic = false;
+            // Button text
+            GameObject textGO = new GameObject("Text");
+            textGO.transform.SetParent(buttonGO.transform, false);
             
-            // Create Content
-            GameObject contentGO = new GameObject("Content");
-            contentGO.transform.SetParent(viewportGO.transform, false);
+            RectTransform textRect = textGO.AddComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = Vector2.zero;
+            textRect.offsetMax = Vector2.zero;
             
-            RectTransform contentRect = contentGO.AddComponent<RectTransform>();
-            contentRect.anchorMin = new Vector2(0, 1);
-            contentRect.anchorMax = new Vector2(1, 1);
-            contentRect.pivot = new Vector2(0.5f, 1);
-            contentRect.anchoredPosition = Vector2.zero;
-            contentRect.sizeDelta = new Vector2(0, 20);
+            Text textComponent = textGO.AddComponent<Text>();
+            textComponent.text = text;
+            textComponent.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            textComponent.fontSize = 10;
+            textComponent.color = Color.white;
+            textComponent.alignment = TextAnchor.MiddleCenter;
             
-            // Create Item (with Toggle component)
-            GameObject itemGO = new GameObject("Item");
-            itemGO.transform.SetParent(contentGO.transform, false);
+            LayoutElement layoutElement = buttonGO.AddComponent<LayoutElement>();
+            layoutElement.preferredWidth = 90f;
+            layoutElement.preferredHeight = 25f;
             
-            RectTransform itemRect = itemGO.AddComponent<RectTransform>();
-            itemRect.anchorMin = Vector2.zero;
-            itemRect.anchorMax = new Vector2(1, 1);
-            itemRect.sizeDelta = Vector2.zero;
-            itemRect.anchoredPosition = Vector2.zero;
+            return buttonGO;
+        }
+        
+        private static GameObject CreateLayoutText(Transform parent, string text, int fontSize, string name = null)
+        {
+            GameObject textGO = new GameObject(name ?? $"Text_{text.Replace(" ", "").Substring(0, Mathf.Min(10, text.Length))}");
+            textGO.transform.SetParent(parent, false);
             
-            UnityEngine.UI.Toggle itemToggle = itemGO.AddComponent<UnityEngine.UI.Toggle>();
-            itemToggle.targetGraphic = null;
-            itemToggle.isOn = false;
+            RectTransform rectTransform = textGO.AddComponent<RectTransform>();
+
+            if (text.StartsWith("URL:"))
+            {
+                rectTransform.sizeDelta = new Vector2(30, 25);
+            }
+            else
+            {
+                rectTransform.sizeDelta = new Vector2(200, 25);
+            }
             
-            // Create Item Background
-            GameObject itemBgGO = new GameObject("Item Background");
-            itemBgGO.transform.SetParent(itemGO.transform, false);
+            Text textComponent = textGO.AddComponent<Text>();
+            textComponent.text = text;
+            textComponent.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            textComponent.fontSize = fontSize;
+            textComponent.color = Color.white;
+            textComponent.alignment = TextAnchor.MiddleLeft;
             
-            RectTransform itemBgRect = itemBgGO.AddComponent<RectTransform>();
-            itemBgRect.anchorMin = Vector2.zero;
-            itemBgRect.anchorMax = Vector2.one;
-            itemBgRect.sizeDelta = Vector2.zero;
-            itemBgRect.anchoredPosition = Vector2.zero;
+            LayoutElement layoutElement = textGO.AddComponent<LayoutElement>();
+            layoutElement.preferredWidth = 200f;
+            layoutElement.preferredHeight = 25f;
             
-            Image itemBgImage = itemBgGO.AddComponent<Image>();
-            itemBgImage.color = new Color(0.96f, 0.96f, 0.96f, 1f);
+            return textGO;
+        }
+        
+        private static GameObject CreateLayoutInputField(Transform parent, string placeholder)
+        {
+            GameObject inputFieldGO = new GameObject("InputField_URL");
+            inputFieldGO.transform.SetParent(parent, false);
             
-            itemToggle.targetGraphic = itemBgImage;
+            RectTransform rectTransform = inputFieldGO.AddComponent<RectTransform>();
+            rectTransform.sizeDelta = new Vector2(300, 25);
             
-            // Create Item Label
-            GameObject itemLabelGO = new GameObject("Item Label");
-            itemLabelGO.transform.SetParent(itemGO.transform, false);
+            Image image = inputFieldGO.AddComponent<Image>();
+            image.color = new Color(1f, 1f, 1f, 0.8f);
             
-            RectTransform itemLabelRect = itemLabelGO.AddComponent<RectTransform>();
-            itemLabelRect.anchorMin = Vector2.zero;
-            itemLabelRect.anchorMax = Vector2.one;
-            itemLabelRect.offsetMin = new Vector2(10, 1);
-            itemLabelRect.offsetMax = new Vector2(-10, -2);
+            InputField inputField = inputFieldGO.AddComponent<InputField>();
+            inputField.transition = Selectable.Transition.ColorTint;
             
-            Text itemLabelText = itemLabelGO.AddComponent<Text>();
-            itemLabelText.text = "Option";
-            itemLabelText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            itemLabelText.fontSize = 12;
-            itemLabelText.color = Color.black;
-            itemLabelText.alignment = TextAnchor.MiddleLeft;
+            // Text component for input field
+            GameObject textGO = new GameObject("Text");
+            textGO.transform.SetParent(inputFieldGO.transform, false);
             
-            // Set dropdown references
-            dropdown.template = templateRect;
-            dropdown.captionText = labelText;
-            dropdown.itemText = itemLabelText;
+            RectTransform textRect = textGO.AddComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = new Vector2(5, 0);
+            textRect.offsetMax = new Vector2(-5, 0);
+            
+            Text textComponent = textGO.AddComponent<Text>();
+            textComponent.text = "";
+            textComponent.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            textComponent.fontSize = 12;
+            textComponent.color = Color.black;
+            textComponent.alignment = TextAnchor.MiddleLeft;
+            
+            // Placeholder
+            GameObject placeholderGO = new GameObject("Placeholder");
+            placeholderGO.transform.SetParent(inputFieldGO.transform, false);
+            
+            RectTransform placeholderRect = placeholderGO.AddComponent<RectTransform>();
+            placeholderRect.anchorMin = Vector2.zero;
+            placeholderRect.anchorMax = Vector2.one;
+            placeholderRect.offsetMin = new Vector2(5, 0);
+            placeholderRect.offsetMax = new Vector2(-5, 0);
+            
+            Text placeholderComponent = placeholderGO.AddComponent<Text>();
+            placeholderComponent.text = placeholder;
+            placeholderComponent.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            placeholderComponent.fontSize = 12;
+            placeholderComponent.color = new Color(0.5f, 0.5f, 0.5f, 1f);
+            placeholderComponent.alignment = TextAnchor.MiddleLeft;
+            
+            inputField.textComponent = textComponent;
+            inputField.placeholder = placeholderComponent;
+            
+            LayoutElement layoutElement = inputFieldGO.AddComponent<LayoutElement>();
+            layoutElement.preferredWidth = 200f;
+            layoutElement.preferredHeight = 25f;
+            
+            return inputFieldGO;
         }
     }
 }

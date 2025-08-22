@@ -1,26 +1,37 @@
 # 🧪 WebView Testing Framework
 
-This framework provides a standardized way to test different WebView packages for Unity integration with Immutable Passport.
+This framework demonstrates and validates the **Volt Unity Web Browser (UWB)** implementation for Immutable Passport login integration.
 
 ## 🎯 Purpose
 
-- **Compare WebView packages** (Volt Unity Web Browser, Alacrity, UWebView2, ZenFulcrum, Vuplex 3D WebView)
-- **Test login page rendering** with actual Passport authentication
-- **Evaluate message passing** between JavaScript and Unity
-- **Measure performance** (FPS, memory usage, rendering quality)
-- **Validate SDK integration** for distribution
+After comprehensive evaluation, **Volt Unity Web Browser has been selected** as the optimal solution:
+
+- ✅ **Production-ready authentication** - Handles complex OAuth flows (Google, Okta, Yubikey)
+- ✅ **MIT Licensed** - Free for commercial SDK distribution
+- ✅ **Already integrated** - No new dependencies required
+- ✅ **Multi-platform support** - Windows and Mac compatibility
+- ✅ **Modern web standards** - Based on Chromium Embedded Framework (CEF)
+
+## 🖥️ Platform Requirements
+
+**Supported Platforms:**
+
+- ✅ **Windows** - Full support with CEF engine
+- ✅ **macOS** - Full support with CEF engine
+- ❌ **Mobile** (iOS/Android) - Not supported by Volt Unity Web Browser
+- ❌ **Linux** - Not supported by Immutable SDK
+
+**Note:** The framework will display a warning message on unsupported platforms.
 
 ## 📁 Structure
 
-```
+```text
 WebViewTesting/
-├── WebViewTestManager.cs          # Main test controller
-├── IWebViewAdapter.cs             # Common interface for all WebView packages
-├── AlacrityWebViewAdapter.cs      # Alacrity WebView implementation
-├── UWebView2Adapter.cs            # UWebView2 implementation  
-├── ZenFulcrumWebViewAdapter.cs    # ZenFulcrum implementation
-├── Vuplex3DWebViewAdapter.cs      # Vuplex 3D WebView implementation
+├── WebViewTestManager.cs          # Main test controller with navigation & debug tools
+├── IWebViewAdapter.cs             # Common interface for WebView implementations
+├── VoltUnityWebBrowserAdapter.cs  # Complete UWB implementation (PRODUCTION READY)
 ├── WebViewTestSceneSetup.cs       # Editor utility to create test scene
+├── test-message-page.html         # Test page for JavaScript ↔ Unity messaging
 └── README.md                      # This file
 ```
 
@@ -33,27 +44,18 @@ WebViewTesting/
 Immutable → WebView Testing → Create WebView Test Scene
 ```
 
-### 2. Import WebView Package
+### 2. Test UWB Implementation
 
-Download and import one of the WebView packages:
+The Volt Unity Web Browser is already integrated! No additional packages needed.
 
-- **Volt Unity Web Browser (UWB)**: `https://projects.voltstro.dev/UnityWebBrowser/latest/` ⭐ **RECOMMENDED** (MIT License, Multi-Platform)
-- **Alacrity**: `https://alacrity.kevinbedi.com/`
-- **UWebView2**: `https://uwebview.com/`
-- **ZenFulcrum**: `https://zenfulcrum.com/browser`
-- **Vuplex 3D WebView**: `https://store.vuplex.com/webview/windows-mac`
+### 3. Run Tests
 
-### 3. Update Adapter Implementation
-
-Replace the template code in the corresponding adapter (e.g., `AlacrityWebViewAdapter.cs`) with actual WebView API calls.
-
-### 4. Run Tests
-
-1. Open the WebView Test scene
-2. 
-3. Select the WebView package in the dropdown
-4. Click "Test Login Page" to test with `https://auth.immutable.com`
-5. Click "Test Messaging" to test JavaScript ↔ Unity communication
+1. **Test Login Page** - Load Passport sample app (`https://passport.immutable.com/sdk-sample-app`)
+2. **Navigate** - Use URL bar to test different sites
+3. **Test Input** - Inject input debugging JavaScript
+4. **Test Popup** - Verify popup handling (opens in external browser)
+5. **Find WebView** - Locate WebView GameObject in hierarchy for inspector access
+6. **Test Messaging** - Test JavaScript ↔ Unity communication
 
 ## 🧪 Test Scenarios
 
