@@ -31,7 +31,7 @@ WebViewTesting/
 ├── IWebViewAdapter.cs             # Common interface for WebView implementations
 ├── VoltUnityWebBrowserAdapter.cs  # Complete UWB implementation (PRODUCTION READY)
 ├── WebViewTestSceneSetup.cs       # Editor utility to create test scene
-├── test-message-page.html         # Test page for JavaScript ↔ Unity messaging
+
 └── README.md                      # This file
 ```
 
@@ -178,7 +178,7 @@ webView.ExecuteJavaScript("window.receiveUnityMessage('Hello WebView!');");
 ## 🔗 Test Resources
 
 - **Login Page**: `https://auth.immutable.com`
-- **Message Test Page**: `StreamingAssets/test-message-page.html`
+- **Message Test Page**: `http://localhost:8080` (Node.js server)
 - **OAuth Callback**: `immutablerunner://callback?code=test&state=test`
 
 ## 🎯 Success Criteria
