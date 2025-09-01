@@ -194,17 +194,15 @@ namespace Immutable.Passport
         /// </summary>
         private IPassportWebView CreatePlatformWebView()
         {
-#if !IMMUTABLE_CUSTOM_BROWSER && UNITY_STANDALONE_WIN
+#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_EDITOR && UNITY_EDITOR_WIN))
             PassportLogger.Info($"{TAG} Creating Windows WebView (UWB)");
             return new WindowsPassportWebView(rawImage, this);
 #elif UNITY_IOS && !UNITY_EDITOR
             PassportLogger.Info($"{TAG} Creating iOS WebView (WKWebView)");
-            // TODO: Implement iOS WebView
-            throw new NotImplementedException("iOS WebView not yet implemented");
+            return new iOSPassportWebView(rawImage, this);
 #elif UNITY_ANDROID && !UNITY_EDITOR
             PassportLogger.Info($"{TAG} Creating Android WebView");
-            // TODO: Implement Android WebView
-            throw new NotImplementedException("Android WebView not yet implemented");
+            return new AndroidPassportWebView(rawImage, this);
 #elif UNITY_STANDALONE_OSX
             PassportLogger.Info($"{TAG} Creating macOS WebView (WKWebView)");
             // TODO: Implement macOS WebView
