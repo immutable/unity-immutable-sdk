@@ -197,10 +197,10 @@ namespace Immutable.Passport
 #if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_EDITOR && UNITY_EDITOR_WIN))
             PassportLogger.Info($"{TAG} Creating Windows WebView (UWB)");
             return new WindowsPassportWebView(rawImage, this);
-#elif UNITY_IOS && !UNITY_EDITOR
+#elif UNITY_IOS || UNITY_EDITOR_OSX
             PassportLogger.Info($"{TAG} Creating iOS WebView (WKWebView)");
             return new iOSPassportWebView(rawImage, this);
-#elif UNITY_ANDROID && !UNITY_EDITOR
+#elif UNITY_ANDROID
             PassportLogger.Info($"{TAG} Creating Android WebView");
             return new AndroidPassportWebView(rawImage, this);
 #elif UNITY_STANDALONE_OSX

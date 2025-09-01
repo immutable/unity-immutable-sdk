@@ -3,13 +3,13 @@ using UnityEngine;
 using UnityEngine.UI;
 using Immutable.Passport.Core.Logging;
 
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if UNITY_ANDROID
 using Immutable.Browser.Gree;
 #endif
 
 namespace Immutable.Passport
 {
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if UNITY_ANDROID
     /// <summary>
     /// Android implementation of IPassportWebView using Gree WebView (Android WebView)
     /// Wraps Gree WebViewObject in a clean, platform-agnostic interface
