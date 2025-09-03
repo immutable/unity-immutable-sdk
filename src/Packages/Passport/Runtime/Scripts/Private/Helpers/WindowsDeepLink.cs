@@ -275,6 +275,8 @@ namespace Immutable.Passport.Helpers
             if (suffix == ".exe")
             {
                 // Get the path of the currently running executable
+#if !ENABLE_IL2CPP
+                // Process.MainModule is only supported in Mono builds, not in IL2CPP, and will cause a crash
                 try
                 {
                     var process = System.Diagnostics.Process.GetCurrentProcess();
@@ -291,6 +293,7 @@ namespace Immutable.Passport.Helpers
                 {
                     PassportLogger.Warn($"Process inaccessible: {ex.Message}. Using fallback method.");
                 }
+#endif
 
                 // Fallback: Use command line args
                 var args = System.Environment.GetCommandLineArgs();
