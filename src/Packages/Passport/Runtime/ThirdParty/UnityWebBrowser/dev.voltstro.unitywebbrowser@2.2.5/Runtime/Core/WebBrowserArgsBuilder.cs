@@ -1,4 +1,4 @@
-#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
+#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
 
 // UnityWebBrowser (UWB)
 // Copyright (c) 2021-2022 Voltstro-Studios
@@ -40,6 +40,15 @@ namespace VoltstroStudios.UnityWebBrowser.Core
                 builtArg += $" {parameters}";
 
             arguments.Add(builtArg);
+        }
+
+        /// <summary>
+        ///     Adds a flag-only argument (without parameters)
+        /// </summary>
+        /// <param name="arg"></param>
+        public void AppendFlag(string arg)
+        {
+            arguments.Add($"-{arg}");
         }
 
         /// <summary>

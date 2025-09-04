@@ -20,7 +20,8 @@
     "allowUnsafeCode": false,
     "overrideReferences": true,
     "precompiledReferences": [
-        "Newtonsoft.Json.dll"
+        "Newtonsoft.Json.dll",
+        "VoltstroStudios.UnityWebBrowser.Shared.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],

@@ -298,6 +298,11 @@ namespace Immutable.Passport
                 if (response != null && response.success == true && response.result != null)
                 {
                     var url = response.result.Replace(" ", "+");
+
+                    // force marketing consent to true for now
+                    // TODO: remove this once we have a way to get the marketing consent from the user
+                    url = url + "&marketingConsent=opted_in";
+
 #if UNITY_ANDROID && !UNITY_EDITOR
                     loginPKCEUrl = url;
                     SendAuthEvent(_pkceLoginOnly ? PassportAuthEvent.LoginPKCELaunchingCustomTabs : PassportAuthEvent.ConnectImxPKCELaunchingCustomTabs);
@@ -774,7 +779,7 @@ namespace Immutable.Passport
     {
 
         /// <summary>
-        /// Called when the Android Chrome Custom Tabs is hidden. 
+        /// Called when the Android Chrome Custom Tabs is hidden.
         /// Note that you won't be able to tell whether it was closed by the user or the SDK.
         /// <param name="completing">True if the user has entered everything required (e.g. email address),
         /// Chrome Custom Tabs have closed, and the SDK is trying to complete the PKCE flow.

@@ -1,6 +1,7 @@
-#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
+#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -27,6 +28,12 @@ namespace VoltstroStudios.UnityWebBrowser
     public class UwbWebView : MonoBehaviour, IWebBrowserClient
     {
         public event OnUnityPostMessageDelegate? OnUnityPostMessage;
+
+        // Required for Gree browser only
+#if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
+        public event OnUnityPostMessageDelegate? OnAuthPostMessage;
+        public event OnUnityPostMessageErrorDelegate? OnPostMessageError;
+#endif
 
         private WebBrowserClient? webBrowserClient;
 
@@ -70,19 +77,46 @@ namespace VoltstroStudios.UnityWebBrowser
             // Set up engine
             EngineConfiguration engineConfig = ScriptableObject.CreateInstance<EngineConfiguration>();
             engineConfig.engineAppName = "UnityWebBrowser.Engine.Cef";
-            engineConfig.engineFiles = new Engine.EnginePlatformFiles[]
+            
+            var engineFiles = new List<Engine.EnginePlatformFiles>();
+            
+            // Windows engine configuration
+            engineFiles.Add(new Engine.EnginePlatformFiles()
             {
-                new Engine.EnginePlatformFiles()
-                {
-                    platform = Platform.Windows64,
-                    engineBaseAppLocation = "",
-                    engineRuntimeLocation = "UWB/"
+                platform = Platform.Windows64,
+                engineBaseAppLocation = "",
+                engineRuntimeLocation = "UWB/"
 #if UNITY_EDITOR
-                    ,
-                    engineEditorLocation = "Packages/com.immutable.passport/Runtime/ThirdParty/UnityWebBrowser/dev.voltstro.unitywebbrowser.engine.cef.win.x64@2.2.5-130.1.16/Engine~"
+                ,
+                engineEditorLocation = "Packages/com.immutable.passport/Runtime/ThirdParty/UnityWebBrowser/dev.voltstro.unitywebbrowser.engine.cef.win.x64@2.2.5-130.1.16/Engine~"
 #endif
-                }
-            };
+            });
+            
+                    // macOS engine configuration (Intel)
+        engineFiles.Add(new Engine.EnginePlatformFiles()
+        {
+            platform = Platform.MacOS,
+            engineBaseAppLocation = "UnityWebBrowser.Engine.Cef.app/Contents/MacOS",
+            engineRuntimeLocation = "UWB/"
+#if UNITY_EDITOR
+            ,
+            engineEditorLocation = "Packages/com.immutable.passport/Runtime/ThirdParty/UnityWebBrowser/dev.voltstro.unitywebbrowser.engine.cef.macos.x64@2.2.5-130.1.16/Engine~"
+#endif
+        });
+
+        // macOS engine configuration (ARM64 - Apple Silicon)
+        engineFiles.Add(new Engine.EnginePlatformFiles()
+        {
+            platform = Platform.MacOSArm64,
+            engineBaseAppLocation = "UnityWebBrowser.Engine.Cef.app/Contents/MacOS",
+            engineRuntimeLocation = "UWB/"
+#if UNITY_EDITOR
+            ,
+            engineEditorLocation = "Packages/com.immutable.passport/Runtime/ThirdParty/UnityWebBrowser/dev.voltstro.unitywebbrowser.engine.cef.macos.arm64@2.2.5-130.1.16/Engine~"
+#endif
+        });
+            
+            engineConfig.engineFiles = engineFiles.ToArray();
             webBrowserClient.engine = engineConfig;
 
             // Find available ports
@@ -134,12 +168,30 @@ namespace VoltstroStudios.UnityWebBrowser
             Application.OpenURL(url);
         }
 
+        // Only available for mobile devices
+#if (UNITY_IPHONE && !UNITY_EDITOR) || (UNITY_ANDROID && !UNITY_EDITOR)
+        public void ClearCache(bool includeDiskFiles)
+        {
+            // UWB doesn't have direct cache clearing methods for mobile
+            // This would need to be implemented if mobile support is added
+        }
+
+        public void ClearStorage()
+        {
+            // UWB doesn't have direct storage clearing methods for mobile
+            // This would need to be implemented if mobile support is added
+        }
+#endif
+
+        // Required for Windows browser only
+#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
         public void Dispose()
         {
             if (webBrowserClient?.HasDisposed == true) return;
 
             webBrowserClient?.Dispose();
         }
+#endif
     }
 }
 

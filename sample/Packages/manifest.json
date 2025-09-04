@@ -64,7 +64,7 @@
     },
     {
       "name": "npmjs",
-      "url": "https://registry.npmjs.org/",
+      "url": "https://registry.npmjs.org",
       "scopes": [
         "com.unity.uiextensions"
       ]

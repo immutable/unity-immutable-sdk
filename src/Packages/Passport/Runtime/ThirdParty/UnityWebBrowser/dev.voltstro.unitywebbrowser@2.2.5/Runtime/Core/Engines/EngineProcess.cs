@@ -1,4 +1,4 @@
-#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
+#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
 
 // UnityWebBrowser (UWB)
 // Copyright (c) 2021-2024 Voltstro-Studios
@@ -31,7 +31,15 @@ namespace VoltstroStudios.UnityWebBrowser.Core.Engines
         /// <param name="logger"></param>
         public EngineProcess(Engine engine, IWebBrowserLogger logger)
         {
+#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
             processHandle = new WindowProcess();
+#elif UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
+            processHandle = new MacOsProcess();
+#elif UNITY_STANDALONE_LINUX
+            processHandle = new LinuxProcess();
+#else
+            throw new PlatformNotSupportedException("Current platform is not supported for UWB engine processes");
+#endif
             
             this.engine = engine;
             this.logger = logger;
