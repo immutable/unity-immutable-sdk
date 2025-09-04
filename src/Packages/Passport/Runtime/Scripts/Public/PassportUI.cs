@@ -202,7 +202,7 @@ namespace Immutable.Passport
             return new iOSPassportWebView(rawImage, this);
 #elif UNITY_ANDROID
             PassportLogger.Info($"{TAG} Creating Android WebView");
-            return new AndroidPassportWebView(rawImage, this);
+            return new AndroidVuplexWebView(rawImage);
 #elif UNITY_STANDALONE_OSX
             PassportLogger.Info($"{TAG} Creating macOS WebView (WKWebView)");
             // TODO: Implement macOS WebView

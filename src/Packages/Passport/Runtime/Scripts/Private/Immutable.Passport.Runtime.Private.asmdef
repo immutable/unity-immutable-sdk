@@ -6,7 +6,8 @@
         "UniTask",
         "Immutable.Browser.Core",
         "Immutable.Browser.Gree",
-        "Immutable.Passport.Core.Logging"
+        "Immutable.Passport.Core.Logging",
+        "Vuplex.WebView"
     ],
     "includePlatforms": [
         "Android",
