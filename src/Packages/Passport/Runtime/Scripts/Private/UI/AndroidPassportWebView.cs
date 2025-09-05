@@ -248,7 +248,7 @@ namespace Immutable.Passport
             UnityEngine.Object.DontDestroyOnLoad(webViewGameObject);
 
             // Add WebViewObject component
-            webViewObject = webViewGameObject.AddComponent<WebViewObject>();
+            webViewObject = new WebViewObject();
 
             PassportLogger.Info($"{TAG} Gree WebViewObject created successfully");
         }
