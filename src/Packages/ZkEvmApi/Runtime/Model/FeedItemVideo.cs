@@ -71,12 +71,13 @@ namespace Immutable.Api.ZkEvm.Model
         /// <param name="gameName">Game name.</param>
         /// <param name="questCompletedPopupText">Text to display when the quest is completed in an onboarding experience.</param>
         /// <param name="tags">The tags for the feed item.</param>
+        /// <param name="controlTags">Some specific tags for controlling feed items.</param>
         /// <param name="categories">The categories for the feed item.</param>
         /// <param name="onboardingExperience">The onboarding experience for the feed item.</param>
         /// <param name="type">Feed item type (required).</param>
         /// <param name="title">Title of the video (required).</param>
         /// <param name="url">URL of the video (required).</param>
-        public FeedItemVideo(string id = default(string), string name = default(string), string questId = default(string), int priority = default(int), int gemsEarnable = default(int), bool bypass = default(bool), bool dayZero = default(bool), Guid gameId = default(Guid), string gameName = default(string), string questCompletedPopupText = default(string), List<string> tags = default(List<string>), List<string> categories = default(List<string>), string onboardingExperience = default(string), TypeEnum type = default(TypeEnum), string title = default(string), string url = default(string))
+        public FeedItemVideo(string id = default(string), string name = default(string), string questId = default(string), int priority = default(int), int gemsEarnable = default(int), bool bypass = default(bool), bool dayZero = default(bool), Guid gameId = default(Guid), string gameName = default(string), string questCompletedPopupText = default(string), List<string> tags = default(List<string>), List<string> controlTags = default(List<string>), List<string> categories = default(List<string>), string onboardingExperience = default(string), TypeEnum type = default(TypeEnum), string title = default(string), string url = default(string))
         {
             // to ensure "id" is required (not null)
             if (id == null)
@@ -117,6 +118,7 @@ namespace Immutable.Api.ZkEvm.Model
             this.GameName = gameName;
             this.QuestCompletedPopupText = questCompletedPopupText;
             this.Tags = tags;
+            this.ControlTags = controlTags;
             this.Categories = categories;
             this.OnboardingExperience = onboardingExperience;
         }
@@ -199,6 +201,13 @@ namespace Immutable.Api.ZkEvm.Model
         public List<string> Tags { get; set; }
 
         /// <summary>
+        /// Some specific tags for controlling feed items
+        /// </summary>
+        /// <value>Some specific tags for controlling feed items</value>
+        [DataMember(Name = "control_tags", EmitDefaultValue = false)]
+        public List<string> ControlTags { get; set; }
+
+        /// <summary>
         /// The categories for the feed item
         /// </summary>
         /// <value>The categories for the feed item</value>
@@ -245,6 +254,7 @@ namespace Immutable.Api.ZkEvm.Model
             sb.Append("  GameName: ").Append(GameName).Append("\n");
             sb.Append("  QuestCompletedPopupText: ").Append(QuestCompletedPopupText).Append("\n");
             sb.Append("  Tags: ").Append(Tags).Append("\n");
+            sb.Append("  ControlTags: ").Append(ControlTags).Append("\n");
             sb.Append("  Categories: ").Append(Categories).Append("\n");
             sb.Append("  OnboardingExperience: ").Append(OnboardingExperience).Append("\n");
             sb.Append("  Type: ").Append(Type).Append("\n");
