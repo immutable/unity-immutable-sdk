@@ -237,7 +237,7 @@ namespace Immutable.Passport
             }
         }
 
-        #region Private Implementation
+    #region Private Implementation
 
         private void CreateWebViewObject()
         {
@@ -276,9 +276,9 @@ namespace Immutable.Passport
             PassportLogger.Info($"{TAG} Gree WebView configured successfully");
         }
 
-        #endregion
+    #endregion
 
-        #region WebView Event Handlers
+    #region WebView Event Handlers
 
         private void OnWebViewMessage(string message)
         {
@@ -326,7 +326,7 @@ namespace Immutable.Passport
             PassportLogger.Debug($"{TAG} WebView console log: {message}");
         }
 
-        #endregion
+    #endregion
     }
 #endif
 }

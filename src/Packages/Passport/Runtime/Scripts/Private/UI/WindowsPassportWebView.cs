@@ -355,7 +355,7 @@ namespace Immutable.Passport
             }
         }
 
-        #region Private Implementation
+    #region Private Implementation
 
         private void CreateUWBInstance()
         {
@@ -689,7 +689,7 @@ namespace Immutable.Passport
             }
         }
 
-        #endregion
+    #endregion
     }
 #endif
 }
