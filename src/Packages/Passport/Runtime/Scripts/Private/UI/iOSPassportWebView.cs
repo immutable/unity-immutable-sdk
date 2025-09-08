@@ -3,13 +3,13 @@ using UnityEngine;
 using UnityEngine.UI;
 using Immutable.Passport.Core.Logging;
 
-#if UNITY_IOS && !UNITY_EDITOR
+#if UNITY_IOS || UNITY_EDITOR_OSX
 using Immutable.Browser.Gree;
 #endif
 
 namespace Immutable.Passport
 {
-#if UNITY_IOS && !UNITY_EDITOR
+#if UNITY_IOS || UNITY_EDITOR_OSX
     /// <summary>
     /// iOS implementation of IPassportWebView using Gree WebView (WKWebView)
     /// Wraps Gree WebViewObject in a clean, platform-agnostic interface
@@ -246,8 +246,7 @@ namespace Immutable.Passport
             webViewGameObject = new GameObject("PassportUI_iOS_WebView");
             UnityEngine.Object.DontDestroyOnLoad(webViewGameObject);
 
-            // Add WebViewObject component
-            webViewObject = webViewGameObject.AddComponent<WebViewObject>();
+            webViewObject = new WebViewObject();
 
             PassportLogger.Info($"{TAG} Gree WebViewObject created successfully");
         }
@@ -266,8 +265,6 @@ namespace Immutable.Passport
             );
 
             // Configure WebView settings
-            webViewObject.SetMargins(0, 0, 0, 0); // Full screen
-            webViewObject.SetVisibility(false); // Start hidden
 
             // Clear cache if requested
             if (config.ClearCacheOnInit)

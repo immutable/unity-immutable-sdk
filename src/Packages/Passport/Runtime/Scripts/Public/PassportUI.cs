@@ -83,7 +83,6 @@ namespace Immutable.Passport
         private RawImage rawImage;
         // Login completion source removed - OAuth handled by external browser
         private bool isInitialized = false;
-        private bool pointerEnterTriggered = false;
         private GameObject bridgeWebViewGameObject;
 
         // Input management
@@ -459,8 +458,6 @@ namespace Immutable.Passport
                 bridgeWebViewGameObject = null; // Clear reference
             }
 
-            // Reset pointer enter flag for next login
-            pointerEnterTriggered = false;
         }
 
         /// <summary>

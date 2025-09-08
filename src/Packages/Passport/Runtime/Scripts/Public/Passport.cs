@@ -237,6 +237,7 @@ namespace Immutable.Passport
 #elif (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
                 // Initialise default browser client for Android, iOS, and macOS
                 _webBrowserClient = new GreeBrowserClient();
+                await UniTask.CompletedTask;
 #else
                 throw new PassportException("Platform not supported");
 #endif
