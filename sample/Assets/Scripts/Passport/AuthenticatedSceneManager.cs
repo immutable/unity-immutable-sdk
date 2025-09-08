@@ -60,6 +60,6 @@ public class AuthenticatedSceneManager : MonoBehaviour
 
     public static void NavigateToUnauthenticatedScene()
     {
-        UnityEngine.SceneManagement.SceneManager.LoadScene("InitialisationWithUI");
+        UnityEngine.SceneManagement.SceneManager.LoadScene("UnauthenticatedScene");
     }
 }
