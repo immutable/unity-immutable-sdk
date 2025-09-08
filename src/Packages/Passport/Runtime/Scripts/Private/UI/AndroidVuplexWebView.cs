@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Immutable.Passport.Core.Logging;
 
-            #if UNITY_ANDROID && !UNITY_EDITOR && VUPLEX_AVAILABLE && VUPLEX_AVAILABLE && VUPLEX_AVAILABLE
+#if UNITY_ANDROID && !UNITY_EDITOR && VUPLEX_AVAILABLE && VUPLEX_AVAILABLE && VUPLEX_AVAILABLE
 using Vuplex.WebView;
 #endif
 
@@ -20,8 +20,8 @@ namespace Immutable.Passport
     public class AndroidVuplexWebView : IPassportWebView
     {
         private const string TAG = "[AndroidVuplexWebView]";
-        
-            #if UNITY_ANDROID && !UNITY_EDITOR && VUPLEX_AVAILABLE && VUPLEX_AVAILABLE && VUPLEX_AVAILABLE
+
+#if UNITY_ANDROID && !UNITY_EDITOR && VUPLEX_AVAILABLE && VUPLEX_AVAILABLE && VUPLEX_AVAILABLE
         private CanvasWebViewPrefab? _webViewPrefab;
 #endif
         private readonly Dictionary<string, Action<string>> _jsHandlers = new Dictionary<string, Action<string>>();
@@ -33,7 +33,7 @@ namespace Immutable.Passport
         public event Action? OnLoadStarted;
 
         // Safe access - check initialization
-            #if UNITY_ANDROID && !UNITY_EDITOR && VUPLEX_AVAILABLE && VUPLEX_AVAILABLE && VUPLEX_AVAILABLE
+#if UNITY_ANDROID && !UNITY_EDITOR && VUPLEX_AVAILABLE && VUPLEX_AVAILABLE && VUPLEX_AVAILABLE
         public bool IsVisible => _webViewPrefab?.Visible ?? false;
         public string CurrentUrl => _webViewPrefab?.WebView?.Url ?? "";
 #else
@@ -54,7 +54,7 @@ namespace Immutable.Passport
                 return;
             }
 
-            #if UNITY_ANDROID && !UNITY_EDITOR && VUPLEX_AVAILABLE && VUPLEX_AVAILABLE
+#if UNITY_ANDROID && !UNITY_EDITOR && VUPLEX_AVAILABLE && VUPLEX_AVAILABLE
             try
             {
                 PassportLogger.Info($"{TAG} Initializing Vuplex WebView...");
@@ -73,7 +73,7 @@ namespace Immutable.Passport
 #endif
         }
 
-            #if UNITY_ANDROID && !UNITY_EDITOR && VUPLEX_AVAILABLE && VUPLEX_AVAILABLE
+#if UNITY_ANDROID && !UNITY_EDITOR && VUPLEX_AVAILABLE && VUPLEX_AVAILABLE
         private async UniTaskVoid InitializeAsync(PassportWebViewConfig config)
         {
             try
@@ -134,7 +134,7 @@ namespace Immutable.Passport
 
         public void LoadUrl(string url)
         {
-            #if UNITY_ANDROID && !UNITY_EDITOR && VUPLEX_AVAILABLE && VUPLEX_AVAILABLE
+#if UNITY_ANDROID && !UNITY_EDITOR && VUPLEX_AVAILABLE && VUPLEX_AVAILABLE
             if (!_isInitialized || _webViewPrefab?.WebView == null)
             {
                 PassportLogger.Error($"{TAG} Cannot load URL - WebView not initialized");
@@ -149,7 +149,7 @@ namespace Immutable.Passport
 
         public void Show()
         {
-            #if UNITY_ANDROID && !UNITY_EDITOR && VUPLEX_AVAILABLE && VUPLEX_AVAILABLE
+#if UNITY_ANDROID && !UNITY_EDITOR && VUPLEX_AVAILABLE && VUPLEX_AVAILABLE
             if (_webViewPrefab != null)
             {
                 _webViewPrefab.Visible = true;
@@ -159,7 +159,7 @@ namespace Immutable.Passport
 
         public void Hide()
         {
-            #if UNITY_ANDROID && !UNITY_EDITOR && VUPLEX_AVAILABLE && VUPLEX_AVAILABLE
+#if UNITY_ANDROID && !UNITY_EDITOR && VUPLEX_AVAILABLE && VUPLEX_AVAILABLE
             if (_webViewPrefab != null)
             {
                 _webViewPrefab.Visible = false;
@@ -169,7 +169,7 @@ namespace Immutable.Passport
 
         public void ExecuteJavaScript(string js)
         {
-            #if UNITY_ANDROID && !UNITY_EDITOR && VUPLEX_AVAILABLE && VUPLEX_AVAILABLE
+#if UNITY_ANDROID && !UNITY_EDITOR && VUPLEX_AVAILABLE && VUPLEX_AVAILABLE
             if (!_isInitialized || _webViewPrefab?.WebView == null)
             {
                 PassportLogger.Error($"{TAG} Cannot execute JavaScript - WebView not initialized");
@@ -184,7 +184,7 @@ namespace Immutable.Passport
         {
             _jsHandlers[methodName] = handler;
 
-            #if UNITY_ANDROID && !UNITY_EDITOR && VUPLEX_AVAILABLE && VUPLEX_AVAILABLE
+#if UNITY_ANDROID && !UNITY_EDITOR && VUPLEX_AVAILABLE && VUPLEX_AVAILABLE
             if (_isInitialized && _webViewPrefab?.WebView != null)
             {
                 ExecuteJavaScript($"window.{methodName}=d=>window.vuplex?.postMessage('{methodName}:'+(typeof d==='object'?JSON.stringify(d):d))");
@@ -194,7 +194,7 @@ namespace Immutable.Passport
 
         public void Dispose()
         {
-            #if UNITY_ANDROID && !UNITY_EDITOR && VUPLEX_AVAILABLE && VUPLEX_AVAILABLE
+#if UNITY_ANDROID && !UNITY_EDITOR && VUPLEX_AVAILABLE && VUPLEX_AVAILABLE
             if (_webViewPrefab != null)
             {
                 _webViewPrefab.Destroy();
