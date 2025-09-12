@@ -9103,6 +9103,11 @@ components:
           items:
             type: string
           type: array
+        control_tags:
+          description: Some specific tags for controlling feed items
+          items:
+            type: string
+          type: array
         categories:
           description: The categories for the feed item
           items:
@@ -9348,6 +9353,47 @@ components:
             type: string
         required:
         - type
+    FeedItemSocialQuest:
+      allOf:
+      - $ref: '#/components/schemas/FeedItemBase'
+      - type: object
+      - properties:
+          type:
+            description: Feed item type
+            enum:
+            - socialquest
+            type: string
+          title:
+            description: Title of the social quest
+            type: string
+          subtitle:
+            description: Title of the social quest
+            type: string
+          label:
+            description: The label for the CTA button
+            type: string
+          description:
+            description: The description for the CTA button
+            type: string
+          url:
+            description: The URL for the CTA button
+            type: string
+          logo:
+            description: URL of the logo
+            format: uri
+            type: string
+          platform_name:
+            description: The name of the platform social quest belongs to
+            type: string
+        required:
+        - description
+        - label
+        - logo
+        - platform_name
+        - subtitle
+        - title
+        - type
+        - url
     FilterValue:
       example:
       - value: Common
