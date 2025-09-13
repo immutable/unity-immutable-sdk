@@ -1,4 +1,4 @@
-# Immutable.Api.ZkEvm.Model.FeedItemCTA
+# Immutable.Api.ZkEvm.Model.FeedItemSocialQuest
 
 ## Properties
 
@@ -19,10 +19,13 @@ Name | Type | Description | Notes
 **Categories** | **List&lt;string&gt;** | The categories for the feed item | [optional] 
 **OnboardingExperience** | **string** | The onboarding experience for the feed item | [optional] 
 **Type** | **string** | Feed item type | 
+**Title** | **string** | Title of the social quest | 
+**Subtitle** | **string** | Title of the social quest | 
 **Label** | **string** | The label for the CTA button | 
 **Description** | **string** | The description for the CTA button | 
 **Url** | **string** | The URL for the CTA button | 
-**Image** | **string** | The image for the CTA background | 
+**Logo** | **string** | URL of the logo | 
+**PlatformName** | **string** | The name of the platform social quest belongs to | 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 
