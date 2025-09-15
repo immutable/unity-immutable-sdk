@@ -1,332 +1,213 @@
+#nullable enable
 using System;
+using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 using Immutable.Passport.Core.Logging;
 
-#if UNITY_IOS || UNITY_EDITOR_OSX
-using Immutable.Browser.Gree;
+#if UNITY_IOS && !UNITY_EDITOR
+using Vuplex.WebView;
 #endif
 
 namespace Immutable.Passport
 {
-#if UNITY_IOS || UNITY_EDITOR_OSX
     /// <summary>
-    /// iOS implementation of IPassportWebView using Gree WebView (WKWebView)
-    /// Wraps Gree WebViewObject in a clean, platform-agnostic interface
+    /// iOS implementation of IPassportWebView using Vuplex WebView
+    /// Provides embedded WebView functionality within the Unity app (not external browser)
+    /// This is different from iOSPassportWebView which uses external browser for auth flows
     /// </summary>
     public class iOSPassportWebView : IPassportWebView
     {
         private const string TAG = "[iOSPassportWebView]";
 
-        // Gree WebView components
-        private WebViewObject webViewObject;
-        private GameObject webViewGameObject;
+#if UNITY_IOS && !UNITY_EDITOR
+        private CanvasWebViewPrefab? _webViewPrefab;
+#endif
+        private readonly Dictionary<string, Action<string>> _jsHandlers = new Dictionary<string, Action<string>>();
+        private readonly RawImage _canvasReference;
+        private bool _isInitialized = false;
 
-        // Configuration and state
-        private RawImage targetRawImage;
-        private MonoBehaviour coroutineRunner;
-        private PassportWebViewConfig config;
-        private bool isInitialized = false;
-        private bool isVisible = false;
-        private string currentUrl = "";
+        public event Action<string>? OnJavaScriptMessage;
+        public event Action? OnLoadFinished;
+        public event Action? OnLoadStarted;
 
-        // Events
-        public event Action<string> OnJavaScriptMessage;
-        public event Action OnLoadFinished;
-        public event Action OnLoadStarted;
+        // Safe access - check initialization
+#if UNITY_IOS && !UNITY_EDITOR
+        public bool IsVisible => _webViewPrefab?.Visible ?? false;
+        public string CurrentUrl => _webViewPrefab?.WebView?.Url ?? "";
+#else
+        public bool IsVisible => false;
+        public string CurrentUrl => "";
+#endif
 
-        // Properties
-        public bool IsVisible => isVisible;
-        public string CurrentUrl => currentUrl;
-
-        /// <summary>
-        /// Constructor for iOS PassportWebView
-        /// </summary>
-        /// <param name="targetRawImage">RawImage component to display WebView content (not used on iOS - native overlay)</param>
-        /// <param name="coroutineRunner">MonoBehaviour to run coroutines (for consistency with other platforms)</param>
-        public iOSPassportWebView(RawImage targetRawImage, MonoBehaviour coroutineRunner)
+        public iOSPassportWebView(RawImage canvasReference)
         {
-            this.targetRawImage = targetRawImage ?? throw new ArgumentNullException(nameof(targetRawImage));
-            this.coroutineRunner = coroutineRunner ?? throw new ArgumentNullException(nameof(coroutineRunner));
-
-            PassportLogger.Info($"{TAG} iOS WebView wrapper created");
+            _canvasReference = canvasReference ?? throw new ArgumentNullException(nameof(canvasReference));
         }
 
         public void Initialize(PassportWebViewConfig config)
         {
-            if (isInitialized)
+            if (_isInitialized)
             {
                 PassportLogger.Warn($"{TAG} Already initialized, skipping");
                 return;
             }
 
-            this.config = config ?? new PassportWebViewConfig();
-
+#if UNITY_IOS && !UNITY_EDITOR
             try
             {
-                PassportLogger.Info($"{TAG} Initializing iOS WebView with Gree WebView...");
+                PassportLogger.Info($"{TAG} Initializing iOS WebView...");
 
-                CreateWebViewObject();
-                ConfigureWebView();
-
-                isInitialized = true;
-                PassportLogger.Info($"{TAG} iOS WebView initialized successfully");
+                // Start async initialization but don't wait
+                InitializeAsync(config).Forget();
             }
             catch (Exception ex)
             {
                 PassportLogger.Error($"{TAG} Failed to initialize: {ex.Message}");
                 throw;
             }
+#else
+            PassportLogger.Warn($"{TAG} Vuplex WebView is only supported on iOS builds, not in editor");
+            _isInitialized = true;
+#endif
         }
 
-        public void LoadUrl(string url)
+#if UNITY_IOS && !UNITY_EDITOR
+        private async UniTaskVoid InitializeAsync(PassportWebViewConfig config)
         {
-            if (!isInitialized)
-            {
-                PassportLogger.Error($"{TAG} Cannot load URL - WebView not initialized");
-                return;
-            }
-
-            if (string.IsNullOrEmpty(url))
-            {
-                PassportLogger.Error($"{TAG} Cannot load empty URL");
-                return;
-            }
-
             try
             {
-                PassportLogger.Info($"{TAG} Loading URL: {url}");
-                currentUrl = url;
+                // Create WebView prefab and parent to Canvas
+                _webViewPrefab = CanvasWebViewPrefab.Instantiate();
+                _webViewPrefab.Native2DModeEnabled = false; // Disable Native2DMode to avoid Unity integration issues
+                
+                // Set reasonable resolution - much lower to avoid texture size issues
+                _webViewPrefab.Resolution = 1.0f; // 1px per Unity unit - creates 800x600px texture
 
-                // iOS implementation: Use LaunchAuthURL to open in external browser (Safari/SFSafariViewController)
-                // This follows the same pattern as the main Passport SDK for iOS authentication
-                webViewObject.LaunchAuthURL(url, "immutablerunner://callback");
-                PassportLogger.Info($"{TAG} URL launched in external browser: {url}");
+                // Must be child of Canvas for Vuplex to work
+                _webViewPrefab.transform.SetParent(_canvasReference.canvas.transform, false);
 
-                // Trigger load started event
-                OnLoadStarted?.Invoke();
+                // Set reasonable fixed size instead of full-screen to avoid massive textures
+                var rect = _webViewPrefab.GetComponent<RectTransform>();
+                rect.anchorMin = new Vector2(0.5f, 0.5f); // Center anchor
+                rect.anchorMax = new Vector2(0.5f, 0.5f);
+                rect.sizeDelta = new Vector2(1000, 700); // Wider: 1000x700 for better login UX
+                rect.anchoredPosition = Vector2.zero; // Center position
 
-                // For iOS, we consider the load "finished" immediately since it opens externally
-                OnLoadFinished?.Invoke();
+                // Wait for WebView initialization
+                await _webViewPrefab.WaitUntilInitialized();
+
+                // Setup event handlers
+                _webViewPrefab.WebView.LoadProgressChanged += (s, e) =>
+                {
+                    if (e.Type == ProgressChangeType.Started)
+                    {
+                        OnLoadStarted?.Invoke();
+                    }
+                    else if (e.Type == ProgressChangeType.Finished)
+                    {
+                        OnLoadFinished?.Invoke();
+                    }
+                };
+                _webViewPrefab.WebView.MessageEmitted += (s, e) =>
+                {
+                    foreach (var h in _jsHandlers)
+                    {
+                        if (e.Value.StartsWith($"{h.Key}:"))
+                        {
+                            h.Value?.Invoke(e.Value.Substring(h.Key.Length + 1));
+                            return;
+                        }
+                    }
+
+                    OnJavaScriptMessage?.Invoke(e.Value);
+                };
+                _webViewPrefab.WebView.LoadFailed += (s, e) => PassportLogger.Warn($"{TAG} Load failed: {e.NativeErrorCode} for {e.Url}");
+
+                _isInitialized = true;
+                PassportLogger.Info($"{TAG} iOS WebView initialized successfully");
             }
             catch (Exception ex)
             {
-                PassportLogger.Error($"{TAG} Failed to load URL: {ex.Message}");
+                PassportLogger.Error($"{TAG} Failed to initialize iOS WebView: {ex.Message}");
+                throw;
             }
+        }
+#endif
+
+        public void LoadUrl(string url)
+        {
+#if UNITY_IOS && !UNITY_EDITOR
+            if (!_isInitialized || _webViewPrefab?.WebView == null)
+            {
+                PassportLogger.Error($"{TAG} Cannot load URL - iOS WebView not initialized");
+                return;
+            }
+
+            _webViewPrefab.WebView.LoadUrl(url);
+#else
+            PassportLogger.Warn($"{TAG} LoadUrl not supported in iOS editor mode");
+#endif
         }
 
         public void Show()
         {
-            if (!isInitialized)
+#if UNITY_IOS && !UNITY_EDITOR
+            if (_webViewPrefab != null)
             {
-                PassportLogger.Error($"{TAG} Cannot show - WebView not initialized");
-                return;
+                _webViewPrefab.Visible = true;
             }
-
-            try
-            {
-                PassportLogger.Info($"{TAG} Showing WebView (iOS uses external browser)");
-
-                // iOS implementation: WebView is always "shown" since we use external browser
-                // The actual display happens when LoadUrl calls LaunchAuthURL
-                isVisible = true;
-
-                PassportLogger.Info($"{TAG} WebView shown successfully");
-            }
-            catch (Exception ex)
-            {
-                PassportLogger.Error($"{TAG} Failed to show WebView: {ex.Message}");
-            }
+#endif
         }
 
         public void Hide()
         {
-            if (!isInitialized)
+#if UNITY_IOS && !UNITY_EDITOR
+            if (_webViewPrefab != null)
             {
-                PassportLogger.Warn($"{TAG} Cannot hide - WebView not initialized");
-                return;
+                _webViewPrefab.Visible = false;
             }
-
-            try
-            {
-                PassportLogger.Info($"{TAG} Hiding WebView (iOS external browser will close automatically)");
-
-                // iOS implementation: External browser closes automatically after auth
-                // No explicit hide needed
-                isVisible = false;
-
-                PassportLogger.Info($"{TAG} WebView hidden successfully");
-            }
-            catch (Exception ex)
-            {
-                PassportLogger.Error($"{TAG} Failed to hide WebView: {ex.Message}");
-            }
+#endif
         }
 
         public void ExecuteJavaScript(string js)
         {
-            if (!isInitialized)
+#if UNITY_IOS && !UNITY_EDITOR
+            if (!_isInitialized || _webViewPrefab?.WebView == null)
             {
-                PassportLogger.Error($"{TAG} Cannot execute JavaScript - WebView not initialized");
+                PassportLogger.Error($"{TAG} Cannot execute JavaScript - iOS WebView not initialized");
                 return;
             }
 
-            try
-            {
-                PassportLogger.Debug($"{TAG} Executing JavaScript: {js.Substring(0, Math.Min(100, js.Length))}...");
-                webViewObject.EvaluateJS(js);
-            }
-            catch (Exception ex)
-            {
-                PassportLogger.Error($"{TAG} Failed to execute JavaScript: {ex.Message}");
-            }
+            _webViewPrefab.WebView.ExecuteJavaScript(js);
+#endif
         }
 
         public void RegisterJavaScriptMethod(string methodName, Action<string> handler)
         {
-            if (!isInitialized)
-            {
-                PassportLogger.Error($"{TAG} Cannot register JavaScript method - WebView not initialized");
-                return;
-            }
+            _jsHandlers[methodName] = handler;
 
-            try
+#if UNITY_IOS && !UNITY_EDITOR
+            if (_isInitialized && _webViewPrefab?.WebView != null)
             {
-                PassportLogger.Info($"{TAG} Registering JavaScript method: {methodName}");
-
-                // iOS implementation: Since we use external browser (Safari/SFSafariViewController),
-                // JavaScript methods are handled through deep links and auth callbacks
-                // The login data will be captured via the auth callback when the external browser
-                // redirects back to the app with immutablerunner://callback
-
-                PassportLogger.Info($"{TAG} JavaScript method '{methodName}' registered (handled via deep link callbacks on iOS)");
+                ExecuteJavaScript($"window.{methodName}=d=>window.vuplex?.postMessage('{methodName}:'+(typeof d==='object'?JSON.stringify(d):d))");
             }
-            catch (Exception ex)
-            {
-                PassportLogger.Error($"{TAG} Failed to register JavaScript method: {ex.Message}");
-            }
+#endif
         }
 
         public void Dispose()
         {
-            try
+#if UNITY_IOS && !UNITY_EDITOR
+            if (_webViewPrefab != null)
             {
-                PassportLogger.Info($"{TAG} Disposing iOS WebView");
-
-                // Destroy WebView GameObject
-                if (webViewGameObject != null)
-                {
-                    UnityEngine.Object.DestroyImmediate(webViewGameObject);
-                    webViewGameObject = null;
-                }
-
-                // Clear references
-                webViewObject = null;
-                targetRawImage = null;
-                coroutineRunner = null;
-
-                isInitialized = false;
-                isVisible = false;
-
-                PassportLogger.Info($"{TAG} iOS WebView disposed successfully");
+                _webViewPrefab.Destroy();
+                _webViewPrefab = null;
             }
-            catch (Exception ex)
-            {
-                PassportLogger.Error($"{TAG} Error during disposal: {ex.Message}");
-            }
-        }
-
-    #region Private Implementation
-
-        private void CreateWebViewObject()
-        {
-            PassportLogger.Info($"{TAG} Creating Gree WebViewObject...");
-
-            // Create GameObject for WebView
-            webViewGameObject = new GameObject("PassportUI_iOS_WebView");
-            UnityEngine.Object.DontDestroyOnLoad(webViewGameObject);
-
-            webViewObject = new WebViewObject();
-
-            PassportLogger.Info($"{TAG} Gree WebViewObject created successfully");
-        }
-
-        private void ConfigureWebView()
-        {
-            PassportLogger.Info($"{TAG} Configuring Gree WebView...");
-
-            // Initialize WebViewObject with callbacks
-            webViewObject.Init(
-                cb: OnWebViewMessage,
-                httpErr: OnWebViewHttpError,
-                err: OnWebViewError,
-                auth: OnWebViewAuth,
-                log: OnWebViewLog
-            );
-
-            // Configure WebView settings
-
-            // Clear cache if requested
-            if (config.ClearCacheOnInit)
-            {
-                webViewObject.ClearCache(true);
-                PassportLogger.Info($"{TAG} WebView cache cleared");
-            }
-
-            PassportLogger.Info($"{TAG} Gree WebView configured successfully");
-        }
-
-    #endregion
-
-    #region WebView Event Handlers
-
-        private void OnWebViewMessage(string message)
-        {
-            try
-            {
-                PassportLogger.Debug($"{TAG} WebView message: {message}");
-
-                // Parse message to see if it's a JavaScript method call
-                if (message.Contains("method") && message.Contains("data"))
-                {
-                    // This is a JavaScript method call from our registered methods
-                    OnJavaScriptMessage?.Invoke(message);
-                }
-                else
-                {
-                    // Regular WebView message
-                    OnJavaScriptMessage?.Invoke(message);
-                }
-            }
-            catch (Exception ex)
-            {
-                PassportLogger.Error($"{TAG} Error handling WebView message: {ex.Message}");
-            }
-        }
-
-        private void OnWebViewHttpError(string id, string message)
-        {
-            PassportLogger.Error($"{TAG} WebView HTTP error [{id}]: {message}");
-        }
-
-        private void OnWebViewError(string id, string message)
-        {
-            PassportLogger.Error($"{TAG} WebView error [{id}]: {message}");
-        }
-
-        private void OnWebViewAuth(string message)
-        {
-            PassportLogger.Info($"{TAG} WebView auth message: {message}");
-            // Auth messages could be login completion, etc.
-            OnJavaScriptMessage?.Invoke(message);
-        }
-
-        private void OnWebViewLog(string message)
-        {
-            PassportLogger.Debug($"{TAG} WebView console log: {message}");
-        }
-
-    #endregion
-    }
 #endif
+
+            _jsHandlers.Clear();
+            _isInitialized = false;
+        }
+    }
 }

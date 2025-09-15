@@ -6,7 +6,8 @@ namespace Immutable.Passport
     /// Platform abstraction interface for PassportUI WebView implementations.
     /// Provides a unified API for different WebView technologies across platforms:
     /// - Windows: Volt Unity Web Browser (UWB) with Chromium CEF
-    /// - iOS/macOS: Gree WebView with WKWebView
+    /// - macOS: Volt Unity Web Browser (UWB) with Chromium CEF
+    /// - iOS: Vuplex 3D WebView with WKWebView
     /// - Android: Gree WebView with Android WebView
     /// </summary>
     public interface IPassportWebView
