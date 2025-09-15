@@ -353,6 +353,9 @@
             if (typeof uwb !== 'undefined' && uwb.ExecuteJsMethod) {
                 uwb.ExecuteJsMethod('HandleLoginData', JSON.stringify(loginData));
             }
+            if (window.vuplex && window.vuplex.postMessage) {
+                window.vuplex.postMessage('HandleLoginData:' + JSON.stringify(loginData));
+            }
         }
         
         function handleEmailLogin(event) {
@@ -379,6 +382,9 @@
             // Send to Unity WebView if available
             if (typeof uwb !== 'undefined' && uwb.ExecuteJsMethod) {
                 uwb.ExecuteJsMethod('HandleLoginData', JSON.stringify(loginData));
+            }
+            if (window.vuplex && window.vuplex.postMessage) {
+                window.vuplex.postMessage('HandleLoginData:' + JSON.stringify(loginData));
             }
         }
         
