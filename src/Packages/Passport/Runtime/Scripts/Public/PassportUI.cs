@@ -37,8 +37,8 @@ namespace Immutable.Passport
     /// Cross-platform WebView UI component for Passport authentication.
     /// Automatically selects the appropriate WebView implementation based on the target platform:
     /// - Windows: Unity Web Browser (UWB) with Chromium CEF
-    /// - iOS/Android: Gree unity-webview with external browser integration
-    /// - macOS: Not yet implemented
+    /// - iOS/Android: Vuplex WebView with embedded browser
+    /// - macOS: Vuplex WebView with embedded browser
     ///
     /// SETUP: When configuring the PassportUI prefab in the editor:
     /// - Set RawImage component's width and height to 0 in the RectTransform
@@ -207,9 +207,8 @@ namespace Immutable.Passport
             PassportLogger.Info($"{TAG} Creating Android WebView (Vuplex)");
             return new AndroidVuplexWebView(rawImage);
 #elif UNITY_STANDALONE_OSX
-            PassportLogger.Info($"{TAG} Creating macOS WebView (Vuplex)");
-            // TODO: Implement macOS WebView
-            throw new NotImplementedException("macOS WebView not yet implemented");
+            PassportLogger.Info($"{TAG} Creating MacOS WebView (Vuplex)");
+            return new MacOSPassportWebView(rawImage);
 #else
             PassportLogger.Error($"{TAG} WebView not supported on this platform");
             return null;
