@@ -81,7 +81,7 @@ namespace Immutable.Passport
                 // Create WebView prefab and parent to Canvas
                 _webViewPrefab = CanvasWebViewPrefab.Instantiate();
                 _webViewPrefab.Native2DModeEnabled = false; // Use standard mode for better desktop compatibility
-                
+
                 // Set higher resolution for desktop - MacOS can handle larger textures
                 _webViewPrefab.Resolution = 1.5f; // 1.5px per Unity unit for crisp rendering
 

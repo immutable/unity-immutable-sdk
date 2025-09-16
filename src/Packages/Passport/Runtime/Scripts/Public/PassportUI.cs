@@ -73,12 +73,28 @@ namespace Immutable.Passport
         [Tooltip("Unity Event triggered when login fails (with error message)")]
         public UnityEvent<string> OnLoginFailure;
 
-        [Header("Debug Settings")]
+        [Header("Debug Settings (Windows WebView Only)")]
+        [Tooltip("Enable remote debugging for the Windows WebView (Volt Unity Web Browser). Not used on other platforms.")]
         public bool enableRemoteDebugging = false;
+        [Tooltip("Port for remote debugging on Windows WebView (Volt Unity Web Browser). Not used on other platforms.")]
         public uint remoteDebuggingPort = 9222;
 
-        [Header("Cache Settings")]
+        [Header("Cache Settings (Windows WebView Only)")]
+        [Tooltip("Clear WebView cache on login for Windows WebView (Volt Unity Web Browser). Not used on other platforms.")]
         public bool clearCacheOnLogin = true;
+
+        [Header("WebView Settings")]
+        [Tooltip("URL to load in the WebView for authentication.")]
+        [SerializeField] private string webViewUrl = "http://localhost:3001";
+
+        /// <summary>
+        /// Gets or sets the URL to load in the WebView for authentication
+        /// </summary>
+        public string WebViewUrl
+        {
+            get => webViewUrl;
+            set => webViewUrl = value;
+        }
 
         // Cross-platform WebView abstraction
         private IPassportWebView webView;
@@ -293,7 +309,7 @@ namespace Immutable.Passport
 
                 if (loginSuccess)
                 {
-                    PassportLogger.Info($"{TAG} ✅ Login successful!");
+                    PassportLogger.Info($"{TAG} Login successful!");
 
                     // Trigger events
                     OnLoginSuccess?.Invoke();
@@ -305,7 +321,7 @@ namespace Immutable.Passport
                 else
                 {
                     string errorMessage = "Login failed - authentication was not completed";
-                    PassportLogger.Error($"{TAG} ❌ {errorMessage}");
+                    PassportLogger.Error($"{TAG} {errorMessage}");
 
                     // Trigger failure events
                     OnLoginFailure?.Invoke(errorMessage);
@@ -382,7 +398,7 @@ namespace Immutable.Passport
                 PassportLogger.Info($"{TAG} Passport bridge ready - waiting for login form submission");
 
                 // CRITICAL: Initialize deep link system for OAuth callback handling
-                PassportLogger.Info($"{TAG} 🔗 Initializing deep link system for OAuth callbacks");
+                PassportLogger.Info($"{TAG} Initializing deep link system for OAuth callbacks");
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
                 try
                 {
@@ -396,7 +412,7 @@ namespace Immutable.Passport
                         // Initialize deep link system with the redirect URI and PassportImpl's callback
                         var redirectUri = "immutablerunner://callback";
                         WindowsDeepLink.Initialise(redirectUri, passportImpl.OnDeepLinkActivated);
-                        PassportLogger.Info($"{TAG} ✅ Deep link system initialized for protocol: {redirectUri}");
+                        PassportLogger.Info($"{TAG} Deep link system initialized for protocol: {redirectUri}");
                     }
                     else
                     {
@@ -409,22 +425,11 @@ namespace Immutable.Passport
                 }
 #endif
 
-                // TESTING: Load local test page instead of auth URL
-                PassportLogger.Info($"{TAG} 🧪 Loading local test page for development");
-                string testPageUrl = "http://localhost:3001";
-                PassportLogger.Info($"{TAG} Test page URL: {testPageUrl}");
-
-                // Show the WebView
                 webView.Show();
                 PassportLogger.Info($"{TAG} WebView shown");
 
-                // Navigate to test page
-                webView.LoadUrl(testPageUrl);
-                PassportLogger.Info($"{TAG} Navigated to test page: {testPageUrl}");
-
-                // Test page loaded for development
-                PassportLogger.Info($"{TAG} 🧪 Test page loaded in WebView for development and testing.");
-                PassportLogger.Info($"{TAG} Login data will be captured and logged from the test page.");
+                webView.LoadUrl(webViewUrl);
+                PassportLogger.Info($"{TAG} Navigated to configured URL: {webViewUrl}");
 
                 // Return true since we successfully started the OAuth flow
                 // The actual authentication completion is handled by the deep link system
@@ -457,7 +462,7 @@ namespace Immutable.Passport
             if (bridgeWebViewGameObject != null && !bridgeWebViewGameObject.activeSelf)
             {
                 bridgeWebViewGameObject.SetActive(true);
-                PassportLogger.Info($"{TAG} ✅ Re-enabled bridge WebView {bridgeWebViewGameObject.name} - UI WebView is now hidden");
+                PassportLogger.Info($"{TAG} Re-enabled bridge WebView {bridgeWebViewGameObject.name} - UI WebView is now hidden");
                 bridgeWebViewGameObject = null; // Clear reference
             }
 
