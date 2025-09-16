@@ -18,25 +18,29 @@ namespace Immutable.Passport
 {
     /// <summary>
     /// Data structure for login information received from JavaScript
+    /// Matches the TypeScript LoginData interface from the web page
     /// </summary>
     [System.Serializable]
     public class LoginData
     {
-        public string provider;
+        public string directLoginMethod;
         public string email;
-        public bool marketing_consent;
+        public string marketingConsentStatus;
 
         public override string ToString()
         {
-            return $"LoginData(provider: {provider}, email: {email}, marketing_consent: {marketing_consent})";
+            return $"LoginData(directLoginMethod: {directLoginMethod}, email: {email}, marketingConsentStatus: {marketingConsentStatus})";
         }
     }
 
     /// <summary>
-    /// PassportUI that follows the working WebViewTest pattern
-    /// Key difference: Let Unity handle component lifecycle instead of manual initialization
+    /// Cross-platform WebView UI component for Passport authentication.
+    /// Automatically selects the appropriate WebView implementation based on the target platform:
+    /// - Windows: Unity Web Browser (UWB) with Chromium CEF
+    /// - iOS/Android: Gree unity-webview with external browser integration
+    /// - macOS: Not yet implemented
     ///
-    /// IMPORTANT: When setting up the PassportUI prefab in the editor:
+    /// SETUP: When configuring the PassportUI prefab in the editor:
     /// - Set RawImage component's width and height to 0 in the RectTransform
     /// - This ensures the UI is completely hidden before initialization
     ///
@@ -256,11 +260,11 @@ namespace Immutable.Passport
                 PassportLogger.Info($"{TAG} Parsed login data: {loginData}");
 
                 // For now, just log the data - in the future this could trigger OAuth flow
-                PassportLogger.Info($"{TAG} Login attempt - Provider: {loginData.provider}, Email: {loginData.email}, Marketing Consent: {loginData.marketing_consent}");
+                PassportLogger.Info($"{TAG} Login attempt - Method: {loginData.directLoginMethod}, Email: {loginData.email}, Marketing Consent: {loginData.marketingConsentStatus}");
 
                 // Login(bool useCachedSession = false, DirectLoginOptions directLoginOptions = null)
                 DirectLoginMethod loginMethod;
-                switch (loginData.provider)
+                switch (loginData.directLoginMethod)
                 {
                     case "email":
                         loginMethod = DirectLoginMethod.Email;
@@ -275,7 +279,7 @@ namespace Immutable.Passport
                         loginMethod = DirectLoginMethod.Facebook;
                         break;
                     default:
-                        PassportLogger.Error($"{TAG} Invalid login provider: {loginData.provider}");
+                        PassportLogger.Error($"{TAG} Invalid login method: {loginData.directLoginMethod}");
                         return;
                 }
                 var loginOptions = new DirectLoginOptions(loginMethod);
@@ -285,7 +289,7 @@ namespace Immutable.Passport
                 }
 
                 // Perform the login and handle the result
-                PassportLogger.Info($"{TAG} Starting login with provider: {loginData.provider}");
+                PassportLogger.Info($"{TAG} Starting login with method: {loginData.directLoginMethod}");
                 bool loginSuccess = await _passportInstance.Login(false, loginOptions);
 
                 if (loginSuccess)
@@ -408,7 +412,7 @@ namespace Immutable.Passport
 
                 // TESTING: Load local test page instead of auth URL
                 PassportLogger.Info($"{TAG} 🧪 Loading local test page for development");
-                string testPageUrl = "http://localhost:8080";
+                string testPageUrl = "http://localhost:3001";
                 PassportLogger.Info($"{TAG} Test page URL: {testPageUrl}");
 
                 // Show the WebView
