@@ -95,31 +95,40 @@ namespace Immutable.Passport
                 await _webViewPrefab.WaitUntilInitialized();
 
                 // Setup event handlers
-                _webViewPrefab.WebView.LoadProgressChanged += (s, e) =>
+                _webViewPrefab.WebView.LoadProgressChanged += (sender, progressArgs) =>
                 {
-                    if (e.Type == ProgressChangeType.Started)
+                    if (progressArgs.Type == ProgressChangeType.Started)
                     {
                         OnLoadStarted?.Invoke();
                     }
-                    else if (e.Type == ProgressChangeType.Finished)
+                    else if (progressArgs.Type == ProgressChangeType.Finished)
                     {
                         OnLoadFinished?.Invoke();
                     }
                 };
-                _webViewPrefab.WebView.MessageEmitted += (s, e) =>
+                _webViewPrefab.WebView.MessageEmitted += (sender, messageArgs) =>
                 {
-                    foreach (var h in _jsHandlers)
+                    try
                     {
-                        if (e.Value.StartsWith($"{h.Key}:"))
+                        // Parse the JSON message from window.vuplex.postMessage()
+                        var message = JsonUtility.FromJson<VuplexMessage>(messageArgs.Value);
+
+                        if (_jsHandlers.ContainsKey(message.method))
                         {
-                            h.Value?.Invoke(e.Value.Substring(h.Key.Length + 1));
+                            _jsHandlers[message.method]?.Invoke(message.data);
                             return;
                         }
-                    }
 
-                    OnJavaScriptMessage?.Invoke(e.Value);
+                        PassportLogger.Warn($"{TAG} No handler registered for method: {message.method}");
+                    }
+                    catch (Exception ex)
+                    {
+                        PassportLogger.Error($"{TAG} Failed to parse Vuplex message: {ex.Message}, Raw message: {messageArgs.Value}");
+                        // Fallback to raw message for backwards compatibility
+                        OnJavaScriptMessage?.Invoke(messageArgs.Value);
+                    }
                 };
-                _webViewPrefab.WebView.LoadFailed += (s, e) => PassportLogger.Warn($"{TAG} Load failed: {e.NativeErrorCode} for {e.Url}");
+                _webViewPrefab.WebView.LoadFailed += (sender, failedArgs) => PassportLogger.Warn($"{TAG} Load failed: {failedArgs.NativeErrorCode} for {failedArgs.Url}");
 
                 _isInitialized = true;
                 PassportLogger.Info($"{TAG} Vuplex WebView initialized successfully");
@@ -183,13 +192,10 @@ namespace Immutable.Passport
         public void RegisterJavaScriptMethod(string methodName, Action<string> handler)
         {
             _jsHandlers[methodName] = handler;
+            PassportLogger.Info($"{TAG} JavaScript method '{methodName}' registered for Vuplex message handling");
 
-#if UNITY_ANDROID && !UNITY_EDITOR
-            if (_isInitialized && _webViewPrefab?.WebView != null)
-            {
-                ExecuteJavaScript($"window.{methodName}=d=>window.vuplex?.postMessage('{methodName}:'+(typeof d==='object'?JSON.stringify(d):d))");
-            }
-#endif
+            // Note: No JavaScript injection needed with Vuplex - web page should call:
+            // window.vuplex.postMessage({method: 'methodName', data: 'jsonData'})
         }
 
         public void Dispose()

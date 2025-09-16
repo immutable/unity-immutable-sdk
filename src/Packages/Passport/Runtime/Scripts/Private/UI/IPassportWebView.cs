@@ -3,6 +3,16 @@ using System;
 namespace Immutable.Passport
 {
     /// <summary>
+    /// Message structure for Vuplex WebView communication
+    /// Matches the JSON format: {method: "MethodName", data: "..."}
+    /// </summary>
+    [System.Serializable]
+    public class VuplexMessage
+    {
+        public string method;
+        public string data;
+    }
+    /// <summary>
     /// Platform abstraction interface for PassportUI WebView implementations.
     /// Provides a unified API for different WebView technologies across platforms:
     /// - Windows: Volt Unity Web Browser (UWB) with Chromium CEF
