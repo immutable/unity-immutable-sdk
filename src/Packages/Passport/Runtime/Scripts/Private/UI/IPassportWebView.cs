@@ -12,6 +12,22 @@ namespace Immutable.Passport
         public string method;
         public string data;
     }
+
+    /// <summary>
+    /// Error data structure for JavaScript error messages
+    /// Matches the TypeScript Error serialization: {message: string, name: string}
+    /// </summary>
+    [System.Serializable]
+    public class ErrorData
+    {
+        public string message;
+        public string name;
+
+        public override string ToString()
+        {
+            return $"ErrorData(name: {name}, message: {message})";
+        }
+    }
     /// <summary>
     /// Platform abstraction interface for PassportUI WebView implementations.
     /// Provides a unified API for different WebView technologies across platforms:

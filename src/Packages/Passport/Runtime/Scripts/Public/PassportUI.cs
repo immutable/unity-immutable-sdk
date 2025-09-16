@@ -197,6 +197,7 @@ namespace Immutable.Passport
 
                 // Register JavaScript methods
                 webView.RegisterJavaScriptMethod("HandleLoginData", HandleLoginData);
+                webView.RegisterJavaScriptMethod("HandleLoginError", HandleLoginError);
 
                 isInitialized = true;
                 PassportLogger.Info($"{TAG} Cross-platform WebView created successfully");
@@ -366,6 +367,44 @@ namespace Immutable.Passport
                 // Trigger failure events for exceptions too
                 OnLoginFailure?.Invoke(errorMessage);
                 OnLoginFailureStatic?.Invoke(errorMessage);
+            }
+        }
+
+        /// <summary>
+        /// Handles error messages received from JavaScript
+        /// Called when the login page encounters an error and sends error information
+        /// </summary>
+        /// <param name="jsonData">JSON string containing error data</param>
+        private void HandleLoginError(string jsonData)
+        {
+            try
+            {
+                PassportLogger.Info($"{TAG} Received error data from JavaScript: {jsonData}");
+
+                // Parse the JSON error data
+                ErrorData errorData = JsonUtility.FromJson<ErrorData>(jsonData);
+                PassportLogger.Error($"{TAG} Login page error: {errorData}");
+
+                // Create user-friendly error message
+                string errorMessage = !string.IsNullOrEmpty(errorData.message)
+                    ? $"Login failed: {errorData.message}"
+                    : "Login failed due to an unknown error";
+
+                // Trigger failure events
+                OnLoginFailure?.Invoke(errorMessage);
+                OnLoginFailureStatic?.Invoke(errorMessage);
+
+                // Hide the WebView after error
+                HideLoginUI();
+            }
+            catch (Exception ex)
+            {
+                string errorMessage = $"Failed to handle error message from JavaScript: {ex.Message}";
+                PassportLogger.Error($"{TAG} {errorMessage}");
+
+                // Trigger failure events even if we can't parse the error
+                OnLoginFailure?.Invoke("Login failed due to an error processing error message");
+                OnLoginFailureStatic?.Invoke("Login failed due to an error processing error message");
             }
         }
 
