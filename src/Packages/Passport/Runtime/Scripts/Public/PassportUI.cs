@@ -274,6 +274,13 @@ namespace Immutable.Passport
                 LoginData loginData = JsonUtility.FromJson<LoginData>(jsonData);
                 PassportLogger.Info($"{TAG} Parsed login data: {loginData}");
 
+                // Validate required login data
+                if (string.IsNullOrEmpty(loginData.directLoginMethod))
+                {
+                    PassportLogger.Error($"{TAG} Login method is required but was null or empty");
+                    return;
+                }
+
                 // For now, just log the data - in the future this could trigger OAuth flow
                 PassportLogger.Info($"{TAG} Login attempt - Method: {loginData.directLoginMethod}, Email: {loginData.email}, Marketing Consent: {loginData.marketingConsentStatus}");
 
@@ -298,8 +305,16 @@ namespace Immutable.Passport
                         return;
                 }
                 var loginOptions = new DirectLoginOptions(loginMethod);
-                if (loginData.email != null)
+
+                // Validate email is provided for email login method
+                if (loginMethod == DirectLoginMethod.Email)
                 {
+                    if (string.IsNullOrEmpty(loginData.email))
+                    {
+                        PassportLogger.Error($"{TAG} Email is required for email login method but was null or empty");
+                        return;
+                    }
+
                     loginOptions.email = loginData.email;
                 }
 
