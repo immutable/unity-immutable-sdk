@@ -85,7 +85,7 @@ namespace Immutable.Passport
 
         [Header("WebView Settings")]
         [Tooltip("URL to load in the WebView for authentication.")]
-        [SerializeField] private string webViewUrl = "http://localhost:3001";
+        [SerializeField] private string webViewUrl = "https://auth.immutable.com/im-embedded-login-prompt?isWebView=true&client_id=YOUR_CLIENT_ID";
 
         /// <summary>
         /// Gets or sets the URL to load in the WebView for authentication
@@ -198,6 +198,7 @@ namespace Immutable.Passport
                 // Register JavaScript methods
                 webView.RegisterJavaScriptMethod("HandleLoginData", HandleLoginData);
                 webView.RegisterJavaScriptMethod("HandleLoginError", HandleLoginError);
+                webView.RegisterJavaScriptMethod("CloseWebView", (data) => HideLoginUI());
 
                 isInitialized = true;
                 PassportLogger.Info($"{TAG} Cross-platform WebView created successfully");
@@ -511,15 +512,6 @@ namespace Immutable.Passport
                     PassportLogger.Info($"{TAG} Login UI hidden");
                 }
             }
-
-            // CRITICAL: Re-enable the bridge WebView GameObject now that UI is hidden
-            if (bridgeWebViewGameObject != null && !bridgeWebViewGameObject.activeSelf)
-            {
-                bridgeWebViewGameObject.SetActive(true);
-                PassportLogger.Info($"{TAG} Re-enabled bridge WebView {bridgeWebViewGameObject.name} - UI WebView is now hidden");
-                bridgeWebViewGameObject = null; // Clear reference
-            }
-
         }
 
         /// <summary>
