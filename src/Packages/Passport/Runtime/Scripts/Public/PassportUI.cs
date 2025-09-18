@@ -198,7 +198,7 @@ namespace Immutable.Passport
                 // Register JavaScript methods
                 webView.RegisterJavaScriptMethod("HandleLoginData", HandleLoginData);
                 webView.RegisterJavaScriptMethod("HandleLoginError", HandleLoginError);
-                webView.RegisterJavaScriptMethod("CloseWebView", (data) => HideLoginUI());
+                webView.RegisterJavaScriptMethod("HandleClose", (data) => HideLoginUI());
 
                 isInitialized = true;
                 PassportLogger.Info($"{TAG} Cross-platform WebView created successfully");
