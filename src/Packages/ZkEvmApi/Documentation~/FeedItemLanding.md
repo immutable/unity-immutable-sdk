@@ -15,6 +15,7 @@ Name | Type | Description | Notes
 **GameName** | **string** | Game name | [optional] 
 **QuestCompletedPopupText** | **string** | Text to display when the quest is completed in an onboarding experience | [optional] 
 **Tags** | **List&lt;string&gt;** | The tags for the feed item | [optional] 
+**ControlTags** | **List&lt;string&gt;** | Some specific tags for controlling feed items | [optional] 
 **Categories** | **List&lt;string&gt;** | The categories for the feed item | [optional] 
 **OnboardingExperience** | **string** | The onboarding experience for the feed item | [optional] 
 **Type** | **string** | Feed item type | 
