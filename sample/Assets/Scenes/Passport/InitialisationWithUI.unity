@@ -346,7 +346,13 @@ MonoBehaviour:
   enableRemoteDebugging: 1
   remoteDebuggingPort: 9222
   clearCacheOnLogin: 1
-  webViewUrl: https://auth.immutable.com/im-embedded-login-prompt?client_id=IllW5pJ54DShXtaSXzaAlghm40uQjptd
+  clientId: IllW5pJ54DShXtaSXzaAlghm40uQjptd
+  environment: sandbox
+  redirectUri: immutablerunner://callback
+  logoutRedirectUri: immutablerunner://logout
+  webViewBaseUrl: https://auth.immutable.com/im-embedded-login-prompt
+  webViewWidth: 1920
+  webViewHeight: 1080
 --- !u!1 &96192975
 GameObject:
   m_ObjectHideFlags: 0
