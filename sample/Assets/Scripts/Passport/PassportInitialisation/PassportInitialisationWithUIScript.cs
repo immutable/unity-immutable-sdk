@@ -4,7 +4,15 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Immutable.Passport;
 using Immutable.Passport.Core.Logging;
+using Cysharp.Threading.Tasks;
 
+/// <summary>
+/// Sample script demonstrating how to initialize Passport using the PassportUI prefab.
+/// This is the recommended approach for quick setup - configure Passport settings
+/// in the PassportUI Inspector, then call InitializeWithPassport().
+///
+/// For advanced scenarios without UI, see PassportInitialisationScript.cs instead.
+/// </summary>
 public class PassportInitialisationWithUIScript : MonoBehaviour
 {
 #pragma warning disable CS8618
@@ -21,25 +29,6 @@ public class PassportInitialisationWithUIScript : MonoBehaviour
 
     private async void InitialisePassport()
     {
-        string redirectUri;
-        string logoutRedirectUri;
-
-#if UNITY_WEBGL
-            var url = Application.absoluteURL;
-            var uri = new Uri(url);
-            var scheme = uri.Scheme;
-            var hostWithPort = uri.IsDefaultPort ? uri.Host : $"{uri.Host}:{uri.Port}";
-            var fullPath = uri.AbsolutePath.EndsWith("/")
-                ? uri.AbsolutePath
-                : uri.AbsolutePath.Substring(0, uri.AbsolutePath.LastIndexOf('/') + 1);
-
-            redirectUri = $"{scheme}://{hostWithPort}{fullPath}callback.html";
-            logoutRedirectUri = $"{scheme}://{hostWithPort}{fullPath}logout.html";
-#else
-        redirectUri = "immutablerunner://callback";
-        logoutRedirectUri = "immutablerunner://logout";
-#endif
-
         try
         {
             // Set the log level for the SDK
@@ -48,27 +37,43 @@ public class PassportInitialisationWithUIScript : MonoBehaviour
             // Don't redact token values from logs
             Passport.RedactTokensInLogs = false;
 
-            // Initialise Passport with UI support enabled
-            const string environment = Immutable.Passport.Model.Environment.SANDBOX;
-            // const string clientId = "mp6rxfMDwwZDogcdgNrAaHnG0qMlXuMK";
-            const string clientId = "IllW5pJ54DShXtaSXzaAlghm40uQjptd";
-            var passport = await Passport.Init(clientId, environment, redirectUri, logoutRedirectUri);
-            SampleAppManager.PassportInstance = passport;
-
-            // Find and initialize PassportUI at runtime
+            // Find PassportUI component
             passportUI = FindObjectOfType<PassportUI>();
-            if (passportUI != null)
+            if (passportUI == null)
             {
-                passportUI.Init(passport);
-                Debug.Log("PassportUI found and initialized successfully");
+                Debug.LogError("PassportUI component not found in scene - UI login will not be available");
+                return;
+            }
 
-                // Subscribe to login success event for automatic scene transition
-                PassportUI.OnLoginSuccessStatic += OnPassportLoginSuccess;
-                PassportUI.OnLoginFailureStatic += OnPassportLoginFailure;
+            // Subscribe to login events for automatic scene transition
+            PassportUI.OnLoginSuccessStatic += OnPassportLoginSuccess;
+            PassportUI.OnLoginFailureStatic += OnPassportLoginFailure;
+
+            // Check if Passport is already initialized (e.g., from logout flow)
+            if (Passport.Instance != null)
+            {
+                Debug.Log("Passport already initialized, setting up UI only...");
+
+                // Just initialize the UI with the existing Passport instance
+                await passportUI.InitializeWithPassport(Passport.Instance);
+
+                // Store reference for other scripts that need it
+                SampleAppManager.PassportInstance = Passport.Instance;
+
+                Debug.Log("PassportUI initialized with existing Passport instance");
             }
             else
             {
-                Debug.LogWarning("PassportUI component not found in scene - UI login will not be available");
+                Debug.Log("Initializing Passport using PassportUI prefab configuration...");
+
+                // PassportUI handles both Passport.Init() and UI setup
+                // Configuration is done in the PassportUI Inspector (clientId, environment, etc.)
+                await passportUI.InitializeWithPassport();
+
+                // Store reference for other scripts that need it
+                SampleAppManager.PassportInstance = Passport.Instance;
+
+                Debug.Log("Passport and PassportUI initialized successfully");
             }
         }
         catch (Exception ex)
@@ -79,7 +84,7 @@ public class PassportInitialisationWithUIScript : MonoBehaviour
 
     private void OnPassportLoginSuccess()
     {
-        Debug.Log("🎉 Passport login successful! Navigating to authenticated scene...");
+        Debug.Log("Passport login successful! Navigating to authenticated scene...");
 
         // Navigate to authenticated scene
         SceneManager.LoadScene("AuthenticatedScene");
@@ -87,7 +92,7 @@ public class PassportInitialisationWithUIScript : MonoBehaviour
 
     private void OnPassportLoginFailure(string errorMessage)
     {
-        Debug.LogError($"❌ Passport login failed: {errorMessage}");
+        Debug.LogError($"Passport login failed: {errorMessage}");
 
         // Could show error UI, retry options, etc.
         // For now, just log the error

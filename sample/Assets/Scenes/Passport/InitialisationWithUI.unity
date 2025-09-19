@@ -337,9 +337,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   loginButton: {fileID: 1274086209}
+  OnLoginSuccess:
+    m_PersistentCalls:
+      m_Calls: []
+  OnLoginFailure:
+    m_PersistentCalls:
+      m_Calls: []
   enableRemoteDebugging: 1
   remoteDebuggingPort: 9222
   clearCacheOnLogin: 1
+  webViewUrl: https://auth.immutable.com/im-embedded-login-prompt?client_id=IllW5pJ54DShXtaSXzaAlghm40uQjptd
 --- !u!1 &96192975
 GameObject:
   m_ObjectHideFlags: 0

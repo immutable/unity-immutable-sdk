@@ -60,6 +60,7 @@ public class AuthenticatedSceneManager : MonoBehaviour
 
     public static void NavigateToUnauthenticatedScene()
     {
-        UnityEngine.SceneManagement.SceneManager.LoadScene("UnauthenticatedScene");
+        // Navigate to the main initialization scene with PassportUI instead
+        UnityEngine.SceneManagement.SceneManager.LoadScene("InitialisationWithUI");
     }
 }
