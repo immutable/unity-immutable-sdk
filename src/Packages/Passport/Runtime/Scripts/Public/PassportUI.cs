@@ -449,6 +449,23 @@ namespace Immutable.Passport
                     loginOptions.email = loginData.email;
                 }
 
+                // Parse and set marketing consent status if provided
+                if (!string.IsNullOrEmpty(loginData.marketingConsentStatus))
+                {
+                    switch (loginData.marketingConsentStatus.ToLower())
+                    {
+                        case "opted_in":
+                            loginOptions.marketingConsentStatus = MarketingConsentStatus.OptedIn;
+                            break;
+                        case "unsubscribed":
+                            loginOptions.marketingConsentStatus = MarketingConsentStatus.Unsubscribed;
+                            break;
+                        default:
+                            PassportLogger.Warn($"{TAG} Unknown marketing consent status: {loginData.marketingConsentStatus}");
+                            break;
+                    }
+                }
+
                 // Perform the login and handle the result
                 PassportLogger.Info($"{TAG} Starting login with method: {loginData.directLoginMethod}");
                 bool loginSuccess = await _passportInstance.Login(false, loginOptions);

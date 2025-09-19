@@ -275,22 +275,19 @@ namespace Immutable.Passport
         {
             try
             {
-                // Create the request JSON manually to ensure proper serialization
-                var requestJson = $"{{\"isConnectImx\":{(!_pkceLoginOnly).ToString().ToLower()}";
-
-                if (_directLoginOptions != null)
+                // Create the request using a serializable class for clean JSON generation
+                var request = new AuthUrlRequest
                 {
-                    requestJson += $",\"directLoginOptions\":{{\"directLoginMethod\":\"{_directLoginOptions.directLoginMethod.ToString().ToLower()}\"";
-
-                    if (_directLoginOptions.IsEmailValid())
+                    isConnectImx = !_pkceLoginOnly,
+                    directLoginOptions = _directLoginOptions != null ? new DirectLoginRequestOptions
                     {
-                        requestJson += $",\"email\":\"{_directLoginOptions.email}\"";
-                    }
+                        directLoginMethod = _directLoginOptions.directLoginMethod.ToString().ToLower(),
+                        email = _directLoginOptions.IsEmailValid() ? _directLoginOptions.email : null,
+                        marketingConsentStatus = _directLoginOptions.marketingConsentStatus?.ToApiString()
+                    } : null
+                };
 
-                    requestJson += "}";
-                }
-
-                requestJson += "}";
+                var requestJson = JsonUtility.ToJson(request);
 
                 var callResponse = await _communicationsManager.Call(PassportFunction.GET_PKCE_AUTH_URL, requestJson);
                 var response = callResponse.OptDeserializeObject<StringResponse>();
@@ -298,10 +295,6 @@ namespace Immutable.Passport
                 if (response != null && response.success == true && response.result != null)
                 {
                     var url = response.result.Replace(" ", "+");
-
-                    // force marketing consent to true for now
-                    // TODO: remove this once we have a way to get the marketing consent from the user
-                    url = url + "&marketingConsent=opted_in";
 
 #if UNITY_ANDROID && !UNITY_EDITOR
                     loginPKCEUrl = url;
@@ -818,4 +811,25 @@ namespace Immutable.Passport
         }
     }
 #endif
+
+    /// <summary>
+    /// Serializable request class for LaunchAuthUrl to replace manual JSON string concatenation
+    /// </summary>
+    [Serializable]
+    internal class AuthUrlRequest
+    {
+        public bool isConnectImx;
+        public DirectLoginRequestOptions directLoginOptions;
+    }
+
+    /// <summary>
+    /// Serializable class for directLoginOptions within AuthUrlRequest
+    /// </summary>
+    [Serializable]
+    internal class DirectLoginRequestOptions
+    {
+        public string directLoginMethod;
+        public string email;
+        public string marketingConsentStatus;
+    }
 }
