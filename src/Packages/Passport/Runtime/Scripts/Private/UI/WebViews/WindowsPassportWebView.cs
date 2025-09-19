@@ -187,17 +187,32 @@ namespace Immutable.Passport
                     uwbGameObject.SetActive(true);
                 }
 
-                // Enable the RawImage and restore size
+                // Enable the RawImage and set size to match WebView
                 if (targetRawImage != null)
                 {
                     targetRawImage.enabled = true;
                     var rectTransform = targetRawImage.GetComponent<RectTransform>();
                     if (rectTransform != null)
                     {
-                        rectTransform.anchorMin = Vector2.zero;
-                        rectTransform.anchorMax = Vector2.one;
-                        rectTransform.offsetMin = Vector2.zero;
-                        rectTransform.offsetMax = Vector2.zero;
+                        // Match the WebView dimensions that were configured
+                        if (config.Width > 0 && config.Height > 0)
+                        {
+                            // Center the RawImage with specific dimensions to match WebView
+                            rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+                            rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                            rectTransform.sizeDelta = new Vector2(config.Width, config.Height);
+                            rectTransform.anchoredPosition = Vector2.zero;
+                            PassportLogger.Info($"{TAG} RawImage sized to match WebView: {config.Width}x{config.Height}");
+                        }
+                        else
+                        {
+                            // Full-screen fallback to match WebView
+                            rectTransform.anchorMin = Vector2.zero;
+                            rectTransform.anchorMax = Vector2.one;
+                            rectTransform.offsetMin = Vector2.zero;
+                            rectTransform.offsetMax = Vector2.zero;
+                            PassportLogger.Info($"{TAG} RawImage sized to full-screen to match WebView");
+                        }
                     }
                 }
 
@@ -381,10 +396,26 @@ namespace Immutable.Passport
 
             // Add RectTransform for UI positioning
             RectTransform rectTransform = uwbGameObject.AddComponent<RectTransform>();
-            rectTransform.anchorMin = Vector2.zero;
-            rectTransform.anchorMax = Vector2.one;
-            rectTransform.offsetMin = Vector2.zero;
-            rectTransform.offsetMax = Vector2.zero;
+
+            // Use configured dimensions or fallback to full-screen
+            if (config.Width > 0 && config.Height > 0)
+            {
+                // Center the WebView with specific dimensions
+                rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+                rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                rectTransform.sizeDelta = new Vector2(config.Width, config.Height);
+                rectTransform.anchoredPosition = Vector2.zero;
+                PassportLogger.Info($"{TAG} Using configured dimensions: {config.Width}x{config.Height}");
+            }
+            else
+            {
+                // Full-screen fallback
+                rectTransform.anchorMin = Vector2.zero;
+                rectTransform.anchorMax = Vector2.one;
+                rectTransform.offsetMin = Vector2.zero;
+                rectTransform.offsetMax = Vector2.zero;
+                PassportLogger.Info($"{TAG} Using full-screen dimensions");
+            }
 
             // Add WebBrowserUIFull component
             webBrowserUI = uwbGameObject.AddComponent<WebBrowserUIFull>();
