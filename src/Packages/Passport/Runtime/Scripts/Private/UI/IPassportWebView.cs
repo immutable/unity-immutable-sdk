@@ -131,6 +131,16 @@ namespace Immutable.Passport
         public string InitialUrl { get; set; } = "about:blank";
 
         /// <summary>
+        /// WebView width in pixels (0 = use RawImage width)
+        /// </summary>
+        public int Width { get; set; } = 1920;
+
+        /// <summary>
+        /// WebView height in pixels (0 = use RawImage height)
+        /// </summary>
+        public int Height { get; set; } = 1080;
+
+        /// <summary>
         /// Custom User-Agent string (optional)
         /// </summary>
         public string UserAgent { get; set; } = "";

@@ -40,6 +40,11 @@ namespace Immutable.Passport
     /// - iOS/Android: Vuplex WebView with embedded browser
     /// - macOS: Vuplex WebView with embedded browser
     ///
+    /// INITIALIZATION OPTIONS:
+    /// 1. Simple: Call InitializeWithPassport() - PassportUI handles both Passport.Init() and UI setup
+    /// 2. Hybrid: Call InitializeWithPassport(passport) - Use existing Passport instance with UI
+    /// 3. Traditional: Call Passport.Init() yourself, then call Init(passport) - for advanced control
+    ///
     /// SETUP: When configuring the PassportUI prefab in the editor:
     /// - Set RawImage component's width and height to 0 in the RectTransform
     /// - This ensures the UI is completely hidden before initialization
@@ -83,17 +88,69 @@ namespace Immutable.Passport
         [Tooltip("Clear WebView cache on login for Windows WebView (Volt Unity Web Browser). Not used on other platforms.")]
         public bool clearCacheOnLogin = true;
 
+        [Header("Passport Configuration")]
+        [Tooltip("Passport client ID from the Immutable Developer Hub")]
+        [SerializeField] private string clientId = "";
+
+        [Tooltip("Passport environment (sandbox or production)")]
+        [SerializeField] private string environment = "sandbox";
+
+        [Tooltip("OAuth redirect URI for authentication callbacks")]
+        [SerializeField] private string redirectUri = "immutablerunner://callback";
+
+        [Tooltip("OAuth logout redirect URI for logout callbacks")]
+        [SerializeField] private string logoutRedirectUri = "immutablerunner://logout";
+
         [Header("WebView Settings")]
-        [Tooltip("URL to load in the WebView for authentication.")]
-        [SerializeField] private string webViewUrl = "https://auth.immutable.com/im-embedded-login-prompt?isWebView=true&client_id=YOUR_CLIENT_ID";
+        [Tooltip("Base URL for the WebView authentication page. The client_id parameter will be automatically appended from the Passport Configuration above.")]
+        [SerializeField] private string webViewBaseUrl = "https://auth.immutable.com/im-embedded-login-prompt";
+
+        [Tooltip("Width of the WebView in pixels. Set to 0 to use the RawImage's current width.")]
+        [SerializeField] private int webViewWidth = 1920;
+
+        [Tooltip("Height of the WebView in pixels. Set to 0 to use the RawImage's current height.")]
+        [SerializeField] private int webViewHeight = 1080;
 
         /// <summary>
-        /// Gets or sets the URL to load in the WebView for authentication
+        /// Gets the complete WebView URL with the client ID automatically appended
         /// </summary>
         public string WebViewUrl
         {
-            get => webViewUrl;
-            set => webViewUrl = value;
+            get
+            {
+                if (string.IsNullOrEmpty(clientId))
+                {
+                    return webViewBaseUrl;
+                }
+                return $"{webViewBaseUrl}?isWebView=true&client_id={clientId}";
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the base WebView URL (without client_id parameter)
+        /// </summary>
+        public string WebViewBaseUrl
+        {
+            get => webViewBaseUrl;
+            set => webViewBaseUrl = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the WebView width in pixels
+        /// </summary>
+        public int WebViewWidth
+        {
+            get => webViewWidth;
+            set => webViewWidth = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the WebView height in pixels
+        /// </summary>
+        public int WebViewHeight
+        {
+            get => webViewHeight;
+            set => webViewHeight = value;
         }
 
         // Cross-platform WebView abstraction
@@ -109,9 +166,79 @@ namespace Immutable.Passport
         private Coroutine inputActivationCoroutine;
 
         /// <summary>
-        /// Initialize PassportUI with the main Passport instance
-        /// Following the working WebViewTest pattern
+        /// Initialize Passport and PassportUI in one call using the configured settings.
+        /// This is the simple initialization method that handles both Passport.Init() and UI setup.
+        /// Uses the serialized fields (clientId, environment, redirectUri, logoutRedirectUri) from the Unity Inspector.
         /// </summary>
+        /// <returns>UniTask that completes when initialization is finished</returns>
+        public async UniTask InitializeWithPassport()
+        {
+            // Validate configuration
+            if (string.IsNullOrEmpty(clientId))
+            {
+                PassportLogger.Error($"{TAG} Client ID is required but not set in the Inspector");
+                return;
+            }
+
+            try
+            {
+                PassportLogger.Info($"{TAG} Initializing Passport with client ID: {clientId}");
+
+                // Initialize Passport using the configured settings
+                var passport = await Passport.Init(clientId, environment, redirectUri, logoutRedirectUri);
+
+                // Initialize the UI with the created Passport instance
+                Init(passport);
+
+                PassportLogger.Info($"{TAG} Passport and PassportUI initialized successfully");
+            }
+            catch (Exception ex)
+            {
+                PassportLogger.Error($"{TAG} Failed to initialize Passport: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Initialize PassportUI with an existing Passport instance in one call.
+        /// Use this method when you already have a Passport instance from elsewhere in your code
+        /// and just want to set up the UI component.
+        /// </summary>
+        /// <param name="passportInstance">The existing initialized Passport instance</param>
+        /// <returns>UniTask that completes when UI initialization is finished</returns>
+        public async UniTask InitializeWithPassport(Passport passportInstance)
+        {
+            if (passportInstance == null)
+            {
+                PassportLogger.Error($"{TAG} Passport instance cannot be null");
+                return;
+            }
+
+            try
+            {
+                PassportLogger.Info($"{TAG} Initializing PassportUI with existing Passport instance");
+
+                // Initialize the UI with the provided Passport instance
+                Init(passportInstance);
+
+                // Wait a frame to ensure initialization is complete
+                await UniTask.Yield();
+
+                PassportLogger.Info($"{TAG} PassportUI initialized successfully with existing Passport instance");
+            }
+            catch (Exception ex)
+            {
+                PassportLogger.Error($"{TAG} Failed to initialize PassportUI with existing Passport: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Initialize PassportUI with an existing Passport instance.
+        /// Use this method if you want to control Passport.Init() yourself.
+        /// Following the working WebViewTest pattern.
+        /// </summary>
+        /// <param name="passportInstance">The initialized Passport instance</param>
         public void Init(Passport passportInstance)
         {
             if (passportInstance == null)
@@ -185,7 +312,9 @@ namespace Immutable.Passport
                     EnableRemoteDebugging = enableRemoteDebugging,
                     RemoteDebuggingPort = remoteDebuggingPort,
                     ClearCacheOnInit = clearCacheOnLogin,
-                    InitialUrl = "about:blank"
+                    InitialUrl = "about:blank",
+                    Width = webViewWidth > 0 ? webViewWidth : (int)rawImage.rectTransform.rect.width,
+                    Height = webViewHeight > 0 ? webViewHeight : (int)rawImage.rectTransform.rect.height
                 };
 
                 // Initialize WebView
@@ -483,8 +612,8 @@ namespace Immutable.Passport
                 webView.Show();
                 PassportLogger.Info($"{TAG} WebView shown");
 
-                webView.LoadUrl(webViewUrl);
-                PassportLogger.Info($"{TAG} Navigated to configured URL: {webViewUrl}");
+                webView.LoadUrl(WebViewUrl);
+                PassportLogger.Info($"{TAG} Navigated to configured URL: {WebViewUrl}");
 
                 // Return true since we successfully started the OAuth flow
                 // The actual authentication completion is handled by the deep link system
