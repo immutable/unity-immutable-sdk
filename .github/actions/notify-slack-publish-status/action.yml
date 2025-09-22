@@ -1,0 +1,13 @@
+---
+name: 'Notify Slack Publish Status'
+description: 'Notify Slack with the completion status of the publish action'
+inputs:
+  message:
+    description: 'Message to send to Slack'
+    required: true
+  webhook-url:
+    description: 'Slack incoming webhook URL'
+    required: true
+runs:
+  using: 'node20'
+  main: 'index.js'

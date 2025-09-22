@@ -1,10 +1,10 @@
 <div class="display-none">
 
-# ZkEvm Integration
+# ZkEvm Features
 
 </div>
 
-The ZkEvm feature group demonstrates how to integrate Immutable's ZkEvm blockchain capabilities into your Unity game. These features allow games to connect to the Immutable ZkEvm blockchain, perform transactions, check balances, and interact with smart contracts.
+The ZkEvm feature group demonstrates how to interact with Immutable's zkEVM blockchain through the Passport SDK. These features enable developers to perform essential blockchain operations including connecting to the zkEVM provider, sending transactions, checking balances, retrieving transaction receipts, signing typed data, and requesting account information.
 
 <div class="button-component">
 
@@ -14,29 +14,24 @@ The ZkEvm feature group demonstrates how to integrate Immutable's ZkEvm blockcha
 
 ## ZkEvm Overview
 
-The ZkEvm feature group includes the following features:
+The ZkEvm feature group includes six interconnected features that work together to provide comprehensive zkEVM blockchain functionality:
 
-- **ZkEvmConnect**: Connect to the Immutable ZkEvm network
-- **ZkEvmSendTransaction**: Send transactions to the blockchain
-- **ZkEvmGetBalance**: Check account balances
-- **ZkEvmGetTransactionReceipt**: Verify transaction status
-- **ZkEvmSignTypedData**: Sign structured data using EIP-712
-- **ZkEvmRequestAccounts**: Request user accounts from Passport
+- **ZkEvmConnect** - Establishes connection to the zkEVM provider
+- **ZkEvmSendTransaction** - Sends transactions with optional confirmation and receipt polling
+- **ZkEvmGetBalance** - Retrieves account balance in both hex and decimal formats
+- **ZkEvmGetTransactionReceipt** - Gets transaction status and detailed receipt information
+- **ZkEvmSignTypedData** - Signs EIP-712 structured data for secure message verification
+- **ZkEvmRequestAccounts** - Retrieves list of wallet addresses associated with the user
 
-These features work together to provide a complete integration with Immutable's ZkEvm blockchain, allowing games to leverage blockchain functionality while maintaining a seamless user experience.
+These features follow a common pattern where `ZkEvmConnect` must be called first to establish the provider connection, after which other features can perform their specific blockchain operations.
 
 ## Unity SDK ZkEvm Features
 
-### Feature: ZkEvm Connect
+### Feature: ZkEvmConnect
 
-The ZkEvmConnect feature initializes the connection to the Immutable ZkEvm network. This is a prerequisite for all other ZkEvm operations.
+The ZkEvmConnect feature establishes a connection to the zkEVM provider, which is required before any other zkEVM operations can be performed. This feature updates the global connection state and refreshes the UI to enable other zkEVM features.
 
-```csharp title="ZkEvmConnectScript" manualLink="https://github.com/immutable/unity-immutable-sdk/blob/main/sample/Assets/Scripts/Passport/ZkEvm/ZkEvmConnect/ZkEvmConnectScript.cs"
-public void ConnectZkEvm()
-{
-    ConnectZkEvmAsync();
-}
-
+```csharp title="ZkEvmConnect" manualLink="https://github.com/immutable/unity-immutable-sdk/blob/main/sample/Assets/Scripts/Passport/ZkEvm/ZkEvmConnect/ZkEvmConnectScript.cs"
 private async UniTaskVoid ConnectZkEvmAsync()
 {
     if (Passport.Instance == null)
@@ -44,21 +39,19 @@ private async UniTaskVoid ConnectZkEvmAsync()
         ShowOutput("Passport not initialised.");
         return;
     }
-    // Set the static property for global access
+    
     SampleAppManager.PassportInstance = Passport.Instance;
-
     ShowOutput("Connecting to zkEVM...");
+    
     try
     {
         await Passport.Instance.ConnectEvm();
         
-        // Update connection state and refresh UI
         SampleAppManager.IsConnectedToZkEvm = true;
         var sceneManager = FindObjectOfType<AuthenticatedSceneManager>();
         if (sceneManager != null)
         {
             sceneManager.UpdateZkEvmButtonStates();
-            Debug.Log("Updated zkEVM button states after connection");
         }
         
         ShowOutput("Connected to EVM");
@@ -70,82 +63,55 @@ private async UniTaskVoid ConnectZkEvmAsync()
 }
 ```
 
-This script establishes a connection to the ZkEvm network through the Passport instance. It updates the UI to reflect the connection status and handles any errors that might occur during the connection process.
+This implementation calls `Passport.Instance.ConnectEvm()` to establish the provider connection, then updates the global connection state and UI. The connection is essential for all subsequent zkEVM operations.
 
-### Feature: ZkEvm Send Transaction
+### Feature: ZkEvmSendTransaction
 
-The ZkEvmSendTransaction feature allows you to send transactions to the Immutable ZkEvm blockchain.
+The ZkEvmSendTransaction feature enables sending transactions to the zkEVM network with flexible options for confirmation and receipt polling. It supports both immediate transaction submission and confirmed transaction processing.
 
-```csharp title="ZkEvmSendTransactionScript" manualLink="https://github.com/immutable/unity-immutable-sdk/blob/main/sample/Assets/Scripts/Passport/ZkEvm/ZkEvmSendTransaction/ZkEvmSendTransactionScript.cs"
+```csharp title="ZkEvmSendTransaction" manualLink="https://github.com/immutable/unity-immutable-sdk/blob/main/sample/Assets/Scripts/Passport/ZkEvm/ZkEvmSendTransaction/ZkEvmSendTransactionScript.cs"
 private async UniTaskVoid SendTransactionAsync()
 {
-    if (SampleAppManager.PassportInstance == null)
+    await SampleAppManager.PassportInstance.ConnectEvm();
+    
+    TransactionRequest request = new TransactionRequest
     {
-        ShowOutput("Passport instance is null");
-        return;
+        to = ToInputField != null ? ToInputField.text : "",
+        value = ValueInputField != null ? ValueInputField.text : "",
+        data = DataInputField != null ? DataInputField.text : ""
+    };
+
+    if (ConfirmToggle != null && ConfirmToggle.isOn)
+    {
+        TransactionReceiptResponse response = await SampleAppManager.PassportInstance.ZkEvmSendTransactionWithConfirmation(request);
+        ShowOutput($"Transaction hash: {response.hash}\nStatus: {GetTransactionStatusString(response.status)}");
     }
-    // Ensure EVM provider is connected
-    try
+    else
     {
-        ShowOutput("Connecting to zkEVM provider...");
-        await SampleAppManager.PassportInstance.ConnectEvm();
-    }
-    catch (Exception ex)
-    {
-        ShowOutput($"Failed to connect to zkEVM provider: {ex.Message}");
-        return;
-    }
-    ShowOutput("Sending transaction...");
-    try
-    {
-        TransactionRequest request = new TransactionRequest
-        {
-            to = ToInputField != null ? ToInputField.text : "",
-            value = ValueInputField != null ? ValueInputField.text : "",
-            data = DataInputField != null ? DataInputField.text : ""
-        };
+        string transactionHash = await SampleAppManager.PassportInstance.ZkEvmSendTransaction(request);
         
-        if (ConfirmToggle != null && ConfirmToggle.isOn)
+        if (GetTransactionReceiptToggle != null && GetTransactionReceiptToggle.isOn)
         {
-            TransactionReceiptResponse response = await SampleAppManager.PassportInstance.ZkEvmSendTransactionWithConfirmation(request);
-            ShowOutput($"Transaction hash: {response.transactionHash}\nStatus: {GetTransactionStatusString(response.status)}");
+            string? status = await PollStatus(transactionHash);
+            ShowOutput($"Transaction hash: {transactionHash}\nStatus: {GetTransactionStatusString(status)}");
         }
         else
         {
-            string transactionHash = await SampleAppManager.PassportInstance.ZkEvmSendTransaction(request);
-            
-            if (GetTransactionReceiptToggle != null && GetTransactionReceiptToggle.isOn)
-            {
-                string? status = await PollStatus(transactionHash);
-                ShowOutput($"Transaction hash: {transactionHash}\nStatus: {GetTransactionStatusString(status)}");
-            }
-            else
-            {
-                ShowOutput($"Transaction hash: {transactionHash}");
-            }
+            ShowOutput($"Transaction hash: {transactionHash}");
         }
-    }
-    catch (Exception ex)
-    {
-        ShowOutput($"Failed to send transaction: {ex.Message}");
     }
 }
 ```
 
-This script demonstrates sending transactions to the ZkEvm blockchain. It supports both regular transactions and transactions with confirmation, which wait for the transaction to be included in a block. Users can input the target address, value, and transaction data through the UI.
+The feature provides two transaction modes: `ZkEvmSendTransaction` for immediate submission and `ZkEvmSendTransactionWithConfirmation` for confirmed transactions. It also includes status polling functionality to track transaction completion.
 
-### Feature: ZkEvm Get Balance
+### Feature: ZkEvmGetBalance
 
-The ZkEvmGetBalance feature retrieves the balance of a specific address on the ZkEvm blockchain.
+The ZkEvmGetBalance feature retrieves the balance of any Ethereum address on the zkEVM network, displaying results in both hexadecimal and decimal formats for developer convenience.
 
-```csharp title="ZkEvmGetBalanceScript" manualLink="https://github.com/immutable/unity-immutable-sdk/blob/main/sample/Assets/Scripts/Passport/ZkEvm/ZkEvmGetBalance/ZkEvmGetBalanceScript.cs"
+```csharp title="ZkEvmGetBalance" manualLink="https://github.com/immutable/unity-immutable-sdk/blob/main/sample/Assets/Scripts/Passport/ZkEvm/ZkEvmGetBalance/ZkEvmGetBalanceScript.cs"
 private async UniTaskVoid GetBalanceAsync()
 {
-    if (SampleAppManager.PassportInstance == null)
-    {
-        ShowOutput("Passport instance is null");
-        return;
-    }
     ShowOutput("Getting account balance...");
     try
     {
@@ -164,60 +130,62 @@ private async UniTaskVoid GetBalanceAsync()
 }
 ```
 
-This script fetches the balance of an Ethereum address on the ZkEvm network. It displays both the hexadecimal and decimal representations of the balance, after parsing the hexadecimal response from the blockchain.
+This implementation uses `ZkEvmGetBalance` to retrieve the balance and includes proper hex-to-decimal conversion with error handling for edge cases.
 
-### Feature: ZkEvm Get Transaction Receipt
+### Feature: ZkEvmGetTransactionReceipt
 
-The ZkEvmGetTransactionReceipt feature allows you to check the status of a transaction on the ZkEvm blockchain.
+The ZkEvmGetTransactionReceipt feature retrieves detailed information about a specific transaction, including its status and execution details, which is essential for transaction verification and monitoring.
 
-```csharp title="ZkEvmGetTransactionReceiptScript" manualLink="https://github.com/immutable/unity-immutable-sdk/blob/main/sample/Assets/Scripts/Passport/ZkEvm/ZkEvmGetTransactionReceipt/ZkEvmGetTransactionReceiptScript.cs"
-private async UniTaskVoid GetTransactionReceiptAsync()
+```csharp title="ZkEvmGetTransactionReceipt" manualLink="https://github.com/immutable/unity-immutable-sdk/blob/main/sample/Assets/Scripts/Passport/ZkEvm/ZkEvmGetTransactionReceipt/ZkEvmGetTransactionReceiptScript.cs"
+private async UniTaskVoid GetZkEvmTransactionReceiptAsync()
 {
-    if (SampleAppManager.PassportInstance == null)
-    {
-        ShowOutput("Passport instance is null");
-        return;
-    }
-    ShowOutput($"Getting transaction receipt for hash: {TransactionHashInput.text}");
+    ShowOutput("Getting transaction receipt...");
     try
     {
-        TransactionReceiptResponse receipt = await SampleAppManager.PassportInstance.ZkEvmGetTransactionReceipt(TransactionHashInput.text);
-        
-        string status = receipt.status != null ? GetTransactionStatusString(receipt.status) : "Pending";
-        
-        ShowOutput($"Transaction Hash: {receipt.transactionHash}\nStatus: {status}\nBlock Number: {receipt.blockNumber}\nGas Used: {receipt.gasUsed}");
+        await Passport.Instance.ConnectEvm();
+        TransactionReceiptResponse response = await Passport.Instance.ZkEvmGetTransactionReceipt(TransactionHash.text);
+        string status = $"Status: {GetTransactionStatusString(response.status)}";
+        ShowOutput(status);
     }
     catch (System.Exception ex)
     {
-        ShowOutput($"Failed to get transaction receipt: {ex.Message}");
+        ShowOutput($"Failed to retrieve transaction receipt: {ex.Message}");
+    }
+}
+
+private string GetTransactionStatusString(string status)
+{
+    switch (status)
+    {
+        case "1":
+        case "0x1":
+            return "Success";
+        case "0":
+        case "0x0":
+            return "Failed";
+        case null:
+            return "Still processing";
+        default:
+            return "Unknown status";
     }
 }
 ```
 
-This script retrieves the receipt for a transaction using its hash, which provides information about the transaction's status, block number, and gas used. This is useful for verifying whether a transaction has been successfully processed by the blockchain.
+The feature includes status interpretation logic to convert blockchain status codes into human-readable formats, making transaction monitoring more intuitive.
 
-### Feature: ZkEvm Sign Typed Data
+### Feature: ZkEvmSignTypedData
 
-The ZkEvmSignTypedData feature enables signing of structured data according to EIP-712 standard.
+The ZkEvmSignTypedData feature enables signing of EIP-712 structured data, which is essential for secure message verification and authentication in blockchain applications.
 
-```csharp title="ZkEvmSignTypedDataScript" manualLink="https://github.com/immutable/unity-immutable-sdk/blob/main/sample/Assets/Scripts/Passport/ZkEvm/ZkEvmSignTypedData/ZkEvmSignTypedDataScript.cs"
+```csharp title="ZkEvmSignTypedData" manualLink="https://github.com/immutable/unity-immutable-sdk/blob/main/sample/Assets/Scripts/Passport/ZkEvm/ZkEvmSignTypedData/ZkEvmSignTypedDataScript.cs"
 private async UniTaskVoid SignTypedDataAsync()
 {
-    if (SampleAppManager.PassportInstance == null)
-    {
-        ShowOutput("Passport instance is null");
-        return;
-    }
-    ShowOutput("Signing typed data...");
+    ShowOutput("Signing payload...");
     try
     {
-        // Prepare the EIP-712 typed data
-        string typedData = TypedDataInputField.text;
-        
-        // Sign the typed data
-        string signature = await SampleAppManager.PassportInstance.ZkEvmSignTypedDataV4(typedData);
-        
-        ShowOutput($"Signature: {signature}");
+        await Passport.Instance.ConnectEvm();
+        string signature = await Passport.Instance.ZkEvmSignTypedDataV4(Payload.text);
+        ShowOutput(signature);
     }
     catch (System.Exception ex)
     {
@@ -226,80 +194,74 @@ private async UniTaskVoid SignTypedDataAsync()
 }
 ```
 
-This script demonstrates how to sign structured data (following the EIP-712 standard) using the Passport SDK. This is useful for various on-chain operations where cryptographic signatures are required to prove user intent or authorization.
+This implementation uses `ZkEvmSignTypedDataV4` to sign EIP-712 structured data, following the latest EIP-712 specification for secure message signing.
 
-### Feature: ZkEvm Request Accounts
+### Feature: ZkEvmRequestAccounts
 
-The ZkEvmRequestAccounts feature retrieves the Ethereum addresses associated with the logged-in Passport user.
+The ZkEvmRequestAccounts feature retrieves all wallet addresses associated with the authenticated user, providing essential account information for blockchain operations.
 
-```csharp title="ZkEvmRequestAccountsScript" manualLink="https://github.com/immutable/unity-immutable-sdk/blob/main/sample/Assets/Scripts/Passport/ZkEvm/ZkEvmRequestAccounts/ZkEvmRequestAccountsScript.cs"
+```csharp title="ZkEvmRequestAccounts" manualLink="https://github.com/immutable/unity-immutable-sdk/blob/main/sample/Assets/Scripts/Passport/ZkEvm/ZkEvmRequestAccounts/ZkEvmRequestAccountsScript.cs"
 private async UniTaskVoid RequestAccountsAsync()
 {
-    if (SampleAppManager.PassportInstance == null)
-    {
-        ShowOutput("Passport instance is null");
-        return;
-    }
-    ShowOutput("Requesting accounts...");
+    ShowOutput("Requesting wallet accounts...");
     try
     {
         List<string> accounts = await SampleAppManager.PassportInstance.ZkEvmRequestAccounts();
-        
-        if (accounts.Count > 0)
-        {
-            string accountsString = string.Join("\n", accounts);
-            ShowOutput($"Accounts:\n{accountsString}");
-        }
-        else
-        {
-            ShowOutput("No accounts found");
-        }
+        ShowOutput(accounts.Count > 0 ? string.Join(", ", accounts) : "No accounts found.");
     }
     catch (System.Exception ex)
     {
-        ShowOutput($"Failed to request accounts: {ex.Message}");
+        ShowOutput($"Failed to request wallet accounts: {ex.Message}");
     }
 }
 ```
 
-This script retrieves the Ethereum addresses associated with the user's Passport account. These addresses can be used for various blockchain operations such as sending transactions or signing messages.
+The feature returns a list of account addresses and handles cases where no accounts are found, providing clear feedback to the user.
 
 ## Running the Feature Group Examples
 
 ### Prerequisites
 
-Before running the ZkEvm examples, you need to:
-
-1. Set up your development environment using [Immutable Hub](https://hub.immutable.com/)
-2. Have a Passport account
-3. Have the Unity SDK integrated into your project
+- Unity 2022.3 LTS or later
+- Immutable Passport SDK integrated into your project
+- Valid Passport configuration with zkEVM environment setup
+- Environment setup completed through [Immutable Hub](https://hub.immutable.com/)
 
 ### Step-by-Step Instructions
 
-1. Open the Unity Editor with the Immutable SDK sample project
-2. Ensure you have the Passport SDK initialized properly
-3. Navigate to the Passport scene in the sample project
-4. Log in to Passport using the Authentication feature
-5. Once authenticated, you'll be able to access the ZkEvm features
-6. Try connecting to ZkEvm first, which is required for all other ZkEvm operations
-7. After connecting, you can try the other ZkEvm features in any order
+1. **Open the Sample Project**: Load the Unity sample project containing the ZkEvm features
 
-### Feature Sequence Dependencies
+2. **Configure Passport**: Ensure your Passport instance is properly configured for zkEVM operations
 
-While you can use most ZkEvm features independently once connected, some operations have dependencies:
+3. **Authenticate User**: Complete user authentication through Passport before accessing zkEVM features
 
-1. **ZkEvmConnect** must be called before any other ZkEvm operations
-2. **ZkEvmSendTransaction** should be used before **ZkEvmGetTransactionReceipt** if you want to check a transaction you just sent
-3. **ZkEvmRequestAccounts** can be useful to get the user's address before using **ZkEvmGetBalance**
+4. **Connect to zkEVM**: 
+   - Navigate to the ZkEvmConnect feature
+   - Click "Connect" to establish the zkEVM provider connection
+   - Verify successful connection before proceeding to other features
+
+5. **Test Individual Features**:
+   - **Get Accounts**: Use ZkEvmRequestAccounts to retrieve user wallet addresses
+   - **Check Balance**: Use ZkEvmGetBalance with a valid address to check account balance
+   - **Send Transaction**: Use ZkEvmSendTransaction to send a test transaction (ensure sufficient balance)
+   - **Get Receipt**: Use ZkEvmGetTransactionReceipt with a transaction hash to check status
+   - **Sign Data**: Use ZkEvmSignTypedData with valid EIP-712 structured data
+
+6. **Sequence Dependencies**: 
+   - Always run ZkEvmConnect first
+   - ZkEvmRequestAccounts should be run early to get available addresses
+   - ZkEvmGetBalance requires a valid address (from ZkEvmRequestAccounts)
+   - ZkEvmGetTransactionReceipt requires a transaction hash (from ZkEvmSendTransaction)
 
 ## Summary
 
-The ZkEvm feature group provides a comprehensive set of tools for integrating Immutable's ZkEvm blockchain into Unity games. By using these features, developers can enable users to connect to the blockchain, send transactions, check balances, and perform other blockchain operations directly from within their games.
+The ZkEvm feature group provides comprehensive blockchain functionality for Unity applications using the Immutable Passport SDK. These features demonstrate essential patterns for zkEVM integration, including provider connection, transaction management, balance checking, receipt verification, message signing, and account management.
 
-When using these features together, follow these best practices:
+Key best practices when using these features together:
+- Always establish the zkEVM connection first using ZkEvmConnect
+- Handle async operations properly with UniTask for optimal performance
+- Implement comprehensive error handling for blockchain operations
+- Use the confirmation and polling features for reliable transaction processing
+- Validate user inputs and provide clear feedback for all operations
 
-1. Always check if Passport is initialized and the user is logged in before attempting ZkEvm operations
-2. Handle exceptions properly to provide clear feedback to users when blockchain operations fail
-3. Remember that blockchain operations may take time to process, especially when waiting for transaction confirmations
-4. Use the TransactionReceiptResponse to verify transaction status before proceeding with dependent game logic
-5. Store transaction hashes for important game transactions to allow for later verification 
+These features provide the foundation for building robust blockchain-enabled Unity applications on Immutable's zkEVM platform. 

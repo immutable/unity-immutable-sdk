@@ -37,7 +37,7 @@ jobs:
           repository: immutable/docs
           token: ${{ secrets.UNITY_SDK_DOCS_WORKFLOW }}
           path: imx-docs
-          ref: 'main'
+          ref: 'DVR-295-docs-restructure'
 
       - name: Setup environment variables
         run: echo "CLONE_DIR=./imx-docs" >> $GITHUB_ENV
@@ -65,20 +65,39 @@ jobs:
           .github/scripts/process-passport-tutorials.sh
         shell: bash
 
-      - name: Commit and Push Changes to Docs Repo
+      - name: Create Pull Request in Docs Repo
+        id: create_pr
         run: |
           cd "$CLONE_DIR"
-          if git status --porcelain | grep -q .; then
-            git add .
-            
-            # Commit with reference to source commit
-            COMMIT_MSG="docs: Update Passport tutorials from Unity SDK (Ref: ${GITHUB_SHA::8})"
-            git commit -m "$COMMIT_MSG"
-            
-            # Push to the target branch
-            git push -u origin main
-            echo "Successfully pushed Passport tutorial changes to docs repo"
-          else
+          if ! git status --porcelain | grep -q .; then
             echo "No changes to commit"
+            echo "pr_url=" >> $GITHUB_OUTPUT
+            exit 0
           fi
+
+          BRANCH_NAME="chore/unity-sdk-docs-update-${{ github.run_id }}"
+          git checkout -b $BRANCH_NAME
+          
+          git add .
+          git commit -m "chore: example app usage guide updated"
+          git push -u origin $BRANCH_NAME
+          echo "Successfully pushed changes to docs repo on branch $BRANCH_NAME"
+
+          PR_URL=$(gh pr create \
+            --title "auto(unity-immutable-sdk): example app usage guide updated" \
+            --body "Automated PR from unity-immutable-sdk to update tutorials. This is safe for anyone to approve and merge." \
+            --base DVR-295-docs-restructure \
+            --repo immutable/docs)
+          
+          echo "Successfully created PR in docs repo: $PR_URL"
+          echo "pr_url=${PR_URL}" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.UNITY_SDK_DOCS_WORKFLOW }}
         shell: bash
+
+      - name: Notify Slack
+        if: steps.create_pr.outputs.pr_url != ''
+        uses: ./.github/actions/notify-slack-publish-status
+        with:
+          message: 'New automated Unity SDK sample app tutorials PR is ready for review: ${{ steps.create_pr.outputs.pr_url }}'
+          webhook-url: ${{ secrets.SDK_DOCS_TUTORIALS_SLACK_WEBHOOK }}

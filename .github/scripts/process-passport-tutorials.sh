@@ -12,16 +12,14 @@ TUTORIALS_DIR="${PASSPORT_ROOT}/_tutorials~"
 
 echo "Processing Passport tutorials..."
 
-# Load features.json to get feature groups
 FEATURES_JSON="${PASSPORT_ROOT}/features.json"
 if [ ! -f "${FEATURES_JSON}" ]; then
   echo "Error: features.json not found at ${FEATURES_JSON}"
   exit 1
 fi
 
-# Create _tutorials directory in docs repo
-DOCS_TUTORIALS_DIR="${DOCS_REPO_DIR}/docs/main/example/zkEVM/unity/passport-examples/_tutorials"
-mkdir -p "${DOCS_TUTORIALS_DIR}"
+# Base directory for usage guides in the docs repo
+DOCS_USAGE_GUIDES_DIR="${DOCS_REPO_DIR}/docs/main/build/unity/usage/passport"
 
 # Check if _tutorials~ directory exists
 if [ ! -d "${TUTORIALS_DIR}" ]; then
@@ -40,12 +38,16 @@ else
     if [ -f "${TUTORIAL_FILE}" ]; then
       echo "Found tutorial for ${GROUP_NAME}"
       
+      # Define the destination directory for this feature group
+      DEST_GROUP_DIR="${DOCS_USAGE_GUIDES_DIR}/_tutorials"
+      mkdir -p "${DEST_GROUP_DIR}"
+      
       # Use the folder name directly for the destination filename
       OUTPUT_FILENAME="${GROUP_NAME}.md"
       
-      # Copy the tutorial file
-      cp "${TUTORIAL_FILE}" "${DOCS_TUTORIALS_DIR}/${OUTPUT_FILENAME}"
-      echo "Copied ${TUTORIAL_FILE} to ${DOCS_TUTORIALS_DIR}/${OUTPUT_FILENAME}"
+      # Copy the tutorial file to its new group directory
+      cp "${TUTORIAL_FILE}" "${DEST_GROUP_DIR}/${OUTPUT_FILENAME}"
+      echo "Copied ${TUTORIAL_FILE} to ${DEST_GROUP_DIR}/${OUTPUT_FILENAME}"
     else
       echo "Warning: No tutorial.md found for feature group ${GROUP_NAME}"
     fi
@@ -56,12 +58,12 @@ fi
 JSON_FILE="./_parsed/passport-features.json"
 if [ -f "${JSON_FILE}" ]; then
   # Create directory for JSON file if it doesn't exist
-  JSON_DIR="${DOCS_REPO_DIR}/docs/main/example/zkEVM/unity/passport-examples"
+  JSON_DIR="${DOCS_REPO_DIR}/docs/main/build/unity/usage/passport"
   mkdir -p "${JSON_DIR}"
   
   # Copy JSON file
-  cp "${JSON_FILE}" "${JSON_DIR}/passport-features.json"
-  echo "Copied ${JSON_FILE} to ${JSON_DIR}/passport-features.json"
+  cp "${JSON_FILE}" "${JSON_DIR}/passport-examples.json"
+  echo "Copied ${JSON_FILE} to ${JSON_DIR}/passport-examples.json"
 else
   echo "Warning: No passport-features.json found at ${JSON_FILE}"
 fi

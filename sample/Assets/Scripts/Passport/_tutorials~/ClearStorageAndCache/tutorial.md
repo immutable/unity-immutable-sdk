@@ -4,7 +4,7 @@
 
 </div>
 
-The Clear Storage and Cache feature in the Immutable Passport SDK provides a way to clear WebView storage and cache on mobile devices (Android and iOS). This is particularly useful for testing login flows, handling user log out completely, or managing authentication state for your application.
+The Clear Storage and Cache feature provides essential WebView maintenance functionality for mobile applications using Immutable Passport. This feature allows developers to clear the underlying WebView's cached resources and JavaScript storage data, which is crucial for troubleshooting authentication issues, managing storage space, and ensuring clean application states on Android and iOS devices.
 
 <div class="button-component">
 
@@ -12,16 +12,24 @@ The Clear Storage and Cache feature in the Immutable Passport SDK provides a way
 
 </div>
 
-#### Unity SDK Clear Storage and Cache Implementation
+## Feature Introduction
 
-The Clear Storage and Cache feature provides two main functions:
+The Clear Storage and Cache feature demonstrates how to use Immutable Passport's WebView maintenance capabilities to clear cached data and storage. This functionality is particularly valuable for:
 
-1. `ClearStorage()` - Clears all underlying WebView storage currently being used by JavaScript storage APIs, including Web SQL Database and HTML5 Web Storage APIs.
-2. `ClearCache(bool includeDiskFiles)` - Clears the underlying WebView resource cache, with an option to include disk files.
+- Resolving authentication issues by clearing stale session data
+- Managing device storage by removing cached resources
+- Ensuring clean application states during development and testing
+- Troubleshooting WebView-related problems
 
-##### Feature: Clear Storage and Cache
+This feature is only available on Android and iOS devices, as it directly interacts with the native WebView components used by Passport for authentication and communication.
 
-```csharp title="ClearStorageAndCacheScript" manualLink="https://github.com/immutable/unity-immutable-sdk/blob/main/sample/Assets/Scripts/Passport/ClearStorageAndCache/ClearStorageAndCacheScript.cs"
+## Unity SDK Clear Storage and Cache Implementation
+
+### Feature: Clear Storage and Cache
+
+The Clear Storage and Cache feature provides two distinct but complementary operations for maintaining WebView data:
+
+```csharp title="Clear Storage and Cache" manualLink="https://github.com/immutable/unity-immutable-sdk/blob/main/sample/Assets/Scripts/Passport/ClearStorageAndCache/ClearStorageAndCacheScript.cs"
 public void ClearStorageAndCache()
 {
     if (Passport.Instance == null)
@@ -46,41 +54,77 @@ public void ClearStorageAndCache()
 }
 ```
 
-The implementation is straightforward:
+The implementation demonstrates several key aspects:
 
-1. First, it checks if the Passport instance has been initialized
-2. Then, based on the platform:
-   - On Android and iOS devices, it calls `ClearStorage()` to clear WebView storage and `ClearCache(true)` to clear the WebView cache including disk files
-   - On other platforms, it displays a message indicating that the feature is only available on mobile devices
+**Platform Availability**: The feature uses conditional compilation directives to ensure it only executes on Android and iOS devices. In the Unity editor or other platforms, it displays an informative message about platform limitations.
 
-Note that this feature is specifically designed for mobile platforms (Android and iOS) and is not available in the Unity Editor or on desktop platforms.
+**Passport Instance Validation**: Before attempting to clear data, the code verifies that the Passport instance has been properly initialized, providing clear feedback if initialization is required.
 
-#### Running the Feature Example
+**Dual Clearing Operations**: The feature calls both `ClearStorage()` and `ClearCache(true)` methods:
+- `ClearStorage()` removes JavaScript storage data including localStorage, sessionStorage, WebSQL databases, and IndexedDB data
+- `ClearCache(true)` clears the WebView's resource cache, with the `true` parameter indicating that disk-based cache files should also be removed
 
-##### Prerequisites
+**User Feedback**: The implementation provides clear status messages to inform users about the operation's progress and completion, enhancing the debugging and development experience.
 
-1. Make sure you have set up your Unity project with the Immutable Passport SDK. For detailed setup instructions, visit [Immutable Hub](https://hub.immutable.com/).
-2. For testing on mobile devices, you need to build the application for Android or iOS.
+## Running the Feature Example
 
-##### Steps to Run the Example
+### Prerequisites
 
-1. Open the sample project in Unity
-2. Configure the Passport SDK with your application credentials
-3. Build and deploy the application to an Android or iOS device
-4. Navigate to the ClearStorageAndCache feature in the sample app
-5. First login to Passport to initialize the SDK
-6. Click the "Clear Storage and Cache" button to execute the feature
-7. The application will display a message indicating that the storage and cache have been cleared
+Before running the Clear Storage and Cache example, ensure you have:
 
-Note: This feature is particularly useful when testing authentication flows or when you need to clear user data from the device.
+- Unity 2022.3 LTS or later installed
+- Immutable Passport SDK properly configured in your project
+- A valid Passport client ID from [Immutable Hub](https://hub.immutable.com)
+- An Android or iOS device for testing (this feature is not available in the Unity editor)
 
-#### Summary
+### Step-by-Step Instructions
 
-The Clear Storage and Cache feature provides a simple way to clear WebView storage and cache on mobile devices. This is useful for:
+1. **Open the Sample Project**
+   - Navigate to the Unity sample project in the SDK repository
+   - Open the project in Unity Editor
 
-- Testing authentication flows
-- Ensuring user privacy by clearing stored data
-- Resolving WebView caching issues
-- Completely logging out users and removing saved credentials
+2. **Configure Passport Settings**
+   - Ensure your Passport client ID is properly configured
+   - Verify that redirect URLs are set up correctly in Immutable Hub
 
-When implementing this feature in your own application, remember that it is only available on Android and iOS devices, and requires that the Passport SDK is properly initialized before use. 
+3. **Build for Mobile Platform**
+   - Switch to Android or iOS build target in Build Settings
+   - Configure platform-specific settings as needed
+   - Build and deploy to your target device
+
+4. **Initialize Passport**
+   - Launch the application on your mobile device
+   - Navigate to the Passport initialization section
+   - Complete the Passport initialization process
+
+5. **Test Clear Storage and Cache**
+   - Locate the "Clear Storage & Cache" button in the sample application
+   - Tap the button to execute the clearing operation
+   - Observe the status messages confirming the operation completion
+
+6. **Verify Results**
+   - Check that cached authentication data has been cleared
+   - Verify that subsequent authentication flows work as expected
+   - Monitor device storage to confirm cache reduction
+
+### Development Considerations
+
+When integrating this feature into your own application, consider:
+
+- **Timing**: Only call these methods when necessary, as clearing cache and storage will require users to re-authenticate
+- **User Experience**: Provide clear communication to users about what data will be cleared and why
+- **Error Handling**: Implement appropriate error handling for edge cases where clearing operations might fail
+- **Platform Detection**: Always check platform availability before calling these methods
+
+## Summary
+
+The Clear Storage and Cache feature provides essential WebView maintenance capabilities for Immutable Passport applications on mobile platforms. By offering both cache clearing and storage clearing operations, developers can effectively manage WebView data, resolve authentication issues, and maintain optimal application performance.
+
+Key takeaways for developers:
+
+- **Mobile-Only Functionality**: This feature is exclusively available on Android and iOS devices due to its direct interaction with native WebView components
+- **Dual-Purpose Operations**: The feature provides both cache clearing (for resource management) and storage clearing (for session data management)
+- **Development Tool**: Particularly valuable during development and testing phases for ensuring clean application states
+- **User Impact Awareness**: Clearing storage and cache will require users to re-authenticate, so use judiciously in production applications
+
+This feature exemplifies best practices for WebView maintenance in Unity applications, providing developers with the tools needed to maintain robust and reliable authentication experiences across mobile platforms. 
