@@ -163,7 +163,44 @@ namespace Immutable.Passport
         private GameObject bridgeWebViewGameObject;
 
         // Input management
-        private Coroutine inputActivationCoroutine;
+        // Note: Input coroutine removed - games should manage cursor state themselves
+
+        /// <summary>
+        /// Auto-initialize PassportUI when the component starts if clientId is configured.
+        /// This enables "drag and drop" functionality - just configure the Inspector fields and it works.
+        /// </summary>
+        private async void Start()
+        {
+            if (!isInitialized && !string.IsNullOrEmpty(clientId))
+            {
+                try
+                {
+                    PassportLogger.Info($"{TAG} Auto-initializing PassportUI from Start()...");
+                    if (Passport.Instance != null)
+                    {
+                        PassportLogger.Info($"{TAG} Auto-initialization: Passport already exists, setting up UI only");
+                        await InitializeWithPassport(Passport.Instance);
+                    }
+                    else
+                    {
+                        PassportLogger.Info($"{TAG} Auto-initialization: Creating new Passport instance");
+                        await InitializeWithPassport();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    PassportLogger.Error($"{TAG} Auto-initialization failed: {ex.Message}");
+                }
+            }
+            else if (string.IsNullOrEmpty(clientId))
+            {
+                PassportLogger.Warn($"{TAG} Auto-initialization skipped - Client ID not configured in Inspector");
+            }
+            else if (isInitialized)
+            {
+                PassportLogger.Info($"{TAG} Auto-initialization skipped - Already initialized");
+            }
+        }
 
         /// <summary>
         /// Initialize Passport and PassportUI in one call using the configured settings.
@@ -173,6 +210,12 @@ namespace Immutable.Passport
         /// <returns>UniTask that completes when initialization is finished</returns>
         public async UniTask InitializeWithPassport()
         {
+            if (isInitialized)
+            {
+                PassportLogger.Warn($"{TAG} PassportUI is already initialized, skipping InitializeWithPassport()");
+                return;
+            }
+
             // Validate configuration
             if (string.IsNullOrEmpty(clientId))
             {
@@ -208,6 +251,12 @@ namespace Immutable.Passport
         /// <returns>UniTask that completes when UI initialization is finished</returns>
         public async UniTask InitializeWithPassport(Passport passportInstance)
         {
+            if (isInitialized)
+            {
+                PassportLogger.Warn($"{TAG} PassportUI is already initialized, skipping InitializeWithPassport(passport)");
+                return;
+            }
+
             if (passportInstance == null)
             {
                 PassportLogger.Error($"{TAG} Passport instance cannot be null");
@@ -241,6 +290,12 @@ namespace Immutable.Passport
         /// <param name="passportInstance">The initialized Passport instance</param>
         public void Init(Passport passportInstance)
         {
+            if (isInitialized)
+            {
+                PassportLogger.Warn($"{TAG} PassportUI is already initialized, skipping Init(passport)");
+                return;
+            }
+
             if (passportInstance == null)
             {
                 PassportLogger.Error($"{TAG} Passport instance cannot be null");
@@ -279,6 +334,7 @@ namespace Immutable.Passport
             // Hide initially
             HideLoginUI(logMessage: false);
 
+            isInitialized = true;
             PassportLogger.Info($"{TAG} PassportUI initialized successfully");
         }
 
@@ -329,7 +385,6 @@ namespace Immutable.Passport
                 webView.RegisterJavaScriptMethod("HandleLoginError", HandleLoginError);
                 webView.RegisterJavaScriptMethod("HandleClose", (data) => HideLoginUI());
 
-                isInitialized = true;
                 PassportLogger.Info($"{TAG} Cross-platform WebView created successfully");
             }
             catch (Exception ex)
@@ -678,13 +733,7 @@ namespace Immutable.Passport
                     PassportLogger.Info($"{TAG} WebView disposed on destroy");
                 }
 
-                // Stop any running coroutines
-                if (inputActivationCoroutine != null)
-                {
-                    StopCoroutine(inputActivationCoroutine);
-                    inputActivationCoroutine = null;
-                    PassportLogger.Info($"{TAG} Stopped input activation coroutine during cleanup");
-                }
+                // Note: Input coroutine handling removed - games should manage cursor state themselves
             }
             catch (Exception ex)
             {
