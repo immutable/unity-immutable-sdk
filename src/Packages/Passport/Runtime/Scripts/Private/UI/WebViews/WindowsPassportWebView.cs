@@ -10,6 +10,10 @@ using UnityEngine.UI;
 using Immutable.Passport.Core.Logging;
 using Cysharp.Threading.Tasks;
 
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -520,8 +524,25 @@ namespace Immutable.Passport
         {
             try
             {
-                // Load the BrowserInput asset from SDK Resources
-                var inputHandler = Resources.Load<WebBrowserOldInputHandler>("BrowserInput");
+#if ENABLE_INPUT_SYSTEM
+                // Use UWB's built-in Input System handler
+                PassportLogger.Info($"{TAG} Using UWB Input System handler");
+                var inputSystemHandler = ScriptableObject.CreateInstance<VoltstroStudios.UnityWebBrowser.Input.WebBrowserInputSystemHandler>();
+
+                // Configure Input Actions for the handler
+                // Set up scroll input action
+                inputSystemHandler.scrollInput = new InputAction("Scroll", InputActionType.Value, "<Mouse>/scroll");
+                inputSystemHandler.scrollInput.Enable();
+
+                // Set up pointer position input action
+                inputSystemHandler.pointPosition = new InputAction("PointerPosition", InputActionType.Value, "<Mouse>/position");
+                inputSystemHandler.pointPosition.Enable();
+
+                webBrowserUI.inputHandler = inputSystemHandler;
+                PassportLogger.Info($"{TAG} Input System handler configured with mouse actions");
+#else
+                // Load the BrowserInput asset from SDK Resources (legacy input)
+                var inputHandler = Resources.Load<VoltstroStudios.UnityWebBrowser.Input.WebBrowserOldInputHandler>("BrowserInput");
                 if (inputHandler != null)
                 {
                     webBrowserUI.inputHandler = inputHandler;
@@ -530,9 +551,10 @@ namespace Immutable.Passport
                 else
                 {
                     PassportLogger.Warn($"{TAG} BrowserInput.asset not found in Resources, creating fallback");
-                    var fallbackHandler = ScriptableObject.CreateInstance<WebBrowserOldInputHandler>();
+                    var fallbackHandler = ScriptableObject.CreateInstance<VoltstroStudios.UnityWebBrowser.Input.WebBrowserOldInputHandler>();
                     webBrowserUI.inputHandler = fallbackHandler;
                 }
+#endif
             }
             catch (Exception ex)
             {
