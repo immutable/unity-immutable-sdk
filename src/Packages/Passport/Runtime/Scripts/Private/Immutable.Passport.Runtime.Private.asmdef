@@ -7,7 +7,8 @@
         "Immutable.Browser.Core",
         "Immutable.Browser.Gree",
         "Immutable.Passport.Core.Logging",
-        "Vuplex.WebView"
+        "Vuplex.WebView",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [
         "Android",
@@ -26,6 +27,12 @@
     ],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.inputsystem",
+            "expression": "1.0.0",
+            "define": "ENABLE_INPUT_SYSTEM"
+        }
+    ],
     "noEngineReferences": false
 }
