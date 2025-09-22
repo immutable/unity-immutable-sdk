@@ -134,8 +134,32 @@ namespace Immutable.Passport.Helpers
                 "        if not \"%%B\"==\"\" set \"cmdline=!cmdline!%%B\"",
                 "    )",
                 "    echo [%date% %time%] Raw command line: !cmdline! >> \"%LOG_PATH%\"",
+                "    REM Try multiple path formats to handle Unity's various command line formats",
+                "    set \"MATCH_FOUND=0\"",
+                "    ",
+                "    REM Try 1: Exact match with backslashes",
                 "    echo !cmdline! | findstr /I /C:\"-projectPath\" | findstr /I /C:\"%PROJECT_PATH%\" >nul",
-                "    if not errorlevel 1 (",
+                "    if not errorlevel 1 set \"MATCH_FOUND=1\"",
+                "    ",
+                "    REM Try 2: Forward slashes if backslashes didn't match",
+                "    if \"!MATCH_FOUND!\"==\"0\" (",
+                "        set \"PROJECT_PATH_FORWARD=%PROJECT_PATH:\\=/%\"",
+                "        echo [%date% %time%] Trying forward slash path: !PROJECT_PATH_FORWARD! >> \"%LOG_PATH%\"",
+                "        echo !cmdline! | findstr /I /C:\"-projectPath\" | findstr /I /C:\"!PROJECT_PATH_FORWARD!\" >nul",
+                "        if not errorlevel 1 set \"MATCH_FOUND=1\"",
+                "    )",
+                "    ",
+                "    REM Try 3: With quotes around paths",
+                "    if \"!MATCH_FOUND!\"==\"0\" (",
+                "        echo [%date% %time%] Trying quoted paths >> \"%LOG_PATH%\"",
+                "        echo !cmdline! | findstr /I /C:\"-projectPath \\\"!PROJECT_PATH!\\\"\" >nul",
+                "        if not errorlevel 1 set \"MATCH_FOUND=1\"",
+                "        if \"!MATCH_FOUND!\"==\"0\" (",
+                "            echo !cmdline! | findstr /I /C:\"-projectPath \\\"!PROJECT_PATH_FORWARD!\\\"\" >nul",
+                "            if not errorlevel 1 set \"MATCH_FOUND=1\"",
+                "        )",
+                "    )",
+                "    if \"!MATCH_FOUND!\"==\"1\" (",
                 "        echo [%date% %time%] Found matching Unity process ID: %%A >> \"%LOG_PATH%\"",
                 "        echo [%date% %time%] Command line: !cmdline! >> \"%LOG_PATH%\"",
                 "        powershell -NoProfile -ExecutionPolicy Bypass -Command ^",
@@ -161,7 +185,7 @@ namespace Immutable.Passport.Helpers
                 $"echo [%date% %time%] Starting new Unity instance >> \"%LOG_PATH%\"",
                 $"start \"\" \"{unityExe}\" -projectPath \"%PROJECT_PATH%\" >nul 2>&1"
             };
-            
+
             File.WriteAllLines(cmdPath, scriptLines);
             PassportLogger.Debug($"Writing script to {cmdPath}");
             PassportLogger.Debug($"Writing logs to {logPath}");
@@ -198,7 +222,7 @@ namespace Immutable.Passport.Helpers
         private static void RegisterProtocol(string protocolName)
         {
             PassportLogger.Debug($"Register protocol: {protocolName}");
-            
+
             UIntPtr hKey;
             uint disposition;
             // Create registry key for the protocol
@@ -214,14 +238,14 @@ namespace Immutable.Passport.Helpers
                 out disposition);
 
             if (result != 0)
-            {                
+            {
                 throw new Exception($"Failed to create PKCE registry key. Error code: {result}");
             }
 
             // Set the default value for the protocol key to Application.productName
             // This is often used by Windows as the display name for the protocol
             var appProductName = Application.productName;
-            var productNameDataSize = (uint)((appProductName.Length + 1) * Marshal.SystemDefaultCharSize); 
+            var productNameDataSize = (uint)((appProductName.Length + 1) * Marshal.SystemDefaultCharSize);
             var setDefaultResult = RegSetValueEx(hKey, null, 0, REG_SZ, appProductName, productNameDataSize);
 
             if (setDefaultResult != 0)
@@ -230,7 +254,7 @@ namespace Immutable.Passport.Helpers
             }
 
             // Set URL Protocol value
-            RegSetValueEx(hKey, "URL Protocol", 0, REG_SZ, string.Empty, (uint)(1 * Marshal.SystemDefaultCharSize)); 
+            RegSetValueEx(hKey, "URL Protocol", 0, REG_SZ, string.Empty, (uint)(1 * Marshal.SystemDefaultCharSize));
 
             // Create command subkey
             UIntPtr commandKey;
@@ -246,7 +270,7 @@ namespace Immutable.Passport.Helpers
                 out disposition);
 
             if (result != 0)
-            {              
+            {
                 RegCloseKey(hKey);
                 throw new Exception($"Failed to create PKCE command registry key. Error code: {result}");
             }
@@ -255,7 +279,7 @@ namespace Immutable.Passport.Helpers
             var scriptLocation = GetGameExecutablePath(".cmd");
             string command = $"\"{scriptLocation}\" \"%1\"";
             uint commandSize = (uint)((command.Length + 1) * 2);
-            
+
             result = RegSetValueEx(commandKey, "", 0, REG_SZ, command, commandSize);
             if (result != 0)
             {
@@ -268,7 +292,7 @@ namespace Immutable.Passport.Helpers
             RegCloseKey(commandKey);
             RegCloseKey(hKey);
         }
-        
+
         private static string GetGameExecutablePath(string suffix)
         {
 #if !UNITY_EDITOR_WIN
