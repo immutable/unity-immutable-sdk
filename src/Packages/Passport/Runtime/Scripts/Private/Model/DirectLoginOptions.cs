@@ -17,7 +17,7 @@ namespace Immutable.Passport.Model
         /// <summary>
         /// Email address for email-based authentication (only used when directLoginMethod is Email).
         /// </summary>
-        public string email;
+        public string? email;
 
         /// <summary>
         /// Marketing consent status. Defaults to OptedIn. Required by Auth endpoints.
@@ -40,7 +40,7 @@ namespace Immutable.Passport.Model
         /// <param name="loginMethod">The direct login method</param>
         /// <param name="emailAddress">The email address (optional)</param>
         /// <param name="marketingConsentStatus">Marketing consent status. Defaults to OptedIn if not specified. Required.</param>
-        public DirectLoginOptions(DirectLoginMethod loginMethod, string emailAddress = null, MarketingConsentStatus? marketingConsentStatus = null)
+        public DirectLoginOptions(DirectLoginMethod loginMethod, string? emailAddress = null, MarketingConsentStatus? marketingConsentStatus = null)
         {
             directLoginMethod = loginMethod;
             email = emailAddress;

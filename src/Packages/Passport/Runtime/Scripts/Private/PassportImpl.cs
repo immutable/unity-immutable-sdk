@@ -98,7 +98,7 @@ namespace Immutable.Passport
             _communicationsManager.SetCallTimeout(ms);
         }
 
-        public UniTask<bool> Login(bool useCachedSession = false, DirectLoginOptions directLoginOptions = null)
+        public UniTask<bool> Login(bool useCachedSession = false, DirectLoginOptions? directLoginOptions = null)
         {
             if (useCachedSession)
             {
@@ -163,7 +163,7 @@ namespace Immutable.Passport
             return false;
         }
 
-        public async UniTask<bool> ConnectImx(bool useCachedSession = false, DirectLoginOptions directLoginOptions = null)
+        public async UniTask<bool> ConnectImx(bool useCachedSession = false, DirectLoginOptions? directLoginOptions = null)
         {
             if (useCachedSession)
             {
