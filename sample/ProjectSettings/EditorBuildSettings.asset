@@ -5,10 +5,10 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 0
+  - enabled: 1
     path: Assets/Scenes/Passport/Initialisation.unity
     guid: bb0668e0c95b745ce8e2f127d5940ede
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Passport/InitialisationWithUI.unity
     guid: b588e10e8f614e0458aee90c7d02a499
   - enabled: 1

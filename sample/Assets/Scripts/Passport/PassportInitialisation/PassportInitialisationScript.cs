@@ -54,8 +54,8 @@ public class PassportInitialisationScript : MonoBehaviour
             var passport = await Passport.Init(clientId, environment, redirectUri, logoutRedirectUri);
             SampleAppManager.PassportInstance = passport;
 
-            // Navigate to the main initialization scene with PassportUI after initialising Passport
-            SceneManager.LoadScene("InitialisationWithUI");
+            // Navigate to the unauthenticated scene after initialising Passport
+            SceneManager.LoadScene("UnauthenticatedScene");
         }
         catch (Exception ex)
         {

@@ -25,8 +25,7 @@ public class LogoutScript : MonoBehaviour
             await Passport.Instance.Logout();
             SampleAppManager.IsConnectedToImx = false;
             SampleAppManager.IsConnectedToZkEvm = false;
-            // Navigate back to the main initialization scene with PassportUI
-            SceneManager.LoadScene("InitialisationWithUI");
+            AuthenticatedSceneManager.NavigateToUnauthenticatedScene();
         }
         catch (System.Exception ex)
         {
