@@ -20,7 +20,7 @@ namespace Immutable.Passport.Model
         public string email;
 
         /// <summary>
-        /// Marketing consent status (optional).
+        /// Marketing consent status. Defaults to OptedIn. Required by Auth endpoints.
         /// </summary>
         public MarketingConsentStatus? marketingConsentStatus;
 
@@ -31,7 +31,7 @@ namespace Immutable.Passport.Model
         {
             directLoginMethod = DirectLoginMethod.Email;
             email = null;
-            marketingConsentStatus = null;
+            marketingConsentStatus = MarketingConsentStatus.OptedIn;
         }
 
         /// <summary>
@@ -39,12 +39,12 @@ namespace Immutable.Passport.Model
         /// </summary>
         /// <param name="loginMethod">The direct login method</param>
         /// <param name="emailAddress">The email address (optional)</param>
-        /// <param name="marketingConsentStatus">The marketing consent status (optional)</param>
+        /// <param name="marketingConsentStatus">Marketing consent status. Defaults to OptedIn if not specified. Required.</param>
         public DirectLoginOptions(DirectLoginMethod loginMethod, string emailAddress = null, MarketingConsentStatus? marketingConsentStatus = null)
         {
             directLoginMethod = loginMethod;
             email = emailAddress;
-            this.marketingConsentStatus = marketingConsentStatus;
+            this.marketingConsentStatus = marketingConsentStatus ?? MarketingConsentStatus.OptedIn;
         }
 
         /// <summary>
