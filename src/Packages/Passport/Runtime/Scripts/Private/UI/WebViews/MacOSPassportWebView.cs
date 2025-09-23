@@ -83,10 +83,10 @@ namespace Immutable.Passport
                 // Create WebView prefab and parent to Canvas
                 _webViewPrefab = CanvasWebViewPrefab.Instantiate();
                 PassportLogger.Info($"{TAG} CanvasWebViewPrefab created successfully");
-                _webViewPrefab.Native2DModeEnabled = false; // Use standard mode for better desktop compatibility
+                _webViewPrefab.Native2DModeEnabled = true; // Use Native2DMode for better performance on desktop
 
-                // Set higher resolution for desktop - MacOS can handle larger textures
-                _webViewPrefab.Resolution = 1.5f; // 1.5px per Unity unit for crisp rendering
+                // Set lower resolution for faster loading and rendering
+                _webViewPrefab.Resolution = 0.75f; // Balanced resolution for desktop
 
                 // Must be child of Canvas for Vuplex to work
                 _webViewPrefab.transform.SetParent(_canvasReference.canvas.transform, false);
@@ -96,9 +96,9 @@ namespace Immutable.Passport
                 rect.anchorMin = new Vector2(0.5f, 0.5f); // Center anchor
                 rect.anchorMax = new Vector2(0.5f, 0.5f);
 
-                // Use configured dimensions or fallback to desktop-appropriate defaults
-                float width = config.Width > 0 ? config.Width : 1200;
-                float height = config.Height > 0 ? config.Height : 800;
+                // Use configured dimensions or fallback to desktop-appropriate defaults (optimized for performance)
+                float width = config.Width > 0 ? config.Width : 600;
+                float height = config.Height > 0 ? config.Height : 650;
                 rect.sizeDelta = new Vector2(width, height);
                 rect.anchoredPosition = Vector2.zero; // Center position
 
