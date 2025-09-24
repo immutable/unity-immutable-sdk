@@ -402,10 +402,10 @@ namespace Immutable.Passport
 #if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_EDITOR && UNITY_EDITOR_WIN))
             PassportLogger.Info($"{TAG} Creating Windows WebView (UWB)");
             return new WindowsPassportWebView(rawImage, this);
-#elif UNITY_IOS
+#elif UNITY_IOS && VUPLEX_WEBVIEW
             PassportLogger.Info($"{TAG} Creating iOS WebView (Vuplex)");
             return new iOSPassportWebView(rawImage);
-#elif UNITY_ANDROID
+#elif UNITY_ANDROID && VUPLEX_WEBVIEW
             PassportLogger.Info($"{TAG} Creating Android WebView (Vuplex)");
             return new AndroidVuplexWebView(rawImage);
 #elif (UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX) && VUPLEX_WEBVIEW
