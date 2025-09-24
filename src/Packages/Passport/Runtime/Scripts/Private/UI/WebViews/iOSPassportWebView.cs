@@ -6,9 +6,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using Immutable.Passport.Core.Logging;
 
-#if UNITY_IOS && !UNITY_EDITOR
+#if UNITY_IOS && VUPLEX_WEBVIEW
 using Vuplex.WebView;
-#endif
 
 namespace Immutable.Passport
 {
@@ -21,9 +20,7 @@ namespace Immutable.Passport
     {
         private const string TAG = "[iOSPassportWebView]";
 
-#if UNITY_IOS && !UNITY_EDITOR
         private CanvasWebViewPrefab? _webViewPrefab;
-#endif
         private readonly Dictionary<string, Action<string>> _jsHandlers = new Dictionary<string, Action<string>>();
         private readonly RawImage _canvasReference;
         private bool _isInitialized = false;
@@ -32,14 +29,8 @@ namespace Immutable.Passport
         public event Action? OnLoadFinished;
         public event Action? OnLoadStarted;
 
-        // Safe access - check initialization
-#if UNITY_IOS && !UNITY_EDITOR
         public bool IsVisible => _webViewPrefab?.Visible ?? false;
         public string CurrentUrl => _webViewPrefab?.WebView?.Url ?? "";
-#else
-        public bool IsVisible => false;
-        public string CurrentUrl => "";
-#endif
 
         public iOSPassportWebView(RawImage canvasReference)
         {
@@ -54,7 +45,6 @@ namespace Immutable.Passport
                 return;
             }
 
-#if UNITY_IOS && !UNITY_EDITOR
             try
             {
                 PassportLogger.Info($"{TAG} Initializing iOS WebView...");
@@ -67,13 +57,8 @@ namespace Immutable.Passport
                 PassportLogger.Error($"{TAG} Failed to initialize: {ex.Message}");
                 throw;
             }
-#else
-            PassportLogger.Warn($"{TAG} Vuplex WebView is only supported on iOS builds, not in editor");
-            _isInitialized = true;
-#endif
         }
 
-#if UNITY_IOS && !UNITY_EDITOR
         private async UniTaskVoid InitializeAsync(PassportWebViewConfig config)
         {
             try
@@ -149,11 +134,9 @@ namespace Immutable.Passport
                 throw;
             }
         }
-#endif
 
         public void LoadUrl(string url)
         {
-#if UNITY_IOS && !UNITY_EDITOR
             if (!_isInitialized || _webViewPrefab?.WebView == null)
             {
                 PassportLogger.Error($"{TAG} Cannot load URL - iOS WebView not initialized");
@@ -161,34 +144,26 @@ namespace Immutable.Passport
             }
 
             _webViewPrefab.WebView.LoadUrl(url);
-#else
-            PassportLogger.Warn($"{TAG} LoadUrl not supported in iOS editor mode");
-#endif
         }
 
         public void Show()
         {
-#if UNITY_IOS && !UNITY_EDITOR
             if (_webViewPrefab != null)
             {
                 _webViewPrefab.Visible = true;
             }
-#endif
         }
 
         public void Hide()
         {
-#if UNITY_IOS && !UNITY_EDITOR
             if (_webViewPrefab != null)
             {
                 _webViewPrefab.Visible = false;
             }
-#endif
         }
 
         public void ExecuteJavaScript(string js)
         {
-#if UNITY_IOS && !UNITY_EDITOR
             if (!_isInitialized || _webViewPrefab?.WebView == null)
             {
                 PassportLogger.Error($"{TAG} Cannot execute JavaScript - iOS WebView not initialized");
@@ -196,7 +171,6 @@ namespace Immutable.Passport
             }
 
             _webViewPrefab.WebView.ExecuteJavaScript(js);
-#endif
         }
 
         public void RegisterJavaScriptMethod(string methodName, Action<string> handler)
@@ -210,16 +184,15 @@ namespace Immutable.Passport
 
         public void Dispose()
         {
-#if UNITY_IOS && !UNITY_EDITOR
             if (_webViewPrefab != null)
             {
                 _webViewPrefab.Destroy();
                 _webViewPrefab = null;
             }
-#endif
 
             _jsHandlers.Clear();
             _isInitialized = false;
         }
     }
 }
+#endif
