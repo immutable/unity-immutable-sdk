@@ -408,7 +408,7 @@ namespace Immutable.Passport
 #elif UNITY_ANDROID
             PassportLogger.Info($"{TAG} Creating Android WebView (Vuplex)");
             return new AndroidVuplexWebView(rawImage);
-#elif UNITY_STANDALONE_OSX
+#elif (UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX) && VUPLEX_WEBVIEW
             PassportLogger.Info($"{TAG} Creating MacOS WebView (Vuplex)");
             return new MacOSPassportWebView(rawImage);
 #else

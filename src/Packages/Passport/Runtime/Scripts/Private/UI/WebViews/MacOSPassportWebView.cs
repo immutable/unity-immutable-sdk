@@ -6,9 +6,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using Immutable.Passport.Core.Logging;
 
-#if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
+#if (UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX) && VUPLEX_WEBVIEW
 using Vuplex.WebView;
-#endif
 
 namespace Immutable.Passport
 {
@@ -21,9 +20,7 @@ namespace Immutable.Passport
     {
         private const string TAG = "[MacOSPassportWebView]";
 
-#if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
         private CanvasWebViewPrefab? _webViewPrefab;
-#endif
         private readonly Dictionary<string, Action<string>> _jsHandlers = new Dictionary<string, Action<string>>();
         private readonly RawImage _canvasReference;
         private bool _isInitialized = false;
@@ -33,14 +30,8 @@ namespace Immutable.Passport
         public event Action? OnLoadFinished;
         public event Action? OnLoadStarted;
 
-        // Safe access - check initialization
-#if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
         public bool IsVisible => _webViewPrefab?.Visible ?? false;
         public string CurrentUrl => _webViewPrefab?.WebView?.Url ?? "";
-#else
-        public bool IsVisible => false;
-        public string CurrentUrl => "";
-#endif
 
         public MacOSPassportWebView(RawImage canvasReference)
         {
@@ -55,7 +46,6 @@ namespace Immutable.Passport
                 return;
             }
 
-#if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
             try
             {
                 PassportLogger.Info($"{TAG} Initializing MacOS WebView...");
@@ -68,13 +58,8 @@ namespace Immutable.Passport
                 PassportLogger.Error($"{TAG} Failed to initialize: {ex.Message}");
                 throw;
             }
-#else
-            PassportLogger.Warn($"{TAG} Vuplex WebView is only supported on MacOS builds, not in editor");
-            _isInitialized = true;
-#endif
         }
 
-#if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
         private async UniTaskVoid InitializeAsync(PassportWebViewConfig config)
         {
             try
@@ -162,11 +147,9 @@ namespace Immutable.Passport
                 throw;
             }
         }
-#endif
 
         public void LoadUrl(string url)
         {
-#if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
             if (!_isInitialized || _webViewPrefab?.WebView == null)
             {
                 PassportLogger.Info($"{TAG} WebView not ready, queueing URL: {url}");
@@ -176,40 +159,28 @@ namespace Immutable.Passport
 
             PassportLogger.Info($"{TAG} Loading URL: {url}");
             _webViewPrefab.WebView.LoadUrl(url);
-#else
-            PassportLogger.Warn($"{TAG} LoadUrl not supported in MacOS editor mode");
-#endif
         }
 
         public void Show()
         {
-#if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
             if (_webViewPrefab != null)
             {
                 _webViewPrefab.Visible = true;
                 PassportLogger.Info($"{TAG} WebView shown");
             }
-#else
-            PassportLogger.Info($"{TAG} Show() called (editor mode)");
-#endif
         }
 
         public void Hide()
         {
-#if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
             if (_webViewPrefab != null)
             {
                 _webViewPrefab.Visible = false;
                 PassportLogger.Info($"{TAG} WebView hidden");
             }
-#else
-            PassportLogger.Info($"{TAG} Hide() called (editor mode)");
-#endif
         }
 
         public void ExecuteJavaScript(string js)
         {
-#if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
             if (!_isInitialized || _webViewPrefab?.WebView == null)
             {
                 PassportLogger.Error($"{TAG} Cannot execute JavaScript - MacOS WebView not initialized");
@@ -217,9 +188,6 @@ namespace Immutable.Passport
             }
 
             _webViewPrefab.WebView.ExecuteJavaScript(js);
-#else
-            PassportLogger.Warn($"{TAG} ExecuteJavaScript not supported in MacOS editor mode");
-#endif
         }
 
         public void RegisterJavaScriptMethod(string methodName, Action<string> handler)
@@ -233,17 +201,16 @@ namespace Immutable.Passport
 
         public void Dispose()
         {
-#if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
             if (_webViewPrefab != null)
             {
                 PassportLogger.Info($"{TAG} Disposing MacOS WebView");
                 _webViewPrefab.Destroy();
                 _webViewPrefab = null;
             }
-#endif
 
             _jsHandlers.Clear();
             _isInitialized = false;
         }
     }
 }
+#endif
