@@ -12,29 +12,29 @@ namespace Immutable.Passport.Editor
     public static class VuplexSymbolManager
     {
         private const string VUPLEX_SYMBOL = "VUPLEX_WEBVIEW";
-        
+
         static VuplexSymbolManager()
         {
             // Run on editor startup and after assembly reload
             EditorApplication.delayCall += CheckAndUpdateVuplexSymbol;
         }
-        
+
         private static void CheckAndUpdateVuplexSymbol()
         {
             try
             {
                 // Check if Vuplex WebView assembly exists
                 bool vuplexExists = DoesVuplexAssemblyExist();
-                
+
                 // Get current build target group
                 var buildTargetGroup = EditorUserBuildSettings.selectedBuildTargetGroup;
-                
+
                 // Get current scripting define symbols
                 var currentSymbols = PlayerSettings.GetScriptingDefineSymbolsForGroup(buildTargetGroup);
                 var symbolList = currentSymbols.Split(';').Where(s => !string.IsNullOrEmpty(s)).ToList();
-                
+
                 bool symbolExists = symbolList.Contains(VUPLEX_SYMBOL);
-                
+
                 // Update symbol if needed
                 if (vuplexExists && !symbolExists)
                 {
@@ -52,7 +52,7 @@ namespace Immutable.Passport.Editor
                     PlayerSettings.SetScriptingDefineSymbolsForGroup(buildTargetGroup, newSymbols);
                     Debug.Log($"[VuplexSymbolManager] Removed {VUPLEX_SYMBOL} symbol - Vuplex WebView not found");
                 }
-                
+
                 // Log current status (only once per session to avoid spam)
                 if (!SessionState.GetBool("VuplexSymbolManager.LoggedStatus", false))
                 {
@@ -72,25 +72,25 @@ namespace Immutable.Passport.Editor
                 Debug.LogError($"[VuplexSymbolManager] Error managing Vuplex symbol: {ex.Message}");
             }
         }
-        
+
         private static bool DoesVuplexAssemblyExist()
         {
             // Check for Vuplex assembly in multiple ways
-            
+
             // Method 1: Check compiled assemblies
             var assemblies = System.AppDomain.CurrentDomain.GetAssemblies();
             if (assemblies.Any(a => a.GetName().Name == "Vuplex.WebView"))
             {
                 return true;
             }
-            
+
             // Method 2: Check for Vuplex types
             var vuplexType = System.Type.GetType("Vuplex.WebView.CanvasWebViewPrefab, Vuplex.WebView");
             if (vuplexType != null)
             {
                 return true;
             }
-            
+
             // Method 3: Check for Vuplex assets in project
             var vuplexAssets = AssetDatabase.FindAssets("CanvasWebViewPrefab");
             foreach (var guid in vuplexAssets)
@@ -101,7 +101,7 @@ namespace Immutable.Passport.Editor
                     return true;
                 }
             }
-            
+
             return false;
         }
     }
