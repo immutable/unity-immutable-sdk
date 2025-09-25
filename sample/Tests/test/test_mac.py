@@ -92,8 +92,20 @@ class MacTest(UnityTest):
         # Set up Chrome options to connect to the existing Chrome instance
         chrome_options = Options()
         chrome_options.add_experimental_option("debuggerAddress", "localhost:9222")
+        
+        # Explicitly specify ChromeDriver path and Chrome browser path for macOS
+        from selenium.webdriver.chrome.service import Service
+        chromedriver_path = "/usr/local/bin/chromedriver"
+        chrome_path = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+        
+        # Set Chrome as the browser binary
+        chrome_options.binary_location = chrome_path
+        
+        # Create service with explicit ChromeDriver path
+        service = Service(executable_path=chromedriver_path)
+        
         # Connect to the existing Chrome instance
-        cls.seleniumdriver = webdriver.Chrome(options=chrome_options)
+        cls.seleniumdriver = webdriver.Chrome(service=service, options=chrome_options)
 
         print("Open a window on Chrome")
 
