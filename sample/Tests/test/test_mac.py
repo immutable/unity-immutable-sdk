@@ -40,7 +40,7 @@ class MacTest(UnityTest):
     def launch_browser(cls):
         print("Starting Browser...")
         browser_paths = [
-            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+            "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
         ]
 
         browser_path = None
@@ -50,46 +50,61 @@ class MacTest(UnityTest):
                 break
 
         if not browser_path:
-            print("Chrome executable not found.")
+            print("Brave Browser executable not found.")
             exit(1)
 
         subprocess.Popen([
             browser_path,
-            "--remote-debugging-port=9222"
+            "--remote-debugging-port=9222",
+            "--no-first-run",
+            "--no-default-browser-check"
         ])
 
-        time.sleep(5)
+        # Give Brave more time to fully initialize remote debugging
+        print("Waiting for Brave to fully initialize...")
+        time.sleep(10)
+        
+        # Verify remote debugging is accessible
+        try:
+            import urllib.request
+            with urllib.request.urlopen("http://127.0.0.1:9222/json", timeout=5) as response:
+                tabs = response.read()
+                print(f"Remote debugging verified - found {len(eval(tabs))} tabs")
+        except Exception as e:
+            print(f"Remote debugging check failed: {e}")
+            print("Continuing anyway...")
 
     @classmethod
     def stop_browser(cls):
-        print("Stopping Chrome...")
+        print("Stopping Brave Browser...")
         try:
             # First try graceful shutdown using AppleScript
             subprocess.run([
                 "osascript", "-e", 
-                'tell application "Google Chrome" to quit'
+                'tell application "Brave Browser" to quit'
             ], check=False, capture_output=True)
             time.sleep(2)
             
             # Check if still running, then force kill
-            result = subprocess.run(["pgrep", "-f", "Google Chrome"], 
+            result = subprocess.run(["pgrep", "-f", "Brave Browser"], 
                                   capture_output=True, text=True)
             if result.returncode == 0:
                 # Still running, force kill
-                subprocess.run(["pkill", "-f", "Google Chrome"], 
+                subprocess.run(["pkill", "-f", "Brave Browser"], 
                              check=False, capture_output=True)
+                print("Killed Brave Browser processes")
             
-            print("All Chrome processes have been closed.")
+            print("Brave Browser has been closed.")
         except Exception as e:
-            print("Chrome might not be running.")
+            print("Brave Browser might not be running.")
         
         time.sleep(3)
-        print("Stopped Chrome")
+        print("Stopped Brave Browser")
 
     @classmethod
     def login(cls):
-        print("Connect to Chrome")
-        # Set up Chrome options to connect to the existing Chrome instance
+        print("Connect to Brave Browser")
+        # Set up Chrome options to connect to the existing Brave instance (Brave uses Chromium engine)
         chrome_options = Options()
         chrome_options.add_experimental_option("debuggerAddress", "localhost:9222")
 
@@ -97,18 +112,19 @@ class MacTest(UnityTest):
         from selenium.webdriver.chrome.service import Service
         chromedriver_path = "/usr/local/bin/chromedriver"
         
-        # Use Chrome browser (company software ensures it's installed)
-        chrome_path = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+        # Use Brave Browser only for macOS automation
+        brave_path = "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
         
         import os
         browser_path = None
-        if os.path.exists(chrome_path):
-            browser_path = chrome_path
-            print(f"Found Chrome at: {browser_path}")
+        if os.path.exists(brave_path):
+            browser_path = brave_path
+            print(f"Found Brave at: {browser_path}")
         else:
-            print("Chrome not found, letting Selenium auto-detect")
+            print("Brave Browser not found - required for macOS tests")
+            raise FileNotFoundError("Brave Browser is required for macOS CI tests")
         
-        # Set Chrome as the browser binary if found
+        # Set Brave as the browser binary if found
         if browser_path:
             chrome_options.binary_location = browser_path
 
@@ -116,10 +132,10 @@ class MacTest(UnityTest):
         service_args = ["--whitelisted-ips=", "--disable-build-check"]
         service = Service(executable_path=chromedriver_path, service_args=service_args)
 
-        # Connect to the existing Chrome instance
+        # Connect to the existing Brave instance
         cls.seleniumdriver = webdriver.Chrome(service=service, options=chrome_options)
 
-        print("Open a window on Chrome")
+        print("Open a window on Brave")
 
         wait = WebDriverWait(cls.seleniumdriver, 60)
 
