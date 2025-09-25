@@ -96,10 +96,30 @@ class MacTest(UnityTest):
         # Explicitly specify ChromeDriver path and Chrome browser path for macOS
         from selenium.webdriver.chrome.service import Service
         chromedriver_path = "/usr/local/bin/chromedriver"
-        chrome_path = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
         
-        # Set Chrome as the browser binary
-        chrome_options.binary_location = chrome_path
+        # Try multiple possible Chrome paths on macOS
+        chrome_paths = [
+            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            "/System/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            "/usr/bin/google-chrome",
+            "/usr/local/bin/google-chrome"
+        ]
+        
+        import os
+        chrome_path = None
+        for path in chrome_paths:
+            if os.path.exists(path):
+                chrome_path = path
+                print(f"Found Chrome at: {chrome_path}")
+                break
+        
+        if not chrome_path:
+            print("Chrome not found at any expected path, letting Selenium auto-detect")
+            chrome_path = None
+        
+        # Set Chrome as the browser binary if found
+        if chrome_path:
+            chrome_options.binary_location = chrome_path
         
         # Create service with explicit ChromeDriver path
         service = Service(executable_path=chromedriver_path)
