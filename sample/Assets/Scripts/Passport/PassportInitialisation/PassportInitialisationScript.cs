@@ -50,8 +50,8 @@ public class PassportInitialisationScript : MonoBehaviour
 
             // Initialise Passport
             const string environment = Immutable.Passport.Model.Environment.SANDBOX;
-            // const string clientId = "mp6rxfMDwwZDogcdgNrAaHnG0qMlXuMK";
-            const string clientId = "IllW5pJ54DShXtaSXzaAlghm40uQjptd";
+            const string clientId = "mp6rxfMDwwZDogcdgNrAaHnG0qMlXuMK";
+            // const string clientId = "IllW5pJ54DShXtaSXzaAlghm40uQjptd";
             var passport = await Passport.Init(clientId, environment, redirectUri, logoutRedirectUri);
             SampleAppManager.PassportInstance = passport;
 
