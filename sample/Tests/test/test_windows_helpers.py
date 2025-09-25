@@ -150,8 +150,17 @@ def logout_with_controlled_browser():
     chrome_options.add_experimental_option("debuggerAddress", "localhost:9222")
     
     try:
-        # Connect to the existing browser instance
-        driver = webdriver.Chrome(options=chrome_options)
+        # Connect to the existing browser instance with explicit ChromeDriver path
+        from selenium.webdriver.chrome.service import Service
+        chromedriver_path = r"C:\Users\WindowsBuildsdkServi\Development\chromedriver-win64\chromedriver-win64\chromedriver.exe"
+        
+        import os
+        if os.path.exists(chromedriver_path):
+            service = Service(executable_path=chromedriver_path)
+        else:
+            service = Service()  # Let Selenium Manager handle it
+            
+        driver = webdriver.Chrome(service=service, options=chrome_options)
         print("Connected to existing browser for logout")
         
         # Monitor Unity logs for logout URL
