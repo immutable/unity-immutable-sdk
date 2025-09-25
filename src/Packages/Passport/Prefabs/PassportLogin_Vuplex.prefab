@@ -197,10 +197,10 @@ MonoBehaviour:
   enableRemoteDebugging: 1
   remoteDebuggingPort: 9222
   clearCacheOnLogin: 1
-  clientId: IllW5pJ54DShXtaSXzaAlghm40uQjptd
+  clientId: 
   environment: sandbox
-  redirectUri: immutablerunner://callback
-  logoutRedirectUri: immutablerunner://logout
+  redirectUri: 
+  logoutRedirectUri: 
   webViewBaseUrl: https://auth.immutable.com/im-embedded-login-prompt
-  webViewWidth: 1920
-  webViewHeight: 1080
+  webViewWidth: 800
+  webViewHeight: 600

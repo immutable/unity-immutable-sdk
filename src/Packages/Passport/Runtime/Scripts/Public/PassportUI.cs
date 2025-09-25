@@ -95,21 +95,21 @@ namespace Immutable.Passport
         [Tooltip("Passport environment (sandbox or production)")]
         [SerializeField] private string environment = "sandbox";
 
-        [Tooltip("OAuth redirect URI for authentication callbacks")]
-        [SerializeField] private string redirectUri = "immutablerunner://callback";
+        [Tooltip("Redirect URI for authentication callbacks (configure in the Immutable Developer Hub)")]
+        [SerializeField] private string redirectUri = "";
 
-        [Tooltip("OAuth logout redirect URI for logout callbacks")]
-        [SerializeField] private string logoutRedirectUri = "immutablerunner://logout";
+        [Tooltip("OAuth logout redirect URI for logout callbacks (configure in the Immutable Developer Hub)")]
+        [SerializeField] private string logoutRedirectUri = "";
 
         [Header("WebView Settings")]
-        [Tooltip("Base URL for the WebView authentication page. The client_id parameter will be automatically appended from the Passport Configuration above.")]
-        [SerializeField] private string webViewBaseUrl = "https://auth.immutable.com/im-embedded-login-prompt";
+        // Internal base URL for Passport authentication - users don't need to modify this
+        private const string webViewBaseUrl = "https://auth.immutable.com/im-embedded-login-prompt";
 
         [Tooltip("Width of the WebView in pixels. Set to 0 to use the RawImage's current width.")]
-        [SerializeField] private int webViewWidth = 1920;
+        [SerializeField] private int webViewWidth = 800;
 
         [Tooltip("Height of the WebView in pixels. Set to 0 to use the RawImage's current height.")]
-        [SerializeField] private int webViewHeight = 1080;
+        [SerializeField] private int webViewHeight = 600;
 
         /// <summary>
         /// Gets the complete WebView URL with the client ID automatically appended
@@ -127,13 +127,9 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Gets or sets the base WebView URL (without client_id parameter)
+        /// Gets the base WebView URL (without client_id parameter) - read-only
         /// </summary>
-        public string WebViewBaseUrl
-        {
-            get => webViewBaseUrl;
-            set => webViewBaseUrl = value;
-        }
+        public string WebViewBaseUrl => webViewBaseUrl;
 
         /// <summary>
         /// Gets or sets the WebView width in pixels
