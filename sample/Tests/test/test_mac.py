@@ -97,32 +97,26 @@ class MacTest(UnityTest):
         from selenium.webdriver.chrome.service import Service
         chromedriver_path = "/usr/local/bin/chromedriver"
         
-        # Try multiple possible Chrome paths on macOS
-        chrome_paths = [
-            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-            "/System/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-            "/usr/bin/google-chrome",
-            "/usr/local/bin/google-chrome"
-        ]
+        # Use Brave browser path (what CI actually uses)
+        brave_path = "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
         
         import os
-        chrome_path = None
-        for path in chrome_paths:
-            if os.path.exists(path):
-                chrome_path = path
-                print(f"Found Chrome at: {chrome_path}")
-                break
+        browser_path = None
+        if os.path.exists(brave_path):
+            browser_path = brave_path
+            print(f"Found browser at: {browser_path}")
         
-        if not chrome_path:
-            print("Chrome not found at any expected path, letting Selenium auto-detect")
-            chrome_path = None
+        if not browser_path:
+            print("Browser not found at any expected path, letting Selenium auto-detect")
+            browser_path = None
         
-        # Set Chrome as the browser binary if found
-        if chrome_path:
-            chrome_options.binary_location = chrome_path
-        
-        # Create service with explicit ChromeDriver path
-        service = Service(executable_path=chromedriver_path)
+        # Set browser as the binary if found
+        if browser_path:
+            chrome_options.binary_location = browser_path
+
+        # Create service with explicit ChromeDriver path and bypass version checking
+        service_args = ["--whitelisted-ips=", "--disable-build-check"]
+        service = Service(executable_path=chromedriver_path, service_args=service_args)
 
         # Connect to the existing Chrome instance
         cls.seleniumdriver = webdriver.Chrome(service=service, options=chrome_options)
