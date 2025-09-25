@@ -150,15 +150,16 @@ def logout_with_controlled_browser():
     chrome_options.add_experimental_option("debuggerAddress", "localhost:9222")
     
     try:
-        # Connect to the existing browser instance with explicit ChromeDriver path
+        # Connect to the existing browser instance with explicit paths
         from selenium.webdriver.chrome.service import Service
         chromedriver_path = r"C:\Users\WindowsBuildsdkServi\Development\chromedriver-win64\chromedriver-win64\chromedriver.exe"
+        brave_path = r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
         
-        import os
-        if os.path.exists(chromedriver_path):
-            service = Service(executable_path=chromedriver_path)
-        else:
-            service = Service()  # Let Selenium Manager handle it
+        # Set Brave as the browser binary
+        chrome_options.binary_location = brave_path
+        
+        # Create service with explicit ChromeDriver path
+        service = Service(executable_path=chromedriver_path)
             
         driver = webdriver.Chrome(service=service, options=chrome_options)
         print("Connected to existing browser for logout")
@@ -287,8 +288,20 @@ def login():
     # (Brave uses Chromium engine so Chrome WebDriver works)
     chrome_options = Options()
     chrome_options.add_experimental_option("debuggerAddress", "localhost:9222")
+    
+    # Explicitly specify ChromeDriver path and Brave browser path
+    from selenium.webdriver.chrome.service import Service
+    chromedriver_path = r"C:\Users\WindowsBuildsdkServi\Development\chromedriver-win64\chromedriver-win64\chromedriver.exe"
+    brave_path = r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
+    
+    # Set Brave as the browser binary
+    chrome_options.binary_location = brave_path
+    
+    # Create service with explicit ChromeDriver path
+    service = Service(executable_path=chromedriver_path)
+    
     # Connect to the existing Brave browser instance
-    driver = webdriver.Chrome(options=chrome_options)
+    driver = webdriver.Chrome(service=service, options=chrome_options)
 
     # HYBRID APPROACH: Try multi-window detection first (proven to work in CI), 
     # then fall back to Unity log monitoring if needed
