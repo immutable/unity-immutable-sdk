@@ -40,7 +40,7 @@ class MacTest(UnityTest):
     def launch_browser(cls):
         print("Starting Browser...")
         browser_paths = [
-            "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
+            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
         ]
 
         browser_path = None
@@ -50,7 +50,7 @@ class MacTest(UnityTest):
                 break
 
         if not browser_path:
-            print("Brave executable not found.")
+            print("Chrome executable not found.")
             exit(1)
 
         subprocess.Popen([
@@ -62,29 +62,29 @@ class MacTest(UnityTest):
 
     @classmethod
     def stop_browser(cls):
-        print("Stopping Brave...")
+        print("Stopping Chrome...")
         try:
             # First try graceful shutdown using AppleScript
             subprocess.run([
                 "osascript", "-e", 
-                'tell application "Brave Browser" to quit'
+                'tell application "Google Chrome" to quit'
             ], check=False, capture_output=True)
             time.sleep(2)
             
             # Check if still running, then force kill
-            result = subprocess.run(["pgrep", "-f", "Brave Browser"], 
+            result = subprocess.run(["pgrep", "-f", "Google Chrome"], 
                                   capture_output=True, text=True)
             if result.returncode == 0:
                 # Still running, force kill
-                subprocess.run(["pkill", "-f", "Brave Browser"], 
+                subprocess.run(["pkill", "-f", "Google Chrome"], 
                              check=False, capture_output=True)
             
-            print("All Brave processes have been closed.")
+            print("All Chrome processes have been closed.")
         except Exception as e:
-            print("Brave might not be running.")
+            print("Chrome might not be running.")
         
         time.sleep(3)
-        print("Stopped Brave")
+        print("Stopped Chrome")
 
     @classmethod
     def login(cls):
@@ -97,20 +97,18 @@ class MacTest(UnityTest):
         from selenium.webdriver.chrome.service import Service
         chromedriver_path = "/usr/local/bin/chromedriver"
         
-        # Use Brave browser path (what CI actually uses)
-        brave_path = "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
+        # Use Chrome browser (company software ensures it's installed)
+        chrome_path = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
         
         import os
         browser_path = None
-        if os.path.exists(brave_path):
-            browser_path = brave_path
-            print(f"Found browser at: {browser_path}")
+        if os.path.exists(chrome_path):
+            browser_path = chrome_path
+            print(f"Found Chrome at: {browser_path}")
+        else:
+            print("Chrome not found, letting Selenium auto-detect")
         
-        if not browser_path:
-            print("Browser not found at any expected path, letting Selenium auto-detect")
-            browser_path = None
-        
-        # Set browser as the binary if found
+        # Set Chrome as the browser binary if found
         if browser_path:
             chrome_options.binary_location = browser_path
 
