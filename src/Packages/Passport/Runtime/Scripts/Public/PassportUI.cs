@@ -375,13 +375,13 @@ namespace Immutable.Passport
                     throw new NotSupportedException("WebView not supported on this platform");
                 }
 
-                // Configure WebView
+                // Configure WebView with login page pre-loading for better performance
                 var config = new PassportWebViewConfig
                 {
                     EnableRemoteDebugging = enableRemoteDebugging,
                     RemoteDebuggingPort = remoteDebuggingPort,
                     ClearCacheOnInit = clearCacheOnLogin,
-                    InitialUrl = "about:blank",
+                    InitialUrl = WebViewUrl, // Pre-load the login page during initialization
                     Width = webViewWidth > 0 ? webViewWidth : (int)rawImage.rectTransform.rect.width,
                     Height = webViewHeight > 0 ? webViewHeight : (int)rawImage.rectTransform.rect.height
                 };
@@ -730,8 +730,9 @@ namespace Immutable.Passport
                 webView.Show();
                 PassportLogger.Info($"{TAG} WebView shown");
 
+                // Load URL (WebView will optimize if already loaded)
                 webView.LoadUrl(WebViewUrl);
-                PassportLogger.Info($"{TAG} Navigated to configured URL: {WebViewUrl}");
+                PassportLogger.Info($"{TAG} Login page ready: {WebViewUrl}");
 
                 // Return true since we successfully started the OAuth flow
                 // The actual authentication completion is handled by the deep link system

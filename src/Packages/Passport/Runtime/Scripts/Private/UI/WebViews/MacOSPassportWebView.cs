@@ -65,13 +65,41 @@ namespace Immutable.Passport
             try
             {
                 PassportLogger.Info($"{TAG} Starting Vuplex CanvasWebViewPrefab instantiation...");
+                
+                // Apply aggressive performance optimizations for macOS
+                try 
+                {
+                    StandaloneWebView.SetCommandLineArguments(
+                        "--disable-gpu " +
+                        "--disable-gpu-compositing " +
+                        "--disable-software-rasterizer " +
+                        "--disable-background-timer-throttling " +
+                        "--disable-renderer-backgrounding " +
+                        "--disable-features=TranslateUI " +
+                        "--no-sandbox"
+                    );
+                    PassportLogger.Info($"{TAG} Applied comprehensive performance optimizations for macOS");
+                }
+                catch (System.Exception ex)
+                {
+                    PassportLogger.Warn($"{TAG} Could not apply performance optimizations: {ex.Message}");
+                }
+                
                 // Create WebView prefab and parent to Canvas
                 _webViewPrefab = CanvasWebViewPrefab.Instantiate();
                 PassportLogger.Info($"{TAG} CanvasWebViewPrefab created successfully");
-                _webViewPrefab.Native2DModeEnabled = true; // Use Native2DMode for better performance on desktop
-
-                // Set lower resolution for faster loading and rendering
-                _webViewPrefab.Resolution = 0.75f; // Balanced resolution for desktop
+                
+                // Enable Native2DMode and additional performance settings
+                _webViewPrefab.Native2DModeEnabled = true; // Direct native rendering - fastest on desktop
+                _webViewPrefab.Resolution = 0.5f; // Balanced resolution for desktop
+                
+                // Additional 2D mode optimizations
+                if (_webViewPrefab.Native2DModeEnabled)
+                {
+                    PassportLogger.Info($"{TAG} Native2DMode confirmed enabled - using direct native rendering");
+                    // In Native2D mode, reduce pixel density for better performance
+                    _webViewPrefab.PixelDensity = 1.0f; // Standard density, no high-DPI overhead
+                }
 
                 // Must be child of Canvas for Vuplex to work
                 _webViewPrefab.transform.SetParent(_canvasReference.canvas.transform, false);
@@ -89,9 +117,31 @@ namespace Immutable.Passport
 
                 PassportLogger.Info($"{TAG} Using WebView dimensions: {width}x{height}");
 
-                // Wait for WebView initialization
+                // Wait for WebView initialization with timing
+                var startTime = System.DateTime.Now;
                 await _webViewPrefab.WaitUntilInitialized();
-                PassportLogger.Info($"{TAG} Vuplex WebView initialization completed");
+                var initTime = (System.DateTime.Now - startTime).TotalSeconds;
+                PassportLogger.Info($"{TAG} Vuplex WebView initialization completed in {initTime:F2}s");
+                
+                // Pre-load the login page for instant display
+                try
+                {
+                    if (!string.IsNullOrEmpty(config.InitialUrl) && config.InitialUrl != "about:blank")
+                    {
+                        _webViewPrefab.WebView.LoadUrl(config.InitialUrl);
+                        PassportLogger.Info($"{TAG} Pre-loaded login page: {config.InitialUrl}");
+                    }
+                    else
+                    {
+                        // Load minimal blank page if no URL provided (rare edge case)
+                        _webViewPrefab.WebView.LoadHtml("<html><body style='margin:0;padding:20px;font-family:system-ui;color:#666;text-align:center;'>Initializing...</body></html>");
+                        PassportLogger.Info($"{TAG} Loaded minimal blank page (no InitialUrl provided)");
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    PassportLogger.Warn($"{TAG} Could not pre-load content: {ex.Message}");
+                }
 
                 // Setup event handlers
                 _webViewPrefab.WebView.LoadProgressChanged += (sender, progressArgs) =>
@@ -154,6 +204,19 @@ namespace Immutable.Passport
             {
                 PassportLogger.Info($"{TAG} WebView not ready, queueing URL: {url}");
                 _queuedUrl = url; // Queue the URL for later loading
+                return;
+            }
+
+            // Check if the requested URL is already loaded (performance optimization)
+            var currentUrl = _webViewPrefab.WebView.Url;
+            if (currentUrl == url)
+            {
+                PassportLogger.Info($"{TAG} URL already loaded, showing instantly: {url}");
+                // No need to reload - just show the WebView if hidden
+                if (!_webViewPrefab.Visible)
+                {
+                    _webViewPrefab.Visible = true;
+                }
                 return;
             }
 

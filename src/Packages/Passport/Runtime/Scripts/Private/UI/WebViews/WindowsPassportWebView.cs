@@ -520,9 +520,19 @@ namespace Immutable.Passport
             webBrowserClient.headless = false;
             webBrowserClient.popupAction = PopupAction.OpenExternalWindow;
 
-            // Set initial URL
-            webBrowserClient.initialUrl = config.InitialUrl;
-            PassportLogger.Info($"{TAG} Set initial URL to: {config.InitialUrl}");
+            // Set initial URL (use about:blank for fast startup, pre-load login page separately)
+            if (!string.IsNullOrEmpty(config.InitialUrl) && config.InitialUrl != "about:blank")
+            {
+                // Store login URL for pre-loading after initialization
+                queuedUrl = config.InitialUrl;
+                webBrowserClient.initialUrl = "about:blank"; // Fast startup
+                PassportLogger.Info($"{TAG} Queued login URL for pre-loading: {config.InitialUrl}");
+            }
+            else
+            {
+                webBrowserClient.initialUrl = config.InitialUrl;
+                PassportLogger.Info($"{TAG} Set initial URL to: {config.InitialUrl}");
+            }
 
             // Configure isolated instance
             ConfigureIsolatedInstance();
