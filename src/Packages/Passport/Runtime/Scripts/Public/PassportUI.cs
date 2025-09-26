@@ -137,7 +137,14 @@ namespace Immutable.Passport
         public int WebViewWidth
         {
             get => webViewWidth;
-            set => webViewWidth = value;
+            set
+            {
+                if (webViewWidth != value)
+                {
+                    webViewWidth = value;
+                    UpdateWebViewResolution();
+                }
+            }
         }
 
         /// <summary>
@@ -146,7 +153,14 @@ namespace Immutable.Passport
         public int WebViewHeight
         {
             get => webViewHeight;
-            set => webViewHeight = value;
+            set
+            {
+                if (webViewHeight != value)
+                {
+                    webViewHeight = value;
+                    UpdateWebViewResolution();
+                }
+            }
         }
 
         // Cross-platform WebView abstraction
@@ -303,6 +317,9 @@ namespace Immutable.Passport
 
             // Get RawImage component
             rawImage = GetComponent<RawImage>();
+
+            // Set transparent background so unused areas don't show white
+            rawImage.color = Color.clear;
 
             // Ensure UI starts completely hidden
             rawImage.enabled = false;
@@ -603,6 +620,35 @@ namespace Immutable.Passport
                 // Trigger failure events even if we can't parse the error
                 OnLoginFailure?.Invoke("Login failed due to an error processing error message");
                 OnLoginFailureStatic?.Invoke("Login failed due to an error processing error message");
+            }
+        }
+
+        /// <summary>
+        /// Update the WebView internal resolution when PassportUI dimensions change
+        /// </summary>
+        private void UpdateWebViewResolution()
+        {
+            if (webView != null && isInitialized && webViewWidth > 0 && webViewHeight > 0)
+            {
+                // For Windows UWB, update the internal resolution
+                if (webView is WindowsPassportWebView windowsWebView)
+                {
+                    windowsWebView.UpdateUWBResolution(webViewWidth, webViewHeight);
+                }
+                // For other platforms (Vuplex), the RectTransform size is sufficient
+                // as they don't have separate internal resolution properties
+            }
+        }
+
+        /// <summary>
+        /// Unity Update method to handle main thread operations
+        /// </summary>
+        private void Update()
+        {
+            // Check for pending resolution updates on Windows WebView
+            if (webView is WindowsPassportWebView windowsWebView)
+            {
+                windowsWebView.UpdatePendingResolution();
             }
         }
 

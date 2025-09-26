@@ -9,6 +9,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Immutable.Passport.Core.Logging;
 using Cysharp.Threading.Tasks;
+using Resolution = VoltstroStudios.UnityWebBrowser.Shared.Resolution;
 
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
@@ -80,6 +81,7 @@ namespace Immutable.Passport
         private string currentUrl = "";
         private string queuedUrl = null;
         private PassportWebViewConfig config;
+        private bool needsResolutionUpdate = false;
 
         // Input management
         private Coroutine inputActivationCoroutine;
@@ -184,6 +186,12 @@ namespace Immutable.Passport
             try
             {
                 PassportLogger.Info($"{TAG} Showing WebView");
+
+                // Update UWB internal resolution to match PassportUI dimensions
+                if (webBrowserClient != null && webBrowserClient.IsConnected)
+                {
+                    SetUWBResolution(config.Width, config.Height);
+                }
 
                 // Show the UWB GameObject
                 if (uwbGameObject != null)
@@ -327,6 +335,52 @@ namespace Immutable.Passport
             }
         }
 
+        /// <summary>
+        /// Check and apply any pending resolution updates (call from main thread)
+        /// </summary>
+        public void UpdatePendingResolution()
+        {
+            if (needsResolutionUpdate && isWebBrowserReady && webBrowserClient != null)
+            {
+                needsResolutionUpdate = false;
+                SetUWBResolution(config.Width, config.Height);
+            }
+        }
+
+        /// <summary>
+        /// Update the UWB internal resolution to match new dimensions
+        /// </summary>
+        /// <param name="width">New width in pixels</param>
+        /// <param name="height">New height in pixels</param>
+        public void UpdateUWBResolution(int width, int height)
+        {
+            if (!isInitialized || webBrowserClient == null || !webBrowserClient.IsConnected)
+            {
+                return; // Silently ignore if not ready
+            }
+
+            SetUWBResolution(width, height);
+        }
+
+        /// <summary>
+        /// Internal method to set UWB resolution with validation and logging
+        /// </summary>
+        private void SetUWBResolution(int width, int height)
+        {
+            if (width <= 0 || height <= 0) return;
+
+            try
+            {
+                var newResolution = new Resolution((uint)width, (uint)height);
+                webBrowserClient.Resolution = newResolution;
+                PassportLogger.Info($"{TAG} UWB resolution set to: {width}x{height}");
+            }
+            catch (Exception ex)
+            {
+                PassportLogger.Error($"{TAG} Failed to set UWB resolution: {ex.Message}");
+            }
+        }
+
         public void Dispose()
         {
             try
@@ -436,6 +490,31 @@ namespace Immutable.Passport
         private void ConfigureUWBSettings()
         {
             PassportLogger.Info($"{TAG} Configuring UWB settings...");
+
+            // Set UWB resolution before starting (direct field access to avoid Resize() call)
+            if (config.Width > 0 && config.Height > 0)
+            {
+                try
+                {
+                    // Use reflection to set the private resolution field directly
+                    var resolutionField = typeof(VoltstroStudios.UnityWebBrowser.Core.WebBrowserClient).GetField("resolution",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (resolutionField != null)
+                    {
+                        var initialResolution = new Resolution((uint)config.Width, (uint)config.Height);
+                        resolutionField.SetValue(webBrowserClient, initialResolution);
+                        PassportLogger.Info($"{TAG} Set initial UWB resolution field to: {config.Width}x{config.Height}");
+                    }
+                    else
+                    {
+                        PassportLogger.Warn($"{TAG} Could not find UWB resolution field for direct setting");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    PassportLogger.Error($"{TAG} Failed to set initial UWB resolution field: {ex.Message}");
+                }
+            }
 
             // Configure for UI display (not headless)
             webBrowserClient.headless = false;
@@ -591,6 +670,12 @@ namespace Immutable.Passport
         {
             PassportLogger.Info($"{TAG} WebBrowser client connected and ready!");
             isWebBrowserReady = true;
+
+            // Set flag to update resolution on main thread
+            if (config.Width > 0 && config.Height > 0)
+            {
+                needsResolutionUpdate = true;
+            }
 
             // Process any queued URL
             if (!string.IsNullOrEmpty(queuedUrl))
