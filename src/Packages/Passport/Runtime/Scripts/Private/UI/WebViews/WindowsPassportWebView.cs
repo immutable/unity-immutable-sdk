@@ -9,7 +9,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using Immutable.Passport.Core.Logging;
 using Cysharp.Threading.Tasks;
-using Resolution = VoltstroStudios.UnityWebBrowser.Shared.Resolution;
 
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
@@ -33,6 +32,7 @@ using VoltstroStudios.UnityWebBrowser.Shared.Core;
 using VoltstroStudios.UnityWebBrowser.Shared.Popups;
 using VoltstroStudios.UnityWebBrowser.Input;
 using static VoltstroStudios.UnityWebBrowser.Core.Engines.Engine;
+using Resolution = VoltstroStudios.UnityWebBrowser.Shared.Resolution;
 #endif
 
 namespace Immutable.Passport
