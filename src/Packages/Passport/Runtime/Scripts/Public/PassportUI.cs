@@ -630,11 +630,13 @@ namespace Immutable.Passport
         {
             if (webView != null && isInitialized && webViewWidth > 0 && webViewHeight > 0)
             {
+#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_EDITOR && UNITY_EDITOR_WIN))
                 // For Windows UWB, update the internal resolution
                 if (webView is WindowsPassportWebView windowsWebView)
                 {
                     windowsWebView.UpdateUWBResolution(webViewWidth, webViewHeight);
                 }
+#endif
                 // For other platforms (Vuplex), the RectTransform size is sufficient
                 // as they don't have separate internal resolution properties
             }
@@ -645,11 +647,13 @@ namespace Immutable.Passport
         /// </summary>
         private void Update()
         {
+#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_EDITOR && UNITY_EDITOR_WIN))
             // Check for pending resolution updates on Windows WebView
             if (webView is WindowsPassportWebView windowsWebView)
             {
                 windowsWebView.UpdatePendingResolution();
             }
+#endif
         }
 
         private void SetupLoginButton()
