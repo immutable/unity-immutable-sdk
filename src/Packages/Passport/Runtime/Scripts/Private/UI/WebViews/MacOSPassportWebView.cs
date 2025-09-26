@@ -65,9 +65,9 @@ namespace Immutable.Passport
             try
             {
                 PassportLogger.Info($"{TAG} Starting Vuplex CanvasWebViewPrefab instantiation...");
-                
+
                 // Apply aggressive performance optimizations for macOS
-                try 
+                try
                 {
                     StandaloneWebView.SetCommandLineArguments(
                         "--disable-gpu " +
@@ -84,15 +84,15 @@ namespace Immutable.Passport
                 {
                     PassportLogger.Warn($"{TAG} Could not apply performance optimizations: {ex.Message}");
                 }
-                
+
                 // Create WebView prefab and parent to Canvas
                 _webViewPrefab = CanvasWebViewPrefab.Instantiate();
                 PassportLogger.Info($"{TAG} CanvasWebViewPrefab created successfully");
-                
+
                 // Enable Native2DMode and additional performance settings
                 _webViewPrefab.Native2DModeEnabled = true; // Direct native rendering - fastest on desktop
                 _webViewPrefab.Resolution = 0.5f; // Balanced resolution for desktop
-                
+
                 // Additional 2D mode optimizations
                 if (_webViewPrefab.Native2DModeEnabled)
                 {
@@ -122,7 +122,7 @@ namespace Immutable.Passport
                 await _webViewPrefab.WaitUntilInitialized();
                 var initTime = (System.DateTime.Now - startTime).TotalSeconds;
                 PassportLogger.Info($"{TAG} Vuplex WebView initialization completed in {initTime:F2}s");
-                
+
                 // Pre-load the login page for instant display
                 try
                 {
