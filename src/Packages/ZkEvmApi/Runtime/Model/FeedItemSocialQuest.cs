@@ -26,18 +26,39 @@ using OpenAPIDateConverter = Immutable.Api.ZkEvm.Client.OpenAPIDateConverter;
 namespace Immutable.Api.ZkEvm.Model
 {
     /// <summary>
-    /// FeedItemBase
+    /// FeedItemSocialQuest
     /// </summary>
-    [DataContract(Name = "FeedItemBase")]
-    public partial class FeedItemBase
+    [DataContract(Name = "FeedItemSocialQuest")]
+    public partial class FeedItemSocialQuest
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="FeedItemBase" /> class.
+        /// Feed item type
+        /// </summary>
+        /// <value>Feed item type</value>
+        [JsonConverter(typeof(StringEnumConverter))]
+        public enum TypeEnum
+        {
+            /// <summary>
+            /// Enum Socialquest for value: socialquest
+            /// </summary>
+            [EnumMember(Value = "socialquest")]
+            Socialquest = 1
+        }
+
+
+        /// <summary>
+        /// Feed item type
+        /// </summary>
+        /// <value>Feed item type</value>
+        [DataMember(Name = "type", IsRequired = true, EmitDefaultValue = true)]
+        public TypeEnum Type { get; set; }
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FeedItemSocialQuest" /> class.
         /// </summary>
         [JsonConstructorAttribute]
-        protected FeedItemBase() { }
+        protected FeedItemSocialQuest() { }
         /// <summary>
-        /// Initializes a new instance of the <see cref="FeedItemBase" /> class.
+        /// Initializes a new instance of the <see cref="FeedItemSocialQuest" /> class.
         /// </summary>
         /// <param name="id">Feed item ID (required).</param>
         /// <param name="name">Feed item name (required).</param>
@@ -53,28 +74,79 @@ namespace Immutable.Api.ZkEvm.Model
         /// <param name="controlTags">Some specific tags for controlling feed items.</param>
         /// <param name="categories">The categories for the feed item.</param>
         /// <param name="onboardingExperience">The onboarding experience for the feed item.</param>
-        public FeedItemBase(string id = default(string), string name = default(string), string questId = default(string), int priority = default(int), int gemsEarnable = default(int), bool bypass = default(bool), bool dayZero = default(bool), Guid gameId = default(Guid), string gameName = default(string), string questCompletedPopupText = default(string), List<string> tags = default(List<string>), List<string> controlTags = default(List<string>), List<string> categories = default(List<string>), string onboardingExperience = default(string))
+        /// <param name="type">Feed item type (required).</param>
+        /// <param name="title">Title of the social quest (required).</param>
+        /// <param name="subtitle">Title of the social quest (required).</param>
+        /// <param name="label">The label for the CTA button (required).</param>
+        /// <param name="description">The description for the CTA button (required).</param>
+        /// <param name="url">The URL for the CTA button (required).</param>
+        /// <param name="logo">URL of the logo (required).</param>
+        /// <param name="platformName">The name of the platform social quest belongs to (required).</param>
+        public FeedItemSocialQuest(string id = default(string), string name = default(string), string questId = default(string), int priority = default(int), int gemsEarnable = default(int), bool bypass = default(bool), bool dayZero = default(bool), Guid gameId = default(Guid), string gameName = default(string), string questCompletedPopupText = default(string), List<string> tags = default(List<string>), List<string> controlTags = default(List<string>), List<string> categories = default(List<string>), string onboardingExperience = default(string), TypeEnum type = default(TypeEnum), string title = default(string), string subtitle = default(string), string label = default(string), string description = default(string), string url = default(string), string logo = default(string), string platformName = default(string))
         {
             // to ensure "id" is required (not null)
             if (id == null)
             {
-                throw new ArgumentNullException("id is a required property for FeedItemBase and cannot be null");
+                throw new ArgumentNullException("id is a required property for FeedItemSocialQuest and cannot be null");
             }
             this.Id = id;
             // to ensure "name" is required (not null)
             if (name == null)
             {
-                throw new ArgumentNullException("name is a required property for FeedItemBase and cannot be null");
+                throw new ArgumentNullException("name is a required property for FeedItemSocialQuest and cannot be null");
             }
             this.Name = name;
             // to ensure "questId" is required (not null)
             if (questId == null)
             {
-                throw new ArgumentNullException("questId is a required property for FeedItemBase and cannot be null");
+                throw new ArgumentNullException("questId is a required property for FeedItemSocialQuest and cannot be null");
             }
             this.QuestId = questId;
             this.Priority = priority;
             this.GemsEarnable = gemsEarnable;
+            this.Type = type;
+            // to ensure "title" is required (not null)
+            if (title == null)
+            {
+                throw new ArgumentNullException("title is a required property for FeedItemSocialQuest and cannot be null");
+            }
+            this.Title = title;
+            // to ensure "subtitle" is required (not null)
+            if (subtitle == null)
+            {
+                throw new ArgumentNullException("subtitle is a required property for FeedItemSocialQuest and cannot be null");
+            }
+            this.Subtitle = subtitle;
+            // to ensure "label" is required (not null)
+            if (label == null)
+            {
+                throw new ArgumentNullException("label is a required property for FeedItemSocialQuest and cannot be null");
+            }
+            this.Label = label;
+            // to ensure "description" is required (not null)
+            if (description == null)
+            {
+                throw new ArgumentNullException("description is a required property for FeedItemSocialQuest and cannot be null");
+            }
+            this.Description = description;
+            // to ensure "url" is required (not null)
+            if (url == null)
+            {
+                throw new ArgumentNullException("url is a required property for FeedItemSocialQuest and cannot be null");
+            }
+            this.Url = url;
+            // to ensure "logo" is required (not null)
+            if (logo == null)
+            {
+                throw new ArgumentNullException("logo is a required property for FeedItemSocialQuest and cannot be null");
+            }
+            this.Logo = logo;
+            // to ensure "platformName" is required (not null)
+            if (platformName == null)
+            {
+                throw new ArgumentNullException("platformName is a required property for FeedItemSocialQuest and cannot be null");
+            }
+            this.PlatformName = platformName;
             this.Bypass = bypass;
             this.DayZero = dayZero;
             this.GameId = gameId;
@@ -185,13 +257,62 @@ namespace Immutable.Api.ZkEvm.Model
         public string OnboardingExperience { get; set; }
 
         /// <summary>
+        /// Title of the social quest
+        /// </summary>
+        /// <value>Title of the social quest</value>
+        [DataMember(Name = "title", IsRequired = true, EmitDefaultValue = true)]
+        public string Title { get; set; }
+
+        /// <summary>
+        /// Title of the social quest
+        /// </summary>
+        /// <value>Title of the social quest</value>
+        [DataMember(Name = "subtitle", IsRequired = true, EmitDefaultValue = true)]
+        public string Subtitle { get; set; }
+
+        /// <summary>
+        /// The label for the CTA button
+        /// </summary>
+        /// <value>The label for the CTA button</value>
+        [DataMember(Name = "label", IsRequired = true, EmitDefaultValue = true)]
+        public string Label { get; set; }
+
+        /// <summary>
+        /// The description for the CTA button
+        /// </summary>
+        /// <value>The description for the CTA button</value>
+        [DataMember(Name = "description", IsRequired = true, EmitDefaultValue = true)]
+        public string Description { get; set; }
+
+        /// <summary>
+        /// The URL for the CTA button
+        /// </summary>
+        /// <value>The URL for the CTA button</value>
+        [DataMember(Name = "url", IsRequired = true, EmitDefaultValue = true)]
+        public string Url { get; set; }
+
+        /// <summary>
+        /// URL of the logo
+        /// </summary>
+        /// <value>URL of the logo</value>
+        [DataMember(Name = "logo", IsRequired = true, EmitDefaultValue = true)]
+        public string Logo { get; set; }
+
+        /// <summary>
+        /// The name of the platform social quest belongs to
+        /// </summary>
+        /// <value>The name of the platform social quest belongs to</value>
+        [DataMember(Name = "platform_name", IsRequired = true, EmitDefaultValue = true)]
+        public string PlatformName { get; set; }
+
+        /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
         /// <returns>String presentation of the object</returns>
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append("class FeedItemBase {\n");
+            sb.Append("class FeedItemSocialQuest {\n");
             sb.Append("  Id: ").Append(Id).Append("\n");
             sb.Append("  Name: ").Append(Name).Append("\n");
             sb.Append("  QuestId: ").Append(QuestId).Append("\n");
@@ -206,6 +327,14 @@ namespace Immutable.Api.ZkEvm.Model
             sb.Append("  ControlTags: ").Append(ControlTags).Append("\n");
             sb.Append("  Categories: ").Append(Categories).Append("\n");
             sb.Append("  OnboardingExperience: ").Append(OnboardingExperience).Append("\n");
+            sb.Append("  Type: ").Append(Type).Append("\n");
+            sb.Append("  Title: ").Append(Title).Append("\n");
+            sb.Append("  Subtitle: ").Append(Subtitle).Append("\n");
+            sb.Append("  Label: ").Append(Label).Append("\n");
+            sb.Append("  Description: ").Append(Description).Append("\n");
+            sb.Append("  Url: ").Append(Url).Append("\n");
+            sb.Append("  Logo: ").Append(Logo).Append("\n");
+            sb.Append("  PlatformName: ").Append(PlatformName).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
