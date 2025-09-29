@@ -519,6 +519,13 @@ namespace Immutable.Passport
             }
         }
 
+        public async UniTask<bool> CompleteLogin(TokenResponse request)
+        {
+            var json = JsonUtility.ToJson(request);
+            var callResponse = await _communicationsManager.Call(PassportFunction.STORE_TOKENS, json);
+            return callResponse.GetBoolResponse() ?? false;
+        }
+
         public async UniTask<string?> GetAddress()
         {
             var response = await _communicationsManager.Call(PassportFunction.IMX.GET_ADDRESS);
