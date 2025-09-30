@@ -1,4 +1,4 @@
-#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
+#if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
 
 // UnityWebBrowser (UWB)
 // Copyright (c) 2021-2022 Voltstro-Studios
@@ -140,7 +140,34 @@ namespace VoltstroStudios.UnityWebBrowser.Helper
         /// <returns></returns>
         public static Platform GetRunningPlatform()
         {
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
             return Platform.Windows64;
+#elif UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
+            // Check if we're on ARM64 or Intel Mac
+            return System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture == System.Runtime.InteropServices.Architecture.Arm64 
+                ? Platform.MacOSArm64 
+                : Platform.MacOS;
+#elif UNITY_STANDALONE_LINUX || UNITY_EDITOR_LINUX
+            return Platform.Linux64;
+#else
+            // Fallback to runtime detection
+            switch (Application.platform)
+            {
+                case RuntimePlatform.WindowsPlayer:
+                case RuntimePlatform.WindowsEditor:
+                    return Platform.Windows64;
+                case RuntimePlatform.OSXPlayer:
+                case RuntimePlatform.OSXEditor:
+                    return System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture == System.Runtime.InteropServices.Architecture.Arm64 
+                        ? Platform.MacOSArm64 
+                        : Platform.MacOS;
+                case RuntimePlatform.LinuxPlayer:
+                case RuntimePlatform.LinuxEditor:
+                    return Platform.Linux64;
+                default:
+                    throw new PlatformNotSupportedException($"Platform {Application.platform} is not supported by UnityWebBrowser");
+            }
+#endif
         }
         
         /// <summary>

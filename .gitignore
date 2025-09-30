@@ -104,6 +104,8 @@ sample/mono_crash*
 
 # Vuplex
 sample/Assets/Vuplex*
+Vuplex/
+Vuplex.meta
 
 __pycache__/
 *.pyc

@@ -98,7 +98,7 @@ namespace Immutable.Passport
             _communicationsManager.SetCallTimeout(ms);
         }
 
-        public UniTask<bool> Login(bool useCachedSession = false, DirectLoginOptions directLoginOptions = null)
+        public UniTask<bool> Login(bool useCachedSession = false, DirectLoginOptions? directLoginOptions = null)
         {
             if (useCachedSession)
             {
@@ -163,7 +163,7 @@ namespace Immutable.Passport
             return false;
         }
 
-        public async UniTask<bool> ConnectImx(bool useCachedSession = false, DirectLoginOptions directLoginOptions = null)
+        public async UniTask<bool> ConnectImx(bool useCachedSession = false, DirectLoginOptions? directLoginOptions = null)
         {
             if (useCachedSession)
             {
@@ -275,22 +275,19 @@ namespace Immutable.Passport
         {
             try
             {
-                // Create the request JSON manually to ensure proper serialization
-                var requestJson = $"{{\"isConnectImx\":{(!_pkceLoginOnly).ToString().ToLower()}";
-
-                if (_directLoginOptions != null)
+                // Create the request using a serializable class for clean JSON generation
+                var request = new AuthUrlRequest
                 {
-                    requestJson += $",\"directLoginOptions\":{{\"directLoginMethod\":\"{_directLoginOptions.directLoginMethod.ToString().ToLower()}\"";
-
-                    if (_directLoginOptions.IsEmailValid())
+                    isConnectImx = !_pkceLoginOnly,
+                    directLoginOptions = _directLoginOptions != null ? new DirectLoginRequestOptions
                     {
-                        requestJson += $",\"email\":\"{_directLoginOptions.email}\"";
-                    }
+                        directLoginMethod = _directLoginOptions.directLoginMethod.ToString().ToLower(),
+                        email = _directLoginOptions.IsEmailValid() ? _directLoginOptions.email : null,
+                        marketingConsentStatus = _directLoginOptions.marketingConsentStatus?.ToApiString()
+                    } : null
+                };
 
-                    requestJson += "}";
-                }
-
-                requestJson += "}";
+                var requestJson = JsonUtility.ToJson(request);
 
                 var callResponse = await _communicationsManager.Call(PassportFunction.GET_PKCE_AUTH_URL, requestJson);
                 var response = callResponse.OptDeserializeObject<StringResponse>();
@@ -298,6 +295,7 @@ namespace Immutable.Passport
                 if (response != null && response.success == true && response.result != null)
                 {
                     var url = response.result.Replace(" ", "+");
+
 #if UNITY_ANDROID && !UNITY_EDITOR
                     loginPKCEUrl = url;
                     SendAuthEvent(_pkceLoginOnly ? PassportAuthEvent.LoginPKCELaunchingCustomTabs : PassportAuthEvent.ConnectImxPKCELaunchingCustomTabs);
@@ -781,7 +779,7 @@ namespace Immutable.Passport
     {
 
         /// <summary>
-        /// Called when the Android Chrome Custom Tabs is hidden. 
+        /// Called when the Android Chrome Custom Tabs is hidden.
         /// Note that you won't be able to tell whether it was closed by the user or the SDK.
         /// <param name="completing">True if the user has entered everything required (e.g. email address),
         /// Chrome Custom Tabs have closed, and the SDK is trying to complete the PKCE flow.
@@ -820,4 +818,25 @@ namespace Immutable.Passport
         }
     }
 #endif
+
+    /// <summary>
+    /// Serializable request class for LaunchAuthUrl to replace manual JSON string concatenation
+    /// </summary>
+    [Serializable]
+    internal class AuthUrlRequest
+    {
+        public bool isConnectImx;
+        public DirectLoginRequestOptions directLoginOptions;
+    }
+
+    /// <summary>
+    /// Serializable class for directLoginOptions within AuthUrlRequest
+    /// </summary>
+    [Serializable]
+    internal class DirectLoginRequestOptions
+    {
+        public string directLoginMethod;
+        public string email;
+        public string marketingConsentStatus;
+    }
 }
