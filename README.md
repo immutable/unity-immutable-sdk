@@ -17,6 +17,33 @@ The Immutable SDK for Unity helps you integrate your game with Immutable Passpor
 * [Immutable X](https://docs.immutable.com/docs/x/sdks/unity)
 * [Immutable zkEVM](https://docs.immutable.com/docs/zkEVM/sdks/unity)
 
+## Sample Projects
+
+This repository contains two sample projects:
+
+- **`sample/`** - Unity 2021.3.26f1 sample project
+- **`sample-unity6/`** - Unity 6 sample project *(work in progress)*
+
+Both projects share the same Scenes and Scripts via symbolic links, providing a single source of truth for the sample code. See [`sample-unity6/README.md`](sample-unity6/README.md) for setup instructions.
+
+### First Time Setup (for contributors)
+
+The `sample-unity6` project uses symbolic links to share Scenes and Scripts with the `sample` project.
+
+**macOS/Linux:** Symlinks are created automatically when you clone/pull - no action needed.
+
+**Windows:** Check if symlinks were created correctly:
+1. Navigate to `sample-unity6/Assets/`
+2. Check if `Scenes` and `Scripts` are folders (symlinks work) or small text files (symlinks didn't work)
+
+If symlinks didn't work, run the setup script:
+
+```powershell
+.\setup-symlinks.ps1
+```
+
+> **Note for Windows users**: You'll need Developer Mode enabled or run PowerShell as Administrator. See [`sample-unity6/README.md`](sample-unity6/README.md) for details.
+
 ## Contributing
 
 Thank you for your interest in contributing to our project! Here's a quick guide on how you can get started:
