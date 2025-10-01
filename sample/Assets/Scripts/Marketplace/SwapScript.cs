@@ -1,5 +1,4 @@
 using System;
-using AltWebSocketSharp;
 using Immutable.Marketplace;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -29,7 +28,7 @@ public class SwapScript : MonoBehaviour
     /// </summary>
     private void ValidateInputFields()
     {
-        OpenButton.interactable = !KeyInput.text.IsNullOrEmpty();
+        OpenButton.interactable = !string.IsNullOrEmpty(KeyInput.text);
     }
 
     /// <summary>
@@ -46,8 +45,8 @@ public class SwapScript : MonoBehaviour
             publishableKey: publishableKey,
             queryParams: new SwapQueryParams
             {
-                FromTokenAddress = FromTokenAddress.text.IsNullOrEmpty() ? null : FromTokenAddress.text,
-                ToTokenAddress = ToTokenAddress.text.IsNullOrEmpty() ? null : ToTokenAddress.text
+                FromTokenAddress = string.IsNullOrEmpty(FromTokenAddress.text) ? null : FromTokenAddress.text,
+                ToTokenAddress = string.IsNullOrEmpty(ToTokenAddress.text) ? null : ToTokenAddress.text
             }
         );
 
