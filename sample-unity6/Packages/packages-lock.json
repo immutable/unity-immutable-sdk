@@ -1,5 +1,16 @@
 {
   "dependencies": {
+    "com.alttester.sdk": {
+      "version": "2.2.5",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.nuget.newtonsoft-json": "3.1.0",
+        "com.unity.editorcoroutines": "1.0.0",
+        "com.unity.textmeshpro": "3.0.6"
+      },
+      "url": "https://package.openupm.com"
+    },
     "com.cysharp.unitask": {
       "version": "2.3.3",
       "depth": 0,
@@ -151,6 +162,13 @@
         "com.unity.nuget.mono-cecil": "1.11.4",
         "com.unity.test-framework.performance": "3.0.3"
       },
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.editorcoroutines": {
+      "version": "1.0.0",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {},
       "url": "https://packages.unity.com"
     },
     "com.unity.ext.nunit": {
@@ -308,6 +326,14 @@
         "com.unity.modules.jsonserialize": "1.0.0"
       },
       "url": "https://packages.unity.com"
+    },
+    "com.unity.textmeshpro": {
+      "version": "5.0.0",
+      "depth": 1,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.ugui": "2.0.0"
+      }
     },
     "com.unity.timeline": {
       "version": "1.8.9",

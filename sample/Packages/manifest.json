@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "com.alttester.sdk": "2.2.0",
+    "com.alttester.sdk": "2.2.5",
     "com.cysharp.unitask": "2.3.3",
     "com.immutable.api.zkevm": "file:../../src/Packages/ZkEvmApi",
     "com.immutable.marketplace": "file:../../src/Packages/Marketplace",

@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.alttester.sdk": "2.2.5",
     "com.cysharp.unitask": "2.3.3",
     "com.immutable.api.zkevm": "file:../../src/Packages/ZkEvmApi",
     "com.immutable.marketplace": "file:../../src/Packages/Marketplace",
@@ -55,6 +56,13 @@
       "url": "https://package.openupm.com",
       "scopes": [
         "com.cysharp.unitask"
+      ]
+    },
+    {
+      "name": "package.openupm.com",
+      "url": "https://package.openupm.com",
+      "scopes": [
+        "com.alttester.sdk"
       ]
     },
     {

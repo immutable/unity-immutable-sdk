@@ -1,38 +1,81 @@
+#if UNITY_6000_OR_NEWER
 using UnityEngine;
 using UnityEditor;
+using UnityEditor.Build.Profile;
 using UnityEditor.SceneManagement;
 using AltTester.AltTesterUnitySDK.Editor;
 using System;
+using System.Linq;
 using AltTester.AltTesterUnitySDK.Commands;
 using AltTester.AltTesterSDK.Driver;
 
-public class MacBuilder
+/// <summary>
+/// Unity 6+ builder that uses Build Profiles for macOS builds.
+/// This builder loads the "macOS Profile" build profile asset and uses it to build.
+/// </summary>
+public class MacBuilderUnity6
 {
-    private const string DefaultBuildPath = "Builds/MacOS/SampleApp.app";
+    private const string DefaultBuildPath = "Builds/MacOS/Sample Unity 6 macOS.app";
+    private const string BuildProfilePath = "Assets/Settings/Build Profiles/macOS Profile.asset";
 
     static void Build()
     {
-        BuildPlayer(DefaultBuildPath, BuildOptions.None);
+        BuildPlayer(DefaultBuildPath, false);
     }
 
     static void BuildForAltTester()
     {
-        BuildPlayer(DefaultBuildPath, BuildOptions.Development | BuildOptions.IncludeTestAssemblies | BuildOptions.AutoRunPlayer, true);
+        BuildPlayer(DefaultBuildPath, true);
     }
 
-    private static void BuildPlayer(string defaultBuildPath, BuildOptions buildOptions, bool setupForAltTester = false)
+    private static void BuildPlayer(string defaultBuildPath, bool setupForAltTester = false)
     {
         try
         {
             string buildPath = GetBuildPathFromArgs(defaultBuildPath);
-            BuildPlayerOptions buildPlayerOptions = CreateBuildPlayerOptions(buildPath, buildOptions);
+            
+            // Load the Build Profile
+            BuildProfile buildProfile = AssetDatabase.LoadAssetAtPath<BuildProfile>(BuildProfilePath);
+            if (buildProfile == null)
+            {
+                Debug.LogError($"Build Profile not found at path: {BuildProfilePath}");
+                EditorApplication.Exit(1);
+                return;
+            }
+
+            Debug.Log($"Using Build Profile: {buildProfile.name}");
+
+            // Get scenes from the build profile or use default scenes
+            string[] scenes = GetScenesToBuild(buildProfile);
 
             if (setupForAltTester)
             {
-                SetupAltTester(buildPlayerOptions);
+                SetupAltTester(scenes);
             }
 
-            var results = BuildPipeline.BuildPlayer(buildPlayerOptions);
+            // Build using the Build Profile
+            BuildPlayerOptions options = new BuildPlayerOptions
+            {
+                locationPathName = buildPath,
+                scenes = scenes
+            };
+
+            if (setupForAltTester)
+            {
+                options.options = BuildOptions.Development | BuildOptions.IncludeTestAssemblies | BuildOptions.AutoRunPlayer;
+            }
+
+            var result = BuildPipeline.BuildPlayer(options, buildProfile);
+
+            if (result.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded)
+            {
+                Debug.Log($"Build succeeded: {result.summary.totalSize} bytes");
+            }
+            else
+            {
+                Debug.LogError($"Build failed: {result.summary.result}");
+                EditorApplication.Exit(1);
+            }
 
             if (setupForAltTester)
             {
@@ -44,12 +87,13 @@ public class MacBuilder
                 defineSymbols = defineSymbols.Replace("IMMUTABLE_E2E_TESTING;", "").Replace(";IMMUTABLE_E2E_TESTING", "").Replace("IMMUTABLE_E2E_TESTING", "");
                 PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone, defineSymbols);
 
-                RemoveAltFromScene(buildPlayerOptions.scenes[0]);
+                RemoveAltFromScene(scenes[0]);
             }
         }
         catch (Exception exception)
         {
             Debug.LogException(exception);
+            EditorApplication.Exit(1);
         }
     }
 
@@ -66,29 +110,31 @@ public class MacBuilder
         return defaultBuildPath;
     }
 
-    private static BuildPlayerOptions CreateBuildPlayerOptions(string buildPath, BuildOptions buildOptions)
+    private static string[] GetScenesToBuild(BuildProfile buildProfile)
     {
-        return new BuildPlayerOptions
+        // Check if the build profile has custom scenes configured
+        if (buildProfile.scenes != null && buildProfile.scenes.Length > 0)
         {
-            scenes = new[]
-            {
-                "Assets/Scenes/Passport/Initialisation.unity",
-                "Assets/Scenes/Passport/UnauthenticatedScene.unity",
-                "Assets/Scenes/Passport/AuthenticatedScene.unity",
-                "Assets/Scenes/Passport/ZkEvm/ZkEvmGetBalance.unity",
-                "Assets/Scenes/Passport/ZkEvm/ZkEvmGetTransactionReceipt.unity",
-                "Assets/Scenes/Passport/ZkEvm/ZkEvmSendTransaction.unity",
-                "Assets/Scenes/Passport/Imx/ImxNftTransfer.unity",
-                "Assets/Scenes/Passport/ZkEvm/ZkEVMSignTypedData.unity",
-                "Assets/Scenes/Passport/Other/SetCallTimeout.unity"
-            },
-            locationPathName = buildPath,
-            target = BuildTarget.StandaloneOSX,
-            options = buildOptions
+            var sceneAssets = buildProfile.scenes;
+            return sceneAssets.Select(scene => AssetDatabase.GetAssetPath(scene)).ToArray();
+        }
+
+        // Otherwise, use the default scenes
+        return new[]
+        {
+            "Assets/Scenes/Passport/Initialisation.unity",
+            "Assets/Scenes/Passport/UnauthenticatedScene.unity",
+            "Assets/Scenes/Passport/AuthenticatedScene.unity",
+            "Assets/Scenes/Passport/ZkEvm/ZkEvmGetBalance.unity",
+            "Assets/Scenes/Passport/ZkEvm/ZkEvmGetTransactionReceipt.unity",
+            "Assets/Scenes/Passport/ZkEvm/ZkEvmSendTransaction.unity",
+            "Assets/Scenes/Passport/Imx/ImxNftTransfer.unity",
+            "Assets/Scenes/Passport/ZkEvm/ZkEVMSignTypedData.unity",
+            "Assets/Scenes/Passport/Other/SetCallTimeout.unity"
         };
     }
 
-    private static void SetupAltTester(BuildPlayerOptions buildPlayerOptions)
+    private static void SetupAltTester(string[] scenes)
     {
         AltBuilder.AddAltTesterInScriptingDefineSymbolsGroup(BuildTargetGroup.Standalone);
 
@@ -119,7 +165,7 @@ public class MacBuilder
             instrumentationSettings.AltServerPort = 13000;
         }
         instrumentationSettings.ResetConnectionData = true;
-        AltBuilder.InsertAltInScene(buildPlayerOptions.scenes[0], instrumentationSettings);
+        AltBuilder.InsertAltInScene(scenes[0], instrumentationSettings);
     }
 
     public static void RemoveAltFromScene(string scene)
@@ -147,5 +193,6 @@ public class MacBuilder
             Debug.LogWarning("AltTesterPrefab was not found in the [" + scene + "] scene.");
         }
     }
-
 }
+#endif
+

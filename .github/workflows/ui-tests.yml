@@ -11,7 +11,8 @@ on:
         type: choice
         options:
           - All
-          - StandaloneOSX
+          - StandaloneOSX  # Builds Unity 2021 macOS only
+          - StandaloneOSX-Unity6  # Builds Unity 6 macOS only
           - StandaloneWindows64
           - Android
           - iOS
@@ -31,15 +32,28 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # Unity 2021 macOS build
           - targetPlatform: StandaloneOSX
             buildMethod: MacBuilder.BuildForAltTester
             buildPath: sample/Builds/MacOS
+            projectPath: sample
+            unityVersion: 2021.3.26f1
+          # Unity 6 macOS build (also triggered when StandaloneOSX is selected)
+          - targetPlatform: StandaloneOSX-Unity6
+            buildMethod: MacBuilderUnity6.BuildForAltTester
+            buildPath: sample-unity6/Builds/MacOS
+            projectPath: sample-unity6
+            unityVersion: 6000.0.58f1
           - targetPlatform: StandaloneWindows64
             buildMethod: WindowsBuilder.BuildForAltTester
             buildPath: sample/Builds/Windows64
+            projectPath: sample
+            unityVersion: 2021.3.26f1
           - targetPlatform: Android
             buildMethod: MobileBuilder.BuildForAltTester
             buildPath: sample/Builds/Android
+            projectPath: sample
+            unityVersion: 2021.3.26f1
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
@@ -49,7 +63,7 @@ jobs:
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
         with:
           path: Library
-          key: Library-${{ matrix.targetPlatform }}-${{ hashFiles('sample/Assets/**', 'sample/Packages/**', 'sample/ProjectSettings/**') }}
+          key: Library-${{ matrix.targetPlatform }}-${{ hashFiles(format('{0}/Assets/**', matrix.projectPath), format('{0}/Packages/**', matrix.projectPath), format('{0}/ProjectSettings/**', matrix.projectPath)) }}
           restore-keys: |
             Library-${{ matrix.targetPlatform }}
             Library-
@@ -61,8 +75,9 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         with:
-          targetPlatform: ${{ matrix.targetPlatform }}
-          projectPath: sample
+          targetPlatform: ${{ contains(matrix.targetPlatform, 'Unity6') && 'StandaloneOSX' || matrix.targetPlatform }}
+          projectPath: ${{ matrix.projectPath }}
+          unityVersion: ${{ matrix.unityVersion }}
           buildMethod: ${{ matrix.buildMethod }}
           customParameters: -logFile logFile.log -quit -batchmode
           artifactsPath: ${{ matrix.buildPath }}
@@ -84,9 +99,18 @@ jobs:
           - targetPlatform: StandaloneOSX
             runs-on: [self-hosted, macOS]
             test_script: pytest -xs test/test_mac.py::MacTest
+            projectPath: sample
+            unityAppName: SampleApp
+          - targetPlatform: StandaloneOSX-Unity6
+            runs-on: [self-hosted, macOS]
+            test_script: pytest -xs test/test_mac.py::MacTest
+            projectPath: sample-unity6
+            unityAppName: Sample Unity 6 macOS
           - targetPlatform: StandaloneWindows64
             runs-on: [self-hosted, windows]
             test_script: python -m pytest -xs test/test_windows.py::WindowsTest
+            projectPath: sample
+            unityAppName: SampleApp
           # - targetPlatform: Android
           #   runs-on: [ self-hosted, macOS ]
           #   test_script: browserstack-sdk pytest -s ./test/test_android.py --browserstack.config "browserstack.android.yml"
@@ -100,7 +124,7 @@ jobs:
         with:
           lfs: true
       - name: Create temporary keychain
-        if: matrix.targetPlatform == 'StandaloneOSX' && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneOSX')
+        if: contains(matrix.targetPlatform, 'StandaloneOSX') && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform)
         run: |
           security list-keychains
           security delete-keychain temporary || true
@@ -113,32 +137,32 @@ jobs:
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
         with:
           name: Build-${{ matrix.targetPlatform }}
-          path: sample/Tests
+          path: ${{ matrix.projectPath }}/Tests
       - name: Make macOS artifact executable
-        if: matrix.targetPlatform == 'StandaloneOSX' && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneOSX')
-        run: chmod +x sample/Tests/SampleApp.app/Contents/MacOS/*
+        if: contains(matrix.targetPlatform, 'StandaloneOSX') && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform)
+        run: chmod +x ${{ matrix.projectPath }}/Tests/${{ matrix.unityAppName }}.app/Contents/MacOS/*
       - uses: actions/setup-python@v4
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
         with:
           python-version: "3.13"
       - name: Install dependencies (Windows)
         if: matrix.targetPlatform == 'StandaloneWindows64' && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneWindows64')
-        run: pip install -r "sample/Tests/requirements-desktop.txt"
+        run: pip install -r "${{ matrix.projectPath }}/Tests/requirements-desktop.txt"
       - name: Install dependencies (Mac)
-        if: matrix.targetPlatform == 'StandaloneOSX' && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneOSX')
-        run: pip install -r "sample/Tests/requirements-desktop.txt"
+        if: contains(matrix.targetPlatform, 'StandaloneOSX') && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform)
+        run: pip install -r "${{ matrix.projectPath }}/Tests/requirements-desktop.txt"
       - name: Run UI tests
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
-        env:
-          UNITY_APP_PATH: SampleApp.app
-          UNITY_APP_NAME: SampleApp
+        env: 
+          UNITY_APP_PATH: ${{ matrix.unityAppName }}.app
+          UNITY_APP_NAME: ${{ matrix.unityAppName }}
           MAILSLURP_API_KEY: ${{ secrets.MAILSLURP_API_KEY }}
           BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
           BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
-        working-directory: sample/Tests
+        working-directory: ${{ matrix.projectPath }}/Tests
         run: ${{ matrix.test_script }}
       - name: Remove temporary keychain
-        if: matrix.targetPlatform == 'StandaloneOSX' && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneOSX')
+        if: contains(matrix.targetPlatform, 'StandaloneOSX') && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform)
         run: |
           security list-keychains
           security delete-keychain temporary

@@ -24,21 +24,25 @@ Set-Location $sampleUnity6Assets
 
 if (Test-Path "Scenes") { Remove-Item -Path "Scenes" -Recurse -Force }
 if (Test-Path "Scripts") { Remove-Item -Path "Scripts" -Recurse -Force }
+if (Test-Path "Editor") { Remove-Item -Path "Editor" -Recurse -Force }
 if (Test-Path "Scenes.meta") { Remove-Item -Path "Scenes.meta" -Force }
 if (Test-Path "Scripts.meta") { Remove-Item -Path "Scripts.meta" -Force }
+if (Test-Path "Editor.meta") { Remove-Item -Path "Editor.meta" -Force }
 
 # Create symlinks
 try {
     New-Item -ItemType SymbolicLink -Path "Scenes" -Target "..\..\sample\Assets\Scenes" | Out-Null
     New-Item -ItemType SymbolicLink -Path "Scripts" -Target "..\..\sample\Assets\Scripts" | Out-Null
+    New-Item -ItemType SymbolicLink -Path "Editor" -Target "..\..\sample\Assets\Editor" | Out-Null
     New-Item -ItemType SymbolicLink -Path "Scenes.meta" -Target "..\..\sample\Assets\Scenes.meta" | Out-Null
     New-Item -ItemType SymbolicLink -Path "Scripts.meta" -Target "..\..\sample\Assets\Scripts.meta" | Out-Null
+    New-Item -ItemType SymbolicLink -Path "Editor.meta" -Target "..\..\sample\Assets\Editor.meta" | Out-Null
 
     Write-Output ""
     Write-Output "✅ Symlinks created successfully!"
     Write-Output ""
-    Write-Output "Scenes and Scripts in sample-unity6 now point to sample/Assets"
-    Get-ChildItem | Where-Object { $_.Name -match "Scenes|Scripts" } | Format-Table Name, LinkType, Target
+    Write-Output "Scenes, Scripts, and Editor in sample-unity6 now point to sample/Assets"
+    Get-ChildItem | Where-Object { $_.Name -match "Scenes|Scripts|Editor" } | Format-Table Name, LinkType, Target
 }
 catch {
     Write-Output ""

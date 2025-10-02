@@ -4,7 +4,7 @@ using UnityEditor.SceneManagement;
 using AltTester.AltTesterUnitySDK.Editor;
 using System;
 using AltTester.AltTesterUnitySDK.Commands;
-using AltTester.AltTesterUnitySDK.Driver;
+using AltTester.AltTesterSDK.Driver;
 
 public class MobileBuilder
 {
