@@ -1,23 +1,22 @@
----
-# PowerShell script for Windows to create symlinks
+﻿# PowerShell script for Windows to create symlinks
 # Requires Developer Mode enabled OR running PowerShell as Administrator
 
 $ErrorActionPreference = "Stop"
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $sampleUnity6Assets = Join-Path $scriptDir "sample-unity6\Assets"
 
-Write-Host "Setting up symlinks for sample-unity6..." -ForegroundColor Cyan
+Write-Output "Setting up symlinks for sample-unity6..."
 
 # Check if running with sufficient privileges
 $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
 $isAdmin = $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
 if (-not $isAdmin) {
-    Write-Host "WARNING: Not running as Administrator." -ForegroundColor Yellow
-    Write-Host "If symlink creation fails, either:" -ForegroundColor Yellow
-    Write-Host "  1. Enable Developer Mode (Settings > Update & Security > For developers)" -ForegroundColor Yellow
-    Write-Host "  2. Run PowerShell as Administrator" -ForegroundColor Yellow
-    Write-Host ""
+    Write-Output "WARNING: Not running as Administrator."
+    Write-Output "If symlink creation fails, either:"
+    Write-Output "  1. Enable Developer Mode (Settings > Update & Security > For developers)"
+    Write-Output "  2. Run PowerShell as Administrator"
+    Write-Output ""
 }
 
 # Remove existing directories/symlinks if they exist
@@ -34,21 +33,21 @@ try {
     New-Item -ItemType SymbolicLink -Path "Scripts" -Target "..\..\sample\Assets\Scripts" | Out-Null
     New-Item -ItemType SymbolicLink -Path "Scenes.meta" -Target "..\..\sample\Assets\Scenes.meta" | Out-Null
     New-Item -ItemType SymbolicLink -Path "Scripts.meta" -Target "..\..\sample\Assets\Scripts.meta" | Out-Null
-    
-    Write-Host ""
-    Write-Host "✅ Symlinks created successfully!" -ForegroundColor Green
-    Write-Host ""
-    Write-Host "Scenes and Scripts in sample-unity6 now point to sample/Assets" -ForegroundColor Green
+
+    Write-Output ""
+    Write-Output "✅ Symlinks created successfully!"
+    Write-Output ""
+    Write-Output "Scenes and Scripts in sample-unity6 now point to sample/Assets"
     Get-ChildItem | Where-Object { $_.Name -match "Scenes|Scripts" } | Format-Table Name, LinkType, Target
 }
 catch {
-    Write-Host ""
-    Write-Host "❌ Failed to create symlinks!" -ForegroundColor Red
-    Write-Host "Error: $_" -ForegroundColor Red
-    Write-Host ""
-    Write-Host "Please enable Developer Mode:" -ForegroundColor Yellow
-    Write-Host "  Settings > Update & Security > For developers > Developer Mode: ON" -ForegroundColor Yellow
-    Write-Host "Then run this script again." -ForegroundColor Yellow
+    Write-Output ""
+    Write-Output "❌ Failed to create symlinks!"
+    Write-Output "Error: $_"
+    Write-Output ""
+    Write-Output "Please enable Developer Mode:"
+    Write-Output "  Settings > Update & Security > For developers > Developer Mode: ON"
+    Write-Output "Then run this script again."
     exit 1
 }
 
