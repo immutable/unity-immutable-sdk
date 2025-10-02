@@ -1,1 +1,7 @@
 *.dll filter=lfs diff=lfs merge=lfs -text
+
+# Ensure symlinks are stored as symlinks, not as text files
+sample-unity6/Assets/Scenes text=auto
+sample-unity6/Assets/Scripts text=auto
+sample-unity6/Assets/Scenes.meta text=auto
+sample-unity6/Assets/Scripts.meta text=auto
