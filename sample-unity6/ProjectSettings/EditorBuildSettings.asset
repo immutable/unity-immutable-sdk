@@ -30,9 +30,6 @@ EditorBuildSettings:
     path: Assets/Scenes/Passport/ZkEvm/ZkEvmSignTypedData.unity
     guid: 7947e157cd8d541138343d5eba099466
   - enabled: 1
-    path: Assets/Scenes/Other/LaunchBrowser.unity
-    guid: 7c72c29391829c742a018e4f2e629313
-  - enabled: 1
     path: Assets/Scenes/Passport/UnauthenticatedScene.unity
     guid: ac550d22a7a5f4909be272e42b0c7b46
   - enabled: 1
