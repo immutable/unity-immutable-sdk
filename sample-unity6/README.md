@@ -2,11 +2,11 @@
 
 > **Note:** This Unity 6 sample is a work in progress.
 
-This project shares Scenes, Scripts, and Editor folders with the Unity 2021 sample project located in `../sample`.
+This project shares Scenes, Scripts, Editor folders, and Tests with the Unity 2021 sample project located in `../sample`.
 
 ## Setup
 
-The `Assets/Scenes`, `Assets/Scripts`, and `Assets/Editor` folders are **symbolic links** pointing to `../sample/Assets/`. This ensures a single source of truth for both Unity versions.
+The `Assets/Scenes`, `Assets/Scripts`, `Assets/Editor` folders, and `Tests` are **symbolic links** pointing to `../sample/Assets/` and `../sample/Tests` respectively. This ensures a single source of truth for both Unity versions.
 
 ### First Time Setup
 
@@ -41,7 +41,7 @@ Note: This should be done **before** cloning the repository for best results.
 
 ## How It Works
 
-- **Source of Truth**: All Scenes, Scripts, and Editor folders are stored in `../sample/Assets/`
+- **Source of Truth**: All Scenes, Scripts, Editor folders, and Tests are stored in `../sample/Assets/` and `../sample/Tests`
 - **Shared Assets**: Changes made in either Unity 2021 or Unity 6 are immediately reflected in both projects
 - **Separate Settings**: Each project maintains its own ProjectSettings, Library, and Unity version-specific configurations
 

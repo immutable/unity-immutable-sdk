@@ -59,6 +59,26 @@ jobs:
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
         with:
           lfs: true
+      - name: Setup symlinks for Unity 6 project
+        if: contains(matrix.targetPlatform, 'Unity6') && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform)
+        run: |
+          echo "Setting up symlinks for sample-unity6..."
+          cd sample-unity6/Assets
+          rm -rf Scenes Scripts Editor
+          rm -f Scenes.meta Scripts.meta Editor.meta
+          ln -s ../../sample/Assets/Scenes Scenes
+          ln -s ../../sample/Assets/Scripts Scripts
+          ln -s ../../sample/Assets/Editor Editor
+          ln -s ../../sample/Assets/Scenes.meta Scenes.meta
+          ln -s ../../sample/Assets/Scripts.meta Scripts.meta
+          ln -s ../../sample/Assets/Editor.meta Editor.meta
+          echo "✅ Symlinks for Assets created successfully!"
+          ls -la Scenes Scripts Editor
+          cd ..
+          rm -rf Tests
+          ln -s ../sample/Tests Tests
+          echo "✅ Symlink for Tests created successfully!"
+          ls -la Tests
       - uses: actions/cache@v3
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
         with:
@@ -101,21 +121,24 @@ jobs:
             test_script: pytest -xs test/test_mac.py::MacTest
             projectPath: sample
             unityAppName: SampleApp
+            concurrency_group: macos
           - targetPlatform: StandaloneOSX-Unity6
             runs-on: [self-hosted, macOS]
             test_script: pytest -xs test/test_mac.py::MacTest
             projectPath: sample-unity6
             unityAppName: Sample Unity 6 macOS
+            concurrency_group: macos
           - targetPlatform: StandaloneWindows64
             runs-on: [self-hosted, windows]
             test_script: python -m pytest -xs test/test_windows.py::WindowsTest
             projectPath: sample
             unityAppName: SampleApp
+            concurrency_group: windows
           # - targetPlatform: Android
           #   runs-on: [ self-hosted, macOS ]
           #   test_script: browserstack-sdk pytest -s ./test/test_android.py --browserstack.config "browserstack.android.yml"
     concurrency:
-      group: ui-tests-email-inbox
+      group: ui-tests-email-inbox-${{ matrix.concurrency_group }}
       cancel-in-progress: false  # Let tests complete rather than canceling
     runs-on: ${{ matrix.runs-on }}
     steps:
@@ -140,7 +163,7 @@ jobs:
           path: ${{ matrix.projectPath }}/Tests
       - name: Make macOS artifact executable
         if: contains(matrix.targetPlatform, 'StandaloneOSX') && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform)
-        run: chmod +x ${{ matrix.projectPath }}/Tests/${{ matrix.unityAppName }}.app/Contents/MacOS/*
+        run: chmod -R +x '${{ matrix.projectPath }}/Tests/${{ matrix.unityAppName }}.app/Contents/MacOS'
       - uses: actions/setup-python@v4
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
         with:

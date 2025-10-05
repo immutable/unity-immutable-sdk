@@ -1,5 +1,7 @@
 # UI Tests
 
+> **Note**: This Tests folder is shared between `sample` and `sample-unity6` projects via symbolic links.
+
 ## Prerequisites
 
 ### Passport SDK Log Level Configuration
