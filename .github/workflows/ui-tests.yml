@@ -38,12 +38,6 @@ jobs:
             buildPath: sample/Builds/MacOS
             projectPath: sample
             unityVersion: 2021.3.26f1
-          # Unity 6 macOS build (also triggered when StandaloneOSX is selected)
-          - targetPlatform: StandaloneOSX-Unity6
-            buildMethod: MacBuilderUnity6.BuildForAltTester
-            buildPath: sample-unity6/Builds/MacOS
-            projectPath: sample-unity6
-            unityVersion: 6000.0.58f1
           - targetPlatform: StandaloneWindows64
             buildMethod: WindowsBuilder.BuildForAltTester
             buildPath: sample/Builds/Windows64
@@ -59,26 +53,6 @@ jobs:
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
         with:
           lfs: true
-      - name: Setup symlinks for Unity 6 project
-        if: contains(matrix.targetPlatform, 'Unity6') && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform)
-        run: |
-          echo "Setting up symlinks for sample-unity6..."
-          cd sample-unity6/Assets
-          rm -rf Scenes Scripts Editor
-          rm -f Scenes.meta Scripts.meta Editor.meta
-          ln -s ../../sample/Assets/Scenes Scenes
-          ln -s ../../sample/Assets/Scripts Scripts
-          ln -s ../../sample/Assets/Editor Editor
-          ln -s ../../sample/Assets/Scenes.meta Scenes.meta
-          ln -s ../../sample/Assets/Scripts.meta Scripts.meta
-          ln -s ../../sample/Assets/Editor.meta Editor.meta
-          echo "✅ Symlinks for Assets created successfully!"
-          ls -la Scenes Scripts Editor
-          cd ..
-          rm -rf Tests
-          ln -s ../sample/Tests Tests
-          echo "✅ Symlink for Tests created successfully!"
-          ls -la Tests
       - uses: actions/cache@v3
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
         with:
@@ -110,9 +84,69 @@ jobs:
         with:
           name: Build-${{ matrix.targetPlatform }}
           path: ${{ matrix.buildPath }}
+  
+  build-unity6-macos: # Game CI and Unity 6 don't like how we setup the project for AltTester in the build script, so we have to build it manually
+    name: Build Unity 6 macOS for AltTester 🛠️
+    runs-on: [self-hosted, macOS]
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneOSX-Unity6'
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          lfs: true
+      - name: Setup symlinks for Unity 6 project
+        run: |
+          echo "Setting up symlinks for sample-unity6..."
+          cd sample-unity6/Assets
+          rm -rf Scenes Scripts Editor
+          rm -f Scenes.meta Scripts.meta Editor.meta
+          ln -s ../../sample/Assets/Scenes Scenes
+          ln -s ../../sample/Assets/Scripts Scripts
+          ln -s ../../sample/Assets/Editor Editor
+          ln -s ../../sample/Assets/Scenes.meta Scenes.meta
+          ln -s ../../sample/Assets/Scripts.meta Scripts.meta
+          ln -s ../../sample/Assets/Editor.meta Editor.meta
+          echo "✅ Symlinks for Assets created successfully!"
+          ls -la Scenes Scripts Editor
+          cd ..
+          rm -rf Tests
+          ln -s ../sample/Tests Tests
+          echo "✅ Symlink for Tests created successfully!"
+          ls -la Tests
+      - name: Build Unity 6 macOS with command line
+        run: |
+          echo "Building Unity 6 macOS using command line..."
+          export TMPDIR="/Users/svc_buildsdk/tmp"
+          mkdir -p "$TMPDIR"
+          mkdir -p sample-unity6/Tests
+          /Applications/Unity/Hub/Editor/6000.0.58f1/Unity.app/Contents/MacOS/Unity \
+            -projectPath "${{ github.workspace }}/sample-unity6" \
+            -executeMethod "MacBuilderUnity6.BuildForAltTester" \
+            -logFile "${{ github.workspace }}/sample-unity6/build-log.txt" \
+            -quit \
+            -batchmode \
+            --buildPath "${{ github.workspace }}/sample-unity6/Tests"
+          
+          echo "Build completed. Checking for build output..."
+          ls -la sample-unity6/Tests/
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Unity6-Build-Log
+          path: sample-unity6/build-log.txt
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Build-StandaloneOSX-Unity6
+          path: sample-unity6/Tests
+  
   test:
     name: Run ${{ matrix.targetPlatform }} UI tests 🧪
-    needs: build
+    needs: [build, build-unity6-macos]
+    if: |
+      always() && 
+      (needs.build.result == 'success' || needs.build.result == 'skipped') &&
+      (needs.build-unity6-macos.result == 'success' || needs.build-unity6-macos.result == 'skipped')
     strategy:
       matrix:
         include:
@@ -162,7 +196,9 @@ jobs:
           name: Build-${{ matrix.targetPlatform }}
           path: ${{ matrix.projectPath }}/Tests
       - name: Make macOS artifact executable
-        if: contains(matrix.targetPlatform, 'StandaloneOSX') && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform)
+        if: |
+          contains(matrix.targetPlatform, 'StandaloneOSX') &&
+          (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform)
         run: chmod -R +x '${{ matrix.projectPath }}/Tests/${{ matrix.unityAppName }}.app/Contents/MacOS'
       - uses: actions/setup-python@v4
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
