@@ -90,6 +90,10 @@ jobs:
     runs-on: [self-hosted, macOS]
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneOSX-Unity6'
     steps:
+      - name: Cleanup old builds
+        run: |
+          # Remove all previous builds to save space
+          rm -rf /tmp/unity-builds/* 2>/dev/null || true
       - uses: actions/checkout@v3
         with:
           lfs: true
@@ -117,28 +121,24 @@ jobs:
           echo "Building Unity 6 macOS using command line..."
           export TMPDIR="/Users/svc_buildsdk/tmp"
           mkdir -p "$TMPDIR"
-          mkdir -p sample-unity6/Tests
+          BUILD_DIR="/tmp/unity-builds/${{ github.run_id }}"
+          mkdir -p "$BUILD_DIR"
           /Applications/Unity/Hub/Editor/6000.0.58f1/Unity.app/Contents/MacOS/Unity \
             -projectPath "${{ github.workspace }}/sample-unity6" \
             -executeMethod "MacBuilderUnity6.BuildForAltTester" \
             -logFile "${{ github.workspace }}/sample-unity6/build-log.txt" \
             -quit \
             -batchmode \
-            --buildPath "${{ github.workspace }}/sample-unity6/Tests"
+            --buildPath "$BUILD_DIR"
           
           echo "Build completed. Checking for build output..."
-          ls -la sample-unity6/Tests/
+          ls -la "$BUILD_DIR"
       - name: Upload build log
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: Unity6-Build-Log
           path: sample-unity6/build-log.txt
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Build-StandaloneOSX-Unity6
-          path: sample-unity6/Tests
   
   test:
     name: Run ${{ matrix.targetPlatform }} UI tests 🧪
@@ -191,10 +191,22 @@ jobs:
           security unlock-keychain -p "" temporary
           security set-keychain-settings -lut 600 temporary
       - uses: actions/download-artifact@v4
-        if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
+        if: |
+          matrix.targetPlatform != 'StandaloneOSX-Unity6' &&
+          (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform)
         with:
           name: Build-${{ matrix.targetPlatform }}
           path: ${{ matrix.projectPath }}/Tests
+      - name: Copy Unity 6 build from shared directory
+        if: |
+          matrix.targetPlatform == 'StandaloneOSX-Unity6' &&
+          (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform)
+        run: |
+          BUILD_APP="/tmp/unity-builds/${{ github.run_id }}.app"
+          mkdir -p "${{ matrix.projectPath }}/Tests"
+          cp -R "$BUILD_APP" "${{ matrix.projectPath }}/Tests/"
+          echo "Build copied from shared directory:"
+          ls -la "${{ matrix.projectPath }}/Tests/"
       - name: Make macOS artifact executable
         if: |
           contains(matrix.targetPlatform, 'StandaloneOSX') &&
@@ -228,6 +240,16 @@ jobs:
           security default-keychain -s ~/Library/Keychains/login.keychain-db
           security list-keychains -d user -s ~/Library/Keychains/login.keychain-db
           security list-keychains
+      - name: Cleanup Unity 6 shared build
+        if: |
+          always() &&
+          matrix.targetPlatform == 'StandaloneOSX-Unity6' &&
+          (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform)
+        run: |
+          BUILD_APP="/tmp/unity-builds/${{ github.run_id }}.app"
+          echo "Cleaning up shared build: $BUILD_APP"
+          rm -rf "$BUILD_APP"
+          echo "✅ Cleanup completed"
   build-ios: #test-ios:
     name: Run iOS build #UI tests 🧪
     needs:
