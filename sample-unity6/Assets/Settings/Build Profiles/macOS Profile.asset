@@ -256,7 +256,8 @@ MonoBehaviour:
     - line: '|   iOSLaunchScreeniPadCustomStoryboardPath: '
     - line: '|   iOSDeviceRequirements: []'
     - line: '|   iOSURLSchemes: []'
-    - line: '|   macOSURLSchemes: []'
+    - line: '|   macOSURLSchemes:'
+    - line: '|   - immutablerunner'
     - line: '|   iOSBackgroundModes: 0'
     - line: '|   iOSMetalForceHardShadows: 0'
     - line: '|   metalEditorSupport: 1'
@@ -915,7 +916,7 @@ MonoBehaviour:
     - rid: 279568446812586195
       type: {class: OSXStandaloneBuildProfile, ns: UnityEditor.OSXStandalone, asm: UnityEditor.OSXStandalone.Extensions}
       data:
-        m_Development: 0
+        m_Development: 1
         m_ConnectProfiler: 0
         m_BuildWithDeepProfilingSupport: 0
         m_AllowDebugging: 0

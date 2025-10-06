@@ -85,68 +85,125 @@ jobs:
           name: Build-${{ matrix.targetPlatform }}
           path: ${{ matrix.buildPath }}
   
-  build-unity6-macos: # Game CI and Unity 6 don't like how we setup the project for AltTester in the build script, so we have to build it manually
-    name: Build Unity 6 macOS for AltTester 🛠️
+  build-and-test-unity6-macos: # Unity 6 requires a full build cycle to compile AltTester packages properly. This doesn't work well in Game CI, so we have to build it manually.
+    name: Build & Test Unity 6 macOS 🛠️🧪
     runs-on: [self-hosted, macOS]
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneOSX-Unity6'
     steps:
       - name: Cleanup old builds
         run: |
-          # Remove all previous builds to save space
-          rm -rf /tmp/unity-builds/* 2>/dev/null || true
+          # Remove previous build to save space
+          rm -rf sample-unity6/Tests/* 2>/dev/null || true
       - uses: actions/checkout@v3
         with:
           lfs: true
-      - name: Setup symlinks for Unity 6 project
+      - name: Copy files for Unity 6 project
         run: |
-          echo "Setting up symlinks for sample-unity6..."
+          echo "Removing symlinks and copying files for sample-unity6..."
+          pwd
           cd sample-unity6/Assets
+          pwd
+          ls -l
+          echo "Remove symlinks explicitly (rm -f works on symlinks without following them)"
+          rm -f Scenes Scripts Editor Scenes.meta Scripts.meta Editor.meta
+          ls -l
+          echo "Also remove if they were directories (in case previous copy made them real)"
           rm -rf Scenes Scripts Editor
-          rm -f Scenes.meta Scripts.meta Editor.meta
-          ln -s ../../sample/Assets/Scenes Scenes
-          ln -s ../../sample/Assets/Scripts Scripts
-          ln -s ../../sample/Assets/Editor Editor
-          ln -s ../../sample/Assets/Scenes.meta Scenes.meta
-          ln -s ../../sample/Assets/Scripts.meta Scripts.meta
-          ln -s ../../sample/Assets/Editor.meta Editor.meta
-          echo "✅ Symlinks for Assets created successfully!"
-          ls -la Scenes Scripts Editor
+          ls -l
+          # Now copy the actual files
+          cp -R ../../sample/Assets/Scenes Scenes
+          cp -R ../../sample/Assets/Scripts Scripts
+          cp -R ../../sample/Assets/Editor Editor
+          cp ../../sample/Assets/Scenes.meta Scenes.meta
+          cp ../../sample/Assets/Scripts.meta Scripts.meta
+          cp ../../sample/Assets/Editor.meta Editor.meta
+          echo "✅ Assets copied successfully as real files (not symlinks)!"
+          # Verify they are NOT symlinks
+          file Scenes Scripts Editor Scenes.meta Scripts.meta Editor.meta
           cd ..
+          rm -f Tests
           rm -rf Tests
-          ln -s ../sample/Tests Tests
-          echo "✅ Symlink for Tests created successfully!"
-          ls -la Tests
-      - name: Build Unity 6 macOS with command line
+          cp -R ../sample/Tests Tests
+          echo "✅ Tests copied successfully!"
+          file Tests
+      - name: Force clean package resolution
+        run: |
+          echo "Removing Library folder to force clean package resolution..."
+          rm -rf sample-unity6/Library
+          echo "✅ Library folder removed"
+      - name: First build (resolves packages)
+        run: |
+          echo "Running first build to trigger package resolution..."
+          export TMPDIR="/Users/svc_buildsdk/tmp"
+          mkdir -p "$TMPDIR"
+          mkdir -p sample-unity6/Tests
+          /Applications/Unity/Hub/Editor/6000.0.58f1/Unity.app/Contents/MacOS/Unity -projectPath "${{ github.workspace }}/sample-unity6" -executeMethod "MacBuilderUnity6.BuildForAltTester" -logFile "${{ github.workspace }}/sample-unity6/first-build-log.txt" -quit -batchmode --buildPath "${{ github.workspace }}/sample-unity6/Tests/Sample Unity 6 macOS" || true
+          
+          echo "First build completed (may have failed, that's ok). Checking for AltTester..."
+          if ls -la "${{ github.workspace }}/sample-unity6/Library/PackageCache/" | grep alttester; then
+            echo "✅ AltTester found in PackageCache after first build"
+          else
+            echo "⚠️ AltTester not found yet, but will be ready for second build"
+          fi
+      - name: Build Unity 6 macOS with command line (second build with packages ready)
         run: |
           echo "Building Unity 6 macOS using command line..."
           export TMPDIR="/Users/svc_buildsdk/tmp"
           mkdir -p "$TMPDIR"
-          BUILD_DIR="/tmp/unity-builds/${{ github.run_id }}"
-          mkdir -p "$BUILD_DIR"
-          /Applications/Unity/Hub/Editor/6000.0.58f1/Unity.app/Contents/MacOS/Unity \
-            -projectPath "${{ github.workspace }}/sample-unity6" \
-            -executeMethod "MacBuilderUnity6.BuildForAltTester" \
-            -logFile "${{ github.workspace }}/sample-unity6/build-log.txt" \
-            -quit \
-            -batchmode \
-            --buildPath "$BUILD_DIR"
+          mkdir -p sample-unity6/Tests
+          /Applications/Unity/Hub/Editor/6000.0.58f1/Unity.app/Contents/MacOS/Unity -projectPath "${{ github.workspace }}/sample-unity6" -executeMethod "MacBuilderUnity6.BuildForAltTester" -logFile "${{ github.workspace }}/sample-unity6/build-log.log" -quit -batchmode --buildPath "${{ github.workspace }}/sample-unity6/Tests/Sample Unity 6 macOS"
           
           echo "Build completed. Checking for build output..."
-          ls -la "$BUILD_DIR"
+          ls -la sample-unity6/Tests/
+      - name: Create temporary keychain
+        run: |
+          security list-keychains
+          security delete-keychain temporary || true
+          security list-keychains
+          security create-keychain -p "" temporary
+          security default-keychain -s temporary
+          security unlock-keychain -p "" temporary
+          security set-keychain-settings -lut 600 temporary
+      - name: Make macOS artifact executable
+        run: chmod -R +x 'sample-unity6/Tests/Sample Unity 6 macOS.app/Contents/MacOS'
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+      - name: Install dependencies
+        run: pip install -r sample-unity6/Tests/requirements-desktop.txt
+      - name: Run UI tests
+        env: 
+          UNITY_APP_PATH: Sample Unity 6 macOS.app
+          UNITY_APP_NAME: Sample Unity 6 macOS
+          MAILSLURP_API_KEY: ${{ secrets.MAILSLURP_API_KEY }}
+          BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
+          BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+        working-directory: sample-unity6/Tests
+        run: pytest -xs test/test_mac.py::MacTest
+      - name: Remove temporary keychain
+        if: always()
+        run: |
+          security list-keychains
+          security delete-keychain temporary
+          security default-keychain -s ~/Library/Keychains/login.keychain-db
+          security list-keychains -d user -s ~/Library/Keychains/login.keychain-db
+          security list-keychains
+      - name: Upload first build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Unity6-First-Build-Log
+          path: sample-unity6/first-build-log.txt
       - name: Upload build log
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: Unity6-Build-Log
-          path: sample-unity6/build-log.txt
+          path: sample-unity6/build-log.log
   
   test:
     name: Run ${{ matrix.targetPlatform }} UI tests 🧪
-    needs: [build, build-unity6-macos]
-    if: |
-      always() && 
-      (needs.build.result == 'success' || needs.build.result == 'skipped') &&
-      (needs.build-unity6-macos.result == 'success' || needs.build-unity6-macos.result == 'skipped')
+    needs: build
     strategy:
       matrix:
         include:
@@ -155,12 +212,6 @@ jobs:
             test_script: pytest -xs test/test_mac.py::MacTest
             projectPath: sample
             unityAppName: SampleApp
-            concurrency_group: macos
-          - targetPlatform: StandaloneOSX-Unity6
-            runs-on: [self-hosted, macOS]
-            test_script: pytest -xs test/test_mac.py::MacTest
-            projectPath: sample-unity6
-            unityAppName: Sample Unity 6 macOS
             concurrency_group: macos
           - targetPlatform: StandaloneWindows64
             runs-on: [self-hosted, windows]
@@ -191,22 +242,10 @@ jobs:
           security unlock-keychain -p "" temporary
           security set-keychain-settings -lut 600 temporary
       - uses: actions/download-artifact@v4
-        if: |
-          matrix.targetPlatform != 'StandaloneOSX-Unity6' &&
-          (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform)
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
         with:
           name: Build-${{ matrix.targetPlatform }}
           path: ${{ matrix.projectPath }}/Tests
-      - name: Copy Unity 6 build from shared directory
-        if: |
-          matrix.targetPlatform == 'StandaloneOSX-Unity6' &&
-          (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform)
-        run: |
-          BUILD_APP="/tmp/unity-builds/${{ github.run_id }}.app"
-          mkdir -p "${{ matrix.projectPath }}/Tests"
-          cp -R "$BUILD_APP" "${{ matrix.projectPath }}/Tests/"
-          echo "Build copied from shared directory:"
-          ls -la "${{ matrix.projectPath }}/Tests/"
       - name: Make macOS artifact executable
         if: |
           contains(matrix.targetPlatform, 'StandaloneOSX') &&
@@ -240,16 +279,6 @@ jobs:
           security default-keychain -s ~/Library/Keychains/login.keychain-db
           security list-keychains -d user -s ~/Library/Keychains/login.keychain-db
           security list-keychains
-      - name: Cleanup Unity 6 shared build
-        if: |
-          always() &&
-          matrix.targetPlatform == 'StandaloneOSX-Unity6' &&
-          (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform)
-        run: |
-          BUILD_APP="/tmp/unity-builds/${{ github.run_id }}.app"
-          echo "Cleaning up shared build: $BUILD_APP"
-          rm -rf "$BUILD_APP"
-          echo "✅ Cleanup completed"
   build-ios: #test-ios:
     name: Run iOS build #UI tests 🧪
     needs:
