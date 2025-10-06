@@ -186,12 +186,14 @@ jobs:
             test_script: pytest -xs test/test_mac.py::MacTest
             projectPath: sample
             unityAppName: SampleApp
+            unityAppExtension: .app
             concurrency_group: macos
           - targetPlatform: StandaloneWindows64
             runs-on: [self-hosted, windows]
             test_script: python -m pytest -xs test/test_windows.py::WindowsTest
             projectPath: sample
-            unityAppName: SampleApp
+            unityAppName: Immutable Sample
+            unityAppExtension: .exe
             concurrency_group: windows
           # - targetPlatform: Android
           #   runs-on: [ self-hosted, macOS ]
@@ -238,7 +240,7 @@ jobs:
       - name: Run UI tests
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
         env: 
-          UNITY_APP_PATH: ${{ matrix.unityAppName }}.app
+          UNITY_APP_PATH: ${{ matrix.unityAppName }}${{ matrix.unityAppExtension }}
           UNITY_APP_NAME: ${{ matrix.unityAppName }}
           MAILSLURP_API_KEY: ${{ secrets.MAILSLURP_API_KEY }}
           BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
