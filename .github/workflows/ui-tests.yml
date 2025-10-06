@@ -88,6 +88,9 @@ jobs:
   build-and-test-unity6-macos: # Unity 6 requires a full build cycle to compile AltTester packages properly. This doesn't work well in Game CI, so we have to build it manually.
     name: Build & Test Unity 6 macOS 🛠️🧪
     runs-on: [self-hosted, macOS]
+    concurrency:
+      group: ui-tests-email-inbox-macos
+      cancel-in-progress: false  # Let tests complete rather than canceling
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneOSX-Unity6'
     steps:
       - name: Cleanup old builds

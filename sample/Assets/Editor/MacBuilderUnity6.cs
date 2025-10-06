@@ -69,7 +69,7 @@ public class MacBuilderUnity6
 
             Debug.Log($"Build options: {options.options}");
             Debug.Log($"Starting build to: {buildPath}");
-            
+
             var result = BuildPipeline.BuildPlayer(options);
 
             if (result.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded)
@@ -90,7 +90,7 @@ public class MacBuilderUnity6
             Debug.Log("Build Profile restored");
 
             if (setupForAltTester)
-            {                
+            {
                 // Clean up AltTester settings after build
                 AltBuilder.RemoveAltTesterFromScriptingDefineSymbols(BuildTargetGroup.Standalone);
 
@@ -98,7 +98,7 @@ public class MacBuilderUnity6
                 var defineSymbols = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone);
                 defineSymbols = defineSymbols.Replace("IMMUTABLE_E2E_TESTING;", "").Replace(";IMMUTABLE_E2E_TESTING", "").Replace("IMMUTABLE_E2E_TESTING", "");
                 PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone, defineSymbols);
-                
+
                 var cleanedDefineSymbols = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone);
 
                 RemoveAltFromScene(scenes[0]);
@@ -129,7 +129,7 @@ public class MacBuilderUnity6
         return new[]
         {
             "Assets/Scenes/Passport/Initialisation.unity",
-            "Assets/Scenes/Passport/UnauthenticatedScene.unity", 
+            "Assets/Scenes/Passport/UnauthenticatedScene.unity",
             "Assets/Scenes/Passport/AuthenticatedScene.unity",
             "Assets/Scenes/Passport/ZkEvm/ZkEvmGetBalance.unity",
             "Assets/Scenes/Passport/ZkEvm/ZkEvmGetTransactionReceipt.unity",
@@ -143,7 +143,7 @@ public class MacBuilderUnity6
     private static void SetupAltTester(string[] scenes)
     {
         AltBuilder.AddAltTesterInScriptingDefineSymbolsGroup(BuildTargetGroup.Standalone);
-        
+
         var defineSymbols = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone);
         if (!defineSymbols.Contains("IMMUTABLE_E2E_TESTING"))
         {
@@ -165,7 +165,7 @@ public class MacBuilderUnity6
         {
             instrumentationSettings.AltServerPort = int.Parse(port);
         }
-        
+
         instrumentationSettings.ResetConnectionData = true;
         AltBuilder.InsertAltInScene(scenes[0], instrumentationSettings);
     }
