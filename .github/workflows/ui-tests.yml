@@ -97,35 +97,6 @@ jobs:
       - uses: actions/checkout@v3
         with:
           lfs: true
-      - name: Copy files for Unity 6 project
-        run: |
-          echo "Removing symlinks and copying files for sample-unity6..."
-          pwd
-          cd sample-unity6/Assets
-          pwd
-          ls -l
-          echo "Remove symlinks explicitly (rm -f works on symlinks without following them)"
-          rm -f Scenes Scripts Editor Scenes.meta Scripts.meta Editor.meta
-          ls -l
-          echo "Also remove if they were directories (in case previous copy made them real)"
-          rm -rf Scenes Scripts Editor
-          ls -l
-          # Now copy the actual files
-          cp -R ../../sample/Assets/Scenes Scenes
-          cp -R ../../sample/Assets/Scripts Scripts
-          cp -R ../../sample/Assets/Editor Editor
-          cp ../../sample/Assets/Scenes.meta Scenes.meta
-          cp ../../sample/Assets/Scripts.meta Scripts.meta
-          cp ../../sample/Assets/Editor.meta Editor.meta
-          echo "✅ Assets copied successfully as real files (not symlinks)!"
-          # Verify they are NOT symlinks
-          file Scenes Scripts Editor Scenes.meta Scripts.meta Editor.meta
-          cd ..
-          rm -f Tests
-          rm -rf Tests
-          cp -R ../sample/Tests Tests
-          echo "✅ Tests copied successfully!"
-          file Tests
       - name: Force clean package resolution
         run: |
           echo "Removing Library folder to force clean package resolution..."
