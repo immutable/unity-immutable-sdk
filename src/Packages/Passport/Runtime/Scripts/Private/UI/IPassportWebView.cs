@@ -146,6 +146,13 @@ namespace Immutable.Passport
         public string UserAgent { get; set; } = "";
 
         /// <summary>
+        /// Custom URL scheme for OAuth callbacks (e.g., "mygame", "awesomegame")
+        /// Each game should use a unique scheme for App Store compliance
+        /// Default: "immutablerunner"
+        /// </summary>
+        public string CustomURLScheme { get; set; } = "immutablerunner";
+
+        /// <summary>
         /// Platform-specific configuration data
         /// </summary>
         public object PlatformSpecificConfig { get; set; }

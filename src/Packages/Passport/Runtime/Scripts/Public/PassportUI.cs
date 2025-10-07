@@ -415,8 +415,13 @@ namespace Immutable.Passport
 #if !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_EDITOR && UNITY_EDITOR_WIN))
             PassportLogger.Info($"{TAG} Creating Windows WebView (UWB)");
             return new WindowsPassportWebView(rawImage, this);
+#elif UNITY_IOS && !UNITY_EDITOR
+            // Use native iOS WebView on device builds
+            PassportLogger.Info($"{TAG} Creating iOS Native WebView (WKWebView)");
+            return new iOSNativePassportWebView();
 #elif UNITY_IOS && VUPLEX_WEBVIEW
-            PassportLogger.Info($"{TAG} Creating iOS WebView (Vuplex)");
+            // Fallback to Vuplex for iOS Editor mode
+            PassportLogger.Info($"{TAG} Creating iOS WebView (Vuplex - Editor)");
             return new iOSPassportWebView(rawImage);
 #elif UNITY_ANDROID && VUPLEX_WEBVIEW
             PassportLogger.Info($"{TAG} Creating Android WebView (Vuplex)");
