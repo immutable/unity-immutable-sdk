@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.alttester.sdk": "2.2.5",
     "com.cysharp.unitask": "2.3.3",
     "com.immutable.api.zkevm": "file:../../src/Packages/ZkEvmApi",
     "com.immutable.marketplace": "file:../../src/Packages/Marketplace",
@@ -13,6 +14,7 @@
     "com.unity.render-pipelines.universal": "17.0.4",
     "com.unity.test-framework": "1.5.1",
     "com.unity.uiextensions": "2.2.4",
+    "com.unity.textmeshpro": "3.0.9",
     "com.unity.timeline": "1.8.9",
     "com.unity.ugui": "2.0.0",
     "com.unity.visualscripting": "1.9.7",
@@ -55,6 +57,13 @@
       "url": "https://package.openupm.com",
       "scopes": [
         "com.cysharp.unitask"
+      ]
+    },
+    {
+      "name": "package.openupm.com",
+      "url": "https://package.openupm.com",
+      "scopes": [
+        "com.alttester.sdk"
       ]
     },
     {

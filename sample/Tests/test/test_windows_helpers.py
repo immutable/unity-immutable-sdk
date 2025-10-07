@@ -590,7 +590,7 @@ def clear_unity_data():
     print("Unity data cleanup complete")
 
 def open_sample_app(clear_data=False):
-    product_name = get_product_name()
+    product_name = os.getenv("UNITY_APP_NAME", get_product_name())
     
     # Clear any cached login state before opening (only when requested)
     if clear_data:
@@ -623,7 +623,7 @@ def open_sample_app(clear_data=False):
     print(f"{product_name} opened successfully.")
 
 def stop_sample_app():
-    product_name = get_product_name()
+    product_name = os.getenv("UNITY_APP_NAME", get_product_name())
     print(f"Stopping {product_name}...")
     powershell_command = f"""
     $process = Get-Process -Name "{product_name}" -ErrorAction SilentlyContinue

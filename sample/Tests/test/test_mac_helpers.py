@@ -1,19 +1,26 @@
 import subprocess
 import time
+import os
+
+def get_app_name():
+    """Get the app name from environment variable, falling back to default"""
+    return os.getenv("UNITY_APP_NAME", "SampleApp")
 
 def open_sample_app():
-    print("Opening Unity sample app...")
-    subprocess.Popen(["open", "SampleApp.app"], shell=False)
+    app_name = get_app_name()
+    print(f"Opening Unity sample app ({app_name})...")
+    subprocess.Popen(["open", f"{app_name}.app"], shell=False)
     time.sleep(5)
-    print("Unity sample app opened successfully.")
+    print(f"Unity sample app ({app_name}) opened successfully.")
 
 def stop_sample_app():
-    print("Stopping sample app...")
+    app_name = get_app_name()
+    print(f"Stopping sample app ({app_name})...")
 
-    bash_script = """
-    app_path="SampleApp.app"
+    bash_script = f"""
+    app_path="{app_name}.app"
     echo "Closing sample app..."
-    PID=$(ps aux | grep "$app_path" | grep -v grep | awk '{print $2}')
+    PID=$(ps aux | grep "$app_path" | grep -v grep | awk '{{print $2}}')
     if [ -n "$PID" ]; then
         kill $PID
         echo "Sample app (PID $PID) has been terminated."
@@ -27,11 +34,12 @@ def stop_sample_app():
     subprocess.run(bash_script, shell=True, check=True, text=True)
 
     time.sleep(5)
-    print("Stopped sample app.")
+    print(f"Stopped sample app ({app_name}).")
 
 def bring_sample_app_to_foreground():
-    print("Bringing Unity sample app to the foreground...")
+    app_name = get_app_name()
+    print(f"Bringing Unity sample app ({app_name}) to the foreground...")
     subprocess.run(
-            ['osascript', '-e', f'tell application "SampleApp" to activate'],
+            ['osascript', '-e', f'tell application "{app_name}" to activate'],
             check=True
         )

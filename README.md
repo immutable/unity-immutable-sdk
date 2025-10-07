@@ -24,17 +24,17 @@ This repository contains two sample projects:
 - **`sample/`** - Unity 2021.3.26f1 sample project
 - **`sample-unity6/`** - Unity 6 sample project *(work in progress)*
 
-Both projects share the same Scenes and Scripts via symbolic links, providing a single source of truth for the sample code. See [`sample-unity6/README.md`](sample-unity6/README.md) for setup instructions.
+Both projects share the same Scenes, Scripts, Editor folders, and Tests via symbolic links, providing a single source of truth for the sample code. See [`sample-unity6/README.md`](sample-unity6/README.md) for setup instructions.
 
 ### First Time Setup (for contributors)
 
-The `sample-unity6` project uses symbolic links to share Scenes and Scripts with the `sample` project.
+The `sample-unity6` project uses symbolic links to share Scenes, Scripts, Editor folders, and Tests with the `sample` project.
 
 **macOS/Linux:** Symlinks are created automatically when you clone/pull - no action needed.
 
 **Windows:** Check if symlinks were created correctly:
-1. Navigate to `sample-unity6/Assets/`
-2. Check if `Scenes` and `Scripts` are folders (symlinks work) or small text files (symlinks didn't work)
+1. Navigate to `sample-unity6/Assets/` and `sample-unity6/`
+2. Check if `Scenes`, `Scripts`, `Editor`, and `Tests` are folders (symlinks work) or small text files (symlinks didn't work)
 
 If symlinks didn't work, run the setup script:
 
