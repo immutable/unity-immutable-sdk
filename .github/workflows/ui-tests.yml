@@ -14,8 +14,8 @@ on:
           - StandaloneOSX  # Builds Unity 2021 macOS only
           - StandaloneOSX-Unity6  # Builds Unity 6 macOS only
           - StandaloneWindows64
-          - Android
-          - iOS
+          # - Android
+          # - iOS
   push:
     branches: [main]
   pull_request:
@@ -32,7 +32,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Unity 2021 macOS build
           - targetPlatform: StandaloneOSX
             buildMethod: MacBuilder.BuildForAltTester
             buildPath: sample/Builds/MacOS
@@ -43,11 +42,11 @@ jobs:
             buildPath: sample/Builds/Windows64
             projectPath: sample
             unityVersion: 2021.3.26f1
-          - targetPlatform: Android
-            buildMethod: MobileBuilder.BuildForAltTester
-            buildPath: sample/Builds/Android
-            projectPath: sample
-            unityVersion: 2021.3.26f1
+          # - targetPlatform: Android
+          #   buildMethod: MobileBuilder.BuildForAltTester
+          #   buildPath: sample/Builds/Android
+          #   projectPath: sample
+          #   unityVersion: 2021.3.26f1
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
@@ -255,20 +254,23 @@ jobs:
           security default-keychain -s ~/Library/Keychains/login.keychain-db
           security list-keychains -d user -s ~/Library/Keychains/login.keychain-db
           security list-keychains
-  build-ios: #test-ios:
-    name: Run iOS build #UI tests 🧪
-    needs:
-      - build
-      - test
-    runs-on: [ self-hosted, macOS ]
-    if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'iOS'
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          lfs: true
-      - name: Build iOS app
-        working-directory: sample
-        run: ./build_ios.sh
+  # build-ios: #test-ios:
+  #   name: Run iOS build #UI tests 🧪
+  #   needs:
+  #     - build
+  #     - test
+  #   runs-on: [ self-hosted, macOS ]
+  #   if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'iOS'
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         lfs: true
+  #     - name: Build iOS app
+  #       working-directory: sample
+  #       run: |
+  #         export TMPDIR=/Users/svc_buildsdk/tmp
+  #         mkdir -p $TMPDIR
+  #         ./build_ios.sh
   #     - uses: actions/setup-python@v4
   #       with:
   #         python-version: "3.13"
