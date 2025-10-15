@@ -1,5 +1,4 @@
 using System;
-using AltWebSocketSharp;
 using Immutable.Marketplace;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -29,10 +28,10 @@ public class BridgeScript : MonoBehaviour
             environment: environment,
             queryParams: new BridgeQueryParams
             {
-                FromTokenAddress = FromTokenAddress.text.IsNullOrEmpty() ? null : FromTokenAddress.text,
-                FromChainID = FromChain.text.IsNullOrEmpty() ? null : FromChain.text,
-                ToTokenAddress = ToTokenAddress.text.IsNullOrEmpty() ? null : ToTokenAddress.text,
-                ToChainID = ToChain.text.IsNullOrEmpty() ? null : ToChain.text
+                FromTokenAddress = string.IsNullOrEmpty(FromTokenAddress.text) ? null : FromTokenAddress.text,
+                FromChainID = string.IsNullOrEmpty(FromChain.text) ? null : FromChain.text,
+                ToTokenAddress = string.IsNullOrEmpty(ToTokenAddress.text) ? null : ToTokenAddress.text,
+                ToChainID = string.IsNullOrEmpty(ToChain.text) ? null : ToChain.text
             }
         );
 
