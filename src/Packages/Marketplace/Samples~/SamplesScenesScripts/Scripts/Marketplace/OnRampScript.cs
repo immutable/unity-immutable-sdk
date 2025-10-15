@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using AltWebSocketSharp;
 using Immutable.Marketplace;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -34,7 +33,7 @@ public class OnRampScript : MonoBehaviour
     /// </summary>
     private void ValidateInputFields()
     {
-        OpenButton.interactable = !EmailInput.text.IsNullOrEmpty() && !AddressInput.text.IsNullOrEmpty();
+        OpenButton.interactable = !string.IsNullOrEmpty(EmailInput.text) && !string.IsNullOrEmpty(AddressInput.text);
     }
 
     /// <summary>
@@ -53,10 +52,10 @@ public class OnRampScript : MonoBehaviour
             walletAddress: walletAddress,
             queryParams: new OnRampQueryParams
             {
-                DefaultFiatCurrency = FiatCurrencyInput.text.IsNullOrEmpty() ? "USD" : FiatCurrencyInput.text,
-                DefaultFiatAmount = FiatAmountInput.text.IsNullOrEmpty() ? "50" : FiatAmountInput.text,
-                DefaultCryptoCurrency = CryptoCurrency.text.IsNullOrEmpty() ? "IMX" : CryptoCurrency.text,
-                CryptoCurrencyList = CryptoCurrencyList.text.IsNullOrEmpty() ? "imx,eth,usdc" : CryptoCurrencyList.text
+                DefaultFiatCurrency = string.IsNullOrEmpty(FiatCurrencyInput.text) ? "USD" : FiatCurrencyInput.text,
+                DefaultFiatAmount = string.IsNullOrEmpty(FiatAmountInput.text) ? "50" : FiatAmountInput.text,
+                DefaultCryptoCurrency = string.IsNullOrEmpty(CryptoCurrency.text) ? "IMX" : CryptoCurrency.text,
+                CryptoCurrencyList = string.IsNullOrEmpty(CryptoCurrencyList.text) ? "imx,eth,usdc" : CryptoCurrencyList.text
             },
             extraQueryParams: new Dictionary<string, string> {
                 {"themeColor", "000000"}
