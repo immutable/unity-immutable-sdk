@@ -261,7 +261,7 @@ namespace Immutable.Browser.Gree
             webView.Call("Init", ua);
             webView.Call("setCallback", new AndroidCallback((message) => handleMessage(message)));
 #else
-            Logger.Error("Webview is not supported on this platform.");
+            PassportLogger.Error("Webview is not supported on this platform.");
 #endif
         }
 
