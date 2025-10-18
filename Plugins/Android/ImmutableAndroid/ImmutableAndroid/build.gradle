@@ -7,7 +7,7 @@ android {
     compileSdk 33
 
     defaultConfig {
-        minSdk 28  // Android 9+ required for Credential Manager
+        minSdk 28  // Android 9+ (matches Unity SDK minimum requirement)
 
         consumerProguardFiles "consumer-rules.pro"
     }
@@ -26,11 +26,6 @@ android {
 
 dependencies {
     implementation 'androidx.browser:browser:1.5.0'
-
-    // Google Credential Manager for native One Tap sign-in (no browser)
-    implementation 'androidx.credentials:credentials:1.3.0'
-    implementation 'androidx.credentials:credentials-play-services-auth:1.3.0'
-    implementation 'com.google.android.libraries.identity.googleid:googleid:1.1.1'
 
     // Google Play Services for diagnostics
     implementation 'com.google.android.gms:play-services-base:18.5.0'
