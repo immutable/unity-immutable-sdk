@@ -65,7 +65,7 @@ Immutable X is open to all to build on, with no approvals required. If you want 
 
 To get help from other developers, discuss ideas, and stay up-to-date on what's happening, become a part of our community on Discord.
 
-[Join us on Discord](https://discord.gg/TkVumkJ9D6)
+[Join us on Discord](https://discord.com/invite/Dmhp398dna)
 
 #### Still need help?
 
