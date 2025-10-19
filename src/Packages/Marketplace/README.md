@@ -14,4 +14,4 @@ The Immutable SDK Marketplace package for Unity simplifies integrating marketpla
 
 ## Documentation  
 
-- [Immutable zkEVM Documentation](https://docs.immutable.com/docs/zkEVM/sdks/unity)
+- [Immutable zkEVM Documentation](https://docs.immutable.com/reference/unity/)
