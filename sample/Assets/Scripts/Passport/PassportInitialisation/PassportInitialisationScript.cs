@@ -56,7 +56,7 @@ public class PassportInitialisationScript : MonoBehaviour
             SampleAppManager.PassportInstance = passport;
 
             // Navigate to the unauthenticated scene after initialising Passport
-            SceneManager.LoadScene("UnauthenticatedScene");
+            //SceneManager.LoadScene("UnauthenticatedScene");
         }
         catch (Exception ex)
         {
