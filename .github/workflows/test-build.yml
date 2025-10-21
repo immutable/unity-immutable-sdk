@@ -44,6 +44,37 @@ jobs:
         with:
           name: Coverage results
           path: ${{ steps.passportTest.outputs.coveragePath }}
+  test-unity6:
+    if: github.event.pull_request.head.repo.fork == false
+    name: Test Unity 6 sample app 🛠️
+    runs-on: ubuntu-latest-8-cores
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          lfs: true
+      - run: git lfs pull
+      - uses: game-ci/unity-test-runner@v4
+        id: unity6Test
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        with:
+          unityVersion: 6000.0.58f1
+          projectPath: './sample-unity6'
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          testMode: 'EditMode'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Unity6-Test-results
+          path: ${{ steps.unity6Test.outputs.artifactsPath }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Unity6-Coverage-results
+          path: ${{ steps.unity6Test.outputs.coveragePath }}
+
   build:
     needs: test
     name: Build for ${{ matrix.targetPlatform }}
@@ -89,4 +120,41 @@ jobs:
         if: always()
         with:
           name: Build-${{ matrix.targetPlatform }}
+          path: build
+
+  build-unity6:
+    needs: test-unity6
+    name: Build Unity 6 for ${{ matrix.targetPlatform }}
+    runs-on: ubuntu-latest-8-cores
+    strategy:
+      fail-fast: false
+      matrix:
+        targetPlatform:
+          - iOS
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+      - uses: actions/cache@v3
+        with:
+          path: Library
+          key:
+            Library-Unity6-${{ matrix.targetPlatform }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-Unity6-${{ matrix.targetPlatform }}
+            Library-
+      - uses: game-ci/unity-builder@v4
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        with:
+          unityVersion: 6000.0.58f1
+          targetPlatform: ${{ matrix.targetPlatform }}
+          projectPath: sample-unity6
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Build-Unity6-${{ matrix.targetPlatform }}
           path: build
