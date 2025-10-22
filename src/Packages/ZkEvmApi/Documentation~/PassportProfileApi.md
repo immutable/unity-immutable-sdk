@@ -386,8 +386,6 @@ void (empty response body)
 |-------------|-------------|------------------|
 | **200** | OK |  -  |
 | **400** | BadRequestError |  -  |
-| **401** | UnauthorizedError |  -  |
-| **403** | ForbiddenError |  -  |
 | **429** | TooManyRequestsError |  -  |
 | **500** | InternalServerError |  -  |
 
