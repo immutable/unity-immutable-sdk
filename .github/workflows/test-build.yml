@@ -60,7 +60,7 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         with:
-          unityVersion: 6000.0.58f1
+          unityVersion: 6000.0.58f2
           projectPath: './sample-unity6'
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           testMode: 'EditMode'
@@ -131,6 +131,7 @@ jobs:
       matrix:
         targetPlatform:
           - iOS
+          - Android
     steps:
       - uses: actions/checkout@v4
         with:
@@ -150,7 +151,7 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         with:
-          unityVersion: 6000.0.58f1
+          unityVersion: 6000.0.58f2
           targetPlatform: ${{ matrix.targetPlatform }}
           projectPath: sample-unity6
       - uses: actions/upload-artifact@v4
