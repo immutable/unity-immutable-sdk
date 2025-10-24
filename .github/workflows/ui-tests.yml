@@ -110,7 +110,7 @@ jobs:
           export TMPDIR="/Users/svc_buildsdk/tmp"
           mkdir -p "$TMPDIR"
           mkdir -p sample-unity6/Tests
-          /Applications/Unity/Hub/Editor/6000.0.58f1/Unity.app/Contents/MacOS/Unity -projectPath "${{ github.workspace }}/sample-unity6" -executeMethod "MacBuilderUnity6.BuildForAltTester" -logFile "${{ github.workspace }}/sample-unity6/first-build-log.txt" -quit -batchmode --buildPath "${{ github.workspace }}/sample-unity6/Tests/Sample Unity 6 macOS" || true
+          /Applications/Unity/Hub/Editor/6000.0.58f2/Unity.app/Contents/MacOS/Unity -projectPath "${{ github.workspace }}/sample-unity6" -executeMethod "MacBuilderUnity6.BuildForAltTester" -logFile "${{ github.workspace }}/sample-unity6/first-build-log.txt" -quit -batchmode --buildPath "${{ github.workspace }}/sample-unity6/Tests/Sample Unity 6 macOS" || true
           
           echo "First build completed (may have failed, that's ok). Checking for AltTester..."
           if ls -la "${{ github.workspace }}/sample-unity6/Library/PackageCache/" | grep alttester; then
@@ -124,7 +124,7 @@ jobs:
           export TMPDIR="/Users/svc_buildsdk/tmp"
           mkdir -p "$TMPDIR"
           mkdir -p sample-unity6/Tests
-          /Applications/Unity/Hub/Editor/6000.0.58f1/Unity.app/Contents/MacOS/Unity -projectPath "${{ github.workspace }}/sample-unity6" -executeMethod "MacBuilderUnity6.BuildForAltTester" -logFile "${{ github.workspace }}/sample-unity6/build-log.log" -quit -batchmode --buildPath "${{ github.workspace }}/sample-unity6/Tests/Sample Unity 6 macOS"
+          /Applications/Unity/Hub/Editor/6000.0.58f2/Unity.app/Contents/MacOS/Unity -projectPath "${{ github.workspace }}/sample-unity6" -executeMethod "MacBuilderUnity6.BuildForAltTester" -logFile "${{ github.workspace }}/sample-unity6/build-log.log" -quit -batchmode --buildPath "${{ github.workspace }}/sample-unity6/Tests/Sample Unity 6 macOS"
           
           echo "Build completed. Checking for build output..."
           ls -la sample-unity6/Tests/
