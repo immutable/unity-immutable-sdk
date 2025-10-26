@@ -521,7 +521,10 @@ namespace Immutable.Passport
         {
             var json = JsonUtility.ToJson(request);
             var callResponse = await _communicationsManager.Call(PassportFunction.STORE_TOKENS, json);
-            return callResponse.GetBoolResponse() ?? false;
+            // storeTokens returns success:true with result:{sub, email}, not a boolean result
+            // So check the success field instead of trying to parse result as boolean
+            var response = callResponse.OptDeserializeObject<BrowserResponse>();
+            return response?.success ?? false;
         }
 
         public async UniTask<string?> GetAddress()

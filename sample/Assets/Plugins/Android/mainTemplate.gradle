@@ -17,6 +17,9 @@ dependencies {
     // Auth0 Android SDK for native social authentication
     implementation('com.auth0.android:auth0:2.10.2')
 
+    // OkHttp for direct HTTP requests to Auth0 API
+    implementation('com.squareup.okhttp3:okhttp:4.12.0')
+
     // Kotlin coroutines for async operations
     implementation('org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3')
     implementation('org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3')
@@ -34,10 +37,23 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
+    // Kotlin configuration for Auth0 SDK compatibility (Kotlin 1.9.0 metadata)
+    kotlinOptions {
+        jvmTarget = '1.8'
+        freeCompilerArgs += ['-Xskip-metadata-version-check']
+    }
+
     defaultConfig {
 **DEFAULT_CONFIG_SETUP**
         minSdk **MINSDK**
         targetSdk **TARGETSDK**
+
+        // Auth0 manifest placeholders for deep linking
+        manifestPlaceholders = [
+            'auth0Domain': 'prod.immutable.auth0app.com',
+            'auth0Scheme': 'https'
+        ]
+
         ndk {
             debugSymbolLevel **DEBUGSYMBOLLEVEL**
             abiFilters **ABIFILTERS**

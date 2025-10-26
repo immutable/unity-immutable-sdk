@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
+using Immutable.Passport.Model;
 
 #if UNITY_ANDROID && !UNITY_EDITOR
 using UnityEngine.Android;

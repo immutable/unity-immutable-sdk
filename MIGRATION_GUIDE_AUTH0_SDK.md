@@ -93,7 +93,7 @@ Allow Sign-ups: Yes
 Sync user profile attributes: Yes
 
 # Advanced Settings
-Client ID: 182709567437-juu00150qf2mfcmi833m3lvajsabjngv.apps.googleusercontent.com (Web Client ID)
+Client ID: 410239185541-kgflh9f9g1a0r2vrs7ilto5f8521od77.apps.googleusercontent.com (Web Client ID)
 Client Secret: [from Google OAuth Console]
 
 # Attributes
@@ -107,7 +107,7 @@ Scopes: openid, profile, email
 Enable Native Social Login: ✅ YES ← CRITICAL
 
 # Allowed Mobile Client IDs
-Add: 182709567437-6t4eclvgk9381clhfelqe7bgf3ahr7gv.apps.googleusercontent.com (Android Client ID)
+Add: 410239185541-hkielganvnnvgmd40iep6c630d15bfr4.apps.googleusercontent.com (Android Client ID)
 ```
 
 **Why "Allowed Mobile Client IDs"?**
@@ -302,7 +302,7 @@ class Auth0NativeHelper(
         private const val AUTH0_CLIENT_ID = "mp6rxfMDwwZDogcdgNrAaHnG0qMlXuMK"
 
         // Google OAuth Configuration
-        private const val GOOGLE_WEB_CLIENT_ID = "182709567437-juu00150qf2mfcmi833m3lvajsabjngv.apps.googleusercontent.com"
+        private const val GOOGLE_WEB_CLIENT_ID = "410239185541-kgflh9f9g1a0r2vrs7ilto5f8521od77.apps.googleusercontent.com"
 
         // Unity Callback
         private const val UNITY_GAME_OBJECT = "PassportManager"

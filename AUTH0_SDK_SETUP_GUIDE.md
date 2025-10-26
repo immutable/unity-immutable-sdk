@@ -29,7 +29,7 @@ Connection Name: google
 Status: ✅ Enabled
 
 # Basic Settings
-Client ID: 182709567437-juu00150qf2mfcmi833m3lvajsabjngv.apps.googleusercontent.com
+Client ID: 410239185541-kgflh9f9g1a0r2vrs7ilto5f8521od77.apps.googleusercontent.com
 Client Secret: [from Google OAuth Console]
 
 # Attributes
@@ -54,7 +54,7 @@ Scroll to **Advanced Settings** → **Native Social Login**:
 Enable Native Social Login: ✅ YES
 
 Allowed Mobile Client IDs:
-  - 182709567437-6t4eclvgk9381clhfelqe7bgf3ahr7gv.apps.googleusercontent.com
+  - 410239185541-hkielganvnnvgmd40iep6c630d15bfr4.apps.googleusercontent.com
     (This is your Android Client ID)
 ```
 

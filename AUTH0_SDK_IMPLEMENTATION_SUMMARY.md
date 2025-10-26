@@ -168,7 +168,7 @@ Follow: `AUTH0_SDK_SETUP_GUIDE.md`
 **Required Steps:**
 1. **Enable Google Connection** (Auth0 Dashboard → Authentication → Social → Google)
 2. **Enable Native Social Login** (Google Connection → Advanced Settings → Enable)
-3. **Add Android Client ID to Allowed List** (Add `182709567437-6t4eclvgk9381clhfelqe7bgf3ahr7gv.apps.googleusercontent.com`)
+3. **Add Android Client ID to Allowed List** (Add `410239185541-hkielganvnnvgmd40iep6c630d15bfr4.apps.googleusercontent.com`)
 4. **Create Auth0 Action** for custom logic (ban checks, custom claims, logging)
 5. **Deploy Action to Login Flow** (Actions → Flows → Login)
 

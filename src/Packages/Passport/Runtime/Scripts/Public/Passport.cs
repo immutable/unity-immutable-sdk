@@ -384,8 +384,8 @@ namespace Immutable.Passport
                 throw new PassportException($"Auth0 native login failed: {ex.Message}", PassportErrorType.AUTHENTICATION_ERROR);
             }
 #else
-            PassportLogger.Warning($"{TAG} Auth0 native login is only available on Android");
-            throw new PassportException("Auth0 native login is only available on Android", PassportErrorType.NOT_SUPPORTED);
+            PassportLogger.Warn($"{TAG} Auth0 native login is only available on Android");
+            throw new PassportException("Auth0 native login is only available on Android", PassportErrorType.OPERATION_NOT_SUPPORTED_ERROR);
 #endif
         }
 

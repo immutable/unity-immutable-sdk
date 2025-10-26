@@ -17,12 +17,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
-// Auth0 SDK imports
+// Auth0 SDK imports (not using AuthenticationAPIClient anymore - direct HTTP instead)
 import com.auth0.android.Auth0
-import com.auth0.android.authentication.AuthenticationAPIClient
-import com.auth0.android.authentication.AuthenticationException
-import com.auth0.android.callback.Callback
-import com.auth0.android.result.Credentials
+
+// OkHttp for direct API calls
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
+import java.util.UUID
 
 /**
  * Auth0 Native Social Authentication Helper
@@ -50,9 +55,12 @@ class Auth0NativeHelper(
         private const val AUTH0_CLIENT_ID = "mp6rxfMDwwZDogcdgNrAaHnG0qMlXuMK"
 
         // Google OAuth Configuration
-        // IMPORTANT: Use WEB Client ID (not Android Client ID) for serverClientId
-        // This must match the "Allowed Mobile Client IDs" in Auth0 Google connection
-        private const val GOOGLE_WEB_CLIENT_ID = "182709567437-juu00150qf2mfcmi833m3lvajsabjngv.apps.googleusercontent.com"
+        // IMPORTANT: Use WEB Client ID for serverClientId (required by Credential Manager)
+        // Android Client ID is used internally by Google for APK signature validation
+        private const val GOOGLE_WEB_CLIENT_ID = "410239185541-kgflh9f9g1a0r2vrs7ilto5f8521od77.apps.googleusercontent.com"
+
+        // Android Client ID - must be in Auth0's "Allowed Mobile Client IDs"
+        private const val GOOGLE_ANDROID_CLIENT_ID = "410239185541-hkielganvnnvgmd40iep6c630d15bfr4.apps.googleusercontent.com"
 
         // Unity Callback Configuration
         private const val UNITY_GAME_OBJECT = "PassportManager"
@@ -78,8 +86,7 @@ class Auth0NativeHelper(
     }
 
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
-    private val auth0 = Auth0(AUTH0_CLIENT_ID, AUTH0_DOMAIN)
-    private val authClient = AuthenticationAPIClient(auth0)
+    private val httpClient = OkHttpClient()
 
     /**
      * Launch native Google account picker and authenticate with Auth0
@@ -87,7 +94,6 @@ class Auth0NativeHelper(
      * This is the main entry point called from Unity.
      * Flow is asynchronous - result returned via Unity callbacks.
      */
-    @JvmStatic
     fun loginWithGoogle() {
         Log.d(TAG, "loginWithGoogle called")
 
@@ -134,10 +140,15 @@ class Auth0NativeHelper(
     private suspend fun getGoogleIdTokenFromCredentialManager(): String {
         val credentialManager = CredentialManager.create(activity)
 
+        // Generate nonce for security (required by Auth0)
+        val nonce = UUID.randomUUID().toString()
+        Log.d(TAG, "Generated nonce for credential request")
+
         // Configure Google ID credential request
         val googleIdOption = GetGoogleIdOption.Builder()
             .setFilterByAuthorizedAccounts(false)  // Show all Google accounts on device
             .setServerClientId(GOOGLE_WEB_CLIENT_ID)  // Web Client ID for backend validation
+            .setNonce(nonce)  // Add nonce for Auth0 verification
             .setAutoSelectEnabled(false)  // Don't auto-select account (user must choose)
             .build()
 
@@ -184,92 +195,114 @@ class Auth0NativeHelper(
     }
 
     /**
-     * Authenticate with Auth0 using Google ID token
+     * Authenticate with Auth0 using Google ID token via direct HTTP POST
      *
-     * Auth0 SDK handles:
-     * - JWT signature verification
-     * - Token audience validation
-     * - User creation/lookup
-     * - Running Auth0 Actions (custom logic)
-     * - Token issuance
+     * Makes OAuth 2.0 Token Exchange request directly to Auth0's /oauth/token endpoint
+     * This bypasses Auth0 SDK limitations with native social login
      *
      * @param googleIdToken Google ID token (JWT)
      */
     private fun authenticateWithAuth0(googleIdToken: String) {
-        Log.d(TAG, "Calling Auth0.loginWithNativeSocialToken...")
+        Log.d(TAG, "Calling Auth0 /oauth/token endpoint...")
 
-        authClient
-            .loginWithNativeSocialToken(googleIdToken, "google")
-            .start(object : Callback<Credentials, AuthenticationException> {
-                override fun onSuccess(credentials: Credentials) {
+        scope.launch(Dispatchers.IO) {
+            try {
+                // Build JSON request body for Auth0 native social login
+                // Auth0 expects specific format for Google ID token exchange
+                val requestBody = JSONObject().apply {
+                    put("grant_type", "urn:ietf:params:oauth:grant-type:token-exchange")
+                    put("subject_token", googleIdToken)
+                    put("subject_token_type", "http://auth0.com/oauth/token-type/google-id-token")
+                    put("client_id", AUTH0_CLIENT_ID)
+                    put("scope", "openid profile email offline_access")
+                }.toString()
+
+                val mediaType = "application/json; charset=utf-8".toMediaType()
+                val body = requestBody.toRequestBody(mediaType)
+
+                // Make HTTP POST request to Auth0
+                val request = Request.Builder()
+                    .url("https://$AUTH0_DOMAIN/oauth/token")
+                    .post(body)
+                    .build()
+
+                val response = httpClient.newCall(request).execute()
+                val responseBody = response.body?.string() ?: ""
+
+                if (response.isSuccessful) {
+                    // Parse successful response directly (don't use Credentials class - it has wrong field order)
+                    val json = JSONObject(responseBody)
+
                     Log.d(TAG, "Auth0 authentication successful")
-                    Log.d(TAG, "Access token received, expires in: ${credentials.expiresIn}")
+                    Log.d(TAG, "Access token length: ${json.optString("access_token").length}")
+                    Log.d(TAG, "ID token length: ${json.optString("id_token").length}")
+                    Log.d(TAG, "Token type: ${json.optString("token_type", "Bearer")}")
 
-                    sendSuccessToUnity(credentials)
-                }
+                    // Switch to Main thread for Unity callback
+                    scope.launch(Dispatchers.Main) {
+                        sendSuccessToUnity(json)
+                    }
+                } else {
+                    // Parse error response
+                    Log.e(TAG, "Auth0 authentication failed: HTTP ${response.code}")
+                    Log.e(TAG, "Response body: $responseBody")
 
-                override fun onFailure(error: AuthenticationException) {
-                    Log.e(TAG, "Auth0 authentication failed", error)
-                    Log.e(TAG, "Error code: ${error.getCode()}, Description: ${error.getDescription()}")
-
-                    // Provide user-friendly error messages
-                    val errorMessage = when {
-                        error.isBrowserAppNotAvailable ->
-                            "Browser not available on device"
-
-                        error.isNetworkError ->
-                            "Network error. Please check your internet connection."
-
-                        error.isAuthenticationError -> {
-                            val description = error.getDescription()
-                            when {
-                                description.contains("banned", ignoreCase = true) ||
-                                description.contains("suspended", ignoreCase = true) ->
-                                    "Account suspended: ${description}"
-
-                                description.contains("audience", ignoreCase = true) ->
-                                    "Configuration error. Please contact support."
-
-                                else ->
-                                    "Authentication failed: ${description}"
-                            }
-                        }
-
-                        else ->
-                            "Login failed: ${error.message ?: "Unknown error"}"
+                    val errorMessage = try {
+                        val json = JSONObject(responseBody)
+                        val error = json.optString("error", "unknown_error")
+                        val description = json.optString("error_description", "Authentication failed")
+                        "Authentication failed: $description ($error)"
+                    } catch (e: Exception) {
+                        "Authentication failed: HTTP ${response.code}"
                     }
 
-                    sendErrorToUnity(errorMessage)
+                    // Switch to Main thread for Unity callback
+                    scope.launch(Dispatchers.Main) {
+                        sendErrorToUnity(errorMessage)
+                    }
                 }
-            })
+            } catch (e: Exception) {
+                Log.e(TAG, "Error calling Auth0 API", e)
+                // Switch to Main thread for Unity callback
+                scope.launch(Dispatchers.Main) {
+                    sendErrorToUnity("Network error: ${e.message}")
+                }
+            }
+        }
     }
 
     /**
      * Send authentication success result to Unity
      *
      * Serializes tokens to JSON and calls Unity callback via UnitySendMessage.
+     * Reads directly from Auth0 response JSON to avoid Credentials class parameter order bug.
      *
-     * @param credentials Auth0 credentials (access token, ID token, refresh token)
+     * @param authResponse Auth0 /oauth/token response JSON
      */
-    private fun sendSuccessToUnity(credentials: Credentials) {
-        val json = """
-            {
-                "access_token": "${credentials.accessToken}",
-                "id_token": "${credentials.idToken}",
-                "refresh_token": "${credentials.refreshToken ?: ""}",
-                "token_type": "${credentials.type}",
-                "expires_at": ${credentials.expiresAt.time},
-                "scope": "${credentials.scope ?: ""}"
-            }
-        """.trimIndent()
+    private fun sendSuccessToUnity(authResponse: JSONObject) {
+        // Build JSON for Unity directly from Auth0 response
+        // This bypasses the Auth0 SDK Credentials class which has incorrect parameter ordering
+        val unityJson = JSONObject().apply {
+            put("access_token", authResponse.optString("access_token", ""))
+            put("id_token", authResponse.optString("id_token", ""))
+            put("refresh_token", authResponse.optString("refresh_token", ""))
+            put("token_type", authResponse.optString("token_type", "Bearer"))
+            // Calculate expires_at from expires_in (Auth0 returns expiry in seconds)
+            val expiresIn = authResponse.optInt("expires_in", 3600)
+            put("expires_at", System.currentTimeMillis() + (expiresIn * 1000L))
+            put("scope", authResponse.optString("scope", ""))
+        }.toString()
 
         Log.d(TAG, "Sending success to Unity: ${UNITY_GAME_OBJECT}.${UNITY_SUCCESS_CALLBACK}")
+        Log.d(TAG, "Unity JSON payload length: ${unityJson.length} characters")
+        Log.d(TAG, "Unity JSON access_token length: ${authResponse.optString("access_token").length}")
+        Log.d(TAG, "Unity JSON id_token length: ${authResponse.optString("id_token").length}")
 
         try {
             UnityPlayer.UnitySendMessage(
                 UNITY_GAME_OBJECT,
                 UNITY_SUCCESS_CALLBACK,
-                json
+                unityJson
             )
         } catch (e: Exception) {
             Log.e(TAG, "Failed to send success to Unity", e)
