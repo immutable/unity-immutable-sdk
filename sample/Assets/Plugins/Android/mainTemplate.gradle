@@ -1,13 +1,32 @@
 apply plugin: 'com.android.library'
+apply from: '../shared/keepUnitySymbols.gradle'
 **APPLY_PLUGINS**
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation('androidx.browser:browser:1.5.0')
+
+    // Google Credential Manager for native One Tap sign-in
+    implementation('androidx.credentials:credentials:1.3.0')
+    implementation('androidx.credentials:credentials-play-services-auth:1.3.0')
+    implementation('com.google.android.libraries.identity.googleid:googleid:1.1.1')
+
+    // Google Play Services for diagnostics (required by ImmutableAndroid.aar)
+    implementation('com.google.android.gms:play-services-base:18.5.0')
+
+    // Auth0 Android SDK for native social authentication
+    implementation('com.auth0.android:auth0:2.10.2')
+
+    // Kotlin coroutines for async operations
+    implementation('org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3')
+    implementation('org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3')
 **DEPS**}
 
 android {
-    compileSdkVersion **APIVERSION**
+    namespace "com.unity3d.player"
+    ndkPath "**NDKPATH**"
+    ndkVersion "**NDKVERSION**"
+    compileSdk **APIVERSION**
     buildToolsVersion '**BUILDTOOLS**'
 
     compileOptions {
@@ -16,9 +35,11 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion **MINSDKVERSION**
-        targetSdkVersion **TARGETSDKVERSION**
+**DEFAULT_CONFIG_SETUP**
+        minSdk **MINSDK**
+        targetSdk **TARGETSDK**
         ndk {
+            debugSymbolLevel **DEBUGSYMBOLLEVEL**
             abiFilters **ABIFILTERS**
         }
         versionCode **VERSIONCODE**
@@ -26,14 +47,14 @@ android {
         consumerProguardFiles 'proguard-unity.txt'**USER_PROGUARD**
     }
 
-    lintOptions {
+    lint {
         abortOnError false
     }
 
-    aaptOptions {
+    androidResources {
         noCompress = **BUILTIN_NOCOMPRESS** + unityStreamingAssets.tokenize(', ')
         ignoreAssetsPattern = "!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~"
-    }**PACKAGING_OPTIONS**
+    }**PACKAGING**
 }**REPOSITORIES**
 **IL_CPP_BUILD_SETUP**
 **SOURCE_BUILD_SETUP**

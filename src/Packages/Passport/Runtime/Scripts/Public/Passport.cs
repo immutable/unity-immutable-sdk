@@ -328,6 +328,90 @@ namespace Immutable.Passport
         }
 
         /// <summary>
+        /// Logs in using Auth0 native social login (Android only).
+        ///
+        /// This method provides a seamless native authentication experience on Android:
+        /// - Shows native Google account picker (Android Credential Manager)
+        /// - Authenticates with Auth0 using Google ID token
+        /// - No browser/WebView required
+        /// - Supports biometric authentication
+        ///
+        /// Requires Android 9+ (API 28+) for full native experience.
+        /// </summary>
+        /// <returns>
+        /// True if authentication is successful, otherwise false.
+        /// </returns>
+        /// <exception cref="PassportException">
+        /// Thrown when authentication fails or is cancelled.
+        /// Common causes:
+        /// - User cancelled sign-in
+        /// - No Google account on device
+        /// - Network error
+        /// - Auth0 authentication failure
+        /// </exception>
+        public async UniTask<bool> LoginWithAuth0Native()
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            try
+            {
+                PassportLogger.Info($"{TAG} Starting Auth0 native login...");
+
+                // Get Auth0 credentials from Android native flow
+                var auth0Credentials = await Auth0NativeManager.Instance.LoginWithNative();
+
+                PassportLogger.Info($"{TAG} Auth0 authentication successful, storing tokens...");
+
+                // Convert Auth0 credentials to TokenResponse format
+                var tokenResponse = ConvertAuth0Credentials(auth0Credentials);
+
+                // Store tokens using existing CompleteLogin flow
+                var success = await CompleteLogin(tokenResponse);
+
+                if (success)
+                {
+                    PassportLogger.Info($"{TAG} Auth0 native login completed successfully");
+                }
+                else
+                {
+                    PassportLogger.Error($"{TAG} Failed to store Auth0 tokens");
+                }
+
+                return success;
+            }
+            catch (Exception ex)
+            {
+                PassportLogger.Error($"{TAG} Auth0 native login failed: {ex.Message}");
+                throw new PassportException($"Auth0 native login failed: {ex.Message}", PassportErrorType.AUTHENTICATION_ERROR);
+            }
+#else
+            PassportLogger.Warning($"{TAG} Auth0 native login is only available on Android");
+            throw new PassportException("Auth0 native login is only available on Android", PassportErrorType.NOT_SUPPORTED);
+#endif
+        }
+
+        /// <summary>
+        /// Converts Auth0 credentials to TokenResponse format.
+        /// </summary>
+        /// <param name="credentials">Auth0 credentials from native login</param>
+        /// <returns>TokenResponse compatible with Passport SDK</returns>
+        private TokenResponse ConvertAuth0Credentials(Auth0Credentials credentials)
+        {
+            // Convert expires_at (milliseconds timestamp) to expires_in (seconds from now)
+            var expiresAt = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                .AddMilliseconds(credentials.expires_at);
+            var expiresIn = (int)(expiresAt - DateTime.UtcNow).TotalSeconds;
+
+            return new TokenResponse
+            {
+                access_token = credentials.access_token ?? string.Empty,
+                id_token = credentials.id_token ?? string.Empty,
+                refresh_token = credentials.refresh_token ?? string.Empty,
+                token_type = credentials.token_type ?? "Bearer",
+                expires_in = Math.Max(0, expiresIn) // Ensure non-negative
+            };
+        }
+
+        /// <summary>
         /// Gets the wallet address of the logged in user.
         /// <returns>
         /// The wallet address

@@ -5,3 +5,11 @@
 -dontwarn androidx.**
 -keep class androidx.** { *; }
 -keep interface androidx.** { *; }
+
+# Keep Credential Manager classes
+-keep class androidx.credentials.** { *; }
+-keep interface androidx.credentials.** { *; }
+
+# Keep Google Identity classes
+-keep class com.google.android.libraries.identity.googleid.** { *; }
+-keep interface com.google.android.libraries.identity.googleid.** { *; }
