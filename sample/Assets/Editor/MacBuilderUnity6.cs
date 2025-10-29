@@ -64,7 +64,7 @@ public class MacBuilderUnity6
             {
                 buildProfile = buildProfile,
                 locationPathName = buildPath,
-                options = setupForAltTester ? (BuildOptions.Development | BuildOptions.IncludeTestAssemblies) : BuildOptions.None
+                options = setupForAltTester ? (BuildOptions.Development | BuildOptions.IncludeTestAssemblies | BuildOptions.AutoRunPlayer) : BuildOptions.None
             };
 
             Debug.Log($"Build options: {options.options}");
@@ -82,12 +82,6 @@ public class MacBuilderUnity6
                 EditorApplication.Exit(1);
             }
 
-            // Restore Build Profile to original state (empty scenes)
-            Debug.Log("Restoring Build Profile to original state...");
-            buildProfile.scenes = new EditorBuildSettingsScene[0];
-            EditorUtility.SetDirty(buildProfile);
-            AssetDatabase.SaveAssets();
-            Debug.Log("Build Profile restored");
 
             if (setupForAltTester)
             {

@@ -82,12 +82,6 @@ public class WindowsBuilderUnity6
                 EditorApplication.Exit(1);
             }
 
-            // Restore Build Profile to original state (empty scenes)
-            Debug.Log("Restoring Build Profile to original state...");
-            buildProfile.scenes = new EditorBuildSettingsScene[0];
-            EditorUtility.SetDirty(buildProfile);
-            AssetDatabase.SaveAssets();
-            Debug.Log("Build Profile restored");
 
             if (setupForAltTester)
             {
