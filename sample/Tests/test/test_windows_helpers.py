@@ -740,12 +740,12 @@ def setup_protocol_association():
     
     # Find the Unity sample app executable
     $sampleAppPath = "C:\\Immutable\\unity-immutable-sdk\\sample\\build\\{product_name}.exe"
-    if (Test-Path $sampleAppPath) {
+    if (Test-Path $sampleAppPath) {{
         Set-ItemProperty -Path $commandKey -Name "(Default)" -Value "`"$sampleAppPath`" `"%1`""
         Write-Host "Protocol association set up successfully"
-    } else {
+    }} else {{
         Write-Host "Sample app not found at expected path"
-    }
+    }}
     '''
     
     try:
