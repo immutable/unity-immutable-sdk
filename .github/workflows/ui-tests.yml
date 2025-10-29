@@ -223,24 +223,23 @@ jobs:
           Write-Output "Removing Library folder to force clean package resolution..."
           if (Test-Path "sample-unity6/Library") { Remove-Item -Recurse -Force "sample-unity6/Library" }
           Write-Output "✅ Library folder removed"
-      - name: First build (resolves packages)
+      - name: Ensure Tests directory exists
         run: |
-          Write-Output "Running first build to trigger package resolution..."
-          # Don't create Tests directory - it should be a symlink from setup-symlinks.ps1
-          # Verify the symlink exists
-          if (Test-Path "sample-unity6/Tests") {
+          Write-Output "Ensuring Tests directory/symlink exists..."
+          if (-not (Test-Path "sample-unity6/Tests")) {
+            Write-Output "Creating Tests directory..."
+            New-Item -ItemType Directory -Path "sample-unity6/Tests" -Force
+          } else {
             $item = Get-Item "sample-unity6/Tests"
             if ($item.LinkType) {
               Write-Output "✅ Tests is a symlink to: $($item.Target)"
             } else {
-              Write-Output "⚠️ Tests exists but is not a symlink"
+              Write-Output "✅ Tests directory exists"
             }
-          } else {
-            Write-Output "⚠️ Tests symlink not found, creating directory"
-            New-Item -ItemType Directory -Path "sample-unity6/Tests"
           }
-          
-          Write-Output ""
+      - name: First build (resolves packages)
+        run: |
+          Write-Output "Running first build to trigger package resolution..."
           Write-Output "Unity command: C:\Program Files\Unity\Hub\Editor\6000.0.58f2\Editor\Unity.exe"
           Write-Output "Project path: ${{ github.workspace }}\sample-unity6"
           Write-Output "Build method: WindowsBuilderUnity6.BuildForAltTester"
@@ -269,24 +268,32 @@ jobs:
       - name: Build Unity 6 Windows with command line (second build with packages ready)
         run: |
           Write-Output "Building Unity 6 Windows using command line (second attempt)..."
-          # Don't create Tests directory - it should already exist from first build or be a symlink
-          if (-not (Test-Path "sample-unity6/Tests")) {
-            Write-Output "⚠️ Tests directory/symlink not found, creating directory"
-            New-Item -ItemType Directory -Path "sample-unity6/Tests"
-          }
-          
           Write-Output "Starting Unity build..."
           & "C:\Program Files\Unity\Hub\Editor\6000.0.58f2\Editor\Unity.exe" -projectPath "${{ github.workspace }}\sample-unity6" -executeMethod "WindowsBuilderUnity6.BuildForAltTester" -logFile "${{ github.workspace }}\sample-unity6\build-log.log" -quit -batchmode -nographics --buildPath "${{ github.workspace }}\sample-unity6\Tests\Sample Unity 6 Windows.exe"
           $buildExitCode = $LASTEXITCODE
           
           Write-Output ""
           Write-Output "Build completed with exit code: $buildExitCode"
+          
+          # Wait a moment for file system to settle
+          Start-Sleep -Seconds 2
+          
           Write-Output ""
           Write-Output "Build log (last 100 lines):"
-          if (Test-Path "${{ github.workspace }}\sample-unity6\build-log.log") {
-            Get-Content "${{ github.workspace }}\sample-unity6\build-log.log" -Tail 100
+          $logPath = "${{ github.workspace }}\sample-unity6\build-log.log"
+          if (Test-Path $logPath) {
+            Write-Output "Log file found at: $logPath"
+            Get-Content $logPath -Tail 100
           } else {
-            Write-Output "⚠️ Log file not found at: ${{ github.workspace }}\sample-unity6\build-log.log"
+            Write-Output "⚠️ Log file not found at: $logPath"
+            Write-Output "Checking current directory..."
+            if (Test-Path "sample-unity6\build-log.log") {
+              Write-Output "Found in relative path!"
+              Get-Content "sample-unity6\build-log.log" -Tail 100
+            } else {
+              Write-Output "Listing sample-unity6 directory:"
+              Get-ChildItem "sample-unity6" -File | Where-Object { $_.Name -like "*.log" -or $_.Name -like "*.txt" } | Format-Table Name, Length, LastWriteTime
+            }
           }
           
           Write-Output ""
@@ -294,24 +301,71 @@ jobs:
           Get-ChildItem sample-unity6/Tests/ -ErrorAction SilentlyContinue
           
           Write-Output ""
-          if (Test-Path "${{ github.workspace }}\sample-unity6\Tests\Sample Unity 6 Windows.exe") {
-            Write-Output "✅ Build succeeded! Executable found at: ${{ github.workspace }}\sample-unity6\Tests\Sample Unity 6 Windows.exe"
-            $fileSize = (Get-Item "${{ github.workspace }}\sample-unity6\Tests\Sample Unity 6 Windows.exe").Length / 1MB
-            Write-Output "File size: $([math]::Round($fileSize, 2)) MB"
-          } else {
-            Write-Output "❌ Build failed! Executable not found at: ${{ github.workspace }}\sample-unity6\Tests\Sample Unity 6 Windows.exe"
+          Write-Output "Searching for executable..."
+          $exePaths = @(
+            "${{ github.workspace }}\sample-unity6\Tests\Sample Unity 6 Windows.exe",
+            "sample-unity6\Tests\Sample Unity 6 Windows.exe",
+            "${{ github.workspace }}\sample\Tests\Sample Unity 6 Windows.exe",
+            "sample\Tests\Sample Unity 6 Windows.exe"
+          )
+          
+          $exeFound = $false
+          foreach ($path in $exePaths) {
+            if (Test-Path $path) {
+              Write-Output "✅ Build succeeded! Executable found at: $path"
+              $fileSize = (Get-Item $path).Length / 1MB
+              Write-Output "File size: $([math]::Round($fileSize, 2)) MB"
+              $exeFound = $true
+              break
+            } else {
+              Write-Output "Not found: $path"
+            }
+          }
+          
+          if (-not $exeFound) {
+            Write-Output ""
+            Write-Output "❌ Build failed! Executable not found in any expected location"
             Write-Output ""
             Write-Output "Full build log:"
             if (Test-Path "${{ github.workspace }}\sample-unity6\build-log.log") {
               Get-Content "${{ github.workspace }}\sample-unity6\build-log.log"
+            } elseif (Test-Path "sample-unity6\build-log.log") {
+              Get-Content "sample-unity6\build-log.log"
+            } else {
+              Write-Output "⚠️ Build log not found"
             }
             exit 1
           }
       - uses: actions/setup-python@v4
         with:
           python-version: "3.13"
+      - name: Verify test files are accessible
+        run: |
+          Write-Output "Checking for test files in sample-unity6/Tests..."
+          if (Test-Path "sample-unity6/Tests/requirements-desktop.txt") {
+            Write-Output "✅ requirements-desktop.txt found"
+          } else {
+            Write-Output "⚠️ requirements-desktop.txt not found, trying sample/Tests..."
+            if (Test-Path "sample/Tests/requirements-desktop.txt") {
+              Write-Output "✅ Found in sample/Tests"
+            } else {
+              Write-Output "❌ requirements-desktop.txt not found"
+              exit 1
+            }
+          }
+          if (Test-Path "sample-unity6/Tests/test") {
+            Write-Output "✅ test directory found"
+          } else {
+            Write-Output "⚠️ test directory not found in sample-unity6/Tests"
+          }
       - name: Install dependencies
-        run: pip install -r sample-unity6/Tests/requirements-desktop.txt
+        run: |
+          if (Test-Path "sample-unity6/Tests/requirements-desktop.txt") {
+            pip install -r sample-unity6/Tests/requirements-desktop.txt
+          } else {
+            Write-Output "Installing from sample/Tests instead..."
+            pip install -r sample/Tests/requirements-desktop.txt
+          }
       - name: Run UI tests
         env: 
           UNITY_APP_PATH: Sample Unity 6 Windows.exe

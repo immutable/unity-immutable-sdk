@@ -64,7 +64,7 @@ public class WindowsBuilderUnity6
             {
                 buildProfile = buildProfile,
                 locationPathName = buildPath,
-                options = setupForAltTester ? (BuildOptions.Development | BuildOptions.IncludeTestAssemblies | BuildOptions.AutoRunPlayer) : BuildOptions.None
+                options = setupForAltTester ? (BuildOptions.Development | BuildOptions.IncludeTestAssemblies) : BuildOptions.None
             };
 
             Debug.Log($"Build options: {options.options}");
