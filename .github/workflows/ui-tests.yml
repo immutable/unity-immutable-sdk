@@ -203,58 +203,57 @@ jobs:
         run: .\setup-symlinks.ps1
       - name: Verify symlinks were created
         run: |
-          Write-Output "Verifying symlinks..."
-          Write-Output "Checking Editor folder:"
-          if (Test-Path "sample-unity6/Assets/Editor") {
-            Write-Output "✅ Editor folder exists"
-            if ((Get-Item "sample-unity6/Assets/Editor").LinkType -eq "Junction") {
-              Write-Output "✅ Editor is a symlink"
-              Write-Output "Target: $((Get-Item 'sample-unity6/Assets/Editor').Target)"
-            }
-            Write-Output "Editor contents:"
-            Get-ChildItem "sample-unity6/Assets/Editor" | Select-Object -First 10 Name
-            Write-Output ""
-            Write-Output "Looking for WindowsBuilderUnity6.cs:"
-            if (Test-Path "sample-unity6/Assets/Editor/WindowsBuilderUnity6.cs") {
-              Write-Output "✅ WindowsBuilderUnity6.cs found"
-            } else {
-              Write-Output "❌ WindowsBuilderUnity6.cs NOT found"
-              exit 1
-            }
-          } else {
-            Write-Output "❌ Editor folder does not exist"
+          if (-not (Test-Path "sample-unity6/Assets/Editor/WindowsBuilderUnity6.cs")) {
+            Write-Output "❌ Build script not found - symlink setup failed"
             exit 1
           }
+          Write-Output "✅ Symlinks verified"
       # Don't delete Library folder - let Unity reuse cached package data if available
       # Deleting it forces a complete reimport which takes too long
       - name: Ensure Tests directory exists
         run: |
-          Write-Output "Ensuring Tests directory/symlink exists..."
           if (-not (Test-Path "sample-unity6/Tests")) {
-            Write-Output "Creating Tests directory..."
-            New-Item -ItemType Directory -Path "sample-unity6/Tests" -Force
-          } else {
-            $item = Get-Item "sample-unity6/Tests"
-            if ($item.LinkType) {
-              Write-Output "✅ Tests is a symlink to: $($item.Target)"
+            New-Item -ItemType Directory -Path "sample-unity6/Tests" -Force | Out-Null
+          }
+      - name: First build (resolves packages)
+        run: |
+          Write-Output "Running first build to trigger package resolution..."
+          
+          $unityPath = "C:\Program Files\Unity\Hub\Editor\6000.0.58f2\Editor\Unity.exe"
+          $projectPath = "${{ github.workspace }}\sample-unity6"
+          $logFile = "${{ github.workspace }}\sample-unity6\first-build-log.txt"
+          $buildPath = "${{ github.workspace }}\sample-unity6\Tests\Sample Unity 6 Windows.exe"
+          
+          $arguments = @(
+            "-projectPath", "`"$projectPath`"",
+            "-executeMethod", "WindowsBuilderUnity6.BuildForAltTester",
+            "-logFile", "`"$logFile`"",
+            "-quit", "-batchmode", "-nographics",
+            "--buildPath", "`"$buildPath`""
+          )
+          
+          # Run and ignore exit code (may fail on first attempt)
+          $process = Start-Process -FilePath $unityPath `
+            -ArgumentList $arguments `
+            -Wait -PassThru -NoNewWindow
+          
+          Write-Output "First build completed (exit code: $($process.ExitCode), may have failed, that's ok). Checking for AltTester..."
+          
+          if (Test-Path "${{ github.workspace }}\sample-unity6\Library\PackageCache") {
+            $altTesterFound = Get-ChildItem "${{ github.workspace }}\sample-unity6\Library\PackageCache" -Filter "*alttester*" -ErrorAction SilentlyContinue
+            if ($altTesterFound) {
+              Write-Output "✅ AltTester found in PackageCache after first build"
             } else {
-              Write-Output "✅ Tests directory exists"
+              Write-Output "⚠️ AltTester not found yet, but will be ready for second build"
             }
           }
       - name: Build Unity 6 Windows executable
         timeout-minutes: 20
         run: |
           Write-Output "Building Unity 6 Windows executable..."
-          Write-Output "Note: First run will import packages then build. This may take 10-15 minutes."
-          Write-Output ""
-          Write-Output "Current directory: $(Get-Location)"
-          Write-Output "Project path exists: $(Test-Path '${{ github.workspace }}\sample-unity6')"
-          Write-Output "Assets folder exists: $(Test-Path '${{ github.workspace }}\sample-unity6\Assets')"
-          Write-Output "Library folder exists: $(Test-Path '${{ github.workspace }}\sample-unity6\Library')"
-          Write-Output ""
-          Write-Output "Starting Unity build at: $(Get-Date -Format 'HH:mm:ss')"
+          Write-Output "Started at: $(Get-Date -Format 'HH:mm:ss')"
           
-          # Run Unity and capture output in real-time
+          # Run Unity build
           $unityPath = "C:\Program Files\Unity\Hub\Editor\6000.0.58f2\Editor\Unity.exe"
           $projectPath = "${{ github.workspace }}\sample-unity6"
           $logFile = "${{ github.workspace }}\sample-unity6\build-log.log"
@@ -274,71 +273,21 @@ jobs:
             -Wait -PassThru -NoNewWindow
           
           $buildExitCode = $process.ExitCode
+          Write-Output "Finished at: $(Get-Date -Format 'HH:mm:ss') (exit code: $buildExitCode)"
           
-          Write-Output ""
-          Write-Output "Unity build finished at: $(Get-Date -Format 'HH:mm:ss')"
-          
-          Write-Output ""
-          Write-Output "Build completed with exit code: $buildExitCode"
-          
-          # Wait a moment for file system to settle
+          # Verify build output
           Start-Sleep -Seconds 2
-          
-          Write-Output ""
-          Write-Output "Build log (last 100 lines):"
-          $logPath = "${{ github.workspace }}\sample-unity6\build-log.log"
-          if (Test-Path $logPath) {
-            Write-Output "Log file found at: $logPath"
-            Get-Content $logPath -Tail 100
+          if (Test-Path $buildPath) {
+            $fileSize = (Get-Item $buildPath).Length / 1MB
+            Write-Output "✅ Build succeeded! ($([math]::Round($fileSize, 2)) MB)"
           } else {
-            Write-Output "⚠️ Log file not found at: $logPath"
-            Write-Output "Checking current directory..."
-            if (Test-Path "sample-unity6\build-log.log") {
-              Write-Output "Found in relative path!"
-              Get-Content "sample-unity6\build-log.log" -Tail 100
-            } else {
-              Write-Output "Listing sample-unity6 directory:"
-              Get-ChildItem "sample-unity6" -File | Where-Object { $_.Name -like "*.log" -or $_.Name -like "*.txt" } | Format-Table Name, Length, LastWriteTime
-            }
-          }
-          
-          Write-Output ""
-          Write-Output "Checking for build output..."
-          Get-ChildItem sample-unity6/Tests/ -ErrorAction SilentlyContinue
-          
-          Write-Output ""
-          Write-Output "Searching for executable..."
-          $exePaths = @(
-            "${{ github.workspace }}\sample-unity6\Tests\Sample Unity 6 Windows.exe",
-            "sample-unity6\Tests\Sample Unity 6 Windows.exe",
-            "${{ github.workspace }}\sample\Tests\Sample Unity 6 Windows.exe",
-            "sample\Tests\Sample Unity 6 Windows.exe"
-          )
-          
-          $exeFound = $false
-          foreach ($path in $exePaths) {
-            if (Test-Path $path) {
-              Write-Output "✅ Build succeeded! Executable found at: $path"
-              $fileSize = (Get-Item $path).Length / 1MB
-              Write-Output "File size: $([math]::Round($fileSize, 2)) MB"
-              $exeFound = $true
-              break
-            } else {
-              Write-Output "Not found: $path"
-            }
-          }
-          
-          if (-not $exeFound) {
+            Write-Output "❌ Build failed! Executable not found"
             Write-Output ""
-            Write-Output "❌ Build failed! Executable not found in any expected location"
-            Write-Output ""
-            Write-Output "Full build log:"
-            if (Test-Path "${{ github.workspace }}\sample-unity6\build-log.log") {
-              Get-Content "${{ github.workspace }}\sample-unity6\build-log.log"
-            } elseif (Test-Path "sample-unity6\build-log.log") {
-              Get-Content "sample-unity6\build-log.log"
+            Write-Output "Build log:"
+            if (Test-Path $logFile) {
+              Get-Content $logFile
             } else {
-              Write-Output "⚠️ Build log not found"
+              Write-Output "⚠️ Log file not found at: $logFile"
             }
             exit 1
           }
@@ -347,29 +296,15 @@ jobs:
           python-version: "3.13"
       - name: Verify test files are accessible
         run: |
-          Write-Output "Checking for test files in sample-unity6/Tests..."
-          if (Test-Path "sample-unity6/Tests/requirements-desktop.txt") {
-            Write-Output "✅ requirements-desktop.txt found"
-          } else {
-            Write-Output "⚠️ requirements-desktop.txt not found, trying sample/Tests..."
-            if (Test-Path "sample/Tests/requirements-desktop.txt") {
-              Write-Output "✅ Found in sample/Tests"
-            } else {
-              Write-Output "❌ requirements-desktop.txt not found"
-              exit 1
-            }
-          }
-          if (Test-Path "sample-unity6/Tests/test") {
-            Write-Output "✅ test directory found"
-          } else {
-            Write-Output "⚠️ test directory not found in sample-unity6/Tests"
+          if (-not (Test-Path "sample-unity6/Tests/requirements-desktop.txt") -and -not (Test-Path "sample/Tests/requirements-desktop.txt")) {
+            Write-Output "❌ Test requirements file not found"
+            exit 1
           }
       - name: Install dependencies
         run: |
           if (Test-Path "sample-unity6/Tests/requirements-desktop.txt") {
             pip install -r sample-unity6/Tests/requirements-desktop.txt
           } else {
-            Write-Output "Installing from sample/Tests instead..."
             pip install -r sample/Tests/requirements-desktop.txt
           }
       - name: Run UI tests
