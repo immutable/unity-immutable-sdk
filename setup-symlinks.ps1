@@ -30,27 +30,20 @@ if (Test-Path "Scenes.meta") { Remove-Item -Path "Scenes.meta" -Force }
 if (Test-Path "Scripts.meta") { Remove-Item -Path "Scripts.meta" -Force }
 if (Test-Path "Editor.meta") { Remove-Item -Path "Editor.meta" -Force }
 
-# Create junctions for directories (Unity on Windows needs junctions, not symlinks)
-# Get absolute paths for the targets
-$samplesDir = Join-Path $scriptDir "sample"
-$scenesTarget = Join-Path $samplesDir "Assets\Scenes"
-$scriptsTarget = Join-Path $samplesDir "Assets\Scripts"
-$editorTarget = Join-Path $samplesDir "Assets\Editor"
-$scenesMetaTarget = Join-Path $samplesDir "Assets\Scenes.meta"
-$scriptsMetaTarget = Join-Path $samplesDir "Assets\Scripts.meta"
-$editorMetaTarget = Join-Path $samplesDir "Assets\Editor.meta"
-
+# Create symlinks using relative paths (so they work cross-platform)
+# Use relative paths like the bash script does
 try {
-    # Create directory symbolic links (Unity recognizes these on Windows)
+    # Create directory symbolic links (Unity recognises these on Windows)
     # Note: Requires administrator privileges
-    cmd /c mklink /D "Scenes" "$scenesTarget" | Out-Null
-    cmd /c mklink /D "Scripts" "$scriptsTarget" | Out-Null
-    cmd /c mklink /D "Editor" "$editorTarget" | Out-Null
+    # Using relative paths so symlinks work on all platforms
+    cmd /c mklink /D "Scenes" "..\..\sample\Assets\Scenes" | Out-Null
+    cmd /c mklink /D "Scripts" "..\..\sample\Assets\Scripts" | Out-Null
+    cmd /c mklink /D "Editor" "..\..\sample\Assets\Editor" | Out-Null
 
     # Create file symbolic links for .meta files
-    cmd /c mklink "Scenes.meta" "$scenesMetaTarget" | Out-Null
-    cmd /c mklink "Scripts.meta" "$scriptsMetaTarget" | Out-Null
-    cmd /c mklink "Editor.meta" "$editorMetaTarget" | Out-Null
+    cmd /c mklink "Scenes.meta" "..\..\sample\Assets\Scenes.meta" | Out-Null
+    cmd /c mklink "Scripts.meta" "..\..\sample\Assets\Scripts.meta" | Out-Null
+    cmd /c mklink "Editor.meta" "..\..\sample\Assets\Editor.meta" | Out-Null
 
     Write-Output ""
     Write-Output "✅ Asset symlinks created successfully!"
@@ -61,8 +54,8 @@ try {
     # Create directory symbolic link for Tests
     Set-Location $sampleUnity6
     if (Test-Path "Tests") { Remove-Item -Path "Tests" -Recurse -Force }
-    $testsTarget = Join-Path $samplesDir "Tests"
-    cmd /c mklink /D "Tests" "$testsTarget" | Out-Null
+    # Use relative path
+    cmd /c mklink /D "Tests" "..\sample\Tests" | Out-Null
 
     Write-Output ""
     Write-Output "✅ Tests symlink created successfully!"
