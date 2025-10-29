@@ -192,6 +192,13 @@ jobs:
       - uses: actions/checkout@v3
         with:
           lfs: true
+      - name: Cache Unity Library folder
+        uses: actions/cache@v3
+        with:
+          path: sample-unity6/Library
+          key: Library-Unity6-Windows-${{ hashFiles('sample-unity6/Assets/**', 'sample-unity6/Packages/**', 'sample-unity6/ProjectSettings/**') }}
+          restore-keys: |
+            Library-Unity6-Windows-
       - name: Setup symlinks for Unity 6 Windows
         run: .\setup-symlinks.ps1
       - name: Verify symlinks were created
@@ -240,10 +247,28 @@ jobs:
           Write-Output "Building Unity 6 Windows executable..."
           Write-Output "Note: First run will import packages then build. This may take 10-15 minutes."
           Write-Output ""
+          Write-Output "Current directory: $(Get-Location)"
+          Write-Output "Project path exists: $(Test-Path '${{ github.workspace }}\sample-unity6')"
+          Write-Output "Assets folder exists: $(Test-Path '${{ github.workspace }}\sample-unity6\Assets')"
+          Write-Output "Library folder exists: $(Test-Path '${{ github.workspace }}\sample-unity6\Library')"
+          Write-Output ""
           Write-Output "Starting Unity build at: $(Get-Date -Format 'HH:mm:ss')"
           
-          & "C:\Program Files\Unity\Hub\Editor\6000.0.58f2\Editor\Unity.exe" -projectPath "${{ github.workspace }}\sample-unity6" -executeMethod "WindowsBuilderUnity6.BuildForAltTester" -logFile "${{ github.workspace }}\sample-unity6\build-log.log" -quit -batchmode -nographics --buildPath "${{ github.workspace }}\sample-unity6\Tests\Sample Unity 6 Windows.exe"
-          $buildExitCode = $LASTEXITCODE
+          # Run Unity and capture output in real-time
+          $unityPath = "C:\Program Files\Unity\Hub\Editor\6000.0.58f2\Editor\Unity.exe"
+          $projectPath = "${{ github.workspace }}\sample-unity6"
+          $logFile = "${{ github.workspace }}\sample-unity6\build-log.log"
+          $buildPath = "${{ github.workspace }}\sample-unity6\Tests\Sample Unity 6 Windows.exe"
+          
+          $process = Start-Process -FilePath $unityPath `
+            -ArgumentList "-projectPath", $projectPath, `
+                          "-executeMethod", "WindowsBuilderUnity6.BuildForAltTester", `
+                          "-logFile", $logFile, `
+                          "-quit", "-batchmode", "-nographics", `
+                          "--buildPath", $buildPath `
+            -Wait -PassThru -NoNewWindow
+          
+          $buildExitCode = $process.ExitCode
           
           Write-Output ""
           Write-Output "Unity build finished at: $(Get-Date -Format 'HH:mm:ss')"
