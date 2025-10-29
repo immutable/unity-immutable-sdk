@@ -1,7 +1,5 @@
 # Unity 6 Sample Project
 
-> **Note:** This Unity 6 sample is a work in progress.
-
 This project shares Scenes, Scripts, Editor folders, and Tests with the Unity 2021 sample project located in `../sample`.
 
 ## Setup
@@ -17,17 +15,17 @@ The `Assets/Scenes`, `Assets/Scripts`, `Assets/Editor` folders, and `Tests` are 
 ```
 
 #### On Windows:
-1. **Enable Developer Mode** (Recommended):
-   - Open Settings → Update & Security → For developers
-   - Turn on "Developer Mode"
+1. **Run PowerShell as Administrator**:
+   - Right-click on PowerShell in the Start menu
+   - Select "Run as Administrator"
 
-2. Run the setup script in PowerShell:
+2. Run the setup script:
    ```powershell
    # From the repository root
    .\setup-symlinks.ps1
    ```
 
-   Or run PowerShell as Administrator if you don't want to enable Developer Mode.
+> **Note**: Administrator privileges are required because the script creates directory symbolic links (`mklink /D`) which Unity on Windows needs to properly recognise the linked folders. Developer Mode alone is not sufficient for directory symlinks.
 
 ### Git Configuration (Windows Users)
 
@@ -54,9 +52,16 @@ Note: This should be done **before** cloning the repository for best results.
 
 ## Troubleshooting
 
-### Symlinks appear as text files
-- On Windows: Enable Developer Mode or run the setup script as Administrator
+### Symlinks appear as text files (on Windows)
+- You must run the setup script as Administrator
+- Right-click PowerShell → "Run as Administrator", then run `.\setup-symlinks.ps1`
 - Ensure `git config core.symlinks` is set to `true`
+
+### Folders don't appear in Unity's Project window (on Windows)
+- The script must create directory symbolic links (`mklink /D`) not junctions
+- Close Unity completely
+- Delete the existing links and run setup script as Administrator
+- Reopen Unity and let it reimport assets
 
 ### Unity shows missing references
 - Close Unity

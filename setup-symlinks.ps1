@@ -30,14 +30,27 @@ if (Test-Path "Scenes.meta") { Remove-Item -Path "Scenes.meta" -Force }
 if (Test-Path "Scripts.meta") { Remove-Item -Path "Scripts.meta" -Force }
 if (Test-Path "Editor.meta") { Remove-Item -Path "Editor.meta" -Force }
 
-# Create symlinks for Assets
+# Create junctions for directories (Unity on Windows needs junctions, not symlinks)
+# Get absolute paths for the targets
+$samplesDir = Join-Path $scriptDir "sample"
+$scenesTarget = Join-Path $samplesDir "Assets\Scenes"
+$scriptsTarget = Join-Path $samplesDir "Assets\Scripts"
+$editorTarget = Join-Path $samplesDir "Assets\Editor"
+$scenesMetaTarget = Join-Path $samplesDir "Assets\Scenes.meta"
+$scriptsMetaTarget = Join-Path $samplesDir "Assets\Scripts.meta"
+$editorMetaTarget = Join-Path $samplesDir "Assets\Editor.meta"
+
 try {
-    New-Item -ItemType SymbolicLink -Path "Scenes" -Target "..\..\sample\Assets\Scenes" | Out-Null
-    New-Item -ItemType SymbolicLink -Path "Scripts" -Target "..\..\sample\Assets\Scripts" | Out-Null
-    New-Item -ItemType SymbolicLink -Path "Editor" -Target "..\..\sample\Assets\Editor" | Out-Null
-    New-Item -ItemType SymbolicLink -Path "Scenes.meta" -Target "..\..\sample\Assets\Scenes.meta" | Out-Null
-    New-Item -ItemType SymbolicLink -Path "Scripts.meta" -Target "..\..\sample\Assets\Scripts.meta" | Out-Null
-    New-Item -ItemType SymbolicLink -Path "Editor.meta" -Target "..\..\sample\Assets\Editor.meta" | Out-Null
+    # Create directory symbolic links (Unity recognizes these on Windows)
+    # Note: Requires administrator privileges
+    cmd /c mklink /D "Scenes" "$scenesTarget" | Out-Null
+    cmd /c mklink /D "Scripts" "$scriptsTarget" | Out-Null
+    cmd /c mklink /D "Editor" "$editorTarget" | Out-Null
+    
+    # Create file symbolic links for .meta files
+    cmd /c mklink "Scenes.meta" "$scenesMetaTarget" | Out-Null
+    cmd /c mklink "Scripts.meta" "$scriptsMetaTarget" | Out-Null
+    cmd /c mklink "Editor.meta" "$editorMetaTarget" | Out-Null
 
     Write-Output ""
     Write-Output "✅ Asset symlinks created successfully!"
@@ -45,10 +58,11 @@ try {
     Write-Output "Scenes, Scripts, and Editor in sample-unity6 now point to sample/Assets"
     Get-ChildItem | Where-Object { $_.Name -match "Scenes|Scripts|Editor" } | Format-Table Name, LinkType, Target
 
-    # Create symlink for Tests
+    # Create directory symbolic link for Tests
     Set-Location $sampleUnity6
     if (Test-Path "Tests") { Remove-Item -Path "Tests" -Recurse -Force }
-    New-Item -ItemType SymbolicLink -Path "Tests" -Target "..\sample\Tests" | Out-Null
+    $testsTarget = Join-Path $samplesDir "Tests"
+    cmd /c mklink /D "Tests" "$testsTarget" | Out-Null
 
     Write-Output ""
     Write-Output "✅ Tests symlink created successfully!"
@@ -65,4 +79,3 @@ catch {
     Write-Output "Then run this script again."
     exit 1
 }
-
