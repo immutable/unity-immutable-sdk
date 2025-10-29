@@ -46,7 +46,7 @@ try {
     cmd /c mklink /D "Scenes" "$scenesTarget" | Out-Null
     cmd /c mklink /D "Scripts" "$scriptsTarget" | Out-Null
     cmd /c mklink /D "Editor" "$editorTarget" | Out-Null
-    
+
     # Create file symbolic links for .meta files
     cmd /c mklink "Scenes.meta" "$scenesMetaTarget" | Out-Null
     cmd /c mklink "Scripts.meta" "$scriptsMetaTarget" | Out-Null

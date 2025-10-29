@@ -598,16 +598,27 @@ def open_sample_app(clear_data=False):
     
     print(f"Opening {product_name}...")
     
-    # Look for the executable in build folder first, then current directory
-    exe_paths = [
-        f"../build/{product_name}.exe",  # Relative to Tests folder
-        f"{product_name}.exe"  # Current directory (fallback)
-    ]
+    # Check if UNITY_APP_PATH is provided (takes precedence)
+    app_path_env = os.getenv("UNITY_APP_PATH")
+    
+    # Look for the executable in multiple locations
+    exe_paths = []
+    
+    # First priority: use UNITY_APP_PATH if provided
+    if app_path_env:
+        exe_paths.append(app_path_env)
+    
+    # Then check standard locations
+    exe_paths.extend([
+        f"{product_name}.exe",  # Current directory (for Unity 6 builds in Tests/)
+        f"../build/{product_name}.exe",  # Relative to Tests folder (for Unity 2021)
+        f"./{product_name}.exe",  # Explicit current directory
+    ])
     
     exe_launched = False
     for exe_path in exe_paths:
         if os.path.exists(exe_path):
-            print(f"Found executable at: {exe_path}")
+            print(f"Found executable at: {os.path.abspath(exe_path)}")
             subprocess.Popen([exe_path], shell=True)
             exe_launched = True
             break
