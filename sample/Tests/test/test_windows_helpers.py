@@ -650,7 +650,7 @@ def stop_sample_app():
     print(f"{product_name} stopped successfully.")
 
 def bring_sample_app_to_foreground():
-    product_name = get_product_name()
+    product_name = os.getenv("UNITY_APP_NAME", get_product_name())
     powershell_script_path = "./switch-app.ps1"
 
     print(f"Bring {product_name} to the foreground.")
