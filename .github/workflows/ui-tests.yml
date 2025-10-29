@@ -237,37 +237,63 @@ jobs:
               Write-Output "✅ Tests directory exists"
             }
           }
-      - name: First build (resolves packages)
+      - name: Import packages and prepare project
         run: |
-          Write-Output "Running first build to trigger package resolution..."
-          Write-Output "Unity command: C:\Program Files\Unity\Hub\Editor\6000.0.58f2\Editor\Unity.exe"
-          Write-Output "Project path: ${{ github.workspace }}\sample-unity6"
-          Write-Output "Build method: WindowsBuilderUnity6.BuildForAltTester"
-          Write-Output "Build path: ${{ github.workspace }}\sample-unity6\Tests\Sample Unity 6 Windows.exe"
+          Write-Output "Opening Unity to import packages (without building)..."
+          Write-Output "This step just lets Unity import all packages without trying to execute a build."
           Write-Output ""
           
-          & "C:\Program Files\Unity\Hub\Editor\6000.0.58f2\Editor\Unity.exe" -projectPath "${{ github.workspace }}\sample-unity6" -executeMethod "WindowsBuilderUnity6.BuildForAltTester" -logFile "${{ github.workspace }}\sample-unity6\first-build-log.txt" -quit -batchmode -nographics --buildPath "${{ github.workspace }}\sample-unity6\Tests\Sample Unity 6 Windows.exe"
-          $buildExitCode = $LASTEXITCODE
+          # Start Unity without -quit so it stays open, but with a timeout
+          $unityProcess = Start-Process -FilePath "C:\Program Files\Unity\Hub\Editor\6000.0.58f2\Editor\Unity.exe" `
+            -ArgumentList "-projectPath", "${{ github.workspace }}\sample-unity6", `
+                          "-logFile", "${{ github.workspace }}\sample-unity6\import-log.txt", `
+                          "-batchmode", "-nographics" `
+            -PassThru -NoNewWindow
           
-          Write-Output ""
-          Write-Output "First build completed with exit code: $buildExitCode"
-          Write-Output "Checking for AltTester..."
-          if (Test-Path "${{ github.workspace }}\sample-unity6\Library\PackageCache\*alttester*") {
-            Write-Output "✅ AltTester found in PackageCache after first build"
+          Write-Output "Unity process started (PID: $($unityProcess.Id))"
+          Write-Output "Waiting for package import to complete..."
+          Write-Output "Will check for completion every 10 seconds (max 5 minutes)"
+          
+          $maxWaitSeconds = 300
+          $checkInterval = 10
+          $elapsed = 0
+          $packagesImported = $false
+          
+          while ($elapsed -lt $maxWaitSeconds) {
+            Start-Sleep -Seconds $checkInterval
+            $elapsed += $checkInterval
+            
+            # Check if AltTester package has been imported
+            if (Test-Path "${{ github.workspace }}\sample-unity6\Library\PackageCache\*alttester*") {
+              Write-Output "✅ AltTester package found! Packages have been imported."
+              $packagesImported = $true
+              break
+            }
+            
+            Write-Output "Still importing... ($elapsed seconds elapsed)"
+          }
+          
+          # Kill Unity process
+          Write-Output "Stopping Unity process..."
+          Stop-Process -Id $unityProcess.Id -Force -ErrorAction SilentlyContinue
+          Start-Sleep -Seconds 2
+          
+          if ($packagesImported) {
+            Write-Output "✅ Package import completed successfully"
           } else {
-            Write-Output "⚠️ AltTester not found yet, but will be ready for second build"
+            Write-Output "⚠️ Timeout waiting for packages, but continuing anyway"
           }
           
           Write-Output ""
-          Write-Output "First build log (last 50 lines):"
-          if (Test-Path "${{ github.workspace }}\sample-unity6\first-build-log.txt") {
-            Get-Content "${{ github.workspace }}\sample-unity6\first-build-log.txt" -Tail 50
+          Write-Output "Import log (last 50 lines):"
+          if (Test-Path "${{ github.workspace }}\sample-unity6\import-log.txt") {
+            Get-Content "${{ github.workspace }}\sample-unity6\import-log.txt" -Tail 50
           } else {
             Write-Output "⚠️ Log file not found"
           }
-      - name: Build Unity 6 Windows with command line (second build with packages ready)
+      - name: Build Unity 6 Windows executable
         run: |
-          Write-Output "Building Unity 6 Windows using command line (second attempt)..."
+          Write-Output "Building Unity 6 Windows executable (packages should be ready now)..."
           Write-Output "Starting Unity build..."
           & "C:\Program Files\Unity\Hub\Editor\6000.0.58f2\Editor\Unity.exe" -projectPath "${{ github.workspace }}\sample-unity6" -executeMethod "WindowsBuilderUnity6.BuildForAltTester" -logFile "${{ github.workspace }}\sample-unity6\build-log.log" -quit -batchmode -nographics --buildPath "${{ github.workspace }}\sample-unity6\Tests\Sample Unity 6 Windows.exe"
           $buildExitCode = $LASTEXITCODE
@@ -375,12 +401,12 @@ jobs:
           BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
         working-directory: sample-unity6/Tests
         run: python -m pytest -xs test/test_windows.py::WindowsTest
-      - name: Upload first build log
+      - name: Upload import log
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Unity6-Windows-First-Build-Log
-          path: sample-unity6/first-build-log.txt
+          name: Unity6-Windows-Import-Log
+          path: sample-unity6/import-log.txt
       - name: Upload build log
         if: always()
         uses: actions/upload-artifact@v4
