@@ -260,12 +260,17 @@ jobs:
           $logFile = "${{ github.workspace }}\sample-unity6\build-log.log"
           $buildPath = "${{ github.workspace }}\sample-unity6\Tests\Sample Unity 6 Windows.exe"
           
+          # Build argument list with proper quoting for paths with spaces
+          $arguments = @(
+            "-projectPath", "`"$projectPath`"",
+            "-executeMethod", "WindowsBuilderUnity6.BuildForAltTester",
+            "-logFile", "`"$logFile`"",
+            "-quit", "-batchmode", "-nographics",
+            "--buildPath", "`"$buildPath`""
+          )
+          
           $process = Start-Process -FilePath $unityPath `
-            -ArgumentList "-projectPath", $projectPath, `
-                          "-executeMethod", "WindowsBuilderUnity6.BuildForAltTester", `
-                          "-logFile", $logFile, `
-                          "-quit", "-batchmode", "-nographics", `
-                          "--buildPath", $buildPath `
+            -ArgumentList $arguments `
             -Wait -PassThru -NoNewWindow
           
           $buildExitCode = $process.ExitCode
