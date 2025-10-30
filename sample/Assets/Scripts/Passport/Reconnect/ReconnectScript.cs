@@ -1,11 +1,17 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using Cysharp.Threading.Tasks;
 using Immutable.Passport;
 
 public class ReconnectScript : MonoBehaviour
 {
     [SerializeField] private Text Output;
+
+    void Start()
+    {
+        ClickToCopyHelper.EnableClickToCopy(Output);
+    }
 
     /// <summary>
     /// Uses existing credentials to re-login to Passport and reconnect to IMX.

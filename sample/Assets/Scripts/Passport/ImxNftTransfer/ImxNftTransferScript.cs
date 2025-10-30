@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.EventSystems;
 using Cysharp.Threading.Tasks;
 using Immutable.Passport;
 using Immutable.Passport.Model;
@@ -15,6 +16,11 @@ public class ImxNftTransferScript : MonoBehaviour
     [SerializeField] private InputField TokenIdInput2;
     [SerializeField] private InputField TokenAddressInput2;
     [SerializeField] private InputField ReceiverInput2;
+
+    void Start()
+    {
+        ClickToCopyHelper.EnableClickToCopy(Output);
+    }
 
     /// <summary>
     /// Transfers NFTs to the specified receivers based on the provided details.

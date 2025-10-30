@@ -1,11 +1,17 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 namespace Immutable.Passport.Sample.PassportFeatures
 {
     public class ClearStorageAndCacheScript : MonoBehaviour
     {
         [SerializeField] private Text Output;
+
+        void Start()
+        {
+            ClickToCopyHelper.EnableClickToCopy(Output);
+        }
 
         public void ClearStorageAndCache()
         {

@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using Cysharp.Threading.Tasks;
 
 namespace Immutable.Passport.Sample.PassportFeatures
@@ -9,6 +10,14 @@ namespace Immutable.Passport.Sample.PassportFeatures
         [Header("IsRegisteredOffchain UI")]
         public Button checkRegistrationButton;
         public Text output;
+
+        void Start()
+        {
+            if (output != null)
+            {
+                ClickToCopyHelper.EnableClickToCopy(output);
+            }
+        }
 
         public void CheckIsRegisteredOffchain()
         {

@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using Immutable.Passport;
 using Immutable.Passport.Model;
 
@@ -13,6 +14,8 @@ public class ImxGetAddressScript : MonoBehaviour
 
     void Start()
     {
+        ClickToCopyHelper.EnableClickToCopy(Output);
+
         if (Passport.Instance != null)
         {
             Passport = Passport.Instance;

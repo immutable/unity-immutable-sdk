@@ -6,6 +6,7 @@ using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.EventSystems;
 using Immutable.Passport.Model;
 using Cysharp.Threading.Tasks;
 
@@ -20,6 +21,11 @@ public class ZkEvmSendTransactionScript : MonoBehaviour
 
     void Start()
     {
+        if (output != null)
+        {
+            ClickToCopyHelper.EnableClickToCopy(output);
+        }
+
         if (SampleAppManager.PassportInstance == null)
         {
             ShowOutput("Passport instance is null");

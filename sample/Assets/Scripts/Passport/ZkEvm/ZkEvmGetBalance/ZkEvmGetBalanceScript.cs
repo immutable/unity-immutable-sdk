@@ -5,6 +5,7 @@ using System.Numerics;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.EventSystems;
 using Cysharp.Threading.Tasks;
 using Immutable.Passport;
 
@@ -12,6 +13,14 @@ public class ZkEvmGetBalanceScript : MonoBehaviour
 {
     [SerializeField] private Text? output;
     [SerializeField] private InputField? addressInput;
+
+    void Start()
+    {
+        if (output != null)
+        {
+            ClickToCopyHelper.EnableClickToCopy(output);
+        }
+    }
 
     public async void GetBalance()
     {

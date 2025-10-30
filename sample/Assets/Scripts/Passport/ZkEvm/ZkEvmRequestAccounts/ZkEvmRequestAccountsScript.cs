@@ -2,10 +2,19 @@
 
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 public class ZkEvmRequestAccountsScript : MonoBehaviour
 {
     [SerializeField] private Text? output;
+
+    void Start()
+    {
+        if (output != null)
+        {
+            ClickToCopyHelper.EnableClickToCopy(output);
+        }
+    }
 
     public async void RequestAccounts()
     {

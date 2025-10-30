@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.EventSystems;
 using Immutable.Passport;
 using Immutable.Passport.Model;
 
@@ -35,6 +36,9 @@ public class LoginScript : MonoBehaviour
         if (Auth0NativeLoginButton != null) Auth0NativeLoginButton.onClick.AddListener(LoginWithAuth0Native);
         if (AppleLoginButton != null) AppleLoginButton.onClick.AddListener(() => Login(new DirectLoginOptions(DirectLoginMethod.Apple)));
         if (FacebookLoginButton != null) FacebookLoginButton.onClick.AddListener(() => Login(new DirectLoginOptions(DirectLoginMethod.Facebook)));
+
+        // Set up click-to-copy functionality for Output text
+        ClickToCopyHelper.EnableClickToCopy(Output);
     }
 
     /// <summary>

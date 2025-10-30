@@ -1,12 +1,18 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.EventSystems;
 using Cysharp.Threading.Tasks;
 using Immutable.Passport;
 
 public class ReloginScript : MonoBehaviour
 {
     [SerializeField] private Text Output;
+
+    void Start()
+    {
+        ClickToCopyHelper.EnableClickToCopy(Output);
+    }
 
     /// <summary>
     /// Uses the existing credentials to re-login to Passport.

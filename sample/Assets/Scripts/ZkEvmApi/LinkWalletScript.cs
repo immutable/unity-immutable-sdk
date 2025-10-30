@@ -5,6 +5,7 @@ using Immutable.Api.ZkEvm.Model;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.EventSystems;
 using Immutable.Passport;
 
 public class LinkWalletScript : MonoBehaviour
@@ -26,6 +27,11 @@ public class LinkWalletScript : MonoBehaviour
     [SerializeField] private InputField SignatureInput;
     [SerializeField] private InputField NonceInput;
 #pragma warning restore CS8618
+
+    void Start()
+    {
+        ClickToCopyHelper.EnableClickToCopy(Output);
+    }
 
     /// <summary>
     /// Link an external EOA wallet by providing an EIP-712 signature.

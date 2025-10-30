@@ -1,12 +1,18 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.EventSystems;
 using Immutable.Passport;
 
 public class SetCallTimeoutScript : MonoBehaviour
 {
     [SerializeField] private Text Output;
     [SerializeField] private InputField TimeoutInput;
+
+    void Start()
+    {
+        ClickToCopyHelper.EnableClickToCopy(Output);
+    }
 
     public void SetTimeout()
     {

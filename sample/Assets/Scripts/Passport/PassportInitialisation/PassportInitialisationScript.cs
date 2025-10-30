@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.EventSystems;
 using Immutable.Passport;
 using Immutable.Passport.Core.Logging;
 
@@ -14,6 +15,7 @@ public class PassportInitialisationScript : MonoBehaviour
 
     void Start()
     {
+        ClickToCopyHelper.EnableClickToCopy(Output);
         InitialisePassport();
     }
 

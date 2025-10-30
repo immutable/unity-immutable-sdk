@@ -1,12 +1,18 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using Cysharp.Threading.Tasks;
 using Immutable.Passport;
 
 public class GetUserInfoScript : MonoBehaviour
 {
     [SerializeField] private Text Output;
+
+    void Start()
+    {
+        ClickToCopyHelper.EnableClickToCopy(Output);
+    }
 
     /// <summary>
     /// Retrieves the currently logged-in user's email.

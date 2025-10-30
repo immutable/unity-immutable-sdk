@@ -1,11 +1,17 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using Cysharp.Threading.Tasks;
 using Immutable.Passport;
 
 public class ImxConnectScript : MonoBehaviour
 {
     [SerializeField] private Text Output;
+
+    void Start()
+    {
+        ClickToCopyHelper.EnableClickToCopy(Output);
+    }
 
     /// <summary>
     /// Initialises the user's wallet and sets up the Immutable X provider using saved credentials if the user is already logged in.

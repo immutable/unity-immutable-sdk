@@ -2,12 +2,21 @@
 
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 namespace Immutable.Passport.Sample.PassportFeatures
 {
     public class ZkEvmConnectScript : MonoBehaviour
     {
         [SerializeField] public Text? output;
+
+        void Start()
+        {
+            if (output != null)
+            {
+                ClickToCopyHelper.EnableClickToCopy(output);
+            }
+        }
 
         public async void ConnectZkEvm()
         {

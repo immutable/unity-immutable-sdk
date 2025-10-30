@@ -3,12 +3,21 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.EventSystems;
 using Immutable.Passport;
 
 public class ZkEvmSignTypedDataScript : MonoBehaviour
 {
     [SerializeField] private Text? output;
     [SerializeField] private InputField? payloadInputField;
+
+    void Start()
+    {
+        if (output != null)
+        {
+            ClickToCopyHelper.EnableClickToCopy(output);
+        }
+    }
 
     public async void SignTypedData()
     {

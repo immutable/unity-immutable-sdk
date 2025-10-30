@@ -3,12 +3,21 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.EventSystems;
 using Immutable.Passport;
 
 public class ZkEvmGetTransactionReceiptScript : MonoBehaviour
 {
     [SerializeField] private Text? output;
     [SerializeField] private InputField? transactionHashInputField;
+
+    void Start()
+    {
+        if (output != null)
+        {
+            ClickToCopyHelper.EnableClickToCopy(output);
+        }
+    }
 
     public async void GetZkEvmTransactionReceipt()
     {
