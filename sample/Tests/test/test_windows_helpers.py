@@ -64,9 +64,11 @@ def get_auth_url_from_unity_logs():
     import tempfile
     import os
     
+    product_name = os.getenv("UNITY_APP_NAME", get_product_name())
+    
     # Unity log file locations on Windows
     log_paths = [
-        os.path.join(os.path.expanduser("~"), "AppData", "LocalLow", "Immutable", "Immutable Sample", "Player.log"),
+        os.path.join(os.path.expanduser("~"), "AppData", "LocalLow", "Immutable", product_name, "Player.log"),
         os.path.join(tempfile.gettempdir(), "UnityPlayer.log"),
         "Player.log"  # Current directory
     ]
@@ -112,9 +114,11 @@ def get_logout_url_from_unity_logs():
     import tempfile
     import os
     
+    product_name = os.getenv("UNITY_APP_NAME", get_product_name())
+    
     # Unity log file locations on Windows
     log_paths = [
-        os.path.join(os.path.expanduser("~"), "AppData", "LocalLow", "Immutable", "Immutable Sample", "Player.log"),
+        os.path.join(os.path.expanduser("~"), "AppData", "LocalLow", "Immutable", product_name, "Player.log"),
         os.path.join(tempfile.gettempdir(), "UnityPlayer.log"),
         "Player.log"  # Current directory
     ]
@@ -210,10 +214,13 @@ def handle_cached_authentication(driver):
         print("CI environment - checking if authentication completed automatically")
         print("Monitoring Unity logs for authentication completion...")
         
+        product_name = os.getenv("UNITY_APP_NAME", get_product_name())
+        log_path = os.path.join("C:\\Users\\WindowsBuildsdkServi\\AppData\\LocalLow\\Immutable", product_name, "Player.log")
+        
         auth_success = False
         for check_attempt in range(30):  # Check for 30 seconds
             try:
-                with open("C:\\Users\\WindowsBuildsdkServi\\AppData\\LocalLow\\Immutable\\Immutable Sample\\Player.log", 'r', encoding='utf-8', errors='ignore') as f:
+                with open(log_path, 'r', encoding='utf-8', errors='ignore') as f:
                     content = f.read()
                     # Look for signs of successful authentication
                     if any(phrase in content for phrase in [
@@ -374,10 +381,13 @@ def login():
                     print("This means authentication was successful, just need to wait for Unity to process it")
                     
                     # Wait and check Unity logs for authentication success instead of relying on scene changes
+                    product_name = os.getenv("UNITY_APP_NAME", get_product_name())
+                    log_path = os.path.join("C:\\Users\\WindowsBuildsdkServi\\AppData\\LocalLow\\Immutable", product_name, "Player.log")
+                    
                     auth_success = False
                     for check_attempt in range(20):  # Check for 20 seconds
                         try:
-                            with open("C:\\Users\\WindowsBuildsdkServi\\AppData\\LocalLow\\Immutable\\Immutable Sample\\Player.log", 'r', encoding='utf-8', errors='ignore') as f:
+                            with open(log_path, 'r', encoding='utf-8', errors='ignore') as f:
                                 content = f.read()
                                 # Look for signs of successful authentication in logs
                                 if any(phrase in content for phrase in [
@@ -539,9 +549,10 @@ def login():
             except:
                 pass
         
-        # Wait for the deep link dialog to appear and click "Open Immutable Sample.cmd"
+        # Wait for the deep link dialog to appear and click the button
         # Use more specific selector to avoid clicking "Restore" button
-        deep_link_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[text()='Open Immutable Sample.cmd']")))
+        product_name = os.getenv("UNITY_APP_NAME", get_product_name())
+        deep_link_button = wait.until(EC.element_to_be_clickable((By.XPATH, f"//button[text()='Open {product_name}.cmd']")))
         deep_link_button.click()
         print("Clicked deep link permission dialog - Unity should receive redirect")
     except Exception as e:
@@ -555,10 +566,12 @@ def clear_unity_data():
     """Clear Unity's persistent data to force fresh start"""
     print("Clearing Unity persistent data...")
     
+    product_name = os.getenv("UNITY_APP_NAME", get_product_name())
+    
     # Clear PlayerPrefs from Windows Registry
     try:
         import winreg
-        registry_path = r"SOFTWARE\Immutable\Immutable Sample"
+        registry_path = f"SOFTWARE\\Immutable\\{product_name}"
         
         # Try both HKEY_CURRENT_USER and HKEY_LOCAL_MACHINE
         for root_key in [winreg.HKEY_CURRENT_USER, winreg.HKEY_LOCAL_MACHINE]:
@@ -577,7 +590,7 @@ def clear_unity_data():
     
     # Clear Application.persistentDataPath
     try:
-        data_path = os.path.join(os.path.expanduser("~"), "AppData", "LocalLow", "Immutable", "Immutable Sample")
+        data_path = os.path.join(os.path.expanduser("~"), "AppData", "LocalLow", "Immutable", product_name)
         if os.path.exists(data_path):
             import shutil
             shutil.rmtree(data_path)
@@ -598,16 +611,27 @@ def open_sample_app(clear_data=False):
     
     print(f"Opening {product_name}...")
     
-    # Look for the executable in build folder first, then current directory
-    exe_paths = [
-        f"../build/{product_name}.exe",  # Relative to Tests folder
-        f"{product_name}.exe"  # Current directory (fallback)
-    ]
+    # Check if UNITY_APP_PATH is provided (takes precedence)
+    app_path_env = os.getenv("UNITY_APP_PATH")
+    
+    # Look for the executable in multiple locations
+    exe_paths = []
+    
+    # First priority: use UNITY_APP_PATH if provided
+    if app_path_env:
+        exe_paths.append(app_path_env)
+    
+    # Then check standard locations
+    exe_paths.extend([
+        f"{product_name}.exe",  # Current directory (for Unity 6 builds in Tests/)
+        f"../build/{product_name}.exe",  # Relative to Tests folder (for Unity 2021)
+        f"./{product_name}.exe",  # Explicit current directory
+    ])
     
     exe_launched = False
     for exe_path in exe_paths:
         if os.path.exists(exe_path):
-            print(f"Found executable at: {exe_path}")
+            print(f"Found executable at: {os.path.abspath(exe_path)}")
             subprocess.Popen([exe_path], shell=True)
             exe_launched = True
             break
@@ -639,7 +663,7 @@ def stop_sample_app():
     print(f"{product_name} stopped successfully.")
 
 def bring_sample_app_to_foreground():
-    product_name = get_product_name()
+    product_name = os.getenv("UNITY_APP_NAME", get_product_name())
     powershell_script_path = "./switch-app.ps1"
 
     print(f"Bring {product_name} to the foreground.")
@@ -694,32 +718,34 @@ def setup_protocol_association():
     """Set up immutablerunner:// protocol association to avoid permission dialogs"""
     print("Setting up protocol association for immutablerunner://...")
     
+    product_name = os.getenv("UNITY_APP_NAME", get_product_name())
+    
     # PowerShell script to register the protocol
-    ps_script = '''
+    ps_script = f'''
     # Register immutablerunner protocol
     $protocolKey = "HKCU:\\Software\\Classes\\immutablerunner"
     $commandKey = "$protocolKey\\shell\\open\\command"
     
     # Create the registry keys
-    if (!(Test-Path $protocolKey)) {
+    if (!(Test-Path $protocolKey)) {{
         New-Item -Path $protocolKey -Force | Out-Null
-    }
-    if (!(Test-Path $commandKey)) {
+    }}
+    if (!(Test-Path $commandKey)) {{
         New-Item -Path $commandKey -Force | Out-Null
-    }
+    }}
     
     # Set the protocol values
     Set-ItemProperty -Path $protocolKey -Name "(Default)" -Value "URL:immutablerunner Protocol"
     Set-ItemProperty -Path $protocolKey -Name "URL Protocol" -Value ""
     
     # Find the Unity sample app executable
-    $sampleAppPath = "C:\\Immutable\\unity-immutable-sdk\\sample\\build\\Immutable Sample.exe"
-    if (Test-Path $sampleAppPath) {
+    $sampleAppPath = "C:\\Immutable\\unity-immutable-sdk\\sample\\build\\{product_name}.exe"
+    if (Test-Path $sampleAppPath) {{
         Set-ItemProperty -Path $commandKey -Name "(Default)" -Value "`"$sampleAppPath`" `"%1`""
         Write-Host "Protocol association set up successfully"
-    } else {
+    }} else {{
         Write-Host "Sample app not found at expected path"
-    }
+    }}
     '''
     
     try:

@@ -12,14 +12,14 @@ using AltTester.AltTesterSDK.Driver;
 using TMPro;
 
 /// <summary>
-/// Unity 6+ builder for macOS builds using Build Profiles.
+/// Unity 6+ builder for Windows builds using Build Profiles.
 /// Ensures TextMeshPro Settings are available for AltTester UI components.
 /// This class is only available in Unity 6.0.0 and newer due to Build Profile API requirements.
 /// </summary>
-public class MacBuilderUnity6
+public class WindowsBuilderUnity6
 {
-    private const string DefaultBuildPath = "Builds/MacOS/Sample Unity 6 macOS.app";
-    private const string BuildProfilePath = "Assets/Settings/Build Profiles/macOS Profile.asset";
+    private const string DefaultBuildPath = "Builds/Windows64/Sample Unity 6 Windows.exe";
+    private const string BuildProfilePath = "Assets/Settings/Build Profiles/Windows Profile.asset";
 
     public static void Build()
     {
@@ -64,7 +64,7 @@ public class MacBuilderUnity6
             {
                 buildProfile = buildProfile,
                 locationPathName = buildPath,
-                options = setupForAltTester ? (BuildOptions.Development | BuildOptions.IncludeTestAssemblies | BuildOptions.AutoRunPlayer) : BuildOptions.None
+                options = setupForAltTester ? (BuildOptions.Development | BuildOptions.IncludeTestAssemblies) : BuildOptions.None
             };
 
             Debug.Log($"Build options: {options.options}");
@@ -158,6 +158,10 @@ public class MacBuilderUnity6
         if (!string.IsNullOrEmpty(port))
         {
             instrumentationSettings.AltServerPort = int.Parse(port);
+        }
+        else
+        {
+            instrumentationSettings.AltServerPort = 13000;
         }
 
         instrumentationSettings.ResetConnectionData = true;

@@ -13,7 +13,8 @@ on:
           - All
           - StandaloneOSX  # Builds Unity 2021 macOS only
           - StandaloneOSX-Unity6  # Builds Unity 6 macOS only
-          - StandaloneWindows64
+          - StandaloneWindows64  # Builds Unity 2021 Windows only
+          - StandaloneWindows64-Unity6  # Builds Unity 6 Windows only
           # - Android
           # - iOS
   push:
@@ -88,8 +89,8 @@ jobs:
     name: Build & Test Unity 6 macOS 🛠️🧪
     runs-on: [self-hosted, macOS]
     concurrency:
-      group: ui-tests-email-inbox-macos
-      cancel-in-progress: false  # Let tests complete rather than canceling
+      group: ui-tests-email-inbox-macos-unity6
+      cancel-in-progress: false  # Let tests complete rather than cancelling
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneOSX-Unity6'
     steps:
       - name: Cleanup old builds
@@ -99,6 +100,8 @@ jobs:
       - uses: actions/checkout@v3
         with:
           lfs: true
+      - name: Setup symlinks for Unity 6 macOS
+        run: ./setup-symlinks.sh
       - name: Force clean package resolution
         run: |
           echo "Removing Library folder to force clean package resolution..."
@@ -171,7 +174,153 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Unity6-Build-Log
+          name: Unity6-macOS-Build-Log
+          path: sample-unity6/build-log.log
+  
+  build-and-test-unity6-windows: # Unity 6 requires a full build cycle to compile AltTester packages properly. This doesn't work well in Game CI, so we have to build it manually.
+    name: Build & Test Unity 6 Windows 🛠️🧪
+    runs-on: [self-hosted, windows]
+    concurrency:
+      group: ui-tests-email-inbox-windows-unity6
+      cancel-in-progress: false  # Let tests complete rather than cancelling
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneWindows64-Unity6'
+    steps:
+      - name: Cleanup old builds
+        run: |
+          # Remove previous build to save space
+          if (Test-Path "sample-unity6/Tests") { Remove-Item -Recurse -Force "sample-unity6/Tests" -ErrorAction SilentlyContinue }
+      - uses: actions/checkout@v3
+        with:
+          lfs: true
+      - name: Cache Unity Library folder
+        uses: actions/cache@v3
+        with:
+          path: sample-unity6/Library
+          key: Library-Unity6-Windows-${{ hashFiles('sample-unity6/Assets/**', 'sample-unity6/Packages/**', 'sample-unity6/ProjectSettings/**') }}
+          restore-keys: |
+            Library-Unity6-Windows-
+      - name: Setup symlinks for Unity 6 Windows
+        run: .\setup-symlinks.ps1
+      - name: Verify symlinks were created
+        run: |
+          if (-not (Test-Path "sample-unity6/Assets/Editor/WindowsBuilderUnity6.cs")) {
+            Write-Output "❌ Build script not found - symlink setup failed"
+            exit 1
+          }
+          Write-Output "✅ Symlinks verified"
+      # Don't delete Library folder - let Unity reuse cached package data if available
+      # Deleting it forces a complete reimport which takes too long
+      - name: Ensure Tests directory exists
+        run: |
+          if (-not (Test-Path "sample-unity6/Tests")) {
+            New-Item -ItemType Directory -Path "sample-unity6/Tests" -Force | Out-Null
+          }
+      - name: First build (resolves packages)
+        run: |
+          Write-Output "Running first build to trigger package resolution..."
+          
+          $unityPath = "C:\Program Files\Unity\Hub\Editor\6000.0.58f2\Editor\Unity.exe"
+          $projectPath = "${{ github.workspace }}\sample-unity6"
+          $logFile = "${{ github.workspace }}\sample-unity6\first-build-log.txt"
+          $buildPath = "${{ github.workspace }}\sample-unity6\Tests\Sample Unity 6 Windows.exe"
+          
+          $arguments = @(
+            "-projectPath", "`"$projectPath`"",
+            "-executeMethod", "WindowsBuilderUnity6.BuildForAltTester",
+            "-logFile", "`"$logFile`"",
+            "-quit", "-batchmode", "-nographics",
+            "--buildPath", "`"$buildPath`""
+          )
+          
+          # Run and ignore exit code (may fail on first attempt)
+          $process = Start-Process -FilePath $unityPath `
+            -ArgumentList $arguments `
+            -Wait -PassThru -NoNewWindow
+          
+          Write-Output "First build completed (exit code: $($process.ExitCode), may have failed, that's ok). Checking for AltTester..."
+          
+          if (Test-Path "${{ github.workspace }}\sample-unity6\Library\PackageCache") {
+            $altTesterFound = Get-ChildItem "${{ github.workspace }}\sample-unity6\Library\PackageCache" -Filter "*alttester*" -ErrorAction SilentlyContinue
+            if ($altTesterFound) {
+              Write-Output "✅ AltTester found in PackageCache after first build"
+            } else {
+              Write-Output "⚠️ AltTester not found yet, but will be ready for second build"
+            }
+          }
+      - name: Build Unity 6 Windows executable
+        timeout-minutes: 20
+        run: |
+          Write-Output "Building Unity 6 Windows executable..."
+          Write-Output "Started at: $(Get-Date -Format 'HH:mm:ss')"
+          
+          # Run Unity build
+          $unityPath = "C:\Program Files\Unity\Hub\Editor\6000.0.58f2\Editor\Unity.exe"
+          $projectPath = "${{ github.workspace }}\sample-unity6"
+          $logFile = "${{ github.workspace }}\sample-unity6\build-log.log"
+          $buildPath = "${{ github.workspace }}\sample-unity6\Tests\Sample Unity 6 Windows.exe"
+          
+          # Build argument list with proper quoting for paths with spaces
+          $arguments = @(
+            "-projectPath", "`"$projectPath`"",
+            "-executeMethod", "WindowsBuilderUnity6.BuildForAltTester",
+            "-logFile", "`"$logFile`"",
+            "-quit", "-batchmode", "-nographics",
+            "--buildPath", "`"$buildPath`""
+          )
+          
+          $process = Start-Process -FilePath $unityPath `
+            -ArgumentList $arguments `
+            -Wait -PassThru -NoNewWindow
+          
+          $buildExitCode = $process.ExitCode
+          Write-Output "Finished at: $(Get-Date -Format 'HH:mm:ss') (exit code: $buildExitCode)"
+          
+          # Verify build output
+          Start-Sleep -Seconds 2
+          if (Test-Path $buildPath) {
+            $fileSize = (Get-Item $buildPath).Length / 1MB
+            Write-Output "✅ Build succeeded! ($([math]::Round($fileSize, 2)) MB)"
+          } else {
+            Write-Output "❌ Build failed! Executable not found"
+            Write-Output ""
+            Write-Output "Build log:"
+            if (Test-Path $logFile) {
+              Get-Content $logFile
+            } else {
+              Write-Output "⚠️ Log file not found at: $logFile"
+            }
+            exit 1
+          }
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+      - name: Verify test files are accessible
+        run: |
+          if (-not (Test-Path "sample-unity6/Tests/requirements-desktop.txt") -and -not (Test-Path "sample/Tests/requirements-desktop.txt")) {
+            Write-Output "❌ Test requirements file not found"
+            exit 1
+          }
+      - name: Install dependencies
+        run: |
+          if (Test-Path "sample-unity6/Tests/requirements-desktop.txt") {
+            pip install -r sample-unity6/Tests/requirements-desktop.txt
+          } else {
+            pip install -r sample/Tests/requirements-desktop.txt
+          }
+      - name: Run UI tests
+        env: 
+          UNITY_APP_PATH: Sample Unity 6 Windows.exe
+          UNITY_APP_NAME: Sample Unity 6 Windows
+          MAILSLURP_API_KEY: ${{ secrets.MAILSLURP_API_KEY }}
+          BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
+          BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+        working-directory: sample-unity6/Tests
+        run: python -m pytest -xs test/test_windows.py::WindowsTest
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Unity6-Windows-Build-Log
           path: sample-unity6/build-log.log
   
   test:
