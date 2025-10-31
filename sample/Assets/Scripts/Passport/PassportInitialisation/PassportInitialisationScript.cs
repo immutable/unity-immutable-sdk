@@ -49,9 +49,10 @@ public class PassportInitialisationScript : MonoBehaviour
             Passport.RedactTokensInLogs = false;
 
             // Initialise Passport
-            const string environment = Immutable.Passport.Model.Environment.SANDBOX;
-            const string clientId = "mp6rxfMDwwZDogcdgNrAaHnG0qMlXuMK";
-            // const string clientId = "IllW5pJ54DShXtaSXzaAlghm40uQjptd";
+            // Use "local" for testing against local BFF backend
+            const string environment = "local";
+            const string clientId = "2Dx7GLUZeFsMnmp1kvOXJ2SYaWGhEpnF";
+            
             var passport = await Passport.Init(clientId, environment, redirectUri, logoutRedirectUri);
             SampleAppManager.PassportInstance = passport;
 

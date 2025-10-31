@@ -11,19 +11,22 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/Passport/InitialisationWithUI.unity
     guid: b588e10e8f614e0458aee90c7d02a499
+  - enabled: 1
+    path: Assets/Scenes/Passport/AppleSignInTestScene.unity
+    guid: a5fffc41f93eef24393ff475b5c166ac
   - enabled: 0
     path: Assets/Scenes/Passport/UnauthenticatedScene.unity
     guid: ac550d22a7a5f4909be272e42b0c7b46
-  - enabled: 0
+  - enabled: 1
     path: Assets/Scenes/Passport/AuthenticatedScene.unity
     guid: 48b17d6cb0b0f409a9edf831addcbc0a
-  - enabled: 0
+  - enabled: 1
     path: Assets/Scenes/Passport/ZkEvm/ZkEvmSendTransaction.unity
     guid: a7c5223614c2d4ff7ac5b06a02ef956c
-  - enabled: 0
+  - enabled: 1
     path: Assets/Scenes/Passport/ZkEvm/ZkEvmGetBalance.unity
     guid: 996b0bbb9b6464417b845459e3e8d764
-  - enabled: 0
+  - enabled: 1
     path: Assets/Scenes/Passport/ZkEvm/ZkEvmGetTransactionReceipt.unity
     guid: ee999224a19ee442d998a452e74dab8c
   - enabled: 0
@@ -53,7 +56,4 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/Passport/WebViewTest.unity
     guid: c8e2712d59c2d9a479d9177e52dd28c5
-  - enabled: 1
-    path: Assets/Scenes/Passport/AppleSignInTestScene.unity
-    guid: a5fffc41f93eef24393ff475b5c166ac
   m_configObjects: {}
