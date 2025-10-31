@@ -327,6 +327,29 @@ namespace Immutable.Passport
             return await GetPassportImpl().CompleteLogin(request);
         }
 
+#if UNITY_IOS && !UNITY_EDITOR
+        /// <summary>
+        /// Logs the user into Passport using Apple Sign-in (iOS only).
+        /// 
+        /// This method:
+        /// 1. Displays the native Apple Sign-in UI
+        /// 2. Exchanges Apple tokens with Immutable's Passport backend
+        /// 3. Completes the login and establishes a Passport session
+        /// 
+        /// The backend endpoint is automatically determined based on the environment
+        /// configured during Passport initialization (production, sandbox, or development).
+        /// </summary>
+        /// <returns>
+        /// Returns true if login is successful, otherwise false.
+        /// Throws PassportException on failure.
+        /// Throws OperationCanceledException if user cancels.
+        /// </returns>
+        public async UniTask<bool> LoginWithApple()
+        {
+            return await GetPassportImpl().LoginWithApple();
+        }
+#endif
+
         /// <summary>
         /// Gets the wallet address of the logged in user.
         /// <returns>

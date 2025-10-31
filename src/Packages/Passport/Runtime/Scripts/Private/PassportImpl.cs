@@ -29,6 +29,8 @@ namespace Immutable.Passport
         private UniTaskCompletionSource<bool>? _pkceCompletionSource;
         private string _redirectUri;
         private string _logoutRedirectUri;
+        private string _environment;
+        private string _clientId;
 
 #if UNITY_ANDROID
         // Used for the PKCE callback
@@ -49,8 +51,10 @@ namespace Immutable.Passport
         public async UniTask Init(string clientId, string environment, string redirectUri,
             string logoutRedirectUri, string? deeplink = null)
         {
+            _clientId = clientId;
             _redirectUri = redirectUri;
             _logoutRedirectUri = logoutRedirectUri;
+            _environment = environment;
 
 #if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
             _communicationsManager.OnAuthPostMessage += OnDeepLinkActivated;
@@ -521,8 +525,290 @@ namespace Immutable.Passport
         {
             var json = JsonUtility.ToJson(request);
             var callResponse = await _communicationsManager.Call(PassportFunction.STORE_TOKENS, json);
-            return callResponse.GetBoolResponse() ?? false;
+            
+            // Check if the call was successful
+            // The bridge returns success: true with a result object containing user info (sub, email)
+            // GetBoolResponse() looks for a boolean in 'result', but storeTokens returns an object
+            // So we need to deserialize and check the 'success' field instead
+            var response = callResponse.OptDeserializeObject<BrowserResponse>();
+            
+            if (response != null && response.success == true)
+            {
+                PassportLogger.Debug($"{TAG} STORE_TOKENS succeeded");
+                return true;
+            }
+            
+            PassportLogger.Error($"{TAG} STORE_TOKENS failed or returned null");
+            return false;
         }
+
+#if UNITY_IOS && !UNITY_EDITOR
+        /// <summary>
+        /// Logs in with Apple Sign-in (iOS only).
+        /// This method:
+        /// 1. Initiates native Apple Sign-in flow
+        /// 2. Sends Apple tokens to backend for verification and Auth0 token exchange
+        ///    - Backend verifies Apple identity token with Apple's public keys
+        ///    - Backend calls IMX Engine Auth Service to exchange for Auth0 tokens
+        /// 3. Completes Passport login with Auth0 tokens
+        /// 
+        /// The backend endpoint is automatically determined based on the environment.
+        /// </summary>
+        /// <returns>True if login successful, false otherwise</returns>
+        public async UniTask<bool> LoginWithApple()
+        {
+            try
+            {
+                PassportLogger.Info($"{TAG} Starting Apple Sign-in flow...");
+                SendAuthEvent(PassportAuthEvent.LoggingInPKCE);
+                Track(PassportAnalytics.EventName.START_LOGIN_PKCE);
+
+                // Step 1: Initiate native Apple Sign-in
+                var appleSignInTask = new UniTaskCompletionSource<AppleSignInRequest>();
+                
+                void OnSuccess(string identityToken, string authorizationCode, string userId, string email, string fullName)
+                {
+                    PassportLogger.Info($"{TAG} Apple Sign-in native callback - Success!");
+                    var request = new AppleSignInRequest(
+                        identityToken, 
+                        authorizationCode, 
+                        userId, 
+                        email, 
+                        fullName,
+                        _clientId
+                    );
+                    appleSignInTask.TrySetResult(request);
+                }
+
+                void OnError(string errorCode, string errorMessage)
+                {
+                    PassportLogger.Error($"{TAG} Apple Sign-in native callback - Error: {errorCode} - {errorMessage}");
+                    appleSignInTask.TrySetException(new PassportException(
+                        $"Apple Sign-in failed: {errorMessage}", 
+                        PassportErrorType.AUTHENTICATION_ERROR
+                    ));
+                }
+
+                void OnCancel()
+                {
+                    PassportLogger.Info($"{TAG} Apple Sign-in native callback - Cancelled by user");
+                    appleSignInTask.TrySetException(new OperationCanceledException("User cancelled Apple Sign-in"));
+                }
+
+                // Subscribe to native callbacks
+                AppleSignInNative.OnSuccess += OnSuccess;
+                AppleSignInNative.OnError += OnError;
+                AppleSignInNative.OnCancel += OnCancel;
+
+                try
+                {
+                    // Check if Apple Sign-in is available
+                    if (!AppleSignInNative.IsAvailable())
+                    {
+                        throw new PassportException("Apple Sign-in is not available on this device", PassportErrorType.OPERATION_NOT_SUPPORTED_ERROR);
+                    }
+
+                    // Start native Apple Sign-in flow
+                    AppleSignInNative.Start();
+
+                    // Wait for native callback
+                    var appleRequest = await appleSignInTask.Task;
+                    PassportLogger.Info($"{TAG} Received Apple tokens, exchanging with backend...");
+
+                    // Step 2: Construct backend URL based on environment
+                    string backendUrl = GetAppleSignInBackendUrl();
+                    PassportLogger.Debug($"{TAG} Using Apple Sign-in backend: {backendUrl}");
+
+                    // Step 3: Exchange Apple tokens with backend
+                    var passportTokens = await ExchangeAppleTokenWithBackend(backendUrl, appleRequest);
+                    
+                    if (passportTokens == null)
+                    {
+                        throw new PassportException("Backend returned null tokens", PassportErrorType.AUTHENTICATION_ERROR);
+                    }
+
+                    PassportLogger.Info($"{TAG} Received Passport tokens, completing login...");
+
+                    // Step 4: Complete login using existing infrastructure
+                    var tokenResponse = new TokenResponse
+                    {
+                        access_token = passportTokens.accessToken,
+                        id_token = passportTokens.idToken,
+                        refresh_token = passportTokens.refreshToken,
+                        expires_in = passportTokens.expiresIn,
+                        token_type = passportTokens.tokenType
+                    };
+
+                    PassportLogger.Debug($"{TAG} Token response:");
+                    PassportLogger.Debug($"{TAG}   access_token: {(string.IsNullOrEmpty(tokenResponse.access_token) ? "EMPTY" : tokenResponse.access_token)}");
+                    PassportLogger.Debug($"{TAG}   id_token: {(string.IsNullOrEmpty(tokenResponse.id_token) ? "EMPTY" : tokenResponse.id_token)}");
+                    PassportLogger.Debug($"{TAG}   refresh_token: {(string.IsNullOrEmpty(tokenResponse.refresh_token) ? "EMPTY" : tokenResponse.refresh_token)}");
+                    PassportLogger.Debug($"{TAG}   expires_in: {tokenResponse.expires_in}");
+                    PassportLogger.Debug($"{TAG}   token_type: {tokenResponse.token_type}");
+                    
+                    PassportLogger.Debug($"{TAG} Calling CompleteLogin...");
+                    bool success = await CompleteLogin(tokenResponse);
+                    PassportLogger.Debug($"{TAG} CompleteLogin returned: {success}");
+
+                    if (success)
+                    {
+                        _isLoggedIn = true;
+                        PassportLogger.Info($"{TAG} Apple Sign-in completed successfully!");
+                        Track(PassportAnalytics.EventName.COMPLETE_LOGIN_PKCE, success: true);
+                        SendAuthEvent(PassportAuthEvent.LoginPKCESuccess);
+                    }
+                    else
+                    {
+                        throw new PassportException("Failed to complete login with Passport tokens", PassportErrorType.AUTHENTICATION_ERROR);
+                    }
+
+                    return success;
+                }
+                finally
+                {
+                    // Clean up event handlers
+                    AppleSignInNative.OnSuccess -= OnSuccess;
+                    AppleSignInNative.OnError -= OnError;
+                    AppleSignInNative.OnCancel -= OnCancel;
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                PassportLogger.Info($"{TAG} Apple Sign-in was cancelled by user");
+                Track(PassportAnalytics.EventName.COMPLETE_LOGIN_PKCE, success: false);
+                SendAuthEvent(PassportAuthEvent.LoginPKCEFailed);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                var errorMessage = $"Apple Sign-in failed: {ex.Message}";
+                PassportLogger.Error($"{TAG} {errorMessage}");
+                Track(PassportAnalytics.EventName.COMPLETE_LOGIN_PKCE, success: false);
+                SendAuthEvent(PassportAuthEvent.LoginPKCEFailed);
+                throw new PassportException(errorMessage, PassportErrorType.AUTHENTICATION_ERROR);
+            }
+        }
+
+        /// <summary>
+        /// Gets the Apple Sign-in backend URL based on the configured environment
+        /// Points to the game developer's BFF (Backend-for-Frontend) which securely
+        /// forwards requests to IMX Engine with the API key
+        /// </summary>
+        private string GetAppleSignInBackendUrl()
+        {
+            string baseUrl = _environment.ToLower() switch
+            {
+                // For production/sandbox/dev, game developers need to deploy their own BFF
+                // that calls api.immutable.com/v1/apple-signin with their API key
+                "production" => "https://your-game-backend.com/auth/apple",
+                "sandbox" => "https://your-game-backend-sandbox.com/auth/apple",
+                "dev" or "development" => "https://your-game-backend-dev.com/auth/apple",
+                "local" => GetLocalUrl(),
+                _ => throw new PassportException($"Unknown environment: {_environment}", PassportErrorType.INITALISATION_ERROR)
+            };
+            
+            return baseUrl;
+        }
+
+        /// <summary>
+        /// Gets the local URL for development, handling iOS simulator networking
+        /// iOS simulator can't access host's localhost, so we use the Mac's IP address
+        /// </summary>
+        private string GetLocalUrl()
+        {
+#if UNITY_IOS && !UNITY_EDITOR
+            // On iOS device/simulator, use Mac's IP address instead of localhost
+            // Update this IP address to match your Mac's local IP
+            return "http://192.168.4.27:3000/auth/apple";
+#else
+            return "http://localhost:3000/auth/apple";
+#endif
+        }
+
+        /// <summary>
+        /// Sends Apple Sign-in tokens to backend for verification and Auth0 token exchange
+        /// The backend (BFF) forwards the request to IMX Engine with the API key
+        /// </summary>
+        private async UniTask<AppleSignInResponse?> ExchangeAppleTokenWithBackend(
+            string backendUrl,
+            AppleSignInRequest request)
+        {
+            PassportLogger.Info($"{TAG} Sending Apple tokens to backend for exchange...");
+            PassportLogger.Debug($"{TAG} Backend URL: {backendUrl}");
+            PassportLogger.Debug($"{TAG} User ID: {request.userId}");
+            PassportLogger.Debug($"{TAG} Email: {request.email ?? "(not provided)"}");
+            
+            // Serialize the Apple Sign-in request to JSON
+            string jsonBody = Newtonsoft.Json.JsonConvert.SerializeObject(request);
+            
+            using (var webRequest = UnityEngine.Networking.UnityWebRequest.Post(backendUrl, ""))
+            {
+                // Set JSON body
+                var bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonBody);
+                webRequest.uploadHandler = new UnityEngine.Networking.UploadHandlerRaw(bodyRaw);
+                webRequest.downloadHandler = new UnityEngine.Networking.DownloadHandlerBuffer();
+                webRequest.SetRequestHeader("Content-Type", "application/json");
+
+                // Send request
+                PassportLogger.Debug($"{TAG} Sending request to backend...");
+                await webRequest.SendWebRequest();
+
+                // Check for errors
+                if (webRequest.result != UnityEngine.Networking.UnityWebRequest.Result.Success)
+                {
+                    string errorDetails = webRequest.downloadHandler?.text ?? "No response body";
+                    PassportLogger.Error($"{TAG} Backend request failed: {webRequest.error}");
+                    PassportLogger.Error($"{TAG} Response: {errorDetails}");
+                    
+                    // Try to parse error response
+                    try
+                    {
+                        var errorResponse = Newtonsoft.Json.JsonConvert.DeserializeObject<AppleSignInErrorResponse>(errorDetails);
+                        throw new PassportException(
+                            $"Apple Sign-in failed: {errorResponse?.errorDescription ?? webRequest.error}", 
+                            PassportErrorType.AUTHENTICATION_ERROR
+                        );
+                    }
+                    catch (Newtonsoft.Json.JsonException)
+                    {
+                        // Couldn't parse error response, use generic message
+                        throw new PassportException(
+                            $"Apple Sign-in failed: {webRequest.error}. Details: {errorDetails}", 
+                            PassportErrorType.AUTHENTICATION_ERROR
+                        );
+                    }
+                }
+
+                // Parse success response
+                var responseText = webRequest.downloadHandler.text;
+                PassportLogger.Info($"{TAG} Backend response received successfully");
+                PassportLogger.Debug($"{TAG} Full response: {responseText}");
+                
+                var passportTokens = Newtonsoft.Json.JsonConvert.DeserializeObject<AppleSignInResponse>(responseText);
+                
+                if (passportTokens == null)
+                {
+                    PassportLogger.Error($"{TAG} Failed to deserialize backend response");
+                    throw new PassportException("Backend returned invalid token response - deserialization failed", PassportErrorType.AUTHENTICATION_ERROR);
+                }
+                
+                PassportLogger.Debug($"{TAG} Deserialized tokens:");
+                PassportLogger.Debug($"{TAG}   accessToken: {(string.IsNullOrEmpty(passportTokens.accessToken) ? "EMPTY/NULL" : passportTokens.accessToken)}");
+                PassportLogger.Debug($"{TAG}   idToken: {(string.IsNullOrEmpty(passportTokens.idToken) ? "EMPTY/NULL" : passportTokens.idToken)}");
+                PassportLogger.Debug($"{TAG}   refreshToken: {(string.IsNullOrEmpty(passportTokens.refreshToken) ? "EMPTY/NULL" : passportTokens.refreshToken)}");
+                PassportLogger.Debug($"{TAG}   expiresIn: {passportTokens.expiresIn}");
+                PassportLogger.Debug($"{TAG}   tokenType: {passportTokens.tokenType}");
+                
+                if (string.IsNullOrEmpty(passportTokens.accessToken))
+                {
+                    PassportLogger.Error($"{TAG} Backend returned empty/null access_token");
+                    throw new PassportException("Backend returned invalid token response - missing access_token", PassportErrorType.AUTHENTICATION_ERROR);
+                }
+                
+                return passportTokens;
+            }
+        }
+#endif
 
         public async UniTask<string?> GetAddress()
         {
