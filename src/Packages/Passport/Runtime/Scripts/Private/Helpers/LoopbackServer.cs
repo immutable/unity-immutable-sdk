@@ -2,8 +2,6 @@ using System;
 using System.Net;
 using System.Text;
 using System.Threading;
-using System.Runtime.InteropServices;
-using System.Diagnostics;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using Immutable.Passport.Core.Logging;
@@ -17,51 +15,17 @@ namespace Immutable.Passport.Helpers
     /// </summary>
     public class LoopbackServer : MonoBehaviour
     {
-        private const string SUCCESS_HTML = @"
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset='utf-8'>
-    <title>Authentication Successful</title>
-</head>
-<body>
-    <p>Authentication successful. You can close this window.</p>
-    <script>
-        // Attempt to close the window automatically
-        window.close();
-        
-        // If that doesn't work (browser security may prevent it), try alternative methods
-        setTimeout(function() {
-            window.open('', '_self').close();
-        }, 100);
-    </script>
-</body>
-</html>";
-
         private static LoopbackServer? _instance;
         private HttpListener? _httpListener;
-        private Action<string>? _callback;
         private CancellationTokenSource? _cancellationTokenSource;
         private int _port;
 
-        // Windows P/Invoke declarations for window focusing
-        [DllImport("user32.dll")]
-        private static extern bool SetForegroundWindow(IntPtr hWnd);
-
-        [DllImport("user32.dll")]
-        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-
-        [DllImport("user32.dll")]
-        private static extern bool IsIconic(IntPtr hWnd);
-
-        private const int SW_RESTORE = 9;
-
         /// <summary>
         /// Initialises the loopback server for handling OAuth callbacks.
+        /// The server will redirect to a deep link URI passed in the redirect_uri query parameter.
         /// </summary>
         /// <param name="port">The port to listen on (e.g. 2963)</param>
-        /// <param name="callback">Callback to invoke when a redirect is received with the full URL</param>
-        public static void Initialise(int port, Action<string> callback)
+        public static void Initialise(int port)
         {
             if (_instance == null)
             {
@@ -70,7 +34,6 @@ namespace Immutable.Passport.Helpers
             }
 
             _instance._port = port;
-            _instance._callback = callback;
             _instance.StartServer();
         }
 
@@ -125,24 +88,51 @@ namespace Immutable.Passport.Helpers
                     var url = context.Request.Url?.ToString();
                     PassportLogger.Debug($"Loopback server received request: {url}");
 
-                    // Send the HTML response
+                    // Send HTML response that redirects to the deep link
                     var response = context.Response;
-                    var buffer = Encoding.UTF8.GetBytes(SUCCESS_HTML);
+                    var redirectHtml = @"<html><body>
+<p>You have been successfully logged in. Redirecting you automatically...</p>
+<p>If it doesn't redirect, <a href='#' id='redirectLink'>click here</a>.</p>
+<script>
+(function() {
+    var urlParams = new URLSearchParams(window.location.search);
+    var redirectUri = urlParams.get('redirect_uri');
+    
+    if (redirectUri) {
+        // Remove redirect_uri from params to pass the rest to the deep link
+        urlParams.delete('redirect_uri');
+        
+        // Build final redirect URL with remaining parameters
+        var finalUrl = redirectUri;
+        var remainingParams = urlParams.toString();
+        if (remainingParams) {
+            var separator = redirectUri.includes('?') ? '&' : '?';
+            finalUrl = redirectUri + separator + remainingParams;
+        }
+        
+        // Set up manual redirect link
+        var redirectLink = document.getElementById('redirectLink');
+        redirectLink.href = finalUrl;
+        redirectLink.onclick = function(e) {
+            e.preventDefault();
+            window.location.href = finalUrl;
+        };
+        
+        // Automatic redirect after 1 second
+        setTimeout(function() {
+            window.location.href = finalUrl;
+        }, 1000);
+    }
+})();
+</script>
+</body></html>";
+                    var buffer = Encoding.UTF8.GetBytes(redirectHtml);
                     response.ContentLength64 = buffer.Length;
                     response.ContentType = "text/html; charset=utf-8";
                     response.StatusCode = 200;
                     
                     await response.OutputStream.WriteAsync(buffer, 0, buffer.Length, cancellationToken);
                     response.OutputStream.Close();
-
-                    // Invoke the callback with the URL
-                    if (!string.IsNullOrEmpty(url))
-                    {
-                        // Focus the Unity window to bring user back to the game
-                        FocusUnityWindow();
-                        
-                        _callback?.Invoke(url);
-                    }
 
                     // Stop the server after handling the request
                     StopServer();
@@ -160,40 +150,6 @@ namespace Immutable.Passport.Helpers
             catch (Exception ex)
             {
                 PassportLogger.Error($"Loopback server error: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Focuses the Unity application window to bring it to the foreground.
-        /// </summary>
-        private void FocusUnityWindow()
-        {
-            try
-            {
-                // Get the current process
-                var currentProcess = Process.GetCurrentProcess();
-                IntPtr windowHandle = currentProcess.MainWindowHandle;
-
-                if (windowHandle != IntPtr.Zero)
-                {
-                    // If window is minimised, restore it first
-                    if (IsIconic(windowHandle))
-                    {
-                        ShowWindow(windowHandle, SW_RESTORE);
-                    }
-
-                    // Bring window to foreground
-                    SetForegroundWindow(windowHandle);
-                    PassportLogger.Debug("Unity window brought to focus");
-                }
-                else
-                {
-                    PassportLogger.Warn("Could not get Unity window handle");
-                }
-            }
-            catch (Exception ex)
-            {
-                PassportLogger.Warn($"Error focusing Unity window: {ex.Message}");
             }
         }
 

@@ -117,8 +117,8 @@ namespace Immutable.Passport
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
                 WindowsDeepLink.Initialise(_redirectUri, OnDeepLinkActivated);
 #endif
-                // Initialise loopback server for OAuth callback handling
-                LoopbackServer.Initialise(2963, OnDeepLinkActivated);
+                // Initialise loopback server for OAuth callback handling via deep link redirect
+                LoopbackServer.Initialise(2963);
                 _ = LaunchAuthUrl();
                 return task.Task;
             }
@@ -196,8 +196,8 @@ namespace Immutable.Passport
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
                 WindowsDeepLink.Initialise(_redirectUri, OnDeepLinkActivated);
 #endif
-                // Initialise loopback server for OAuth callback handling
-                LoopbackServer.Initialise(2963, OnDeepLinkActivated);
+                // Initialise loopback server for OAuth callback handling via deep link redirect
+                LoopbackServer.Initialise(2963);
 
                 _ = LaunchAuthUrl();
                 return await task.Task;
@@ -458,8 +458,8 @@ namespace Immutable.Passport
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
                 WindowsDeepLink.Initialise(_logoutRedirectUri, OnDeepLinkActivated);
 #endif
-                // Initialise loopback server for OAuth callback handling
-                LoopbackServer.Initialise(2963, OnDeepLinkActivated);
+                // Initialise loopback server for OAuth callback handling via deep link redirect
+                LoopbackServer.Initialise(2963);
                 LaunchLogoutPkceUrl(hardLogout);
                 return await task.Task;
             }
