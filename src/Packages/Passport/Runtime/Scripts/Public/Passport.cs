@@ -153,7 +153,7 @@ namespace Immutable.Passport
         )
         {
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
-            ValidateWindowsProtocols(redirectUri, logoutRedirectUri);
+            ValidateWindowsProtocols(environment, redirectUri, logoutRedirectUri);
 #endif
 
             if (Instance == null)
@@ -705,8 +705,16 @@ namespace Immutable.Passport
         /// Validates that custom protocols are used for Windows platforms instead of http/https.
         /// Windows uses registry-based deep linking which requires custom protocols.
         /// </summary>
-        private static void ValidateWindowsProtocols(string redirectUri, string logoutRedirectUri)
+        private static void ValidateWindowsProtocols(string environment, string redirectUri, string logoutRedirectUri)
         {
+            // Allow the special hosted login page URL format for Windows login redirect
+            string hostedLoginPageUrl = PassportImpl.GetHostedLoginPageUrl(environment);
+
+            if (redirectUri.Contains(hostedLoginPageUrl))
+            {
+                return;
+            }
+
             if (IsHttpProtocol(redirectUri))
             {
                 throw new PassportException(
