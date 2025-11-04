@@ -50,6 +50,13 @@ namespace Immutable.Passport
             string logoutRedirectUri, string? deeplink = null)
         {
             _redirectUri = redirectUri;
+#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+            if (redirectUri.Contains(GetHostedLoginPageUrl(environment))) {
+                Uri uri = new Uri(redirectUri);
+                string redirectUriParam = uri.GetQueryParameter("redirect_uri");
+                _redirectUri = redirectUriParam;
+            }
+#endif
             _logoutRedirectUri = logoutRedirectUri;
 
 #if (UNITY_ANDROID && !UNITY_EDITOR_WIN) || (UNITY_IPHONE && !UNITY_EDITOR_WIN) || UNITY_STANDALONE_OSX || UNITY_WEBGL
@@ -772,6 +779,19 @@ namespace Immutable.Passport
         {
             await _analytics.Track(_communicationsManager, eventName, success, properties);
         }
+
+#if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
+        /// <summary>
+        /// Gets the hosted login page URL for the specified environment.
+        /// This is used for Windows login redirect flow.
+        /// </summary>
+        public static string GetHostedLoginPageUrl(string environment)
+        {
+            return environment == Immutable.Passport.Model.Environment.DEVELOPMENT
+                ? "https://auth.dev.immutable.com/im-logged-in"
+                : "https://auth.immutable.com/im-logged-in";
+        }
+#endif
     }
 
 #if UNITY_ANDROID
