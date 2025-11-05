@@ -548,10 +548,8 @@ paths:
       security:
       - ImmutableApiKey:
         - refresh:metadata
-      - BearerAuthWithClient:
-        - refresh:metadata
-      - BearerAuth:
-        - refresh:metadata
+      - BearerAuthWithClient: []
+      - BearerAuth: []
       summary: Refresh collection metadata
       tags:
       - collections
@@ -2212,8 +2210,7 @@ paths:
                 $ref: '#/components/schemas/APIError500'
           description: Internal Server Error (500)
       security:
-      - BearerAuthWithClient:
-        - refresh:metadata
+      - BearerAuthWithClient: []
       summary: Refresh collection metadata internal
       tags:
       - collections
