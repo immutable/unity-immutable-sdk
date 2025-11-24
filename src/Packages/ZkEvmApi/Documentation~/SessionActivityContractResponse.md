@@ -1,0 +1,17 @@
+# Immutable.Api.ZkEvm.Model.SessionActivityContractResponse
+
+## Properties
+
+Name | Type | Description | Notes
+------------ | ------------- | ------------- | -------------
+**Id** | **int** | The unique identifier of the session activity contract | 
+**Name** | **string** | The name of the session activity contract | 
+**ContractAddress** | **string** | The smart contract address | 
+**ClientId** | **string** | The client ID associated with the session activity contract | 
+**ChainId** | **string** | The chain ID for the session activity contract | 
+**OrganisationId** | **Guid** | The organisation ID that owns this session activity contract (UUID format) | 
+**Enabled** | **bool** | Whether the session activity contract is enabled | 
+**CreatedAt** | **DateTime** | The timestamp when the session activity contract was created | 
+
+[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+
