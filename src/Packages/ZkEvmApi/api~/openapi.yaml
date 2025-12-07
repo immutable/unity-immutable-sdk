@@ -3363,6 +3363,52 @@ paths:
       summary: Verify phone OTP code against user phone number
       tags:
       - passport profile
+  /passport-profile/v1/username:
+    post:
+      description: Update username for the authenticated user's Passport wallet
+      operationId: update-username
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsernameUpdateRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsernameUpdateResponse'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError400'
+          description: BadRequestError
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError401'
+          description: UnauthorizedError
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError403'
+          description: ForbiddenError
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError500'
+          description: InternalServerError
+      security:
+      - BearerAuth:
+        - openid
+      summary: Update username
+      tags:
+      - passport profile
   /passport-profile/v1/phone-otp:
     post:
       description: Send phone OTP code for user supplied phone number
@@ -9379,6 +9425,102 @@ components:
         - title
         - type
         - url
+    UsernameUpdateRequest:
+      description: Request to update username
+      example:
+        username: username
+      properties:
+        username:
+          description: The new username
+          maxLength: 100
+          minLength: 1
+          pattern: "^[a-zA-Z0-9._]+$"
+          type: string
+      required:
+      - username
+      type: object
+    UsernameUpdateResponse:
+      description: Username update response
+      example:
+        username: username
+      properties:
+        username:
+          type: string
+      required:
+      - username
+      type: object
+    SessionActivityContractResponse:
+      allOf:
+      - $ref: '#/components/schemas/SessionActivityContract'
+      - type: object
+      - required:
+        - chain_id
+        - client_id
+        - contract_address
+        - created_at
+        - enabled
+        - id
+        - name
+        - organisation_id
+    UpsertSessionActivityContractReq:
+      allOf:
+      - $ref: '#/components/schemas/SessionActivityContract'
+      - type: object
+      - required:
+        - chain_id
+        - client_id
+        - contract_address
+        - enabled
+        - name
+        - organisation_id
+    UpsertSessionActivityContractResp:
+      allOf:
+      - $ref: '#/components/schemas/SessionActivityContract'
+      - type: object
+    SessionActivityContract:
+      properties:
+        id:
+          description: The unique identifier of the session activity contract
+          example: 1
+          type: integer
+        name:
+          description: The name of the session activity contract
+          example: Session Activity Contract 1
+          type: string
+        contract_address:
+          description: The smart contract address
+          example: 0x1234567890abcdef1234567890abcdef12345678
+          maxLength: 42
+          minLength: 42
+          pattern: "^0x[0-9a-fA-F]{40}$"
+          type: string
+        client_id:
+          description: The client ID associated with the session activity contract
+          example: ZabAMafQRA9bWE1XatAtBYNe6DRamgqE
+          maxLength: 32
+          minLength: 32
+          pattern: "^[a-zA-Z0-9]{32}$"
+          type: string
+        chain_id:
+          description: The chain ID for the session activity contract
+          example: eip155:13371
+          type: string
+        organisation_id:
+          description: The organisation ID that owns this session activity contract
+            (UUID format)
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+        enabled:
+          description: Whether the session activity contract is enabled
+          example: true
+          type: boolean
+        created_at:
+          description: The timestamp when the session activity contract was created
+          example: 2023-12-07T10:30:00Z
+          format: date-time
+          type: string
+      type: object
     FilterValue:
       example:
       - value: Common
