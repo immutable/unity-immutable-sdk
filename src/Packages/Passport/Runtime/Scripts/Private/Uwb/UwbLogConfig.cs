@@ -17,9 +17,9 @@ namespace Immutable.Passport
             browserClient.logSeverity = PassportLogger.CurrentLogLevel switch
             {
                 LogLevel.Debug => LogSeverity.Debug,
-                LogLevel.Warn  => LogSeverity.Warn,
+                LogLevel.Warn => LogSeverity.Warn,
                 LogLevel.Error => LogSeverity.Error,
-                _              => LogSeverity.Info
+                _ => LogSeverity.Info
             };
 
             if (browserClient.Logger is not DefaultUnityWebBrowserLogger)
