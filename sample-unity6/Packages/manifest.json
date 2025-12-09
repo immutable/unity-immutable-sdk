@@ -17,6 +17,9 @@
     "com.unity.ugui": "2.0.0",
     "com.unity.uiextensions": "2.2.4",
     "com.unity.visualscripting": "1.9.7",
+    "dev.voltstro.unitywebbrowser": "2.2.7",
+    "dev.voltstro.unitywebbrowser.engine.cef": "2.2.7",
+    "dev.voltstro.unitywebbrowser.engine.cef.win.x64": "2.2.7",
     "com.unity.modules.accessibility": "1.0.0",
     "com.unity.modules.ai": "1.0.0",
     "com.unity.modules.androidjni": "1.0.0",
@@ -70,6 +73,14 @@
       "url": "https://registry.npmjs.org/",
       "scopes": [
         "com.unity.uiextensions"
+      ]
+    },
+    {
+      "name": "VoltUPR",
+      "url": "https://upr.voltstro.dev",
+      "scopes": [
+        "dev.voltstro",
+        "org.nuget"
       ]
     }
   ]
