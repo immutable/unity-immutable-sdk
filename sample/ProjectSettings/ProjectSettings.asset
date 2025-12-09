@@ -776,7 +776,7 @@ PlayerSettings:
   webGLPowerPreference: 2
   scriptingDefineSymbols:
     Android: VUPLEX_STANDALONE
-    Standalone: VUPLEX_STANDALONE
+    Standalone: UWB_WEBVIEW;VUPLEX_STANDALONE
     iPhone: 
   additionalCompilerArguments:
     Standalone:
