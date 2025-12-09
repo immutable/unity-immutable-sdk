@@ -20,7 +20,8 @@ MonoBehaviour:
     rid: 5612885467593965569
   m_OverrideGlobalSceneList: 0
   m_Scenes: []
-  m_ScriptingDefines: []
+  m_ScriptingDefines:
+  - UWB_WEBVIEW
   m_PlayerSettingsYaml:
     m_Settings:
     - line: '| PlayerSettings:'
