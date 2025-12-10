@@ -2,7 +2,6 @@
     "name": "Immutable.Passport.Runtime.Private",
     "rootNamespace": "Immutable.Passport",
     "references": [
-        "VoltstroStudios.UnityWebBrowser",
         "UniTask",
         "Immutable.Browser.Core",
         "Immutable.Browser.Gree",
@@ -22,8 +21,7 @@
     "allowUnsafeCode": false,
     "overrideReferences": true,
     "precompiledReferences": [
-        "Newtonsoft.Json.dll",
-        "VoltstroStudios.UnityWebBrowser.Shared.dll"
+        "Newtonsoft.Json.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],

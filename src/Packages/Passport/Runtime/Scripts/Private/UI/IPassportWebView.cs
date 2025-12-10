@@ -106,6 +106,25 @@ namespace Immutable.Passport
     }
 
     /// <summary>
+    /// Optional capability for WebViews that support updating their internal rendering resolution.
+    /// Used by PassportUI to keep the underlying WebView resolution in sync with the UI.
+    /// </summary>
+    public interface IResizablePassportWebView : IPassportWebView
+    {
+        /// <summary>
+        /// Update the internal resolution of the WebView.
+        /// </summary>
+        /// <param name="width">New width in pixels.</param>
+        /// <param name="height">New height in pixels.</param>
+        void UpdateInternalResolution(int width, int height);
+
+        /// <summary>
+        /// Apply any pending resolution updates (intended to be called from the main thread per frame).
+        /// </summary>
+        void UpdatePendingResolution();
+    }
+
+    /// <summary>
     /// Configuration options for PassportUI WebView
     /// </summary>
     public class PassportWebViewConfig
