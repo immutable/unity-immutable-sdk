@@ -89,6 +89,27 @@ namespace Immutable.Api.ZkEvm.Api
         /// <returns>ApiResponse of PhoneNumberOTPResponse</returns>
         ApiResponse<PhoneNumberOTPResponse> SendPhoneOtpWithHttpInfo(PhoneNumberOTPRequest? phoneNumberOTPRequest = default(PhoneNumberOTPRequest?));
         /// <summary>
+        /// Update username
+        /// </summary>
+        /// <remarks>
+        /// Update username for the authenticated user&#39;s Passport wallet
+        /// </remarks>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="usernameUpdateRequest"> (optional)</param>
+        /// <returns>UsernameUpdateResponse</returns>
+        UsernameUpdateResponse UpdateUsername(UsernameUpdateRequest? usernameUpdateRequest = default(UsernameUpdateRequest?));
+
+        /// <summary>
+        /// Update username
+        /// </summary>
+        /// <remarks>
+        /// Update username for the authenticated user&#39;s Passport wallet
+        /// </remarks>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="usernameUpdateRequest"> (optional)</param>
+        /// <returns>ApiResponse of UsernameUpdateResponse</returns>
+        ApiResponse<UsernameUpdateResponse> UpdateUsernameWithHttpInfo(UsernameUpdateRequest? usernameUpdateRequest = default(UsernameUpdateRequest?));
+        /// <summary>
         /// Verify phone OTP code against user phone number
         /// </summary>
         /// <remarks>
@@ -185,6 +206,29 @@ namespace Immutable.Api.ZkEvm.Api
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (PhoneNumberOTPResponse)</returns>
         System.Threading.Tasks.Task<ApiResponse<PhoneNumberOTPResponse>> SendPhoneOtpWithHttpInfoAsync(PhoneNumberOTPRequest? phoneNumberOTPRequest = default(PhoneNumberOTPRequest?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
+        /// <summary>
+        /// Update username
+        /// </summary>
+        /// <remarks>
+        /// Update username for the authenticated user&#39;s Passport wallet
+        /// </remarks>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="usernameUpdateRequest"> (optional)</param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of UsernameUpdateResponse</returns>
+        System.Threading.Tasks.Task<UsernameUpdateResponse> UpdateUsernameAsync(UsernameUpdateRequest? usernameUpdateRequest = default(UsernameUpdateRequest?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
+
+        /// <summary>
+        /// Update username
+        /// </summary>
+        /// <remarks>
+        /// Update username for the authenticated user&#39;s Passport wallet
+        /// </remarks>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="usernameUpdateRequest"> (optional)</param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of ApiResponse (UsernameUpdateResponse)</returns>
+        System.Threading.Tasks.Task<ApiResponse<UsernameUpdateResponse>> UpdateUsernameWithHttpInfoAsync(UsernameUpdateRequest? usernameUpdateRequest = default(UsernameUpdateRequest?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
         /// <summary>
         /// Verify phone OTP code against user phone number
         /// </summary>
@@ -734,6 +778,138 @@ namespace Immutable.Api.ZkEvm.Api
             if (this.ExceptionFactory != null)
             {
                 Exception _exception = this.ExceptionFactory("SendPhoneOtp", localVarResponse);
+                if (_exception != null) throw _exception;
+            }
+
+            return localVarResponse;
+        }
+
+        /// <summary>
+        /// Update username Update username for the authenticated user&#39;s Passport wallet
+        /// </summary>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="usernameUpdateRequest"> (optional)</param>
+        /// <returns>UsernameUpdateResponse</returns>
+        public UsernameUpdateResponse UpdateUsername(UsernameUpdateRequest? usernameUpdateRequest = default(UsernameUpdateRequest?))
+        {
+            Immutable.Api.ZkEvm.Client.ApiResponse<UsernameUpdateResponse> localVarResponse = UpdateUsernameWithHttpInfo(usernameUpdateRequest);
+            return localVarResponse.Data;
+        }
+
+        /// <summary>
+        /// Update username Update username for the authenticated user&#39;s Passport wallet
+        /// </summary>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="usernameUpdateRequest"> (optional)</param>
+        /// <returns>ApiResponse of UsernameUpdateResponse</returns>
+        public Immutable.Api.ZkEvm.Client.ApiResponse<UsernameUpdateResponse> UpdateUsernameWithHttpInfo(UsernameUpdateRequest? usernameUpdateRequest = default(UsernameUpdateRequest?))
+        {
+            Immutable.Api.ZkEvm.Client.RequestOptions localVarRequestOptions = new Immutable.Api.ZkEvm.Client.RequestOptions();
+
+            string[] _contentTypes = new string[] {
+                "application/json"
+            };
+
+            // to determine the Accept header
+            string[] _accepts = new string[] {
+                "application/json"
+            };
+
+            var localVarContentType = Immutable.Api.ZkEvm.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
+            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
+
+            var localVarAccept = Immutable.Api.ZkEvm.Client.ClientUtils.SelectHeaderAccept(_accepts);
+            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
+
+            localVarRequestOptions.Data = usernameUpdateRequest;
+
+            // authentication (BearerAuth) required
+            // bearer authentication required
+            if (!string.IsNullOrEmpty(this.Configuration.AccessToken) && !localVarRequestOptions.HeaderParameters.ContainsKey("Authorization"))
+            {
+                localVarRequestOptions.HeaderParameters.Add("Authorization", "Bearer " + this.Configuration.AccessToken);
+            }
+
+            // make the HTTP request
+            var localVarResponse = this.Client.Post<UsernameUpdateResponse>("/passport-profile/v1/username", localVarRequestOptions, this.Configuration);
+
+            if (this.ExceptionFactory != null)
+            {
+                Exception _exception = this.ExceptionFactory("UpdateUsername", localVarResponse);
+                if (_exception != null) throw _exception;
+            }
+
+            return localVarResponse;
+        }
+
+        /// <summary>
+        /// Update username Update username for the authenticated user&#39;s Passport wallet
+        /// </summary>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="usernameUpdateRequest"> (optional)</param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of UsernameUpdateResponse</returns>
+        public async System.Threading.Tasks.Task<UsernameUpdateResponse> UpdateUsernameAsync(UsernameUpdateRequest? usernameUpdateRequest = default(UsernameUpdateRequest?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+        {
+            var task = UpdateUsernameWithHttpInfoAsync(usernameUpdateRequest, cancellationToken);
+#if UNITY_EDITOR || !UNITY_WEBGL
+            Immutable.Api.ZkEvm.Client.ApiResponse<UsernameUpdateResponse> localVarResponse = await task.ConfigureAwait(false);
+#else
+            Immutable.Api.ZkEvm.Client.ApiResponse<UsernameUpdateResponse> localVarResponse = await task;
+#endif
+            return localVarResponse.Data;
+        }
+
+        /// <summary>
+        /// Update username Update username for the authenticated user&#39;s Passport wallet
+        /// </summary>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="usernameUpdateRequest"> (optional)</param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of ApiResponse (UsernameUpdateResponse)</returns>
+        public async System.Threading.Tasks.Task<Immutable.Api.ZkEvm.Client.ApiResponse<UsernameUpdateResponse>> UpdateUsernameWithHttpInfoAsync(UsernameUpdateRequest? usernameUpdateRequest = default(UsernameUpdateRequest?), System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+        {
+
+            Immutable.Api.ZkEvm.Client.RequestOptions localVarRequestOptions = new Immutable.Api.ZkEvm.Client.RequestOptions();
+
+            string[] _contentTypes = new string[] {
+                "application/json"
+            };
+
+            // to determine the Accept header
+            string[] _accepts = new string[] {
+                "application/json"
+            };
+
+
+            var localVarContentType = Immutable.Api.ZkEvm.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
+            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
+
+            var localVarAccept = Immutable.Api.ZkEvm.Client.ClientUtils.SelectHeaderAccept(_accepts);
+            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
+
+            localVarRequestOptions.Data = usernameUpdateRequest;
+
+            // authentication (BearerAuth) required
+            // bearer authentication required
+            if (!string.IsNullOrEmpty(this.Configuration.AccessToken) && !localVarRequestOptions.HeaderParameters.ContainsKey("Authorization"))
+            {
+                localVarRequestOptions.HeaderParameters.Add("Authorization", "Bearer " + this.Configuration.AccessToken);
+            }
+
+            // make the HTTP request
+
+            var task = this.AsynchronousClient.PostAsync<UsernameUpdateResponse>("/passport-profile/v1/username", localVarRequestOptions, this.Configuration, cancellationToken);
+
+#if UNITY_EDITOR || !UNITY_WEBGL
+            var localVarResponse = await task.ConfigureAwait(false);
+#else
+            var localVarResponse = await task;
+#endif
+
+            if (this.ExceptionFactory != null)
+            {
+                Exception _exception = this.ExceptionFactory("UpdateUsername", localVarResponse);
                 if (_exception != null) throw _exception;
             }
 
