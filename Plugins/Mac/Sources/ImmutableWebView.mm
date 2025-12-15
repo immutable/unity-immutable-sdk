@@ -322,12 +322,32 @@ static ASWebAuthenticationSession *_authSession;
 {
     if (webView == nil)
         return;
-
+    
     WKWebView *_webView = (WKWebView *)webView;
     NSString *urlStr = [NSString stringWithUTF8String:url];
     NSURL *nsurl = [NSURL URLWithString:urlStr];
-    NSURLRequest *request = [NSURLRequest requestWithURL:nsurl];
-    [_webView load:request];
+    
+    // Check if it's a file URL
+    if ([nsurl.scheme isEqualToString:@"file"]) {
+        // Load file content as HTML string with a proper base URL
+        NSError *error = nil;
+        NSString *htmlString = [NSString stringWithContentsOfURL:nsurl 
+                                                        encoding:NSUTF8StringEncoding 
+                                                           error:&error];
+        
+        if (error) {
+            NSLog(@"Error loading file: %@", error.localizedDescription);
+            return;
+        }
+        
+        // Use http://localhost as base URL to avoid null origin
+        NSURL *baseURL = [NSURL URLWithString:@"http://localhost/"];
+        [_webView loadHTMLString:htmlString baseURL:baseURL];
+    } else {
+        // Load remote URLs normally
+        NSURLRequest *request = [NSURLRequest requestWithURL:nsurl];
+        [_webView loadRequest:request];
+    }
 }
 
 - (void)launchAuthURL:(const char *)url redirectUri:(const char *)redirectUri
