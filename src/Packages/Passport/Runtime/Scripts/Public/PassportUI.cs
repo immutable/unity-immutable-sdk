@@ -547,6 +547,9 @@ namespace Immutable.Passport
                         case "opted_in":
                             loginOptions.marketingConsentStatus = MarketingConsentStatus.OptedIn;
                             break;
+                        case "subscribed":
+                            loginOptions.marketingConsentStatus = MarketingConsentStatus.Subscribed;
+                            break;
                         case "unsubscribed":
                             loginOptions.marketingConsentStatus = MarketingConsentStatus.Unsubscribed;
                             break;
