@@ -43,7 +43,16 @@ public class ImxRegisterScript : MonoBehaviour
         }
         catch (PassportException e)
         {
-            ShowOutput($"Unable to register off-chain: {e.Message} ({e.Type})");
+            // Handle 409 - account already registered
+            if (e.Type == PassportErrorType.USER_REGISTRATION_ERROR &&
+                (e.Message.Contains("409") || e.Message.Contains("already registered")))
+            {
+                ShowOutput("Passport account already registered");
+            }
+            else
+            {
+                ShowOutput($"Unable to register off-chain: {e.Message} ({e.Type})");
+            }
         }
         catch (Exception e)
         {
