@@ -9432,9 +9432,9 @@ components:
       properties:
         username:
           description: The new username
-          maxLength: 100
-          minLength: 1
-          pattern: "^[a-zA-Z0-9._]+$"
+          maxLength: 18
+          minLength: 3
+          pattern: "^[a-zA-Z0-9]+$"
           type: string
       required:
       - username
