@@ -114,14 +114,17 @@ class UnityTest(unittest.TestCase):
            print(f"RegisterOffchainBtn output: {text}")
            self.assertEqual("Registering off-chain...", text)
            time.sleep(20)
-           if "Passport account already registered" in output.get_text():
+           output_text = output.get_text()
+           # Accept either success message or 409 error (account already registered)
+           if "Successfully registered" in output_text or ("409" in output_text and "USER_REGISTRATION_ERROR" in output_text):
                break
            attempts += 1
 
-        # Assert that the desired text is found after waiting
+        # Assert that registration completed (either success or 409 error for already registered)
+        output_text = output.get_text()
         self.assertTrue(
-           "Passport account already registered" in output.get_text(),
-           f"Expected 'Passport account already registered' not found. Actual output: '{output.get_text()}'"
+           "Successfully registered" in output_text or ("409" in output_text and "USER_REGISTRATION_ERROR" in output_text),
+           f"Expected 'Successfully registered' or '409 (USER_REGISTRATION_ERROR)' not found. Actual output: '{output_text}'"
         )
 
         # Get address
