@@ -9,6 +9,7 @@ namespace Immutable.Passport.Model
     public enum MarketingConsentStatus
     {
         OptedIn,
+        Subscribed,
         Unsubscribed
     }
 
@@ -27,6 +28,7 @@ namespace Immutable.Passport.Model
             return status switch
             {
                 MarketingConsentStatus.OptedIn => "opted_in",
+                MarketingConsentStatus.Subscribed => "subscribed",
                 MarketingConsentStatus.Unsubscribed => "unsubscribed",
                 _ => throw new ArgumentOutOfRangeException(nameof(status), status, "Unknown MarketingConsentStatus value")
             };
