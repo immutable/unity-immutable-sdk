@@ -52,6 +52,9 @@ namespace Immutable.Passport
             WebBrowserClient browserClient = ui.browserClient;
             browserClient.engineStartupTimeout = engineStartupTimeoutMs;
 
+            // Disable sandbox for Windows VM compatibility
+            browserClient.noSandbox = true;
+
             // Apply Passport logging preferences to the UWB client
             UwbLogConfig.ApplyTo(browserClient);
 
