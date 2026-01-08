@@ -10,23 +10,21 @@ using UnityEngine;
 namespace Immutable.Browser.Core
 {
     /// <summary>
-    /// A lightweight HTTP server to serve the GameBridge index.html locally.
-    /// This provides a proper origin (http://localhost:PORT) instead of null origin from file:// URLs.
+    /// Local HTTP server for index.html to provide a proper origin instead of null from file:// URLs.
     /// </summary>
     public class GameBridgeServer : IDisposable
     {
         private const string TAG = "[Game Bridge Server]";
-        private const int MIN_PORT = 49152;
-        private const int MAX_PORT = 65535;
-        private const int MAX_PORT_ATTEMPTS = 100;
+        
+        // Fixed port to maintain consistent origin for localStorage/IndexedDB persistence
+        private const int PORT = 51990;
+        private static readonly string URL = "http://localhost:" + PORT + "/";
 
         private HttpListener? _listener;
         private Thread? _listenerThread;
         private byte[]? _indexHtmlContent;
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
         private bool _disposed;
-
-        public int Port { get; private set; }
 
         /// <summary>
         /// Creates a new GameBridgeServer instance.
@@ -40,13 +38,12 @@ namespace Immutable.Browser.Core
             if (!File.Exists(indexHtmlPath))
                 throw new FileNotFoundException($"{TAG} index.html not found: {indexHtmlPath}");
 
-            // Cache the file content at startup
             _indexHtmlContent = File.ReadAllBytes(indexHtmlPath);
             Debug.Log($"{TAG} Loaded index.html ({_indexHtmlContent.Length} bytes)");
         }
 
         /// <summary>
-        /// Starts the HTTP server on an available port.
+        /// Starts the game bridge server.
         /// </summary>
         /// <returns>The URL to the index.html file.</returns>
         public string Start()
@@ -55,15 +52,15 @@ namespace Immutable.Browser.Core
                 throw new ObjectDisposedException(nameof(GameBridgeServer));
 
             if (_listener?.IsListening == true)
-                return $"http://localhost:{Port}/";
+                return URL;
 
-            Port = FindAvailablePort();
+            EnsurePortAvailable();
             
             _listener = new HttpListener();
-            _listener.Prefixes.Add($"http://localhost:{Port}/");
+            _listener.Prefixes.Add(URL);
             _listener.Start();
             
-            Debug.Log($"{TAG} Started on http://localhost:{Port}/");
+            Debug.Log($"{TAG} Started on {URL}");
 
             _listenerThread = new Thread(ListenerLoop)
             {
@@ -72,7 +69,7 @@ namespace Immutable.Browser.Core
             };
             _listenerThread.Start();
 
-            return $"http://localhost:{Port}/";
+            return URL;
         }
 
         private void ListenerLoop()
@@ -120,16 +117,14 @@ namespace Immutable.Browser.Core
             }
         }
 
-        private int FindAvailablePort()
+        private void EnsurePortAvailable()
         {
-            var random = new System.Random();
-            for (int attempt = 0; attempt < MAX_PORT_ATTEMPTS; attempt++)
+            if (!IsPortAvailable(PORT))
             {
-                int port = random.Next(MIN_PORT, MAX_PORT);
-                if (IsPortAvailable(port))
-                    return port;
+                throw new InvalidOperationException(
+                    $"{TAG} Port {PORT} is already in use. " +
+                    "Please close any application using this port to ensure localStorage/IndexedDB data persists correctly.");
             }
-            throw new InvalidOperationException($"{TAG} Could not find an available port");
         }
 
         private bool IsPortAvailable(int port)
