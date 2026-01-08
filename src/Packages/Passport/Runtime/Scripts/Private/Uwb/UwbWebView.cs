@@ -1,4 +1,4 @@
-#if UWB_WEBVIEW && !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
+#if UWB_WEBVIEW && !IMMUTABLE_CUSTOM_BROWSER && (UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN))
 
 using System;
 using System.IO;
@@ -32,6 +32,7 @@ namespace Immutable.Passport
 #endif
 
         private WebBrowserClient? webBrowserClient;
+        private GameBridgeServer? gameBridgeServer;
 
         public async UniTask Init(int engineStartupTimeoutMs, bool redactTokensInLogs, Func<string, string> redactionHandler)
         {
@@ -66,8 +67,9 @@ namespace Immutable.Passport
             var browserEngineMainDir = WebBrowserUtils.GetAdditionFilesDirectory();
             browserClient.CachePath = new FileInfo(Path.Combine(browserEngineMainDir, "ImmutableSDK/UWBCache"));
 
-            // Game bridge path
-            browserClient.initialUrl = GameBridge.GetFilePath();
+            // Start local HTTP server to serve index.html
+            gameBridgeServer = new GameBridgeServer(GameBridge.GetFileSystemPath());
+            browserClient.initialUrl = gameBridgeServer.Start();
 
             // Set up engine from standard UWB configuration asset
             var engineConfigAsset = Resources.Load<EngineConfiguration>("Cef Engine Configuration");
@@ -145,6 +147,8 @@ namespace Immutable.Passport
             if (webBrowserClient?.HasDisposed == true) return;
 
             webBrowserClient?.Dispose();
+            gameBridgeServer?.Dispose();
+            gameBridgeServer = null;
         }
 #endif
     }

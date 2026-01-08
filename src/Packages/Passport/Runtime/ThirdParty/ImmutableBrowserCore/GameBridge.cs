@@ -41,5 +41,15 @@ namespace Immutable.Browser.Core
             filePath = filePath.Replace(" ", "%20");
             return filePath;
         }
+
+        /// <summary>
+        /// Gets the file system path to index.html (without file:// scheme or URL encoding).
+        /// </summary>
+        public static string GetFileSystemPath()
+        {
+            return GetFilePath()
+                .Replace(SCHEME_FILE, "")
+                .Replace("%20", " ");
+        }
     }
 }
