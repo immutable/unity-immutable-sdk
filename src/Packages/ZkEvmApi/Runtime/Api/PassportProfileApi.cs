@@ -28,6 +28,25 @@ namespace Immutable.Api.ZkEvm.Api
     {
         #region Synchronous Operations
         /// <summary>
+        /// Get profile for authenticated user
+        /// </summary>
+        /// <remarks>
+        /// Get profile for the authenticated user&#39;s Passport wallet
+        /// </remarks>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <returns>ProfileResponse</returns>
+        ProfileResponse GetProfileByAuthenticatedWallet();
+
+        /// <summary>
+        /// Get profile for authenticated user
+        /// </summary>
+        /// <remarks>
+        /// Get profile for the authenticated user&#39;s Passport wallet
+        /// </remarks>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <returns>ApiResponse of ProfileResponse</returns>
+        ApiResponse<ProfileResponse> GetProfileByAuthenticatedWalletWithHttpInfo();
+        /// <summary>
         /// Get all info for a Passport user
         /// </summary>
         /// <remarks>
@@ -139,6 +158,27 @@ namespace Immutable.Api.ZkEvm.Api
     public interface IPassportProfileApiAsync : IApiAccessor
     {
         #region Asynchronous Operations
+        /// <summary>
+        /// Get profile for authenticated user
+        /// </summary>
+        /// <remarks>
+        /// Get profile for the authenticated user&#39;s Passport wallet
+        /// </remarks>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of ProfileResponse</returns>
+        System.Threading.Tasks.Task<ProfileResponse> GetProfileByAuthenticatedWalletAsync(System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
+
+        /// <summary>
+        /// Get profile for authenticated user
+        /// </summary>
+        /// <remarks>
+        /// Get profile for the authenticated user&#39;s Passport wallet
+        /// </remarks>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of ApiResponse (ProfileResponse)</returns>
+        System.Threading.Tasks.Task<ApiResponse<ProfileResponse>> GetProfileByAuthenticatedWalletWithHttpInfoAsync(System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken));
         /// <summary>
         /// Get all info for a Passport user
         /// </summary>
@@ -394,6 +434,130 @@ namespace Immutable.Api.ZkEvm.Api
                 return _exceptionFactory;
             }
             set { _exceptionFactory = value; }
+        }
+
+        /// <summary>
+        /// Get profile for authenticated user Get profile for the authenticated user&#39;s Passport wallet
+        /// </summary>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <returns>ProfileResponse</returns>
+        public ProfileResponse GetProfileByAuthenticatedWallet()
+        {
+            Immutable.Api.ZkEvm.Client.ApiResponse<ProfileResponse> localVarResponse = GetProfileByAuthenticatedWalletWithHttpInfo();
+            return localVarResponse.Data;
+        }
+
+        /// <summary>
+        /// Get profile for authenticated user Get profile for the authenticated user&#39;s Passport wallet
+        /// </summary>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <returns>ApiResponse of ProfileResponse</returns>
+        public Immutable.Api.ZkEvm.Client.ApiResponse<ProfileResponse> GetProfileByAuthenticatedWalletWithHttpInfo()
+        {
+            Immutable.Api.ZkEvm.Client.RequestOptions localVarRequestOptions = new Immutable.Api.ZkEvm.Client.RequestOptions();
+
+            string[] _contentTypes = new string[] {
+            };
+
+            // to determine the Accept header
+            string[] _accepts = new string[] {
+                "application/json"
+            };
+
+            var localVarContentType = Immutable.Api.ZkEvm.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
+            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
+
+            var localVarAccept = Immutable.Api.ZkEvm.Client.ClientUtils.SelectHeaderAccept(_accepts);
+            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
+
+
+            // authentication (BearerAuth) required
+            // bearer authentication required
+            if (!string.IsNullOrEmpty(this.Configuration.AccessToken) && !localVarRequestOptions.HeaderParameters.ContainsKey("Authorization"))
+            {
+                localVarRequestOptions.HeaderParameters.Add("Authorization", "Bearer " + this.Configuration.AccessToken);
+            }
+
+            // make the HTTP request
+            var localVarResponse = this.Client.Get<ProfileResponse>("/passport-profile/v1/profile", localVarRequestOptions, this.Configuration);
+
+            if (this.ExceptionFactory != null)
+            {
+                Exception _exception = this.ExceptionFactory("GetProfileByAuthenticatedWallet", localVarResponse);
+                if (_exception != null) throw _exception;
+            }
+
+            return localVarResponse;
+        }
+
+        /// <summary>
+        /// Get profile for authenticated user Get profile for the authenticated user&#39;s Passport wallet
+        /// </summary>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of ProfileResponse</returns>
+        public async System.Threading.Tasks.Task<ProfileResponse> GetProfileByAuthenticatedWalletAsync(System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+        {
+            var task = GetProfileByAuthenticatedWalletWithHttpInfoAsync(cancellationToken);
+#if UNITY_EDITOR || !UNITY_WEBGL
+            Immutable.Api.ZkEvm.Client.ApiResponse<ProfileResponse> localVarResponse = await task.ConfigureAwait(false);
+#else
+            Immutable.Api.ZkEvm.Client.ApiResponse<ProfileResponse> localVarResponse = await task;
+#endif
+            return localVarResponse.Data;
+        }
+
+        /// <summary>
+        /// Get profile for authenticated user Get profile for the authenticated user&#39;s Passport wallet
+        /// </summary>
+        /// <exception cref="Immutable.Api.ZkEvm.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of ApiResponse (ProfileResponse)</returns>
+        public async System.Threading.Tasks.Task<Immutable.Api.ZkEvm.Client.ApiResponse<ProfileResponse>> GetProfileByAuthenticatedWalletWithHttpInfoAsync(System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+        {
+
+            Immutable.Api.ZkEvm.Client.RequestOptions localVarRequestOptions = new Immutable.Api.ZkEvm.Client.RequestOptions();
+
+            string[] _contentTypes = new string[] {
+            };
+
+            // to determine the Accept header
+            string[] _accepts = new string[] {
+                "application/json"
+            };
+
+
+            var localVarContentType = Immutable.Api.ZkEvm.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
+            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
+
+            var localVarAccept = Immutable.Api.ZkEvm.Client.ClientUtils.SelectHeaderAccept(_accepts);
+            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
+
+
+            // authentication (BearerAuth) required
+            // bearer authentication required
+            if (!string.IsNullOrEmpty(this.Configuration.AccessToken) && !localVarRequestOptions.HeaderParameters.ContainsKey("Authorization"))
+            {
+                localVarRequestOptions.HeaderParameters.Add("Authorization", "Bearer " + this.Configuration.AccessToken);
+            }
+
+            // make the HTTP request
+
+            var task = this.AsynchronousClient.GetAsync<ProfileResponse>("/passport-profile/v1/profile", localVarRequestOptions, this.Configuration, cancellationToken);
+
+#if UNITY_EDITOR || !UNITY_WEBGL
+            var localVarResponse = await task.ConfigureAwait(false);
+#else
+            var localVarResponse = await task;
+#endif
+
+            if (this.ExceptionFactory != null)
+            {
+                Exception _exception = this.ExceptionFactory("GetProfileByAuthenticatedWallet", localVarResponse);
+                if (_exception != null) throw _exception;
+            }
+
+            return localVarResponse;
         }
 
         /// <summary>
