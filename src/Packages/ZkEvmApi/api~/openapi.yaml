@@ -3363,6 +3363,41 @@ paths:
       summary: Verify phone OTP code against user phone number
       tags:
       - passport profile
+  /passport-profile/v1/profile:
+    get:
+      description: Get profile for the authenticated user's Passport wallet
+      operationId: get-profile-by-authenticated-wallet
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError401'
+          description: UnauthorizedError
+        "429":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError429'
+          description: TooManyRequestsError
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError500'
+          description: InternalServerError
+      security:
+      - BearerAuth:
+        - openid
+      summary: Get profile for authenticated user
+      tags:
+      - passport profile
   /passport-profile/v1/username:
     post:
       description: Update username for the authenticated user's Passport wallet
@@ -9425,6 +9460,16 @@ components:
         - title
         - type
         - url
+    ProfileResponse:
+      description: Get profile by wallet response
+      example:
+        username: username
+      properties:
+        username:
+          type: string
+      required:
+      - username
+      type: object
     UsernameUpdateRequest:
       description: Request to update username
       example:
