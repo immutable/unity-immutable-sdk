@@ -1,5 +1,5 @@
 AltTester-Driver==2.1.1
-protobuf==5.27.2
+protobuf==7.34.0rc1
 selenium==4.22.0
 pytest==8.2.2
 requests==2.32.3
