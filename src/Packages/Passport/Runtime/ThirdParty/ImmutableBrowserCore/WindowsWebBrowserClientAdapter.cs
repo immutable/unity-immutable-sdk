@@ -1,9 +1,8 @@
 #if UNITY_STANDALONE_WIN || (UNITY_ANDROID && UNITY_EDITOR_WIN) || (UNITY_IPHONE && UNITY_EDITOR_WIN)
 
-using System.Net.Sockets;
+using System.IO;
 using UnityEngine;
 using Immutable.Browser.Core;
-using Immutable.Passport;
 using Immutable.Passport.Core.Logging;
 using Cysharp.Threading.Tasks;
 
@@ -14,7 +13,6 @@ namespace Immutable.Browser.Core
         public event OnUnityPostMessageDelegate OnUnityPostMessage;
 
         private readonly IWindowsWebBrowserClient webBrowserClient;
-        private GameBridgeServer? gameBridgeServer;
 
         public WindowsWebBrowserClientAdapter(IWindowsWebBrowserClient windowsWebBrowserClient)
         {
@@ -35,11 +33,8 @@ namespace Immutable.Browser.Core
             // Initialise the web browser client asynchronously
             await webBrowserClient.Init();
 
-            // Start local HTTP server to serve index.html
-            gameBridgeServer = new GameBridgeServer(GameBridge.GetFileSystemPath());
-            
             // Load the game bridge file into the web browser client
-            webBrowserClient.LoadUrl(gameBridgeServer.Start());
+            webBrowserClient.LoadUrl(GameBridge.GetFilePath());
 
             // Get the JavaScript API call for posting messages from the web page to the Unity application
             string postMessageApiCall = webBrowserClient.GetPostMessageApiCall();
@@ -64,8 +59,6 @@ namespace Immutable.Browser.Core
         public void Dispose()
         {
             webBrowserClient.Dispose();
-            gameBridgeServer?.Dispose();
-            gameBridgeServer = null;
         }
     }
 }
