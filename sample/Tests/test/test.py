@@ -106,25 +106,36 @@ class UnityTest(unittest.TestCase):
         self.assertEqual("Registered", text)
 
         # Register off-chain
-        # Wait up to 3 times for "Passport account already registered" to appear
+        # Wait up to 3 times for successful registration or already-registered error
         attempts = 0
         while attempts < 3:
            self.altdriver.find_object(By.NAME, "RegisterOffchainBtn").tap()
            text = output.get_text()
            print(f"RegisterOffchainBtn output: {text}")
+           
+           # Check if we got an immediate "already registered" error (400 or 409)
+           if ("400" in text and "USER_REGISTRATION_ERROR" in text) or \
+              ("409" in text and "USER_REGISTRATION_ERROR" in text):
+               print(f"Account already registered (got error immediately): {text}")
+               break
+           
            self.assertEqual("Registering off-chain...", text)
            time.sleep(20)
            output_text = output.get_text()
-           # Accept either success message or 409 error (account already registered)
-           if "Successfully registered" in output_text or ("409" in output_text and "USER_REGISTRATION_ERROR" in output_text):
+           # Accept either success message or 400/409 error (account already registered)
+           if "Successfully registered" in output_text or \
+              ("400" in output_text and "USER_REGISTRATION_ERROR" in output_text) or \
+              ("409" in output_text and "USER_REGISTRATION_ERROR" in output_text):
                break
            attempts += 1
 
-        # Assert that registration completed (either success or 409 error for already registered)
+        # Assert that registration completed (either success or 400/409 error for already registered)
         output_text = output.get_text()
         self.assertTrue(
-           "Successfully registered" in output_text or ("409" in output_text and "USER_REGISTRATION_ERROR" in output_text),
-           f"Expected 'Successfully registered' or '409 (USER_REGISTRATION_ERROR)' not found. Actual output: '{output_text}'"
+           "Successfully registered" in output_text or \
+           ("400" in output_text and "USER_REGISTRATION_ERROR" in output_text) or \
+           ("409" in output_text and "USER_REGISTRATION_ERROR" in output_text),
+           f"Expected 'Successfully registered' or '400/409 (USER_REGISTRATION_ERROR)' not found. Actual output: '{output_text}'"
         )
 
         # Get address
