@@ -16,10 +16,13 @@ namespace Immutable.Passport.Helpers
     public class WindowsDeepLink : MonoBehaviour
     {
         private const string REGISTRY_DEEP_LINK_NAME = "deeplink";
+        private const int ERROR_FILE_NOT_FOUND = 2;
+        private const float POLL_INTERVAL_SECONDS = 0.5f;
 
         private static WindowsDeepLink? _instance;
         private Action<string>? _callback;
         private string? _protocolName;
+        private float _nextPollAt;
 
         // P/Invoke declarations
         private const uint HKEY_CURRENT_USER = 0x80000001;
@@ -344,6 +347,18 @@ namespace Immutable.Passport.Helpers
             HandleDeeplink();
         }
 
+        private void Update()
+        {
+            // In some environments (CI, embedded browsers, focus restrictions), the game may not regain focus
+            // even if the external protocol handler was triggered. Polling ensures we still process the
+            // deeplink once the handler writes it into the registry.
+            if (_callback == null || string.IsNullOrEmpty(_protocolName)) return;
+            if (Time.unscaledTime < _nextPollAt) return;
+            _nextPollAt = Time.unscaledTime + POLL_INTERVAL_SECONDS;
+
+            HandleDeeplink();
+        }
+
         private void HandleDeeplink()
         {
             // Open registry key for the protocol
@@ -370,7 +385,11 @@ namespace Immutable.Passport.Helpers
             if (result != 0)
             {
                 RegCloseKey(hKey);
-                PassportLogger.Warn($"Failed to get deeplink data size. Error code: {result}");
+                // No deeplink written yet; don't spam logs on each poll.
+                if (result != ERROR_FILE_NOT_FOUND)
+                {
+                    PassportLogger.Warn($"Failed to get deeplink data size. Error code: {result}");
+                }
                 return;
             }
 
