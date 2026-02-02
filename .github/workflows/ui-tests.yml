@@ -156,6 +156,43 @@ jobs:
           BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
         working-directory: sample-unity6/Tests
         run: pytest -xs test/test_mac.py::MacTest
+      - name: Collect Unity Player logs (macOS)
+        if: always()
+        run: |
+          set -euo pipefail
+          workspaceLogs="${{ github.workspace }}/sample-unity6/player-logs"
+          zipPath="${{ github.workspace }}/sample-unity6/Unity6-macOS-PlayerLogs.zip"
+          mkdir -p "$workspaceLogs"
+
+          # Unity Player.log location on macOS
+          unityLogsDir="$HOME/Library/Logs/Unity"
+          if [ -d "$unityLogsDir" ]; then
+            cp -R "$unityLogsDir" "$workspaceLogs/UnityLogs" || true
+            echo "Copied Unity logs from: $unityLogsDir"
+          else
+            echo "Unity logs directory not found: $unityLogsDir"
+          fi
+
+          # Try to collect crash reports (if any)
+          diagDir="$HOME/Library/Logs/DiagnosticReports"
+          if [ -d "$diagDir" ]; then
+            mkdir -p "$workspaceLogs/DiagnosticReports"
+            cp -R "$diagDir/"*Sample*Unity*6*macOS* "$workspaceLogs/DiagnosticReports/" 2>/dev/null || true
+            cp -R "$diagDir/"*Unity* "$workspaceLogs/DiagnosticReports/" 2>/dev/null || true
+            echo "Attempted to copy DiagnosticReports from: $diagDir"
+          else
+            echo "DiagnosticReports directory not found: $diagDir"
+          fi
+
+          rm -f "$zipPath" || true
+          (cd "${{ github.workspace }}/sample-unity6" && zip -r "Unity6-macOS-PlayerLogs.zip" "player-logs" >/dev/null) || true
+          echo "Player logs zip created: $zipPath"
+      - name: Upload Unity Player logs (macOS)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Unity6-macOS-Player-Logs
+          path: sample-unity6/Unity6-macOS-PlayerLogs.zip
       - name: Remove temporary keychain
         if: always()
         run: |
