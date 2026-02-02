@@ -255,14 +255,21 @@ class UnityTest(unittest.TestCase):
 
         # Connect to zkEVM
         self.altdriver.find_object(By.NAME, "ConnectEvmBtn").tap()
-        text = output.get_text()
+        text = self.wait_for_output(
+            output,
+            lambda t: t == "Connected to EVM",
+            timeout_seconds=30,
+        )
         print(f"ConnectEvmBtn output: {text}")
         self.assertEqual("Connected to EVM", text)
 
         # Initiliase wallet and get address
         self.altdriver.wait_for_object(By.NAME, "RequestAccountsBtn").tap()
-        time.sleep(5)
-        text = output.get_text()
+        text = self.wait_for_output(
+            output,
+            lambda t: t == TestConfig.WALLET_ADDRESS,
+            timeout_seconds=30,
+        )
         print(f"RequestAccountsBtn output: {text}")
         self.assertEqual(TestConfig.WALLET_ADDRESS, text)
 
