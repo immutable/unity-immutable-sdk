@@ -1,5 +1,6 @@
 import sys
 import time
+import unittest
 import os
 import subprocess
 from pathlib import Path
@@ -229,12 +230,14 @@ class MacTest(UnityTest):
     def test_3_passport_functions(self):
         self.test_1_passport_functions()
 
+    @unittest.skip("IMX (StarkEx) scenarios deprecated; removing from E2E suite")
     def test_4_imx_functions(self):
         self.test_2_imx_functions()
 
     def test_5_zkevm_functions(self):
         self.test_3_zkevm_functions()
 
+    @unittest.skip("IMX (StarkEx) scenarios deprecated; removing from E2E suite")
     def test_6_relogin(self):
         # Close and reopen app
         stop_sample_app()
@@ -268,6 +271,7 @@ class MacTest(UnityTest):
 
         self.altdriver.stop()
 
+    @unittest.skip("IMX (StarkEx) scenarios deprecated; removing from E2E suite")
     def test_7_reconnect_connect_imx(self):
         # Close and reopen app
         stop_sample_app()

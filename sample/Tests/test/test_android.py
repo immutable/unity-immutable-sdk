@@ -106,12 +106,14 @@ class TestBase(UnityTest):
     def test_3_passport_functions(self):
         self.test_1_passport_functions()
 
+    @unittest.skip("IMX (StarkEx) scenarios deprecated; removing from E2E suite")
     def test_4_imx_functions(self):
         self.test_2_imx_functions()
 
     def test_5_zkevm_functions(self):
         self.test_3_zkevm_functions()
 
+    @unittest.skip("IMX (StarkEx) scenarios deprecated; removing from E2E suite")
     def test_6_pkce_relogin(self):
         driver = self.appium_driver
 
@@ -147,6 +149,7 @@ class TestBase(UnityTest):
 
         self.altdriver.stop()
 
+    @unittest.skip("IMX (StarkEx) scenarios deprecated; removing from E2E suite")
     def test_7_pkce_reconnect(self):
         self.close_and_open_app()
 
@@ -189,6 +192,7 @@ class TestBase(UnityTest):
 
         self.altdriver.stop()
 
+    @unittest.skip("IMX (StarkEx) scenarios deprecated; removing from E2E suite")
     def test_8_pkce_connect_imx(self):
         self.close_and_open_app()
 

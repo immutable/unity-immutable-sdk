@@ -8,6 +8,7 @@ These tests require proper authentication URL logging to work correctly.
 """
 
 import time
+import unittest
 
 from alttester import *
 
@@ -242,6 +243,7 @@ class WindowsTest(UnityTest):
         print("COMPLETED TEST: test_3_passport_functions")
         print("=" * 60)
 
+    @unittest.skip("IMX (StarkEx) scenarios deprecated; removing from E2E suite")
     def test_4_imx_functions(self):
         print("=" * 60)
         print("STARTING TEST: test_4_imx_functions")
@@ -258,6 +260,7 @@ class WindowsTest(UnityTest):
         print("COMPLETED TEST: test_5_zkevm_functions")
         print("=" * 60)
 
+    @unittest.skip("IMX (StarkEx) scenarios deprecated; removing from E2E suite")
     def test_6_relogin(self):
         print("=" * 60)
         print("STARTING TEST: test_6_relogin")
@@ -285,6 +288,7 @@ class WindowsTest(UnityTest):
         print("COMPLETED TEST: test_6_relogin")
         print("=" * 60)
 
+    @unittest.skip("IMX (StarkEx) scenarios deprecated; removing from E2E suite")
     def test_7_reconnect_connect_imx(self):
         print("=" * 60)
         print("STARTING TEST: test_7_reconnect_connect_imx")
@@ -330,6 +334,7 @@ class WindowsTest(UnityTest):
         print("COMPLETED TEST: test_7_reconnect_connect_imx")
         print("=" * 60)
 
+    @unittest.skip("IMX (StarkEx) scenarios deprecated; removing from E2E suite")
     def test_8_connect_imx(self):
         print("=" * 60)
         print("STARTING TEST: test_8_connect_imx")
