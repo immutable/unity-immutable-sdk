@@ -316,6 +316,42 @@ jobs:
           BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
         working-directory: sample-unity6/Tests
         run: python -m pytest -xs test/test_windows.py::WindowsTest
+      - name: Collect Unity Player logs (Windows)
+        if: always()
+        run: |
+          $playerLogRoot = Join-Path $env:USERPROFILE "AppData\LocalLow\Immutable\Sample Unity 6 Windows"
+          $workspaceLogs = "${{ github.workspace }}\sample-unity6\player-logs"
+          $zipPath = "${{ github.workspace }}\sample-unity6\Unity6-Windows-PlayerLogs.zip"
+          
+          New-Item -ItemType Directory -Force -Path $workspaceLogs | Out-Null
+          
+          if (Test-Path $playerLogRoot) {
+            Copy-Item -Force -Recurse "$playerLogRoot\*" $workspaceLogs -ErrorAction SilentlyContinue
+            Write-Output "Copied player logs from: $playerLogRoot"
+          } else {
+            Write-Output "Player log directory not found: $playerLogRoot"
+          }
+          
+          # Also try to capture Unity crash dumps if present
+          $unityCrashes = Join-Path $env:USERPROFILE "AppData\LocalLow\Unity\Crashes"
+          if (Test-Path $unityCrashes) {
+            $crashDst = Join-Path $workspaceLogs "UnityCrashes"
+            New-Item -ItemType Directory -Force -Path $crashDst | Out-Null
+            Copy-Item -Force -Recurse "$unityCrashes\*" $crashDst -ErrorAction SilentlyContinue
+            Write-Output "Copied Unity crashes from: $unityCrashes"
+          } else {
+            Write-Output "Unity crashes directory not found: $unityCrashes"
+          }
+          
+          if (Test-Path $zipPath) { Remove-Item -Force $zipPath }
+          Compress-Archive -Path "$workspaceLogs\*" -DestinationPath $zipPath -Force
+          Write-Output "Player logs zip created: $zipPath"
+      - name: Upload Unity Player logs (Windows)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Unity6-Windows-Player-Logs
+          path: sample-unity6/Unity6-Windows-PlayerLogs.zip
       - name: Upload build log
         if: always()
         uses: actions/upload-artifact@v4
