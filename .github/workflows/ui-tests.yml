@@ -89,7 +89,8 @@ jobs:
     name: Build & Test Unity 6 macOS 🛠️🧪
     runs-on: [self-hosted, macOS]
     concurrency:
-      group: ui-tests-email-inbox-macos-unity6
+      # Serialize UI runs across all platforms that share the same MailSlurp inbox / account state.
+      group: ui-tests-email-inbox
       cancel-in-progress: false  # Let tests complete rather than cancelling
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneOSX-Unity6'
     steps:
@@ -218,7 +219,8 @@ jobs:
     name: Build & Test Unity 6 Windows 🛠️🧪
     runs-on: [self-hosted, windows]
     concurrency:
-      group: ui-tests-email-inbox-windows-unity6
+      # Serialize UI runs across all platforms that share the same MailSlurp inbox / account state.
+      group: ui-tests-email-inbox
       cancel-in-progress: false  # Let tests complete rather than cancelling
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneWindows64-Unity6'
     steps:
@@ -420,7 +422,9 @@ jobs:
           #   runs-on: [ self-hosted, macOS ]
           #   test_script: browserstack-sdk pytest -s ./test/test_android.py --browserstack.config "browserstack.android.yml"
     concurrency:
-      group: ui-tests-email-inbox-${{ matrix.concurrency_group }}
+      # Serialize Standalone UI tests across macOS + Windows.
+      # These share the same MailSlurp inbox / account state and can interfere when run in parallel.
+      group: ui-tests-email-inbox
       cancel-in-progress: false  # Let tests complete rather than canceling
     runs-on: ${{ matrix.runs-on }}
     steps:
