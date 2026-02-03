@@ -164,7 +164,7 @@ jobs:
           zipPath="${{ github.workspace }}/sample-unity6/Unity6-macOS-PlayerLogs.zip"
           mkdir -p "$workspaceLogs"
 
-          # Unity Player.log location on macOS
+          # Unity Editor logs (useful for build/package debugging)
           unityLogsDir="$HOME/Library/Logs/Unity"
           if [ -d "$unityLogsDir" ]; then
             cp -R "$unityLogsDir" "$workspaceLogs/UnityLogs" || true
@@ -172,6 +172,49 @@ jobs:
           else
             echo "Unity logs directory not found: $unityLogsDir"
           fi
+
+          # Unity Player logs (the standalone app's Player.log). This is what we actually
+          # need when UI tests fail at runtime. On macOS it's typically under:
+          #   ~/Library/Logs/<CompanyName>/<ProductName>/Player.log
+          python3 - <<'PY'
+          import os
+          import shutil
+          from pathlib import Path
+          
+          home = Path.home()
+          logs_root = home / "Library" / "Logs"
+          workspace = Path(os.environ.get("GITHUB_WORKSPACE", "."))
+          dest_dir = workspace / "sample-unity6" / "player-logs" / "PlayerLogs"
+          dest_dir.mkdir(parents=True, exist_ok=True)
+          
+          candidates = []
+          if logs_root.exists():
+              # Prefer company folders we expect, but fall back to scanning all Logs.
+              preferred_roots = [
+                  logs_root / "Immutable",
+                  logs_root / "unity3d",
+                  logs_root,
+              ]
+              for root in preferred_roots:
+                  if root.exists():
+                      candidates.extend(root.rglob("Player.log"))
+          
+          copied = 0
+          for plog in candidates:
+              try:
+                  rel = plog.relative_to(logs_root)
+                  out_name = str(rel).replace("/", "__")
+              except Exception:
+                  out_name = plog.name
+              out_path = dest_dir / out_name
+              try:
+                  shutil.copy2(plog, out_path)
+                  copied += 1
+              except Exception:
+                  pass
+          
+          print(f"Collected {copied} Player.log file(s) into: {dest_dir}")
+          PY
 
           # Try to collect crash reports (if any)
           diagDir="$HOME/Library/Logs/DiagnosticReports"
