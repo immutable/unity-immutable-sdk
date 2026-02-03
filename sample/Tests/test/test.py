@@ -36,6 +36,33 @@ class UnityTest(unittest.TestCase):
         if self.__class__.altdriver:
             self.__class__.altdriver.stop()
 
+    def wait_for_output(
+        self,
+        output_obj,
+        predicate,
+        *,
+        timeout_seconds: float = 15.0,
+        poll_seconds: float = 0.25,
+    ) -> str:
+        """
+        Poll the `Output` UI element until `predicate(text)` is True.
+
+        UI actions often update `Output` asynchronously (especially in CI),
+        so reading immediately after `.tap()` can be flaky.
+        """
+        deadline = time.time() + float(timeout_seconds)
+        last_text = ""
+        while time.time() < deadline:
+            try:
+                last_text = output_obj.get_text()
+                if predicate(last_text):
+                    return last_text
+            except Exception:
+                # App/UI might be mid-transition; retry.
+                pass
+            time.sleep(float(poll_seconds))
+        return last_text
+
     @pytest.mark.skip(reason="Base test should not be executed directly")
     def test_0_other_functions(self):
         # Show set call timeout scene
@@ -59,31 +86,52 @@ class UnityTest(unittest.TestCase):
         output = self.altdriver.find_object(By.NAME, "Output")
 
         # Get access token
+        prev = output.get_text()
         self.altdriver.find_object(By.NAME, "GetAccessTokenBtn").tap()
-        text = output.get_text()
-        self.assertTrue(len(text) > 50)
+        text = self.wait_for_output(
+            output,
+            lambda t: len(t) > 50 and (t != prev or prev == ""),
+            timeout_seconds=20,
+        )
+        self.assertTrue(len(text) > 50, f"Access token output too short. Actual output: '{text}'")
 
         # Get ID token
+        prev = output.get_text()
         self.altdriver.find_object(By.NAME, "GetIdTokenBtn").tap()
-        text = output.get_text()
-        self.assertTrue(len(text) > 50)
+        text = self.wait_for_output(
+            output,
+            lambda t: len(t) > 50 and (t != prev or prev == ""),
+            timeout_seconds=20,
+        )
+        self.assertTrue(len(text) > 50, f"ID token output too short. Actual output: '{text}'")
 
         # Get email
         self.altdriver.find_object(By.NAME, "GetEmail").tap()
-        text = output.get_text()
+        text = self.wait_for_output(
+            output,
+            lambda t: t == TestConfig.EMAIL,
+            timeout_seconds=10,
+        )
         print(f"GetEmail output: {text}")
         self.assertEqual(TestConfig.EMAIL, text)
 
         # Get Passport ID
         self.altdriver.find_object(By.NAME, "GetPassportId").tap()
-        text = output.get_text()
+        text = self.wait_for_output(
+            output,
+            lambda t: t == TestConfig.PASSPORT_ID,
+            timeout_seconds=10,
+        )
         print(f"GetPassportId output: {text}")
         self.assertEqual(TestConfig.PASSPORT_ID, text)
 
         # Get linked addresses
         self.altdriver.find_object(By.NAME, "GetLinkedAddresses").tap()
-        time.sleep(1)
-        text = output.get_text()
+        text = self.wait_for_output(
+            output,
+            lambda t: t == "No linked addresses",
+            timeout_seconds=10,
+        )
         print(f"GetLinkedAddresses output: {text}")
         self.assertEqual("No linked addresses", text)
 
