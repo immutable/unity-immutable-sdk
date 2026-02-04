@@ -24,6 +24,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+import json
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -35,6 +36,194 @@ from selenium.webdriver.common.keys import Keys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'src'))
 from fetch_otp import EMAIL, fetch_code
+
+# Unity authentication success markers we can reliably detect from Player.log.
+_UNITY_AUTH_SUCCESS_MARKERS = [
+    "AuthenticatedScene",
+    "COMPLETE_LOGIN_PKCE",
+    "LoginPKCESuccess",
+    "HandleLoginPkceSuccess",
+    "authentication successful",
+    "logged in successfully",
+    "Passport token received",
+]
+
+def _try_enable_cdp_network_logging(driver) -> None:
+    """
+    Best-effort enable CDP domains so performance logs contain network events.
+    """
+    try:
+        driver.execute_cdp_cmd("Network.enable", {})
+        driver.execute_cdp_cmd("Page.enable", {})
+    except Exception as e:
+        print(f"CDP enable failed (non-fatal): {e}")
+
+
+def _drain_performance_logs_for_immutablerunner(driver) -> str | None:
+    """
+    Scan ChromeDriver performance logs for an attempted immutablerunner:// navigation.
+
+    Useful when Chromium blocks external protocol launches: the attempted URL often still
+    appears in DevTools events (redirectResponse headers, request URL).
+    """
+    try:
+        entries = driver.get_log("performance")
+    except Exception as e:
+        print(f"Performance log not available (non-fatal): {e}")
+        return None
+
+    for entry in entries:
+        try:
+            msg = json.loads(entry.get("message", "{}")).get("message", {}) or {}
+            method = msg.get("method")
+            params = msg.get("params", {}) or {}
+
+            # Redirect responses sometimes include the next Location in headers.
+            redirect = params.get("redirectResponse") or {}
+            headers = redirect.get("headers") or {}
+            if headers:
+                lower_headers = {str(k).lower(): v for k, v in headers.items()}
+                loc = lower_headers.get("location")
+                if isinstance(loc, str) and loc.lower().startswith("immutablerunner:"):
+                    return loc
+
+            if method == "Network.requestWillBeSent":
+                req = params.get("request") or {}
+                url = req.get("url")
+                if isinstance(url, str) and url.lower().startswith("immutablerunner:"):
+                    return url
+
+            if method in ("Page.frameNavigated", "Page.navigatedWithinDocument"):
+                frame = params.get("frame") or {}
+                url = frame.get("url")
+                if isinstance(url, str) and url.lower().startswith("immutablerunner:"):
+                    return url
+        except Exception:
+            continue
+
+    return None
+
+
+def _write_deeplink_registry(callback_url: str) -> bool:
+    """
+    Write the deeplink URL into HKCU\\Software\\Classes\\immutablerunner\\deeplink.
+
+    This matches what `WindowsDeepLink` reads on the Unity side.
+    """
+    try:
+        # Escape for PowerShell double-quoted string.
+        ps_value = callback_url.replace("`", "``").replace('"', '`"')
+        ps_script = f'''
+        $protocolKey = "HKCU:\\Software\\Classes\\immutablerunner"
+        if (!(Test-Path $protocolKey)) {{ New-Item -Path $protocolKey -Force | Out-Null }}
+        New-ItemProperty -Path $protocolKey -Name "deeplink" -PropertyType String -Value "{ps_value}" -Force | Out-Null
+        Write-Host "Wrote deeplink to registry."
+        '''
+        result = subprocess.run(["powershell", "-Command", ps_script], capture_output=True, text=True, timeout=10)
+        if result.stdout:
+            print(result.stdout.strip())
+        if result.stderr:
+            print(result.stderr.strip())
+        return True
+    except Exception as e:
+        print(f"Failed to write deeplink registry value: {e}")
+        return False
+
+
+def wait_for_authentication_success_in_unity_logs(timeout_seconds: int = 60) -> bool:
+    """
+    Best-effort wait for Unity to process the deep-link callback.
+
+    This is needed in CI because the browser may auto-handle the external protocol
+    without showing any permission dialog (especially if protocol association is set),
+    so Selenium won't have any button to click, but Unity will still authenticate.
+    """
+    import os
+
+    product_name = os.getenv("UNITY_APP_NAME", get_product_name())
+    log_path = os.path.join("C:\\Users\\WindowsBuildsdkServi\\AppData\\LocalLow\\Immutable", product_name, "Player.log")
+
+    print(f"Waiting up to {timeout_seconds}s for Unity auth success in Player.log...")
+    print(f"Monitoring Unity log: {log_path}")
+
+    for _ in range(max(1, int(timeout_seconds))):
+        try:
+            with open(log_path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+                if any(marker in content for marker in _UNITY_AUTH_SUCCESS_MARKERS):
+                    print("Authentication success detected in Unity logs!")
+                    return True
+        except Exception:
+            # Log may not exist yet or be temporarily locked; retry.
+            pass
+        time.sleep(1)
+
+    print("No authentication success detected in Unity logs within timeout.")
+    return False
+
+
+def try_click_protocol_permission_dialog(timeout_seconds: int = 15) -> bool:
+    """
+    Try to click the browser-level external protocol permission prompt.
+
+    Important: this dialog is NOT part of the web page DOM, so Selenium cannot click it.
+    We use Windows UIAutomation to locate and invoke an "Open/Allow/Yes" button.
+    """
+    product_name = os.getenv("UNITY_APP_NAME", get_product_name())
+    print("Attempting to click external protocol permission dialog via UIAutomation...")
+
+    ps_script = f'''
+    $deadline = (Get-Date).AddSeconds({int(timeout_seconds)})
+    Add-Type -AssemblyName UIAutomationClient
+
+    function Find-And-Click($titlePart) {{
+      $procs = Get-Process -ErrorAction SilentlyContinue | Where-Object {{ $_.MainWindowHandle -ne 0 -and $_.MainWindowTitle -like "*$titlePart*" }}
+      foreach ($p in $procs) {{
+        try {{
+          $el = [Windows.Automation.AutomationElement]::FromHandle($p.MainWindowHandle)
+          if ($null -eq $el) {{ continue }}
+          $buttons = $el.FindAll([Windows.Automation.TreeScope]::Descendants,
+            [Windows.Automation.Condition]::new([Windows.Automation.AutomationElement]::ControlTypeProperty, [Windows.Automation.ControlType]::Button))
+
+          foreach ($b in $buttons) {{
+            $name = $b.Current.Name
+            if ($name -like "*Open*" -or $name -like "*Allow*" -or $name -like "*Yes*" -or $name -like "*{product_name}*") {{
+              $b.GetCurrentPattern([Windows.Automation.InvokePattern]::Pattern).Invoke()
+              Write-Host "Clicked protocol dialog button: $name"
+              return $true
+            }}
+          }}
+        }} catch {{}}
+      }}
+      return $false
+    }}
+
+    while ((Get-Date) -lt $deadline) {{
+      if (Find-And-Click "auth.immutable.com") {{ exit 0 }}
+      if (Find-And-Click "Immutable Passport") {{ exit 0 }}
+      if (Find-And-Click "Open") {{ exit 0 }}
+      Start-Sleep -Milliseconds 500
+    }}
+    Write-Host "No protocol dialog found"
+    exit 1
+    '''
+
+    try:
+        result = subprocess.run(
+            ["powershell", "-Command", ps_script],
+            capture_output=True,
+            text=True,
+            timeout=max(5, int(timeout_seconds) + 5),
+        )
+        if "Clicked protocol dialog button" in (result.stdout or ""):
+            print(result.stdout.strip())
+            print("Successfully clicked protocol dialog via UIAutomation.")
+            return True
+        print((result.stdout or "").strip() or "UIAutomation did not find/click any dialog button.")
+        return False
+    except Exception as e:
+        print(f"UIAutomation dialog click failed: {e}")
+        return False
 
 # Add chrome.exe to environment variable
 # Download chrome driver and add to environment variable
@@ -295,6 +484,8 @@ def login():
     # (Brave uses Chromium engine so Chrome WebDriver works)
     chrome_options = Options()
     chrome_options.add_experimental_option("debuggerAddress", "localhost:9222")
+    # Best-effort: enable performance/browser logs so we can capture attempted immutablerunner redirects.
+    chrome_options.set_capability("goog:loggingPrefs", {"performance": "ALL", "browser": "ALL"})
     
     # Explicitly specify ChromeDriver path and Brave browser path
     from selenium.webdriver.chrome.service import Service
@@ -309,6 +500,7 @@ def login():
     
     # Connect to the existing Brave browser instance
     driver = webdriver.Chrome(service=service, options=chrome_options)
+    _try_enable_cdp_network_logging(driver)
 
     # HYBRID APPROACH: Try multi-window detection first (proven to work in CI), 
     # then fall back to Unity log monitoring if needed
@@ -538,6 +730,8 @@ def login():
     time.sleep(3)
     
     try:
+        current_url_lower = (driver.current_url or "").lower()
+
         # Check what's actually on the page
         buttons = driver.find_elements(By.TAG_NAME, "button")
         print(f"Found {len(buttons)} buttons on page:")
@@ -548,16 +742,125 @@ def login():
                     print(f"  Button {i}: '{text}'")
             except:
                 pass
-        
-        # Wait for the deep link dialog to appear and click the button
-        # Use more specific selector to avoid clicking "Restore" button
+
+        # The "open external protocol" prompt is often browser UI (not DOM),
+        # so Selenium can't click it. We try multiple strategies:
+        # - observe URL transitions (sometimes it flips to new tab/about:blank after protocol launch)
+        # - inspect page HTML for any immutablerunner:// URL we can trigger manually
+        # - wait for Unity logs (best source of truth)
+        # - fall back to UIAutomation click
+        if "auth.immutable.com/checking" in current_url_lower:
+            checking_start = time.time()
+
+            for i in range(30):  # ~60s, 2s per loop
+                time.sleep(2)
+                try:
+                    current = driver.current_url or ""
+                    lower = current.lower()
+                    elapsed = int(time.time() - checking_start)
+                    print(f"/checking monitor (+{elapsed}s) - current URL: {current}")
+
+                    if "newtab" in lower or "about:blank" in lower:
+                        print("Detected newtab/about:blank; assuming external protocol launch was attempted.")
+                        wait_for_authentication_success_in_unity_logs(timeout_seconds=75)
+                        return
+
+                    # If Chromium attempted to redirect to immutablerunner but blocked it, it may still
+                    # show up in performance logs. If we can capture it, feed it directly to Unity via
+                    # the registry (WindowsDeepLink reads HKCU\\Software\\Classes\\immutablerunner\\deeplink).
+                    deeplink = _drain_performance_logs_for_immutablerunner(driver)
+                    if deeplink:
+                        print(f"Captured immutablerunner deeplink from performance logs: {deeplink}")
+                        if _write_deeplink_registry(deeplink):
+                            wait_for_authentication_success_in_unity_logs(timeout_seconds=75)
+                            return
+
+                    # Try to spot a protocol callback URL in the HTML (best-effort).
+                    # Some flows embed the redirect URL or a "continue" link.
+                    try:
+                        html = driver.page_source or ""
+                        if i in (0, 2, 5, 10):  # don't spam
+                            print("----- /checking page_source (head) -----")
+                            print(html[:2000])
+                            print("----- end page_source (head) -----")
+                            try:
+                                body_text = driver.execute_script(
+                                    "return (document.body && document.body.innerText) ? document.body.innerText : ''"
+                                ) or ""
+                                if body_text.strip():
+                                    print("----- /checking body (text) -----")
+                                    print(body_text.strip()[:500])
+                                    print("----- end body (text) -----")
+                            except Exception as e:
+                                print(f"Error reading /checking body text: {e}")
+
+                        m = re.search(r"(immutablerunner:[^\\s\"'<>]+)", html, re.IGNORECASE)
+                        if m:
+                            callback_url = m.group(1)
+                            print(f"Found immutablerunner URL in page_source: {callback_url}")
+                            # Prefer deterministic Unity-side pickup over browser protocol handling.
+                            if _write_deeplink_registry(callback_url):
+                                wait_for_authentication_success_in_unity_logs(timeout_seconds=75)
+                                return
+
+                        # Try to click any "Open/Continue" element to create a user gesture.
+                        # Some browsers require a user action before launching external protocols.
+                        if i in (1, 3, 6, 12, 20):
+                            try:
+                                candidates = driver.find_elements(By.CSS_SELECTOR, "button, [role='button'], a")
+                                keywords = ("open", "continue", "launch", "return", "back")
+                                for el in candidates[:50]:
+                                    try:
+                                        href = (el.get_attribute("href") or "").strip()
+                                        txt = (el.text or "").strip().lower()
+                                        if href.lower().startswith("immutablerunner:"):
+                                            print(f"Clicking deeplink anchor: {href}")
+                                            el.click()
+                                            break
+                                        if any(k in txt for k in keywords):
+                                            print(f"Clicking candidate element on /checking: '{txt[:80]}'")
+                                            el.click()
+                                            break
+                                    except Exception:
+                                        continue
+                            except Exception as e:
+                                print(f"Error attempting to click /checking candidates: {e}")
+                    except Exception as e:
+                        print(f"Error inspecting /checking page source: {e}")
+
+                    if "auth.immutable.com/checking" not in lower:
+                        print("Left /checking; waiting for Unity to process callback...")
+                        wait_for_authentication_success_in_unity_logs(timeout_seconds=75)
+                        return
+                except Exception as e:
+                    print(f"/checking monitor error: {e}")
+
+            # If we're still here, attempt log-based success and UIAutomation as last resort.
+            if wait_for_authentication_success_in_unity_logs(timeout_seconds=10):
+                return
+
+            clicked = try_click_protocol_permission_dialog(timeout_seconds=20)
+            if clicked:
+                wait_for_authentication_success_in_unity_logs(timeout_seconds=75)
+                return
+
+            print("Could not trigger protocol callback from /checking.")
+            wait_for_authentication_success_in_unity_logs(timeout_seconds=30)
+            return
+
+        # Otherwise, try to click the deep link dialog if it appears.
+        # Use more specific selector to avoid clicking "Restore" button.
         product_name = os.getenv("UNITY_APP_NAME", get_product_name())
-        deep_link_button = wait.until(EC.element_to_be_clickable((By.XPATH, f"//button[text()='Open {product_name}.cmd']")))
+        dialog_wait = WebDriverWait(driver, 8)
+        deep_link_button = dialog_wait.until(
+            EC.element_to_be_clickable((By.XPATH, f"//button[text()='Open {product_name}.cmd']"))
+        )
         deep_link_button.click()
         print("Clicked deep link permission dialog - Unity should receive redirect")
     except Exception as e:
         print(f"Deep link dialog not found or failed to click: {e}")
-        print("This may cause the test to timeout waiting for scene change")
+        print("Assuming dialog was suppressed/auto-handled; waiting for Unity to process callback via Player.log...")
+        wait_for_authentication_success_in_unity_logs(timeout_seconds=75)
 
     # Keep browser alive for Unity deep link redirect
     # driver.quit()
@@ -678,14 +981,11 @@ def bring_sample_app_to_foreground():
     subprocess.run(command, check=True)
     time.sleep(10)
 
-def setup_browser_permissions():
-    """Set up browser permissions to allow auth.immutable.com to open external applications"""
+def setup_browser_permissions(user_data_dir: str):
+    """Set up browser profile permissions to allow auth.immutable.com to open external applications."""
     print("Setting up browser permissions for auth.immutable.com...")
-    
-    # Create a browser preferences file to pre-allow the domain
-    user_data_dir = "C:\\temp\\brave_debug"
-    if not os.path.exists(user_data_dir):
-        os.makedirs(user_data_dir, exist_ok=True)
+    print(f"Using browser profile dir: {user_data_dir}")
+    os.makedirs(user_data_dir, exist_ok=True)
     
     # Create preferences file that allows auth.immutable.com to open external apps
     preferences = {
@@ -714,13 +1014,92 @@ def setup_browser_permissions():
     except Exception as e:
         print(f"Browser permission setup error: {e}")
 
+
+def setup_autolaunch_protocol_policy():
+    """
+    Configure Brave enterprise policy to allow external protocol launches without prompting.
+
+    Selenium cannot click the browser-level external protocol permission UI reliably.
+    This policy avoids the prompt entirely by allowing `immutablerunner:` to auto-launch
+    from the Passport origin.
+
+    Policy reference (Chromium/Edge naming):
+    - AutoLaunchProtocolsFromOrigins: JSON array of { protocol, allowed_origins }
+    - Registry path (Brave): HKCU\\Software\\Policies\\BraveSoftware\\Brave
+    """
+    print("Setting up Brave AutoLaunchProtocolsFromOrigins policy...")
+
+    # This must be REG_SZ containing JSON.
+    # Protocol must be lowercase and WITHOUT ':' (e.g. "immutablerunner", not "immutablerunner:").
+    policy_json = (
+        '[{"protocol":"immutablerunner","allowed_origins":["https://auth.immutable.com","https://auth.immutable.com:443"]}]'
+    )
+
+    ps_script = f'''
+    $json = '{policy_json}'
+    $paths = @(
+      "HKCU:\\Software\\Policies\\BraveSoftware\\Brave",
+      "HKLM:\\Software\\Policies\\BraveSoftware\\Brave"
+    )
+
+    foreach ($key in $paths) {{
+      try {{
+        if (!(Test-Path $key)) {{
+          New-Item -Path $key -Force | Out-Null
+        }}
+        New-ItemProperty -Path $key -Name "AutoLaunchProtocolsFromOrigins" -PropertyType String -Value $json -Force | Out-Null
+        Write-Host "Brave policy AutoLaunchProtocolsFromOrigins set at $key."
+      }} catch {{
+        # NOTE: avoid "$key:" which PowerShell parses as a drive reference.
+        Write-Host ("Failed to set policy at {0}: {1}" -f $key, $_.Exception.Message)
+      }}
+    }}
+    '''
+
+    try:
+        result = subprocess.run(["powershell", "-Command", ps_script], capture_output=True, text=True, timeout=10)
+        if result.stdout:
+            print(result.stdout.strip())
+        if result.stderr:
+            # Non-fatal, but useful for debugging policy issues in CI.
+            print(result.stderr.strip())
+    except Exception as e:
+        print(f"Policy setup error: {e}")
+
 def setup_protocol_association():
     """Set up immutablerunner:// protocol association to avoid permission dialogs"""
     print("Setting up protocol association for immutablerunner://...")
     
     product_name = os.getenv("UNITY_APP_NAME", get_product_name())
+    app_path_env = os.getenv("UNITY_APP_PATH")
+    
+    # Find the executable path using the same logic as open_sample_app()
+    exe_paths = []
+    if app_path_env:
+        exe_paths.append(app_path_env)
+    exe_paths.extend([
+        f"{product_name}.exe",
+        f"../build/{product_name}.exe",
+        f"./{product_name}.exe",
+    ])
+    
+    sample_app_path = None
+    for exe_path in exe_paths:
+        if os.path.exists(exe_path):
+            sample_app_path = os.path.abspath(exe_path)
+            break
+    
+    if not sample_app_path:
+        print(f"WARNING: Could not find Unity executable for protocol handler registration")
+        print(f"Tried paths: {exe_paths}")
+        return
+    
+    print(f"Registering protocol handler with executable: {sample_app_path}")
     
     # PowerShell script to register the protocol
+    # Escape backslashes for PowerShell
+    ps_app_path = sample_app_path.replace('\\', '\\\\')
+    
     ps_script = f'''
     # Register immutablerunner protocol
     $protocolKey = "HKCU:\\Software\\Classes\\immutablerunner"
@@ -738,14 +1117,10 @@ def setup_protocol_association():
     Set-ItemProperty -Path $protocolKey -Name "(Default)" -Value "URL:immutablerunner Protocol"
     Set-ItemProperty -Path $protocolKey -Name "URL Protocol" -Value ""
     
-    # Find the Unity sample app executable
-    $sampleAppPath = "C:\\Immutable\\unity-immutable-sdk\\sample\\build\\{product_name}.exe"
-    if (Test-Path $sampleAppPath) {{
-        Set-ItemProperty -Path $commandKey -Name "(Default)" -Value "`"$sampleAppPath`" `"%1`""
-        Write-Host "Protocol association set up successfully"
-    }} else {{
-        Write-Host "Sample app not found at expected path"
-    }}
+    # Set the command to launch the Unity app with the callback URL
+    $sampleAppPath = "{ps_app_path}"
+    Set-ItemProperty -Path $commandKey -Name "(Default)" -Value "`"$sampleAppPath`" `"%1`""
+    Write-Host "Protocol association set up successfully for: $sampleAppPath"
     '''
     
     try:
@@ -761,10 +1136,6 @@ def setup_protocol_association():
 def launch_browser():
     print("Starting Brave...")
     
-    # Set up browser permissions and protocol association first
-    setup_browser_permissions()
-    setup_protocol_association()
-    
     browser_paths = [
         r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
     ]
@@ -779,9 +1150,20 @@ def launch_browser():
         print("Brave executable not found.")
         exit(1)
 
+    # Create a temporary directory for browser data to ensure clean state
+    import tempfile
+    temp_user_data = tempfile.mkdtemp(prefix='brave_test_')
+
+    # IMPORTANT: apply permissions to the SAME profile we launch with.
+    setup_browser_permissions(user_data_dir=temp_user_data)
+    setup_protocol_association()
+    setup_autolaunch_protocol_policy()
+    
     # Launch Brave with CI-friendly flags to handle protocol dialogs automatically
     browser_args = [
         '--remote-debugging-port=9222',
+        # Reduce chance of the auth flow changing due to webdriver detection.
+        '--disable-blink-features=AutomationControlled',
         '--disable-web-security', 
         '--allow-running-insecure-content',
         '--disable-features=VizDisplayCompositor',
@@ -791,11 +1173,22 @@ def launch_browser():
         '--disable-extensions',
         '--disable-component-extensions-with-background-pages',
         '--autoplay-policy=no-user-gesture-required',
+        # We now rely on enterprise policy + profile permissions to auto-allow protocol launch,
+        # so enabling external protocol handlers should allow the redirect to fire without
+        # any UI prompt (Selenium cannot click browser-level prompts reliably).
         '--allow-external-protocol-handlers',
         '--enable-automation',
         '--disable-background-timer-throttling',
         '--disable-backgrounding-occluded-windows',
-        '--disable-renderer-backgrounding'
+        '--disable-renderer-backgrounding',
+        # Cache-busting flags to ensure fresh session every time
+        f'--user-data-dir={temp_user_data}',
+        '--disk-cache-size=0',
+        '--disable-application-cache',
+        '--disable-gpu-shader-disk-cache',
+        '--media-cache-size=0',
+        '--aggressive-cache-discard',
+        '--disable-dev-shm-usage'
     ]
     
     # Check if we're in CI environment

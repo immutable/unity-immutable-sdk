@@ -12,7 +12,7 @@ import time
 from alttester import *
 
 from test import TestConfig, UnityTest
-from test_windows_helpers import login, open_sample_app, launch_browser, bring_sample_app_to_foreground, stop_browser, stop_sample_app, logout_with_controlled_browser
+from test_windows_helpers import login, open_sample_app, launch_browser, bring_sample_app_to_foreground, stop_browser, stop_sample_app, logout_with_controlled_browser, get_product_name
 
 class WindowsTest(UnityTest):
 
@@ -120,11 +120,56 @@ class WindowsTest(UnityTest):
             bring_sample_app_to_foreground()
 
             # Wait for authenticated screen
-            self.get_altdriver().wait_for_current_scene_to_be("AuthenticatedScene")
+            # Default AltTester timeout for this command is ~20s; CI often needs longer,
+            # especially when the browser auto-handles the deep-link without a dialog.
+            self.get_altdriver().wait_for_current_scene_to_be("AuthenticatedScene", timeout=90)
             stop_browser()
             print("[SUCCESS] Login successful")
             
         except Exception as err:
+            # Dump Player.log tail to help diagnose why the deep-link callback
+            # wasn't processed (or why Unity failed after receiving it).
+            try:
+                import os
+                product_name = os.getenv("UNITY_APP_NAME", get_product_name())
+                log_path = os.path.join(
+                    "C:\\Users\\WindowsBuildsdkServi\\AppData\\LocalLow\\Immutable",
+                    product_name,
+                    "Player.log",
+                )
+                print(f"Attempting to dump Unity Player.log tail: {log_path}")
+                if os.path.exists(log_path):
+                    with open(log_path, "r", encoding="utf-8", errors="ignore") as f:
+                        lines = f.read().splitlines()
+                    # The tail is often dominated by AltTester noise. Print:
+                    # 1) last lines, and 2) last relevant lines (Passport/Immutable/URLs/errors).
+                    tail = lines[-200:] if len(lines) > 200 else lines
+                    print("----- Player.log (tail) -----")
+                    for line in tail:
+                        print(line)
+                    print("----- end Player.log (tail) -----")
+
+                    needles = (
+                        "immutable",
+                        "passport",
+                        "launchauthurl",
+                        "passport_auth_url",
+                        "immutablerunner",
+                        "error",
+                        "exception",
+                        "gb:",
+                    )
+                    relevant = [ln for ln in lines if any(n in ln.lower() for n in needles)]
+                    relevant_tail = relevant[-200:] if len(relevant) > 200 else relevant
+                    print("----- Player.log (relevant tail) -----")
+                    for line in relevant_tail:
+                        print(line)
+                    print("----- end Player.log (relevant tail) -----")
+                else:
+                    print("Player.log not found.")
+            except Exception as e:
+                print(f"Failed to dump Player.log: {e}")
+
             stop_browser()
             raise SystemExit(f"Login failed: {err}")
 
@@ -224,7 +269,7 @@ class WindowsTest(UnityTest):
         self.get_altdriver().wait_for_object(By.NAME, "ReloginBtn").tap()
 
         # Wait for authenticated screen
-        self.get_altdriver().wait_for_current_scene_to_be("AuthenticatedScene")
+        self.get_altdriver().wait_for_current_scene_to_be("AuthenticatedScene", timeout=90)
         print("Re-logged in")
 
         # Get access token
@@ -251,7 +296,7 @@ class WindowsTest(UnityTest):
         self.get_altdriver().wait_for_object(By.NAME, "ReconnectBtn").tap()
 
         # Wait for authenticated screen
-        self.get_altdriver().wait_for_current_scene_to_be("AuthenticatedScene")
+        self.get_altdriver().wait_for_current_scene_to_be("AuthenticatedScene", timeout=90)
         print("Reconnected")
 
         # Get access token
@@ -304,7 +349,7 @@ class WindowsTest(UnityTest):
         bring_sample_app_to_foreground()
 
         # Wait for authenticated screen
-        self.get_altdriver().wait_for_current_scene_to_be("AuthenticatedScene")
+        self.get_altdriver().wait_for_current_scene_to_be("AuthenticatedScene", timeout=90)
         print("Logged in and connected to IMX")
         stop_browser()
 
