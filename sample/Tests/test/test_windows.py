@@ -123,7 +123,7 @@ class WindowsTest(UnityTest):
             # Wait for authenticated screen
             # Default AltTester timeout for this command is ~20s; CI often needs longer,
             # especially when the browser auto-handles the deep-link without a dialog.
-            self.get_altdriver().wait_for_current_scene_to_be("AuthenticatedScene", timeout=90)
+            self.get_altdriver().wait_for_current_scene_to_be("AuthenticatedScene", timeout=30)
             stop_browser()
             print("[SUCCESS] Login successful")
             

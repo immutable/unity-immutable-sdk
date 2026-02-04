@@ -16,7 +16,7 @@ from selenium.webdriver.common.keys import Keys
 from alttester import *
 
 from test import TestConfig, UnityTest
-from test_mac_helpers import open_sample_app, bring_sample_app_to_foreground, stop_sample_app
+from test_mac_helpers import open_sample_app, bring_sample_app_to_foreground, stop_sample_app, logout_with_controlled_browser
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'src'))
 from fetch_otp import fetch_code
@@ -172,9 +172,19 @@ class MacTest(UnityTest):
         print("Logging out...")
         cls.launch_browser()
         bring_sample_app_to_foreground()
+        
+        # Click logout button
         cls.altdriver.find_object(By.NAME, "LogoutBtn").tap()
-        time.sleep(5)
-        bring_sample_app_to_foreground()  # Bring app back to foreground after browser processes logout
+        print("Logout button clicked")
+        
+        # Use controlled browser to handle logout
+        logout_with_controlled_browser()
+        
+        # Bring app back to foreground after browser processes logout
+        time.sleep(2)
+        bring_sample_app_to_foreground()
+        
+        # Wait for unauthenticated scene
         cls.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
         time.sleep(2)
         cls.stop_browser()
