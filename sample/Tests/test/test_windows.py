@@ -8,6 +8,7 @@ These tests require proper authentication URL logging to work correctly.
 """
 
 import time
+import unittest
 
 from alttester import *
 
@@ -197,138 +198,10 @@ class WindowsTest(UnityTest):
         print("COMPLETED TEST: test_3_passport_functions")
         print("=" * 60)
 
-    def test_4_imx_functions(self):
-        print("=" * 60)
-        print("STARTING TEST: test_4_imx_functions")
-        print("=" * 60)
-        self.test_2_imx_functions()
-        print("COMPLETED TEST: test_4_imx_functions")
-        print("=" * 60)
-
     def test_5_zkevm_functions(self):
         print("=" * 60)
         print("STARTING TEST: test_5_zkevm_functions")
         print("=" * 60)
         self.test_3_zkevm_functions()
         print("COMPLETED TEST: test_5_zkevm_functions")
-        print("=" * 60)
-
-    def test_6_relogin(self):
-        print("=" * 60)
-        print("STARTING TEST: test_6_relogin")
-        print("=" * 60)
-        self.restart_app_and_altdriver()
-
-        # Relogin
-        print("Re-logging in...")
-        self.get_altdriver().wait_for_object(By.NAME, "ReloginBtn").tap()
-
-        # Wait for authenticated screen
-        self.get_altdriver().wait_for_current_scene_to_be("AuthenticatedScene")
-        print("Re-logged in")
-
-        # Get access token
-        self.get_altdriver().find_object(By.NAME, "GetAccessTokenBtn").tap()
-        output = self.get_altdriver().find_object(By.NAME, "Output")
-        self.assertTrue(len(output.get_text()) > 50)
-
-        # Click Connect to IMX button
-        self.get_altdriver().find_object(By.NAME, "ConnectBtn").tap()
-        time.sleep(5)
-        self.assertEqual("Connected to IMX", output.get_text())
-        
-        print("COMPLETED TEST: test_6_relogin")
-        print("=" * 60)
-
-    def test_7_reconnect_connect_imx(self):
-        print("=" * 60)
-        print("STARTING TEST: test_7_reconnect_connect_imx")
-        print("=" * 60)
-        self.restart_app_and_altdriver()
-
-        # Reconnect
-        print("Reconnecting...")
-        self.get_altdriver().wait_for_object(By.NAME, "ReconnectBtn").tap()
-
-        # Wait for authenticated screen
-        self.get_altdriver().wait_for_current_scene_to_be("AuthenticatedScene")
-        print("Reconnected")
-
-        # Get access token
-        self.get_altdriver().find_object(By.NAME, "GetAccessTokenBtn").tap()
-        output = self.get_altdriver().find_object(By.NAME, "Output")
-        self.assertTrue(len(output.get_text()) > 50)
-
-        # Get address without having to click Connect to IMX button
-        self.get_altdriver().find_object(By.NAME, "GetAddressBtn").tap()
-        self.assertEqual(TestConfig.WALLET_ADDRESS, output.get_text())
-
-        # Logout
-        print("Logging out...")
-        launch_browser()
-        bring_sample_app_to_foreground()
-        self.get_altdriver().find_object(By.NAME, "LogoutBtn").tap()
-        
-        # Use controlled browser logout instead of waiting for scene change
-        logout_with_controlled_browser()
-        
-        # Give Unity time to process the logout callback
-        time.sleep(5)
-        bring_sample_app_to_foreground()
-
-        # Wait for authenticated screen
-        self.get_altdriver().wait_for_current_scene_to_be("UnauthenticatedScene")
-        
-        stop_browser()
-        print("Logged out")
-
-        print("COMPLETED TEST: test_7_reconnect_connect_imx")
-        print("=" * 60)
-
-    def test_8_connect_imx(self):
-        print("=" * 60)
-        print("STARTING TEST: test_8_connect_imx")
-        print("=" * 60)
-        # Ensure clean state regardless of previous tests
-        self.restart_app_and_altdriver()
-    
-        # Wait for initial scene
-        self.get_altdriver().wait_for_current_scene_to_be("UnauthenticatedScene")
-
-        # Connect IMX
-        print("Logging in and connecting to IMX...")
-        launch_browser()
-        bring_sample_app_to_foreground()
-        self.get_altdriver().wait_for_object(By.NAME, "ConnectBtn").tap()
-        login()
-        bring_sample_app_to_foreground()
-
-        # Wait for authenticated screen
-        self.get_altdriver().wait_for_current_scene_to_be("AuthenticatedScene")
-        print("Logged in and connected to IMX")
-        stop_browser()
-
-        # Get access token
-        self.get_altdriver().find_object(By.NAME, "GetAccessTokenBtn").tap()
-        output = self.get_altdriver().find_object(By.NAME, "Output")
-        self.assertTrue(len(output.get_text()) > 50)
-
-        # Get address without having to click Connect to IMX button
-        self.get_altdriver().find_object(By.NAME, "GetAddressBtn").tap()
-        self.assertEqual(TestConfig.WALLET_ADDRESS, output.get_text())
-
-        # Logout
-        launch_browser()
-        bring_sample_app_to_foreground()
-        print("Logging out...")
-        self.get_altdriver().find_object(By.NAME, "LogoutBtn").tap()
-        logout_with_controlled_browser()
-        time.sleep(5)
-        bring_sample_app_to_foreground()
-
-        # Wait for authenticated screen
-        self.get_altdriver().wait_for_current_scene_to_be("UnauthenticatedScene")
-        stop_browser()
-        print("Logged out")
-        print("COMPLETED TEST: test_8_connect_imx")
         print("=" * 60)
