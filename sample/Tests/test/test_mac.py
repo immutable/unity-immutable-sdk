@@ -174,6 +174,7 @@ class MacTest(UnityTest):
         bring_sample_app_to_foreground()
         cls.altdriver.find_object(By.NAME, "LogoutBtn").tap()
         time.sleep(5)
+        bring_sample_app_to_foreground()  # Bring app back to foreground after browser processes logout
         cls.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
         time.sleep(2)
         cls.stop_browser()
@@ -232,3 +233,64 @@ class MacTest(UnityTest):
 
     def test_5_zkevm_functions(self):
         self.test_3_zkevm_functions()
+
+    def test_6_relogin(self):
+        # Close and reopen app
+        stop_sample_app()
+        open_sample_app()
+
+        # Restart AltTester
+        self.altdriver.stop()
+        self.__class__.altdriver = AltDriver()
+        time.sleep(5)
+
+        # Wait for unauthenticated screen
+        self.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
+
+        # Relogin
+        print("Re-logging in...")
+        self.altdriver.wait_for_object(By.NAME, "ReloginBtn").tap()
+
+        # Wait for authenticated screen
+        self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
+        print("Re-logged in")
+
+        # Get access token
+        self.altdriver.find_object(By.NAME, "GetAccessTokenBtn").tap()
+        output = self.altdriver.find_object(By.NAME, "Output")
+        self.assertTrue(len(output.get_text()) > 50)
+
+        self.altdriver.stop()
+
+    def test_7_reconnect_connect_imx(self):
+        # Close and reopen app
+        stop_sample_app()
+        open_sample_app()
+
+        # Restart AltTester
+        self.altdriver.stop()
+        self.__class__.altdriver = AltDriver()
+        time.sleep(5)
+
+        # Wait for unauthenticated screen
+        self.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
+        
+        # Reconnect
+        print("Reconnecting...")
+        self.altdriver.wait_for_object(By.NAME, "ReconnectBtn").tap()
+
+        # Wait for authenticated screen
+        self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
+        print("Reconnected")
+
+        # Get access token
+        self.altdriver.find_object(By.NAME, "GetAccessTokenBtn").tap()
+        output = self.altdriver.find_object(By.NAME, "Output")
+        self.assertTrue(len(output.get_text()) > 50)
+
+        # Get address without having to click Connect to IMX button
+        self.altdriver.find_object(By.NAME, "GetAddressBtn").tap()
+        self.assertEqual(TestConfig.WALLET_ADDRESS, output.get_text())
+
+        # Logout
+        self.logout()
