@@ -775,7 +775,7 @@ PlayerSettings:
   webGLDecompressionFallback: 0
   webGLPowerPreference: 2
   scriptingDefineSymbols:
-    Android: VUPLEX_STANDALONE
+    Android: VUPLEX_STANDALONE;UWB_WEBVIEW
     Standalone: UWB_WEBVIEW;VUPLEX_STANDALONE
     iPhone: 
   additionalCompilerArguments:

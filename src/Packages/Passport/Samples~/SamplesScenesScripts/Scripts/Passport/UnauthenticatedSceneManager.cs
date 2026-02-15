@@ -7,8 +7,6 @@ public class UnauthenticatedSceneManager : MonoBehaviour
     [SerializeField] private GameObject LoginButtons;
     [SerializeField] private GameObject ReloginButtons;
 
-    public Action OnImxConnected;
-
     private async void Start()
     {
         if (Passport.Instance != null)
@@ -22,9 +20,5 @@ public class UnauthenticatedSceneManager : MonoBehaviour
             Debug.LogError("[UnauthenticatedSceneManager] Passport.Instance is null");
         }
     }
-
-    void Awake()
-    {
-        OnImxConnected = () => { UnityEngine.SceneManagement.SceneManager.LoadScene("AuthenticatedScene"); };
-    }
+    
 }

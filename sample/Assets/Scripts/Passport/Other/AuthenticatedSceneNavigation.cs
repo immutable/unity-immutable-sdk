@@ -29,12 +29,6 @@ public class AuthenticatedSceneNavigation : MonoBehaviour
         SceneManager.LoadScene("ZkEvmRequestAccounts");
     }
 
-    // IMX Features
-    public void ShowImxNftTransfer()
-    {
-        SceneManager.LoadScene("ImxNftTransfer");
-    }
-
     public void ShowSetCallTimeout()
     {
         SceneManager.LoadScene("SetCallTimeout");

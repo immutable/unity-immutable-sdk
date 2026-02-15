@@ -22,11 +22,6 @@ namespace Immutable.Passport.Event
             public const string COMPLETE_LOGIN_PKCE = "performedLoginPkce";
             public const string COMPLETE_RELOGIN = "performedRelogin";
 
-            // Connect
-            public const string START_CONNECT_IMX_PKCE = "startedConnectImxPkce";
-            public const string COMPLETE_CONNECT_IMX_PKCE = "performedConnectImxPkce";
-            public const string COMPLETE_RECONNECT = "performedReconnect";
-
             // Logout
             public const string COMPLETE_LOGOUT_PKCE = "performedLogoutPkce";
         }
