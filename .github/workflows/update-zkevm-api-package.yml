@@ -26,18 +26,18 @@ jobs:
       - name: Download remote openapi.json
         run: curl -o openapi.json https://imx-openapiv3-mr-sandbox.s3.us-east-2.amazonaws.com/openapi.json
 
-      - name: Ensure local openapi.yaml exists (if not, assume it's blank)
+      - name: Ensure local openapi.json exists (if not, create an empty one)
         run: |
-          if [ ! -f ./src/Packages/ZkEvmApi/api~/openapi.yaml ]; then
-            echo "Creating empty openapi.yaml file..."
+          if [ ! -f ./src/Packages/ZkEvmApi/api~/openapi.json ]; then
+            echo "Creating empty openapi.json file..."
             mkdir -p ./src/Packages/ZkEvmApi/api~
-            touch ./src/Packages/ZkEvmApi/api~/openapi.yaml
+            echo "{}" > ./src/Packages/ZkEvmApi/api~/openapi.json
           fi
 
-      - name: Compare openapi.json with openapi.yaml
+      - name: Compare openapi.json files
         id: comparison
         run: |
-          if diff openapi.json ./src/Packages/ZkEvmApi/api~/openapi.yaml > /dev/null; then
+          if diff openapi.json ./src/Packages/ZkEvmApi/api~/openapi.json > /dev/null; then
             echo "::set-output name=difference::false"
           else
             echo "::set-output name=difference::true"
@@ -67,6 +67,7 @@ jobs:
           cp -r ./ZkEvmApi/api/* ./src/Packages/ZkEvmApi/api~/
           cp -r ./ZkEvmApi/docs/* ./src/Packages/ZkEvmApi/Documentation~/
           cp -r ./ZkEvmApi/src/Immutable.Api.ZkEvm/* ./src/Packages/ZkEvmApi/Runtime/
+          cp openapi.json ./src/Packages/ZkEvmApi/api~/openapi.json
 
           # Remove .meta files that do not have corresponding files
           for dir in ./src/Packages/ZkEvmApi/Runtime; do
