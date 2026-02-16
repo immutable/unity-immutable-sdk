@@ -21,24 +21,8 @@ public class PassportInitialisationScript : MonoBehaviour
     {
         ShowOutput("Initialising Passport...");
 
-        string redirectUri;
-        string logoutRedirectUri;
-
-#if UNITY_WEBGL
-            var url = Application.absoluteURL;
-            var uri = new Uri(url);
-            var scheme = uri.Scheme;
-            var hostWithPort = uri.IsDefaultPort ? uri.Host : $"{uri.Host}:{uri.Port}";
-            var fullPath = uri.AbsolutePath.EndsWith("/")
-                ? uri.AbsolutePath
-                : uri.AbsolutePath.Substring(0, uri.AbsolutePath.LastIndexOf('/') + 1);
-
-            redirectUri = $"{scheme}://{hostWithPort}{fullPath}callback.html";
-            logoutRedirectUri = $"{scheme}://{hostWithPort}{fullPath}logout.html";
-#else
-        redirectUri = "immutablerunner://callback";
-        logoutRedirectUri = "immutablerunner://logout";
-#endif
+        var redirectUri = "immutablerunner://callback";
+        var logoutRedirectUri = "immutablerunner://logout";
 
         try
         {

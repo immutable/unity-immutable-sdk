@@ -337,17 +337,6 @@ namespace Immutable.Passport
         }
 
         /// <summary>
-        /// Logs the user into Passport using Authorisation Code Flow with Proof Key for Code Exchange (PKCE) and sets up the Immutable X provider.
-        /// This opens the user's default browser on desktop or an in-app browser on mobile.
-        /// <param name="useCachedSession">If true, Passport will attempt to re-authenticate the player using stored credentials. If re-authentication fails, it won't automatically prompt the user to log in again.</param>
-        /// <param name="directLoginOptions">Direct login options for authentication (defaults to email method).
-        /// </summary>
-        public async UniTask<bool> ConnectImx(bool useCachedSession = false, DirectLoginOptions directLoginOptions = null)
-        {
-            return await GetPassportImpl().ConnectImx(useCachedSession, directLoginOptions);
-        }
-
-        /// <summary>
         /// Completes the login process by storing tokens received from the Bring Your Own Auth API token exchange endpoint.
         /// This method enables authentication using existing auth systems without requiring users to log in twice.q
         /// </summary>
@@ -358,17 +347,6 @@ namespace Immutable.Passport
         public async UniTask<bool> CompleteLogin(TokenResponse request)
         {
             return await GetPassportImpl().CompleteLogin(request);
-        }
-
-        /// <summary>
-        /// Gets the wallet address of the logged in user.
-        /// <returns>
-        /// The wallet address
-        /// </returns>
-        /// </summary>
-        public async UniTask<string?> GetAddress()
-        {
-            return await GetPassportImpl().GetAddress();
         }
 
         /// <summary>
@@ -389,25 +367,6 @@ namespace Immutable.Passport
         public UniTask<bool> HasCredentialsSaved()
         {
             return GetPassportImpl().HasCredentialsSaved();
-        }
-
-        /// <summary>
-        /// Checks if the user is registered off-chain
-        /// <returns>
-        /// True if the user is registered with Immutable X, false otherwise
-        /// </returns>
-        /// </summary>
-        public async UniTask<bool> IsRegisteredOffchain()
-        {
-            return await GetPassportImpl().IsRegisteredOffchain();
-        }
-
-        /// <summary>
-        /// Registers the user to Immutable X if they are not already registered
-        /// </summary>
-        public async UniTask<RegisterUserResponse?> RegisterOffchain()
-        {
-            return await GetPassportImpl().RegisterOffchain();
         }
 
         /// <summary>
@@ -464,28 +423,6 @@ namespace Immutable.Passport
         public async UniTask<List<string>> GetLinkedAddresses()
         {
             return await GetPassportImpl().GetLinkedAddresses();
-        }
-
-        /// <summary>
-        /// Create a new transfer request with the given unsigned transfer request.
-        /// <returns>
-        /// The transfer response if successful
-        /// </returns>
-        /// </summary>
-        public async UniTask<CreateTransferResponseV1?> ImxTransfer(UnsignedTransferRequest request)
-        {
-            return await GetPassportImpl().ImxTransfer(request);
-        }
-
-        /// <summary>
-        /// Create a new batch nft transfer request with the given transfer details.
-        /// <returns>
-        /// The transfer response if successful
-        /// </returns>
-        /// </summary>
-        public async UniTask<CreateBatchTransferResponse?> ImxBatchNftTransfer(NftTransferDetails[] details)
-        {
-            return await GetPassportImpl().ImxBatchNftTransfer(details);
         }
 
         /// <summary>

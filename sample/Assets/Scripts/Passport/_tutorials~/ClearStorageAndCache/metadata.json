@@ -1,8 +1,0 @@
-{
-  "title": "Clear Storage and Cache on Mobile Devices",
-  "description": "Learn how to clear WebView storage and cache on Android and iOS devices using the Immutable Passport SDK",
-  "keywords": ["Immutable", "SDK", "ClearStorageAndCache", "Mobile", "Android", "iOS", "WebView"],
-  "tech_stack": ["Unity", "C#", "WebView"],
-  "product": "Passport",
-  "programming_language": "C#"
-} 

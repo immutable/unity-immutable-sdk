@@ -1,8 +1,0 @@
-{
-  "title": "Initializing the Immutable Passport SDK",
-  "description": "Learn how to properly initialize the Immutable Passport SDK in your Unity application to enable authentication and blockchain interactions",
-  "keywords": ["Immutable", "SDK", "PassportInitialisation", "Authentication", "Unity"],
-  "tech_stack": ["Unity", "C#", "UniTask"],
-  "product": "Passport",
-  "programming_language": "C#"
-} 

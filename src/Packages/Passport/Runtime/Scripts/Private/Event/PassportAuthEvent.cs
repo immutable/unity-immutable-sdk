@@ -33,33 +33,6 @@ namespace Immutable.Passport.Event
         CompletingLoginPKCE,
 
         /// <summary>
-        /// Started the login and set up IMX provider process using PKCE flow
-        /// </summary>
-        ConnectingImxPKCE,
-        /// <summary>
-        /// Launching Passport login in Chrome Custom Tabs for connect IMX via PKCE flow
-        /// </summary>
-        ConnectImxPKCELaunchingCustomTabs,
-        /// <summary>
-        /// Opening Passport login in a webview (ASWebAuthenticationSession) for connect IMX via PKCE flow
-        /// </summary>
-        ConnectImxPKCEOpeningWebView,
-        /// <summary>
-        /// Failed to login and set up IMX provider using PKCE flow
-        /// </summary>
-        ConnectImxPKCEFailed,
-        /// <summary>
-        /// Successfully logged in and set up IMX provider using PKCE flow
-        /// </summary>
-        ConnectImxPKCESuccess,
-        /// <summary>
-        /// Chrome Custom Tabs/Webview redirected the user back to the game via deeplink 
-        /// and is now trying to complete the PKCE login process and set up IMX provider
-        /// </summary>
-        CompletingConnectImxPKCE,
-
-
-        /// <summary>
         /// Started the log out process using Chrome Custom Tabs/ASWebAuthenticationSession
         /// </summary>
         LoggingOutPKCE,
@@ -87,19 +60,6 @@ namespace Immutable.Passport.Event
         /// Successfully re-logged in using saved credentials
         /// </summary>
         ReloginSuccess,
-
-        /// <summary>
-        /// Started the reconnect (login and set up IMX provider) process using saved credentials
-        /// </summary>
-        Reconnecting,
-        /// <summary>
-        /// Failed to reconnect (login and set up IMX provider) using saved credentials
-        /// </summary>
-        ReconnectFailed,
-        /// <summary>
-        /// Successfully reconnected (login and set up IMX provider) in using saved credentials
-        /// </summary>
-        ReconnectSuccess,
 
         #endregion
 

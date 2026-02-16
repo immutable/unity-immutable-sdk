@@ -9,11 +9,6 @@ namespace Immutable.Passport.Model
     internal class GetPKCEAuthUrlRequest
     {
         /// <summary>
-        /// Whether this is a connect to IMX operation (true) or just login (false).
-        /// </summary>
-        public bool isConnectImx;
-
-        /// <summary>
         /// The direct login options for authentication.
         /// </summary>
         public DirectLoginOptions directLoginOptions;
@@ -21,11 +16,9 @@ namespace Immutable.Passport.Model
         /// <summary>
         /// Creates a new GetPKCEAuthUrlRequest with DirectLoginOptions.
         /// </summary>
-        /// <param name="isConnectImx">Whether this is a connect to IMX operation</param>
         /// <param name="directLoginOptions">The direct login options to use</param>
-        public GetPKCEAuthUrlRequest(bool isConnectImx, DirectLoginOptions directLoginOptions)
+        public GetPKCEAuthUrlRequest(DirectLoginOptions directLoginOptions)
         {
-            this.isConnectImx = isConnectImx;
             this.directLoginOptions = directLoginOptions;
         }
     }

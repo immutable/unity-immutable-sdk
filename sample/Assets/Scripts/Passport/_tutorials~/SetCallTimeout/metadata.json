@@ -1,8 +1,0 @@
-{
-  "title": "Configuring API Call Timeouts in Passport SDK",
-  "description": "Learn how to customize network timeout durations for API calls in the Immutable Passport SDK",
-  "keywords": ["Immutable", "SDK", "SetCallTimeout", "Network Timeout", "API Timeout", "Unity"],
-  "tech_stack": ["Unity", "C#", "Passport SDK"],
-  "product": "Passport",
-  "programming_language": "C#"
-} 

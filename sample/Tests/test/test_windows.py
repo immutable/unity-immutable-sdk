@@ -224,35 +224,6 @@ class WindowsTest(UnityTest):
         self.get_altdriver().find_object(By.NAME, "GetAccessTokenBtn").tap()
         output = self.get_altdriver().find_object(By.NAME, "Output")
         self.assertTrue(len(output.get_text()) > 50)
-        
-        print("COMPLETED TEST: test_6_relogin")
-        print("=" * 60)
-
-    def test_7_reconnect_connect_imx(self):
-        print("=" * 60)
-        print("STARTING TEST: test_7_reconnect_connect_imx")
-        print("=" * 60)
-        self.restart_app_and_altdriver()
-
-        # Reconnect
-        print("Reconnecting...")
-        self.get_altdriver().wait_for_object(By.NAME, "ReconnectBtn").tap()
-
-        # Wait for authenticated screen
-        self.get_altdriver().wait_for_current_scene_to_be("AuthenticatedScene")
-        print("Reconnected")
-
-        # Get access token
-        self.get_altdriver().find_object(By.NAME, "GetAccessTokenBtn").tap()
-        time.sleep(2)  # Give Unity time to fetch and display the access token
-        output = self.get_altdriver().find_object(By.NAME, "Output")
-        self.assertTrue(len(output.get_text()) > 50)
-
-        # Get address without having to click Connect to IMX button
-        self.get_altdriver().find_object(By.NAME, "GetAddressBtn").tap()
-        time.sleep(2)  # Give Unity time to fetch and display the address
-        output = self.get_altdriver().find_object(By.NAME, "Output")  # Re-fetch output after address is loaded
-        self.assertEqual(TestConfig.WALLET_ADDRESS, output.get_text())
 
         # Logout
         print("Logging out...")
@@ -275,5 +246,5 @@ class WindowsTest(UnityTest):
         stop_browser()
         print("Logged out")
 
-        print("COMPLETED TEST: test_7_reconnect_connect_imx")
+        print("COMPLETED TEST: test_6_relogin")
         print("=" * 60)

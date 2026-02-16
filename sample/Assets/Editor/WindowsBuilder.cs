@@ -72,7 +72,6 @@ public class WindowsBuilder
                 "Assets/Scenes/Passport/ZkEvm/ZkEvmGetBalance.unity",
                 "Assets/Scenes/Passport/ZkEvm/ZkEvmGetTransactionReceipt.unity",
                 "Assets/Scenes/Passport/ZkEvm/ZkEvmSendTransaction.unity",
-                "Assets/Scenes/Passport/Imx/ImxNftTransfer.unity",
                 "Assets/Scenes/Passport/ZkEvm/ZkEVMSignTypedData.unity",
                 "Assets/Scenes/Passport/Other/SetCallTimeout.unity"
             },
