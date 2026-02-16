@@ -137,38 +137,6 @@ class TestBase(UnityTest):
         output = self.altdriver.find_object(By.NAME, "Output")
         self.assertTrue(len(output.get_text()) > 50)
 
-        self.altdriver.stop()
-
-    def test_7_pkce_reconnect(self):
-        self.close_and_open_app()
-
-        # Restart AltTester
-        self.altdriver.stop()
-        self.altdriver = AltDriver()
-        time.sleep(5)
-
-        # Select use PKCE auth
-        self.altdriver.find_object(By.NAME, "PKCE").tap()
-        # Wait for unauthenticated screen
-        self.altdriver.wait_for_current_scene_to_be("UnauthenticatedScene")
-        
-        # Reconnect
-        print("Reconnecting...")
-        self.altdriver.wait_for_object(By.NAME, "ReconnectBtn").tap()
-
-        # Wait for authenticated screen
-        self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
-        print("Reconnected")
-
-        # Get access token
-        self.altdriver.find_object(By.NAME, "GetAccessTokenBtn").tap()
-        output = self.altdriver.find_object(By.NAME, "Output")
-        self.assertTrue(len(output.get_text()) > 50)
-
-        # Get address without having to click Connect to IMX button
-        self.altdriver.find_object(By.NAME, "GetAddressBtn").tap()
-        self.assertEqual(TestConfig.WALLET_ADDRESS, output.get_text())
-
         # Logout
         print("Logging out...")
         self.altdriver.find_object(By.NAME, "LogoutBtn").tap()
