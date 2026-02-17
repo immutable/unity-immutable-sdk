@@ -3,7 +3,6 @@
     "com.alttester.sdk": "2.2.5",
     "com.cysharp.unitask": "2.3.3",
     "com.immutable.api.zkevm": "file:../../src/Packages/ZkEvmApi",
-    "com.immutable.marketplace": "file:../../src/Packages/Marketplace",
     "com.immutable.passport": "file:../../src/Packages/Passport",
     "com.unity.2d.pixel-perfect": "5.1.1",
     "com.unity.collab-proxy": "2.9.3",
