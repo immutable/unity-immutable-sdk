@@ -327,6 +327,7 @@ jobs:
     name: Run ${{ matrix.targetPlatform }} UI tests 🧪
     needs: build
     strategy:
+      fail-fast: false
       matrix:
         include:
           - targetPlatform: StandaloneOSX
