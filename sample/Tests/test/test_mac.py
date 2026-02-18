@@ -58,12 +58,23 @@ class MacTest(UnityTest):
             browser_path,
             "--remote-debugging-port=9222",
             "--no-first-run",
-            "--no-default-browser-check"
+            "--no-default-browser-check",
+            "--restore-last-session=false"
         ])
 
         # Give Brave more time to fully initialize remote debugging
         print("Waiting for Brave to fully initialize...")
         time.sleep(10)
+
+        # Close any restored tabs/windows from a previous session
+        print("Clearing any restored tabs...")
+        subprocess.run([
+            "osascript", "-e",
+            'tell application "Brave Browser" to repeat while (count of windows) > 0\n'
+            'tell front window to close\n'
+            'end repeat'
+        ], check=False, capture_output=True, timeout=10)
+        time.sleep(1)
         
         # Verify remote debugging is accessible
         try:
@@ -79,11 +90,19 @@ class MacTest(UnityTest):
     def stop_browser(cls):
         print("Stopping Brave Browser...")
         try:
-            # First try graceful shutdown using AppleScript
+            # Close all tabs first so the browser won't restore them on next launch
+            subprocess.run([
+                "osascript", "-e",
+                'tell application "Brave Browser" to repeat while (count of windows) > 0\n'
+                'tell front window to close\n'
+                'end repeat'
+            ], check=False, capture_output=True, timeout=10)
+            time.sleep(1)
+
             subprocess.run([
                 "osascript", "-e", 
                 'tell application "Brave Browser" to quit'
-            ], check=False, capture_output=True)
+            ], check=False, capture_output=True, timeout=10)
             time.sleep(2)
             
             # Check if still running, then force kill
