@@ -72,7 +72,8 @@ class MacTest(UnityTest):
             "--remote-debugging-port=9222",
             "--no-first-run",
             "--no-default-browser-check",
-            "--disable-session-crashed-bubble"
+            "--disable-session-crashed-bubble",
+            "--restore-last-session=false"
         ])
 
         # Give Brave more time to fully initialize remote debugging
