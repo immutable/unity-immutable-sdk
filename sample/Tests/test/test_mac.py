@@ -66,6 +66,19 @@ class MacTest(UnityTest):
         print("Waiting for Brave to fully initialize...")
         time.sleep(10)
 
+        # Dismiss any macOS keychain dialog that may appear from a previous failed cleanup
+        subprocess.run([
+            "osascript", "-e",
+            'tell application "System Events"\n'
+            'if exists (process "SecurityAgent") then\n'
+            'tell process "SecurityAgent"\n'
+            'click button "OK" of window 1\n'
+            'end tell\n'
+            'end if\n'
+            'end tell'
+        ], check=False, capture_output=True, timeout=5)
+        time.sleep(1)
+
         # Close any restored tabs/windows from a previous session
         print("Clearing any restored tabs...")
         subprocess.run([

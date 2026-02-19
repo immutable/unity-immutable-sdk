@@ -133,8 +133,10 @@ jobs:
           ls -la sample-unity6/Tests/
       - name: Create temporary keychain
         run: |
-          security list-keychains
+          # Clean up any leftover temporary keychain from a previous failed run
+          security default-keychain -s ~/Library/Keychains/login.keychain-db || true
           security delete-keychain temporary || true
+          security list-keychains -d user -s ~/Library/Keychains/login.keychain-db
           security list-keychains
           security create-keychain -p "" temporary
           security default-keychain -s temporary
@@ -359,8 +361,10 @@ jobs:
       - name: Create temporary keychain
         if: contains(matrix.targetPlatform, 'StandaloneOSX') && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform)
         run: |
-          security list-keychains
+          # Clean up any leftover temporary keychain from a previous failed run
+          security default-keychain -s ~/Library/Keychains/login.keychain-db || true
           security delete-keychain temporary || true
+          security list-keychains -d user -s ~/Library/Keychains/login.keychain-db
           security list-keychains
           security create-keychain -p "" temporary
           security default-keychain -s temporary
