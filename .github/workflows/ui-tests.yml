@@ -89,7 +89,7 @@ jobs:
     name: Build & Test Unity 6 macOS 🛠️🧪
     runs-on: [self-hosted, macOS]
     concurrency:
-      group: ui-tests-email-inbox-macos-unity6
+      group: ui-tests-email-inbox-macos
       cancel-in-progress: false  # Let tests complete rather than cancelling
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneOSX-Unity6'
     steps:
@@ -133,8 +133,10 @@ jobs:
           ls -la sample-unity6/Tests/
       - name: Create temporary keychain
         run: |
-          security list-keychains
+          # Clean up any leftover temporary keychain from a previous failed run
+          security default-keychain -s ~/Library/Keychains/login.keychain-db || true
           security delete-keychain temporary || true
+          security list-keychains -d user -s ~/Library/Keychains/login.keychain-db
           security list-keychains
           security create-keychain -p "" temporary
           security default-keychain -s temporary
@@ -156,6 +158,12 @@ jobs:
           BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
         working-directory: sample-unity6/Tests
         run: pytest -xs test/test_mac.py::MacTest
+      - name: Close Brave Browser
+        if: always()
+        run: |
+          osascript -e 'tell application "Brave Browser" to quit' 2>/dev/null || true
+          sleep 2
+          pkill -f "Brave Browser" 2>/dev/null || true
       - name: Remove temporary keychain
         if: always()
         run: |
@@ -181,7 +189,7 @@ jobs:
     name: Build & Test Unity 6 Windows 🛠️🧪
     runs-on: [self-hosted, windows]
     concurrency:
-      group: ui-tests-email-inbox-windows-unity6
+      group: ui-tests-email-inbox-windows
       cancel-in-progress: false  # Let tests complete rather than cancelling
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneWindows64-Unity6'
     steps:
@@ -359,8 +367,10 @@ jobs:
       - name: Create temporary keychain
         if: contains(matrix.targetPlatform, 'StandaloneOSX') && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform)
         run: |
-          security list-keychains
+          # Clean up any leftover temporary keychain from a previous failed run
+          security default-keychain -s ~/Library/Keychains/login.keychain-db || true
           security delete-keychain temporary || true
+          security list-keychains -d user -s ~/Library/Keychains/login.keychain-db
           security list-keychains
           security create-keychain -p "" temporary
           security default-keychain -s temporary
@@ -396,6 +406,12 @@ jobs:
           BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
         working-directory: ${{ matrix.projectPath }}/Tests
         run: ${{ matrix.test_script }}
+      - name: Close Brave Browser
+        if: contains(matrix.targetPlatform, 'StandaloneOSX') && always()
+        run: |
+          osascript -e 'tell application "Brave Browser" to quit' 2>/dev/null || true
+          sleep 2
+          pkill -f "Brave Browser" 2>/dev/null || true
       - name: Remove temporary keychain
         if: contains(matrix.targetPlatform, 'StandaloneOSX') && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform)
         run: |

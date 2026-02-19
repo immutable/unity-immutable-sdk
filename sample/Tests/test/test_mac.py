@@ -38,6 +38,53 @@ class MacTest(UnityTest):
         cls.stop_browser()
 
     @classmethod
+    def ensure_browser_clean(cls):
+        """Kill any running Brave instance and delete session restore files.
+        Call this before any action that may open the browser (login, logout, etc.)
+        so Brave always starts with a clean slate."""
+        result = subprocess.run(["pgrep", "-f", "Brave Browser"], capture_output=True, text=True)
+        if result.returncode == 0:
+            print("Brave Browser already running, stopping it...")
+            subprocess.run(["osascript", "-e", 'tell application "Brave Browser" to quit'],
+                           check=False, capture_output=True, timeout=5)
+            time.sleep(2)
+            subprocess.run(["pkill", "-f", "Brave Browser"], check=False, capture_output=True)
+            time.sleep(2)
+            print("Existing Brave Browser stopped")
+
+        brave_profile = os.path.expanduser(
+            "~/Library/Application Support/BraveSoftware/Brave-Browser/Default"
+        )
+
+        # Clear session data (Brave stores sessions in Sessions/ directory)
+        import shutil
+        sessions_dir = os.path.join(brave_profile, "Sessions")
+        if os.path.isdir(sessions_dir):
+            shutil.rmtree(sessions_dir, ignore_errors=True)
+            print("Removed Sessions directory")
+        session_storage_dir = os.path.join(brave_profile, "Session Storage")
+        if os.path.isdir(session_storage_dir):
+            shutil.rmtree(session_storage_dir, ignore_errors=True)
+            print("Removed Session Storage directory")
+
+        # Patch Preferences so Brave thinks it shut down cleanly,
+        # otherwise it forces session restore on "Crashed" exit_type
+        prefs_path = os.path.join(brave_profile, "Preferences")
+        try:
+            if os.path.exists(prefs_path):
+                import json
+                with open(prefs_path, "r") as f:
+                    prefs = json.load(f)
+                prefs.setdefault("profile", {})["exit_type"] = "Normal"
+                prefs["profile"]["exited_cleanly"] = True
+                prefs.setdefault("session", {})["restore_on_startup"] = 5
+                with open(prefs_path, "w") as f:
+                    json.dump(prefs, f)
+                print("Patched Preferences: exit_type=Normal, restore_on_startup=NewTab")
+        except Exception as e:
+            print(f"Could not patch Preferences: {e}")
+
+    @classmethod
     def launch_browser(cls):
         print("Starting Browser...")
         browser_paths = [
@@ -54,18 +101,33 @@ class MacTest(UnityTest):
             print("Brave Browser executable not found.")
             exit(1)
 
+        cls.ensure_browser_clean()
+
         subprocess.Popen([
             browser_path,
             "--remote-debugging-port=9222",
             "--no-first-run",
-            "--no-default-browser-check"
+            "--no-default-browser-check",
+            "--disable-session-crashed-bubble",
+            "--restore-last-session=false"
         ])
 
-        # Give Brave more time to fully initialize remote debugging
         print("Waiting for Brave to fully initialize...")
         time.sleep(10)
-        
-        # Verify remote debugging is accessible
+
+        # Dismiss any macOS keychain dialog from a previous failed cleanup
+        subprocess.run([
+            "osascript", "-e",
+            'tell application "System Events"\n'
+            'if exists (process "SecurityAgent") then\n'
+            'tell process "SecurityAgent"\n'
+            'click button "OK" of window 1\n'
+            'end tell\n'
+            'end if\n'
+            'end tell'
+        ], check=False, capture_output=True, timeout=5)
+        time.sleep(1)
+
         try:
             import urllib.request
             with urllib.request.urlopen("http://127.0.0.1:9222/json", timeout=5) as response:
@@ -79,26 +141,23 @@ class MacTest(UnityTest):
     def stop_browser(cls):
         print("Stopping Brave Browser...")
         try:
-            # First try graceful shutdown using AppleScript
             subprocess.run([
-                "osascript", "-e", 
+                "osascript", "-e",
                 'tell application "Brave Browser" to quit'
-            ], check=False, capture_output=True)
+            ], check=False, capture_output=True, timeout=10)
             time.sleep(2)
-            
-            # Check if still running, then force kill
-            result = subprocess.run(["pgrep", "-f", "Brave Browser"], 
-                                  capture_output=True, text=True)
+
+            result = subprocess.run(["pgrep", "-f", "Brave Browser"],
+                                    capture_output=True, text=True)
             if result.returncode == 0:
-                # Still running, force kill
-                subprocess.run(["pkill", "-f", "Brave Browser"], 
-                             check=False, capture_output=True)
+                subprocess.run(["pkill", "-f", "Brave Browser"],
+                               check=False, capture_output=True)
                 print("Killed Brave Browser processes")
-            
+
             print("Brave Browser has been closed.")
         except Exception as e:
             print("Brave Browser might not be running.")
-        
+
         time.sleep(3)
         print("Stopped Brave Browser")
 
@@ -215,7 +274,6 @@ class MacTest(UnityTest):
                     self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
                     print("Re-logged in")
 
-                    # Logout
                     self.logout()
                     print("Logged out and successfully reset app")
                     time.sleep(2)
