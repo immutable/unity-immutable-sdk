@@ -54,12 +54,25 @@ class MacTest(UnityTest):
             print("Brave Browser executable not found.")
             exit(1)
 
+        # Delete session/tab restore files so Brave starts with a clean slate
+        brave_profile = os.path.expanduser(
+            "~/Library/Application Support/BraveSoftware/Brave-Browser/Default"
+        )
+        for session_file in ["Current Session", "Current Tabs", "Last Session", "Last Tabs"]:
+            path = os.path.join(brave_profile, session_file)
+            try:
+                if os.path.exists(path):
+                    os.remove(path)
+                    print(f"Removed {session_file}")
+            except OSError:
+                pass
+
         subprocess.Popen([
             browser_path,
             "--remote-debugging-port=9222",
             "--no-first-run",
             "--no-default-browser-check",
-            "--restore-last-session=false"
+            "--disable-session-crashed-bubble"
         ])
 
         # Give Brave more time to fully initialize remote debugging
@@ -77,16 +90,6 @@ class MacTest(UnityTest):
             'end if\n'
             'end tell'
         ], check=False, capture_output=True, timeout=5)
-        time.sleep(1)
-
-        # Close any restored tabs/windows from a previous session
-        print("Clearing any restored tabs...")
-        subprocess.run([
-            "osascript", "-e",
-            'tell application "Brave Browser" to repeat while (count of windows) > 0\n'
-            'tell front window to close\n'
-            'end repeat'
-        ], check=False, capture_output=True, timeout=10)
         time.sleep(1)
         
         # Verify remote debugging is accessible
@@ -247,7 +250,6 @@ class MacTest(UnityTest):
                     self.altdriver.wait_for_current_scene_to_be("AuthenticatedScene")
                     print("Re-logged in")
 
-                    # Logout
                     self.logout()
                     print("Logged out and successfully reset app")
                     time.sleep(2)
