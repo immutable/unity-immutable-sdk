@@ -158,6 +158,12 @@ jobs:
           BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
         working-directory: sample-unity6/Tests
         run: pytest -xs test/test_mac.py::MacTest
+      - name: Close Brave Browser
+        if: always()
+        run: |
+          osascript -e 'tell application "Brave Browser" to quit' 2>/dev/null || true
+          sleep 2
+          pkill -f "Brave Browser" 2>/dev/null || true
       - name: Remove temporary keychain
         if: always()
         run: |
@@ -400,6 +406,12 @@ jobs:
           BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
         working-directory: ${{ matrix.projectPath }}/Tests
         run: ${{ matrix.test_script }}
+      - name: Close Brave Browser
+        if: contains(matrix.targetPlatform, 'StandaloneOSX') && always()
+        run: |
+          osascript -e 'tell application "Brave Browser" to quit' 2>/dev/null || true
+          sleep 2
+          pkill -f "Brave Browser" 2>/dev/null || true
       - name: Remove temporary keychain
         if: contains(matrix.targetPlatform, 'StandaloneOSX') && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform)
         run: |
