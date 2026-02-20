@@ -538,25 +538,45 @@ def login():
     time.sleep(3)
     
     try:
-        # Check what's actually on the page
         buttons = driver.find_elements(By.TAG_NAME, "button")
         print(f"Found {len(buttons)} buttons on page:")
-        for i, btn in enumerate(buttons[:5]):  # Show first 5 buttons
+        for i, btn in enumerate(buttons[:10]):
             try:
                 text = btn.text.strip()
                 if text:
                     print(f"  Button {i}: '{text}'")
             except:
                 pass
-        
-        # Wait for the deep link dialog to appear and click the button
-        # Use more specific selector to avoid clicking "Restore" button
+
         product_name = os.getenv("UNITY_APP_NAME", get_product_name())
-        deep_link_button = wait.until(EC.element_to_be_clickable((By.XPATH, f"//button[text()='Open {product_name}.cmd']")))
-        deep_link_button.click()
-        print("Clicked deep link permission dialog - Unity should receive redirect")
+        deep_link_selectors = [
+            f"//button[contains(text(),'Open {product_name}')]",
+            "//button[contains(text(),'Open')]",
+            "//button[contains(text(),'Allow')]",
+            "//a[contains(text(),'Open')]",
+        ]
+
+        clicked = False
+        for selector in deep_link_selectors:
+            try:
+                deep_link_button = WebDriverWait(driver, 5).until(
+                    EC.element_to_be_clickable((By.XPATH, selector)))
+                btn_text = deep_link_button.text.strip()
+                deep_link_button.click()
+                print(f"Clicked deep link button '{btn_text}' with selector: {selector}")
+                clicked = True
+                break
+            except:
+                continue
+
+        if not clicked:
+            print("No deep link button found with any selector - checking if redirect happened automatically")
+            current_url = driver.current_url
+            print(f"Current URL: {current_url}")
+            if 'checking' in current_url or 'callback' in current_url:
+                print("Still on checking page - deep link may not have fired")
     except Exception as e:
-        print(f"Deep link dialog not found or failed to click: {e}")
+        print(f"Deep link dialog handling error: {e}")
         print("This may cause the test to timeout waiting for scene change")
 
     # Keep browser alive for Unity deep link redirect
