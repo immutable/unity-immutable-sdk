@@ -81,53 +81,38 @@ class WindowsTest(UnityTest):
             raise SystemExit(f"App stuck in unknown scene: {current_scene}")
 
     def _perform_login(self):
-        """Perform normal login flow when app is in UnauthenticatedScene"""
-        try:
-            # Debug: Check what scene we're actually in and what objects exist
+        """Perform normal login flow when app is in UnauthenticatedScene.
+        Retries once if the first attempt fails (e.g. deep link dialog not handled)."""
+        for attempt in range(2):
             try:
                 current_scene = self.get_altdriver().get_current_scene()
-                print(f"DEBUG: _perform_login - current scene: {current_scene}")
-            except Exception as e:
-                print(f"DEBUG: Could not get current scene: {e}")
-            
-            # Wait a moment for UI to stabilize and check if app is still running
-            time.sleep(3)
-            
-            # Debug: Check if we can still communicate with the app
-            try:
-                connection_test = self.get_altdriver().get_current_scene()
-                print(f"DEBUG: App still responsive, scene: {connection_test}")
-            except Exception as e:
-                print(f"DEBUG: App may have crashed or lost connection: {e}")
-                raise SystemExit("App connection lost during login attempt")
-            
-            # Debug: Try to find any buttons to see what's available
-            try:
-                all_objects = self.get_altdriver().get_all_elements()
-                button_objects = [obj for obj in all_objects if 'btn' in obj.name.lower() or 'button' in obj.name.lower()]
-                print(f"DEBUG: Found button-like objects: {[obj.name for obj in button_objects]}")
-            except Exception as e:
-                print(f"DEBUG: Could not get all objects: {e}")
-            
-            # Check for login button
-            login_button = self.get_altdriver().find_object(By.NAME, "LoginBtn")
-            print("Found login button - performing login")
+                print(f"Login attempt {attempt + 1}/2 - current scene: {current_scene}")
 
-            # Login
-            launch_browser()
-            bring_sample_app_to_foreground()
-            login_button.tap()
-            login()
-            bring_sample_app_to_foreground()
+                time.sleep(3)
 
-            # Wait for authenticated screen
-            self.get_altdriver().wait_for_current_scene_to_be("AuthenticatedScene")
-            stop_browser()
-            print("[SUCCESS] Login successful")
-            
-        except Exception as err:
-            stop_browser()
-            raise SystemExit(f"Login failed: {err}")
+                login_button = self.get_altdriver().find_object(By.NAME, "LoginBtn")
+                print("Found login button - performing login")
+
+                launch_browser()
+                bring_sample_app_to_foreground()
+                login_button.tap()
+                login()
+                bring_sample_app_to_foreground()
+
+                self.get_altdriver().wait_for_current_scene_to_be("AuthenticatedScene", timeout=30)
+                stop_browser()
+                print("[SUCCESS] Login successful")
+                return
+
+            except Exception as err:
+                stop_browser()
+                if attempt == 0:
+                    print(f"Login attempt 1 failed: {err}")
+                    print("Retrying login...")
+                    time.sleep(5)
+                    bring_sample_app_to_foreground()
+                else:
+                    raise SystemExit(f"Login failed after 2 attempts: {err}")
 
     def _logout_and_login(self):
         """Handle logout and then login when app starts authenticated"""
