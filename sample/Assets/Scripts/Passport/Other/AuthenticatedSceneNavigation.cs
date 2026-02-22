@@ -34,10 +34,5 @@ public class AuthenticatedSceneNavigation : MonoBehaviour
         SceneManager.LoadScene("SetCallTimeout");
     }
 
-    public void ShowLinkWallet()
-    {
-        SceneManager.LoadScene("Passport/LinkWallet");
-    }
-
     // Add more navigation methods as needed for other features
 }
