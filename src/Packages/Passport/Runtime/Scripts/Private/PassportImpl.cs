@@ -274,7 +274,7 @@ namespace Immutable.Passport
                 }
                 else
                 {
-                    var request = new ConnectPKCERequest()
+                    var request = new ConnectPKCERequest
                     {
                         authorizationCode = authCode,
                         state = state

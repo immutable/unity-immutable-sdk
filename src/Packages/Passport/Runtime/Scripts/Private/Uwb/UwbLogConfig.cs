@@ -7,7 +7,7 @@ namespace Immutable.Passport
 {
     internal static class UwbLogConfig
     {
-        internal static void ApplyTo(WebBrowserClient browserClient)
+        internal static void ApplyTo(WebBrowserClient? browserClient)
         {
             if (browserClient == null)
             {

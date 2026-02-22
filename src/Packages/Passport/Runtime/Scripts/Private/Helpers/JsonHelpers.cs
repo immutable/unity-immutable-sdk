@@ -25,24 +25,6 @@ namespace Immutable.Passport.Helpers
             }
         }
 
-        public static string ToJson<T>(this T[] array)
-        {
-            // Need a wrapper to serialise arrays
-            var wrapper = new Wrapper<T> { Items = array };
-            var wrapped = JsonUtility.ToJson(wrapper);
-
-            // Remove the wrapper
-            return wrapped.ReplaceFirst("{\"Items\":", "").TrimEnd('}');
-        }
-
-        private static string ReplaceFirst(this string source, string search, string replace)
-        {
-            var pos = source.IndexOf(search);
-            return pos < 0
-                ? source
-                : source.Substring(0, pos) + replace + source.Substring(pos + search.Length);
-        }
-
         public static string ToJson(this IDictionary<string, object> dictionary)
         {
             // JsonUtility cannot serialise dictionary, but not using newtonsoft json as it doesn't
