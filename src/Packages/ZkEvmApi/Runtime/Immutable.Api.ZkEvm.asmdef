@@ -1,7 +1,0 @@
-{
-    "name": "Immutable.Api.ZkEvm",
-    "overrideReferences": true,
-    "precompiledReferences": [
-        "Newtonsoft.Json.dll"
-    ]
-}
