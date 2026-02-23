@@ -315,6 +315,10 @@ jobs:
           } else {
             pip install -r sample/Tests/requirements-desktop.txt
           }
+      - name: Kill leftover Brave processes
+        if: always()
+        run: |
+          Get-Process | Where-Object { $_.Name -like "*brave*" -or $_.Name -eq "chromedriver" } | Stop-Process -Force -ErrorAction SilentlyContinue
       - name: Run UI tests
         env: 
           UNITY_APP_PATH: Sample Unity 6 Windows.exe
@@ -324,6 +328,10 @@ jobs:
           BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
         working-directory: sample-unity6/Tests
         run: python -m pytest -xs test/test_windows.py::WindowsTest
+      - name: Close Brave Browser
+        if: always()
+        run: |
+          Get-Process | Where-Object { $_.Name -like "*brave*" -or $_.Name -eq "chromedriver" } | Stop-Process -Force -ErrorAction SilentlyContinue
       - name: Upload build log
         if: always()
         uses: actions/upload-artifact@v4
@@ -334,6 +342,7 @@ jobs:
   test:
     name: Run ${{ matrix.targetPlatform }} UI tests 🧪
     needs: build
+    if: ${{ !cancelled() }}
     strategy:
       fail-fast: false
       matrix:
@@ -396,6 +405,10 @@ jobs:
       - name: Install dependencies (Mac)
         if: contains(matrix.targetPlatform, 'StandaloneOSX') && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform)
         run: pip install -r "${{ matrix.projectPath }}/Tests/requirements-desktop.txt"
+      - name: Kill leftover Brave processes (Windows)
+        if: matrix.targetPlatform == 'StandaloneWindows64' && always()
+        run: |
+          Get-Process | Where-Object { $_.Name -like "*brave*" -or $_.Name -eq "chromedriver" } | Stop-Process -Force -ErrorAction SilentlyContinue
       - name: Run UI tests
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
         env: 
@@ -406,12 +419,16 @@ jobs:
           BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
         working-directory: ${{ matrix.projectPath }}/Tests
         run: ${{ matrix.test_script }}
-      - name: Close Brave Browser
+      - name: Close Brave Browser (macOS)
         if: contains(matrix.targetPlatform, 'StandaloneOSX') && always()
         run: |
           osascript -e 'tell application "Brave Browser" to quit' 2>/dev/null || true
           sleep 2
           pkill -f "Brave Browser" 2>/dev/null || true
+      - name: Close Brave Browser (Windows)
+        if: matrix.targetPlatform == 'StandaloneWindows64' && always()
+        run: |
+          Get-Process | Where-Object { $_.Name -like "*brave*" -or $_.Name -eq "chromedriver" } | Stop-Process -Force -ErrorAction SilentlyContinue
       - name: Remove temporary keychain
         if: contains(matrix.targetPlatform, 'StandaloneOSX') && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform)
         run: |

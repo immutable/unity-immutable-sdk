@@ -310,6 +310,47 @@ def login():
     # Connect to the existing Brave browser instance
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
+    # Inject a script on all future page loads to intercept immutablerunner:// redirects.
+    # The auth0 "checking" page redirects via JS to immutablerunner://callback?code=...&state=...
+    # but Brave blocks it with a native dialog Selenium cannot click. By intercepting the URL
+    # before the navigation fires, we can invoke the deep link directly from the OS.
+    try:
+        driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+            "source": """
+                window.__capturedProtocolUrl = null;
+                if (window.navigation) {
+                    window.navigation.addEventListener('navigate', function(e) {
+                        if (e.destination && e.destination.url &&
+                            e.destination.url.startsWith('immutablerunner://')) {
+                            window.__capturedProtocolUrl = e.destination.url;
+                            e.preventDefault();
+                        }
+                    });
+                }
+                try {
+                    var origAssign = Location.prototype.assign;
+                    Location.prototype.assign = function(url) {
+                        if (typeof url === 'string' && url.startsWith('immutablerunner://')) {
+                            window.__capturedProtocolUrl = url;
+                            return;
+                        }
+                        return origAssign.call(this, url);
+                    };
+                    var origReplace = Location.prototype.replace;
+                    Location.prototype.replace = function(url) {
+                        if (typeof url === 'string' && url.startsWith('immutablerunner://')) {
+                            window.__capturedProtocolUrl = url;
+                            return;
+                        }
+                        return origReplace.call(this, url);
+                    };
+                } catch(e) {}
+            """
+        })
+        print("Injected protocol redirect interceptor via CDP")
+    except Exception as e:
+        print(f"Could not inject interceptor (non-fatal): {e}")
+
     # HYBRID APPROACH: Try multi-window detection first (proven to work in CI), 
     # then fall back to Unity log monitoring if needed
     
@@ -524,54 +565,55 @@ def login():
     except:
         print("No consent screen found (expected behavior)")
 
-    # Wait for deep link redirect to fire and be handled by the OS protocol handler.
-    # The checking page redirects to immutablerunner://callback via JavaScript.
-    # With the protocol handler and browser policy set up, this should happen automatically.
-    print("Waiting for deep link redirect from checking page...")
+    # The checking page will try to redirect to immutablerunner://callback?code=...&state=...
+    # Our injected CDP script intercepts this URL. We poll for it, then invoke it directly
+    # from the OS -- bypassing Brave's protocol permission dialog entirely.
+    print("Waiting for callback URL to be intercepted...")
     print(f"Current URL: {driver.current_url}")
 
-    deep_link_handled = False
-    for wait_i in range(15):
-        time.sleep(2)
+    callback_url = None
+    for wait_i in range(30):
+        time.sleep(1)
         try:
-            current_url = driver.current_url
-            page_title = driver.title
-
-            if 'checking' not in current_url and 'auth.immutable.com' not in current_url:
-                print(f"Page navigated away from checking: {current_url}")
-                deep_link_handled = True
+            # Check if our interceptor captured the URL
+            url = driver.execute_script("return window.__capturedProtocolUrl")
+            if url:
+                callback_url = url
+                print(f"Intercepted callback URL: {url[:100]}...")
                 break
 
-            # Look for an "Open" button (browser permission dialog rendered in-page)
-            buttons = driver.find_elements(By.TAG_NAME, "button")
-            for btn in buttons:
+            # Also check if the browser navigated away (deep link fired natively)
+            current_url = driver.current_url
+            if 'checking' not in current_url and 'auth.immutable.com' not in current_url:
+                print(f"Browser navigated away from checking page: {current_url}")
+                break
+
+            # Try clicking any in-page "Open" / "Allow" button
+            for btn in driver.find_elements(By.TAG_NAME, "button"):
                 try:
                     text = btn.text.strip()
                     if text and any(kw in text for kw in ['Open', 'Allow']):
                         btn.click()
                         print(f"Clicked deep link dialog button: '{text}'")
-                        deep_link_handled = True
                         break
                 except:
                     pass
-            if deep_link_handled:
-                break
         except Exception as e:
-            print(f"Deep link wait iteration {wait_i} error: {e}")
+            if wait_i % 10 == 9:
+                print(f"Deep link poll iteration {wait_i}: {e}")
 
-    if deep_link_handled:
-        print("Deep link redirect detected - Unity should receive the callback")
-    else:
-        print("Deep link redirect did not fire within timeout")
-        print("Protocol handler may not be working - attempting direct invocation...")
+    if callback_url:
+        print("Invoking deep link directly via OS (bypassing browser dialog)...")
         try:
-            auth_url = get_auth_url_from_unity_logs()
-            if auth_url:
-                print(f"Invoking protocol handler directly via OS for auth URL callback")
-                subprocess.run(["cmd", "/c", "start", "", "immutablerunner://callback"],
-                             timeout=5, capture_output=True)
+            subprocess.run(
+                ["powershell", "-Command", f"Start-Process '{callback_url}'"],
+                capture_output=True, timeout=10
+            )
+            print("Deep link invoked via OS")
         except Exception as e:
-            print(f"Direct protocol invocation failed: {e}")
+            print(f"OS invocation failed: {e}")
+    else:
+        print("Could not intercept callback URL - deep link may have fired natively via protocol handler")
 
 def clear_unity_data():
     """Clear Unity's persistent data to force fresh start"""
@@ -689,16 +731,56 @@ def bring_sample_app_to_foreground():
     subprocess.run(command, check=True)
     time.sleep(10)
 
-def setup_browser_permissions():
-    """Set up browser preferences to allow auth.immutable.com to open external applications.
-    Writes to the user-data-dir that launch_browser() uses (C:\\temp\\brave_debug)."""
-    print("Setting up browser permissions for auth.immutable.com...")
+def get_brave_default_profile_dir():
+    """Return the path to Brave's default user profile on Windows."""
+    local_app_data = os.environ.get('LOCALAPPDATA', os.path.join(os.path.expanduser("~"), "AppData", "Local"))
+    return os.path.join(local_app_data, "BraveSoftware", "Brave-Browser", "User Data", "Default")
 
-    user_data_dir = r"C:\temp\brave_debug"
-    os.makedirs(user_data_dir, exist_ok=True)
+def ensure_browser_clean():
+    """Kill any running Brave/chromedriver processes and clean session data so Brave
+    starts cleanly without restoring previous tabs (mirrors the Mac helper approach)."""
+    # Kill all Brave processes
+    subprocess.run(["powershell.exe", "-Command",
+                    'Get-Process | Where-Object { $_.Name -like "*brave*" } | Stop-Process -Force -ErrorAction SilentlyContinue'],
+                   capture_output=True, timeout=10)
+    subprocess.run(["powershell.exe", "-Command",
+                    'Get-Process -Name "chromedriver" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue'],
+                   capture_output=True, timeout=10)
+    time.sleep(2)
+
+    brave_profile = get_brave_default_profile_dir()
+
+    import shutil
+    for session_dir_name in ("Sessions", "Session Storage"):
+        session_dir = os.path.join(brave_profile, session_dir_name)
+        if os.path.isdir(session_dir):
+            shutil.rmtree(session_dir, ignore_errors=True)
+            print(f"Removed {session_dir_name} directory")
 
     import json
-    preferences = {
+    prefs_path = os.path.join(brave_profile, "Preferences")
+    try:
+        if os.path.exists(prefs_path):
+            with open(prefs_path, "r") as f:
+                prefs = json.load(f)
+            prefs.setdefault("profile", {})["exit_type"] = "Normal"
+            prefs["profile"]["exited_cleanly"] = True
+            prefs.setdefault("session", {})["restore_on_startup"] = 5
+            with open(prefs_path, "w") as f:
+                json.dump(prefs, f)
+            print("Patched Preferences: exit_type=Normal, restore_on_startup=NewTab")
+    except Exception as e:
+        print(f"Could not patch Preferences: {e}")
+
+def setup_browser_permissions():
+    """Merge protocol-handler permissions into Brave's default profile Preferences."""
+    print("Setting up browser permissions for auth.immutable.com...")
+
+    brave_profile = get_brave_default_profile_dir()
+    os.makedirs(brave_profile, exist_ok=True)
+
+    import json
+    permissions_overlay = {
         "profile": {
             "content_settings": {
                 "exceptions": {
@@ -709,9 +791,7 @@ def setup_browser_permissions():
                         }
                     }
                 }
-            },
-            "exit_type": "Normal",
-            "exited_cleanly": True
+            }
         },
         "protocol_handler": {
             "excluded_schemes": {
@@ -723,9 +803,7 @@ def setup_browser_permissions():
         }
     }
 
-    prefs_dir = os.path.join(user_data_dir, "Default")
-    os.makedirs(prefs_dir, exist_ok=True)
-    prefs_file = os.path.join(prefs_dir, "Preferences")
+    prefs_file = os.path.join(brave_profile, "Preferences")
 
     try:
         existing = {}
@@ -743,7 +821,7 @@ def setup_browser_permissions():
                 else:
                     base[k] = v
 
-        deep_merge(existing, preferences)
+        deep_merge(existing, permissions_overlay)
 
         with open(prefs_file, 'w') as f:
             json.dump(existing, f, indent=2)
@@ -858,11 +936,11 @@ def setup_browser_policy():
 def launch_browser():
     print("Starting Brave...")
 
-    # Kill any existing Brave processes for a clean start
-    subprocess.run(["powershell.exe", "-Command",
-                    'Get-Process -Name "brave" -ErrorAction SilentlyContinue | Stop-Process -Force'],
-                   capture_output=True, timeout=10)
-    time.sleep(2)
+    # Clean up any existing Brave/chromedriver processes and stale session data.
+    # This ensures our instance is the ONLY Brave running so that Unity's
+    # Application.OpenURL() opens the auth page in the same browser we control
+    # via remote debugging (instead of spawning a second uncontrolled instance).
+    ensure_browser_clean()
 
     # Set up protocol handler, browser permissions, and enterprise policy
     setup_protocol_association()
@@ -883,16 +961,17 @@ def launch_browser():
         print("Brave executable not found.")
         exit(1)
 
-    user_data_dir = r"C:\temp\brave_debug"
-
+    # NO --user-data-dir: we intentionally use the default profile so that when
+    # Unity calls Application.OpenURL() the OS opens it in THIS Brave instance
+    # (instead of launching a separate default-profile instance).
     browser_args = [
         '--remote-debugging-port=9222',
-        f'--user-data-dir={user_data_dir}',
         '--disable-web-security',
         '--allow-running-insecure-content',
         '--disable-features=VizDisplayCompositor',
         '--disable-popup-blocking',
         '--no-first-run',
+        '--no-default-browser-check',
         '--disable-default-apps',
         '--disable-extensions',
         '--disable-component-extensions-with-background-pages',
@@ -901,7 +980,8 @@ def launch_browser():
         '--enable-automation',
         '--disable-background-timer-throttling',
         '--disable-backgrounding-occluded-windows',
-        '--disable-renderer-backgrounding'
+        '--disable-renderer-backgrounding',
+        '--disable-session-crashed-bubble',
     ]
 
     is_ci = os.getenv('CI') or os.getenv('GITHUB_ACTIONS') or os.getenv('BUILD_ID')
@@ -930,16 +1010,19 @@ def launch_browser():
 def stop_browser():
     print("Stopping Brave...")
     powershell_command = """
-    $process = Get-Process -Name "brave" -ErrorAction SilentlyContinue
-    if ($process) {
-        $process | ForEach-Object {
+    # Kill all Brave processes (browser, renderer, GPU, crashpad, etc.)
+    $braveProcs = Get-Process | Where-Object { $_.Name -like "*brave*" } -ErrorAction SilentlyContinue
+    if ($braveProcs) {
+        $braveProcs | ForEach-Object {
             Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
         }
-        Write-Output "All Brave processes have been closed."
+        Write-Output "Stopped $($braveProcs.Count) Brave process(es)."
     } else {
         Write-Output "Brave is not running."
     }
+    # Also kill any orphaned chromedriver processes
+    Get-Process -Name "chromedriver" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
     """
     subprocess.run(["powershell.exe", "-Command", powershell_command], check=True)
-    time.sleep(5)
+    time.sleep(3)
     print("Stopped Brave")
