@@ -3,6 +3,7 @@ using NUnit.Framework;
 using Immutable.Browser.Core;
 using Immutable.Passport.Model;
 using UnityEngine;
+using UnityEngine.TestTools;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Immutable.Passport.Helpers;
@@ -78,7 +79,7 @@ namespace Immutable.Passport.Core
             }
 
             Assert.NotNull(e);
-            Assert.IsTrue(e.Message.Contains("Response from browser is incorrect") == true);
+            Assert.IsTrue(e.Message.Contains("Response from game bridge is incorrect") == true);
         }
 
         [Test]
@@ -149,6 +150,91 @@ namespace Immutable.Passport.Core
 
             Assert.True(onReadyCalled);
         }
+
+        [Test]
+        public void SetCallTimeout_DoesNotThrow()
+        {
+            Assert.DoesNotThrow(() => manager.SetCallTimeout(5000));
+        }
+
+        [Test]
+        public void LaunchAuthURL_ForwardsUrlAndRedirectUri()
+        {
+            manager.LaunchAuthURL("https://auth.example.com", "myapp://callback");
+
+            Assert.AreEqual("https://auth.example.com", mockClient.lastLaunchedUrl);
+            Assert.AreEqual("myapp://callback", mockClient.lastLaunchedRedirectUri);
+        }
+
+        [Test]
+        public async Task CallAndResponse_Failed_ErrorFieldSet_SuccessTrue_ThrowsException()
+        {
+            // success=true but an error field is present — should still be treated as failure
+            mockClient.browserResponse = new BrowserResponse
+            {
+                responseFor = FUNCTION_NAME,
+                error = ERROR,
+                success = true
+            };
+
+            PassportException e = null;
+            try
+            {
+                await manager.Call(FUNCTION_NAME);
+            }
+            catch (PassportException ex)
+            {
+                e = ex;
+            }
+
+            Assert.NotNull(e);
+            Assert.AreEqual(ERROR, e.Message);
+        }
+
+        [Test]
+        public void HandleResponse_UnknownRequestId_Throws()
+        {
+            // A well-formed response whose requestId was never registered via Call()
+            var response = new BrowserResponse
+            {
+                responseFor = FUNCTION_NAME,
+                requestId = "unknown-request-id",
+                success = true
+            };
+
+            LogAssert.Expect(LogType.Error, new Regex("No TaskCompletionSource for request id"));
+
+            var ex = Assert.Throws<PassportException>(
+                () => mockClient.InvokeUnityPostMessage(JsonUtility.ToJson(response))
+            );
+
+            Assert.IsTrue(ex.Message.Contains("No TaskCompletionSource for request id"));
+        }
+
+        [Test]
+        public async Task CallAndResponse_Failed_ClientError_NoErrorField()
+        {
+            // success=false but no error or errorType - should get "Unknown error"
+            mockClient.browserResponse = new BrowserResponse
+            {
+                responseFor = FUNCTION_NAME,
+                success = false
+            };
+
+            PassportException e = null;
+            try
+            {
+                await manager.Call(FUNCTION_NAME);
+            }
+            catch (PassportException ex)
+            {
+                e = ex;
+            }
+
+            Assert.NotNull(e);
+            Assert.Null(e.Type);
+            Assert.AreEqual("Unknown error", e.Message);
+        }
     }
 
     internal class MockBrowserClient : IWebBrowserClient
@@ -200,9 +286,13 @@ namespace Immutable.Passport.Core
             return value.Substring(adjustedPosA, posB - adjustedPosA);
         }
 
+        public string lastLaunchedUrl;
+        public string lastLaunchedRedirectUri;
+
         public void LaunchAuthURL(string url, string redirectUri)
         {
-            throw new NotImplementedException();
+            lastLaunchedUrl = url;
+            lastLaunchedRedirectUri = redirectUri;
         }
 
         public void Dispose()
