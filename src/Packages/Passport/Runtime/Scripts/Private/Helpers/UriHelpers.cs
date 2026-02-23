@@ -12,11 +12,11 @@ namespace Immutable.Passport.Helpers
         {
             try
             {
-                string query = uri.Query;
-                string[] queryParameters = query.Split(new char[] { '?', '&' });
-                for (int i = 0; i < queryParameters.Length; i++)
+                var query = uri.Query;
+                var queryParameters = query.Split(new char[] { '?', '&' });
+                foreach (var queryParameter in queryParameters)
                 {
-                    string[] keyValue = queryParameters[i].Split('=');
+                    string[] keyValue = queryParameter.Split('=');
                     if (keyValue[0] == key)
                     {
                         return keyValue[1];
