@@ -7,6 +7,7 @@ see: sample/Tests/README.md
 These tests require proper authentication URL logging to work correctly.
 """
 
+import os
 import time
 import unittest
 
@@ -108,7 +109,12 @@ class WindowsTest(UnityTest):
                 stop_browser()
                 if attempt == 0:
                     print(f"Login attempt 1 failed: {err}")
-                    print("Retrying login...")
+                    print("Retrying login... clearing browser data for fresh session")
+                    import shutil
+                    brave_data = r"C:\temp\brave_debug"
+                    if os.path.exists(brave_data):
+                        shutil.rmtree(brave_data, ignore_errors=True)
+                        print("Cleared browser user data to avoid cached session issues")
                     time.sleep(5)
                     bring_sample_app_to_foreground()
                 else:
