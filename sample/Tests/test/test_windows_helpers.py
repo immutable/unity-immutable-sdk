@@ -215,7 +215,7 @@ def handle_cached_authentication(driver):
         print("Monitoring Unity logs for authentication completion...")
         
         product_name = os.getenv("UNITY_APP_NAME", get_product_name())
-        log_path = os.path.join("C:\\Users\\WindowsBuildsdkServi\\AppData\\LocalLow\\Immutable", product_name, "Player.log")
+        log_path = os.path.join(os.path.expanduser("~"), "AppData", "LocalLow", "Immutable", product_name, "Player.log")
         
         auth_success = False
         for check_attempt in range(30):  # Check for 30 seconds
@@ -310,6 +310,47 @@ def login():
     # Connect to the existing Brave browser instance
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
+    # Inject a script on all future page loads to intercept immutablerunner:// redirects.
+    # The auth0 "checking" page redirects via JS to immutablerunner://callback?code=...&state=...
+    # but Brave blocks it with a native dialog Selenium cannot click. By intercepting the URL
+    # before the navigation fires, we can invoke the deep link directly from the OS.
+    try:
+        driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+            "source": """
+                window.__capturedProtocolUrl = null;
+                if (window.navigation) {
+                    window.navigation.addEventListener('navigate', function(e) {
+                        if (e.destination && e.destination.url &&
+                            e.destination.url.startsWith('immutablerunner://')) {
+                            window.__capturedProtocolUrl = e.destination.url;
+                            e.preventDefault();
+                        }
+                    });
+                }
+                try {
+                    var origAssign = Location.prototype.assign;
+                    Location.prototype.assign = function(url) {
+                        if (typeof url === 'string' && url.startsWith('immutablerunner://')) {
+                            window.__capturedProtocolUrl = url;
+                            return;
+                        }
+                        return origAssign.call(this, url);
+                    };
+                    var origReplace = Location.prototype.replace;
+                    Location.prototype.replace = function(url) {
+                        if (typeof url === 'string' && url.startsWith('immutablerunner://')) {
+                            window.__capturedProtocolUrl = url;
+                            return;
+                        }
+                        return origReplace.call(this, url);
+                    };
+                } catch(e) {}
+            """
+        })
+        print("Injected protocol redirect interceptor via CDP")
+    except Exception as e:
+        print(f"Could not inject interceptor (non-fatal): {e}")
+
     # HYBRID APPROACH: Try multi-window detection first (proven to work in CI), 
     # then fall back to Unity log monitoring if needed
     
@@ -376,27 +417,22 @@ def login():
                 
                 # If we ended up on chrome://newtab/ or similar, the redirect already happened
                 if 'newtab' in driver.current_url or 'about:blank' in driver.current_url:
-                    print("Browser was redirected to new tab - cached session completed redirect automatically!")
-                    print("The immutablerunner:// callback was triggered but browser couldn't handle it")
-                    print("This means authentication was successful, just need to wait for Unity to process it")
+                    print("Browser redirected to new tab - cached session triggered immutablerunner:// callback")
+                    print("Protocol handler should have delivered the callback to Unity")
                     
-                    # Wait and check Unity logs for authentication success instead of relying on scene changes
                     product_name = os.getenv("UNITY_APP_NAME", get_product_name())
-                    log_path = os.path.join("C:\\Users\\WindowsBuildsdkServi\\AppData\\LocalLow\\Immutable", product_name, "Player.log")
+                    log_path = os.path.join(os.path.expanduser("~"), "AppData", "LocalLow", "Immutable", product_name, "Player.log")
                     
                     auth_success = False
-                    for check_attempt in range(20):  # Check for 20 seconds
+                    for check_attempt in range(30):
                         try:
                             with open(log_path, 'r', encoding='utf-8', errors='ignore') as f:
                                 content = f.read()
-                                # Look for signs of successful authentication in logs
                                 if any(phrase in content for phrase in [
-                                    "AuthenticatedScene", 
-                                    "COMPLETE_LOGIN_PKCE", 
+                                    "AuthenticatedScene",
+                                    "COMPLETE_LOGIN_PKCE",
                                     "LoginPKCESuccess",
                                     "HandleLoginPkceSuccess",
-                                    "authentication successful",
-                                    "logged in successfully"
                                 ]):
                                     print("Authentication success detected in Unity logs!")
                                     auth_success = True
@@ -408,7 +444,7 @@ def login():
                     if auth_success:
                         print("Cached authentication confirmed successful via Unity logs")
                     else:
-                        print("Could not confirm authentication success in Unity logs")
+                        print("Could not confirm authentication via Unity logs after 30s")
                     
                     return
                 else:
@@ -529,58 +565,55 @@ def login():
     except:
         print("No consent screen found (expected behavior)")
 
-    # Handle deep link permission dialog
-    print("Waiting for deep link permission dialog...")
+    # The checking page will try to redirect to immutablerunner://callback?code=...&state=...
+    # Our injected CDP script intercepts this URL. We poll for it, then invoke it directly
+    # from the OS -- bypassing Brave's protocol permission dialog entirely.
+    print("Waiting for callback URL to be intercepted...")
     print(f"Current URL: {driver.current_url}")
-    print(f"Page title: {driver.title}")
-    
-    # Give a moment for any page transitions to complete
-    time.sleep(3)
-    
-    try:
-        buttons = driver.find_elements(By.TAG_NAME, "button")
-        print(f"Found {len(buttons)} buttons on page:")
-        for i, btn in enumerate(buttons[:10]):
-            try:
-                text = btn.text.strip()
-                if text:
-                    print(f"  Button {i}: '{text}'")
-            except:
-                pass
 
-        product_name = os.getenv("UNITY_APP_NAME", get_product_name())
-        deep_link_selectors = [
-            f"//button[contains(text(),'Open {product_name}')]",
-            "//button[contains(text(),'Open')]",
-            "//button[contains(text(),'Allow')]",
-            "//a[contains(text(),'Open')]",
-        ]
-
-        clicked = False
-        for selector in deep_link_selectors:
-            try:
-                deep_link_button = WebDriverWait(driver, 5).until(
-                    EC.element_to_be_clickable((By.XPATH, selector)))
-                btn_text = deep_link_button.text.strip()
-                deep_link_button.click()
-                print(f"Clicked deep link button '{btn_text}' with selector: {selector}")
-                clicked = True
+    callback_url = None
+    for wait_i in range(30):
+        time.sleep(1)
+        try:
+            # Check if our interceptor captured the URL
+            url = driver.execute_script("return window.__capturedProtocolUrl")
+            if url:
+                callback_url = url
+                print(f"Intercepted callback URL: {url[:100]}...")
                 break
-            except:
-                continue
 
-        if not clicked:
-            print("No deep link button found with any selector - checking if redirect happened automatically")
+            # Also check if the browser navigated away (deep link fired natively)
             current_url = driver.current_url
-            print(f"Current URL: {current_url}")
-            if 'checking' in current_url or 'callback' in current_url:
-                print("Still on checking page - deep link may not have fired")
-    except Exception as e:
-        print(f"Deep link dialog handling error: {e}")
-        print("This may cause the test to timeout waiting for scene change")
+            if 'checking' not in current_url and 'auth.immutable.com' not in current_url:
+                print(f"Browser navigated away from checking page: {current_url}")
+                break
 
-    # Keep browser alive for Unity deep link redirect
-    # driver.quit()
+            # Try clicking any in-page "Open" / "Allow" button
+            for btn in driver.find_elements(By.TAG_NAME, "button"):
+                try:
+                    text = btn.text.strip()
+                    if text and any(kw in text for kw in ['Open', 'Allow']):
+                        btn.click()
+                        print(f"Clicked deep link dialog button: '{text}'")
+                        break
+                except:
+                    pass
+        except Exception as e:
+            if wait_i % 10 == 9:
+                print(f"Deep link poll iteration {wait_i}: {e}")
+
+    if callback_url:
+        print("Invoking deep link directly via OS (bypassing browser dialog)...")
+        try:
+            subprocess.run(
+                ["powershell", "-Command", f"Start-Process '{callback_url}'"],
+                capture_output=True, timeout=10
+            )
+            print("Deep link invoked via OS")
+        except Exception as e:
+            print(f"OS invocation failed: {e}")
+    else:
+        print("Could not intercept callback URL - deep link may have fired natively via protocol handler")
 
 def clear_unity_data():
     """Clear Unity's persistent data to force fresh start"""
@@ -698,17 +731,56 @@ def bring_sample_app_to_foreground():
     subprocess.run(command, check=True)
     time.sleep(10)
 
+def get_brave_default_profile_dir():
+    """Return the path to Brave's default user profile on Windows."""
+    local_app_data = os.environ.get('LOCALAPPDATA', os.path.join(os.path.expanduser("~"), "AppData", "Local"))
+    return os.path.join(local_app_data, "BraveSoftware", "Brave-Browser", "User Data", "Default")
+
+def ensure_browser_clean():
+    """Kill any running Brave/chromedriver processes and clean session data so Brave
+    starts cleanly without restoring previous tabs (mirrors the Mac helper approach)."""
+    # Kill all Brave processes
+    subprocess.run(["powershell.exe", "-Command",
+                    'Get-Process | Where-Object { $_.Name -like "*brave*" } | Stop-Process -Force -ErrorAction SilentlyContinue'],
+                   capture_output=True, timeout=10)
+    subprocess.run(["powershell.exe", "-Command",
+                    'Get-Process -Name "chromedriver" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue'],
+                   capture_output=True, timeout=10)
+    time.sleep(2)
+
+    brave_profile = get_brave_default_profile_dir()
+
+    import shutil
+    for session_dir_name in ("Sessions", "Session Storage"):
+        session_dir = os.path.join(brave_profile, session_dir_name)
+        if os.path.isdir(session_dir):
+            shutil.rmtree(session_dir, ignore_errors=True)
+            print(f"Removed {session_dir_name} directory")
+
+    import json
+    prefs_path = os.path.join(brave_profile, "Preferences")
+    try:
+        if os.path.exists(prefs_path):
+            with open(prefs_path, "r") as f:
+                prefs = json.load(f)
+            prefs.setdefault("profile", {})["exit_type"] = "Normal"
+            prefs["profile"]["exited_cleanly"] = True
+            prefs.setdefault("session", {})["restore_on_startup"] = 5
+            with open(prefs_path, "w") as f:
+                json.dump(prefs, f)
+            print("Patched Preferences: exit_type=Normal, restore_on_startup=NewTab")
+    except Exception as e:
+        print(f"Could not patch Preferences: {e}")
+
 def setup_browser_permissions():
-    """Set up browser permissions to allow auth.immutable.com to open external applications"""
+    """Merge protocol-handler permissions into Brave's default profile Preferences."""
     print("Setting up browser permissions for auth.immutable.com...")
-    
-    # Create a browser preferences file to pre-allow the domain
-    user_data_dir = "C:\\temp\\brave_debug"
-    if not os.path.exists(user_data_dir):
-        os.makedirs(user_data_dir, exist_ok=True)
-    
-    # Create preferences file that allows auth.immutable.com to open external apps
-    preferences = {
+
+    brave_profile = get_brave_default_profile_dir()
+    os.makedirs(brave_profile, exist_ok=True)
+
+    import json
+    permissions_overlay = {
         "profile": {
             "content_settings": {
                 "exceptions": {
@@ -720,71 +792,161 @@ def setup_browser_permissions():
                     }
                 }
             }
+        },
+        "protocol_handler": {
+            "excluded_schemes": {
+                "immutablerunner": False
+            }
+        },
+        "custom_handlers": {
+            "enabled": True
         }
     }
-    
-    import json
-    prefs_file = os.path.join(user_data_dir, "Default", "Preferences")
-    os.makedirs(os.path.dirname(prefs_file), exist_ok=True)
-    
+
+    prefs_file = os.path.join(brave_profile, "Preferences")
+
     try:
+        existing = {}
+        if os.path.exists(prefs_file):
+            with open(prefs_file, 'r') as f:
+                try:
+                    existing = json.load(f)
+                except json.JSONDecodeError:
+                    pass
+
+        def deep_merge(base, override):
+            for k, v in override.items():
+                if k in base and isinstance(base[k], dict) and isinstance(v, dict):
+                    deep_merge(base[k], v)
+                else:
+                    base[k] = v
+
+        deep_merge(existing, permissions_overlay)
+
         with open(prefs_file, 'w') as f:
-            json.dump(preferences, f, indent=2)
+            json.dump(existing, f, indent=2)
         print("Browser permissions configured to allow auth.immutable.com")
     except Exception as e:
         print(f"Browser permission setup error: {e}")
 
-def setup_protocol_association():
-    """Set up immutablerunner:// protocol association to avoid permission dialogs"""
-    print("Setting up protocol association for immutablerunner://...")
-    
+def find_unity_executable():
+    """Find the Unity executable path using the same logic as open_sample_app()."""
     product_name = os.getenv("UNITY_APP_NAME", get_product_name())
-    
-    # PowerShell script to register the protocol
+    app_path_env = os.getenv("UNITY_APP_PATH")
+
+    candidates = []
+    if app_path_env:
+        candidates.append(app_path_env)
+    candidates.extend([
+        f"{product_name}.exe",
+        f"../build/{product_name}.exe",
+        f"./{product_name}.exe",
+    ])
+
+    for candidate in candidates:
+        if os.path.exists(candidate):
+            return os.path.abspath(candidate)
+    return None
+
+def setup_protocol_association():
+    """Set up immutablerunner:// protocol association so the OS can route deep links to Unity."""
+    print("Setting up protocol association for immutablerunner://...")
+
+    exe_path = find_unity_executable()
+    if not exe_path:
+        print("WARNING: Could not find Unity executable for protocol association")
+        print("Deep link callback will not work - login will likely fail")
+        return
+
+    print(f"Registering protocol handler: immutablerunner:// -> {exe_path}")
+
     ps_script = f'''
-    # Register immutablerunner protocol
+    $exePath = "{exe_path}"
     $protocolKey = "HKCU:\\Software\\Classes\\immutablerunner"
     $commandKey = "$protocolKey\\shell\\open\\command"
-    
-    # Create the registry keys
+
     if (!(Test-Path $protocolKey)) {{
         New-Item -Path $protocolKey -Force | Out-Null
     }}
     if (!(Test-Path $commandKey)) {{
         New-Item -Path $commandKey -Force | Out-Null
     }}
-    
-    # Set the protocol values
+
     Set-ItemProperty -Path $protocolKey -Name "(Default)" -Value "URL:immutablerunner Protocol"
     Set-ItemProperty -Path $protocolKey -Name "URL Protocol" -Value ""
-    
-    # Find the Unity sample app executable
-    $sampleAppPath = "C:\\Immutable\\unity-immutable-sdk\\sample\\build\\{product_name}.exe"
-    if (Test-Path $sampleAppPath) {{
-        Set-ItemProperty -Path $commandKey -Name "(Default)" -Value "`"$sampleAppPath`" `"%1`""
-        Write-Host "Protocol association set up successfully"
+    Set-ItemProperty -Path $commandKey -Name "(Default)" -Value "`"$exePath`" `"%1`""
+
+    $registered = Get-ItemProperty -Path $commandKey -Name "(Default)" -ErrorAction SilentlyContinue
+    if ($registered) {{
+        Write-Host "Protocol association set up successfully: $($registered.'(Default)')"
     }} else {{
-        Write-Host "Sample app not found at expected path"
+        Write-Host "ERROR: Failed to write protocol handler to registry"
     }}
     '''
-    
+
     try:
-        result = subprocess.run(["powershell", "-Command", ps_script], 
+        result = subprocess.run(["powershell", "-Command", ps_script],
                               capture_output=True, text=True, timeout=10)
-        if "successfully" in result.stdout:
-            print("Protocol association configured - dialog should not appear!")
+        output = result.stdout.strip()
+        print(output)
+        if "successfully" in output:
+            print("Protocol handler registered")
         else:
-            print("Protocol setup may have failed, dialog might still appear")
+            print("Protocol setup may have failed")
+            if result.stderr:
+                print(f"stderr: {result.stderr.strip()}")
     except Exception as e:
         print(f"Protocol setup error: {e}")
 
+def setup_browser_policy():
+    """Set Brave browser enterprise policy to auto-allow immutablerunner:// from auth.immutable.com.
+    This prevents the native 'Open app?' dialog that Selenium cannot interact with."""
+    print("Setting up browser policy for protocol auto-launch...")
+
+    ps_script = '''
+    $policyValue = '[{"protocol":"immutablerunner","allowed_origins":["https://auth.immutable.com"]}]'
+    $success = $false
+
+    foreach ($root in @("HKLM", "HKCU")) {
+        $policyPath = "${root}:\\Software\\Policies\\BraveSoftware\\Brave"
+        try {
+            if (!(Test-Path $policyPath)) {
+                New-Item -Path $policyPath -Force | Out-Null
+            }
+            Set-ItemProperty -Path $policyPath -Name "AutoLaunchProtocolsFromOrigins" -Value $policyValue -Type String
+            Write-Host "Browser policy set at: $policyPath"
+            $success = $true
+        } catch {
+            Write-Host "Could not set policy at ${policyPath}: $_"
+        }
+    }
+
+    if (!$success) {
+        Write-Host "WARNING: Could not set browser policy at any location"
+    }
+    '''
+
+    try:
+        result = subprocess.run(["powershell", "-Command", ps_script],
+                              capture_output=True, text=True, timeout=10)
+        print(result.stdout.strip())
+    except Exception as e:
+        print(f"Browser policy setup error: {e}")
+
 def launch_browser():
     print("Starting Brave...")
-    
-    # Set up browser permissions and protocol association first
-    setup_browser_permissions()
+
+    # Clean up any existing Brave/chromedriver processes and stale session data.
+    # This ensures our instance is the ONLY Brave running so that Unity's
+    # Application.OpenURL() opens the auth page in the same browser we control
+    # via remote debugging (instead of spawning a second uncontrolled instance).
+    ensure_browser_clean()
+
+    # Set up protocol handler, browser permissions, and enterprise policy
     setup_protocol_association()
-    
+    setup_browser_policy()
+    setup_browser_permissions()
+
     browser_paths = [
         r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
     ]
@@ -799,14 +961,17 @@ def launch_browser():
         print("Brave executable not found.")
         exit(1)
 
-    # Launch Brave with CI-friendly flags to handle protocol dialogs automatically
+    # NO --user-data-dir: we intentionally use the default profile so that when
+    # Unity calls Application.OpenURL() the OS opens it in THIS Brave instance
+    # (instead of launching a separate default-profile instance).
     browser_args = [
         '--remote-debugging-port=9222',
-        '--disable-web-security', 
+        '--disable-web-security',
         '--allow-running-insecure-content',
         '--disable-features=VizDisplayCompositor',
         '--disable-popup-blocking',
         '--no-first-run',
+        '--no-default-browser-check',
         '--disable-default-apps',
         '--disable-extensions',
         '--disable-component-extensions-with-background-pages',
@@ -815,10 +980,10 @@ def launch_browser():
         '--enable-automation',
         '--disable-background-timer-throttling',
         '--disable-backgrounding-occluded-windows',
-        '--disable-renderer-backgrounding'
+        '--disable-renderer-backgrounding',
+        '--disable-session-crashed-bubble',
     ]
-    
-    # Check if we're in CI environment
+
     is_ci = os.getenv('CI') or os.getenv('GITHUB_ACTIONS') or os.getenv('BUILD_ID')
     if is_ci:
         print("CI environment detected - adding additional protocol handling flags")
@@ -828,15 +993,14 @@ def launch_browser():
             '--disable-ipc-flooding-protection',
             '--force-permission-policy-unload-default-enabled'
         ])
-    
+
     args_string = "', '".join(browser_args)
     result = subprocess.run([
         "powershell.exe",
         "-Command",
         f"$process = Start-Process -FilePath '{browser_path}' -ArgumentList '{args_string}' -PassThru; Write-Output $process.Id"
     ], capture_output=True, text=True, check=True)
-    
-    # Store the debug browser process ID globally for later use
+
     global debug_browser_pid
     debug_browser_pid = result.stdout.strip()
     print(f"Debug browser launched with PID: {debug_browser_pid}")
@@ -846,16 +1010,19 @@ def launch_browser():
 def stop_browser():
     print("Stopping Brave...")
     powershell_command = """
-    $process = Get-Process -Name "brave" -ErrorAction SilentlyContinue
-    if ($process) {
-        $process | ForEach-Object {
+    # Kill all Brave processes (browser, renderer, GPU, crashpad, etc.)
+    $braveProcs = Get-Process | Where-Object { $_.Name -like "*brave*" } -ErrorAction SilentlyContinue
+    if ($braveProcs) {
+        $braveProcs | ForEach-Object {
             Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
         }
-        Write-Output "All Brave processes have been closed."
+        Write-Output "Stopped $($braveProcs.Count) Brave process(es)."
     } else {
         Write-Output "Brave is not running."
     }
+    # Also kill any orphaned chromedriver processes
+    Get-Process -Name "chromedriver" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
     """
     subprocess.run(["powershell.exe", "-Command", powershell_command], check=True)
-    time.sleep(5)
+    time.sleep(3)
     print("Stopped Brave")
