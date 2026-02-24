@@ -14,7 +14,7 @@ The Immutable SDK for Unity helps you integrate your game with Immutable Passpor
 
 # Documentation
 
-For setup instructions and API references, see the [official documentation](https://docs.immutable.com/reference/unity/).
+For setup instructions and API references, see the [official documentation](https://docs.immutable.com/docs/sdks/unity/overview).
 
 ## Sample Projects
 
