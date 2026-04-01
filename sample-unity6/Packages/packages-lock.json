@@ -1,38 +1,28 @@
 {
   "dependencies": {
     "com.alttester.sdk": {
-      "version": "2.2.5",
+      "version": "2.3.0",
       "depth": 0,
       "source": "registry",
       "dependencies": {
-        "com.unity.nuget.newtonsoft-json": "3.1.0",
         "com.unity.editorcoroutines": "1.0.0",
-        "com.unity.textmeshpro": "3.0.6"
+        "com.unity.modules.physics": "1.0.0",
+        "com.unity.modules.physics2d": "1.0.0",
+        "com.unity.modules.screencapture": "1.0.0",
+        "com.unity.modules.ui": "1.0.0",
+        "com.unity.modules.unitywebrequest": "1.0.0",
+        "com.unity.nuget.newtonsoft-json": "3.1.0",
+        "com.unity.test-framework": "1.1.33",
+        "com.unity.ugui": "2.0.0"
       },
       "url": "https://package.openupm.com"
     },
     "com.cysharp.unitask": {
-      "version": "2.3.3",
-      "depth": 0,
+      "version": "2.5.10",
+      "depth": 1,
       "source": "registry",
       "dependencies": {},
       "url": "https://package.openupm.com"
-    },
-    "com.immutable.api.zkevm": {
-      "version": "file:../../src/Packages/ZkEvmApi",
-      "depth": 0,
-      "source": "local",
-      "dependencies": {
-        "com.unity.nuget.newtonsoft-json": "3.0.2"
-      }
-    },
-    "com.immutable.marketplace": {
-      "version": "file:../../src/Packages/Marketplace",
-      "depth": 0,
-      "source": "local",
-      "dependencies": {
-        "com.cysharp.unitask": "2.3.3"
-      }
     },
     "com.immutable.passport": {
       "version": "file:../../src/Packages/Passport",
@@ -185,7 +175,7 @@
       "source": "builtin",
       "dependencies": {
         "com.unity.2d.animation": "10.2.1",
-        "com.unity.2d.pixel-perfect": "5.0.3",
+        "com.unity.2d.pixel-perfect": "5.1.1",
         "com.unity.2d.psdimporter": "9.1.0",
         "com.unity.2d.sprite": "1.0.0",
         "com.unity.2d.spriteshape": "10.0.7",
@@ -320,14 +310,6 @@
       },
       "url": "https://packages.unity.com"
     },
-    "com.unity.textmeshpro": {
-      "version": "5.0.0",
-      "depth": 1,
-      "source": "builtin",
-      "dependencies": {
-        "com.unity.ugui": "2.0.0"
-      }
-    },
     "com.unity.timeline": {
       "version": "1.8.9",
       "depth": 0,
@@ -365,6 +347,50 @@
         "com.unity.modules.jsonserialize": "1.0.0"
       },
       "url": "https://packages.unity.com"
+    },
+    "dev.voltstro.nativearrayspanextensions": {
+      "version": "1.0.1",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://upr.voltstro.dev"
+    },
+    "dev.voltstro.unitywebbrowser": {
+      "version": "2.2.7",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "dev.voltstro.nativearrayspanextensions": "1.0.1",
+        "com.unity.nuget.newtonsoft-json": "3.2.1",
+        "com.cysharp.unitask": "2.5.10",
+        "org.nuget.voltrpc": "3.2.1"
+      },
+      "url": "https://upr.voltstro.dev"
+    },
+    "dev.voltstro.unitywebbrowser.engine.cef": {
+      "version": "2.2.7",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "dev.voltstro.unitywebbrowser": "2.2.7"
+      },
+      "url": "https://upr.voltstro.dev"
+    },
+    "dev.voltstro.unitywebbrowser.engine.cef.win.x64": {
+      "version": "2.2.7",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "dev.voltstro.unitywebbrowser.engine.cef": "2.2.7"
+      },
+      "url": "https://upr.voltstro.dev"
+    },
+    "org.nuget.voltrpc": {
+      "version": "3.2.1",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://upr.voltstro.dev"
     },
     "com.unity.modules.accessibility": {
       "version": "1.0.0",
