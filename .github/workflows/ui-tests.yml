@@ -93,6 +93,21 @@ jobs:
       cancel-in-progress: false  # Let tests complete rather than cancelling
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneOSX-Unity6'
     steps:
+      - name: Check runner environment and firewall
+        run: |
+          echo "=== macOS version ==="
+          sw_vers
+          echo ""
+          echo "=== Firewall status ==="
+          /usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate
+          /usr/libexec/ApplicationFirewall/socketfilterfw --getallowsigned
+          /usr/libexec/ApplicationFirewall/socketfilterfw --getallowsignedapp
+          echo ""
+          echo "=== Firewall app allow list ==="
+          /usr/libexec/ApplicationFirewall/socketfilterfw --listapps
+          echo ""
+          echo "=== Port 13000 ==="
+          lsof -i :13000 2>/dev/null || echo "Port 13000 is free"
       - name: Cleanup old builds
         run: |
           # Remove previous build to save space
