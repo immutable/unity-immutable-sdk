@@ -1,0 +1,9 @@
+{
+  "name": "com.immutable.audience",
+  "version": "0.1.0",
+  "description": "Immutable Audience SDK for Unity.",
+  "displayName": "Immutable Audience",
+  "author": {"name": "Immutable", "url": "https://immutable.com"},
+  "keywords": ["unity", "immutable", "audience", "analytics"],
+  "unity": "2021.3"
+}
