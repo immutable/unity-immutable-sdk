@@ -4,7 +4,17 @@ name: Test & Build
 on:
   push:
     branches: [main]
+    paths:
+      - 'src/Packages/Passport/**'
+      - 'sample/**'
+      - 'sample-unity6/**'
+      - 'Plugins/**'
   pull_request:
+    paths:
+      - 'src/Packages/Passport/**'
+      - 'sample/**'
+      - 'sample-unity6/**'
+      - 'Plugins/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
