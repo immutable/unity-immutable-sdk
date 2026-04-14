@@ -1,0 +1,14 @@
+{
+    "name": "Immutable.Audience.Runtime.Tests",
+    "rootNamespace": "Immutable.Audience.Tests",
+    "references": ["Immutable.Audience.Runtime"],
+    "includePlatforms": ["Editor"],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
