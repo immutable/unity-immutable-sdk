@@ -5,6 +5,10 @@ namespace Immutable.Audience
     {
         public string PublishableKey { get; set; }
         public ConsentLevel Consent { get; set; } = ConsentLevel.None;
+        /// <summary>
+        /// Distribution platform the game is running on.
+        /// Use <see cref="DistributionPlatforms"/> for common values, or pass any custom string.
+        /// </summary>
         public string DistributionPlatform { get; set; }
         public bool Debug { get; set; } = false;
         public int FlushIntervalSeconds { get; set; } = Constants.DefaultFlushIntervalSeconds;
