@@ -5,10 +5,5 @@
   "displayName": "Immutable Audience",
   "author": {"name": "Immutable", "url": "https://immutable.com"},
   "keywords": ["unity", "immutable", "audience", "analytics"],
-  "unity": "2021.3",
-  "samples": [{
-    "displayName": "Quick Start",
-    "description": "Demo scene and script demonstrating SDK initialisation and event tracking.",
-    "path": "Samples~/QuickStart"
-  }]
+  "unity": "2021.3"
 }
