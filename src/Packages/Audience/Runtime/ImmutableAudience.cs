@@ -1,3 +1,5 @@
+using System;
+
 namespace Immutable.Audience
 {
     /// <summary>
@@ -7,6 +9,12 @@ namespace Immutable.Audience
     public static class ImmutableAudience
     {
         // Scaffold only -- implementation follows in subsequent sub-issues (see SDK-99).
+
+        /// <summary>
+        /// Raised when the SDK encounters an error (e.g. a failed flush or consent sync).
+        /// Subscribe before calling <see cref="Init"/>.
+        /// </summary>
+        public static event Action<AudienceError>? OnError;
 
         /// <summary>Initialise the SDK. Call once, typically in your game's entry scene.</summary>
         public static void Init(AudienceConfig config)

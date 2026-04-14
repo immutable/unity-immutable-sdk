@@ -13,15 +13,11 @@ namespace Immutable.Audience
     public class AudienceError : Exception
     {
         public AudienceErrorCode Code { get; }
-        public int Status { get; }
-        public string Endpoint { get; }
 
-        public AudienceError(AudienceErrorCode code, string message, int status = 0, string endpoint = null)
+        public AudienceError(AudienceErrorCode code, string message)
             : base(message)
         {
             Code = code;
-            Status = status;
-            Endpoint = endpoint;
         }
     }
 }
