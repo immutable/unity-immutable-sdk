@@ -1022,7 +1022,8 @@ def stop_browser():
     }
     # Also kill any orphaned chromedriver processes
     Get-Process -Name "chromedriver" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+    exit 0
     """
-    subprocess.run(["powershell.exe", "-Command", powershell_command], check=True)
+    subprocess.run(["powershell.exe", "-Command", powershell_command], check=False)
     time.sleep(3)
     print("Stopped Brave")

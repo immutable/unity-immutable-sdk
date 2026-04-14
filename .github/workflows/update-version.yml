@@ -118,11 +118,11 @@ jobs:
     - name: Copy sample scenes and scripts to Passport package Samples~
       id: copy_sample_scenes_and_scripts
       run: |
-        rsync -av --exclude='*.meta' ./sample/Assets/Scenes/Passport ./src/Packages/Passport/Samples~/SamplesScenesScripts/Scenes/
-        rsync -av --exclude='*.meta' --exclude='features.json' --exclude='_prompts~/' --exclude='_tutorials~/' ./sample/Assets/Scripts/Passport ./src/Packages/Passport/Samples~/SamplesScenesScripts/Scripts/
+        rsync -av --exclude='*.meta' ./examples/passport/Assets/Scenes/Passport ./src/Packages/Passport/Samples~/SamplesScenesScripts/Scenes/
+        rsync -av --exclude='*.meta' --exclude='features.json' --exclude='_prompts~/' --exclude='_tutorials~/' ./examples/passport/Assets/Scripts/Passport ./src/Packages/Passport/Samples~/SamplesScenesScripts/Scripts/
 
-        rsync -av --exclude='*.meta' ./sample/Assets/Scenes/Marketplace ./src/Packages/Marketplace/Samples~/SamplesScenesScripts/Scenes/
-        rsync -av --exclude='*.meta' ./sample/Assets/Scripts/Marketplace ./src/Packages/Marketplace/Samples~/SamplesScenesScripts/Scripts/
+        rsync -av --exclude='*.meta' ./examples/passport/Assets/Scenes/Marketplace ./src/Packages/Marketplace/Samples~/SamplesScenesScripts/Scenes/
+        rsync -av --exclude='*.meta' ./examples/passport/Assets/Scripts/Marketplace ./src/Packages/Marketplace/Samples~/SamplesScenesScripts/Scripts/
 
     - uses: gr2m/create-or-update-pull-request-action@v1
       env:
