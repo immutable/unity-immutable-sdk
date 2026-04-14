@@ -2,8 +2,7 @@ namespace Immutable.Audience
 {
     internal static class Constants
     {
-        // Base URL is derived from the publishable key prefix; no environment param is exposed.
-        internal const string SandboxKeyPrefix = "pk_imapik-test-";
+        internal const string TestKeyPrefix = "pk_imapik-test-";
         internal const string SandboxBaseUrl = "https://api.sandbox.immutable.com";
         internal const string ProductionBaseUrl = "https://api.immutable.com";
 
@@ -21,7 +20,7 @@ namespace Immutable.Audience
         internal const string ConsentSource = "UnitySDK";
 
         internal static string BaseUrl(string publishableKey) =>
-            publishableKey != null && publishableKey.StartsWith(SandboxKeyPrefix)
+            publishableKey != null && publishableKey.StartsWith(TestKeyPrefix)
                 ? SandboxBaseUrl
                 : ProductionBaseUrl;
     }
