@@ -2,7 +2,7 @@ AltTester-Driver==2.1.1
 protobuf==5.27.2
 selenium==4.22.0
 pytest==8.2.2
-requests==2.32.3
+requests==2.33.0
 mailslurp-client==15.19.22
 Appium-Python-Client
 browserstack-sdk
