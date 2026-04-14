@@ -3,10 +3,10 @@
 
 $ErrorActionPreference = "Stop"
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$sampleUnity6Assets = Join-Path $scriptDir "sample-unity6\Assets"
-$sampleUnity6 = Join-Path $scriptDir "sample-unity6"
+$sampleUnity6Assets = Join-Path $scriptDir "examples\passport-unity6\Assets"
+$sampleUnity6 = Join-Path $scriptDir "examples\passport-unity6"
 
-Write-Output "Setting up symlinks for sample-unity6..."
+Write-Output "Setting up symlinks for passport-unity6..."
 
 # Check if running with sufficient privileges
 $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
@@ -36,30 +36,30 @@ try {
     # Create directory symbolic links (Unity recognises these on Windows)
     # Note: Requires administrator privileges
     # Using relative paths so symlinks work on all platforms
-    cmd /c mklink /D "Scenes" "..\..\sample\Assets\Scenes" | Out-Null
-    cmd /c mklink /D "Scripts" "..\..\sample\Assets\Scripts" | Out-Null
-    cmd /c mklink /D "Editor" "..\..\sample\Assets\Editor" | Out-Null
+    cmd /c mklink /D "Scenes" "..\..\passport\Assets\Scenes" | Out-Null
+    cmd /c mklink /D "Scripts" "..\..\passport\Assets\Scripts" | Out-Null
+    cmd /c mklink /D "Editor" "..\..\passport\Assets\Editor" | Out-Null
 
     # Create file symbolic links for .meta files
-    cmd /c mklink "Scenes.meta" "..\..\sample\Assets\Scenes.meta" | Out-Null
-    cmd /c mklink "Scripts.meta" "..\..\sample\Assets\Scripts.meta" | Out-Null
-    cmd /c mklink "Editor.meta" "..\..\sample\Assets\Editor.meta" | Out-Null
+    cmd /c mklink "Scenes.meta" "..\..\passport\Assets\Scenes.meta" | Out-Null
+    cmd /c mklink "Scripts.meta" "..\..\passport\Assets\Scripts.meta" | Out-Null
+    cmd /c mklink "Editor.meta" "..\..\passport\Assets\Editor.meta" | Out-Null
 
     Write-Output ""
     Write-Output "✅ Asset symlinks created successfully!"
     Write-Output ""
-    Write-Output "Scenes, Scripts, and Editor in sample-unity6 now point to sample/Assets"
+    Write-Output "Scenes, Scripts, and Editor in passport-unity6 now point to passport/Assets"
     Get-ChildItem | Where-Object { $_.Name -match "Scenes|Scripts|Editor" } | Format-Table Name, LinkType, Target
 
     # Create directory symbolic link for Tests
     Set-Location $sampleUnity6
     if (Test-Path "Tests") { Remove-Item -Path "Tests" -Recurse -Force }
     # Use relative path
-    cmd /c mklink /D "Tests" "..\sample\Tests" | Out-Null
+    cmd /c mklink /D "Tests" "..\passport\Tests" | Out-Null
 
     Write-Output ""
     Write-Output "✅ Tests symlink created successfully!"
-    Write-Output "Tests in sample-unity6 now points to sample/Tests"
+    Write-Output "Tests in passport-unity6 now points to passport/Tests"
     Get-ChildItem | Where-Object { $_.Name -eq "Tests" } | Format-Table Name, LinkType, Target
 }
 catch {

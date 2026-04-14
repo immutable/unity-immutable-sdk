@@ -20,19 +20,19 @@ For setup instructions and API references, see the [official documentation](http
 
 This repository contains two sample projects:
 
-- **`sample/`** - Unity 2021.3.26f1 sample project
-- **`sample-unity6/`** - Unity 6 sample project
+- **`examples/passport/`** - Unity 2021.3.26f1 sample project
+- **`examples/passport-unity6/`** - Unity 6 sample project
 
-Both projects share the same Scenes, Scripts, Editor folders, and Tests via symbolic links, providing a single source of truth for the sample code. See [`sample-unity6/README.md`](sample-unity6/README.md) for setup instructions.
+Both projects share the same Scenes, Scripts, Editor folders, and Tests via symbolic links, providing a single source of truth for the sample code. See [`examples/passport-unity6/README.md`](examples/passport-unity6/README.md) for setup instructions.
 
 ### First Time Setup (for contributors)
 
-The `sample-unity6` project uses symbolic links to share Scenes, Scripts, Editor folders, and Tests with the `sample` project.
+The `passport-unity6` project uses symbolic links to share Scenes, Scripts, Editor folders, and Tests with the `passport` project.
 
 **macOS/Linux:** Symlinks are created automatically when you clone/pull - no action needed.
 
 **Windows:** Check if symlinks were created correctly:
-1. Navigate to `sample-unity6/Assets/` and `sample-unity6/`
+1. Navigate to `examples/passport-unity6/Assets/` and `examples/passport-unity6/`
 2. Check if `Scenes`, `Scripts`, `Editor`, and `Tests` are folders (symlinks work) or small text files (symlinks didn't work)
 
 If symlinks didn't work, run the setup script as Administrator:
@@ -42,7 +42,7 @@ If symlinks didn't work, run the setup script as Administrator:
 .\setup-symlinks.ps1
 ```
 
-> **Note for Windows users**: You must run PowerShell as Administrator. Directory symbolic links (required for Unity to recognise the folders) need admin privileges on Windows. See [`sample-unity6/README.md`](sample-unity6/README.md) for details.
+> **Note for Windows users**: You must run PowerShell as Administrator. Directory symbolic links (required for Unity to recognise the folders) need admin privileges on Windows. See [`examples/passport-unity6/README.md`](examples/passport-unity6/README.md) for details.
 
 ## Contributing
 
