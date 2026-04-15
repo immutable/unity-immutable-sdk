@@ -38,17 +38,17 @@ namespace Immutable.Audience
             }
             else if (value is float f)
             {
-                var result = f.ToString("G", CultureInfo.InvariantCulture);
-                if (result.IndexOf('E') >= 0 || result.IndexOf('e') >= 0)
-                    result = f.ToString("F6", CultureInfo.InvariantCulture);
-                sb.Append(result);
+                if (float.IsNaN(f) || float.IsInfinity(f))
+                    sb.Append("null");
+                else
+                    sb.Append(f.ToString("R", CultureInfo.InvariantCulture));
             }
             else if (value is double d)
             {
-                var result = d.ToString("G", CultureInfo.InvariantCulture);
-                if (result.IndexOf('E') >= 0 || result.IndexOf('e') >= 0)
-                    result = d.ToString("F6", CultureInfo.InvariantCulture);
-                sb.Append(result);
+                if (double.IsNaN(d) || double.IsInfinity(d))
+                    sb.Append("null");
+                else
+                    sb.Append(d.ToString("R", CultureInfo.InvariantCulture));
             }
             else if (value is decimal dec)
             {
@@ -120,7 +120,7 @@ namespace Immutable.Audience
                         break;
                     default:
                         if (c < 0x20)
-                            sb.AppendFormat("\\u{0:X4}", (int)c);
+                            sb.Append("\\u").Append(((int)c).ToString("X4"));
                         else
                             sb.Append(c);
                         break;

@@ -94,6 +94,77 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
+        public void Serialize_FloatNaN_SerializesAsNull()
+        {
+            Assert.AreEqual("{\"v\":null}", Json.Serialize(new Dictionary<string, object> { { "v", float.NaN } }));
+        }
+
+        [Test]
+        public void Serialize_FloatPositiveInfinity_SerializesAsNull()
+        {
+            Assert.AreEqual("{\"v\":null}", Json.Serialize(new Dictionary<string, object> { { "v", float.PositiveInfinity } }));
+        }
+
+        [Test]
+        public void Serialize_FloatNegativeInfinity_SerializesAsNull()
+        {
+            Assert.AreEqual("{\"v\":null}", Json.Serialize(new Dictionary<string, object> { { "v", float.NegativeInfinity } }));
+        }
+
+        [Test]
+        public void Serialize_DoubleNaN_SerializesAsNull()
+        {
+            Assert.AreEqual("{\"v\":null}", Json.Serialize(new Dictionary<string, object> { { "v", double.NaN } }));
+        }
+
+        [Test]
+        public void Serialize_DoubleInfinity_SerializesAsNull()
+        {
+            Assert.AreEqual("{\"v\":null}", Json.Serialize(new Dictionary<string, object> { { "v", double.PositiveInfinity } }));
+        }
+
+        [Test]
+        public void Serialize_FloatValue_NormalRange()
+        {
+            var data = new Dictionary<string, object> { { "v", 3.14f } };
+            var result = Json.Serialize(data);
+            StringAssert.Contains("\"v\":", result);
+            StringAssert.DoesNotContain("\"v\":\"", result); // must not be quoted
+        }
+
+        [Test]
+        public void Serialize_FloatValue_LargeExponent_PreservesValue()
+        {
+            // 1e30f in scientific notation is valid JSON — must not be silently zeroed
+            var data = new Dictionary<string, object> { { "v", 1e30f } };
+            var result = Json.Serialize(data);
+            var serialised = result.Substring(result.IndexOf(':') + 1, result.Length - result.IndexOf(':') - 2);
+            Assert.AreNotEqual("0", serialised);
+            Assert.AreNotEqual("0.000000", serialised);
+        }
+
+        [Test]
+        public void Serialize_FloatValue_SmallNegativeExponent_PreservesValue()
+        {
+            // 1e-30f — the old F6 fallback turned this into "0.000000"
+            var data = new Dictionary<string, object> { { "v", 1e-30f } };
+            var result = Json.Serialize(data);
+            var serialised = result.Substring(result.IndexOf(':') + 1, result.Length - result.IndexOf(':') - 2);
+            Assert.AreNotEqual("0", serialised);
+            Assert.AreNotEqual("0.000000", serialised);
+        }
+
+        [Test]
+        public void Serialize_DoubleValue_SmallNegativeExponent_PreservesValue()
+        {
+            var data = new Dictionary<string, object> { { "v", 1e-300 } };
+            var result = Json.Serialize(data);
+            var serialised = result.Substring(result.IndexOf(':') + 1, result.Length - result.IndexOf(':') - 2);
+            Assert.AreNotEqual("0", serialised);
+            Assert.AreNotEqual("0.000000", serialised);
+        }
+
+        [Test]
         public void Serialize_ListValue_ReturnsJsonArray()
         {
             var data = new Dictionary<string, object>

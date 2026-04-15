@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <IsPackable>false</IsPackable>
+    <!-- Match the Unity asmdef assembly name so InternalsVisibleTo("Immutable.Audience.Runtime.Tests") resolves correctly -->
+    <AssemblyName>Immutable.Audience.Runtime.Tests</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Runtime/Audience.Runtime.csproj" />
+  </ItemGroup>
+</Project>
