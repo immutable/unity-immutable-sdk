@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <!-- Match the Unity asmdef assembly name so InternalsVisibleTo works in both contexts -->
+    <AssemblyName>Immutable.Audience.Runtime</AssemblyName>
+  </PropertyGroup>
+  <!--
+    Exclude modules that depend on Unity APIs (added in later PRs).
+    These compile fine in Unity but cannot be built with the .NET SDK alone.
+    Update this list as Unity-specific modules are added under Collection/ and Utility/MainThreadDispatcher.cs.
+  -->
+</Project>
