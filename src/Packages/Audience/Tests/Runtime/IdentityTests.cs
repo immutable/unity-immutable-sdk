@@ -36,6 +36,20 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
+        public void ExistingFile_ReturnsPreviousId_WithoutGeneratingNew()
+        {
+            // Simulate a returning player by pre-writing an identity file (as a previous launch would have done).
+            var expectedId = "pre-existing-id-from-last-launch";
+            var dir = Path.Combine(_testDir, "imtbl_audience");
+            Directory.CreateDirectory(dir);
+            File.WriteAllText(Path.Combine(dir, "identity"), expectedId);
+
+            var result = Identity.GetOrCreate(_testDir, ConsentLevel.Anonymous);
+
+            Assert.AreEqual(expectedId, result);
+        }
+
+        [Test]
         public void SecondCall_ReturnsSameId()
         {
             var id1 = Identity.GetOrCreate(_testDir, ConsentLevel.Anonymous);

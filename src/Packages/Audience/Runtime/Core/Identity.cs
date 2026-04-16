@@ -5,6 +5,10 @@ namespace Immutable.Audience
 {
     // Manages the anonymous ID that identifies a device across sessions.
     // The ID is a UUID generated once, written to disk, and reused on every subsequent launch.
+    //
+    // Note: _cachedId is a static field. In the Unity Editor with domain reload disabled,
+    // it persists across play sessions. ImmutableAudience.Init() is responsible for calling
+    // Reset() at startup to ensure a clean state in that scenario.
     internal sealed class Identity
     {
         // In-memory cache — volatile so background threads always see the latest write.
@@ -19,7 +23,7 @@ namespace Immutable.Audience
 
         // Returns the anonymous ID, generating and persisting it on first call.
         // Returns null without touching disk when consent is None.
-        // Safe to call from any thread after Init() has run on the main thread.
+        // Safe to call from any thread after ImmutableAudience.Init() has run on the main thread.
         internal static string GetOrCreate(string persistentDataPath, ConsentLevel consent)
         {
             // No ID until the player grants at least anonymous consent.
@@ -77,16 +81,19 @@ namespace Immutable.Audience
         // The next GetOrCreate call will generate a fresh ID.
         internal static void Reset(string persistentDataPath)
         {
-            _cachedId = null;
+            lock (_sync)
+            {
+                _cachedId = null;
 
-            var filePath = GetFilePath(persistentDataPath);
-            try
-            {
-                File.Delete(filePath);
-            }
-            catch (Exception e) when (e is FileNotFoundException || e is DirectoryNotFoundException)
-            {
-                // File was never written (e.g. consent was None) — nothing to do.
+                var filePath = GetFilePath(persistentDataPath);
+                try
+                {
+                    File.Delete(filePath);
+                }
+                catch (Exception e) when (e is FileNotFoundException || e is DirectoryNotFoundException)
+                {
+                    // File was never written (e.g. consent was None) — nothing to do.
+                }
             }
         }
     }
