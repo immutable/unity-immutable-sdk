@@ -124,10 +124,10 @@ namespace Immutable.Audience
         internal int BackoffMs => _consecutiveFailures switch
         {
             <= 0 => 0,
-            1 => 5000,
-            2 => 10000,
-            3 => 20000,
-            _ => 60000,
+            1 => 5_000,
+            2 => 10_000,
+            3 => 20_000,
+            _ => 60_000,
         };
 
         /// <summary>Whether the transport is currently backing off after failures.</summary>
