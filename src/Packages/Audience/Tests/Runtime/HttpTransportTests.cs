@@ -162,6 +162,7 @@ namespace Immutable.Audience.Tests
             using var transport = new HttpTransport(_store, "pk_imapik-test-key1", handler: handler);
 
             // Each SendBatch re-reads the same file (5xx doesn't delete it) and increments backoff.
+            // Schedule per plan: 5s → 10s → 20s → 60s cap (no 40s step).
             await transport.SendBatchAsync();
             Assert.AreEqual(5000, transport.BackoffMs);
             await transport.SendBatchAsync();
@@ -169,9 +170,7 @@ namespace Immutable.Audience.Tests
             await transport.SendBatchAsync();
             Assert.AreEqual(20000, transport.BackoffMs);
             await transport.SendBatchAsync();
-            Assert.AreEqual(40000, transport.BackoffMs);
-            await transport.SendBatchAsync();
-            Assert.AreEqual(60000, transport.BackoffMs, "capped at 60s");
+            Assert.AreEqual(60000, transport.BackoffMs, "jumps to 60s cap after 20s");
             await transport.SendBatchAsync();
             Assert.AreEqual(60000, transport.BackoffMs, "stays at cap");
         }
