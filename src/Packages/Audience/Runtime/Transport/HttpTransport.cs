@@ -119,16 +119,16 @@ namespace Immutable.Audience
 
         /// <summary>
         /// Backoff delay in milliseconds based on consecutive failures.
-        /// 0 → 5s → 10s → 20s → 40s → 60s cap.
+        /// Schedule per plan: 0 → 5s → 10s → 20s → 60s cap.
         /// </summary>
-        internal int BackoffMs
+        internal int BackoffMs => _consecutiveFailures switch
         {
-            get
-            {
-                if (_consecutiveFailures <= 0) return 0;
-                return Math.Min(5000 * (1 << (_consecutiveFailures - 1)), 60000);
-            }
-        }
+            <= 0 => 0,
+            1 => 5000,
+            2 => 10000,
+            3 => 20000,
+            _ => 60000,
+        };
 
         /// <summary>Whether the transport is currently backing off after failures.</summary>
         internal bool IsBackingOff => _consecutiveFailures > 0;
