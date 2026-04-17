@@ -26,7 +26,8 @@ namespace Immutable.Audience
         private readonly Thread _drainThread;
         private readonly ManualResetEventSlim _flushGate = new ManualResetEventSlim(false);
 
-        private bool _disposed;
+        // Volatile so all threads see the shutdown signal immediately.
+        private volatile bool _disposed;
 
         /// <param name="store">Pre-created <see cref="DiskStore"/> for this queue.</param>
         /// <param name="flushIntervalSeconds">How often to drain to disk regardless of batch size.</param>
@@ -73,11 +74,18 @@ namespace Immutable.Audience
         internal void Shutdown()
         {
             if (_disposed) return;
-            _cts.Cancel();
-            _flushGate.Set(); // Wake drain thread so it exits promptly
-            _drainThread.Join(TimeSpan.FromSeconds(5));
-            DrainMemoryToDisk(); // Final drain after thread stops
+
+            // Stop accepting new events first — closes the race window where
+            // events enqueued between Cancel and final drain would be lost.
             _disposed = true;
+
+            // Signal the drain thread to exit, then wait for it.
+            _cts.Cancel();
+            _flushGate.Set();
+            _drainThread.Join(TimeSpan.FromSeconds(5));
+
+            // Final drain: anything enqueued before _disposed was set.
+            DrainMemoryToDisk();
         }
 
         // -----------------------------------------------------------------
