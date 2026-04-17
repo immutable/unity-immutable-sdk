@@ -43,7 +43,7 @@ namespace Immutable.Audience
                 msg["userId"] = Truncate(userId, 256);
 
             if (!string.IsNullOrEmpty(identityType))
-                msg["identityType"] = identityType;
+                msg["identityType"] = Truncate(identityType, 256);
 
             if (traits != null && traits.Count > 0)
                 msg["traits"] = traits;
@@ -60,9 +60,9 @@ namespace Immutable.Audience
         {
             var msg = BuildBase("alias", packageVersion);
             msg["fromId"] = Truncate(fromId, 256);
-            msg["fromType"] = fromType;
+            msg["fromType"] = Truncate(fromType, 256);
             msg["toId"] = Truncate(toId, 256);
-            msg["toType"] = toType;
+            msg["toType"] = Truncate(toType, 256);
             return msg;
         }
 
