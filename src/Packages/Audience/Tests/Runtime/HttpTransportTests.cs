@@ -16,13 +16,24 @@ namespace Immutable.Audience.Tests
         private string _testDir;
         private DiskStore _store;
 
+        // Controllable clock for timing-sensitive tests. Tests that care about
+        // backoff windows or NextAttemptAt pass `getUtcNow: _getUtcNow` to the transport
+        // and use Advance(ms) to move time forward deterministically.
+        private DateTime _utcNow;
+        private Func<DateTime> _getUtcNow;
+
         [SetUp]
         public void SetUp()
         {
             _testDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             Directory.CreateDirectory(_testDir);
             _store = new DiskStore(_testDir);
+            _utcNow = new DateTime(2026, 4, 18, 12, 0, 0, DateTimeKind.Utc);
+            _getUtcNow = () => _utcNow;
         }
+
+        private void Advance(int milliseconds) =>
+            _utcNow = _utcNow.AddMilliseconds(milliseconds);
 
         [TearDown]
         public void TearDown()
@@ -130,7 +141,7 @@ namespace Immutable.Audience.Tests
             await transport.SendBatchAsync();
 
             Assert.AreEqual(0, _store.Count(), "4xx should delete files — won't succeed on retry");
-            Assert.IsFalse(transport.IsBackingOff);
+            Assert.IsFalse(transport.IsInBackoffWindow);
             Assert.IsNotNull(reportedError);
             Assert.AreEqual(AudienceErrorCode.ValidationRejected, reportedError.Code);
         }
@@ -148,31 +159,72 @@ namespace Immutable.Audience.Tests
             await transport.SendBatchAsync();
 
             Assert.AreEqual(1, _store.Count(), "5xx should keep files for retry");
-            Assert.IsTrue(transport.IsBackingOff);
+            Assert.IsTrue(transport.IsInBackoffWindow);
             Assert.AreEqual(5000, transport.BackoffMs, "first failure = 5s backoff");
             Assert.IsNotNull(reportedError);
             Assert.AreEqual(AudienceErrorCode.FlushFailed, reportedError.Code);
         }
 
         [Test]
-        public async Task BackoffMs_ExponentialWithCap()
+        public async Task BackoffMs_EscalatesOnlyAfterWindowElapsed()
         {
             _store.Write("{\"type\":\"track\"}");
             var handler = new MockHandler(HttpStatusCode.InternalServerError, "");
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1", handler: handler);
+            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+                handler: handler, getUtcNow: _getUtcNow);
 
-            // Each SendBatch re-reads the same file (5xx doesn't delete it) and increments backoff.
             // Schedule per plan: 5s → 10s → 20s → 60s cap (no 40s step).
+            // Each escalation requires the previous window to have elapsed.
             await transport.SendBatchAsync();
-            Assert.AreEqual(5000, transport.BackoffMs);
+            Assert.AreEqual(5_000, transport.BackoffMs);
+
+            Advance(5_001);
             await transport.SendBatchAsync();
-            Assert.AreEqual(10000, transport.BackoffMs);
+            Assert.AreEqual(10_000, transport.BackoffMs);
+
+            Advance(10_001);
             await transport.SendBatchAsync();
-            Assert.AreEqual(20000, transport.BackoffMs);
+            Assert.AreEqual(20_000, transport.BackoffMs);
+
+            Advance(20_001);
             await transport.SendBatchAsync();
-            Assert.AreEqual(60000, transport.BackoffMs, "jumps to 60s cap after 20s");
+            Assert.AreEqual(60_000, transport.BackoffMs, "jumps to 60s cap after 20s");
+
+            Advance(60_001);
             await transport.SendBatchAsync();
-            Assert.AreEqual(60000, transport.BackoffMs, "stays at cap");
+            Assert.AreEqual(60_000, transport.BackoffMs, "stays at cap");
+        }
+
+        [Test]
+        public async Task BackoffMs_DoesNotEscalateWhileInsidePreviousWindow()
+        {
+            _store.Write("{\"type\":\"track\"}");
+            var handler = new MockHandler(HttpStatusCode.InternalServerError, "");
+            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+                handler: handler, getUtcNow: _getUtcNow);
+
+            await transport.SendBatchAsync();
+            Assert.AreEqual(5_000, transport.BackoffMs);
+            var firstDeadline = transport.NextAttemptAt;
+            Assert.IsNotNull(firstDeadline);
+
+            // Caller ignores the window and retries immediately. Must not escalate.
+            Advance(100);
+            await transport.SendBatchAsync();
+            Assert.AreEqual(5_000, transport.BackoffMs,
+                "failures inside the previous window must not escalate backoff");
+            Assert.AreEqual(firstDeadline, transport.NextAttemptAt,
+                "NextAttemptAt should not move when the window hasn't elapsed");
+
+            // Another premature retry — still no escalation.
+            Advance(3_000);
+            await transport.SendBatchAsync();
+            Assert.AreEqual(5_000, transport.BackoffMs);
+
+            // Wait out the window, fail again → now we escalate.
+            _utcNow = firstDeadline.Value.AddMilliseconds(1);
+            await transport.SendBatchAsync();
+            Assert.AreEqual(10_000, transport.BackoffMs);
         }
 
         [Test]
@@ -190,17 +242,20 @@ namespace Immutable.Audience.Tests
                     : new HttpResponseMessage(HttpStatusCode.OK)
                     { Content = new StringContent("{\"accepted\":1,\"rejected\":0}") };
             });
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1", handler: handler);
+            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+                handler: handler, getUtcNow: _getUtcNow);
 
             await transport.SendBatchAsync();
-            Assert.AreEqual(5000, transport.BackoffMs);
+            Assert.AreEqual(5_000, transport.BackoffMs);
 
+            Advance(5_001);
             await transport.SendBatchAsync();
-            Assert.AreEqual(10000, transport.BackoffMs);
+            Assert.AreEqual(10_000, transport.BackoffMs);
 
+            Advance(10_001);
             await transport.SendBatchAsync();
             Assert.AreEqual(0, transport.BackoffMs, "backoff resets after success");
-            Assert.IsFalse(transport.IsBackingOff);
+            Assert.IsFalse(transport.IsInBackoffWindow);
         }
 
         [Test]
@@ -216,7 +271,7 @@ namespace Immutable.Audience.Tests
             await transport.SendBatchAsync();
 
             Assert.AreEqual(1, _store.Count(), "network error should keep files for retry");
-            Assert.IsTrue(transport.IsBackingOff);
+            Assert.IsTrue(transport.IsInBackoffWindow);
             Assert.IsNotNull(reportedError);
             Assert.AreEqual(AudienceErrorCode.NetworkError, reportedError.Code);
         }
@@ -241,9 +296,33 @@ namespace Immutable.Audience.Tests
             await transport.SendBatchAsync();
 
             Assert.AreEqual(1, _store.Count(), "timeout should keep files for retry");
-            Assert.IsTrue(transport.IsBackingOff, "timeout must increment failures and engage backoff");
+            Assert.IsTrue(transport.IsInBackoffWindow, "timeout must increment failures and engage backoff");
             Assert.IsNotNull(reportedError, "NetworkError callback must fire on timeout");
             Assert.AreEqual(AudienceErrorCode.NetworkError, reportedError.Code);
+        }
+
+        [Test]
+        public async Task IsInBackoffWindow_ClearsAfterNextAttemptAtElapses()
+        {
+            _store.Write("{\"type\":\"track\"}");
+
+            var now = new DateTime(2026, 4, 17, 12, 0, 0, DateTimeKind.Utc);
+            var handler = new MockHandler(HttpStatusCode.InternalServerError, "");
+            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+                handler: handler, getUtcNow: () => now);
+
+            await transport.SendBatchAsync();
+
+            Assert.IsTrue(transport.IsInBackoffWindow, "within window immediately after failure");
+            Assert.AreEqual(now.AddMilliseconds(5_000), transport.NextAttemptAt);
+
+            // Advance the clock just before NextAttemptAt — still backing off.
+            now = now.AddMilliseconds(4_999);
+            Assert.IsTrue(transport.IsInBackoffWindow);
+
+            // Advance past NextAttemptAt — window closed, next send may proceed.
+            now = now.AddMilliseconds(2);
+            Assert.IsFalse(transport.IsInBackoffWindow, "window closes at NextAttemptAt");
         }
 
         [Test]
