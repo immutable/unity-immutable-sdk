@@ -16,8 +16,10 @@ namespace Immutable.Audience
     /// threads via <see cref="HttpClient"/> — no main thread involvement.
     ///
     /// <para>Retry policy: 5xx and network errors keep events on disk with
-    /// exponential backoff (5s → 10s → 20s → 40s → 60s cap). 4xx and 200
-    /// with rejected events are dropped — they won't succeed on retry.</para>
+    /// exponential backoff (5s → 10s → 20s → 60s cap). Escalation only
+    /// occurs after the previous backoff window has elapsed — premature
+    /// retries don't grow the backoff further. 4xx and 200 with rejected
+    /// events are dropped — they won't succeed on retry.</para>
     /// </summary>
     internal sealed class HttpTransport : IDisposable
     {
@@ -26,18 +28,22 @@ namespace Immutable.Audience
         private readonly string _publishableKey;
         private readonly HttpClient _client;
         private readonly Action<AudienceError> _onError;
+        private readonly Func<DateTime> _getUtcNow;
 
         private int _consecutiveFailures;
+        private DateTime? _nextAttemptAt;
 
         /// <param name="store">Disk store to read batches from.</param>
         /// <param name="publishableKey">Sent as <c>x-immutable-publishable-key</c> header.</param>
         /// <param name="onError">Optional error callback. Never throws to the caller.</param>
         /// <param name="handler">Optional HttpMessageHandler for testing.</param>
+        /// <param name="getUtcNow">Optional UTC clock for deterministic testing of backoff timing.</param>
         internal HttpTransport(
             DiskStore store,
             string publishableKey,
             Action<AudienceError> onError = null,
-            HttpMessageHandler handler = null)
+            HttpMessageHandler handler = null,
+            Func<DateTime> getUtcNow = null)
         {
             _store = store ?? throw new ArgumentNullException(nameof(store));
             _publishableKey = publishableKey ?? throw new ArgumentNullException(nameof(publishableKey));
@@ -45,6 +51,7 @@ namespace Immutable.Audience
             _onError = onError;
             _client = handler != null ? new HttpClient(handler) : new HttpClient();
             _client.Timeout = TimeSpan.FromSeconds(30);
+            _getUtcNow = getUtcNow ?? (() => DateTime.UtcNow);
         }
 
         /// <summary>
@@ -81,23 +88,19 @@ namespace Immutable.Audience
 
                 if (statusCode >= 200 && statusCode < 300)
                 {
-                    // 200 — events accepted. Any rejected ones had validation errors
-                    // and won't succeed on retry, so delete the whole batch.
                     _store.Delete(batch);
-                    _consecutiveFailures = 0;
+                    ResetBackoff();
                 }
                 else if (statusCode >= 400 && statusCode < 500)
                 {
-                    // 4xx — malformed request, won't succeed on retry.
                     _store.Delete(batch);
-                    _consecutiveFailures = 0;
+                    ResetBackoff();
                     NotifyError(AudienceErrorCode.ValidationRejected,
                         $"Batch rejected with {statusCode}");
                 }
                 else
                 {
-                    // 5xx — transient, keep on disk for retry.
-                    _consecutiveFailures++;
+                    RecordFailure();
                     NotifyError(AudienceErrorCode.FlushFailed, $"Server error {statusCode}, will retry");
                 }
             }
@@ -110,7 +113,7 @@ namespace Immutable.Audience
             }
             catch (Exception ex)
             {
-                _consecutiveFailures++;
+                RecordFailure();
                 NotifyError(AudienceErrorCode.NetworkError, ex.Message);
             }
 
@@ -130,12 +133,44 @@ namespace Immutable.Audience
             _ => 60_000,
         };
 
-        /// <summary>Whether the transport is currently backing off after failures.</summary>
-        internal bool IsBackingOff => _consecutiveFailures > 0;
+        /// <summary>
+        /// Timestamp after which the next send attempt should run. Null when there's
+        /// no active backoff (never failed, or last attempt succeeded). Callers should
+        /// skip sending while <c>UtcNow &lt; NextAttemptAt</c>.
+        /// </summary>
+        internal DateTime? NextAttemptAt => _nextAttemptAt;
+
+        /// <summary>
+        /// True if a failure occurred recently and the backoff window has not yet
+        /// elapsed. Becomes false naturally once enough time passes, allowing the
+        /// next send attempt to proceed.
+        /// </summary>
+        internal bool IsInBackoffWindow => _getUtcNow() < _nextAttemptAt;
 
         public void Dispose()
         {
             _client.Dispose();
+        }
+
+        private void RecordFailure()
+        {
+            var now = _getUtcNow();
+
+            // If we're still inside the previous backoff window, the caller retried
+            // before honoring the wait. Don't escalate — the existing NextAttemptAt
+            // deadline stands. When _nextAttemptAt is null (no prior failure),
+            // `now < null` is false via lifted nullable comparison, so we escalate.
+            if (now < _nextAttemptAt)
+                return;
+
+            _consecutiveFailures++;
+            _nextAttemptAt = now.AddMilliseconds(BackoffMs);
+        }
+
+        private void ResetBackoff()
+        {
+            _consecutiveFailures = 0;
+            _nextAttemptAt = null;
         }
 
         /// <summary>
