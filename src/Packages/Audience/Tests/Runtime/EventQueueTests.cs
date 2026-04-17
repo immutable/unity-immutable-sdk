@@ -27,14 +27,14 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
-        public void Enqueue_ThenFlushAsync_PersistesEventToDisk()
+        public void Enqueue_ThenFlushSync_PersistesEventToDisk()
         {
             using var queue = new EventQueue(_store, flushIntervalSeconds: 60, flushSize: 100);
 
             queue.Enqueue("{\"event\":\"track\"}");
-            queue.FlushAsync();
+            queue.FlushSync();
 
-            Assert.AreEqual(1, _store.Count(), "event should be on disk after FlushAsync");
+            Assert.AreEqual(1, _store.Count(), "event should be on disk after FlushSync");
         }
 
         [Test]
@@ -45,7 +45,7 @@ namespace Immutable.Audience.Tests
             for (var i = 0; i < 10; i++)
                 queue.Enqueue($"{{\"i\":{i}}}");
 
-            queue.FlushAsync();
+            queue.FlushSync();
 
             Assert.AreEqual(10, _store.Count());
         }
@@ -65,7 +65,7 @@ namespace Immutable.Audience.Tests
                 Thread.Sleep(20);
 
             Assert.AreEqual(flushSize, _store.Count(),
-                "reaching FlushSize should trigger automatic drain without explicit FlushAsync");
+                "reaching FlushSize should trigger automatic drain without explicit FlushSync");
         }
 
         [Test]

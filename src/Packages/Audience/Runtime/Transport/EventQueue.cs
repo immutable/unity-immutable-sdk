@@ -62,7 +62,7 @@ namespace Immutable.Audience
         /// Drains the in-memory queue and persists all events to disk immediately.
         /// Blocks until the drain is complete.
         /// </summary>
-        internal void FlushAsync()
+        internal void FlushSync()
         {
             DrainMemoryToDisk();
         }
