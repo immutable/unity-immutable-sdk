@@ -176,8 +176,12 @@ namespace Immutable.Audience
         /// <summary>
         /// Reads file contents for each path and builds the batch JSON payload:
         /// <c>{"batch":[msg1,msg2,...]}</c>
-        /// Returns null if no files could be read.
         /// </summary>
+        /// <returns>
+        /// The batch JSON string, or <c>null</c> when every path failed to read
+        /// (files disappeared, empty, or locked). The caller treats <c>null</c>
+        /// as "nothing to send" and deletes the path list.
+        /// </returns>
         private static string BuildPayload(IReadOnlyList<string> paths)
         {
             var sb = new StringBuilder("{\"batch\":[");
