@@ -192,9 +192,11 @@ namespace Immutable.Audience
                     sb.Append(json);
                     count++;
                 }
-                catch (Exception)
+                catch (IOException)
                 {
-                    // File disappeared between ReadBatch and now — skip it.
+                    // File disappeared, locked, or path vanished between ReadBatch
+                    // and now — skip it. Non-IO errors like UnauthorizedAccessException
+                    // indicate real problems and are allowed to propagate.
                 }
             }
 
