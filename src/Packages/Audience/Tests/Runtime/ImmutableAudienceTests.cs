@@ -714,6 +714,30 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
+        public void SetConsent_PersistFailure_SurfacesOnError()
+        {
+            // Pre-create a directory where ConsentStore.Save wants to place
+            // the consent file; File.Move then fails without disturbing
+            // Init's DiskStore or Identity paths.
+            var consentFile = AudiencePaths.ConsentFile(_testDir);
+            Directory.CreateDirectory(consentFile);
+
+            // Bag rather than single capture: ConsentPersistFailed fires
+            // synchronously on the caller thread, SyncConsentToBackend's
+            // Task.Run may also fire ConsentSyncFailed concurrently. Assert
+            // presence of the one under test rather than the last seen.
+            var errors = new System.Collections.Concurrent.ConcurrentBag<AudienceError>();
+            var config = MakeConfig(ConsentLevel.Anonymous);
+            config.OnError = err => errors.Add(err);
+
+            ImmutableAudience.Init(config);
+            ImmutableAudience.SetConsent(ConsentLevel.Full);
+
+            Assert.That(errors.Any(e => e.Code == AudienceErrorCode.ConsentPersistFailed),
+                Is.True, "OnError should receive ConsentPersistFailed for consent persist failure");
+        }
+
+        [Test]
         public void SetConsent_PersistsAcrossInit()
         {
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));
