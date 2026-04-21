@@ -1,6 +1,8 @@
 using System;
 using System.IO;
+#if IMMUTABLE_AUDIENCE_GZIP
 using System.IO.Compression;
+#endif
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -57,6 +59,7 @@ namespace Immutable.Audience.Tests
             Assert.AreEqual(0, _store.Count(), "files should be deleted after 200");
         }
 
+#if IMMUTABLE_AUDIENCE_GZIP
         [Test]
         public async Task SendBatchAsync_200_SendsGzippedPayloadWithCorrectHeaders()
         {
@@ -65,12 +68,14 @@ namespace Immutable.Audience.Tests
             byte[] capturedBody = null;
             string capturedKey = null;
             string capturedContentType = null;
+            string capturedContentEncoding = null;
             // Read body inside the callback — the request content is disposed after SendAsync returns.
             var handler = new MockHandler(HttpStatusCode.OK, "{\"accepted\":1,\"rejected\":0}",
                 onRequest: req =>
                 {
                     capturedKey = string.Join("", req.Headers.GetValues("x-immutable-publishable-key"));
                     capturedContentType = req.Content.Headers.ContentType.MediaType;
+                    capturedContentEncoding = string.Join("", req.Content.Headers.ContentEncoding);
                     capturedBody = req.Content.ReadAsByteArrayAsync().Result;
                 });
             using var transport = new HttpTransport(_store, "pk_imapik-test-key1", handler: handler);
@@ -79,12 +84,43 @@ namespace Immutable.Audience.Tests
 
             Assert.AreEqual("pk_imapik-test-key1", capturedKey);
             Assert.AreEqual("application/json", capturedContentType);
+            Assert.AreEqual("gzip", capturedContentEncoding);
 
             var decompressed = DecompressGzip(capturedBody);
             StringAssert.StartsWith("{\"batch\":[", decompressed);
             StringAssert.EndsWith("]}", decompressed);
             StringAssert.Contains("\"eventName\":\"test\"", decompressed);
         }
+#else
+        [Test]
+        public async Task SendBatchAsync_200_SendsPlainJsonPayloadWithoutContentEncoding()
+        {
+            _store.Write("{\"type\":\"track\",\"eventName\":\"test\"}");
+
+            string capturedKey = null;
+            string capturedContentType = null;
+            int capturedContentEncodingCount = -1;
+            string capturedBody = null;
+            var handler = new MockHandler(HttpStatusCode.OK, "{\"accepted\":1,\"rejected\":0}",
+                onRequest: req =>
+                {
+                    capturedKey = string.Join("", req.Headers.GetValues("x-immutable-publishable-key"));
+                    capturedContentType = req.Content.Headers.ContentType.MediaType;
+                    capturedContentEncodingCount = req.Content.Headers.ContentEncoding.Count;
+                    capturedBody = req.Content.ReadAsStringAsync().Result;
+                });
+            using var transport = new HttpTransport(_store, "pk_imapik-test-key1", handler: handler);
+
+            await transport.SendBatchAsync();
+
+            Assert.AreEqual("pk_imapik-test-key1", capturedKey);
+            Assert.AreEqual("application/json", capturedContentType);
+            Assert.AreEqual(0, capturedContentEncodingCount, "no Content-Encoding header is permitted in v1");
+            StringAssert.StartsWith("{\"batch\":[", capturedBody);
+            StringAssert.EndsWith("]}", capturedBody);
+            StringAssert.Contains("\"eventName\":\"test\"", capturedBody);
+        }
+#endif
 
         [Test]
         public async Task SendBatchAsync_200_UsesCorrectUrlForTestKey()
@@ -342,6 +378,7 @@ namespace Immutable.Audience.Tests
             Assert.DoesNotThrowAsync(() => transport.SendBatchAsync());
         }
 
+#if IMMUTABLE_AUDIENCE_GZIP
         private static string DecompressGzip(byte[] data)
         {
             using var input = new MemoryStream(data);
@@ -349,6 +386,7 @@ namespace Immutable.Audience.Tests
             using var reader = new StreamReader(gzip, Encoding.UTF8);
             return reader.ReadToEnd();
         }
+#endif
 
         /// <summary>
         /// Minimal HttpMessageHandler that returns a canned response.

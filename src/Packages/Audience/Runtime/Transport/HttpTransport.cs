@@ -80,15 +80,18 @@ namespace Immutable.Audience
                 return true;
             }
 
-            var compressed = Gzip.Compress(payload);
-
             try
             {
                 using var request = new HttpRequestMessage(HttpMethod.Post, _url);
                 request.Headers.Add("x-immutable-publishable-key", _publishableKey);
+#if IMMUTABLE_AUDIENCE_GZIP
+                var compressed = Gzip.Compress(payload);
                 request.Content = new ByteArrayContent(compressed);
                 request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
                 request.Content.Headers.Add("Content-Encoding", "gzip");
+#else
+                request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+#endif
 
                 using var response = await _client.SendAsync(request, ct).ConfigureAwait(false);
 
