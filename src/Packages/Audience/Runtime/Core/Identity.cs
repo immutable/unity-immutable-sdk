@@ -15,6 +15,46 @@ namespace Immutable.Audience
         private static volatile string _cachedId;
         private static readonly object _sync = new object();
 
+        // Returns the existing anonymous ID, or null if none exists.
+        // Unlike GetOrCreate, never generates or persists a new one.
+        internal static string Get(string persistentDataPath)
+        {
+            if (_cachedId != null) return _cachedId;
+
+            lock (_sync)
+            {
+                if (_cachedId != null) return _cachedId;
+
+                try
+                {
+                    var filePath = AudiencePaths.IdentityFile(persistentDataPath);
+                    if (!File.Exists(filePath)) return null;
+
+                    _cachedId = File.ReadAllText(filePath).Trim();
+                    return _cachedId;
+                }
+                catch (IOException)
+                {
+                    return null;
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    return null;
+                }
+            }
+        }
+
+        // Drops the in-memory cache without touching disk. Called on
+        // Shutdown/ResetState so a subsequent Init with a different
+        // persistentDataPath re-reads the file from the new location.
+        internal static void ClearCache()
+        {
+            lock (_sync)
+            {
+                _cachedId = null;
+            }
+        }
+
         // Returns the anonymous ID, generating and persisting it on first call.
         // Returns null without touching disk when consent is None.
         // Safe to call from any thread after ImmutableAudience.Init() has run on the main thread.
