@@ -1,7 +1,7 @@
 {
-    "name": "Immutable.Audience.Runtime",
-    "rootNamespace": "Immutable.Audience",
-    "references": [],
+    "name": "Immutable.Audience.Unity",
+    "rootNamespace": "Immutable.Audience.Unity",
+    "references": ["Immutable.Audience.Runtime"],
     "includePlatforms": ["Editor","LinuxStandalone64","macOSStandalone","WindowsStandalone64"],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
@@ -10,5 +10,5 @@
     "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [],
-    "noEngineReferences": true
+    "noEngineReferences": false
 }

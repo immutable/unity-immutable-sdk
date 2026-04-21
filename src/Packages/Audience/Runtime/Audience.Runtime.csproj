@@ -11,6 +11,12 @@
     It references UnityEngine, so it cannot build under the headless .NET SDK
     used for Audience.Tests. Unity's own compiler builds it via
     Runtime/Unity/com.immutable.audience.unity.asmdef.
+
+    Portability enforcement: com.immutable.audience.asmdef sets
+    noEngineReferences: true, which makes stray `using UnityEngine` in Core/,
+    Events/, Transport/, Utility/ fail to compile inside Unity. This
+    Compile Remove is the sibling check for the headless dotnet build.
+    Keep both.
   -->
   <ItemGroup>
     <Compile Remove="Unity/**/*.cs" />
