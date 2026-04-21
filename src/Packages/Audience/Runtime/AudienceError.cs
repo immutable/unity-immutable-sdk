@@ -7,7 +7,9 @@ namespace Immutable.Audience
         FlushFailed,
         ValidationRejected,
         ConsentSyncFailed,
-        NetworkError
+        NetworkError,
+        /// <summary>Failed to persist the consent level to disk. In-memory level still applied but will revert on next launch.</summary>
+        ConsentPersistFailed
     }
 
     public class AudienceError : Exception

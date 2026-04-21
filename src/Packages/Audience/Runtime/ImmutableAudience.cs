@@ -393,6 +393,8 @@ namespace Immutable.Audience
             {
                 Log.Warn($"SetConsent — failed to persist consent level: {ex.GetType().Name}: {ex.Message}. " +
                          "In-memory level is updated but will revert on next launch.");
+                NotifyErrorCallback(config.OnError, AudienceErrorCode.ConsentPersistFailed,
+                    $"Consent persist failed: {ex.Message}");
             }
 
             if (level == ConsentLevel.None)
