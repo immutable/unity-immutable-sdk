@@ -5,10 +5,8 @@ using System.Linq;
 
 namespace Immutable.Audience
 {
-    /// <summary>
-    /// File-per-event persistent store. Each event is written as an atomic
-    /// <c>{ticks}_{uuid}.json</c> file inside <c>imtbl_audience/queue/</c>.
-    /// </summary>
+    // File-per-event persistent store. Each event is written as an atomic
+    // {ticks}_{uuid}.json file inside imtbl_audience/queue/.
     internal sealed class DiskStore
     {
         private readonly string _queueDir;
@@ -19,7 +17,7 @@ namespace Immutable.Audience
             Directory.CreateDirectory(_queueDir);
         }
 
-        /// <summary>Atomically writes <paramref name="json"/> as a new event file.</summary>
+        // Atomically writes json as a new event file.
         internal void Write(string json)
         {
             var fileName = $"{DateTime.UtcNow.Ticks}_{Guid.NewGuid():N}.json";
@@ -40,10 +38,8 @@ namespace Immutable.Audience
             }
         }
 
-        /// <summary>
-        /// Returns up to <paramref name="maxSize"/> file paths, oldest first.
-        /// Files older than <see cref="Constants.StaleEventDays"/> days are deleted and excluded.
-        /// </summary>
+        // Returns up to maxSize file paths, oldest first. Stale files
+        // (older than Constants.StaleEventDays) are deleted and excluded.
         internal IReadOnlyList<string> ReadBatch(int maxSize)
         {
             if (maxSize <= 0)
@@ -83,14 +79,14 @@ namespace Immutable.Audience
             return result;
         }
 
-        /// <summary>Deletes the event files at <paramref name="paths"/>.</summary>
+        // Deletes the given event files.
         internal void Delete(IEnumerable<string> paths)
         {
             foreach (var path in paths)
                 TryDelete(path);
         }
 
-        /// <summary>Returns the total number of event files currently on disk.</summary>
+        // Total number of event files currently on disk.
         internal int Count() => Directory.GetFiles(_queueDir, "*.json").Length;
 
         private static void TryDelete(string path)

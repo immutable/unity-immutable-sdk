@@ -4,17 +4,11 @@ using System.Threading;
 
 namespace Immutable.Audience
 {
-    /// <summary>
-    /// Thread-safe, disk-persistent batch event queue for the Audience SDK.
-    ///
-    /// <para>Enqueue is lock-free and safe to call from any thread. A background
-    /// drain thread moves events from the in-memory <see cref="ConcurrentQueue{T}"/>
-    /// to <see cref="DiskStore"/>, flushing either on a time interval or when the
-    /// in-memory batch reaches <see cref="AudienceConfig.FlushSize"/>.</para>
-    ///
-    /// <para>Call <see cref="Shutdown"/> before process exit to flush remaining events
-    /// and stop the drain thread cleanly.</para>
-    /// </summary>
+    // Thread-safe, disk-persistent batch event queue.
+    // Enqueue is lock-free and safe from any thread. A background drain
+    // thread moves events from the in-memory ConcurrentQueue to DiskStore,
+    // flushing on a time interval or when the batch reaches FlushSize.
+    // Call Shutdown before process exit.
     internal sealed class EventQueue : IDisposable
     {
         private readonly DiskStore _store;
@@ -29,9 +23,9 @@ namespace Immutable.Audience
         // Volatile so all threads see the shutdown signal immediately.
         private volatile bool _disposed;
 
-        /// <param name="store">Pre-created <see cref="DiskStore"/> for this queue.</param>
-        /// <param name="flushIntervalSeconds">How often to drain to disk regardless of batch size.</param>
-        /// <param name="flushSize">Drain to disk immediately when this many events are queued.</param>
+        // store: destination for drained events.
+        // flushIntervalSeconds: how often to drain to disk regardless of batch size.
+        // flushSize: drain to disk immediately when this many events are queued.
         internal EventQueue(DiskStore store, int flushIntervalSeconds, int flushSize)
         {
             _store = store ?? throw new ArgumentNullException(nameof(store));
@@ -46,7 +40,7 @@ namespace Immutable.Audience
             _drainThread.Start();
         }
 
-        /// <summary>Enqueues a JSON-serialised event. Lock-free; safe from any thread.</summary>
+        // Enqueues a JSON-serialised event. Lock-free; safe from any thread.
         internal void Enqueue(string json)
         {
             if (_disposed) return;
@@ -58,19 +52,15 @@ namespace Immutable.Audience
                 _flushGate.Set();
         }
 
-        /// <summary>
-        /// Drains the in-memory queue and persists all events to disk immediately.
-        /// Blocks until the drain is complete.
-        /// </summary>
+        // Drains the in-memory queue and persists all events to disk
+        // immediately. Blocks until the drain is complete.
         internal void FlushSync()
         {
             DrainMemoryToDisk();
         }
 
-        /// <summary>
-        /// Flushes all pending events to disk and stops the drain thread.
-        /// Safe to call multiple times.
-        /// </summary>
+        // Flushes all pending events to disk and stops the drain thread.
+        // Safe to call multiple times.
         internal void Shutdown()
         {
             if (_disposed) return;

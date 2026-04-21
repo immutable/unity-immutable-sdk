@@ -12,9 +12,7 @@ using System.Threading.Tasks;
 
 namespace Immutable.Audience
 {
-    /// <summary>
-    /// Sends queued events from <see cref="DiskStore"/> to the Audience backend.
-    /// </summary>
+    // Sends queued events from DiskStore to the Audience backend.
     internal sealed class HttpTransport : IDisposable
     {
         private readonly DiskStore _store;
@@ -27,11 +25,10 @@ namespace Immutable.Audience
         private int _consecutiveFailures;
         private DateTime? _nextAttemptAt;
 
-        /// <param name="store">Source of event batches.</param>
-        /// <param name="publishableKey">Studio API key. Sent as <c>x-immutable-publishable-key</c> on every request.</param>
-        /// <param name="onError">Optional failure callback. Exceptions thrown inside it are caught and ignored.</param>
-        /// <param name="handler">Optional <see cref="HttpMessageHandler"/>. Callers can supply a custom pipeline (e.g. specific for test purposes). Defaults to the standard handler when null.</param>
-        /// <param name="getUtcNow">Optional UTC clock source used for backoff timing (e.g. swappable for deterministic time). Defaults to <c>DateTime.UtcNow</c> when null.</param>
+        // store: source of event batches.
+        // publishableKey: sent as x-immutable-publishable-key on every request.
+        // onError: optional failure callback. Exceptions thrown inside it are caught.
+        // handler / getUtcNow: test seams; null for production use.
         internal HttpTransport(
             DiskStore store,
             string publishableKey,
@@ -48,10 +45,8 @@ namespace Immutable.Audience
             _getUtcNow = getUtcNow ?? (() => DateTime.UtcNow);
         }
 
-        /// <summary>
-        /// Attempts to process one batch: reads it from disk, gzips it, and POSTs it.
-        /// Returns true if a batch was consumed (outcome irrelevant), false if the queue was empty.
-        /// </summary>
+        // Processes one batch. Returns true if a batch was consumed
+        // (outcome irrelevant), false if the queue was empty.
         internal async Task<bool> SendBatchAsync(CancellationToken ct = default)
         {
             var batch = _store.ReadBatch(Constants.DefaultFlushSize);
@@ -146,16 +141,11 @@ namespace Immutable.Audience
             _ => 60_000,
         };
 
-        /// <summary>
-        /// Earliest UTC time at which the next attempt may run.
-        /// Null when no backoff is active (never failed, or last attempt succeeded).
-        /// </summary>
+        // Earliest UTC time at which the next attempt may run.
+        // Null when no backoff is active.
         internal DateTime? NextAttemptAt => _nextAttemptAt;
 
-        /// <summary>
-        /// True while <c>UtcNow &lt; NextAttemptAt</c>. Flips false as the clock
-        /// advances; no reset required.
-        /// </summary>
+        // True while UtcNow < NextAttemptAt. Flips false as the clock advances.
         internal bool IsInBackoffWindow => _getUtcNow() < _nextAttemptAt;
 
         public void Dispose()
@@ -178,14 +168,9 @@ namespace Immutable.Audience
             _nextAttemptAt = null;
         }
 
-        /// <summary>
-        /// Reads each path and wraps the concatenated JSON bodies in
-        /// <c>{"batch":[msg1,msg2,...]}</c>.
-        /// </summary>
-        /// <returns>
-        /// The batched JSON, or <c>null</c> if every path was unreadable. Caller
-        /// treats <c>null</c> as "nothing to send" and deletes the path list.
-        /// </returns>
+        // Reads each path and wraps the concatenated JSON bodies in
+        // {"batch":[msg1,msg2,...]}. Returns null if every path was
+        // unreadable; the caller treats null as "nothing to send".
         private static string? BuildPayload(IReadOnlyList<string> paths)
         {
             var sb = new StringBuilder("{\"batch\":[");
