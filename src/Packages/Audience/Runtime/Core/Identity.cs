@@ -15,12 +15,6 @@ namespace Immutable.Audience
         private static volatile string _cachedId;
         private static readonly object _sync = new object();
 
-        private static string GetDirectory(string persistentDataPath) =>
-            Path.Combine(persistentDataPath, "imtbl_audience");
-
-        private static string GetFilePath(string persistentDataPath) =>
-            Path.Combine(GetDirectory(persistentDataPath), "identity");
-
         // Returns the anonymous ID, generating and persisting it on first call.
         // Returns null without touching disk when consent is None.
         // Safe to call from any thread after ImmutableAudience.Init() has run on the main thread.
@@ -41,10 +35,10 @@ namespace Immutable.Audience
                 if (_cachedId != null)
                     return _cachedId;
 
-                var dir = GetDirectory(persistentDataPath);
+                var dir = AudiencePaths.AudienceDir(persistentDataPath);
                 Directory.CreateDirectory(dir); // no-op if already exists
 
-                var filePath = GetFilePath(persistentDataPath);
+                var filePath = AudiencePaths.IdentityFile(persistentDataPath);
 
                 // Returning player — read the ID we wrote on a previous launch.
                 if (File.Exists(filePath))
@@ -85,7 +79,7 @@ namespace Immutable.Audience
             {
                 _cachedId = null;
 
-                var filePath = GetFilePath(persistentDataPath);
+                var filePath = AudiencePaths.IdentityFile(persistentDataPath);
                 try
                 {
                     File.Delete(filePath);
