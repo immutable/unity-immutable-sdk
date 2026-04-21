@@ -39,6 +39,10 @@ namespace Immutable.Audience
         // PersistentDataPath on the config.
         internal static Func<string>? DefaultPersistentDataPathProvider;
 
+        // AudienceUnityHooks sets this so game_launch can auto-include
+        // Unity context without the core referencing UnityEngine.
+        internal static Func<Dictionary<string, object>> LaunchContextProvider;
+
         // Starts the SDK. Call once at launch.
         public static void Init(AudienceConfig config)
         {
@@ -550,6 +554,8 @@ namespace Immutable.Audience
         // Shuts down (if initialised) and clears per-session state so a
         // fresh Init starts clean. Used on test teardown and by Unity
         // SubsystemRegistration to survive "disable domain reload".
+        // LaunchContextProvider is not cleared: AudienceUnityHooks
+        // re-assigns it on the same SubsystemRegistration call.
         internal static void ResetState()
         {
             if (_initialized)
@@ -656,10 +662,32 @@ namespace Immutable.Audience
 
             var properties = new Dictionary<string, object>();
 
+            // Unity-side auto-detected context (platform, version, buildGuid,
+            // unityVersion) from AudienceUnityHooks. Core stays pure C#; the
+            // Unity layer fills these via LaunchContextProvider.
+            var provider = LaunchContextProvider;
+            if (provider != null)
+            {
+                Dictionary<string, object> unityContext = null;
+                try { unityContext = provider(); }
+                catch (Exception ex)
+                {
+                    Log.Warn($"LaunchContextProvider threw {ex.GetType().Name}: {ex.Message}. " +
+                             "game_launch will ship without auto-detected Unity context.");
+                }
+
+                if (unityContext != null)
+                {
+                    foreach (var kvp in unityContext)
+                        properties[kvp.Key] = kvp.Value;
+                }
+            }
+
+            // Config-supplied distributionPlatform wins over any provider value;
+            // studios set it explicitly because Unity cannot auto-detect the store.
             if (config.DistributionPlatform != null)
                 properties["distributionPlatform"] = config.DistributionPlatform;
 
-            // Device-derived fields (platform, version, buildGuid, unityVersion) land with DeviceCollector.
             Track("game_launch", properties.Count > 0 ? properties : null);
         }
     }

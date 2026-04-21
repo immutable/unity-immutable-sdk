@@ -26,6 +26,7 @@ namespace Immutable.Audience.Tests
         public void TearDown()
         {
             ImmutableAudience.ResetState();
+            ImmutableAudience.LaunchContextProvider = null;
             ImmutableAudience.DefaultPersistentDataPathProvider = null;
             Identity.Reset(_testDir);
             if (Directory.Exists(_testDir))
@@ -774,6 +775,69 @@ namespace Immutable.Audience.Tests
             var contents = Directory.GetFiles(queueDir, "*.json")
                 .Select(File.ReadAllText).ToList();
             Assert.IsFalse(contents.Any(c => c.Contains("\"game_launch\"")));
+        }
+
+        [Test]
+        public void Init_GameLaunch_IncludesLaunchContextProviderFields()
+        {
+            ImmutableAudience.LaunchContextProvider = () => new Dictionary<string, object>
+            {
+                ["platform"] = "WindowsPlayer",
+                ["version"] = "1.2.3",
+                ["buildGuid"] = "a1b2c3d4e5f6",
+                ["unityVersion"] = "2022.3.20f1",
+            };
+
+            ImmutableAudience.Init(MakeConfig());
+            ImmutableAudience.Shutdown();
+
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            var launchFile = Directory.GetFiles(queueDir, "*.json")
+                .Select(File.ReadAllText)
+                .FirstOrDefault(c => c.Contains("\"game_launch\""));
+            Assert.IsNotNull(launchFile, "game_launch should have been enqueued");
+            StringAssert.Contains("\"platform\":\"WindowsPlayer\"", launchFile);
+            StringAssert.Contains("\"version\":\"1.2.3\"", launchFile);
+            StringAssert.Contains("\"buildGuid\":\"a1b2c3d4e5f6\"", launchFile);
+            StringAssert.Contains("\"unityVersion\":\"2022.3.20f1\"", launchFile);
+        }
+
+        [Test]
+        public void Init_GameLaunch_ConfigDistributionPlatformOverridesProvider()
+        {
+            ImmutableAudience.LaunchContextProvider = () => new Dictionary<string, object>
+            {
+                ["distributionPlatform"] = "provider_value",
+            };
+
+            var config = MakeConfig();
+            config.DistributionPlatform = DistributionPlatforms.Steam;
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Shutdown();
+
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            var launchFile = Directory.GetFiles(queueDir, "*.json")
+                .Select(File.ReadAllText)
+                .First(c => c.Contains("\"game_launch\""));
+            StringAssert.Contains("\"distributionPlatform\":\"steam\"", launchFile);
+            Assert.IsFalse(launchFile.Contains("provider_value"),
+                "config.DistributionPlatform should win over the provider's value");
+        }
+
+        [Test]
+        public void Init_GameLaunch_ProviderThrows_StillFiresEvent()
+        {
+            ImmutableAudience.LaunchContextProvider = () =>
+                throw new InvalidOperationException("provider exploded");
+
+            Assert.DoesNotThrow(() => ImmutableAudience.Init(MakeConfig()));
+            ImmutableAudience.Shutdown();
+
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            var contents = Directory.GetFiles(queueDir, "*.json")
+                .Select(File.ReadAllText).ToList();
+            Assert.IsTrue(contents.Any(c => c.Contains("\"game_launch\"")),
+                "game_launch must still ship when the context provider throws");
         }
 
         // -----------------------------------------------------------------
