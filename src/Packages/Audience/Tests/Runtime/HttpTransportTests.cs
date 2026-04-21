@@ -388,10 +388,8 @@ namespace Immutable.Audience.Tests
         }
 #endif
 
-        /// <summary>
-        /// Minimal HttpMessageHandler that returns a canned response.
-        /// Optionally captures the request for inspection.
-        /// </summary>
+        // Minimal HttpMessageHandler that returns a canned response.
+        // Optionally captures the request for inspection.
         private class MockHandler : HttpMessageHandler
         {
             private readonly Func<HttpResponseMessage> _factory;

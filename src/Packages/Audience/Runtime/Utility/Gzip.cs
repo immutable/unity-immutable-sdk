@@ -5,10 +5,8 @@ using System.Text;
 
 namespace Immutable.Audience
 {
-    /// <summary>
-    /// Gzip compression using <see cref="GZipStream"/> from System.IO.Compression.
-    /// Available in Unity 2021+ (.NET Standard 2.1). Pure C#, works on all desktop platforms.
-    /// </summary>
+    // Gzip compression via GZipStream from System.IO.Compression.
+    // Available in Unity 2021+ (.NET Standard 2.1). Works on all desktop platforms.
     internal static class Gzip
     {
         internal static byte[] Compress(string text)

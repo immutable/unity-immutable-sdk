@@ -1,14 +1,11 @@
 namespace Immutable.Audience
 {
-    /// <summary>
-    /// Entry point for the Immutable Audience SDK.
-    /// Call <see cref="Init"/> once on startup, then use the static methods from any thread.
-    /// </summary>
+    // Entry point for the Immutable Audience SDK.
     public static class ImmutableAudience
     {
         // Scaffold only -- implementation follows in subsequent sub-issues (see SDK-99).
 
-        /// <summary>Initialise the SDK. Call once, typically in your game's entry scene.</summary>
+        // Starts the SDK. Call once at launch.
         public static void Init(AudienceConfig config)
         {
             throw new System.NotImplementedException(

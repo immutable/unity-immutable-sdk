@@ -25,10 +25,7 @@ namespace Immutable.Audience
                 : ProductionBaseUrl;
     }
 
-    /// <summary>
-    /// String constants for common game distribution platforms.
-    /// Any string is accepted -- studios are not limited to these values.
-    /// </summary>
+    // Common distribution platform values for AudienceConfig.DistributionPlatform.
     public static class DistributionPlatforms
     {
         public const string Steam = "steam";
