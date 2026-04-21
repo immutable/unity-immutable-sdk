@@ -95,5 +95,91 @@ namespace Immutable.Audience
             catch (IOException) { }
             catch (UnauthorizedAccessException) { }
         }
+        internal void DeleteAll()
+        {
+            string[] paths;
+            try { paths = Directory.GetFiles(_queueDir, "*.json"); }
+            catch (DirectoryNotFoundException) { return; }
+
+            foreach (var path in paths)
+                TryDelete(path);
+        }
+
+        // Drops queued identify/alias files, strips userId from track files.
+        // Unparseable files are deleted to fail closed.
+        internal void ApplyAnonymousDowngrade()
+        {
+            string[] paths;
+            try { paths = Directory.GetFiles(_queueDir, "*.json"); }
+            catch (DirectoryNotFoundException) { return; }
+
+            foreach (var path in paths)
+                ApplyAnonymousDowngradeToFile(path);
+        }
+
+        private void ApplyAnonymousDowngradeToFile(string path)
+        {
+            if (!TryReadMessage(path, out var msg) ||
+                !msg.TryGetValue(MessageFields.Type, out var typeObj) ||
+                !(typeObj is string type))
+            {
+                TryDelete(path);
+                return;
+            }
+
+            if (IsIdentityMessage(type))
+            {
+                TryDelete(path);
+                return;
+            }
+
+            if (type == MessageTypes.Track && msg.ContainsKey(MessageFields.UserId))
+                RewriteTrackWithoutUserId(path, msg);
+        }
+
+        private static bool IsIdentityMessage(string type) =>
+            type == MessageTypes.Identify || type == MessageTypes.Alias;
+
+        private static bool TryReadMessage(string path, out Dictionary<string, object> msg)
+        {
+            msg = null;
+            string json;
+            try { json = File.ReadAllText(path); }
+            catch (IOException) { return false; }
+            catch (UnauthorizedAccessException) { return false; }
+
+            try { msg = JsonReader.DeserializeObject(json); }
+            catch (FormatException) { return false; }
+
+            return true;
+        }
+
+        private void RewriteTrackWithoutUserId(string path, Dictionary<string, object> msg)
+        {
+            msg.Remove(MessageFields.UserId);
+
+            try
+            {
+                var rewritten = Json.Serialize(msg);
+                var tmp = path + ".tmp";
+                File.WriteAllText(tmp, rewritten);
+                try { File.Move(tmp, path); }
+                catch (IOException)
+                {
+                    File.Delete(path);
+                    File.Move(tmp, path);
+                }
+            }
+            catch (IOException)
+            {
+                // Delete rather than leave the old userId-bearing payload.
+                TryDelete(path);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                TryDelete(path);
+            }
+        }
+
     }
 }
