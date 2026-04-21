@@ -173,7 +173,7 @@ namespace Immutable.Audience.Tests
             using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
                 handler: handler, getUtcNow: _getUtcNow);
 
-            // Schedule per plan: 5s → 10s → 20s → 60s cap (no 40s step).
+            // Schedule: 5s → 10s → 20s → 40s → 60s cap.
             // Each escalation requires the previous window to have elapsed.
             await transport.SendBatchAsync();
             Assert.AreEqual(5_000, transport.BackoffMs);
@@ -188,7 +188,11 @@ namespace Immutable.Audience.Tests
 
             Advance(20_001);
             await transport.SendBatchAsync();
-            Assert.AreEqual(60_000, transport.BackoffMs, "jumps to 60s cap after 20s");
+            Assert.AreEqual(40_000, transport.BackoffMs);
+
+            Advance(40_001);
+            await transport.SendBatchAsync();
+            Assert.AreEqual(60_000, transport.BackoffMs, "reaches 60s cap after 40s step");
 
             Advance(60_001);
             await transport.SendBatchAsync();

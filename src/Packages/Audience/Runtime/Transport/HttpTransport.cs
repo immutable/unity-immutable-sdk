@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,15 +13,7 @@ using System.Threading.Tasks;
 namespace Immutable.Audience
 {
     /// <summary>
-    /// Reads event batches from <see cref="DiskStore"/>, gzip-compresses them,
-    /// and POSTs to <c>/v1/audience/messages</c>. Runs entirely on background
-    /// threads via <see cref="HttpClient"/> — no main thread involvement.
-    ///
-    /// <para>Retry policy: 5xx and network errors keep events on disk with
-    /// exponential backoff (5s → 10s → 20s → 60s cap). Escalation only
-    /// occurs after the previous backoff window has elapsed — premature
-    /// retries don't grow the backoff further. 4xx and 200 with rejected
-    /// events are dropped — they won't succeed on retry.</para>
+    /// Sends queued events from <see cref="DiskStore"/> to the Audience backend.
     /// </summary>
     internal sealed class HttpTransport : IDisposable
     {
@@ -27,23 +21,23 @@ namespace Immutable.Audience
         private readonly string _url;
         private readonly string _publishableKey;
         private readonly HttpClient _client;
-        private readonly Action<AudienceError> _onError;
+        private readonly Action<AudienceError>? _onError;
         private readonly Func<DateTime> _getUtcNow;
 
         private int _consecutiveFailures;
         private DateTime? _nextAttemptAt;
 
-        /// <param name="store">Disk store to read batches from.</param>
-        /// <param name="publishableKey">Sent as <c>x-immutable-publishable-key</c> header.</param>
-        /// <param name="onError">Optional error callback. Never throws to the caller.</param>
-        /// <param name="handler">Optional HttpMessageHandler for testing.</param>
-        /// <param name="getUtcNow">Optional UTC clock for deterministic testing of backoff timing.</param>
+        /// <param name="store">Source of event batches.</param>
+        /// <param name="publishableKey">Studio API key. Sent as <c>x-immutable-publishable-key</c> on every request.</param>
+        /// <param name="onError">Optional failure callback. Exceptions thrown inside it are caught and ignored.</param>
+        /// <param name="handler">Optional <see cref="HttpMessageHandler"/>. Callers can supply a custom pipeline (e.g. specific for test purposes). Defaults to the standard handler when null.</param>
+        /// <param name="getUtcNow">Optional UTC clock source used for backoff timing (e.g. swappable for deterministic time). Defaults to <c>DateTime.UtcNow</c> when null.</param>
         internal HttpTransport(
             DiskStore store,
             string publishableKey,
-            Action<AudienceError> onError = null,
-            HttpMessageHandler handler = null,
-            Func<DateTime> getUtcNow = null)
+            Action<AudienceError>? onError = null,
+            HttpMessageHandler? handler = null,
+            Func<DateTime>? getUtcNow = null)
         {
             _store = store ?? throw new ArgumentNullException(nameof(store));
             _publishableKey = publishableKey ?? throw new ArgumentNullException(nameof(publishableKey));
@@ -55,8 +49,8 @@ namespace Immutable.Audience
         }
 
         /// <summary>
-        /// Reads one batch from disk and sends it to the backend.
-        /// Returns true if a batch was sent (regardless of outcome), false if the queue was empty.
+        /// Attempts to process one batch: reads it from disk, gzips it, and POSTs it.
+        /// Returns true if a batch was consumed (outcome irrelevant), false if the queue was empty.
         /// </summary>
         internal async Task<bool> SendBatchAsync(CancellationToken ct = default)
         {
@@ -64,10 +58,24 @@ namespace Immutable.Audience
             if (batch.Count == 0)
                 return false;
 
-            var payload = BuildPayload(batch);
+            string? payload;
+            try
+            {
+                payload = BuildPayload(batch);
+            }
+            catch (Exception ex)
+            {
+                // Non-IOException = unrecoverable storage failure (e.g. permissions);
+                // retry won't help. Drop the batch, report via onError.
+                _store.Delete(batch);
+                NotifyError(AudienceErrorCode.FlushFailed, $"Local storage read failed: {ex.Message}");
+                return true;
+            }
+
             if (payload == null)
             {
-                // All files were unreadable — delete them and move on.
+                // Every file was unreadable (deleted or locked between ReadBatch and now).
+                // Drop the refs, return.
                 _store.Delete(batch);
                 return true;
             }
@@ -88,11 +96,14 @@ namespace Immutable.Audience
 
                 if (statusCode >= 200 && statusCode < 300)
                 {
+                    // 2xx: server acked, drop the batch, healthy state.
                     _store.Delete(batch);
                     ResetBackoff();
                 }
                 else if (statusCode >= 400 && statusCode < 500)
                 {
+                    // 4xx: server rejected the payload. Drop it (retry won't help) and
+                    // reset backoff — server is healthy, our data was the problem.
                     _store.Delete(batch);
                     ResetBackoff();
                     NotifyError(AudienceErrorCode.ValidationRejected,
@@ -100,16 +111,18 @@ namespace Immutable.Audience
                 }
                 else
                 {
+                    // 5xx (or other non-2xx/4xx): server is unhealthy or the response
+                    // is anomalous. Keep batch on disk, back off, retry later.
                     RecordFailure();
                     NotifyError(AudienceErrorCode.FlushFailed, $"Server error {statusCode}, will retry");
                 }
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
             {
-                // Shutdown requested via cancellation token — don't increment failures,
-                // events stay on disk. HttpClient timeouts throw TaskCanceledException too;
-                // the `when` guard ensures those fall through to the general Exception
-                // handler so backoff and the NetworkError callback fire correctly.
+                // Caller cancelled the token (e.g. on shutdown). Events stay on
+                // disk, no failure recorded. HttpClient timeouts throw the same
+                // exception but without ct.IsCancellationRequested set, so they
+                // fall through to the Exception branch below and trigger backoff.
             }
             catch (Exception ex)
             {
@@ -120,30 +133,25 @@ namespace Immutable.Audience
             return true;
         }
 
-        /// <summary>
-        /// Backoff delay in milliseconds based on consecutive failures.
-        /// Schedule per plan: 0 → 5s → 10s → 20s → 60s cap.
-        /// </summary>
         internal int BackoffMs => _consecutiveFailures switch
         {
             <= 0 => 0,
             1 => 5_000,
             2 => 10_000,
             3 => 20_000,
+            4 => 40_000,
             _ => 60_000,
         };
 
         /// <summary>
-        /// Timestamp after which the next send attempt should run. Null when there's
-        /// no active backoff (never failed, or last attempt succeeded). Callers should
-        /// skip sending while <c>UtcNow &lt; NextAttemptAt</c>.
+        /// Earliest UTC time at which the next attempt may run.
+        /// Null when no backoff is active (never failed, or last attempt succeeded).
         /// </summary>
         internal DateTime? NextAttemptAt => _nextAttemptAt;
 
         /// <summary>
-        /// True if a failure occurred recently and the backoff window has not yet
-        /// elapsed. Becomes false naturally once enough time passes, allowing the
-        /// next send attempt to proceed.
+        /// True while <c>UtcNow &lt; NextAttemptAt</c>. Flips false as the clock
+        /// advances; no reset required.
         /// </summary>
         internal bool IsInBackoffWindow => _getUtcNow() < _nextAttemptAt;
 
@@ -155,13 +163,7 @@ namespace Immutable.Audience
         private void RecordFailure()
         {
             var now = _getUtcNow();
-
-            // If we're still inside the previous backoff window, the caller retried
-            // before honoring the wait. Don't escalate — the existing NextAttemptAt
-            // deadline stands. When _nextAttemptAt is null (no prior failure),
-            // `now < null` is false via lifted nullable comparison, so we escalate.
-            if (now < _nextAttemptAt)
-                return;
+            if (now < _nextAttemptAt) return;  // inside prior window — don't compound backoff
 
             _consecutiveFailures++;
             _nextAttemptAt = now.AddMilliseconds(BackoffMs);
@@ -174,15 +176,14 @@ namespace Immutable.Audience
         }
 
         /// <summary>
-        /// Reads file contents for each path and builds the batch JSON payload:
-        /// <c>{"batch":[msg1,msg2,...]}</c>
+        /// Reads each path and wraps the concatenated JSON bodies in
+        /// <c>{"batch":[msg1,msg2,...]}</c>.
         /// </summary>
         /// <returns>
-        /// The batch JSON string, or <c>null</c> when every path failed to read
-        /// (files disappeared, empty, or locked). The caller treats <c>null</c>
-        /// as "nothing to send" and deletes the path list.
+        /// The batched JSON, or <c>null</c> if every path was unreadable. Caller
+        /// treats <c>null</c> as "nothing to send" and deletes the path list.
         /// </returns>
-        private static string BuildPayload(IReadOnlyList<string> paths)
+        private static string? BuildPayload(IReadOnlyList<string> paths)
         {
             var sb = new StringBuilder("{\"batch\":[");
             var count = 0;
@@ -198,9 +199,11 @@ namespace Immutable.Audience
                 }
                 catch (IOException)
                 {
-                    // File disappeared, locked, or path vanished between ReadBatch
-                    // and now — skip it. Non-IO errors like UnauthorizedAccessException
-                    // indicate real problems and are allowed to propagate.
+                    // Transient disk race: the file was deleted or locked between
+                    // ReadBatch and now. Safe to skip — the remaining paths in the
+                    // batch may still read fine. Non-IOException failures escape
+                    // and are handled by the caller (SendBatchAsync) as a batch-
+                    // wide storage error.
                 }
             }
 
@@ -219,7 +222,8 @@ namespace Immutable.Audience
             }
             catch
             {
-                // Error callback itself threw — swallow to protect the SDK.
+                // Consumer callback threw. Swallow: the SDK must not surface
+                // exceptions through the error-reporting path itself.
             }
         }
     }
