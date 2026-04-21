@@ -31,7 +31,7 @@ namespace Immutable.Audience.Tests
             Assert.IsNotNull(id);
             Assert.IsNotEmpty(id);
 
-            var filePath = Path.Combine(_testDir, "imtbl_audience", "identity");
+            var filePath = AudiencePaths.IdentityFile(_testDir);
             Assert.IsTrue(File.Exists(filePath), "identity file should exist on disk");
         }
 
@@ -40,9 +40,9 @@ namespace Immutable.Audience.Tests
         {
             // Simulate a returning player by pre-writing an identity file (as a previous launch would have done).
             var expectedId = "pre-existing-id-from-last-launch";
-            var dir = Path.Combine(_testDir, "imtbl_audience");
+            var dir = AudiencePaths.AudienceDir(_testDir);
             Directory.CreateDirectory(dir);
-            File.WriteAllText(Path.Combine(dir, "identity"), expectedId);
+            File.WriteAllText(AudiencePaths.IdentityFile(_testDir), expectedId);
 
             var result = Identity.GetOrCreate(_testDir, ConsentLevel.Anonymous);
 
@@ -76,8 +76,29 @@ namespace Immutable.Audience.Tests
 
             Assert.IsNull(id);
 
-            var filePath = Path.Combine(_testDir, "imtbl_audience", "identity");
+            var filePath = AudiencePaths.IdentityFile(_testDir);
             Assert.IsFalse(File.Exists(filePath), "identity file must not be written when consent is None");
+        }
+
+        [Test]
+        public void Get_NoExistingFile_ReturnsNull_AndDoesNotCreate()
+        {
+            var id = Identity.Get(_testDir);
+
+            Assert.IsNull(id);
+            var filePath = AudiencePaths.IdentityFile(_testDir);
+            Assert.IsFalse(File.Exists(filePath), "Get must not create the identity file");
+        }
+
+        [Test]
+        public void Get_ExistingFile_ReturnsPersistedId()
+        {
+            var expectedId = "pre-existing-id";
+            var dir = AudiencePaths.AudienceDir(_testDir);
+            Directory.CreateDirectory(dir);
+            File.WriteAllText(AudiencePaths.IdentityFile(_testDir), expectedId);
+
+            Assert.AreEqual(expectedId, Identity.Get(_testDir));
         }
     }
 }
