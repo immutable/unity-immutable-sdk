@@ -13,13 +13,13 @@ namespace Immutable.Audience
             Dictionary<string, object> properties = null)
         {
             var msg = BuildBase("track", packageVersion);
-            msg["eventName"] = Truncate(eventName, 256);
+            msg["eventName"] = Truncate(eventName, Constants.MaxFieldLength);
 
             if (!string.IsNullOrEmpty(anonymousId))
-                msg["anonymousId"] = Truncate(anonymousId, 256);
+                msg["anonymousId"] = Truncate(anonymousId, Constants.MaxFieldLength);
 
             if (!string.IsNullOrEmpty(userId))
-                msg["userId"] = Truncate(userId, 256);
+                msg["userId"] = Truncate(userId, Constants.MaxFieldLength);
 
             if (properties != null && properties.Count > 0)
                 msg["properties"] = properties;
@@ -37,13 +37,13 @@ namespace Immutable.Audience
             var msg = BuildBase("identify", packageVersion);
 
             if (!string.IsNullOrEmpty(anonymousId))
-                msg["anonymousId"] = Truncate(anonymousId, 256);
+                msg["anonymousId"] = Truncate(anonymousId, Constants.MaxFieldLength);
 
             if (!string.IsNullOrEmpty(userId))
-                msg["userId"] = Truncate(userId, 256);
+                msg["userId"] = Truncate(userId, Constants.MaxFieldLength);
 
             if (!string.IsNullOrEmpty(identityType))
-                msg["identityType"] = Truncate(identityType, 256);
+                msg["identityType"] = Truncate(identityType, Constants.MaxFieldLength);
 
             if (traits != null && traits.Count > 0)
                 msg["traits"] = traits;
@@ -59,10 +59,10 @@ namespace Immutable.Audience
             string packageVersion)
         {
             var msg = BuildBase("alias", packageVersion);
-            msg["fromId"] = Truncate(fromId, 256);
-            msg["fromType"] = Truncate(fromType, 256);
-            msg["toId"] = Truncate(toId, 256);
-            msg["toType"] = Truncate(toType, 256);
+            msg["fromId"] = Truncate(fromId, Constants.MaxFieldLength);
+            msg["fromType"] = Truncate(fromType, Constants.MaxFieldLength);
+            msg["toId"] = Truncate(toId, Constants.MaxFieldLength);
+            msg["toType"] = Truncate(toType, Constants.MaxFieldLength);
             return msg;
         }
 
@@ -76,7 +76,7 @@ namespace Immutable.Audience
                 ["context"] = new Dictionary<string, object>
                 {
                     ["library"] = Constants.LibraryName,
-                    ["libraryVersion"] = Truncate(packageVersion, 256)
+                    ["libraryVersion"] = Truncate(packageVersion, Constants.MaxFieldLength)
                 },
                 ["surface"] = Constants.Surface
             };

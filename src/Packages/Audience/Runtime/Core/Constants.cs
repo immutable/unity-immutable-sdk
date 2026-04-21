@@ -14,10 +14,15 @@ namespace Immutable.Audience
         internal const int DefaultFlushSize = 20;
         internal const int MaxBatchSize = 100;
         internal const int StaleEventDays = 30;
+        internal const int MaxFieldLength = 256; // Backend schema limit.
 
         internal const string LibraryName = "com.immutable.audience";
         internal const string Surface = "unity";
         internal const string ConsentSource = "UnitySDK";
+
+        internal const string PublishableKeyHeader = "x-immutable-publishable-key";
+
+        internal static string MessagesUrl(string publishableKey) => BaseUrl(publishableKey) + MessagesPath;
 
         internal static string BaseUrl(string publishableKey) =>
             publishableKey != null && publishableKey.StartsWith(TestKeyPrefix)

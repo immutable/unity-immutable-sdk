@@ -38,7 +38,7 @@ namespace Immutable.Audience
         {
             _store = store ?? throw new ArgumentNullException(nameof(store));
             _publishableKey = publishableKey ?? throw new ArgumentNullException(nameof(publishableKey));
-            _url = Constants.BaseUrl(publishableKey) + Constants.MessagesPath;
+            _url = Constants.MessagesUrl(publishableKey);
             _onError = onError;
             _client = handler != null ? new HttpClient(handler) : new HttpClient();
             _client.Timeout = TimeSpan.FromSeconds(30);
@@ -78,7 +78,7 @@ namespace Immutable.Audience
             try
             {
                 using var request = new HttpRequestMessage(HttpMethod.Post, _url);
-                request.Headers.Add("x-immutable-publishable-key", _publishableKey);
+                request.Headers.Add(Constants.PublishableKeyHeader, _publishableKey);
 #if IMMUTABLE_AUDIENCE_GZIP
                 var compressed = Gzip.Compress(payload);
                 request.Content = new ByteArrayContent(compressed);
