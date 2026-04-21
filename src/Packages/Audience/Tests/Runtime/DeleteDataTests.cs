@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -142,6 +143,35 @@ namespace Immutable.Audience.Tests
             var identityPath = AudiencePaths.IdentityFile(_testDir);
             Assert.IsFalse(File.Exists(identityPath),
                 "DeleteData must not create the anonymousId file as a side effect");
+        }
+
+        [Test]
+        public async Task DeleteData_ReturnsTask_ThatCompletesAfterRequest()
+        {
+            var handler = new CapturingHandler();
+            ImmutableAudience.Init(MakeConfig(handler));
+
+            var task = ImmutableAudience.DeleteData(userId: "player-42");
+            Assert.IsNotNull(task, "DeleteData must return a non-null Task");
+
+            // Await directly: no need for the RequestSent gate when the task
+            // already represents completion.
+            await task;
+
+            Assert.IsTrue(handler.Requests.Any(r => r.Method == HttpMethod.Delete),
+                "DELETE request must have been sent by the time the task completes");
+        }
+
+        [Test]
+        public void DeleteData_BeforeInit_ReturnsCompletedTask()
+        {
+            // Not initialised — must not throw, must return a completed Task.
+            ImmutableAudience.ResetState();
+
+            var task = ImmutableAudience.DeleteData(userId: "player-42");
+
+            Assert.IsNotNull(task);
+            Assert.IsTrue(task.IsCompleted, "DeleteData before Init must return an already-completed Task");
         }
 
         [Test]

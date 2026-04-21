@@ -292,14 +292,16 @@ namespace Immutable.Audience
             Identity.Reset(config.PersistentDataPath!);
         }
 
-        // Ask the backend to erase this player's data.
-        public static void DeleteData(string? userId = null)
+        // Ask the backend to erase this player's data. Returns a task the
+        // caller can await to know when the request is acknowledged, or
+        // discard for fire-and-forget.
+        public static Task DeleteData(string? userId = null)
         {
-            if (!_initialized) return;
+            if (!_initialized) return Task.CompletedTask;
 
             var config = _config;
             var client = _controlClient;
-            if (config == null || client == null) return;
+            if (config == null || client == null) return Task.CompletedTask;
 
             string query;
             if (!string.IsNullOrEmpty(userId))
@@ -311,7 +313,7 @@ namespace Immutable.Audience
                 // Get, not GetOrCreate — a brand-new install must not register an ID just to delete it.
                 var anonymousId = Identity.Get(config.PersistentDataPath!);
                 if (string.IsNullOrEmpty(anonymousId))
-                    return;
+                    return Task.CompletedTask;
                 query = "anonymousId=" + Uri.EscapeDataString(anonymousId);
             }
 
@@ -320,7 +322,7 @@ namespace Immutable.Audience
             var publishableKey = config.PublishableKey;
             var cancellationToken = _shutdownCancellationSource?.Token ?? CancellationToken.None;
 
-            Task.Run(async () =>
+            return Task.Run(async () =>
             {
                 try
                 {
