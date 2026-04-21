@@ -12,14 +12,14 @@ namespace Immutable.Audience
             string packageVersion,
             Dictionary<string, object> properties = null)
         {
-            var msg = BuildBase("track", packageVersion);
+            var msg = BuildBase(MessageTypes.Track, packageVersion);
             msg["eventName"] = Truncate(eventName, Constants.MaxFieldLength);
 
             if (!string.IsNullOrEmpty(anonymousId))
                 msg["anonymousId"] = Truncate(anonymousId, Constants.MaxFieldLength);
 
             if (!string.IsNullOrEmpty(userId))
-                msg["userId"] = Truncate(userId, Constants.MaxFieldLength);
+                msg[MessageFields.UserId] = Truncate(userId, Constants.MaxFieldLength);
 
             if (properties != null && properties.Count > 0)
                 msg["properties"] = properties;
@@ -34,13 +34,13 @@ namespace Immutable.Audience
             string packageVersion,
             Dictionary<string, object> traits = null)
         {
-            var msg = BuildBase("identify", packageVersion);
+            var msg = BuildBase(MessageTypes.Identify, packageVersion);
 
             if (!string.IsNullOrEmpty(anonymousId))
                 msg["anonymousId"] = Truncate(anonymousId, Constants.MaxFieldLength);
 
             if (!string.IsNullOrEmpty(userId))
-                msg["userId"] = Truncate(userId, Constants.MaxFieldLength);
+                msg[MessageFields.UserId] = Truncate(userId, Constants.MaxFieldLength);
 
             if (!string.IsNullOrEmpty(identityType))
                 msg["identityType"] = Truncate(identityType, Constants.MaxFieldLength);
@@ -58,7 +58,7 @@ namespace Immutable.Audience
             string toType,
             string packageVersion)
         {
-            var msg = BuildBase("alias", packageVersion);
+            var msg = BuildBase(MessageTypes.Alias, packageVersion);
             msg["fromId"] = Truncate(fromId, Constants.MaxFieldLength);
             msg["fromType"] = Truncate(fromType, Constants.MaxFieldLength);
             msg["toId"] = Truncate(toId, Constants.MaxFieldLength);
@@ -70,7 +70,7 @@ namespace Immutable.Audience
         {
             return new Dictionary<string, object>
             {
-                ["type"] = type,
+                [MessageFields.Type] = type,
                 ["messageId"] = Guid.NewGuid().ToString(),
                 ["eventTimestamp"] = DateTime.UtcNow.ToString("o"),
                 ["context"] = new Dictionary<string, object>
