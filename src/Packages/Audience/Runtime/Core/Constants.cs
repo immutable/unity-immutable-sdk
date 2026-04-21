@@ -17,17 +17,36 @@ namespace Immutable.Audience
         internal const int MaxFieldLength = 256; // Backend schema limit.
 
         internal const string LibraryName = "com.immutable.audience";
+        internal const string LibraryVersion = "0.1.0";
         internal const string Surface = "unity";
         internal const string ConsentSource = "UnitySDK";
 
         internal const string PublishableKeyHeader = "x-immutable-publishable-key";
 
         internal static string MessagesUrl(string publishableKey) => BaseUrl(publishableKey) + MessagesPath;
+        internal static string ConsentUrl(string publishableKey) => BaseUrl(publishableKey) + ConsentPath;
+        internal static string DataUrl(string publishableKey) => BaseUrl(publishableKey) + DataPath;
 
         internal static string BaseUrl(string publishableKey) =>
             publishableKey != null && publishableKey.StartsWith(TestKeyPrefix)
                 ? SandboxBaseUrl
                 : ProductionBaseUrl;
+    }
+
+    // Message type values written to (and read back from) the "type" field.
+    internal static class MessageTypes
+    {
+        internal const string Track = "track";
+        internal const string Identify = "identify";
+        internal const string Alias = "alias";
+    }
+
+    // Wire-format field names that cross module boundaries inside the SDK
+    // (read by one module, written by another).
+    internal static class MessageFields
+    {
+        internal const string Type = "type";
+        internal const string UserId = "userId";
     }
 
     // Common distribution platform values for AudienceConfig.DistributionPlatform.

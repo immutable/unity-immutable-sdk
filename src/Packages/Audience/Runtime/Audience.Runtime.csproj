@@ -7,8 +7,12 @@
     <AssemblyName>Immutable.Audience.Runtime</AssemblyName>
   </PropertyGroup>
   <!--
-    Exclude modules that depend on Unity APIs (added in later PRs).
-    These compile fine in Unity but cannot be built with the .NET SDK alone.
-    Update this list as Unity-specific modules are added under Collection/ and Utility/MainThreadDispatcher.cs.
+    The Unity/ subtree belongs to the sibling Immutable.Audience.Unity asmdef.
+    It references UnityEngine, so it cannot build under the headless .NET SDK
+    used for Audience.Tests. Unity's own compiler builds it via
+    Runtime/Unity/com.immutable.audience.unity.asmdef.
   -->
+  <ItemGroup>
+    <Compile Remove="Unity/**/*.cs" />
+  </ItemGroup>
 </Project>
