@@ -1,0 +1,31 @@
+<!--
+IL2CPP link.xml for com.immutable.audience.
+
+Preserves types that IL2CPP might otherwise strip under aggressive
+managed-code stripping. The SDK's own types are kept via full-assembly
+preservation on Immutable.Audience.Runtime; BCL assemblies list only the
+namespaces/types actually reached at runtime (HttpClient pipeline, gzip
+when the scripting define is on).
+
+Regenerate if the transport or serialisation stack gains a new
+framework dependency.
+-->
+<linker>
+  <assembly fullname="Immutable.Audience.Runtime" preserve="all" />
+
+  <assembly fullname="System.Net.Http">
+    <type fullname="System.Net.Http.HttpClient" preserve="all" />
+    <type fullname="System.Net.Http.HttpClientHandler" preserve="all" />
+    <type fullname="System.Net.Http.HttpMessageHandler" preserve="all" />
+    <type fullname="System.Net.Http.HttpRequestMessage" preserve="all" />
+    <type fullname="System.Net.Http.HttpResponseMessage" preserve="all" />
+    <type fullname="System.Net.Http.StringContent" preserve="all" />
+    <type fullname="System.Net.Http.ByteArrayContent" preserve="all" />
+    <type fullname="System.Net.Http.Headers.MediaTypeHeaderValue" preserve="all" />
+  </assembly>
+
+  <assembly fullname="System.IO.Compression">
+    <type fullname="System.IO.Compression.GZipStream" preserve="all" />
+    <type fullname="System.IO.Compression.CompressionLevel" preserve="all" />
+  </assembly>
+</linker>
