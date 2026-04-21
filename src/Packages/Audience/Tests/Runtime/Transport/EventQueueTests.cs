@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using NUnit.Framework;
@@ -26,12 +27,15 @@ namespace Immutable.Audience.Tests
                 Directory.Delete(_testDir, recursive: true);
         }
 
+        private static Dictionary<string, object> Msg(string evt) =>
+            new Dictionary<string, object> { ["event"] = evt };
+
         [Test]
         public void Enqueue_ThenFlushSync_PersistesEventToDisk()
         {
             using var queue = new EventQueue(_store, flushIntervalSeconds: 60, flushSize: 100);
 
-            queue.Enqueue("{\"event\":\"track\"}");
+            queue.Enqueue(Msg("track"));
             queue.FlushSync();
 
             Assert.AreEqual(1, _store.Count(), "event should be on disk after FlushSync");
@@ -43,7 +47,7 @@ namespace Immutable.Audience.Tests
             using var queue = new EventQueue(_store, flushIntervalSeconds: 60, flushSize: 100);
 
             for (var i = 0; i < 10; i++)
-                queue.Enqueue($"{{\"i\":{i}}}");
+                queue.Enqueue(new Dictionary<string, object> { ["i"] = i });
 
             queue.FlushSync();
 
@@ -57,7 +61,7 @@ namespace Immutable.Audience.Tests
             using var queue = new EventQueue(_store, flushIntervalSeconds: 60, flushSize: flushSize);
 
             for (var i = 0; i < flushSize; i++)
-                queue.Enqueue($"{{\"i\":{i}}}");
+                queue.Enqueue(new Dictionary<string, object> { ["i"] = i });
 
             // Give the background thread time to drain
             var deadline = DateTime.UtcNow.AddSeconds(3);
@@ -73,8 +77,8 @@ namespace Immutable.Audience.Tests
         {
             var queue = new EventQueue(_store, flushIntervalSeconds: 60, flushSize: 100);
 
-            queue.Enqueue("{\"event\":\"a\"}");
-            queue.Enqueue("{\"event\":\"b\"}");
+            queue.Enqueue(Msg("a"));
+            queue.Enqueue(Msg("b"));
 
             queue.Shutdown();
 
@@ -95,7 +99,7 @@ namespace Immutable.Audience.Tests
             var queue = new EventQueue(_store, flushIntervalSeconds: 60, flushSize: 100);
             queue.Shutdown();
 
-            queue.Enqueue("{\"event\":\"ignored\"}");
+            queue.Enqueue(Msg("ignored"));
 
             Assert.AreEqual(0, _store.Count(), "events enqueued after Shutdown should be discarded");
         }
@@ -106,7 +110,7 @@ namespace Immutable.Audience.Tests
             // Very short interval to make the test fast
             using var queue = new EventQueue(_store, flushIntervalSeconds: 1, flushSize: 100);
 
-            queue.Enqueue("{\"event\":\"interval_flush\"}");
+            queue.Enqueue(Msg("interval_flush"));
 
             // Wait slightly longer than the flush interval
             var deadline = DateTime.UtcNow.AddSeconds(4);
@@ -121,10 +125,30 @@ namespace Immutable.Audience.Tests
         {
             using (var queue = new EventQueue(_store, flushIntervalSeconds: 60, flushSize: 100))
             {
-                queue.Enqueue("{\"event\":\"dispose_test\"}");
+                queue.Enqueue(Msg("dispose_test"));
             } // Dispose called here
 
             Assert.AreEqual(1, _store.Count(), "Dispose should flush events to disk");
+        }
+
+        [Test]
+        public void SerialisationHappensOnDrainThread_CallerMutationDoesNotCorrupt()
+        {
+            using var queue = new EventQueue(_store, flushIntervalSeconds: 60, flushSize: 100);
+
+            // Caller passes a dict, then -- simulating a misuse -- mutates it
+            // after enqueue but before FlushSync. Because the queue stores the
+            // reference and serialises on drain, the written payload reflects the
+            // mutated state. This test pins down that behaviour so callers know
+            // they must snapshot (which ImmutableAudience.Track does).
+            var shared = new Dictionary<string, object> { ["v"] = 1 };
+            queue.Enqueue(shared);
+            shared["v"] = 99;
+
+            queue.FlushSync();
+
+            var written = File.ReadAllText(_store.ReadBatch(10)[0]);
+            StringAssert.Contains("\"v\":99", written);
         }
     }
 }

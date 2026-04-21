@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 
 namespace Immutable.Audience
@@ -15,12 +17,17 @@ namespace Immutable.Audience
         private readonly int _flushIntervalMs;
         private readonly int _flushSize;
 
-        private readonly ConcurrentQueue<string> _memory = new ConcurrentQueue<string>();
+        // Dictionaries rather than serialised strings: Json.Serialize runs on the drain thread.
+        private readonly ConcurrentQueue<Dictionary<string, object>> _memory
+            = new ConcurrentQueue<Dictionary<string, object>>();
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
         private readonly Thread _drainThread;
         private readonly ManualResetEventSlim _flushGate = new ManualResetEventSlim(false);
 
-        // Volatile so all threads see the shutdown signal immediately.
+        // Serialises drain vs PurgeAll / ApplyAnonymousDowngrade. Without it, a
+        // TryDequeue'd event could hit disk after DeleteAll already cleared it.
+        private readonly object _drainLock = new object();
+
         private volatile bool _disposed;
 
         // store: destination for drained events.
@@ -40,14 +47,34 @@ namespace Immutable.Audience
             _drainThread.Start();
         }
 
-        // Enqueues a JSON-serialised event. Lock-free; safe from any thread.
-        internal void Enqueue(string json)
+        // Enqueues a message dictionary. Lock-free; safe from any thread.
+        // The dictionary is not copied -- callers must not mutate it after
+        // enqueue. Serialisation happens on the drain thread so Track() stays
+        // allocation-light.
+        internal void Enqueue(Dictionary<string, object> msg)
         {
-            if (_disposed) return;
+            if (_disposed || msg == null) return;
 
-            _memory.Enqueue(json);
+            _memory.Enqueue(msg);
 
             // Signal the drain thread early if we've hit the flush-size threshold
+            if (_memory.Count >= _flushSize)
+                _flushGate.Set();
+        }
+
+        // Enqueues under _drainLock, re-checking stillAllowed inside the lock.
+        // Closes the window where a concurrent PurgeAll could complete between
+        // the caller's check and the enqueue, leaking the event past revocation.
+        internal void EnqueueChecked(Dictionary<string, object> msg, Func<bool> stillAllowed)
+        {
+            if (_disposed || msg == null) return;
+
+            lock (_drainLock)
+            {
+                if (stillAllowed != null && !stillAllowed()) return;
+                _memory.Enqueue(msg);
+            }
+
             if (_memory.Count >= _flushSize)
                 _flushGate.Set();
         }
@@ -57,6 +84,40 @@ namespace Immutable.Audience
         internal void FlushSync()
         {
             DrainMemoryToDisk();
+        }
+
+        // Discards every pending event, in-memory and on disk. Used on
+        // consent revocation.
+        internal void PurgeAll()
+        {
+            // Hold _drainLock so the background drain can't sneak a TryDequeue'd
+            // event onto disk after our DeleteAll. See _drainLock declaration for
+            // the full race description.
+            lock (_drainLock)
+            {
+                while (_memory.TryDequeue(out _)) { }
+                _store.DeleteAll();
+            }
+        }
+
+        // Synchronous: a Task.Run offload would race HttpTransport, which
+        // does not take _drainLock, opening a window where userId-bearing
+        // track files could ship during the rewrite.
+        internal void ApplyAnonymousDowngrade()
+        {
+            lock (_drainLock)
+            {
+                // Drain any pending in-memory events first so they hit disk and
+                // get the same filtering as everything already persisted.
+                while (_memory.TryDequeue(out var msg))
+                {
+                    try { _store.Write(Json.Serialize(msg)); }
+                    catch (IOException) { /* best-effort */ }
+                    catch (UnauthorizedAccessException) { /* best-effort */ }
+                }
+
+                _store.ApplyAnonymousDowngrade();
+            }
         }
 
         // Flushes all pending events to disk and stops the drain thread.
@@ -71,7 +132,7 @@ namespace Immutable.Audience
 
             // Signal the drain thread to exit, then wait for it.
             _cts.Cancel();
-            _flushGate.Set();
+            _flushGate.Set(); // Wake drain thread so it exits promptly
             _drainThread.Join(TimeSpan.FromSeconds(5));
 
             // Final drain: anything enqueued before _disposed was set.
@@ -99,15 +160,25 @@ namespace Immutable.Audience
 
         private void DrainMemoryToDisk()
         {
-            while (_memory.TryDequeue(out var json))
+            // Take _drainLock so PurgeAll can't run between our TryDequeue and Write
+            // and leave the just-written event orphaned on disk after the wipe.
+            lock (_drainLock)
             {
-                try
+                while (_memory.TryDequeue(out var msg))
                 {
-                    _store.Write(json);
-                }
-                catch (Exception)
-                {
-                    // Best-effort: if we can't write, discard rather than block the drain
+                    try
+                    {
+                        // Serialise on the drain thread, not on the caller thread —
+                        // keeps Track() lock-free and allocation-light.
+                        _store.Write(Json.Serialize(msg));
+                    }
+                    catch (IOException)
+                    {
+                        // Best-effort: if we can't write, discard rather than block the drain
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                    }
                 }
             }
         }

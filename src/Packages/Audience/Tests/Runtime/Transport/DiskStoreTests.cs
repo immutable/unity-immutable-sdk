@@ -32,7 +32,7 @@ namespace Immutable.Audience.Tests
         {
             _store.Write("{\"event\":\"test\"}");
 
-            var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
+            var queueDir = AudiencePaths.QueueDir(_testDir);
             var files = Directory.GetFiles(queueDir, "*.json");
             Assert.AreEqual(1, files.Length, "should have written exactly one event file");
         }
@@ -43,7 +43,7 @@ namespace Immutable.Audience.Tests
             const string json = "{\"event\":\"pageview\",\"userId\":\"u1\"}";
             _store.Write(json);
 
-            var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
+            var queueDir = AudiencePaths.QueueDir(_testDir);
             var file = Directory.GetFiles(queueDir, "*.json").Single();
             Assert.AreEqual(json, File.ReadAllText(file));
         }
@@ -97,7 +97,7 @@ namespace Immutable.Audience.Tests
             // Manually plant a stale file (ticks from 31 days ago)
             var staleTime = DateTime.UtcNow.AddDays(-(Constants.StaleEventDays + 1));
             var staleName = $"{staleTime.Ticks}_{Guid.NewGuid():N}.json";
-            var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
+            var queueDir = AudiencePaths.QueueDir(_testDir);
             File.WriteAllText(Path.Combine(queueDir, staleName), "{\"stale\":true}");
 
             var batch = _store.ReadBatch(10);
@@ -150,7 +150,7 @@ namespace Immutable.Audience.Tests
         public void CrashRecovery_PicksUpFilesFromPreviousRun()
         {
             // Simulate a previous run by writing a file directly
-            var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
+            var queueDir = AudiencePaths.QueueDir(_testDir);
             var survivingName = $"{DateTime.UtcNow.Ticks}_{Guid.NewGuid():N}.json";
             File.WriteAllText(Path.Combine(queueDir, survivingName), "{\"survived\":true}");
 
@@ -159,6 +159,71 @@ namespace Immutable.Audience.Tests
             var batch = store2.ReadBatch(10);
 
             Assert.AreEqual(1, batch.Count, "crash-surviving file should be picked up on next init");
+        }
+
+        [Test]
+        public void ApplyAnonymousDowngrade_DeletesIdentifyAndAlias_StripsUserIdFromTrack()
+        {
+            _store.Write("{\"type\":\"identify\",\"anonymousId\":\"a\",\"userId\":\"u\"}");
+            _store.Write("{\"type\":\"alias\",\"fromId\":\"a\",\"toId\":\"u\"}");
+            _store.Write("{\"type\":\"track\",\"eventName\":\"x\",\"anonymousId\":\"a\",\"userId\":\"u\"}");
+            _store.Write("{\"type\":\"track\",\"eventName\":\"y\",\"anonymousId\":\"a\"}");
+
+            _store.ApplyAnonymousDowngrade();
+
+            var remaining = _store.ReadBatch(100);
+            Assert.AreEqual(2, remaining.Count, "identify and alias files should be deleted");
+
+            foreach (var path in remaining)
+            {
+                var json = File.ReadAllText(path);
+                var msg = JsonReader.DeserializeObject(json);
+                Assert.AreEqual("track", msg["type"]);
+                Assert.IsFalse(msg.ContainsKey("userId"), "userId must be stripped from queued track messages");
+            }
+        }
+
+        [Test]
+        public void ApplyAnonymousDowngrade_PurchaseValue_RoundsTripsExactlyForRealisticPrices()
+        {
+            // Pinning test: the JsonReader -> Json.Serialize rewrite path
+            // turns decimals into doubles. Assert that the realistic range of
+            // Purchase.Value amounts (typical two-decimal prices, free item,
+            // AAA-tier bundle) survives the rewrite without drift.
+            string[] realisticAmounts = { "0.99", "4.99", "9.99", "19.99", "49.99", "99.99", "149.99" };
+
+            foreach (var amount in realisticAmounts)
+            {
+                // Fresh store per iteration to keep assertions clean.
+                TearDown();
+                SetUp();
+
+                var json = "{\"type\":\"track\",\"eventName\":\"purchase\",\"anonymousId\":\"a\",\"userId\":\"u\","
+                    + "\"properties\":{\"currency\":\"USD\",\"value\":" + amount + "}}";
+                _store.Write(json);
+
+                _store.ApplyAnonymousDowngrade();
+
+                var rewritten = _store.ReadBatch(10);
+                Assert.AreEqual(1, rewritten.Count);
+                var rewrittenJson = File.ReadAllText(rewritten[0]);
+                StringAssert.Contains("\"value\":" + amount, rewrittenJson,
+                    $"Purchase.Value {amount} must round-trip exactly through the downgrade rewrite");
+            }
+        }
+
+        [Test]
+        public void ApplyAnonymousDowngrade_DeletesMalformedFiles()
+        {
+            // Seed the queue directory with a file that is not valid JSON so the
+            // downgrade cannot leave it to potentially leak identified data.
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            var badName = $"{DateTime.UtcNow.Ticks}_{Guid.NewGuid():N}.json";
+            File.WriteAllText(Path.Combine(queueDir, badName), "{not valid json");
+
+            _store.ApplyAnonymousDowngrade();
+
+            Assert.AreEqual(0, _store.ReadBatch(10).Count, "malformed file must not survive downgrade");
         }
     }
 }
