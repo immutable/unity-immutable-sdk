@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 
@@ -31,9 +33,9 @@ namespace Immutable.Audience
         // Required.
         public ProgressionStatus Status { get; set; }
         // Optional.
-        public string World { get; set; }
-        public string Level { get; set; }
-        public string Stage { get; set; }
+        public string? World { get; set; }
+        public string? Level { get; set; }
+        public string? Stage { get; set; }
         public int? Score { get; set; }
         public float? DurationSec { get; set; }
 
@@ -81,16 +83,19 @@ namespace Immutable.Audience
     {
         // Required.
         public ResourceFlow Flow { get; set; }
-        public string Currency { get; set; }
+        public string? Currency { get; set; }
         public float Amount { get; set; }
         // Optional.
-        public string ItemType { get; set; }
-        public string ItemId { get; set; }
+        public string? ItemType { get; set; }
+        public string? ItemId { get; set; }
 
         public string EventName => "resource";
 
         public Dictionary<string, object> ToProperties()
         {
+            if (string.IsNullOrEmpty(Currency))
+                throw new ArgumentException("Resource.Currency must not be null or empty");
+
             var props = new Dictionary<string, object>
             {
                 ["flow"] = Flow.ToLowercaseString(),
@@ -109,21 +114,21 @@ namespace Immutable.Audience
     public class Purchase : IEvent
     {
         // Required. ISO 4217 three-letter uppercase currency code.
-        public string Currency { get; set; }
+        public string? Currency { get; set; }
         // Required.
         public decimal Value { get; set; }
         // Optional.
-        public string ItemId { get; set; }
-        public string ItemName { get; set; }
+        public string? ItemId { get; set; }
+        public string? ItemName { get; set; }
         public int? Quantity { get; set; }
-        public string TransactionId { get; set; }
+        public string? TransactionId { get; set; }
 
         public string EventName => "purchase";
 
         // Hand-rolled to avoid pulling System.Text.RegularExpressions into the IL2CPP build.
         private static bool IsIso4217(string s)
         {
-            if (s == null || s.Length != 3) return false;
+            if (s.Length != 3) return false;
             for (var i = 0; i < 3; i++)
             {
                 var c = s[i];
@@ -134,7 +139,7 @@ namespace Immutable.Audience
 
         public Dictionary<string, object> ToProperties()
         {
-            if (!IsIso4217(Currency))
+            if (Currency == null || !IsIso4217(Currency))
                 throw new ArgumentException(
                     $"Purchase.Currency '{Currency}' must be a three-letter uppercase ISO 4217 code");
 
@@ -157,7 +162,7 @@ namespace Immutable.Audience
     public class MilestoneReached : IEvent
     {
         // Required.
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         public string EventName => "milestone_reached";
 

@@ -1,3 +1,5 @@
+#nullable enable
+
 namespace Immutable.Audience
 {
     internal static class Constants
@@ -23,11 +25,11 @@ namespace Immutable.Audience
 
         internal const string PublishableKeyHeader = "x-immutable-publishable-key";
 
-        internal static string MessagesUrl(string publishableKey) => BaseUrl(publishableKey) + MessagesPath;
-        internal static string ConsentUrl(string publishableKey) => BaseUrl(publishableKey) + ConsentPath;
-        internal static string DataUrl(string publishableKey) => BaseUrl(publishableKey) + DataPath;
+        internal static string MessagesUrl(string? publishableKey) => BaseUrl(publishableKey) + MessagesPath;
+        internal static string ConsentUrl(string? publishableKey) => BaseUrl(publishableKey) + ConsentPath;
+        internal static string DataUrl(string? publishableKey) => BaseUrl(publishableKey) + DataPath;
 
-        internal static string BaseUrl(string publishableKey) =>
+        internal static string BaseUrl(string? publishableKey) =>
             publishableKey != null && publishableKey.StartsWith(TestKeyPrefix)
                 ? SandboxBaseUrl
                 : ProductionBaseUrl;
