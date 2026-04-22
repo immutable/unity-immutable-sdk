@@ -106,6 +106,31 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
+        public void Track_IEventMissingRequiredField_DropsWithWarn()
+        {
+            ImmutableAudience.Init(MakeConfig());
+
+            var lines = new List<string>();
+            Log.Writer = lines.Add;
+            try
+            {
+                // Purchase with no Value set — ToProperties throws; Track must
+                // catch, warn, and drop rather than ship an incomplete event.
+                Assert.DoesNotThrow(() => ImmutableAudience.Track(new Purchase { Currency = "USD" }));
+                Assert.That(lines, Has.Some.Contains("Purchase"));
+                Assert.That(lines, Has.Some.Contains("Dropping"));
+            }
+            finally { Log.Writer = null; }
+
+            ImmutableAudience.Shutdown();
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            var contents = Directory.GetFiles(queueDir, "*.json")
+                .Select(File.ReadAllText).ToList();
+            Assert.IsFalse(contents.Any(c => c.Contains("\"purchase\"")),
+                "purchase event with missing required Value must be dropped, not enqueued");
+        }
+
+        [Test]
         public void Track_NullOrEmptyEventName_DoesNotEnqueue()
         {
             ImmutableAudience.Init(MakeConfig());

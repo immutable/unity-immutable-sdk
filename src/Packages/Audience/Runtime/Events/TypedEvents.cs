@@ -30,8 +30,9 @@ namespace Immutable.Audience
     // Player progressing through a world / level / stage.
     public class Progression : IEvent
     {
-        // Required.
-        public ProgressionStatus Status { get; set; }
+        // Required. Nullable so an unset caller produces a clear validation
+        // error at send time instead of silently shipping the enum default.
+        public ProgressionStatus? Status { get; set; }
         // Optional.
         public string? World { get; set; }
         public string? Level { get; set; }
@@ -43,9 +44,12 @@ namespace Immutable.Audience
 
         public Dictionary<string, object> ToProperties()
         {
+            if (Status is null)
+                throw new ArgumentException("Progression.Status is required — set it before calling Track(IEvent)");
+
             var props = new Dictionary<string, object>
             {
-                ["status"] = Status.ToLowercaseString()
+                ["status"] = Status.Value.ToLowercaseString()
             };
 
             if (World != null) props["world"] = World;
@@ -81,10 +85,12 @@ namespace Immutable.Audience
     // In-game currency earned or spent.
     public class Resource : IEvent
     {
-        // Required.
-        public ResourceFlow Flow { get; set; }
+        // Required. Nullable so an unset caller produces a clear validation
+        // error at send time instead of silently shipping the enum / zero
+        // default.
+        public ResourceFlow? Flow { get; set; }
         public string? Currency { get; set; }
-        public float Amount { get; set; }
+        public float? Amount { get; set; }
         // Optional.
         public string? ItemType { get; set; }
         public string? ItemId { get; set; }
@@ -93,14 +99,18 @@ namespace Immutable.Audience
 
         public Dictionary<string, object> ToProperties()
         {
+            if (Flow is null)
+                throw new ArgumentException("Resource.Flow is required — set it before calling Track(IEvent)");
             if (string.IsNullOrEmpty(Currency))
-                throw new ArgumentException("Resource.Currency must not be null or empty");
+                throw new ArgumentException("Resource.Currency is required — set a non-empty string before calling Track(IEvent)");
+            if (Amount is null)
+                throw new ArgumentException("Resource.Amount is required — set it before calling Track(IEvent)");
 
             var props = new Dictionary<string, object>
             {
-                ["flow"] = Flow.ToLowercaseString(),
+                ["flow"] = Flow.Value.ToLowercaseString(),
                 ["currency"] = Currency,
-                ["amount"] = Amount
+                ["amount"] = Amount.Value
             };
 
             if (ItemType != null) props["itemType"] = ItemType;
@@ -115,8 +125,10 @@ namespace Immutable.Audience
     {
         // Required. ISO 4217 three-letter uppercase currency code.
         public string? Currency { get; set; }
-        // Required.
-        public decimal Value { get; set; }
+        // Required. Nullable so an unset caller produces a clear validation
+        // error at send time instead of silently shipping a zero-value
+        // purchase that breaks attribution and conversion reporting.
+        public decimal? Value { get; set; }
         // Optional.
         public string? ItemId { get; set; }
         public string? ItemName { get; set; }
@@ -142,11 +154,13 @@ namespace Immutable.Audience
             if (Currency == null || !IsIso4217(Currency))
                 throw new ArgumentException(
                     $"Purchase.Currency '{Currency}' must be a three-letter uppercase ISO 4217 code");
+            if (Value is null)
+                throw new ArgumentException("Purchase.Value is required — set it before calling Track(IEvent)");
 
             var props = new Dictionary<string, object>
             {
                 ["currency"] = Currency,
-                ["value"] = Value
+                ["value"] = Value.Value
             };
 
             if (ItemId != null) props["itemId"] = ItemId;

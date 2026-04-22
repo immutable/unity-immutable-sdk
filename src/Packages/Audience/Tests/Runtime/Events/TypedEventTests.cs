@@ -1,3 +1,4 @@
+using System;
 using NUnit.Framework;
 
 namespace Immutable.Audience.Tests
@@ -9,6 +10,15 @@ namespace Immutable.Audience.Tests
         public void Progression_EventName_IsProgression()
         {
             Assert.AreEqual("progression", new Progression().EventName);
+        }
+
+        [Test]
+        public void Progression_WithoutStatus_ThrowsOnToProperties()
+        {
+            var evt = new Progression { World = "tutorial" };
+
+            var ex = Assert.Throws<ArgumentException>(() => evt.ToProperties());
+            Assert.That(ex!.Message, Does.Contain("Status"));
         }
 
         [Test]
@@ -73,6 +83,33 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
+        public void Resource_WithoutFlow_ThrowsOnToProperties()
+        {
+            var evt = new Resource { Currency = "gold", Amount = 100 };
+
+            var ex = Assert.Throws<ArgumentException>(() => evt.ToProperties());
+            Assert.That(ex!.Message, Does.Contain("Flow"));
+        }
+
+        [Test]
+        public void Resource_WithoutCurrency_ThrowsOnToProperties()
+        {
+            var evt = new Resource { Flow = ResourceFlow.Source, Amount = 100 };
+
+            var ex = Assert.Throws<ArgumentException>(() => evt.ToProperties());
+            Assert.That(ex!.Message, Does.Contain("Currency"));
+        }
+
+        [Test]
+        public void Resource_WithoutAmount_ThrowsOnToProperties()
+        {
+            var evt = new Resource { Flow = ResourceFlow.Source, Currency = "gold" };
+
+            var ex = Assert.Throws<ArgumentException>(() => evt.ToProperties());
+            Assert.That(ex!.Message, Does.Contain("Amount"));
+        }
+
+        [Test]
         public void Purchase_ProducesCorrectProperties()
         {
             var evt = new Purchase
@@ -112,6 +149,24 @@ namespace Immutable.Audience.Tests
         public void Purchase_EventName_IsPurchase()
         {
             Assert.AreEqual("purchase", new Purchase().EventName);
+        }
+
+        [Test]
+        public void Purchase_WithoutCurrency_ThrowsOnToProperties()
+        {
+            var evt = new Purchase { Value = 9.99m };
+
+            var ex = Assert.Throws<ArgumentException>(() => evt.ToProperties());
+            Assert.That(ex!.Message, Does.Contain("Currency"));
+        }
+
+        [Test]
+        public void Purchase_WithoutValue_ThrowsOnToProperties()
+        {
+            var evt = new Purchase { Currency = "USD" };
+
+            var ex = Assert.Throws<ArgumentException>(() => evt.ToProperties());
+            Assert.That(ex!.Message, Does.Contain("Value"));
         }
 
         [Test]

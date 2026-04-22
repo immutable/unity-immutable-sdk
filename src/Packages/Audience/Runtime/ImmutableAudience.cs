@@ -138,11 +138,14 @@ namespace Immutable.Audience
 
         // Send a custom event.
         //
-        // For predefined event names (e.g. purchase), prefer the typed
-        // overload Track(new Purchase { ... }) — it enforces required fields
-        // and value types at compile time. This overload does not validate
-        // property shapes, so missing or mistyped fields can break
-        // attribution/conversion reporting.
+        // For predefined event names (e.g. purchase, progression, resource,
+        // milestone_reached), prefer the typed overload —
+        // Track(new Purchase { Currency = "USD", Value = 9.99m }) — which
+        // validates required fields at send time. This overload accepts any
+        // property shape and does not: Track("purchase", new Dictionary...)
+        // that omits currency or value still enqueues and ships, but breaks
+        // attribution and conversion reporting downstream because the
+        // payload is missing the fields CDP needs to reconstruct the event.
         public static void Track(string eventName, Dictionary<string, object>? properties = null)
         {
             if (!CanTrack()) return;
