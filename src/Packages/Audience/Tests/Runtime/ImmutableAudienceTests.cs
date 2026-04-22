@@ -141,7 +141,7 @@ namespace Immutable.Audience.Tests
             Assert.Throws<ArgumentOutOfRangeException>(
                 () => ImmutableAudience.Identify("user1", invalid),
                 "invalid enum cast must throw so a broken call fails loud rather than " +
-                "shipping an identify event CDP cannot match for deletion");
+                "shipping an identify event that cannot be matched for deletion");
         }
 
         [Test]
@@ -154,7 +154,7 @@ namespace Immutable.Audience.Tests
             Assert.Throws<ArgumentOutOfRangeException>(
                 () => ImmutableAudience.Alias("fromId", invalid, "toId", IdentityType.Steam),
                 "invalid enum cast must throw so a broken alias call fails loud rather " +
-                "than shipping an event CDP cannot match for deletion");
+                "than shipping an event that cannot be matched for deletion");
         }
 
         [Test]
