@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.IO;
 
@@ -12,12 +14,12 @@ namespace Immutable.Audience
     internal sealed class Identity
     {
         // In-memory cache — volatile so background threads always see the latest write.
-        private static volatile string _cachedId;
+        private static volatile string? _cachedId;
         private static readonly object _sync = new object();
 
         // Returns the existing anonymous ID, or null if none exists.
         // Unlike GetOrCreate, never generates or persists a new one.
-        internal static string Get(string persistentDataPath)
+        internal static string? Get(string persistentDataPath)
         {
             if (_cachedId != null) return _cachedId;
 
@@ -58,7 +60,7 @@ namespace Immutable.Audience
         // Returns the anonymous ID, generating and persisting it on first call.
         // Returns null without touching disk when consent is None.
         // Safe to call from any thread after ImmutableAudience.Init() has run on the main thread.
-        internal static string GetOrCreate(string persistentDataPath, ConsentLevel consent)
+        internal static string? GetOrCreate(string persistentDataPath, ConsentLevel consent)
         {
             // No ID until the player grants at least anonymous consent.
             if (consent == ConsentLevel.None)

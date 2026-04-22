@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 
@@ -7,10 +9,10 @@ namespace Immutable.Audience
     {
         internal static Dictionary<string, object> Track(
             string eventName,
-            string anonymousId,
-            string userId,
+            string? anonymousId,
+            string? userId,
             string packageVersion,
-            Dictionary<string, object> properties = null)
+            Dictionary<string, object>? properties = null)
         {
             var msg = BuildBase(MessageTypes.Track, packageVersion);
             msg["eventName"] = Truncate(eventName, Constants.MaxFieldLength);
@@ -22,17 +24,20 @@ namespace Immutable.Audience
                 msg[MessageFields.UserId] = Truncate(userId, Constants.MaxFieldLength);
 
             if (properties != null && properties.Count > 0)
+            {
+                TruncateStringValues(properties);
                 msg["properties"] = properties;
+            }
 
             return msg;
         }
 
         internal static Dictionary<string, object> Identify(
-            string anonymousId,
-            string userId,
-            string identityType,
+            string? anonymousId,
+            string? userId,
+            string? identityType,
             string packageVersion,
-            Dictionary<string, object> traits = null)
+            Dictionary<string, object>? traits = null)
         {
             var msg = BuildBase(MessageTypes.Identify, packageVersion);
 
@@ -46,7 +51,10 @@ namespace Immutable.Audience
                 msg["identityType"] = Truncate(identityType, Constants.MaxFieldLength);
 
             if (traits != null && traits.Count > 0)
+            {
+                TruncateStringValues(traits);
                 msg["traits"] = traits;
+            }
 
             return msg;
         }
@@ -84,9 +92,20 @@ namespace Immutable.Audience
 
         private static string Truncate(string s, int maxLen)
         {
-            if (s == null || s.Length <= maxLen)
+            if (s.Length <= maxLen)
                 return s;
             return s.Substring(0, maxLen);
+        }
+
+        private static void TruncateStringValues(Dictionary<string, object> dict)
+        {
+            // Snapshot keys to avoid mutating the collection during iteration.
+            var keys = new List<string>(dict.Keys);
+            foreach (var key in keys)
+            {
+                if (dict[key] is string s && s.Length > Constants.MaxFieldLength)
+                    dict[key] = Truncate(s, Constants.MaxFieldLength);
+            }
         }
     }
 }
