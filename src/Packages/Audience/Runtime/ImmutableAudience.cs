@@ -41,7 +41,7 @@ namespace Immutable.Audience
 
         // AudienceUnityHooks sets this so game_launch can auto-include
         // Unity context without the core referencing UnityEngine.
-        internal static Func<Dictionary<string, object>> LaunchContextProvider;
+        internal static Func<Dictionary<string, object>>? LaunchContextProvider;
 
         // Starts the SDK. Call once at launch.
         public static void Init(AudienceConfig config)
@@ -672,7 +672,7 @@ namespace Immutable.Audience
             var provider = LaunchContextProvider;
             if (provider != null)
             {
-                Dictionary<string, object> unityContext = null;
+                Dictionary<string, object>? unityContext = null;
                 try { unityContext = provider(); }
                 catch (Exception ex)
                 {
