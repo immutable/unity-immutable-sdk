@@ -229,7 +229,16 @@ namespace Immutable.Audience
             Enqueue(msg);
         }
 
-        // Forget the current user id and rotate the anonymous id.
+        // Log out the current player. Clears the user id, generates a fresh
+        // anonymous id, and discards queued events (in-memory and on-disk)
+        // so the next player on this device isn't attributed to the previous
+        // one.
+        //
+        // To send queued events before they're discarded,
+        // invoke await FlushAsync() first:
+        //
+        //     await ImmutableAudience.FlushAsync();
+        //     ImmutableAudience.Reset();
         public static void Reset()
         {
             if (!_initialized) return;
@@ -238,6 +247,7 @@ namespace Immutable.Audience
             if (config == null) return;
 
             _userId = null;
+            _queue?.PurgeAll();
             Identity.Reset(config.PersistentDataPath!);
         }
 

@@ -431,6 +431,24 @@ namespace Immutable.Audience.Tests
             Assert.AreNotEqual(id1, id2, "Reset should generate a new anonymousId");
         }
 
+        [Test]
+        public void Reset_DiscardsQueuedEventsOnDisk()
+        {
+            ImmutableAudience.Init(MakeConfig());
+
+            ImmutableAudience.Track("before_reset");
+            ImmutableAudience.FlushQueueToDiskForTesting();
+
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            Assert.Greater(Directory.GetFiles(queueDir, "*.json").Length, 0,
+                "precondition: queued event should be on disk before reset");
+
+            ImmutableAudience.Reset();
+
+            Assert.AreEqual(0, Directory.GetFiles(queueDir, "*.json").Length,
+                "Reset must discard queued events on disk to match the Web SDK");
+        }
+
         // -----------------------------------------------------------------
         // SetConsent — purge + persistence
         // -----------------------------------------------------------------
