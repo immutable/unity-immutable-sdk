@@ -192,7 +192,7 @@ namespace Immutable.Audience
                 Log.Warn("Identify called with null or empty userId — dropping.");
                 return;
             }
-            if (_consent != ConsentLevel.Full)
+            if (!_consent.CanIdentify())
             {
                 Log.Warn($"Identify discarded — requires Full consent, current is {_consent}");
                 return;
@@ -227,7 +227,7 @@ namespace Immutable.Audience
                 Log.Warn("Alias called with null or empty fromId/toId — dropping.");
                 return;
             }
-            if (_consent != ConsentLevel.Full)
+            if (!_consent.CanIdentify())
             {
                 Log.Warn($"Alias discarded — requires Full consent, current is {_consent}");
                 return;
@@ -556,7 +556,7 @@ namespace Immutable.Audience
 
         private static bool CanTrack()
         {
-            return _initialized && _consent != ConsentLevel.None;
+            return _initialized && _consent.CanTrack();
         }
 
         // Shallow-copy the caller's dict so a post-call mutation cannot race the drain-thread serialiser.
@@ -570,7 +570,7 @@ namespace Immutable.Audience
 
             // Re-check consent inside the drain lock so a SetConsent(None) racing
             // the caller's CanTrack cannot leak this event past the purge.
-            queue.EnqueueChecked(msg, () => _consent != ConsentLevel.None);
+            queue.EnqueueChecked(msg, () => _consent.CanTrack());
         }
 
         private static void SendBatch()
@@ -632,7 +632,7 @@ namespace Immutable.Audience
         // landing between Init returning and here still drops the event.
         private static void FireGameLaunch(AudienceConfig config, ConsentLevel consentAtInit)
         {
-            if (consentAtInit == ConsentLevel.None) return;
+            if (!consentAtInit.CanTrack()) return;
 
             var properties = new Dictionary<string, object>();
 
