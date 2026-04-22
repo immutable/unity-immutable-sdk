@@ -17,10 +17,12 @@ namespace Immutable.Audience
 
     internal static class IdentityTypeExtensions
     {
-        // Returns null on unknown casts. The string overloads of Identify /
-        // Alias check for null/empty and drop + warn, so an out-of-range
-        // cast surfaces as a dropped event, not a corrupt wire payload.
-        internal static string? ToLowercaseString(this IdentityType type) => type switch
+        // Throws on unknown casts. The CDP pipeline requires identityType on
+        // every identify / alias event to match records to the correct
+        // identity namespace during data deletion, so an out-of-range cast
+        // must fail loudly rather than ship an event with a missing or
+        // empty namespace.
+        internal static string ToLowercaseString(this IdentityType type) => type switch
         {
             IdentityType.Passport => "passport",
             IdentityType.Steam => "steam",
@@ -30,7 +32,8 @@ namespace Immutable.Audience
             IdentityType.Discord => "discord",
             IdentityType.Email => "email",
             IdentityType.Custom => "custom",
-            _ => null,
+            _ => throw new System.ArgumentOutOfRangeException(nameof(type), type,
+                "Unknown IdentityType value; cast an out-of-range value."),
         };
     }
 }

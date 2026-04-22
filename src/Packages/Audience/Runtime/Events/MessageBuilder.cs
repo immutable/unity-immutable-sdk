@@ -35,7 +35,7 @@ namespace Immutable.Audience
         internal static Dictionary<string, object> Identify(
             string? anonymousId,
             string? userId,
-            string? identityType,
+            string identityType,
             string packageVersion,
             Dictionary<string, object>? traits = null)
         {
@@ -47,8 +47,7 @@ namespace Immutable.Audience
             if (!string.IsNullOrEmpty(userId))
                 msg[MessageFields.UserId] = Truncate(userId, Constants.MaxFieldLength);
 
-            if (!string.IsNullOrEmpty(identityType))
-                msg["identityType"] = Truncate(identityType, Constants.MaxFieldLength);
+            msg["identityType"] = Truncate(identityType, Constants.MaxFieldLength);
 
             if (traits != null && traits.Count > 0)
             {

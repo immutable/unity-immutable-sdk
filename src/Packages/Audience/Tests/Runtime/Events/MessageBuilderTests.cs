@@ -75,7 +75,7 @@ namespace Immutable.Audience.Tests
         public void AllMessages_ContextContainsLibraryAndLibraryVersion()
         {
             var track = MessageBuilder.Track("evt", null, null, PackageVersion);
-            var identify = MessageBuilder.Identify(null, "u1", null, PackageVersion);
+            var identify = MessageBuilder.Identify(null, "u1", "steam", PackageVersion);
             var alias = MessageBuilder.Alias("f", "t1", "t", "t2", PackageVersion);
 
             foreach (var msg in new[] { track, identify, alias })
@@ -90,7 +90,7 @@ namespace Immutable.Audience.Tests
         public void AllMessages_SurfaceIsUnity()
         {
             var track = MessageBuilder.Track("evt", null, null, PackageVersion);
-            var identify = MessageBuilder.Identify(null, "u1", null, PackageVersion);
+            var identify = MessageBuilder.Identify(null, "u1", "steam", PackageVersion);
             var alias = MessageBuilder.Alias("f", "t1", "t", "t2", PackageVersion);
 
             Assert.AreEqual("unity", track["surface"]);

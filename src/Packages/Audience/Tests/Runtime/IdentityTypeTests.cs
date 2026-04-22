@@ -1,3 +1,4 @@
+using System;
 using NUnit.Framework;
 
 namespace Immutable.Audience.Tests
@@ -19,14 +20,15 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
-        public void ToLowercaseString_UnknownValue_ReturnsNull()
+        public void ToLowercaseString_UnknownValue_Throws()
         {
-            // Never-throw contract: an out-of-range cast should not surface an
-            // exception on the game thread. Callers drop the event via their
-            // null/empty check instead.
+            // CDP matches identify / alias events by identityType during data
+            // deletion; an out-of-range cast would otherwise ship an event
+            // with an empty namespace that CDP cannot clean up. Fail loud so
+            // the programmer error surfaces at the call site instead.
             var invalid = (IdentityType)999;
 
-            Assert.IsNull(invalid.ToLowercaseString());
+            Assert.Throws<ArgumentOutOfRangeException>(() => invalid.ToLowercaseString());
         }
     }
 }
