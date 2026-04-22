@@ -65,7 +65,7 @@ namespace Immutable.Audience
                 _controlClient = config.HttpHandler != null
                     ? new HttpClient(config.HttpHandler, disposeHandler: false)
                     : new HttpClient();
-                _controlClient.Timeout = TimeSpan.FromSeconds(30);
+                _controlClient.Timeout = TimeSpan.FromSeconds(Constants.ControlPlaneRequestTimeoutSeconds);
                 _shutdownCancellationSource = new CancellationTokenSource();
 
                 // Disk → network timer. EventQueue owns the separate memory → disk drain.
