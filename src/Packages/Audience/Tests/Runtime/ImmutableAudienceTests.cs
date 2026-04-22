@@ -850,5 +850,56 @@ namespace Immutable.Audience.Tests
             Assert.IsFalse(trackFiles[0].ContainsKey("userId"),
                 "Track under Anonymous consent must not carry userId");
         }
+
+        // -----------------------------------------------------------------
+        // SendBatch — overlapping timer tick guard
+        // -----------------------------------------------------------------
+
+        [Test]
+        public void SendBatch_ConcurrentTicks_OnlyOneReachesTransport()
+        {
+            var handler = new BlockingHandler();
+            var config = MakeConfig();
+            config.HttpHandler = handler;
+
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Track("event_to_send");
+            ImmutableAudience.FlushQueueToDiskForTesting();
+
+            // Kick off one SendBatch on a worker — it will block inside the
+            // handler until we signal, holding _sendInFlight = 1.
+            var blocked = Task.Run(() => ImmutableAudience.SendBatchForTesting());
+
+            // Give the worker enough time to enter the handler's SendAsync.
+            Assert.IsTrue(handler.EnteredSendAsync.Wait(TimeSpan.FromSeconds(2)),
+                "first SendBatch should have reached the HTTP handler");
+
+            // Second tick while the first is still in flight — must return
+            // immediately without issuing another request.
+            ImmutableAudience.SendBatchForTesting();
+
+            // Release the blocked send and let it finish.
+            handler.Release.Set();
+            Assert.IsTrue(blocked.Wait(TimeSpan.FromSeconds(5)),
+                "blocked SendBatch should finish after release");
+
+            Assert.AreEqual(1, handler.RequestCount,
+                "overlapping tick must not issue a second HTTP request");
+        }
+
+        private class BlockingHandler : HttpMessageHandler
+        {
+            public readonly ManualResetEventSlim EnteredSendAsync = new ManualResetEventSlim(false);
+            public readonly ManualResetEventSlim Release = new ManualResetEventSlim(false);
+            public int RequestCount;
+
+            protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
+            {
+                Interlocked.Increment(ref RequestCount);
+                EnteredSendAsync.Set();
+                await Task.Run(() => Release.Wait(ct), ct).ConfigureAwait(false);
+                return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
+            }
+        }
     }
 }
