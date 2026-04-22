@@ -171,7 +171,11 @@ namespace Immutable.Audience
 
         // Attach a known user id to subsequent events. String overload for
         // providers not in IdentityType.
-        public static void Identify(string userId, string? identityType, Dictionary<string, object>? traits = null)
+        //
+        // identityType is required: CDP uses it to match identify events to
+        // the correct identity namespace when processing data-deletion
+        // requests, so an event without one cannot be cleaned up.
+        public static void Identify(string userId, string identityType, Dictionary<string, object>? traits = null)
         {
             if (!_initialized) return;
 
@@ -179,11 +183,6 @@ namespace Immutable.Audience
             if (string.IsNullOrEmpty(userId))
             {
                 Log.Warn("Identify called with null or empty userId — dropping.");
-                return;
-            }
-            if (string.IsNullOrEmpty(identityType))
-            {
-                Log.Warn("Identify called with null or empty identityType — dropping.");
                 return;
             }
             if (_consent != ConsentLevel.Full)
@@ -209,18 +208,17 @@ namespace Immutable.Audience
 
         // Link two user ids for the same player. String overload for
         // providers not in IdentityType.
-        public static void Alias(string fromId, string? fromType, string toId, string? toType)
+        //
+        // fromType and toType are required: CDP uses them to match alias
+        // events to the correct identity namespaces when processing
+        // data-deletion requests.
+        public static void Alias(string fromId, string fromType, string toId, string toType)
         {
             if (!_initialized) return;
 
             if (string.IsNullOrEmpty(fromId) || string.IsNullOrEmpty(toId))
             {
                 Log.Warn("Alias called with null or empty fromId/toId — dropping.");
-                return;
-            }
-            if (string.IsNullOrEmpty(fromType) || string.IsNullOrEmpty(toType))
-            {
-                Log.Warn("Alias called with null or empty fromType/toType — dropping.");
                 return;
             }
             if (_consent != ConsentLevel.Full)

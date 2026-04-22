@@ -132,36 +132,29 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
-        public void Identify_InvalidIdentityTypeCast_DoesNotThrow_AndDropsEvent()
+        public void Identify_InvalidIdentityTypeCast_Throws()
         {
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
 
             var invalid = (IdentityType)999;
 
-            Assert.DoesNotThrow(() => ImmutableAudience.Identify("user1", invalid));
-
-            ImmutableAudience.Shutdown();
-            var queueDir = AudiencePaths.QueueDir(_testDir);
-            var contents = Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText);
-            Assert.IsFalse(contents.Any(c => c.Contains("\"identify\"")),
-                "invalid enum cast must drop the identify event, not enqueue it");
+            Assert.Throws<ArgumentOutOfRangeException>(
+                () => ImmutableAudience.Identify("user1", invalid),
+                "invalid enum cast must throw so a broken call fails loud rather than " +
+                "shipping an identify event CDP cannot match for deletion");
         }
 
         [Test]
-        public void Alias_InvalidIdentityTypeCast_DoesNotThrow_AndDropsEvent()
+        public void Alias_InvalidIdentityTypeCast_Throws()
         {
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
 
             var invalid = (IdentityType)999;
 
-            Assert.DoesNotThrow(() =>
-                ImmutableAudience.Alias("fromId", invalid, "toId", IdentityType.Steam));
-
-            ImmutableAudience.Shutdown();
-            var queueDir = AudiencePaths.QueueDir(_testDir);
-            var contents = Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText);
-            Assert.IsFalse(contents.Any(c => c.Contains("\"alias\"")),
-                "invalid enum cast must drop the alias event, not enqueue it");
+            Assert.Throws<ArgumentOutOfRangeException>(
+                () => ImmutableAudience.Alias("fromId", invalid, "toId", IdentityType.Steam),
+                "invalid enum cast must throw so a broken alias call fails loud rather " +
+                "than shipping an event CDP cannot match for deletion");
         }
 
         [Test]
