@@ -207,36 +207,6 @@ namespace Immutable.Audience
             Enqueue(msg);
         }
 
-        // Attach or update traits for the current anonymous user without
-        // supplying a user id. Useful when only the anonymous profile is
-        // known, or when only traits have changed since a prior Identify().
-        //
-        // Does not modify the current user id — a subsequent Track() still
-        // carries whatever id was set by a previous Identify(userId, ...) call.
-        public static void Identify(Dictionary<string, object> traits)
-        {
-            if (!_initialized) return;
-
-            if (traits == null)
-            {
-                Log.Warn("Identify(traits) called with null traits — dropping.");
-                return;
-            }
-            if (_consent != ConsentLevel.Full)
-            {
-                Log.Warn($"Identify discarded — requires Full consent, current is {_consent}");
-                return;
-            }
-
-            var config = _config;
-            if (config == null) return;
-
-            var anonymousId = Identity.GetOrCreate(config.PersistentDataPath!, _consent);
-            var msg = MessageBuilder.Identify(anonymousId, userId: null, identityType: null,
-                config.PackageVersion, SnapshotCallerDict(traits));
-            Enqueue(msg);
-        }
-
         // Link two user ids for the same player.
         public static void Alias(string fromId, IdentityType fromType, string toId, IdentityType toType) =>
             Alias(fromId, fromType.ToLowercaseString(), toId, toType.ToLowercaseString());
