@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -317,7 +318,7 @@ namespace Immutable.Audience
                 // PersistentDataPath is validated non-null in Init; compiler can't propagate that.
                 ConsentStore.Save(config.PersistentDataPath!, level);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
             {
                 Log.Warn($"SetConsent — failed to persist consent level: {ex.GetType().Name}: {ex.Message}. " +
                          "In-memory level is updated but will revert on next launch.");
