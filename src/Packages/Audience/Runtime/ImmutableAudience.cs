@@ -176,9 +176,9 @@ namespace Immutable.Audience
         // Attach a known user id to subsequent events. String overload for
         // providers not in IdentityType.
         //
-        // identityType is required: CDP uses it to match identify events to
-        // the correct identity namespace when processing data-deletion
-        // requests, so an event without one cannot be cleaned up.
+        // identityType is required: data-deletion processing relies on it to
+        // match identify events to the correct identity namespace, so an
+        // event without one cannot be cleaned up.
         public static void Identify(string userId, string identityType, Dictionary<string, object>? traits = null)
         {
             if (!_initialized) return;
@@ -213,9 +213,8 @@ namespace Immutable.Audience
         // Link two user ids for the same player. String overload for
         // providers not in IdentityType.
         //
-        // fromType and toType are required: CDP uses them to match alias
-        // events to the correct identity namespaces when processing
-        // data-deletion requests.
+        // fromType and toType are required: data-deletion processing uses
+        // them to match alias events to the correct identity namespaces.
         public static void Alias(string fromId, string fromType, string toId, string toType)
         {
             if (!_initialized) return;

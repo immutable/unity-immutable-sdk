@@ -22,10 +22,15 @@ namespace Immutable.Audience.Tests
         [Test]
         public void ToLowercaseString_UnknownValue_Throws()
         {
-            // CDP matches identify / alias events by identityType during data
-            // deletion; an out-of-range cast would otherwise ship an event
-            // with an empty namespace that CDP cannot clean up. Fail loud so
-            // the programmer error surfaces at the call site instead.
+            // An out-of-range cast like `(IdentityType)999` must throw.
+            // ToLowercaseString emits the "identityType" string on every
+            // identify / alias event (e.g. "passport"), and the backend uses
+            // that string to find and delete a user's events on request.
+            //
+            // An unknown enum value must throw so the bug surfaces at the
+            // cast site. Returning a default string instead would ship the
+            // event with a blank identityType — invisible to the deletion
+            // lookup — and hide the bug.
             var invalid = (IdentityType)999;
 
             Assert.Throws<ArgumentOutOfRangeException>(() => invalid.ToLowercaseString());

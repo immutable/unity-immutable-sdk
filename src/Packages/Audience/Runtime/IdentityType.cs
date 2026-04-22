@@ -17,11 +17,10 @@ namespace Immutable.Audience
 
     internal static class IdentityTypeExtensions
     {
-        // Throws on unknown casts. The CDP pipeline requires identityType on
-        // every identify / alias event to match records to the correct
-        // identity namespace during data deletion, so an out-of-range cast
-        // must fail loudly rather than ship an event with a missing or
-        // empty namespace.
+        // Throws on unknown casts. Every identify / alias event must carry an
+        // identityType so downstream data-deletion requests can match records
+        // to the correct identity namespace; an out-of-range cast must fail
+        // loudly rather than ship an event with a missing or empty namespace.
         internal static string ToLowercaseString(this IdentityType type) => type switch
         {
             IdentityType.Passport => "passport",
