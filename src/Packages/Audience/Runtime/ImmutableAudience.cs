@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -11,14 +13,14 @@ namespace Immutable.Audience
     {
         // Reference fields are written inside _initLock; readers fence off the volatile _initialized load.
         // _consent and _userId are mutated outside the lock and need volatile themselves.
-        private static AudienceConfig _config;
-        private static DiskStore _store;
-        private static EventQueue _queue;
-        private static HttpTransport _transport;
-        private static HttpClient _controlClient;
-        private static Timer _sendTimer;
+        private static AudienceConfig? _config;
+        private static DiskStore? _store;
+        private static EventQueue? _queue;
+        private static HttpTransport? _transport;
+        private static HttpClient? _controlClient;
+        private static Timer? _sendTimer;
         private static volatile ConsentLevel _consent;
-        private static volatile string _userId;
+        private static volatile string? _userId;
         private static volatile bool _initialized;
         private static readonly object _initLock = new object();
 
@@ -26,7 +28,7 @@ namespace Immutable.Audience
         // can omit PersistentDataPath from AudienceConfig and Init will fill it
         // from Application.persistentDataPath. Non-Unity callers must still set
         // PersistentDataPath on the config.
-        internal static Func<string> DefaultPersistentDataPathProvider;
+        internal static Func<string>? DefaultPersistentDataPathProvider;
 
         // Starts the SDK. Call once at launch.
         public static void Init(AudienceConfig config)
@@ -112,14 +114,14 @@ namespace Immutable.Audience
                 return;
             }
 
-            var anonymousId = Identity.GetOrCreate(config.PersistentDataPath, _consent);
+            var anonymousId = Identity.GetOrCreate(config.PersistentDataPath!, _consent);
             // ToProperties returns a fresh dict per call, so no snapshot needed.
             var msg = MessageBuilder.Track(eventName, anonymousId, _userId, config.PackageVersion, properties);
             Enqueue(msg);
         }
 
         // Send a custom event.
-        public static void Track(string eventName, Dictionary<string, object> properties = null)
+        public static void Track(string eventName, Dictionary<string, object>? properties = null)
         {
             if (!CanTrack()) return;
             if (string.IsNullOrEmpty(eventName))
@@ -131,7 +133,7 @@ namespace Immutable.Audience
             var config = _config;
             if (config == null) return;
 
-            var anonymousId = Identity.GetOrCreate(config.PersistentDataPath, _consent);
+            var anonymousId = Identity.GetOrCreate(config.PersistentDataPath!, _consent);
             var msg = MessageBuilder.Track(eventName, anonymousId, _userId, config.PackageVersion,
                 SnapshotCallerDict(properties));
             Enqueue(msg);
@@ -142,12 +144,12 @@ namespace Immutable.Audience
         // -----------------------------------------------------------------
 
         // Attach a known user id to subsequent events.
-        public static void Identify(string userId, IdentityType identityType, Dictionary<string, object> traits = null) =>
+        public static void Identify(string userId, IdentityType identityType, Dictionary<string, object>? traits = null) =>
             Identify(userId, identityType.ToLowercaseString(), traits);
 
         // Attach a known user id to subsequent events. String overload for
         // providers not in IdentityType.
-        public static void Identify(string userId, string identityType, Dictionary<string, object> traits = null)
+        public static void Identify(string userId, string? identityType, Dictionary<string, object>? traits = null)
         {
             if (!_initialized) return;
 
@@ -173,7 +175,7 @@ namespace Immutable.Audience
 
             _userId = userId;
 
-            var anonymousId = Identity.GetOrCreate(config.PersistentDataPath, _consent);
+            var anonymousId = Identity.GetOrCreate(config.PersistentDataPath!, _consent);
             var msg = MessageBuilder.Identify(anonymousId, userId, identityType, config.PackageVersion,
                 SnapshotCallerDict(traits));
             Enqueue(msg);
@@ -185,7 +187,7 @@ namespace Immutable.Audience
 
         // Link two user ids for the same player. String overload for
         // providers not in IdentityType.
-        public static void Alias(string fromId, string fromType, string toId, string toType)
+        public static void Alias(string fromId, string? fromType, string toId, string? toType)
         {
             if (!_initialized) return;
 
@@ -221,11 +223,11 @@ namespace Immutable.Audience
             if (config == null) return;
 
             _userId = null;
-            Identity.Reset(config.PersistentDataPath);
+            Identity.Reset(config.PersistentDataPath!);
         }
 
         // Ask the backend to erase this player's data.
-        public static void DeleteData(string userId = null)
+        public static void DeleteData(string? userId = null)
         {
             if (!_initialized) return;
 
@@ -241,7 +243,7 @@ namespace Immutable.Audience
             else
             {
                 // Get, not GetOrCreate — a brand-new install must not register an ID just to delete it.
-                var anonymousId = Identity.Get(config.PersistentDataPath);
+                var anonymousId = Identity.Get(config.PersistentDataPath!);
                 if (string.IsNullOrEmpty(anonymousId))
                     return;
                 query = "anonymousId=" + Uri.EscapeDataString(anonymousId);
@@ -273,7 +275,7 @@ namespace Immutable.Audience
             });
         }
 
-        private static void NotifyErrorCallback(Action<AudienceError> onError, AudienceErrorCode code, string message)
+        private static void NotifyErrorCallback(Action<AudienceError>? onError, AudienceErrorCode code, string message)
         {
             if (onError == null) return;
             try
@@ -305,14 +307,15 @@ namespace Immutable.Audience
             // None) wipes the file. The PUT audit trail needs it to record
             // whose consent changed.
             var anonymousIdForPut = previous == ConsentLevel.None
-                ? Identity.GetOrCreate(config.PersistentDataPath, level)
-                : Identity.Get(config.PersistentDataPath);
+                ? Identity.GetOrCreate(config.PersistentDataPath!, level)
+                : Identity.Get(config.PersistentDataPath!);
 
             _consent = level;
 
             try
             {
-                ConsentStore.Save(config.PersistentDataPath, level);
+                // PersistentDataPath is validated non-null in Init; compiler can't propagate that.
+                ConsentStore.Save(config.PersistentDataPath!, level);
             }
             catch (Exception ex)
             {
@@ -323,7 +326,7 @@ namespace Immutable.Audience
             if (level == ConsentLevel.None)
             {
                 queue?.PurgeAll();
-                Identity.Reset(config.PersistentDataPath);
+                Identity.Reset(config.PersistentDataPath!);
             }
             else if (previous == ConsentLevel.Full && level == ConsentLevel.Anonymous)
             {
@@ -336,7 +339,7 @@ namespace Immutable.Audience
 
         // Fire-and-forget PUT /v1/audience/tracking-consent. Failures do not
         // block or surface; the local consent change has already applied.
-        private static void SyncConsentToBackend(AudienceConfig config, ConsentLevel level, string anonymousId)
+        private static void SyncConsentToBackend(AudienceConfig config, ConsentLevel level, string? anonymousId)
         {
             var client = _controlClient;
             if (client == null) return;
@@ -349,7 +352,8 @@ namespace Immutable.Audience
             {
                 ["status"] = level.ToLowercaseString(),
                 ["source"] = Constants.ConsentSource,
-                ["anonymousId"] = anonymousId,
+                // Json.Serialize emits null → "anonymousId": null. Preserves the backend's ability to distinguish "unknown" from a missing field.
+                ["anonymousId"] = anonymousId!,
             });
 
             Task.Run(async () =>
@@ -486,10 +490,10 @@ namespace Immutable.Audience
         }
 
         // Shallow-copy the caller's dict so a post-call mutation cannot race the drain-thread serialiser.
-        private static Dictionary<string, object> SnapshotCallerDict(Dictionary<string, object> src) =>
+        private static Dictionary<string, object>? SnapshotCallerDict(Dictionary<string, object>? src) =>
             src != null ? new Dictionary<string, object>(src) : null;
 
-        private static void Enqueue(Dictionary<string, object> msg)
+        private static void Enqueue(Dictionary<string, object>? msg)
         {
             var queue = _queue;
             if (queue == null) return;
