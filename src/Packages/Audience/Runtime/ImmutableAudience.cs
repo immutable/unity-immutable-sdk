@@ -293,6 +293,7 @@ namespace Immutable.Audience
             }
             catch
             {
+                // Swallow: a buggy OnError must not crash the SDK surface.
             }
         }
 
