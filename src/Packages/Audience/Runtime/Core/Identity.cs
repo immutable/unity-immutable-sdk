@@ -63,7 +63,7 @@ namespace Immutable.Audience
         internal static string? GetOrCreate(string persistentDataPath, ConsentLevel consent)
         {
             // No ID until the player grants at least anonymous consent.
-            if (consent == ConsentLevel.None)
+            if (!consent.CanTrack())
                 return null;
 
             // Fast path — already loaded this session, no lock needed.
