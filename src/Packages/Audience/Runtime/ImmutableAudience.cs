@@ -26,6 +26,13 @@ namespace Immutable.Audience
         private static volatile bool _initialized;
         private static readonly object _initLock = new object();
 
+        // Guard against overlapping timer ticks. System.Threading.Timer fires
+        // callbacks on independent ThreadPool threads and does not serialise
+        // them; without this gate, a slow SendBatchAsync (up to the HTTP
+        // timeout) would stack on every interval tick, each tick holding its
+        // own thread blocked on a pending request.
+        private static int _sendInFlight;
+
         // AudienceUnityHooks sets this at SubsystemRegistration so Unity studios
         // can omit PersistentDataPath from AudienceConfig and Init will fill it
         // from Application.persistentDataPath. Non-Unity callers must still set
@@ -484,6 +491,12 @@ namespace Immutable.Audience
                 _sendTimer = null;
             }
 
+            // Clear the in-flight guard in case the WaitOne above timed out
+            // with a SendBatch callback still running: without this, a later
+            // Init would leave _sendInFlight stranded at 1 and suppress every
+            // tick of the new timer.
+            Interlocked.Exchange(ref _sendInFlight, 0);
+
             _queue?.Shutdown();
 
             // Best-effort final send, capped so a slow network can't hang quit.
@@ -553,6 +566,10 @@ namespace Immutable.Audience
 
         internal static void FlushQueueToDiskForTesting() => _queue?.FlushSync();
 
+        // Invokes the timer callback body directly so the overlapping-tick
+        // guard can be exercised without a real timer.
+        internal static void SendBatchForTesting() => SendBatch();
+
         // -----------------------------------------------------------------
         // Private
         // -----------------------------------------------------------------
@@ -578,23 +595,36 @@ namespace Immutable.Audience
 
         private static void SendBatch()
         {
-            var transport = _transport;
-            if (transport == null) return;
+            // CAS in the guard before doing any work; a previous tick still
+            // running means skip entirely, including the reschedule — the
+            // in-flight tick will reschedule on its own finally path.
+            if (Interlocked.CompareExchange(ref _sendInFlight, 1, 0) != 0)
+                return;
 
-            if (!transport.IsInBackoffWindow)
+            try
             {
-                try
-                {
-                    transport.SendBatchAsync().ConfigureAwait(false).GetAwaiter().GetResult();
-                }
-                catch (Exception ex)
-                {
-                    // ThreadPool timer thread; no caller above to catch.
-                    Log.Warn($"SendBatch unexpected exception: {ex.GetType().Name}: {ex.Message}");
-                }
-            }
+                var transport = _transport;
+                if (transport == null) return;
 
-            RescheduleSendTimer(transport);
+                if (!transport.IsInBackoffWindow)
+                {
+                    try
+                    {
+                        transport.SendBatchAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+                    }
+                    catch (Exception ex)
+                    {
+                        // ThreadPool timer thread; no caller above to catch.
+                        Log.Warn($"SendBatch unexpected exception: {ex.GetType().Name}: {ex.Message}");
+                    }
+                }
+
+                RescheduleSendTimer(transport);
+            }
+            finally
+            {
+                Interlocked.Exchange(ref _sendInFlight, 0);
+            }
         }
 
         // Realigns the timer to NextAttemptAt so we don't repoll through a long backoff window.
