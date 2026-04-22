@@ -17,6 +17,7 @@ namespace Immutable.Audience
         internal const int MaxBatchSize = 100;
         internal const int StaleEventDays = 30;
         internal const int MaxFieldLength = 256; // Backend schema limit.
+        internal const int ControlPlaneRequestTimeoutSeconds = 30;
 
         internal const string LibraryName = "com.immutable.audience";
         internal const string LibraryVersion = "0.1.0";
