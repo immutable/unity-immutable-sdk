@@ -19,6 +19,7 @@ namespace Immutable.Audience
         private static EventQueue? _queue;
         private static HttpTransport? _transport;
         private static HttpClient? _controlClient;
+        private static CancellationTokenSource? _shutdownCancellationSource;
         private static Timer? _sendTimer;
         private static volatile ConsentLevel _consent;
         private static volatile string? _userId;
@@ -64,6 +65,8 @@ namespace Immutable.Audience
                 _controlClient = config.HttpHandler != null
                     ? new HttpClient(config.HttpHandler, disposeHandler: false)
                     : new HttpClient();
+                _controlClient.Timeout = TimeSpan.FromSeconds(30);
+                _shutdownCancellationSource = new CancellationTokenSource();
 
                 // Disk → network timer. EventQueue owns the separate memory → disk drain.
                 var sendIntervalMs = Math.Max(1, config.FlushIntervalSeconds) * 1000;
@@ -253,6 +256,7 @@ namespace Immutable.Audience
             var url = Constants.DataUrl(config.PublishableKey) + "?" + query;
             var onError = config.OnError;
             var publishableKey = config.PublishableKey;
+            var cancellationToken = _shutdownCancellationSource?.Token ?? CancellationToken.None;
 
             Task.Run(async () =>
             {
@@ -260,13 +264,17 @@ namespace Immutable.Audience
                 {
                     using var request = new HttpRequestMessage(HttpMethod.Delete, url);
                     request.Headers.Add(Constants.PublishableKeyHeader, publishableKey);
-                    using var response = await client.SendAsync(request).ConfigureAwait(false);
+                    using var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (!response.IsSuccessStatusCode)
                     {
                         NotifyErrorCallback(onError, AudienceErrorCode.NetworkError,
                             $"Data delete failed with status {(int)response.StatusCode}");
                     }
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    // Shutdown cancelled the request — no error fired; caller is tearing down.
                 }
                 catch (Exception ex)
                 {
@@ -348,6 +356,7 @@ namespace Immutable.Audience
             var url = Constants.ConsentUrl(config.PublishableKey);
             var publishableKey = config.PublishableKey;
             var onError = config.OnError;
+            var cancellationToken = _shutdownCancellationSource?.Token ?? CancellationToken.None;
 
             var body = Json.Serialize(new Dictionary<string, object>
             {
@@ -364,13 +373,17 @@ namespace Immutable.Audience
                     using var request = new HttpRequestMessage(HttpMethod.Put, url);
                     request.Headers.Add(Constants.PublishableKeyHeader, publishableKey);
                     request.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
-                    using var response = await client.SendAsync(request).ConfigureAwait(false);
+                    using var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (!response.IsSuccessStatusCode)
                     {
                         NotifyErrorCallback(onError, AudienceErrorCode.ConsentSyncFailed,
                             $"Consent sync failed with status {(int)response.StatusCode}");
                     }
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    // Shutdown cancelled the request — no error fired.
                 }
                 catch (Exception ex)
                 {
@@ -440,9 +453,16 @@ namespace Immutable.Audience
                 }
             }
 
+            // Cancel in-flight control-plane HTTP requests (DeleteData / SyncConsentToBackend)
+            // before disposing the client so awaiting callers observe OperationCanceledException
+            // rather than ObjectDisposedException.
+            _shutdownCancellationSource?.Cancel();
+
             _transport?.Dispose();
             _queue?.Dispose();
             _controlClient?.Dispose();
+            _shutdownCancellationSource?.Dispose();
+            _shutdownCancellationSource = null;
 
             // Drop Identity's in-memory cache so a subsequent Init with a
             // different persistentDataPath reads the file from the new path
