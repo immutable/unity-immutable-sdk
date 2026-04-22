@@ -1,5 +1,8 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 
@@ -140,7 +143,7 @@ namespace Immutable.Audience
         private static bool IsIdentityMessage(string type) =>
             type == MessageTypes.Identify || type == MessageTypes.Alias;
 
-        private static bool TryReadMessage(string path, out Dictionary<string, object> msg)
+        private static bool TryReadMessage(string path, [NotNullWhen(true)] out Dictionary<string, object>? msg)
         {
             msg = null;
             string json;

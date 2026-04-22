@@ -1,3 +1,5 @@
+#nullable enable
+
 namespace Immutable.Audience
 {
     // How much data the Audience SDK is allowed to collect.

@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -51,7 +53,7 @@ namespace Immutable.Audience
         // The dictionary is not copied -- callers must not mutate it after
         // enqueue. Serialisation happens on the drain thread so Track() stays
         // allocation-light.
-        internal void Enqueue(Dictionary<string, object> msg)
+        internal void Enqueue(Dictionary<string, object>? msg)
         {
             if (_disposed || msg == null) return;
 
@@ -65,7 +67,7 @@ namespace Immutable.Audience
         // Enqueues under _drainLock, re-checking stillAllowed inside the lock.
         // Closes the window where a concurrent PurgeAll could complete between
         // the caller's check and the enqueue, leaking the event past revocation.
-        internal void EnqueueChecked(Dictionary<string, object> msg, Func<bool> stillAllowed)
+        internal void EnqueueChecked(Dictionary<string, object>? msg, Func<bool>? stillAllowed)
         {
             if (_disposed || msg == null) return;
 
