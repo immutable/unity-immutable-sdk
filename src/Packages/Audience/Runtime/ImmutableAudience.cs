@@ -52,6 +52,55 @@ namespace Immutable.Audience
         // assignments from SetConsent without taking _initLock.
         private static volatile Session? _session;
 
+        // Diagnostic getters. Safe from any thread, any time — return a
+        // zero-value default (false / null / 0 / ConsentLevel.None) outside
+        // Init..Shutdown. Values are tick-level snapshots, not invariants.
+
+        public static bool Initialized => _initialized;
+
+        // Persisted value, which may differ from AudienceConfig.Consent if
+        // a prior session changed it.
+        public static ConsentLevel CurrentConsent => _state.Level;
+
+        public static string? UserId => _state.UserId;
+
+        // Display-only — Reset and SetConsent(None) wipe it, so it is not
+        // a stable identifier across sessions.
+        public static string? AnonymousId
+        {
+            get
+            {
+                if (!_initialized) return null;
+                var config = _config;
+                if (config == null || !_state.Level.CanTrack()) return null;
+                // PersistentDataPath is validated non-null in Init; compiler can't propagate that.
+                return Identity.Get(config.PersistentDataPath!);
+            }
+        }
+
+        public static string? SessionId => _session?.SessionId;
+
+        // Memory + disk counts are read without holding the drain lock, so
+        // the sum can drift by a few events.
+        public static int QueueSize
+        {
+            get
+            {
+                // Fence off the volatile _initialized load first, matching
+                // the protocol documented on the reference fields. Without
+                // this, a weak-memory-order reader could observe
+                // _initialized=true but _queue/_store still null — the ?.
+                // short-circuits to 0 in that case, but the inconsistency
+                // would break the protocol the file claims to follow.
+                if (!_initialized) return 0;
+                var queue = _queue;
+                var store = _store;
+                var memory = queue?.InMemoryCount ?? 0;
+                var disk = store?.Count() ?? 0;
+                return memory + disk;
+            }
+        }
+
         // Starts the SDK. Call once at launch.
         public static void Init(AudienceConfig config)
         {
@@ -719,8 +768,6 @@ namespace Immutable.Audience
                 Identity.ClearCache();
             }
         }
-
-        internal static ConsentLevel CurrentConsent => _state.Level;
 
         internal static void FlushQueueToDiskForTesting() => _queue?.FlushSync();
 
