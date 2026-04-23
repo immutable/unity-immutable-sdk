@@ -1,6 +1,7 @@
 #nullable enable
 
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using UnityEngine;
 
 namespace Immutable.Audience.Unity
@@ -10,26 +11,25 @@ namespace Immutable.Audience.Unity
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void Install()
         {
-            // Clear surviving statics before re-wiring in case "disable domain reload" kept them alive.
             ImmutableAudience.ResetState();
 
-            // -= then += so repeat SubsystemRegistration cycles don't stack subscriptions.
+            // Avoid stacked subscriptions on reload.
             Application.quitting -= ImmutableAudience.Shutdown;
             Application.quitting += ImmutableAudience.Shutdown;
 
             ImmutableAudience.DefaultPersistentDataPathProvider = () => Application.persistentDataPath;
-            ImmutableAudience.LaunchContextProvider = BuildLaunchContext;
+
+            // Captured once on main thread; ReadOnlyDictionary blocks downstream mutation.
+            IReadOnlyDictionary<string, object> launchProps =
+                new ReadOnlyDictionary<string, object>(DeviceCollector.CollectGameLaunchProperties());
+            IReadOnlyDictionary<string, object> contextProps =
+                new ReadOnlyDictionary<string, object>(DeviceCollector.CollectContext());
+            ImmutableAudience.LaunchContextProvider = () => launchProps;
+            ImmutableAudience.ContextProvider = () => contextProps;
+
+            UnityLifecycleBridge.EnsureExists();
 
             if (Log.Writer == null) Log.Writer = Debug.Log;
         }
-
-        private static Dictionary<string, object> BuildLaunchContext() =>
-            new Dictionary<string, object>
-            {
-                ["platform"] = Application.platform.ToString(),
-                ["version"] = Application.version,
-                ["buildGuid"] = Application.buildGUID,
-                ["unityVersion"] = Application.unityVersion,
-            };
     }
 }

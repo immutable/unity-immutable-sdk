@@ -38,12 +38,13 @@ namespace Immutable.Audience
         // Gate against overlapping timer ticks (Timer callbacks run on independent ThreadPool threads).
         private static int _sendInFlight;
 
-        // AudienceUnityHooks sets these at SubsystemRegistration.
-        // DefaultPersistentDataPathProvider fills PersistentDataPath from
-        // Application.persistentDataPath. LaunchContextProvider supplies
-        // Unity context for game_launch without Core referencing UnityEngine.
-        internal static Func<string>? DefaultPersistentDataPathProvider;
-        internal static Func<Dictionary<string, object>>? LaunchContextProvider;
+        // volatile: assigned on the Unity main thread at SubsystemRegistration,
+        // read from the drain thread in Track / Identify paths.
+        // The assignments happen before any event can fire in practice, but
+        // volatile documents the cross-thread publish contract explicitly.
+        internal static volatile Func<string>? DefaultPersistentDataPathProvider;
+        internal static volatile Func<IReadOnlyDictionary<string, object>>? LaunchContextProvider;
+        internal static volatile Func<IReadOnlyDictionary<string, object>>? ContextProvider;
 
         // Active session. Created at Init (or on upgrade from None) and disposed
         // on Shutdown or SetConsent(None). Volatile so OnPause/OnResume see
@@ -701,9 +702,7 @@ namespace Immutable.Audience
         // Internal — shared with tests and AudienceUnityHooks
         // -----------------------------------------------------------------
 
-        // Shuts down (if initialised) and clears per-session state. Used on
-        // test teardown and Unity SubsystemRegistration to survive "disable
-        // domain reload". LaunchContextProvider is re-assigned by AudienceUnityHooks.
+        // Providers reassigned by SubsystemRegistration.
         internal static void ResetState()
         {
             // Shutdown manages its own serialisation and releases _initLock before
@@ -743,6 +742,7 @@ namespace Immutable.Audience
         // Anonymous the userId is stripped.
         private static void EnqueueTrack(Dictionary<string, object>? msg)
         {
+            MergeUnityContext(msg);
             _queue?.EnqueueChecked(msg, m =>
             {
                 var state = _state;
@@ -756,8 +756,39 @@ namespace Immutable.Audience
         // Identify / Alias require Full; drop if consent has downgraded.
         private static void EnqueueIdentity(Dictionary<string, object>? msg)
         {
+            MergeUnityContext(msg);
             _queue?.EnqueueChecked(msg, m =>
                 _state.Level == ConsentLevel.Full ? m : null);
+        }
+
+        private static void MergeUnityContext(Dictionary<string, object>? msg)
+        {
+            if (msg == null) return;
+
+            var provider = ContextProvider;
+            if (provider == null) return;
+
+            IReadOnlyDictionary<string, object>? extra;
+            try
+            {
+                extra = provider();
+            }
+            catch (Exception ex)
+            {
+                Log.Warn($"ContextProvider threw {ex.GetType().Name}: {ex.Message}. " +
+                         "Event ships with base context only.");
+                return;
+            }
+            if (extra == null) return;
+
+            if (!(msg.TryGetValue("context", out var ctxObj) && ctxObj is Dictionary<string, object> ctx))
+            {
+                ctx = new Dictionary<string, object>();
+                msg["context"] = ctx;
+            }
+
+            foreach (var kv in extra)
+                ctx[kv.Key] = kv.Value;
         }
 
         private static void SendBatch()
@@ -825,7 +856,7 @@ namespace Immutable.Audience
             var provider = LaunchContextProvider;
             if (provider != null)
             {
-                Dictionary<string, object>? unityContext = null;
+                IReadOnlyDictionary<string, object>? unityContext = null;
                 try { unityContext = provider(); }
                 catch (Exception ex)
                 {

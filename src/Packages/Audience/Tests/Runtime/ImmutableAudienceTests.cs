@@ -27,6 +27,7 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.ResetState();
             ImmutableAudience.LaunchContextProvider = null;
+            ImmutableAudience.ContextProvider = null;
             ImmutableAudience.DefaultPersistentDataPathProvider = null;
             Identity.Reset(_testDir);
             if (Directory.Exists(_testDir))
@@ -56,6 +57,96 @@ namespace Immutable.Audience.Tests
             {
                 return Task.FromResult(new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
             }
+        }
+
+        // -----------------------------------------------------------------
+        // Unity context provider
+        // -----------------------------------------------------------------
+
+        [Test]
+        public void ContextProvider_Set_MergesFieldsIntoEveryMessageContext()
+        {
+            ImmutableAudience.ContextProvider = () => new Dictionary<string, object>
+            {
+                ["userAgent"] = "TestOS 1.0",
+                ["locale"] = "en-GB",
+                ["timezone"] = "Europe/London",
+                ["screen"] = "1920x1080",
+            };
+
+            ImmutableAudience.Init(MakeConfig());
+            ImmutableAudience.Track("unit_test_event");
+            ImmutableAudience.Shutdown();
+
+            var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
+            var blobs = Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText).ToList();
+
+            Assert.IsTrue(blobs.Any(b =>
+                b.Contains("\"userAgent\":\"TestOS 1.0\"") &&
+                b.Contains("\"locale\":\"en-GB\"") &&
+                b.Contains("\"timezone\":\"Europe/London\"") &&
+                b.Contains("\"screen\":\"1920x1080\"") &&
+                b.Contains("\"library\":")),
+                "Enqueue should merge ContextProvider fields into msg.context alongside library/libraryVersion");
+        }
+
+        [Test]
+        public void ContextProvider_Set_MergesOnIdentifyPath()
+        {
+            // EnqueueIdentity must merge ContextProvider fields the same way
+            // EnqueueTrack does — otherwise Identify events ship without the
+            // userAgent / locale / timezone / screen context every other
+            // event carries.
+            ImmutableAudience.ContextProvider = () => new Dictionary<string, object>
+            {
+                ["userAgent"] = "TestOS 1.0",
+                ["locale"] = "en-GB",
+            };
+
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
+            ImmutableAudience.Identify("player-42", IdentityType.Custom);
+            ImmutableAudience.Shutdown();
+
+            var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
+            var blobs = Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText).ToList();
+
+            Assert.IsTrue(blobs.Any(b =>
+                b.Contains("\"type\":\"identify\"") &&
+                b.Contains("\"userAgent\":\"TestOS 1.0\"") &&
+                b.Contains("\"locale\":\"en-GB\"")),
+                "Identify message must carry ContextProvider fields in msg.context");
+        }
+
+        [Test]
+        public void ContextProvider_ThrowingDelegate_SwallowsAndShipsBaseContext()
+        {
+            ImmutableAudience.ContextProvider = () => throw new InvalidOperationException("boom");
+
+            ImmutableAudience.Init(MakeConfig());
+            ImmutableAudience.Track("unit_test_event");
+            ImmutableAudience.Shutdown();
+
+            var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
+            var blobs = Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText).ToList();
+
+            Assert.IsTrue(blobs.Any(b => b.Contains("\"unit_test_event\"") && b.Contains("\"library\":")),
+                "event should still ship with base context when ContextProvider throws");
+        }
+
+        [Test]
+        public void ContextProvider_ReturnsNull_ShipsBaseContext()
+        {
+            ImmutableAudience.ContextProvider = () => null;
+
+            ImmutableAudience.Init(MakeConfig());
+            ImmutableAudience.Track("unit_test_event");
+            ImmutableAudience.Shutdown();
+
+            var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
+            var blobs = Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText).ToList();
+
+            Assert.IsTrue(blobs.Any(b => b.Contains("\"unit_test_event\"") && b.Contains("\"library\":")),
+                "event should still ship with base context when ContextProvider returns null");
         }
 
         // -----------------------------------------------------------------
