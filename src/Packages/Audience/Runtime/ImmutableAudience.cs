@@ -258,33 +258,37 @@ namespace Immutable.Audience
         // and then purged). Call FlushAsync() first to preserve queued events.
         public static void Reset()
         {
-            Session? sessionToStart = null;
-            AudienceConfig? config;
+            // Phase 1 under _initLock: swap _session and reset identity. Blocking
+            // work (session drain, disk purge, new session_start) runs outside
+            // the lock so callers racing on _initLock don't wait on it.
+            Session? oldSession;
+            Session? newSession = null;
+            EventQueue? queueForPurge;
+
             lock (_initLock)
             {
                 if (!_initialized) return;
-                config = _config;
+                var config = _config;
                 if (config == null) return;
 
-                // Dispose old session. session_end lands in the queue and is
-                // wiped by PurgeAll below — matches Web SDK's silent-teardown.
-                _session?.Dispose();
-                _session = null;
+                oldSession = _session;
+                queueForPurge = _queue;
 
-                _queue?.PurgeAll();
                 Identity.Reset(config.PersistentDataPath!);
                 _userId = null;
 
-                // Mint a new session if consent allows tracking.
-                if (_consent.CanTrack())
-                {
-                    _session = new Session(Track);
-                    sessionToStart = _session;
-                }
+                // Swap under the lock so racing SetConsent/OnPause/OnResume see
+                // either the old, the new, or null — never a torn reference.
+                _session = _consent.CanTrack() ? new Session(Track) : null;
+                newSession = _session;
             }
 
-            // Start outside _initLock — session_start → Track takes its own locks.
-            sessionToStart?.Start();
+            // Phase 2 outside _initLock:
+            // Dispose enqueues session_end → PurgeAll wipes it → Start emits the
+            // new session_start. Order matches the in-lock sequence this replaces.
+            oldSession?.Dispose();
+            queueForPurge?.PurgeAll();
+            newSession?.Start();
         }
 
         // Asks the backend to erase this player's data. Await for ack, or discard for fire-and-forget.
@@ -498,76 +502,92 @@ namespace Immutable.Audience
         // Flushes and stops the SDK.
         public static void Shutdown()
         {
-            // Serialised with Init / SetConsent under _initLock so teardown
-            // does not race field assignments or the SyncConsentToBackend closure.
+            // Phase 1 under _initLock: flip _initialized and capture references.
+            // Other callers racing on _initLock re-check _initialized once they
+            // acquire and early-return, so they don't wait on Phase 2's drain /
+            // flush / dispose budget (up to ~10s worst case).
+            Session? session;
+            Timer? timer;
+            EventQueue? queue;
+            HttpTransport? transport;
+            HttpClient? controlClient;
+            CancellationTokenSource? cts;
+            int timeoutMs;
+
             lock (_initLock)
             {
                 if (!_initialized) return;
 
-                // End session first so session_end hits the queue before the final flush.
-                _session?.Dispose();
-                _session = null;
+                // Flip the gate first. Init / SetConsent / Reset acquiring after
+                // this see _initialized == false and return cleanly.
+                _initialized = false;
 
-                // Drain in-flight timer callbacks before disposing dependents.
-                // Parameterless Timer.Dispose would return immediately and race SendBatch.
-                var timer = _sendTimer;
-                if (timer != null)
-                {
-                    using var disposed = new ManualResetEvent(false);
-                    if (timer.Dispose(disposed))
-                    {
-                        disposed.WaitOne(TimeSpan.FromSeconds(2));
-                    }
-                    _sendTimer = null;
-                }
+                session       = _session;                    _session = null;
+                timer         = _sendTimer;                  _sendTimer = null;
+                queue         = _queue;                      _queue = null;
+                transport     = _transport;                  _transport = null;
+                controlClient = _controlClient;              _controlClient = null;
+                cts           = _shutdownCancellationSource; _shutdownCancellationSource = null;
 
-                // Clear the gate in case WaitOne timed out with SendBatch still running
-                // — a later Init would otherwise be stranded at 1.
-                Interlocked.Exchange(ref _sendInFlight, 0);
-
-                _queue?.Shutdown();
-
-                // Best-effort final send, capped so a slow network can't hang quit.
-                if (_transport != null)
-                {
-                    var timeoutMs = _config?.ShutdownFlushTimeoutMs ?? 2_000;
-                    try
-                    {
-                        var send = _transport.SendBatchAsync();
-                        if (!send.Wait(timeoutMs))
-                        {
-                            Log.Warn($"Shutdown flush exceeded {timeoutMs}ms — abandoning. " +
-                                     "Queued events remain on disk and will retry on next startup.");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Warn($"Shutdown flush threw: {ex.GetType().Name}: {ex.Message}");
-                    }
-                }
-
-                // Cancel in-flight control-plane requests before disposing the client
-                // so awaiters see OperationCanceledException, not ObjectDisposedException.
-                _shutdownCancellationSource?.Cancel();
-
-                _transport?.Dispose();
-                _queue?.Dispose();
-                _controlClient?.Dispose();
-                _shutdownCancellationSource?.Dispose();
-                _shutdownCancellationSource = null;
+                timeoutMs = _config?.ShutdownFlushTimeoutMs ?? 2_000;
 
                 // Drop Identity's in-memory cache so a later Init with a different
                 // persistentDataPath reads the new file, not the stale cached id.
                 Identity.ClearCache();
 
-                _initialized = false;
                 _config = null;
                 _store = null;
-                _queue = null;
-                _transport = null;
-                _controlClient = null;
                 _userId = null;
             }
+
+            // Phase 2 outside _initLock: end session, drain timers, flush, dispose.
+
+            // End session first so session_end hits the queue before the final flush.
+            session?.Dispose();
+
+            // Drain in-flight timer callbacks before disposing dependents.
+            // Parameterless Timer.Dispose would return immediately and race SendBatch.
+            if (timer != null)
+            {
+                using var disposed = new ManualResetEvent(false);
+                if (timer.Dispose(disposed))
+                {
+                    disposed.WaitOne(TimeSpan.FromSeconds(2));
+                }
+            }
+
+            // Clear the gate in case WaitOne timed out with SendBatch still running
+            // — a later Init would otherwise be stranded at 1.
+            Interlocked.Exchange(ref _sendInFlight, 0);
+
+            queue?.Shutdown();
+
+            // Best-effort final send, capped so a slow network can't hang quit.
+            if (transport != null)
+            {
+                try
+                {
+                    var send = transport.SendBatchAsync();
+                    if (!send.Wait(timeoutMs))
+                    {
+                        Log.Warn($"Shutdown flush exceeded {timeoutMs}ms — abandoning. " +
+                                 "Queued events remain on disk and will retry on next startup.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Warn($"Shutdown flush threw: {ex.GetType().Name}: {ex.Message}");
+                }
+            }
+
+            // Cancel in-flight control-plane requests before disposing the client
+            // so awaiters see OperationCanceledException, not ObjectDisposedException.
+            cts?.Cancel();
+
+            transport?.Dispose();
+            queue?.Dispose();
+            controlClient?.Dispose();
+            cts?.Dispose();
         }
 
         // -----------------------------------------------------------------
@@ -579,12 +599,12 @@ namespace Immutable.Audience
         // domain reload". LaunchContextProvider is re-assigned by AudienceUnityHooks.
         internal static void ResetState()
         {
-            // Same lock as Shutdown/Init; Monitor is recursive so inner Shutdown re-enters.
+            // Shutdown manages its own serialisation and releases _initLock before
+            // its Phase 2 teardown, so calling it here does not strand waiters.
+            Shutdown();
+
             lock (_initLock)
             {
-                if (_initialized)
-                    Shutdown();
-
                 _consent = ConsentLevel.None;
                 // Defensive: Shutdown nulls _session too, but a future refactor
                 // that bails before that null must not leak a stale Session.
