@@ -374,16 +374,32 @@ namespace Immutable.Audience
         {
             if (!_initialized) return;
 
+            var config = _config;
+            if (config == null) return;
+
+            // Snapshot check before any I/O: no-op if already at target consent.
+            var snapshotPrevious = _consent;
+            if (level == snapshotPrevious) return;
+
+            // Capture anonymousId for the PUT audit trail outside _initLock.
+            // Identity methods hold their own _sync lock; disk I/O on a cold
+            // cache (None → Anonymous/Full upgrade creates the UUID file) does
+            // not block _initLock. A racing SetConsent may change _consent
+            // between this read and our lock acquire — acceptable, the racing
+            // call fires its own PUT and our slightly-stale ID still
+            // identifies the user.
+            var anonymousIdForPut = snapshotPrevious == ConsentLevel.None
+                ? Identity.GetOrCreate(config.PersistentDataPath!, level)
+                : Identity.Get(config.PersistentDataPath!);
+
             // Phase 1 under _initLock: flip _consent and swap _session / _userId.
             // Phase 2 outside the lock runs the blocking side effects (persist,
             // dispose, purge, downgrade, backend sync, new session_start) so a
             // concurrent Shutdown / Init / Reset isn't held waiting on them.
             ConsentLevel previous;
-            AudienceConfig? config;
             EventQueue? queue;
             Session? oldSession = null;
             Session? newSession = null;
-            string? anonymousIdForPut;
             bool downgradeFullToAnonymous = false;
 
             lock (_initLock)
@@ -396,12 +412,6 @@ namespace Immutable.Audience
 
                 previous = _consent;
                 if (level == previous) return;
-
-                // Snapshot anonymousId before Identity.Reset (on None) wipes it.
-                // The PUT audit trail needs to record whose consent changed.
-                anonymousIdForPut = previous == ConsentLevel.None
-                    ? Identity.GetOrCreate(config.PersistentDataPath!, level)
-                    : Identity.Get(config.PersistentDataPath!);
 
                 _consent = level;
 
@@ -554,6 +564,15 @@ namespace Immutable.Audience
             lock (_initLock)
             {
                 if (!_initialized) return;
+
+                // Race guard: a concurrent Reset or SetConsent(upgrade-from-None)
+                // may have swapped _session to a new instance that has already
+                // fired session_start. Seal it too so its session_end lands
+                // before the flag flip. Idempotent on the same instance (no-op
+                // via _sessionId null check); the slow path only runs when
+                // Reset fully completed its Start() between the outside-lock
+                // call above and this point — a narrow window.
+                _session?.EmitEndAndSeal();
 
                 // Flip the gate. Init / SetConsent / Reset acquiring after
                 // this see _initialized == false and return cleanly.
