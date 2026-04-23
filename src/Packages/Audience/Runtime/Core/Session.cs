@@ -193,6 +193,31 @@ namespace Immutable.Audience
             });
         }
 
+        // Emits session_end and seals the session without draining the heartbeat
+        // timer. Use when the caller needs to fire session_end inside a short
+        // gating lock (e.g. ImmutableAudience.Shutdown under _initLock while
+        // _initialized is still true) and will drain + dispose the timer after
+        // releasing the lock. Idempotent: a subsequent Dispose() → End() will
+        // find _sessionId null and no-op the re-emission.
+        internal void EmitEndAndSeal()
+        {
+            string sessionId;
+            long duration;
+            lock (_lock)
+            {
+                if (_disposed || _sessionId == null) return;
+                sessionId = _sessionId!;
+                duration = ComputeEngagedSecondsLocked();
+                ResetSessionStateLocked();
+            }
+
+            SafeTrack("session_end", new Dictionary<string, object>
+            {
+                ["sessionId"] = sessionId,
+                ["durationSec"] = duration
+            });
+        }
+
         public void Dispose()
         {
             lock (_lock)

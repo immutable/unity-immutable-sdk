@@ -547,16 +547,29 @@ namespace Immutable.Audience
             {
                 if (!_initialized) return;
 
-                // Flip the gate first. Init / SetConsent / Reset acquiring after
+                // Emit session_end inside the lock while _initialized is still
+                // true so Track's CanTrack gate lets it through. Heartbeat timer
+                // drain is deferred to Phase 2; the second emission from
+                // session.Dispose → End() no-ops because EmitEndAndSeal reset
+                // _sessionId.
+                _session?.EmitEndAndSeal();
+
+                // Flip the gate. Init / SetConsent / Reset acquiring after
                 // this see _initialized == false and return cleanly.
                 _initialized = false;
 
-                session       = _session;                    _session = null;
-                timer         = _sendTimer;                  _sendTimer = null;
-                queue         = _queue;                      _queue = null;
-                transport     = _transport;                  _transport = null;
-                controlClient = _controlClient;              _controlClient = null;
-                cts           = _shutdownCancellationSource; _shutdownCancellationSource = null;
+                session = _session;
+                _session = null;
+                timer = _sendTimer;
+                _sendTimer = null;
+                queue = _queue;
+                _queue = null;
+                transport = _transport;
+                _transport = null;
+                controlClient = _controlClient;
+                _controlClient = null;
+                cts = _shutdownCancellationSource;
+                _shutdownCancellationSource = null;
 
                 timeoutMs = _config?.ShutdownFlushTimeoutMs ?? 2_000;
 
