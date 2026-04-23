@@ -42,7 +42,7 @@ namespace Immutable.Audience.Tests
             var put = WaitForPut(handler);
             var body = JsonReader.DeserializeObject(put.Body);
 
-            Assert.AreEqual(Constants.ConsentUrl("pk_imapik-test-key1"), put.Url);
+            Assert.AreEqual(Constants.ConsentUrl(AudienceEnvironment.Sandbox), put.Url);
             Assert.AreEqual("full", body["status"]);
             Assert.AreEqual(Constants.ConsentSource, body["source"]);
             Assert.IsTrue(body.ContainsKey("anonymousId"));

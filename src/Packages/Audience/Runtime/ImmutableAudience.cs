@@ -62,6 +62,11 @@ namespace Immutable.Audience
         // a prior session changed it.
         public static ConsentLevel CurrentConsent => _state.Level;
 
+        // Caches the last Init's env so a diagnostic HUD does not flicker
+        // to the Sandbox default when Shutdown clears _config.
+        public static AudienceEnvironment CurrentEnvironment => _currentEnvironment;
+        private static volatile AudienceEnvironment _currentEnvironment = AudienceEnvironment.Sandbox;
+
         public static string? UserId => _state.UserId;
 
         // Display-only — Reset and SetConsent(None) wipe it, so it is not
@@ -125,6 +130,7 @@ namespace Immutable.Audience
                 }
 
                 _config = config;
+                _currentEnvironment = config.Environment;
                 Log.Enabled = config.Debug;
                 // Persisted consent overrides the config default (prior downgrade survives restart).
                 var initialLevel = ConsentStore.Load(config.PersistentDataPath) ?? config.Consent;
@@ -132,7 +138,7 @@ namespace Immutable.Audience
 
                 _store = new DiskStore(config.PersistentDataPath);
                 _queue = new EventQueue(_store, config.FlushIntervalSeconds, config.FlushSize);
-                _transport = new HttpTransport(_store, config.PublishableKey, config.OnError, config.HttpHandler);
+                _transport = new HttpTransport(_store, config.PublishableKey, config.Environment, config.OnError, config.HttpHandler);
                 _controlClient = config.HttpHandler != null
                     ? new HttpClient(config.HttpHandler, disposeHandler: false)
                     : new HttpClient();
@@ -388,7 +394,7 @@ namespace Immutable.Audience
                 query = "anonymousId=" + Uri.EscapeDataString(anonymousId);
             }
 
-            var url = Constants.DataUrl(config.PublishableKey) + "?" + query;
+            var url = Constants.DataUrl(config.Environment) + "?" + query;
             var onError = config.OnError;
             var publishableKey = config.PublishableKey;
             var cancellationToken = _shutdownCancellationSource?.Token ?? CancellationToken.None;
@@ -550,7 +556,7 @@ namespace Immutable.Audience
             var client = _controlClient;
             if (client == null) return;
 
-            var url = Constants.ConsentUrl(config.PublishableKey);
+            var url = Constants.ConsentUrl(config.Environment);
             var publishableKey = config.PublishableKey;
             var onError = config.OnError;
             var cancellationToken = _shutdownCancellationSource?.Token ?? CancellationToken.None;
@@ -765,6 +771,9 @@ namespace Immutable.Audience
                 // Defensive: Shutdown nulls _session too, but a future refactor
                 // that bails before that null must not leak a stale Session.
                 _session = null;
+                // Reset the env cache so test isolation and domain-reload
+                // both start from Sandbox; a subsequent Init overwrites it.
+                _currentEnvironment = AudienceEnvironment.Sandbox;
                 Identity.ClearCache();
             }
         }
