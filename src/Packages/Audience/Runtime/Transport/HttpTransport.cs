@@ -41,7 +41,11 @@ namespace Immutable.Audience
             _publishableKey = publishableKey ?? throw new ArgumentNullException(nameof(publishableKey));
             _url = Constants.MessagesUrl(publishableKey);
             _onError = onError;
-            _client = handler != null ? new HttpClient(handler) : new HttpClient();
+            // disposeHandler: false so the consumer can reuse their handler
+            // across Init/Shutdown cycles (matches _controlClient's policy).
+            _client = handler != null
+                ? new HttpClient(handler, disposeHandler: false)
+                : new HttpClient();
             _client.Timeout = TimeSpan.FromSeconds(30);
             _getUtcNow = getUtcNow ?? (() => DateTime.UtcNow);
         }
