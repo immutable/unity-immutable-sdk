@@ -16,7 +16,13 @@ namespace Immutable.Audience
         // `volatile _initialized` flag first so they never see a half-initialised state.
         // _consent and _session are written only inside _initLock but read outside,
         // so they stay `volatile` to make writes visible across threads.
-        // _userId is written outside the lock (Identify, Reset) — `volatile` for the same reason.
+        // _userId is written outside the lock (Identify) — `volatile` for the same reason.
+        //
+        // Init / Shutdown / Reset / SetConsent hold _initLock only to flip state
+        // and capture references; they release the lock before running blocking
+        // teardown (Session.Dispose, timer drain, queue shutdown, transport
+        // flush, disposes). This keeps the hold time to nanoseconds so a caller
+        // arriving on a different thread is not stranded behind those budgets.
         private static AudienceConfig? _config;
         private static DiskStore? _store;
         private static EventQueue? _queue;
@@ -258,9 +264,10 @@ namespace Immutable.Audience
         // and then purged). Call FlushAsync() first to preserve queued events.
         public static void Reset()
         {
-            // Phase 1 under _initLock: swap _session and reset identity. Blocking
-            // work (session drain, disk purge, new session_start) runs outside
-            // the lock so callers racing on _initLock don't wait on it.
+            // Phase 1 under _initLock: swap _session and clear _userId. Blocking
+            // work (session drain, disk purge, identity wipe, new session_start)
+            // runs outside the lock so callers racing on _initLock don't wait.
+            AudienceConfig? config;
             Session? oldSession;
             Session? newSession = null;
             EventQueue? queueForPurge;
@@ -268,13 +275,11 @@ namespace Immutable.Audience
             lock (_initLock)
             {
                 if (!_initialized) return;
-                var config = _config;
+                config = _config;
                 if (config == null) return;
 
                 oldSession = _session;
                 queueForPurge = _queue;
-
-                Identity.Reset(config.PersistentDataPath!);
                 _userId = null;
 
                 // Swap under the lock so racing SetConsent/OnPause/OnResume see
@@ -283,11 +288,13 @@ namespace Immutable.Audience
                 newSession = _session;
             }
 
-            // Phase 2 outside _initLock:
-            // Dispose enqueues session_end → PurgeAll wipes it → Start emits the
-            // new session_start. Order matches the in-lock sequence this replaces.
+            // Phase 2 outside _initLock. Order: Dispose enqueues session_end →
+            // PurgeAll wipes it → Identity.Reset clears the anonymousId file →
+            // Start emits the new session_start against the fresh id. Matches
+            // the in-lock sequence this replaces.
             oldSession?.Dispose();
             queueForPurge?.PurgeAll();
+            Identity.Reset(config.PersistentDataPath!);
             newSession?.Start();
         }
 
@@ -367,69 +374,91 @@ namespace Immutable.Audience
         {
             if (!_initialized) return;
 
-            // Serialised under _initLock: prevents concurrent upgrades from each
-            // building a fresh Session (stranding timers), and prevents racing
-            // Init's _session assignment.
-            Session? sessionToStart = null;
+            // Phase 1 under _initLock: flip _consent and swap _session / _userId.
+            // Phase 2 outside the lock runs the blocking side effects (persist,
+            // dispose, purge, downgrade, backend sync, new session_start) so a
+            // concurrent Shutdown / Init / Reset isn't held waiting on them.
+            ConsentLevel previous;
+            AudienceConfig? config;
+            EventQueue? queue;
+            Session? oldSession = null;
+            Session? newSession = null;
+            string? anonymousIdForPut;
+            bool downgradeFullToAnonymous = false;
+
             lock (_initLock)
             {
                 if (!_initialized) return;
 
-                var config = _config;
-                var queue = _queue;
+                config = _config;
+                queue = _queue;
                 if (config == null) return;
 
-                var previous = _consent;
+                previous = _consent;
                 if (level == previous) return;
 
                 // Snapshot anonymousId before Identity.Reset (on None) wipes it.
                 // The PUT audit trail needs to record whose consent changed.
-                var anonymousIdForPut = previous == ConsentLevel.None
+                anonymousIdForPut = previous == ConsentLevel.None
                     ? Identity.GetOrCreate(config.PersistentDataPath!, level)
                     : Identity.Get(config.PersistentDataPath!);
 
                 _consent = level;
 
-                try
-                {
-                    // PersistentDataPath validated non-null in Init; compiler can't propagate that.
-                    ConsentStore.Save(config.PersistentDataPath!, level);
-                }
-                catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
-                {
-                    Log.Warn($"SetConsent — failed to persist consent level: {ex.GetType().Name}: {ex.Message}. " +
-                             "In-memory level is updated but will revert on next launch.");
-                    NotifyErrorCallback(config.OnError, AudienceErrorCode.ConsentPersistFailed,
-                        $"Consent persist failed: {ex.Message}");
-                }
-
                 if (level == ConsentLevel.None)
                 {
-                    // Dispose for timer cleanup. session_end is gated out by
-                    // CanTrack (post-flip), matching revocation semantics.
-                    _session?.Dispose();
+                    // Swap the session reference under the lock; dispose outside.
+                    // session_end is gated out by CanTrack (post-flip), matching
+                    // revocation semantics.
+                    oldSession = _session;
                     _session = null;
-
-                    queue?.PurgeAll();
-                    Identity.Reset(config.PersistentDataPath!);
                 }
                 else if (previous == ConsentLevel.Full && level == ConsentLevel.Anonymous)
                 {
                     _userId = null;
-                    queue?.ApplyAnonymousDowngrade();
+                    downgradeFullToAnonymous = true;
                 }
                 else if (previous == ConsentLevel.None && _session == null)
                 {
-                    // Upgrade from None: previous session was disposed. Start a
-                    // fresh one. Start() deferred to outside the lock.
-                    _session = new Session(Track);
-                    sessionToStart = _session;
+                    // Upgrade from None: allocate + publish the new Session under
+                    // the lock so a concurrent SetConsent / Init sees the new
+                    // reference and the double-allocation guard above fires.
+                    newSession = new Session(Track);
+                    _session = newSession;
                 }
-
-                SyncConsentToBackend(config, level, anonymousIdForPut);
             }
 
-            sessionToStart?.Start();
+            // Phase 2 outside _initLock.
+            try
+            {
+                // PersistentDataPath validated non-null in Init; compiler can't propagate that.
+                ConsentStore.Save(config.PersistentDataPath!, level);
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            {
+                Log.Warn($"SetConsent — failed to persist consent level: {ex.GetType().Name}: {ex.Message}. " +
+                         "In-memory level is updated but will revert on next launch.");
+                NotifyErrorCallback(config.OnError, AudienceErrorCode.ConsentPersistFailed,
+                    $"Consent persist failed: {ex.Message}");
+            }
+
+            if (level == ConsentLevel.None)
+            {
+                oldSession?.Dispose();
+                queue?.PurgeAll();
+                Identity.Reset(config.PersistentDataPath!);
+            }
+            else if (downgradeFullToAnonymous)
+            {
+                // Synchronous: EventQueue.ApplyAnonymousDowngrade holds _drainLock
+                // while it rewrites on-disk files, blocking the in-queue drain
+                // and shutting the race with HttpTransport. See the method's comment.
+                queue?.ApplyAnonymousDowngrade();
+            }
+
+            newSession?.Start();
+
+            SyncConsentToBackend(config, level, anonymousIdForPut);
         }
 
         // Fire-and-forget PUT /v1/audience/tracking-consent.
