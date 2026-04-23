@@ -12,13 +12,15 @@ namespace Immutable.Audience
     internal delegate void TrackDelegate(string eventName, Dictionary<string, object> properties);
 
     // Unity session lifecycle. Emits session_start / session_heartbeat / session_end.
-    // duration is engagement time (excludes pause). Heartbeat fires off-thread;
-    // public methods run on the caller's thread. _track fires outside _lock.
+    // duration is engagement time (excludes pause). The heartbeat runs on a
+    // background thread; other methods run on the thread that called them. The
+    // track callback is invoked with the internal lock released.
     //
-    // Serialisation: Start / End / Dispose are NOT reentrant-safe from multiple
-    // threads. Callers serialise them (ImmutableAudience holds _initLock across
-    // Init / SetConsent / Shutdown / Reset, which are the only public entry points
-    // that touch a Session). Pause / Resume / OnHeartbeat are thread-safe.
+    // Start / End / Dispose are not safe to call from multiple threads at once.
+    // Callers run them one at a time (ImmutableAudience holds its init lock while
+    // calling Init / SetConsent / Shutdown / Reset — the only public entry points
+    // that touch a Session). Pause / Resume / OnHeartbeat are safe to call from
+    // any thread.
     internal sealed class Session : IDisposable
     {
         internal const int HeartbeatIntervalMs = 60_000;
@@ -63,9 +65,10 @@ namespace Immutable.Audience
         // Starts a session. Fires session_start and arms the heartbeat timer.
         internal void Start()
         {
-            // Phase 1: drain old timer outside _lock (callback re-enters _lock).
-            // Old state left intact so a trailing callback emits for the old session
-            // — wire-ordered before the new session_start.
+            // Phase 1: shut down the old timer with the internal lock released
+            // (the callback takes that lock itself). Old state left intact so a
+            // trailing callback sends a heartbeat for the old session — the
+            // backend receives it before the new session_start.
             Timer? oldTimer;
             lock (_lock)
             {
@@ -216,7 +219,8 @@ namespace Immutable.Audience
             lock (_lock)
             {
                 if (_disposed || _sessionId == null) return;
-                // Paused sessions don't ship heartbeats (timer still fires; this gates _track).
+                // A paused session doesn't send heartbeats. The timer keeps
+                // firing internally; this check stops the event from going out.
                 if (_pausedAt.HasValue) return;
                 sessionId = _sessionId!;
 
@@ -244,8 +248,10 @@ namespace Immutable.Audience
             SafeTrack("session_heartbeat", properties);
         }
 
-        // Guards _track from escaping. Heartbeat is a Timer callback (process
-        // kill on .NET 5+); Start/End are caller-thread (would bubble to Init/Shutdown).
+        // Stops exceptions from the track callback from reaching upstream.
+        // Heartbeat runs on a background timer — an uncaught exception there
+        // crashes the game on modern .NET. Start / End run on the caller's
+        // thread, where it would bubble into Init / Shutdown.
         private void SafeTrack(string eventName, Dictionary<string, object> properties)
         {
             try
@@ -258,7 +264,8 @@ namespace Immutable.Audience
             }
         }
 
-        // Guards the studio-supplied snapshot from escaping to the timer thread.
+        // Stops exceptions from the studio-supplied snapshot callback from
+        // reaching the background timer.
         private Dictionary<string, object>? SafePerformanceSnapshot()
         {
             if (_performanceSnapshot == null) return null;
@@ -288,7 +295,8 @@ namespace Immutable.Audience
             using var waited = new ManualResetEvent(false);
             try
             {
-                // Dispose(wh)=false: already disposed, wh never signals — skip the wait.
+                // Timer was already disposed. The signal handle won't fire, so
+                // don't wait for it.
                 if (!timer.Dispose(waited))
                     return;
 
