@@ -415,7 +415,10 @@ namespace Immutable.Audience.Tests
             using var cts = new CancellationTokenSource();
             cts.Cancel();
 
-            Assert.ThrowsAsync<OperationCanceledException>(
+            // CatchAsync (not ThrowsAsync) because HttpClient re-wraps our mock's
+            // OperationCanceledException as TaskCanceledException before rethrowing.
+            // We want to assert the cancellation *family*, not a specific subclass.
+            Assert.CatchAsync<OperationCanceledException>(
                 async () => await transport.SendBatchAsync(cts.Token));
 
             Assert.AreEqual(1, _store.Count(), "cancelled send must not delete the batch");
