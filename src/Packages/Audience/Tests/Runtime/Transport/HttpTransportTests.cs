@@ -397,6 +397,33 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
+        public void SendBatchAsync_CallerCancelled_Throws_DoesNotDeleteOrRecordFailure()
+        {
+            // Regression guard for PR #701 review: caller cancellation must
+            // propagate. If the `when (ct.IsCancellationRequested)` branch
+            // swallowed the exception, SendBatchAsync would return `true`
+            // with the batch still on disk, and a FlushAsync loop watching
+            // that return value would re-enter on the same cancelled token
+            // forever — nothing ever drains, nothing ever throws.
+            _store.Write("{\"type\":\"track\"}");
+
+            var handler = new MockHandler(() => throw new OperationCanceledException("simulated"));
+            AudienceError reportedError = null;
+            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+                onError: e => reportedError = e, handler: handler);
+
+            using var cts = new CancellationTokenSource();
+            cts.Cancel();
+
+            Assert.ThrowsAsync<OperationCanceledException>(
+                async () => await transport.SendBatchAsync(cts.Token));
+
+            Assert.AreEqual(1, _store.Count(), "cancelled send must not delete the batch");
+            Assert.IsFalse(transport.IsInBackoffWindow, "cancel is not a failure — no backoff engaged");
+            Assert.IsNull(reportedError, "cancel is caller-initiated — no onError fires");
+        }
+
+        [Test]
         public async Task IsInBackoffWindow_ClearsAfterNextAttemptAtElapses()
         {
             _store.Write("{\"type\":\"track\"}");
