@@ -1,0 +1,21 @@
+<Project>
+  <!--
+    Redirect dotnet build outputs to a repo-root artifacts/ folder so they
+    don't leak into the Unity package directory. When the package is
+    referenced from a Unity project via a `file:` path, Unity scans every
+    folder under the package root. Finding bin/obj/*.dll trips
+    "Multiple precompiled assemblies" errors and the locale-specific
+    resource DLLs also confuse Unity's asset importer.
+
+    Targets:
+      artifacts/Audience.Runtime/bin|obj/
+      artifacts/Audience.Tests/bin|obj/
+
+    $(MSBuildThisFileDirectory) here = src/Packages/Audience/
+    ../../../artifacts/ = <repo-root>/artifacts/
+  -->
+  <PropertyGroup>
+    <BaseOutputPath>$(MSBuildThisFileDirectory)../../../artifacts/$(MSBuildProjectName)/bin/</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)../../../artifacts/$(MSBuildProjectName)/obj/</BaseIntermediateOutputPath>
+  </PropertyGroup>
+</Project>

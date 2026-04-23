@@ -23,11 +23,30 @@ namespace Immutable.Audience.Tests
 
         private static string ReadPackageJson()
         {
-            var testDir = TestContext.CurrentContext.TestDirectory;
-            // Tests/bin/Debug/net8.0/ → Tests/ → Audience/package.json
-            var packagePath = Path.GetFullPath(Path.Combine(testDir, "..", "..", "..", "..", "package.json"));
-            Assert.IsTrue(File.Exists(packagePath), $"package.json not found at {packagePath}");
-            return File.ReadAllText(packagePath);
+            // Walk up from the test binary location looking for the Audience
+            // package directory. Originally this hard-coded four "../" hops
+            // which only worked when bin/ sat inside Tests/. Directory.Build
+            // .props redirects bin/ to the repo-root /artifacts/ folder so
+            // dotnet build outputs don't leak into Unity's scan path — the
+            // relative walk no longer resolves to the package. Searching
+            // upward is robust against either layout.
+            var current = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
+            while (current != null)
+            {
+                var candidate = Path.Combine(current.FullName, "src", "Packages", "Audience", "package.json");
+                if (File.Exists(candidate)) return File.ReadAllText(candidate);
+
+                // Also try the direct-inside case (package root itself is
+                // the ancestor), which handles consuming-project layouts
+                // that embed the package without the src/Packages prefix.
+                var direct = Path.Combine(current.FullName, "package.json");
+                if (File.Exists(direct) && current.Name == "Audience") return File.ReadAllText(direct);
+
+                current = current.Parent;
+            }
+
+            Assert.Fail($"package.json not found by walking up from {TestContext.CurrentContext.TestDirectory}");
+            return null;
         }
     }
 }

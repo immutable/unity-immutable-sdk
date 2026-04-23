@@ -27,6 +27,8 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.ResetState();
             ImmutableAudience.LaunchContextProvider = null;
+            ImmutableAudience.ContextProvider = null;
+            ImmutableAudience.PerformanceSnapshotProvider = null;
             ImmutableAudience.DefaultPersistentDataPathProvider = null;
             Identity.Reset(_testDir);
             if (Directory.Exists(_testDir))
@@ -56,6 +58,134 @@ namespace Immutable.Audience.Tests
             {
                 return Task.FromResult(new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
             }
+        }
+
+        // -----------------------------------------------------------------
+        // Unity context provider
+        // -----------------------------------------------------------------
+
+        [Test]
+        public void ContextProvider_Set_MergesFieldsIntoEveryMessageContext()
+        {
+            ImmutableAudience.ContextProvider = () => new Dictionary<string, object>
+            {
+                ["userAgent"] = "TestOS 1.0",
+                ["locale"] = "en-GB",
+                ["timezone"] = "Europe/London",
+                ["screen"] = "1920x1080",
+            };
+
+            ImmutableAudience.Init(MakeConfig());
+            ImmutableAudience.Track("unit_test_event");
+            ImmutableAudience.Shutdown();
+
+            var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
+            var blobs = Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText).ToList();
+
+            Assert.IsTrue(blobs.Any(b =>
+                b.Contains("\"userAgent\":\"TestOS 1.0\"") &&
+                b.Contains("\"locale\":\"en-GB\"") &&
+                b.Contains("\"timezone\":\"Europe/London\"") &&
+                b.Contains("\"screen\":\"1920x1080\"") &&
+                b.Contains("\"library\":")),
+                "Enqueue should merge ContextProvider fields into msg.context alongside library/libraryVersion");
+        }
+
+        [Test]
+        public void ContextProvider_ThrowingDelegate_SwallowsAndShipsBaseContext()
+        {
+            ImmutableAudience.ContextProvider = () => throw new InvalidOperationException("boom");
+
+            ImmutableAudience.Init(MakeConfig());
+            ImmutableAudience.Track("unit_test_event");
+            ImmutableAudience.Shutdown();
+
+            var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
+            var blobs = Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText).ToList();
+
+            Assert.IsTrue(blobs.Any(b => b.Contains("\"unit_test_event\"") && b.Contains("\"library\":")),
+                "event should still ship with base context when ContextProvider throws");
+        }
+
+        [Test]
+        public void ContextProvider_ReturnsNull_ShipsBaseContext()
+        {
+            ImmutableAudience.ContextProvider = () => null;
+
+            ImmutableAudience.Init(MakeConfig());
+            ImmutableAudience.Track("unit_test_event");
+            ImmutableAudience.Shutdown();
+
+            var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
+            var blobs = Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText).ToList();
+
+            Assert.IsTrue(blobs.Any(b => b.Contains("\"unit_test_event\"") && b.Contains("\"library\":")),
+                "event should still ship with base context when ContextProvider returns null");
+        }
+
+        [Test]
+        public void PerformanceSnapshotProvider_ReachesHeartbeat()
+        {
+            var sentinelKey = "sentinel_perf_metric";
+            ImmutableAudience.PerformanceSnapshotProvider = () => new Dictionary<string, object>
+            {
+                [sentinelKey] = 42L,
+            };
+
+            ImmutableAudience.Init(MakeConfig());
+            ImmutableAudience.InvokeSessionHeartbeatForTesting();
+            ImmutableAudience.FlushQueueToDiskForTesting();
+            ImmutableAudience.Shutdown();
+
+            var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
+            var blobs = Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText).ToList();
+
+            Assert.IsTrue(blobs.Any(b => b.Contains("\"session_heartbeat\"") && b.Contains("\"" + sentinelKey + "\":42")),
+                "PerformanceSnapshotProvider fields must reach session_heartbeat on disk");
+        }
+
+        [Test]
+        public void PerformanceSnapshotProvider_ReachesHeartbeat_AfterConsentUpgrade()
+        {
+            var sentinelKey = "sentinel_perf_metric_upgrade";
+            ImmutableAudience.PerformanceSnapshotProvider = () => new Dictionary<string, object>
+            {
+                [sentinelKey] = 99L,
+            };
+
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.None));
+            ImmutableAudience.SetConsent(ConsentLevel.Anonymous);
+            ImmutableAudience.InvokeSessionHeartbeatForTesting();
+            ImmutableAudience.FlushQueueToDiskForTesting();
+            ImmutableAudience.Shutdown();
+
+            var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
+            var blobs = Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText).ToList();
+
+            Assert.IsTrue(blobs.Any(b => b.Contains("\"session_heartbeat\"") && b.Contains("\"" + sentinelKey + "\":99")),
+                "PerformanceSnapshotProvider fields must reach session_heartbeat after consent upgrade");
+        }
+
+        [Test]
+        public void PerformanceSnapshotProvider_ReachesHeartbeat_AfterReset()
+        {
+            var sentinelKey = "sentinel_perf_metric_reset";
+            ImmutableAudience.PerformanceSnapshotProvider = () => new Dictionary<string, object>
+            {
+                [sentinelKey] = 77L,
+            };
+
+            ImmutableAudience.Init(MakeConfig());
+            ImmutableAudience.Reset();
+            ImmutableAudience.InvokeSessionHeartbeatForTesting();
+            ImmutableAudience.FlushQueueToDiskForTesting();
+            ImmutableAudience.Shutdown();
+
+            var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
+            var blobs = Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText).ToList();
+
+            Assert.IsTrue(blobs.Any(b => b.Contains("\"session_heartbeat\"") && b.Contains("\"" + sentinelKey + "\":77")),
+                "PerformanceSnapshotProvider fields must reach session_heartbeat after Reset");
         }
 
         // -----------------------------------------------------------------
