@@ -342,6 +342,12 @@ namespace Immutable.Audience
         {
             var now = _getUtcNow();
             var livePause = _pausedAt.HasValue ? now - _pausedAt.Value : TimeSpan.Zero;
+            // Clamp: mirrors the Resume() guard. If the clock rewinds while the
+            // session is still paused and End / EmitEndAndSeal fires (e.g.
+            // Shutdown while backgrounded), livePause would be negative and,
+            // being subtracted, would inflate engagedSeconds past the wall-clock
+            // window. The final ≥0 clamp catches negatives but not inflation.
+            if (livePause < TimeSpan.Zero) livePause = TimeSpan.Zero;
             var engagedSeconds = ((now - _sessionStart) - _accumulatedPause - livePause).TotalSeconds;
             if (engagedSeconds < 0) return 0;
             return (long)Math.Round(engagedSeconds, MidpointRounding.AwayFromZero);
