@@ -1178,6 +1178,63 @@ namespace Immutable.Audience.Tests
                 "both FlushAsync calls should complete after release");
         }
 
+        [Test]
+        public async Task FlushAsync_CancelledToken_Terminates_DoesNotHotLoop()
+        {
+            // Regression for PR #701 review (@nattb8): if SendBatchAsync
+            // silently swallowed caller cancellation, the inner while-loop
+            // here would re-enter on the same cancelled token and spin
+            // because the batch is never deleted on that code path. The
+            // task below would never complete. After the fix, cancellation
+            // propagates and the task faults quickly.
+            var handler = new CancellingHandler();
+            var config = MakeConfig();
+            config.HttpHandler = handler;
+
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Track("event_to_send");
+            ImmutableAudience.FlushQueueToDiskForTesting();
+
+            using var cts = new CancellationTokenSource();
+            cts.Cancel();
+
+            var flush = ImmutableAudience.FlushAsync(cts.Token);
+            var finishedFirst = await Task.WhenAny(flush, Task.Delay(TimeSpan.FromSeconds(2)));
+
+            Assert.AreSame(flush, finishedFirst,
+                "FlushAsync must terminate (not hot-loop) when the token is cancelled");
+            Assert.IsTrue(flush.IsCanceled || flush.IsFaulted,
+                "FlushAsync must propagate the cancellation, not return normally");
+            Assert.LessOrEqual(handler.CallCount, 1,
+                "a cancelled token must not drive repeated SendAsync attempts");
+
+            // Gate must be released by the finally block — a follow-up flush
+            // on an uncancelled token should proceed, proving _sendInFlight
+            // is not stranded at 1.
+            handler.AcceptNextAsSuccess = true;
+            var followUp = ImmutableAudience.FlushAsync();
+            Assert.IsTrue(followUp.Wait(TimeSpan.FromSeconds(2)),
+                "_sendInFlight must be released after a cancelled flush");
+        }
+
+        private class CancellingHandler : HttpMessageHandler
+        {
+            public int CallCount;
+            public bool AcceptNextAsSuccess;
+
+            protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
+            {
+                Interlocked.Increment(ref CallCount);
+                ct.ThrowIfCancellationRequested();
+                var status = AcceptNextAsSuccess ? HttpStatusCode.OK : HttpStatusCode.ServiceUnavailable;
+                var body = AcceptNextAsSuccess ? "{\"accepted\":1,\"rejected\":0}" : "";
+                return Task.FromResult(new HttpResponseMessage(status)
+                {
+                    Content = new StringContent(body)
+                });
+            }
+        }
+
         private class BlockingHandler : HttpMessageHandler
         {
             public readonly ManualResetEventSlim EnteredSendAsync = new ManualResetEventSlim(false);
