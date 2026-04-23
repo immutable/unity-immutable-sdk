@@ -710,13 +710,7 @@ namespace Immutable.Audience
         // Private
         // -----------------------------------------------------------------
 
-        private static bool CanTrack()
-        {
-            return _initialized && _state.Level.CanTrack();
-        }
-
-        // Copy the dictionary so the caller editing it later can't corrupt the
-        // message while the background thread is writing it to disk.
+        // Shallow-copy the caller's dict so a post-call mutation cannot race the drain-thread serialiser.
         private static Dictionary<string, object>? SnapshotCallerDict(Dictionary<string, object>? src) =>
             src != null ? new Dictionary<string, object>(src) : null;
 
