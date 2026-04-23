@@ -136,16 +136,42 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.Init(MakeConfig());
 
-            var beforeQueue = AudiencePaths.QueueDir(_testDir);
-            var beforeCount = Directory.Exists(beforeQueue) ? Directory.GetFiles(beforeQueue, "*.json").Length : 0;
-
             Assert.DoesNotThrow(() => ImmutableAudience.Track((string)null));
             Assert.DoesNotThrow(() => ImmutableAudience.Track(""));
 
             ImmutableAudience.Shutdown();
-            var afterCount = Directory.GetFiles(beforeQueue, "*.json").Length;
-            // Only game_launch should have been enqueued; null/empty Track calls dropped.
-            Assert.AreEqual(beforeCount + 1, afterCount, "null/empty event names must be dropped, not enqueued");
+
+            // Assert the invariant directly: no enqueued message carries a
+            // null or empty eventName. Earlier versions counted files
+            // before/after the Track calls, which raced with the async
+            // disk drain — Init enqueues session_start + game_launch, and
+            // Shutdown adds session_end, so the file count after Shutdown
+            // is deterministic but the before-count is not. Counting is
+            // the wrong axis: what the test actually wants to pin is
+            // "no empty-name event ever hit the queue", regardless of
+            // what else was enqueued alongside it.
+            //
+            // Deserialize each message and inspect the eventName field
+            // directly. A raw substring scan would false-positive on an
+            // event whose property value happened to be the literal
+            // string "eventName":"" (unlikely but possible) and would
+            // silently break on any future JSON encoding change (whitespace,
+            // key ordering, escape style).
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            if (!Directory.Exists(queueDir)) return;
+            foreach (var file in Directory.GetFiles(queueDir, "*.json"))
+            {
+                var msg = JsonReader.DeserializeObject(File.ReadAllText(file));
+                if ((string)msg["type"] != "track") continue;
+
+                if (!msg.TryGetValue("eventName", out var eventNameObj))
+                    Assert.Fail($"track message {Path.GetFileName(file)} missing eventName field");
+
+                Assert.IsNotNull(eventNameObj,
+                    $"queue file {Path.GetFileName(file)} has a null eventName");
+                Assert.IsNotEmpty((string)eventNameObj,
+                    $"queue file {Path.GetFileName(file)} has an empty eventName");
+            }
         }
 
         [Test]
@@ -596,6 +622,127 @@ namespace Immutable.Audience.Tests
 
                 ImmutableAudience.ResetState();
                 // Clean state for next iteration so consent isn't carried via disk.
+                if (Directory.Exists(AudiencePaths.AudienceDir(_testDir)))
+                    Directory.Delete(AudiencePaths.AudienceDir(_testDir), recursive: true);
+            }
+        }
+
+        [Test]
+        public void Init_ConcurrentWithSetConsent_LeavesConsistentState()
+        {
+            // Pre-fix (before 1784ae3f), SetConsent mutated _consent and
+            // _session outside any lock. A SetConsent landing between Init's
+            // _initialized = true and its _session = new Session(...)
+            // observed _session = null, skipped the dispose path, and let
+            // Init finish creating a Session whose timer was never disposed.
+            //
+            // Limitation: the race window is narrow and not deterministically
+            // reproducible without a test hook inside Init. This is a
+            // probabilistic guard — many iterations of concurrent Init /
+            // SetConsent(None) from two threads, asserting only that the
+            // final state is consistent (consent is whichever the last lock
+            // holder set, no exceptions escape, Init did not silently ignore
+            // the race). Regressions that fully remove SetConsent's lock
+            // would still show up here via ConsentLevel mismatches or
+            // exceptions on a majority of iterations.
+            const int iterations = 50;
+            for (int iter = 0; iter < iterations; iter++)
+            {
+                Exception? initEx = null;
+                Exception? setConsentEx = null;
+
+                var setConsentTask = Task.Run(() =>
+                {
+                    try
+                    {
+                        Thread.Yield();
+                        ImmutableAudience.SetConsent(ConsentLevel.None);
+                    }
+                    catch (Exception ex) { setConsentEx = ex; }
+                });
+
+                var initTask = Task.Run(() =>
+                {
+                    try { ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous)); }
+                    catch (Exception ex) { initEx = ex; }
+                });
+
+                Assert.IsTrue(Task.WaitAll(new[] { initTask, setConsentTask }, TimeSpan.FromSeconds(5)),
+                    $"iteration {iter}: Init / SetConsent must complete within 5s");
+                Assert.IsNull(initEx, $"iteration {iter}: Init threw {initEx}");
+                Assert.IsNull(setConsentEx, $"iteration {iter}: SetConsent threw {setConsentEx}");
+
+                // Either order is valid:
+                //   - SetConsent runs first: _initialized is false, SetConsent
+                //     early-returns, Init then initialises with Anonymous.
+                //   - Init runs first: Init sets Anonymous, SetConsent flips
+                //     to None under the lock, consent ends at None.
+                var finalConsent = ImmutableAudience.CurrentConsentForTesting;
+                Assert.That(finalConsent,
+                    Is.EqualTo(ConsentLevel.None).Or.EqualTo(ConsentLevel.Anonymous),
+                    $"iteration {iter}: unexpected final consent {finalConsent}");
+
+                ImmutableAudience.ResetState();
+                if (Directory.Exists(AudiencePaths.AudienceDir(_testDir)))
+                    Directory.Delete(AudiencePaths.AudienceDir(_testDir), recursive: true);
+            }
+        }
+
+        [Test]
+        public void SetConsent_ConcurrentUpgradeFromNone_StartsOneSession_StressTest()
+        {
+            // Starting from ConsentLevel.None, N threads race to
+            // SetConsent(Anonymous). Without the _initLock in SetConsent,
+            // multiple threads observe previous == None, each take the
+            // upgrade branch, each build a fresh Session, each Start() it.
+            // The last _session = new Session(...) wins; the earlier
+            // instances keep their heartbeat timers running on the
+            // thread pool forever (heartbeats land as dropped-by-CanTrack
+            // no-ops but the Timer allocations leak unbounded).
+            //
+            // Wire-visible symptom: multiple session_start events hit the
+            // queue per iteration. With the lock, exactly one thread
+            // flips _consent, the rest observe previous == Anonymous and
+            // return without touching _session.
+            //
+            // Sabotage: removing the lock (or widening the else-if to skip
+            // the previous-consent check) fails this test reliably within
+            // a handful of iterations.
+            const int iterations = 100;
+            const int callersPerIteration = 4;
+
+            for (int iter = 0; iter < iterations; iter++)
+            {
+                ImmutableAudience.Init(MakeConfig(ConsentLevel.None));
+
+                var barrier = new Barrier(callersPerIteration);
+                var callers = new Task[callersPerIteration];
+                for (int c = 0; c < callersPerIteration; c++)
+                {
+                    callers[c] = Task.Run(() =>
+                    {
+                        barrier.SignalAndWait();
+                        ImmutableAudience.SetConsent(ConsentLevel.Anonymous);
+                    });
+                }
+
+                Task.WaitAll(callers, TimeSpan.FromSeconds(5));
+                ImmutableAudience.FlushQueueToDiskForTesting();
+
+                var queueDir = AudiencePaths.QueueDir(_testDir);
+                var sessionStarts = Directory.Exists(queueDir)
+                    ? Directory.GetFiles(queueDir, "*.json")
+                        .Select(File.ReadAllText)
+                        .Count(c => c.Contains("\"session_start\""))
+                    : 0;
+
+                if (sessionStarts != 1)
+                {
+                    Assert.Fail(
+                        $"iteration {iter}: expected exactly one session_start from concurrent SetConsent upgrade, got {sessionStarts}");
+                }
+
+                ImmutableAudience.ResetState();
                 if (Directory.Exists(AudiencePaths.AudienceDir(_testDir)))
                     Directory.Delete(AudiencePaths.AudienceDir(_testDir), recursive: true);
             }

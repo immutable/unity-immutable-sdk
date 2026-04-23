@@ -13,7 +13,9 @@ namespace Immutable.Audience
     public static class ImmutableAudience
     {
         // Reference fields are written inside _initLock; readers fence off the volatile _initialized load.
-        // _consent and _userId are mutated outside the lock and need volatile themselves.
+        // _consent and _session are written only inside _initLock but read outside (Track's CanTrack,
+        // OnPause/OnResume) so they stay volatile for release/acquire visibility.
+        // _userId is written outside the lock (Identify, Reset) and needs volatile for the same reason.
         private static AudienceConfig? _config;
         private static DiskStore? _store;
         private static EventQueue? _queue;
@@ -43,6 +45,19 @@ namespace Immutable.Audience
         // Unity context without the core referencing UnityEngine.
         internal static Func<Dictionary<string, object>>? LaunchContextProvider;
 
+        // Session is created when consent allows — either at Init or on
+        // upgrade from None — and is disposed on Shutdown or SetConsent(None).
+        // Holds the current sessionId, fires session_start / session_heartbeat
+        // / session_end via the Track callback, and handles pause/resume
+        // rollover.
+        //
+        // Volatile + nullable because the field is read outside _initLock on
+        // the Unity main thread (OnPause, OnResume) and written outside the
+        // lock by SetConsent and Shutdown. volatile gives a release/acquire
+        // fence so a freshly-assigned Session from SetConsent(None → *) is
+        // visible to a subsequent OnPause on any thread.
+        private static volatile Session? _session;
+
         // Starts the SDK. Call once at launch.
         public static void Init(AudienceConfig config)
         {
@@ -56,6 +71,7 @@ namespace Immutable.Audience
                 throw new ArgumentException("PersistentDataPath is required", nameof(config));
 
             ConsentLevel consentAtInit;
+            Session? sessionToStart;
             lock (_initLock)
             {
                 if (_initialized)
@@ -87,9 +103,56 @@ namespace Immutable.Audience
 
                 // Snapshot under the lock so a racing SetConsent(None) can't drop the launch event.
                 consentAtInit = _consent;
+
+                // Create the session object under the lock so ResetState /
+                // Shutdown have a consistent view. Start() is deferred
+                // until outside the lock because Track() (which
+                // session_start calls) acquires its own locks.
+                if (consentAtInit.CanTrack())
+                    _session = new Session(Track);
+
+                // Captured under the lock so the Start() call below
+                // operates on the Session this Init created, not a
+                // replacement from a SetConsent that slips in after we
+                // release _initLock. SetConsent itself takes _initLock so
+                // it cannot land in the middle of this block, but between
+                // the lock release and Start() a SetConsent(None) can
+                // Dispose the captured Session (Start then early-returns
+                // on _disposed, suppressing session_start) or a
+                // SetConsent(None)+SetConsent(Anonymous) pair can swap
+                // _session for a new one (we still Start the captured
+                // original, which is disposed and no-ops; the upgrade path
+                // Starts the replacement itself). Either way, no duplicate
+                // session_start on the wire and no "events after consent
+                // dropped" leak.
+                sessionToStart = _session;
             }
 
+            // session_start fires before game_launch so the wire stream
+            // shows the new sessionId ahead of the launch event.
+            sessionToStart?.Start();
+
             FireGameLaunch(config, consentAtInit);
+        }
+
+        // Notifies the session that the game was paused (alt-tab,
+        // minimize, OS pause). If not resumed within 30 s the session
+        // ends and a new one starts on resume. Called only from the
+        // Unity lifecycle bridge, so it stays internal; the Unity
+        // assembly reaches it via InternalsVisibleTo in AssemblyInfo.cs.
+        internal static void OnPause()
+        {
+            if (!_initialized) return;
+            _session?.Pause();
+        }
+
+        // Notifies the session that the game resumed. Called only from
+        // the Unity lifecycle bridge; see OnPause for the visibility
+        // rationale.
+        internal static void OnResume()
+        {
+            if (!_initialized) return;
+            _session?.Resume();
         }
 
         // -----------------------------------------------------------------
@@ -340,47 +403,87 @@ namespace Immutable.Audience
         {
             if (!_initialized) return;
 
-            var config = _config;
-            var queue = _queue;
-            if (config == null) return;
-
-            var previous = _consent;
-            if (level == previous) return;
-
-            // Snapshot the anonymousId BEFORE Identity.Reset (on downgrade to
-            // None) wipes the file. The PUT audit trail needs it to record
-            // whose consent changed.
-            var anonymousIdForPut = previous == ConsentLevel.None
-                ? Identity.GetOrCreate(config.PersistentDataPath!, level)
-                : Identity.Get(config.PersistentDataPath!);
-
-            _consent = level;
-
-            try
+            // Serialize the whole transition under _initLock:
+            //   - Two concurrent SetConsent calls that both see previous=None
+            //     would otherwise both take the upgrade branch and each build
+            //     a fresh Session, stranding one timer. The lock forces them
+            //     to observe each other.
+            //   - A SetConsent landing in the narrow window between Init's
+            //     _initialized = true and its _session = new Session(...)
+            //     assignment would otherwise see _session = null, skip the
+            //     Dispose path, and let Init finish creating a Session whose
+            //     timer never gets disposed. Under the lock, SetConsent can
+            //     only enter after Init has fully released it, so _session
+            //     reflects Init's final assignment.
+            Session? sessionToStart = null;
+            lock (_initLock)
             {
-                // PersistentDataPath is validated non-null in Init; compiler can't propagate that.
-                ConsentStore.Save(config.PersistentDataPath!, level);
-            }
-            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
-            {
-                Log.Warn($"SetConsent — failed to persist consent level: {ex.GetType().Name}: {ex.Message}. " +
-                         "In-memory level is updated but will revert on next launch.");
-                NotifyErrorCallback(config.OnError, AudienceErrorCode.ConsentPersistFailed,
-                    $"Consent persist failed: {ex.Message}");
+                if (!_initialized) return;
+
+                var config = _config;
+                var queue = _queue;
+                if (config == null) return;
+
+                var previous = _consent;
+                if (level == previous) return;
+
+                // Snapshot the anonymousId BEFORE Identity.Reset (on downgrade to
+                // None) wipes the file. The PUT audit trail needs it to record
+                // whose consent changed.
+                var anonymousIdForPut = previous == ConsentLevel.None
+                    ? Identity.GetOrCreate(config.PersistentDataPath!, level)
+                    : Identity.Get(config.PersistentDataPath!);
+
+                _consent = level;
+
+                try
+                {
+                    // PersistentDataPath is validated non-null in Init; compiler can't propagate that.
+                    ConsentStore.Save(config.PersistentDataPath!, level);
+                }
+                catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+                {
+                    Log.Warn($"SetConsent — failed to persist consent level: {ex.GetType().Name}: {ex.Message}. " +
+                             "In-memory level is updated but will revert on next launch.");
+                    NotifyErrorCallback(config.OnError, AudienceErrorCode.ConsentPersistFailed,
+                        $"Consent persist failed: {ex.Message}");
+                }
+
+                if (level == ConsentLevel.None)
+                {
+                    // Dispose the session for heartbeat-timer cleanup.
+                    // session_end is intentionally NOT emitted: Session.Dispose
+                    // calls back into Track("session_end", ...) which sees
+                    // _consent == None (set above) and drops the event via
+                    // CanTrack. That matches revocation semantics — no events
+                    // should leave the device after consent is None — and the
+                    // queue purge below clears anything on disk anyway.
+                    _session?.Dispose();
+                    _session = null;
+
+                    queue?.PurgeAll();
+                    Identity.Reset(config.PersistentDataPath!);
+                }
+                else if (previous == ConsentLevel.Full && level == ConsentLevel.Anonymous)
+                {
+                    _userId = null;
+                    queue?.ApplyAnonymousDowngrade();
+                }
+                else if (previous == ConsentLevel.None && _session == null)
+                {
+                    // Upgrade from None: the previous session was disposed on
+                    // the prior downgrade. Start a fresh one so
+                    // session_heartbeat and session_end can resume. Start()
+                    // is deferred until outside the lock because Track()
+                    // (which session_start calls) acquires its own locks.
+                    _session = new Session(Track);
+                    sessionToStart = _session;
+                }
+
+                SyncConsentToBackend(config, level, anonymousIdForPut);
             }
 
-            if (level == ConsentLevel.None)
-            {
-                queue?.PurgeAll();
-                Identity.Reset(config.PersistentDataPath!);
-            }
-            else if (previous == ConsentLevel.Full && level == ConsentLevel.Anonymous)
-            {
-                _userId = null;
-                queue?.ApplyAnonymousDowngrade();
-            }
-
-            SyncConsentToBackend(config, level, anonymousIdForPut);
+            sessionToStart?.Start();
         }
 
         // Fire-and-forget PUT /v1/audience/tracking-consent. Failures do not
@@ -454,71 +557,87 @@ namespace Immutable.Audience
         // Flush and stop the SDK.
         public static void Shutdown()
         {
-            if (!_initialized) return;
-
-            // Drain in-flight timer callbacks before disposing dependents.
-            // Parameterless Timer.Dispose returns immediately and would race SendBatch.
-            var timer = _sendTimer;
-            if (timer != null)
+            // Serialize with Init and SetConsent under the same lock. Without
+            // this, Shutdown racing a concurrent Init could observe
+            // _initialized = true (volatile set by Init) and proceed to tear
+            // down fields Init is still in the middle of assigning, or Init
+            // could finish assigning fields that Shutdown already disposed.
+            // The lock also pins _controlClient / _shutdownCancellationSource
+            // against a SetConsent whose SyncConsentToBackend Task closure
+            // captured them just before Shutdown disposed them.
+            lock (_initLock)
             {
-                using var disposed = new ManualResetEvent(false);
-                if (timer.Dispose(disposed))
+                if (!_initialized) return;
+
+                // End the session first so session_end hits the queue before
+                // the final flush.
+                _session?.Dispose();
+                _session = null;
+
+                // Drain in-flight timer callbacks before disposing dependents.
+                // Parameterless Timer.Dispose returns immediately and would race SendBatch.
+                var timer = _sendTimer;
+                if (timer != null)
                 {
-                    disposed.WaitOne(TimeSpan.FromSeconds(2));
-                }
-                _sendTimer = null;
-            }
-
-            // Clear the in-flight guard in case the WaitOne above timed out
-            // with a SendBatch callback still running: without this, a later
-            // Init would leave _sendInFlight stranded at 1 and suppress every
-            // tick of the new timer.
-            Interlocked.Exchange(ref _sendInFlight, 0);
-
-            _queue?.Shutdown();
-
-            // Best-effort final send, capped so a slow network can't hang quit.
-            if (_transport != null)
-            {
-                var timeoutMs = _config?.ShutdownFlushTimeoutMs ?? 2_000;
-                try
-                {
-                    var send = _transport.SendBatchAsync();
-                    if (!send.Wait(timeoutMs))
+                    using var disposed = new ManualResetEvent(false);
+                    if (timer.Dispose(disposed))
                     {
-                        Log.Warn($"Shutdown flush exceeded {timeoutMs}ms — abandoning. " +
-                                 "Queued events remain on disk and will retry on next startup.");
+                        disposed.WaitOne(TimeSpan.FromSeconds(2));
+                    }
+                    _sendTimer = null;
+                }
+
+                // Clear the in-flight guard in case the WaitOne above timed out
+                // with a SendBatch callback still running: without this, a later
+                // Init would leave _sendInFlight stranded at 1 and suppress every
+                // tick of the new timer.
+                Interlocked.Exchange(ref _sendInFlight, 0);
+
+                _queue?.Shutdown();
+
+                // Best-effort final send, capped so a slow network can't hang quit.
+                if (_transport != null)
+                {
+                    var timeoutMs = _config?.ShutdownFlushTimeoutMs ?? 2_000;
+                    try
+                    {
+                        var send = _transport.SendBatchAsync();
+                        if (!send.Wait(timeoutMs))
+                        {
+                            Log.Warn($"Shutdown flush exceeded {timeoutMs}ms — abandoning. " +
+                                     "Queued events remain on disk and will retry on next startup.");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Warn($"Shutdown flush threw: {ex.GetType().Name}: {ex.Message}");
                     }
                 }
-                catch (Exception ex)
-                {
-                    Log.Warn($"Shutdown flush threw: {ex.GetType().Name}: {ex.Message}");
-                }
+
+                // Cancel in-flight control-plane HTTP requests (DeleteData / SyncConsentToBackend)
+                // before disposing the client so awaiting callers observe OperationCanceledException
+                // rather than ObjectDisposedException.
+                _shutdownCancellationSource?.Cancel();
+
+                _transport?.Dispose();
+                _queue?.Dispose();
+                _controlClient?.Dispose();
+                _shutdownCancellationSource?.Dispose();
+                _shutdownCancellationSource = null;
+
+                // Drop Identity's in-memory cache so a subsequent Init with a
+                // different persistentDataPath reads the file from the new path
+                // instead of returning the previous session's id.
+                Identity.ClearCache();
+
+                _initialized = false;
+                _config = null;
+                _store = null;
+                _queue = null;
+                _transport = null;
+                _controlClient = null;
+                _userId = null;
             }
-
-            // Cancel in-flight control-plane HTTP requests (DeleteData / SyncConsentToBackend)
-            // before disposing the client so awaiting callers observe OperationCanceledException
-            // rather than ObjectDisposedException.
-            _shutdownCancellationSource?.Cancel();
-
-            _transport?.Dispose();
-            _queue?.Dispose();
-            _controlClient?.Dispose();
-            _shutdownCancellationSource?.Dispose();
-            _shutdownCancellationSource = null;
-
-            // Drop Identity's in-memory cache so a subsequent Init with a
-            // different persistentDataPath reads the file from the new path
-            // instead of returning the previous session's id.
-            Identity.ClearCache();
-
-            _initialized = false;
-            _config = null;
-            _store = null;
-            _queue = null;
-            _transport = null;
-            _controlClient = null;
-            _userId = null;
         }
 
         // -----------------------------------------------------------------
@@ -532,14 +651,25 @@ namespace Immutable.Audience
         // re-assigns it on the same SubsystemRegistration call.
         internal static void ResetState()
         {
-            if (_initialized)
-                Shutdown();
+            // Same lock as Shutdown/Init so a concurrent Init cannot repopulate
+            // fields we are in the middle of clearing. Monitor is recursive,
+            // so the inner Shutdown() re-enters cleanly on the same thread.
+            lock (_initLock)
+            {
+                if (_initialized)
+                    Shutdown();
 
-            _consent = ConsentLevel.None;
-            // Drop Identity's static cache so a subsequent Init with a different
-            // persistentDataPath (tests, domain reload with changed config) reads
-            // the file from the new path, not the previous session's cached id.
-            Identity.ClearCache();
+                _consent = ConsentLevel.None;
+                // Shutdown already nulls _session. Repeat here as a defensive
+                // belt-and-braces step so a future Shutdown refactor that bails
+                // before the null (early return on a new guard, reordering,
+                // etc.) cannot leak a stale Session into the next Init cycle.
+                _session = null;
+                // Drop Identity's static cache so a subsequent Init with a different
+                // persistentDataPath (tests, domain reload with changed config) reads
+                // the file from the new path, not the previous session's cached id.
+                Identity.ClearCache();
+            }
         }
 
         internal static ConsentLevel CurrentConsentForTesting => _consent;
@@ -549,6 +679,13 @@ namespace Immutable.Audience
         // Invokes the timer callback body directly so the overlapping-tick
         // guard can be exercised without a real timer.
         internal static void SendBatchForTesting() => SendBatch();
+
+        // Drives a single heartbeat through the active Session so lifecycle
+        // tests can assert that OnPause / OnResume actually route to
+        // Session.Pause / Session.Resume. The real heartbeat cadence is
+        // 60 s (Session.HeartbeatIntervalMs) so a timer-driven pass would
+        // either take 60 s or need a bespoke interval override per test.
+        internal static void InvokeSessionHeartbeatForTesting() => _session?.OnHeartbeat();
 
         // -----------------------------------------------------------------
         // Private
@@ -661,6 +798,14 @@ namespace Immutable.Audience
             // studios set it explicitly because Unity cannot auto-detect the store.
             if (config.DistributionPlatform != null)
                 properties["distributionPlatform"] = config.DistributionPlatform;
+
+            // No sessionId on game_launch. Event Reference (v1) schema for
+            // game_launch lists platform, version, buildGuid,
+            // distributionPlatform, unityVersion — not sessionId.
+            // Correlation with the session happens at the pipeline layer via
+            // eventTimestamp ordering; session_start fires immediately
+            // before game_launch (see Init ordering) and carries the id
+            // explicitly.
 
             Track("game_launch", properties.Count > 0 ? properties : null);
         }
