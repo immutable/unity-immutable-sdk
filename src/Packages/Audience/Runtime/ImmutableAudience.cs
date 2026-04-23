@@ -720,7 +720,7 @@ namespace Immutable.Audience
             }
         }
 
-        internal static ConsentLevel CurrentConsentForTesting => _state.Level;
+        internal static ConsentLevel CurrentConsent => _state.Level;
 
         internal static void FlushQueueToDiskForTesting() => _queue?.FlushSync();
 
