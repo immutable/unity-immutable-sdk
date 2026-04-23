@@ -6,6 +6,32 @@ namespace Immutable.Audience.Tests
     [TestFixture]
     internal class ConstantsTests
     {
+        // -----------------------------------------------------------------
+        // BaseUrl per environment
+        // -----------------------------------------------------------------
+
+        [Test]
+        public void BaseUrl_Dev_ReturnsDevHost()
+        {
+            Assert.AreEqual(Constants.DevBaseUrl, Constants.BaseUrl(AudienceEnvironment.Dev));
+        }
+
+        [Test]
+        public void BaseUrl_Sandbox_ReturnsSandboxHost()
+        {
+            Assert.AreEqual(Constants.SandboxBaseUrl, Constants.BaseUrl(AudienceEnvironment.Sandbox));
+        }
+
+        [Test]
+        public void BaseUrl_Production_ReturnsProductionHost()
+        {
+            Assert.AreEqual(Constants.ProductionBaseUrl, Constants.BaseUrl(AudienceEnvironment.Production));
+        }
+
+        // -----------------------------------------------------------------
+        // Library version
+        // -----------------------------------------------------------------
+
         [Test]
         public void LibraryVersion_MatchesPackageJson()
         {

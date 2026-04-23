@@ -28,18 +28,21 @@ namespace Immutable.Audience
 
         // store: source of event batches.
         // publishableKey: sent as x-immutable-publishable-key on every request.
+        // environment: which backend to send to. Defaults to Sandbox so
+        //   tests and ad-hoc construction cannot accidentally hit production.
         // onError: optional failure callback. Exceptions thrown inside it are caught.
         // handler / getUtcNow: test seams; null for production use.
         internal HttpTransport(
             DiskStore store,
             string publishableKey,
+            AudienceEnvironment environment = AudienceEnvironment.Sandbox,
             Action<AudienceError>? onError = null,
             HttpMessageHandler? handler = null,
             Func<DateTime>? getUtcNow = null)
         {
             _store = store ?? throw new ArgumentNullException(nameof(store));
             _publishableKey = publishableKey ?? throw new ArgumentNullException(nameof(publishableKey));
-            _url = Constants.MessagesUrl(publishableKey);
+            _url = Constants.MessagesUrl(environment);
             _onError = onError;
             // disposeHandler: false so the consumer can reuse their handler
             // across Init/Shutdown cycles (matches _controlClient's policy).

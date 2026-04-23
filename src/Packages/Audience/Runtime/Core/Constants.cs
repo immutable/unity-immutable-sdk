@@ -4,7 +4,7 @@ namespace Immutable.Audience
 {
     internal static class Constants
     {
-        internal const string TestKeyPrefix = "pk_imapik-test-";
+        internal const string DevBaseUrl = "https://api.dev.immutable.com";
         internal const string SandboxBaseUrl = "https://api.sandbox.immutable.com";
         internal const string ProductionBaseUrl = "https://api.immutable.com";
 
@@ -26,14 +26,21 @@ namespace Immutable.Audience
 
         internal const string PublishableKeyHeader = "x-immutable-publishable-key";
 
-        internal static string MessagesUrl(string? publishableKey) => BaseUrl(publishableKey) + MessagesPath;
-        internal static string ConsentUrl(string? publishableKey) => BaseUrl(publishableKey) + ConsentPath;
-        internal static string DataUrl(string? publishableKey) => BaseUrl(publishableKey) + DataPath;
+        internal static string MessagesUrl(AudienceEnvironment environment) => BaseUrl(environment) + MessagesPath;
+        internal static string ConsentUrl(AudienceEnvironment environment) => BaseUrl(environment) + ConsentPath;
+        internal static string DataUrl(AudienceEnvironment environment) => BaseUrl(environment) + DataPath;
 
-        internal static string BaseUrl(string? publishableKey) =>
-            publishableKey != null && publishableKey.StartsWith(TestKeyPrefix)
-                ? SandboxBaseUrl
-                : ProductionBaseUrl;
+        internal static string BaseUrl(AudienceEnvironment environment) =>
+            environment switch
+            {
+                AudienceEnvironment.Dev => DevBaseUrl,
+                AudienceEnvironment.Sandbox => SandboxBaseUrl,
+                AudienceEnvironment.Production => ProductionBaseUrl,
+                // Defensive: a future enum addition we forget to wire up
+                // falls back to Sandbox so accidental production traffic
+                // is impossible without explicit opt-in.
+                _ => SandboxBaseUrl,
+            };
     }
 
     // Message type values written to (and read back from) the "type" field.

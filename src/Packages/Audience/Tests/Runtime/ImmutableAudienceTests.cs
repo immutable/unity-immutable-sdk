@@ -81,6 +81,53 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
+        public void CurrentEnvironment_DefaultsToSandbox()
+        {
+            // MakeConfig() leaves Environment unset, which means
+            // AudienceConfig's Sandbox default applies.
+            ImmutableAudience.Init(MakeConfig());
+            Assert.AreEqual(AudienceEnvironment.Sandbox,
+                ImmutableAudience.CurrentEnvironment);
+        }
+
+        [Test]
+        public void CurrentEnvironment_ExplicitDev_PassesThrough()
+        {
+            var config = MakeConfig();
+            config.Environment = AudienceEnvironment.Dev;
+            ImmutableAudience.Init(config);
+            Assert.AreEqual(AudienceEnvironment.Dev,
+                ImmutableAudience.CurrentEnvironment);
+        }
+
+        [Test]
+        public void CurrentEnvironment_BeforeInit_ReturnsSandbox()
+        {
+            // Pre-Init there is no config to read. Returning Sandbox
+            // matches the AudienceConfig default so UI never shows a
+            // separate "(uninitialised)" sentinel for this row.
+            Assert.AreEqual(AudienceEnvironment.Sandbox,
+                ImmutableAudience.CurrentEnvironment);
+        }
+
+        [Test]
+        public void CurrentEnvironment_SurvivesShutdown()
+        {
+            // A diagnostic HUD running in Production must not flicker to
+            // Sandbox when the SDK tears down. CurrentEnvironment caches
+            // the last Init's env so it keeps reporting the same value
+            // after Shutdown clears _config.
+            var config = MakeConfig();
+            config.Environment = AudienceEnvironment.Production;
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Shutdown();
+
+            Assert.AreEqual(AudienceEnvironment.Production,
+                ImmutableAudience.CurrentEnvironment,
+                "CurrentEnvironment should retain the last Init's value after Shutdown");
+        }
+
+        [Test]
         public void CurrentConsent_ReflectsLatestSetConsent()
         {
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));

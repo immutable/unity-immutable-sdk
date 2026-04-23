@@ -10,6 +10,10 @@ namespace Immutable.Audience
         // Studio API key. Required — Init throws if null.
         public string? PublishableKey { get; set; }
 
+        // Target backend. Sandbox default prevents accidental production
+        // traffic; pin to Production explicitly when shipping to players.
+        public AudienceEnvironment Environment { get; set; } = AudienceEnvironment.Sandbox;
+
         // Initial consent level.
         public ConsentLevel Consent { get; set; } = ConsentLevel.None;
 
