@@ -183,6 +183,61 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
+        public async Task SendBatchAsync_200_WithRejected_DeletesFilesAndSurfacesValidationRejected()
+        {
+            // Per Unity Implementation Plan §4.6, a 200 with rejected>0 means
+            // per-message validation errors. The batch is deleted (retries
+            // would not help) and the count is surfaced via onError so
+            // studios can observe silently dropped events.
+            _store.Write("{\"type\":\"track\",\"eventName\":\"a\"}");
+            _store.Write("{\"type\":\"track\",\"eventName\":\"b\"}");
+
+            var handler = new MockHandler(HttpStatusCode.OK, "{\"accepted\":1,\"rejected\":1}");
+            AudienceError reportedError = null;
+            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+                onError: e => reportedError = e, handler: handler);
+
+            await transport.SendBatchAsync();
+
+            Assert.AreEqual(0, _store.Count(), "200 with rejected>0 should still delete the batch");
+            Assert.IsNotNull(reportedError, "partial rejection must surface via onError");
+            Assert.AreEqual(AudienceErrorCode.ValidationRejected, reportedError.Code);
+            StringAssert.Contains("1", reportedError.Message, "message should include the rejected count");
+        }
+
+        [Test]
+        public async Task SendBatchAsync_200_ZeroRejected_DoesNotFireOnError()
+        {
+            _store.Write("{\"type\":\"track\",\"eventName\":\"a\"}");
+
+            var handler = new MockHandler(HttpStatusCode.OK, "{\"accepted\":1,\"rejected\":0}");
+            AudienceError reportedError = null;
+            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+                onError: e => reportedError = e, handler: handler);
+
+            await transport.SendBatchAsync();
+
+            Assert.IsNull(reportedError, "zero rejected must not fire onError");
+        }
+
+        [Test]
+        public async Task SendBatchAsync_200_MalformedBody_TreatsAsZeroRejected()
+        {
+            // Malformed diagnostic body must not block the success path.
+            _store.Write("{\"type\":\"track\",\"eventName\":\"a\"}");
+
+            var handler = new MockHandler(HttpStatusCode.OK, "not-json");
+            AudienceError reportedError = null;
+            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+                onError: e => reportedError = e, handler: handler);
+
+            await transport.SendBatchAsync();
+
+            Assert.AreEqual(0, _store.Count(), "files should still be deleted on 200");
+            Assert.IsNull(reportedError, "malformed body must not surface an error");
+        }
+
+        [Test]
         public async Task SendBatchAsync_5xx_KeepsFilesAndIncreasesBackoff()
         {
             _store.Write("{\"type\":\"track\"}");
