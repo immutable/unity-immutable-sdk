@@ -50,7 +50,8 @@ namespace Immutable.Audience
             if (string.IsNullOrEmpty(config.PublishableKey))
                 throw new ArgumentException("PublishableKey is required", nameof(config));
 
-            // Clone so Init's PersistentDataPath fill-in does not mutate the caller's object.
+            // Copy the caller's config so filling in PersistentDataPath below
+            // doesn't change the object they passed in.
             config = config.Clone();
             if (string.IsNullOrEmpty(config.PersistentDataPath))
                 config.PersistentDataPath = DefaultPersistentDataPathProvider?.Invoke();
