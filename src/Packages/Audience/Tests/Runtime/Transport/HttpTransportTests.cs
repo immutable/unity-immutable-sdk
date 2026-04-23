@@ -375,7 +375,7 @@ namespace Immutable.Audience.Tests
                 onError: _ => throw new InvalidOperationException("callback bug"),
                 handler: handler);
 
-            Assert.DoesNotThrowAsync(() => transport.SendBatchAsync());
+            await transport.SendBatchAsync();
         }
 
 #if IMMUTABLE_AUDIENCE_GZIP
