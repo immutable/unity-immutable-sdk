@@ -14,6 +14,11 @@ namespace Immutable.Audience
     // Unity session lifecycle. Emits session_start / session_heartbeat / session_end.
     // duration is engagement time (excludes pause). Heartbeat fires off-thread;
     // public methods run on the caller's thread. _track fires outside _lock.
+    //
+    // Serialisation: Start / End / Dispose are NOT reentrant-safe from multiple
+    // threads. Callers serialise them (ImmutableAudience holds _initLock across
+    // Init / SetConsent / Shutdown / Reset, which are the only public entry points
+    // that touch a Session). Pause / Resume / OnHeartbeat are thread-safe.
     internal sealed class Session : IDisposable
     {
         internal const int HeartbeatIntervalMs = 60_000;
