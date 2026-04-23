@@ -65,8 +65,8 @@ namespace Immutable.Audience.Tests
             var endEvent = _events.FirstOrDefault(e => e.name == "session_end");
             Assert.IsNotNull(endEvent.props);
             Assert.IsTrue(endEvent.props.ContainsKey("sessionId"));
-            Assert.IsTrue(endEvent.props.ContainsKey("duration"));
-            Assert.AreEqual(2L, (long)endEvent.props["duration"]);
+            Assert.IsTrue(endEvent.props.ContainsKey("durationSec"));
+            Assert.AreEqual(2L, (long)endEvent.props["durationSec"]);
         }
 
         [Test]
@@ -122,7 +122,7 @@ namespace Immutable.Audience.Tests
                 var beat = events.FirstOrDefault(e => e.name == "session_heartbeat");
                 Assert.IsNotNull(beat.props, "heartbeat event should carry a properties dictionary");
                 Assert.IsTrue(beat.props.ContainsKey("sessionId"));
-                Assert.IsTrue(beat.props.ContainsKey("duration"));
+                Assert.IsTrue(beat.props.ContainsKey("durationSec"));
             }
         }
 
@@ -136,7 +136,7 @@ namespace Immutable.Audience.Tests
 
             var beat = _events.Last(e => e.name == "session_heartbeat");
             CollectionAssert.AreEquivalent(
-                new[] { "sessionId", "duration" },
+                new[] { "sessionId", "durationSec" },
                 beat.props.Keys);
         }
 
@@ -161,7 +161,7 @@ namespace Immutable.Audience.Tests
             Assert.AreEqual(512L, beat.props["memoryUsedMb"]);
             Assert.AreEqual(768L, beat.props["memoryReservedMb"]);
             Assert.IsTrue(beat.props.ContainsKey("sessionId"));
-            Assert.IsTrue(beat.props.ContainsKey("duration"));
+            Assert.IsTrue(beat.props.ContainsKey("durationSec"));
         }
 
         [Test]
@@ -177,7 +177,7 @@ namespace Immutable.Audience.Tests
             Func<Dictionary<string, object>> snapshot = () => new Dictionary<string, object>
             {
                 ["sessionId"] = "spoofed-id",
-                ["duration"] = 99999L,
+                ["durationSec"] = 99999L,
                 ["fpsAvg"] = 60.0,
             };
             using var session = new Session(MockTrack, snapshot);
@@ -188,7 +188,7 @@ namespace Immutable.Audience.Tests
             var beat = _events.Last(e => e.name == "session_heartbeat");
             Assert.AreNotEqual("spoofed-id", (string)beat.props["sessionId"],
                 "snapshot must not overwrite Session-owned sessionId");
-            Assert.AreNotEqual(99999L, (long)beat.props["duration"],
+            Assert.AreNotEqual(99999L, (long)beat.props["durationSec"],
                 "snapshot must not overwrite Session-owned duration");
             Assert.AreEqual(60.0, beat.props["fpsAvg"],
                 "non-colliding snapshot fields should still merge");
@@ -279,7 +279,7 @@ namespace Immutable.Audience.Tests
             session.End();
 
             var sessionEnd = _events.Last(e => e.name == "session_end");
-            var duration = (long)sessionEnd.props["duration"];
+            var duration = (long)sessionEnd.props["durationSec"];
             // Wall-clock Start→End = 13s, paused from T=5 to T=10 = 5s, engaged = 8s.
             Assert.AreEqual(8L, duration,
                 "double Pause must preserve the first Pause timestamp so engagement arithmetic covers the full pause window");
@@ -327,7 +327,7 @@ namespace Immutable.Audience.Tests
             session.End();
 
             var sessionEnd = _events.Last(e => e.name == "session_end");
-            var duration = (long)sessionEnd.props["duration"];
+            var duration = (long)sessionEnd.props["durationSec"];
             // Wall-clock from Start to End is 10 + (-5) + 2 = 7 s. The
             // pause duration was clamped to 0, so engaged seconds = 7 - 0 = 7.
             // Without the clamp, _accumulatedPause would be -5, the
@@ -358,7 +358,7 @@ namespace Immutable.Audience.Tests
             session.End();
 
             var sessionEnd = _events.Last(e => e.name == "session_end");
-            var duration = (long)sessionEnd.props["duration"];
+            var duration = (long)sessionEnd.props["durationSec"];
             Assert.AreEqual(0L, duration,
                 "negative engaged time from a wall-clock rewind must clamp to zero");
         }
@@ -383,7 +383,7 @@ namespace Immutable.Audience.Tests
             session.End();
 
             var sessionEnd = _events.Last(e => e.name == "session_end");
-            var duration = (long)sessionEnd.props["duration"];
+            var duration = (long)sessionEnd.props["durationSec"];
             Assert.AreEqual(7L, duration,
                 "session_end duration should exclude the 3s paused interval");
         }
@@ -405,7 +405,7 @@ namespace Immutable.Audience.Tests
             session.End(); // ends while paused
 
             var sessionEnd = _events.Last(e => e.name == "session_end");
-            var duration = (long)sessionEnd.props["duration"];
+            var duration = (long)sessionEnd.props["durationSec"];
             Assert.AreEqual(5L, duration,
                 "session_end fired while paused should count only pre-pause engaged time");
         }
@@ -433,7 +433,7 @@ namespace Immutable.Audience.Tests
             session.Resume();
 
             var sessionEnd = _events.First(e => e.name == "session_end");
-            var duration = (long)sessionEnd.props["duration"];
+            var duration = (long)sessionEnd.props["durationSec"];
             Assert.AreEqual(10L, duration,
                 "session_end on extended-pause rollover should report pre-pause engaged time, not wall-clock");
         }
@@ -458,7 +458,7 @@ namespace Immutable.Audience.Tests
             session.OnHeartbeat();
 
             var heartbeat = _events.Last(e => e.name == "session_heartbeat");
-            var duration = (long)heartbeat.props["duration"];
+            var duration = (long)heartbeat.props["durationSec"];
             Assert.AreEqual(6L, duration,
                 "heartbeat duration should exclude the 2s paused interval");
         }
@@ -640,7 +640,7 @@ namespace Immutable.Audience.Tests
 
                 var beat = _events.Last(e => e.name == "session_heartbeat");
                 CollectionAssert.AreEquivalent(
-                    new[] { "sessionId", "duration" },
+                    new[] { "sessionId", "durationSec" },
                     beat.props.Keys,
                     "heartbeat should carry only the core fields when the snapshot throws");
 

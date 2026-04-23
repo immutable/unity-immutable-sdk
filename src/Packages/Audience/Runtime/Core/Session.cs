@@ -176,7 +176,7 @@ namespace Immutable.Audience
             SafeTrack("session_end", new Dictionary<string, object>
             {
                 ["sessionId"] = sessionId,
-                ["duration"] = duration
+                ["durationSec"] = duration
             });
         }
 
@@ -217,7 +217,7 @@ namespace Immutable.Audience
             var properties = new Dictionary<string, object>
             {
                 ["sessionId"] = sessionId,
-                ["duration"] = duration
+                ["durationSec"] = duration
             };
 
             var perf = SafePerformanceSnapshot();
