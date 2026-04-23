@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 
@@ -202,6 +203,49 @@ namespace Immutable.Audience.Tests
             StringAssert.Contains("\"level\":5", result);
             StringAssert.Contains("\"perfect\":true", result);
             StringAssert.Contains("\"tags\":[\"fast\",\"clean\"]", result);
+        }
+
+        [Test]
+        public void Serialize_NestingExceedsMaxDepth_ThrowsFormatException()
+        {
+            var root = new Dictionary<string, object>();
+            var current = root;
+            for (var i = 0; i < Json.MaxDepth; i++)
+            {
+                var next = new Dictionary<string, object>();
+                current["next"] = next;
+                current = next;
+            }
+
+            var ex = Assert.Throws<FormatException>(() => Json.Serialize(root));
+            StringAssert.Contains("nesting exceeds", ex.Message);
+        }
+
+        [Test]
+        public void Serialize_SelfReferentialDict_ThrowsFormatException()
+        {
+            var root = new Dictionary<string, object>();
+            root["self"] = root;
+
+            var ex = Assert.Throws<FormatException>(() => Json.Serialize(root));
+            StringAssert.Contains("cycle", ex.Message);
+        }
+
+        [Test]
+        public void Serialize_SharedChildInSiblingKeys_IsNotTreatedAsCycle()
+        {
+            // Diamond: visited set tracks the current recursion stack, not all objects ever seen.
+            var shared = new Dictionary<string, object> { ["k"] = "v" };
+            var root = new Dictionary<string, object>
+            {
+                ["a"] = shared,
+                ["b"] = shared,
+            };
+
+            var result = Json.Serialize(root);
+
+            StringAssert.Contains("\"a\":{\"k\":\"v\"}", result);
+            StringAssert.Contains("\"b\":{\"k\":\"v\"}", result);
         }
     }
 }
