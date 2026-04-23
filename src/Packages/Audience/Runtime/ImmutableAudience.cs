@@ -13,9 +13,8 @@ namespace Immutable.Audience
     public static class ImmutableAudience
     {
         // Reference fields are written inside _initLock; readers fence off the volatile _initialized load.
-        // _consent and _session are written only inside _initLock but read outside (Track's CanTrack,
-        // OnPause/OnResume) so they stay volatile for release/acquire visibility.
-        // _userId is written outside the lock (Identify, Reset) and needs volatile for the same reason.
+        // _consent, _session are written in _initLock, read outside → volatile.
+        // _userId is written outside the lock (Identify, Reset) → volatile.
         private static AudienceConfig? _config;
         private static DiskStore? _store;
         private static EventQueue? _queue;
@@ -28,34 +27,19 @@ namespace Immutable.Audience
         private static volatile bool _initialized;
         private static readonly object _initLock = new object();
 
-        // Guard against overlapping timer ticks. System.Threading.Timer fires
-        // callbacks on independent ThreadPool threads and does not serialise
-        // them; without this gate, a slow SendBatchAsync (up to the HTTP
-        // timeout) would stack on every interval tick, each tick holding its
-        // own thread blocked on a pending request.
+        // Gate against overlapping timer ticks (Timer callbacks run on independent ThreadPool threads).
         private static int _sendInFlight;
 
-        // AudienceUnityHooks sets this at SubsystemRegistration so Unity studios
-        // can omit PersistentDataPath from AudienceConfig and Init will fill it
-        // from Application.persistentDataPath. Non-Unity callers must still set
-        // PersistentDataPath on the config.
+        // AudienceUnityHooks sets these at SubsystemRegistration.
+        // DefaultPersistentDataPathProvider fills PersistentDataPath from
+        // Application.persistentDataPath. LaunchContextProvider supplies
+        // Unity context for game_launch without Core referencing UnityEngine.
         internal static Func<string>? DefaultPersistentDataPathProvider;
-
-        // AudienceUnityHooks sets this so game_launch can auto-include
-        // Unity context without the core referencing UnityEngine.
         internal static Func<Dictionary<string, object>>? LaunchContextProvider;
 
-        // Session is created when consent allows — either at Init or on
-        // upgrade from None — and is disposed on Shutdown or SetConsent(None).
-        // Holds the current sessionId, fires session_start / session_heartbeat
-        // / session_end via the Track callback, and handles pause/resume
-        // rollover.
-        //
-        // Volatile + nullable because the field is read outside _initLock on
-        // the Unity main thread (OnPause, OnResume) and written outside the
-        // lock by SetConsent and Shutdown. volatile gives a release/acquire
-        // fence so a freshly-assigned Session from SetConsent(None → *) is
-        // visible to a subsequent OnPause on any thread.
+        // Active session. Created at Init (or on upgrade from None) and disposed
+        // on Shutdown or SetConsent(None). Volatile so OnPause/OnResume see
+        // assignments from SetConsent without taking _initLock.
         private static volatile Session? _session;
 
         // Starts the SDK. Call once at launch.
@@ -83,7 +67,7 @@ namespace Immutable.Audience
 
                 _config = config;
                 Log.Enabled = config.Debug;
-                // Persisted consent overrides the config default so a prior runtime downgrade survives restart.
+                // Persisted consent overrides the config default (prior downgrade survives restart).
                 _consent = ConsentStore.Load(config.PersistentDataPath) ?? config.Consent;
 
                 _store = new DiskStore(config.PersistentDataPath);
@@ -101,30 +85,17 @@ namespace Immutable.Audience
 
                 _initialized = true;
 
-                // Snapshot under the lock so a racing SetConsent(None) can't drop the launch event.
+                // Snapshot so a racing SetConsent(None) can't drop the launch event.
                 consentAtInit = _consent;
 
-                // Create the session object under the lock so ResetState /
-                // Shutdown have a consistent view. Start() is deferred
-                // until outside the lock because Track() (which
-                // session_start calls) acquires its own locks.
+                // Session created under the lock; Start() deferred until after
+                // release because session_start → Track takes its own locks.
                 if (consentAtInit.CanTrack())
                     _session = new Session(Track);
 
-                // Captured under the lock so the Start() call below
-                // operates on the Session this Init created, not a
-                // replacement from a SetConsent that slips in after we
-                // release _initLock. SetConsent itself takes _initLock so
-                // it cannot land in the middle of this block, but between
-                // the lock release and Start() a SetConsent(None) can
-                // Dispose the captured Session (Start then early-returns
-                // on _disposed, suppressing session_start) or a
-                // SetConsent(None)+SetConsent(Anonymous) pair can swap
-                // _session for a new one (we still Start the captured
-                // original, which is disposed and no-ops; the upgrade path
-                // Starts the replacement itself). Either way, no duplicate
-                // session_start on the wire and no "events after consent
-                // dropped" leak.
+                // Captured reference: a later SetConsent(None) may dispose this
+                // Session (Start then no-ops on _disposed). Either way no duplicate
+                // session_start and no post-revocation leak.
                 sessionToStart = _session;
             }
 
@@ -135,20 +106,14 @@ namespace Immutable.Audience
             FireGameLaunch(config, consentAtInit);
         }
 
-        // Notifies the session that the game was paused (alt-tab,
-        // minimize, OS pause). If not resumed within 30 s the session
-        // ends and a new one starts on resume. Called only from the
-        // Unity lifecycle bridge, so it stays internal; the Unity
-        // assembly reaches it via InternalsVisibleTo in AssemblyInfo.cs.
+        // Pause/Resume hooks for the Unity lifecycle bridge.
+        // Internal; reached via InternalsVisibleTo from the Unity assembly.
         internal static void OnPause()
         {
             if (!_initialized) return;
             _session?.Pause();
         }
 
-        // Notifies the session that the game resumed. Called only from
-        // the Unity lifecycle bridge; see OnPause for the visibility
-        // rationale.
         internal static void OnResume()
         {
             if (!_initialized) return;
@@ -159,12 +124,8 @@ namespace Immutable.Audience
         // Track
         // -----------------------------------------------------------------
 
-        // Send a typed event.
-        //
-        // Prefer this overload for predefined event names (e.g. purchase) — the
-        // IEvent implementation enforces required fields and value types at
-        // compile time. The string overload accepts any property shape and
-        // cannot catch missing or mistyped fields.
+        // Sends a typed event. Prefer this over the string overload —
+        // IEvent implementations validate required fields at compile time.
         public static void Track(IEvent evt)
         {
             if (!CanTrack()) return;
@@ -203,16 +164,9 @@ namespace Immutable.Audience
             Enqueue(msg);
         }
 
-        // Send a custom event.
-        //
-        // For predefined event names (e.g. purchase, progression, resource,
-        // milestone_reached), prefer the typed overload —
-        // Track(new Purchase { Currency = "USD", Value = 9.99m }) — which
-        // validates required fields at send time. This overload accepts any
-        // property shape and does not: Track("purchase", new Dictionary...)
-        // that omits currency or value still enqueues and ships, but breaks
-        // attribution and conversion reporting downstream because the
-        // payload is missing the fields CDP needs to reconstruct the event.
+        // Sends a custom event. For predefined names (purchase, progression,
+        // resource, milestone_reached), prefer the typed overload which
+        // validates required fields.
         public static void Track(string eventName, Dictionary<string, object>? properties = null)
         {
             if (!CanTrack()) return;
@@ -235,16 +189,12 @@ namespace Immutable.Audience
         // Identity
         // -----------------------------------------------------------------
 
-        // Attach a known user id to subsequent events.
+        // Attaches a known user id to subsequent events.
         public static void Identify(string userId, IdentityType identityType, Dictionary<string, object>? traits = null) =>
             Identify(userId, identityType.ToLowercaseString(), traits);
 
-        // Attach a known user id to subsequent events. String overload for
-        // providers not in IdentityType.
-        //
-        // identityType is required: data-deletion processing relies on it to
-        // match identify events to the correct identity namespace, so an
-        // event without one cannot be cleaned up.
+        // String overload for providers outside the IdentityType enum.
+        // identityType is required — data-deletion matches events by this namespace.
         public static void Identify(string userId, string identityType, Dictionary<string, object>? traits = null)
         {
             if (!_initialized) return;
@@ -272,15 +222,12 @@ namespace Immutable.Audience
             Enqueue(msg);
         }
 
-        // Link two user ids for the same player.
+        // Links two user ids for the same player.
         public static void Alias(string fromId, IdentityType fromType, string toId, IdentityType toType) =>
             Alias(fromId, fromType.ToLowercaseString(), toId, toType.ToLowercaseString());
 
-        // Link two user ids for the same player. String overload for
-        // providers not in IdentityType.
-        //
-        // fromType and toType are required: data-deletion processing uses
-        // them to match alias events to the correct identity namespaces.
+        // String overload for providers outside the IdentityType enum.
+        // from/toType are required — data-deletion matches by these namespaces.
         public static void Alias(string fromId, string fromType, string toId, string toType)
         {
             if (!_initialized) return;
@@ -303,16 +250,8 @@ namespace Immutable.Audience
             Enqueue(msg);
         }
 
-        // Log out the current player. Clears the user id, generates a fresh
-        // anonymous id, and discards queued events (in-memory and on-disk)
-        // so the next player on this device isn't attributed to the previous
-        // one.
-        //
-        // To send queued events before they're discarded,
-        // invoke await FlushAsync() first:
-        //
-        //     await ImmutableAudience.FlushAsync();
-        //     ImmutableAudience.Reset();
+        // Logs out the current player. Clears userId, mints a fresh anonymousId,
+        // discards queued events. Call FlushAsync() first to preserve queued events.
         public static void Reset()
         {
             if (!_initialized) return;
@@ -325,9 +264,7 @@ namespace Immutable.Audience
             Identity.Reset(config.PersistentDataPath!);
         }
 
-        // Ask the backend to erase this player's data. Returns a task the
-        // caller can await to know when the request is acknowledged, or
-        // discard for fire-and-forget.
+        // Asks the backend to erase this player's data. Await for ack, or discard for fire-and-forget.
         public static Task DeleteData(string? userId = null)
         {
             if (!_initialized) return Task.CompletedTask;
@@ -343,7 +280,7 @@ namespace Immutable.Audience
             }
             else
             {
-                // Get, not GetOrCreate — a brand-new install must not register an ID just to delete it.
+                // Get (not GetOrCreate): a fresh install must not register an id just to delete it.
                 var anonymousId = Identity.Get(config.PersistentDataPath!);
                 if (string.IsNullOrEmpty(anonymousId))
                     return Task.CompletedTask;
@@ -371,7 +308,7 @@ namespace Immutable.Audience
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
-                    // Shutdown cancelled the request — no error fired; caller is tearing down.
+                    // Shutdown cancelled — caller is tearing down, no error fired.
                 }
                 catch (Exception ex)
                 {
@@ -390,7 +327,7 @@ namespace Immutable.Audience
             }
             catch
             {
-                // Swallow: a buggy OnError must not crash the SDK surface.
+                // Swallow: a buggy OnError must not crash the SDK.
             }
         }
 
@@ -398,23 +335,14 @@ namespace Immutable.Audience
         // Consent
         // -----------------------------------------------------------------
 
-        // Change the player's consent level.
+        // Changes the player's consent level.
         public static void SetConsent(ConsentLevel level)
         {
             if (!_initialized) return;
 
-            // Serialize the whole transition under _initLock:
-            //   - Two concurrent SetConsent calls that both see previous=None
-            //     would otherwise both take the upgrade branch and each build
-            //     a fresh Session, stranding one timer. The lock forces them
-            //     to observe each other.
-            //   - A SetConsent landing in the narrow window between Init's
-            //     _initialized = true and its _session = new Session(...)
-            //     assignment would otherwise see _session = null, skip the
-            //     Dispose path, and let Init finish creating a Session whose
-            //     timer never gets disposed. Under the lock, SetConsent can
-            //     only enter after Init has fully released it, so _session
-            //     reflects Init's final assignment.
+            // Serialised under _initLock: prevents concurrent upgrades from each
+            // building a fresh Session (stranding timers), and prevents racing
+            // Init's _session assignment.
             Session? sessionToStart = null;
             lock (_initLock)
             {
@@ -427,9 +355,8 @@ namespace Immutable.Audience
                 var previous = _consent;
                 if (level == previous) return;
 
-                // Snapshot the anonymousId BEFORE Identity.Reset (on downgrade to
-                // None) wipes the file. The PUT audit trail needs it to record
-                // whose consent changed.
+                // Snapshot anonymousId before Identity.Reset (on None) wipes it.
+                // The PUT audit trail needs to record whose consent changed.
                 var anonymousIdForPut = previous == ConsentLevel.None
                     ? Identity.GetOrCreate(config.PersistentDataPath!, level)
                     : Identity.Get(config.PersistentDataPath!);
@@ -438,7 +365,7 @@ namespace Immutable.Audience
 
                 try
                 {
-                    // PersistentDataPath is validated non-null in Init; compiler can't propagate that.
+                    // PersistentDataPath validated non-null in Init; compiler can't propagate that.
                     ConsentStore.Save(config.PersistentDataPath!, level);
                 }
                 catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
@@ -451,13 +378,8 @@ namespace Immutable.Audience
 
                 if (level == ConsentLevel.None)
                 {
-                    // Dispose the session for heartbeat-timer cleanup.
-                    // session_end is intentionally NOT emitted: Session.Dispose
-                    // calls back into Track("session_end", ...) which sees
-                    // _consent == None (set above) and drops the event via
-                    // CanTrack. That matches revocation semantics — no events
-                    // should leave the device after consent is None — and the
-                    // queue purge below clears anything on disk anyway.
+                    // Dispose for timer cleanup. session_end is gated out by
+                    // CanTrack (post-flip), matching revocation semantics.
                     _session?.Dispose();
                     _session = null;
 
@@ -471,11 +393,8 @@ namespace Immutable.Audience
                 }
                 else if (previous == ConsentLevel.None && _session == null)
                 {
-                    // Upgrade from None: the previous session was disposed on
-                    // the prior downgrade. Start a fresh one so
-                    // session_heartbeat and session_end can resume. Start()
-                    // is deferred until outside the lock because Track()
-                    // (which session_start calls) acquires its own locks.
+                    // Upgrade from None: previous session was disposed. Start a
+                    // fresh one. Start() deferred to outside the lock.
                     _session = new Session(Track);
                     sessionToStart = _session;
                 }
@@ -486,8 +405,7 @@ namespace Immutable.Audience
             sessionToStart?.Start();
         }
 
-        // Fire-and-forget PUT /v1/audience/tracking-consent. Failures do not
-        // block or surface; the local consent change has already applied.
+        // Fire-and-forget PUT /v1/audience/tracking-consent.
         private static void SyncConsentToBackend(AudienceConfig config, ConsentLevel level, string? anonymousId)
         {
             var client = _controlClient;
@@ -502,7 +420,7 @@ namespace Immutable.Audience
             {
                 ["status"] = level.ToLowercaseString(),
                 ["source"] = Constants.ConsentSource,
-                // Json.Serialize emits null → "anonymousId": null. Preserves the backend's ability to distinguish "unknown" from a missing field.
+                // Explicit null lets the backend distinguish "unknown" from a missing field.
                 ["anonymousId"] = anonymousId!,
             });
 
@@ -523,7 +441,7 @@ namespace Immutable.Audience
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
-                    // Shutdown cancelled the request — no error fired.
+                    // Shutdown cancelled.
                 }
                 catch (Exception ex)
                 {
@@ -537,7 +455,7 @@ namespace Immutable.Audience
         // Flush / Shutdown
         // -----------------------------------------------------------------
 
-        // Send pending events now.
+        // Sends all pending events now.
         public static async Task FlushAsync()
         {
             if (!_initialized) return;
@@ -554,28 +472,21 @@ namespace Immutable.Audience
             }
         }
 
-        // Flush and stop the SDK.
+        // Flushes and stops the SDK.
         public static void Shutdown()
         {
-            // Serialize with Init and SetConsent under the same lock. Without
-            // this, Shutdown racing a concurrent Init could observe
-            // _initialized = true (volatile set by Init) and proceed to tear
-            // down fields Init is still in the middle of assigning, or Init
-            // could finish assigning fields that Shutdown already disposed.
-            // The lock also pins _controlClient / _shutdownCancellationSource
-            // against a SetConsent whose SyncConsentToBackend Task closure
-            // captured them just before Shutdown disposed them.
+            // Serialised with Init / SetConsent under _initLock so teardown
+            // does not race field assignments or the SyncConsentToBackend closure.
             lock (_initLock)
             {
                 if (!_initialized) return;
 
-                // End the session first so session_end hits the queue before
-                // the final flush.
+                // End session first so session_end hits the queue before the final flush.
                 _session?.Dispose();
                 _session = null;
 
                 // Drain in-flight timer callbacks before disposing dependents.
-                // Parameterless Timer.Dispose returns immediately and would race SendBatch.
+                // Parameterless Timer.Dispose would return immediately and race SendBatch.
                 var timer = _sendTimer;
                 if (timer != null)
                 {
@@ -587,10 +498,8 @@ namespace Immutable.Audience
                     _sendTimer = null;
                 }
 
-                // Clear the in-flight guard in case the WaitOne above timed out
-                // with a SendBatch callback still running: without this, a later
-                // Init would leave _sendInFlight stranded at 1 and suppress every
-                // tick of the new timer.
+                // Clear the gate in case WaitOne timed out with SendBatch still running
+                // — a later Init would otherwise be stranded at 1.
                 Interlocked.Exchange(ref _sendInFlight, 0);
 
                 _queue?.Shutdown();
@@ -614,9 +523,8 @@ namespace Immutable.Audience
                     }
                 }
 
-                // Cancel in-flight control-plane HTTP requests (DeleteData / SyncConsentToBackend)
-                // before disposing the client so awaiting callers observe OperationCanceledException
-                // rather than ObjectDisposedException.
+                // Cancel in-flight control-plane requests before disposing the client
+                // so awaiters see OperationCanceledException, not ObjectDisposedException.
                 _shutdownCancellationSource?.Cancel();
 
                 _transport?.Dispose();
@@ -625,9 +533,8 @@ namespace Immutable.Audience
                 _shutdownCancellationSource?.Dispose();
                 _shutdownCancellationSource = null;
 
-                // Drop Identity's in-memory cache so a subsequent Init with a
-                // different persistentDataPath reads the file from the new path
-                // instead of returning the previous session's id.
+                // Drop Identity's in-memory cache so a later Init with a different
+                // persistentDataPath reads the new file, not the stale cached id.
                 Identity.ClearCache();
 
                 _initialized = false;
@@ -644,30 +551,21 @@ namespace Immutable.Audience
         // Internal — shared with tests and AudienceUnityHooks
         // -----------------------------------------------------------------
 
-        // Shuts down (if initialised) and clears per-session state so a
-        // fresh Init starts clean. Used on test teardown and by Unity
-        // SubsystemRegistration to survive "disable domain reload".
-        // LaunchContextProvider is not cleared: AudienceUnityHooks
-        // re-assigns it on the same SubsystemRegistration call.
+        // Shuts down (if initialised) and clears per-session state. Used on
+        // test teardown and Unity SubsystemRegistration to survive "disable
+        // domain reload". LaunchContextProvider is re-assigned by AudienceUnityHooks.
         internal static void ResetState()
         {
-            // Same lock as Shutdown/Init so a concurrent Init cannot repopulate
-            // fields we are in the middle of clearing. Monitor is recursive,
-            // so the inner Shutdown() re-enters cleanly on the same thread.
+            // Same lock as Shutdown/Init; Monitor is recursive so inner Shutdown re-enters.
             lock (_initLock)
             {
                 if (_initialized)
                     Shutdown();
 
                 _consent = ConsentLevel.None;
-                // Shutdown already nulls _session. Repeat here as a defensive
-                // belt-and-braces step so a future Shutdown refactor that bails
-                // before the null (early return on a new guard, reordering,
-                // etc.) cannot leak a stale Session into the next Init cycle.
+                // Defensive: Shutdown nulls _session too, but a future refactor
+                // that bails before that null must not leak a stale Session.
                 _session = null;
-                // Drop Identity's static cache so a subsequent Init with a different
-                // persistentDataPath (tests, domain reload with changed config) reads
-                // the file from the new path, not the previous session's cached id.
                 Identity.ClearCache();
             }
         }
@@ -676,15 +574,10 @@ namespace Immutable.Audience
 
         internal static void FlushQueueToDiskForTesting() => _queue?.FlushSync();
 
-        // Invokes the timer callback body directly so the overlapping-tick
-        // guard can be exercised without a real timer.
+        // Drives SendBatch without a real timer so the overlapping-tick guard is testable.
         internal static void SendBatchForTesting() => SendBatch();
 
-        // Drives a single heartbeat through the active Session so lifecycle
-        // tests can assert that OnPause / OnResume actually route to
-        // Session.Pause / Session.Resume. The real heartbeat cadence is
-        // 60 s (Session.HeartbeatIntervalMs) so a timer-driven pass would
-        // either take 60 s or need a bespoke interval override per test.
+        // Drives a single heartbeat so lifecycle tests don't wait the 60s cadence.
         internal static void InvokeSessionHeartbeatForTesting() => _session?.OnHeartbeat();
 
         // -----------------------------------------------------------------
@@ -696,7 +589,7 @@ namespace Immutable.Audience
             return _initialized && _consent.CanTrack();
         }
 
-        // Shallow-copy the caller's dict so a post-call mutation cannot race the drain-thread serialiser.
+        // Shallow-copy so post-call mutation can't race the drain-thread serialiser.
         private static Dictionary<string, object>? SnapshotCallerDict(Dictionary<string, object>? src) =>
             src != null ? new Dictionary<string, object>(src) : null;
 
@@ -705,16 +598,14 @@ namespace Immutable.Audience
             var queue = _queue;
             if (queue == null) return;
 
-            // Re-check consent inside the drain lock so a SetConsent(None) racing
-            // the caller's CanTrack cannot leak this event past the purge.
+            // Re-check consent inside _drainLock so a racing SetConsent(None) can't leak past the purge.
             queue.EnqueueChecked(msg, () => _consent.CanTrack());
         }
 
         private static void SendBatch()
         {
-            // CAS in the guard before doing any work; a previous tick still
-            // running means skip entirely, including the reschedule — the
-            // in-flight tick will reschedule on its own finally path.
+            // CAS the gate; a previous tick still running → skip (including reschedule,
+            // which the in-flight tick handles in its finally).
             if (Interlocked.CompareExchange(ref _sendInFlight, 1, 0) != 0)
                 return;
 
@@ -731,7 +622,7 @@ namespace Immutable.Audience
                     }
                     catch (Exception ex)
                     {
-                        // ThreadPool timer thread; no caller above to catch.
+                        // Timer-thread callback; no caller above to catch.
                         Log.Warn($"SendBatch unexpected exception: {ex.GetType().Name}: {ex.Message}");
                     }
                 }
@@ -744,7 +635,7 @@ namespace Immutable.Audience
             }
         }
 
-        // Realigns the timer to NextAttemptAt so we don't repoll through a long backoff window.
+        // Realigns the timer to NextAttemptAt so backoff windows aren't repolled.
         private static void RescheduleSendTimer(HttpTransport transport)
         {
             var timer = _sendTimer;
@@ -764,18 +655,15 @@ namespace Immutable.Audience
             timer.Change(nextMs, sendIntervalMs);
         }
 
-        // consentAtInit snapshot is only used to skip the launch event under None;
-        // Track still consults live _consent via CanTrack, so a SetConsent(None)
-        // landing between Init returning and here still drops the event.
+        // consentAtInit only gates the launch; Track still checks live _consent via CanTrack.
         private static void FireGameLaunch(AudienceConfig config, ConsentLevel consentAtInit)
         {
             if (!consentAtInit.CanTrack()) return;
 
             var properties = new Dictionary<string, object>();
 
-            // Unity-side auto-detected context (platform, version, buildGuid,
-            // unityVersion) from AudienceUnityHooks. Core stays pure C#; the
-            // Unity layer fills these via LaunchContextProvider.
+            // Unity auto-detected context (platform, version, buildGuid, unityVersion).
+            // Core stays pure C#; Unity layer fills via LaunchContextProvider.
             var provider = LaunchContextProvider;
             if (provider != null)
             {
@@ -794,19 +682,12 @@ namespace Immutable.Audience
                 }
             }
 
-            // Config-supplied distributionPlatform wins over any provider value;
-            // studios set it explicitly because Unity cannot auto-detect the store.
+            // Config-supplied distributionPlatform overrides the provider value.
             if (config.DistributionPlatform != null)
                 properties["distributionPlatform"] = config.DistributionPlatform;
 
-            // No sessionId on game_launch. Event Reference (v1) schema for
-            // game_launch lists platform, version, buildGuid,
-            // distributionPlatform, unityVersion — not sessionId.
-            // Correlation with the session happens at the pipeline layer via
-            // eventTimestamp ordering; session_start fires immediately
-            // before game_launch (see Init ordering) and carries the id
-            // explicitly.
-
+            // No sessionId on game_launch per Event Reference. Pipeline correlates
+            // via eventTimestamp with the session_start that fires just before.
             Track("game_launch", properties.Count > 0 ? properties : null);
         }
     }
