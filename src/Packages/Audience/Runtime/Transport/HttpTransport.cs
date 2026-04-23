@@ -22,6 +22,7 @@ namespace Immutable.Audience
         private readonly Action<AudienceError>? _onError;
         private readonly Func<DateTime> _getUtcNow;
 
+        private readonly object _backoffLock = new object();
         private int _consecutiveFailures;
         private DateTime? _nextAttemptAt;
 
@@ -131,7 +132,15 @@ namespace Immutable.Audience
             return true;
         }
 
-        internal int BackoffMs => _consecutiveFailures switch
+        internal int BackoffMs
+        {
+            get
+            {
+                lock (_backoffLock) return BackoffMsLocked();
+            }
+        }
+
+        private int BackoffMsLocked() => _consecutiveFailures switch
         {
             <= 0 => 0,
             1 => 5_000,
@@ -143,10 +152,16 @@ namespace Immutable.Audience
 
         // Earliest UTC time at which the next attempt may run.
         // Null when no backoff is active.
-        internal DateTime? NextAttemptAt => _nextAttemptAt;
+        internal DateTime? NextAttemptAt
+        {
+            get { lock (_backoffLock) return _nextAttemptAt; }
+        }
 
         // True while UtcNow < NextAttemptAt. Flips false as the clock advances.
-        internal bool IsInBackoffWindow => _getUtcNow() < _nextAttemptAt;
+        internal bool IsInBackoffWindow
+        {
+            get { lock (_backoffLock) return _getUtcNow() < _nextAttemptAt; }
+        }
 
         public void Dispose()
         {
@@ -155,17 +170,22 @@ namespace Immutable.Audience
 
         private void RecordFailure()
         {
-            var now = _getUtcNow();
-            if (now < _nextAttemptAt) return;  // inside prior window — don't compound backoff
-
-            _consecutiveFailures++;
-            _nextAttemptAt = now.AddMilliseconds(BackoffMs);
+            lock (_backoffLock)
+            {
+                var now = _getUtcNow();
+                if (now < _nextAttemptAt) return;  // inside prior window — don't compound backoff
+                _consecutiveFailures++;
+                _nextAttemptAt = now.AddMilliseconds(BackoffMsLocked());
+            }
         }
 
         private void ResetBackoff()
         {
-            _consecutiveFailures = 0;
-            _nextAttemptAt = null;
+            lock (_backoffLock)
+            {
+                _consecutiveFailures = 0;
+                _nextAttemptAt = null;
+            }
         }
 
         // Reads each path and wraps the concatenated JSON bodies in
