@@ -70,19 +70,11 @@ namespace Immutable.Audience
         // a previous run.
         public static ConsentLevel CurrentConsent => _consent;
 
-        // Resolved backend environment — never returns Auto. Auto is
-        // collapsed to Sandbox or Production based on the publishable
-        // key's prefix (pk_imapik-test- → Sandbox, otherwise Production).
-        // Returns Auto only if Init has not run yet.
-        public static AudienceEnvironment CurrentEnvironment
-        {
-            get
-            {
-                var config = _config;
-                if (config == null) return AudienceEnvironment.Auto;
-                return Constants.ResolveEnvironment(config.PublishableKey, config.Environment);
-            }
-        }
+        // Backend environment the SDK is currently sending to. Returns
+        // the AudienceConfig.Environment value; pre-Init it returns the
+        // Sandbox default that AudienceConfig itself would supply, so
+        // diagnostics never have to handle a "no env yet" case.
+        public static AudienceEnvironment CurrentEnvironment => _config?.Environment ?? AudienceEnvironment.Sandbox;
 
         // The userId most recently passed to Identify, or null if the SDK
         // is uninitialised, consent is below Full, or the caller has not
@@ -403,7 +395,7 @@ namespace Immutable.Audience
                 query = "anonymousId=" + Uri.EscapeDataString(anonymousId);
             }
 
-            var url = Constants.DataUrl(config.PublishableKey, config.Environment) + "?" + query;
+            var url = Constants.DataUrl(config.Environment) + "?" + query;
             var onError = config.OnError;
             var publishableKey = config.PublishableKey;
             var cancellationToken = _shutdownCancellationSource?.Token ?? CancellationToken.None;
@@ -559,7 +551,7 @@ namespace Immutable.Audience
             var client = _controlClient;
             if (client == null) return;
 
-            var url = Constants.ConsentUrl(config.PublishableKey, config.Environment);
+            var url = Constants.ConsentUrl(config.Environment);
             var publishableKey = config.PublishableKey;
             var onError = config.OnError;
             var cancellationToken = _shutdownCancellationSource?.Token ?? CancellationToken.None;

@@ -123,7 +123,7 @@ namespace Immutable.Audience.Tests
 #endif
 
         [Test]
-        public async Task SendBatchAsync_200_UsesCorrectUrlForTestKey()
+        public async Task SendBatchAsync_DefaultEnvironment_HitsSandbox()
         {
             _store.Write("{\"type\":\"track\"}");
 
@@ -138,25 +138,8 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
-        public async Task SendBatchAsync_200_UsesCorrectUrlForProdKey()
+        public async Task SendBatchAsync_ExplicitDev_HitsDev()
         {
-            _store.Write("{\"type\":\"track\"}");
-
-            HttpRequestMessage captured = null;
-            var handler = new MockHandler(HttpStatusCode.OK, "{\"accepted\":1,\"rejected\":0}",
-                onRequest: req => captured = req);
-            using var transport = new HttpTransport(_store, "pk_imapik-prodkey", handler: handler);
-
-            await transport.SendBatchAsync();
-
-            StringAssert.StartsWith(Constants.ProductionBaseUrl, captured.RequestUri.ToString());
-        }
-
-        [Test]
-        public async Task SendBatchAsync_ExplicitDevEnvironment_OverridesKeyPrefix()
-        {
-            // A test-prefixed key would resolve to Sandbox under Auto. Explicit
-            // Dev wins so studios can stage either key shape against any env.
             _store.Write("{\"type\":\"track\"}");
 
             HttpRequestMessage captured = null;
@@ -171,7 +154,7 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
-        public async Task SendBatchAsync_ExplicitProductionEnvironment_OverridesTestKey()
+        public async Task SendBatchAsync_ExplicitProduction_HitsProduction()
         {
             _store.Write("{\"type\":\"track\"}");
 

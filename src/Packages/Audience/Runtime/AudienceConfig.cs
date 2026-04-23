@@ -10,13 +10,12 @@ namespace Immutable.Audience
         // Studio API key. Required — Init throws if null.
         public string? PublishableKey { get; set; }
 
-        // Target backend environment. Default Auto picks sandbox for
-        // pk_imapik-test- keys and production for everything else, so
-        // most integrations leave this alone. Set Dev to hit Immutable's
-        // internal development backend, or Sandbox/Production to override
-        // the key-based default (e.g. staging a test key against prod
-        // infra during a regression sweep).
-        public AudienceEnvironment Environment { get; set; } = AudienceEnvironment.Auto;
+        // Target backend environment. Defaults to Sandbox so a
+        // misconfigured integration cannot accidentally send production
+        // traffic — pin to Production explicitly when shipping to live
+        // players. Set Dev to hit Immutable's internal backend (engineers
+        // only).
+        public AudienceEnvironment Environment { get; set; } = AudienceEnvironment.Sandbox;
 
         // Initial consent level.
         public ConsentLevel Consent { get; set; } = ConsentLevel.None;
