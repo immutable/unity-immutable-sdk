@@ -489,6 +489,7 @@ namespace Immutable.Audience
 
             newSession?.Start();
 
+
             SyncConsentToBackend(config, level, anonymousIdForPut);
         }
 
