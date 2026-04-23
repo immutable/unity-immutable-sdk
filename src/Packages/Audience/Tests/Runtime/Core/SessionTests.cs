@@ -883,6 +883,57 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
+        public void Reset_StartsNewSession_DoesNotEmitSessionEnd()
+        {
+            // Reset must end the old session and start a new one so subsequent
+            // Track events carry a fresh sessionId alongside the fresh
+            // anonymousId — matches Web SDK reset() semantics. The old
+            // session's session_end is enqueued by Session.Dispose but wiped
+            // by the PurgeAll in Reset, so the wire sees only a session_start
+            // for the new session.
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));
+
+            // Drain game_launch + session_start for the initial session so we
+            // only see post-Reset events.
+            ImmutableAudience.FlushQueueToDiskForTesting();
+            var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
+            foreach (var f in Directory.GetFiles(queueDir, "*.json")) File.Delete(f);
+
+            var firstAnonymousId = Identity.Get(_testDir);
+            Assert.IsNotNull(firstAnonymousId, "first session should have minted an anonymousId");
+
+            ImmutableAudience.Reset();
+            ImmutableAudience.FlushQueueToDiskForTesting();
+
+            var files = ReadQueueFiles();
+            Assert.IsTrue(files.Any(c => c.Contains("\"session_start\"")),
+                "Reset must fire session_start for the new session");
+            Assert.IsFalse(files.Any(c => c.Contains("\"session_end\"")),
+                "Reset must not leak session_end for the old session (Web SDK parity)");
+
+            var secondAnonymousId = Identity.Get(_testDir);
+            Assert.IsNotNull(secondAnonymousId, "Reset should have minted a fresh anonymousId");
+            Assert.AreNotEqual(firstAnonymousId, secondAnonymousId,
+                "Reset must mint a new anonymousId");
+
+            ImmutableAudience.Shutdown();
+        }
+
+        [Test]
+        public void Reset_ConsentNone_DoesNotStartSession()
+        {
+            // At consent=None there is no session running; Reset must not
+            // spin one up (Web SDK reset() guards on !isTrackingDisabled()).
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.None));
+
+            ImmutableAudience.Reset();
+            ImmutableAudience.Shutdown();
+
+            Assert.IsFalse(ReadQueueFiles().Any(c => c.Contains("\"session_start\"")),
+                "Reset at consent=None must not fire session_start");
+        }
+
+        [Test]
         public void SetConsent_AnonymousToNone_DoesNotEmitSessionEnd()
         {
             // Consent revocation purges the queue and disposes the session.
