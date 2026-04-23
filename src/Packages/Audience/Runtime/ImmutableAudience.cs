@@ -14,10 +14,10 @@ namespace Immutable.Audience
     {
         // Reference fields are written inside _initLock; readers check the
         // `volatile _initialized` flag first so they never see a half-initialised state.
-        // _state (consent level + userId) and _session are volatile: writes
-        // happen inside _initLock, reads happen outside. A ConsentState swap
-        // publishes level + userId together so callers never observe
-        // (Anonymous, oldUserId).
+        // _state (consent level + userId) and _session are volatile so a write
+        // on one thread is visible on any other. Writes happen under _initLock
+        // (Identify / Reset / SetConsent also take it) so level and userId
+        // always move together — callers never observe (Anonymous, oldUserId).
         //
         // Init / Shutdown / Reset / SetConsent hold _initLock only to flip state
         // and capture references; they release the lock before running blocking
@@ -221,7 +221,8 @@ namespace Immutable.Audience
 
             AudienceConfig? config;
             ConsentLevel level;
-            // Update _state under _initLock so (consent, userId) stays a consistent pair.
+            // Update consent + userId under the init lock so they always move
+            // together — another thread reading _state never sees one half-updated.
             lock (_initLock)
             {
                 if (!_initialized) return;
@@ -719,8 +720,9 @@ namespace Immutable.Audience
         private static Dictionary<string, object>? SnapshotCallerDict(Dictionary<string, object>? src) =>
             src != null ? new Dictionary<string, object>(src) : null;
 
-        // Re-reads _state under _drainLock to close the Track-races-SetConsent
-        // window: drops on downgrade to None, strips userId on downgrade to Anonymous.
+        // Checks the current consent inside the drain lock. If consent has
+        // since dropped to None the message is discarded. If it dropped to
+        // Anonymous the userId is stripped.
         private static void EnqueueTrack(Dictionary<string, object>? msg)
         {
             _queue?.EnqueueChecked(msg, m =>

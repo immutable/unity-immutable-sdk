@@ -64,11 +64,12 @@ namespace Immutable.Audience
                 _flushGate.Set();
         }
 
-        // Enqueues under _drainLock, giving the caller a transform callback
-        // that runs inside the lock. The transform returns the (possibly
-        // mutated) message or null to drop. Serialises the decision against
-        // PurgeAll / ApplyAnonymousDowngrade so consent-race leaks and stale
-        // userIds can be dropped or stripped atomically.
+        // Queues the message under the drain lock. The caller supplies a
+        // transform that runs while the lock is held — it can edit the
+        // message or return null to drop it. Running under the lock means
+        // PurgeAll and ApplyAnonymousDowngrade can't slip in mid-decision, so
+        // a Track that races a consent downgrade gets its userId stripped or
+        // the message dropped before it reaches the queue.
         internal void EnqueueChecked(
             Dictionary<string, object>? msg,
             Func<Dictionary<string, object>, Dictionary<string, object>?>? transform)

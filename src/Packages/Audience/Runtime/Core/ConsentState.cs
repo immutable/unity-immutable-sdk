@@ -2,16 +2,17 @@
 
 namespace System.Runtime.CompilerServices
 {
-    // Polyfill: record { init } properties compile to init-only setters that
-    // reference IsExternalInit. .NET Standard 2.1 (Unity) doesn't ship it.
+    // Unity's .NET runtime doesn't include this type, but the C# compiler
+    // needs it to exist to build the ConsentState record below. Declaring
+    // an empty one here gives the compiler what it looks for.
     internal static class IsExternalInit { }
 }
 
 namespace Immutable.Audience
 {
-    // Immutable consent + userId pair. Stored as a volatile reference so
-    // readers observe both fields atomically — a SetConsent(Full → Anonymous)
-    // swap cannot be observed as Anonymous+oldUserId.
+    // Pairs the consent level with the user id so the two always move
+    // together. Updates swap the whole pair at once — a reader never sees
+    // the new consent level alongside a leftover user id.
     internal sealed record ConsentState(ConsentLevel Level, string? UserId)
     {
         internal static readonly ConsentState None = new(ConsentLevel.None, null);
