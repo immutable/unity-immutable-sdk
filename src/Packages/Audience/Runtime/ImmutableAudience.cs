@@ -555,10 +555,10 @@ namespace Immutable.Audience
 
             queue.FlushSync();
 
-            // Serialise SendBatchAsync via _sendInFlight. Without the gate,
-            // two concurrent FlushAsync callers both call ReadBatch with the
-            // same paths and double-POST. Poll cheaply while another caller
-            // (timer SendBatch or a racing FlushAsync) holds the gate.
+            // Only one send runs at a time. Without this, two FlushAsync
+            // callers would both read the same batch from disk and send it
+            // twice. Yield while another caller (the timer or another
+            // FlushAsync) holds the in-flight slot.
             while (Interlocked.CompareExchange(ref _sendInFlight, 1, 0) != 0)
             {
                 cancellationToken.ThrowIfCancellationRequested();

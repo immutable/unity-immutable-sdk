@@ -99,9 +99,10 @@ namespace Immutable.Audience
 
                 if (statusCode >= 200 && statusCode < 300)
                 {
-                    // 2xx: server acked. Parse {accepted, rejected} and surface
-                    // any partial rejections via onError — rejected events are
-                    // validation errors, won't succeed on retry.
+                    // Server accepted the batch. Count how many messages it
+                    // rejected; if any, tell the studio via onError. Rejected
+                    // messages are validation failures — retrying won't help,
+                    // so the batch is deleted either way.
                     var rejected = await ParseRejectedCount(response).ConfigureAwait(false);
                     _store.Delete(batch);
                     ResetBackoff();
@@ -233,9 +234,9 @@ namespace Immutable.Audience
             return sb.ToString();
         }
 
-        // Reads the body and extracts "rejected". Returns 0 on any parse or
-        // read failure — the body is diagnostic, so a malformed one must not
-        // block the success path.
+        // Reads the response body and pulls out the "rejected" count. Returns
+        // 0 if the body is missing or unreadable — the body is only for
+        // reporting, so failing to read it must not break the success path.
         private static async Task<int> ParseRejectedCount(HttpResponseMessage response)
         {
             string body;
