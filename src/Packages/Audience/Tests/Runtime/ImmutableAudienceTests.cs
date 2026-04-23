@@ -951,6 +951,44 @@ namespace Immutable.Audience.Tests
             Assert.DoesNotThrow(() => ImmutableAudience.Track("should_not_crash"));
         }
 
+        [Test]
+        public void Shutdown_ReleasesInitLock_BeforeBlockingTeardown()
+        {
+            // Hanging handler: the final flush inside Shutdown's Phase 2 will
+            // block in transport.SendBatchAsync().Wait(timeoutMs). Pre-refactor,
+            // _initLock was held across that wait — SetConsent / Reset on another
+            // thread would be stranded for the full ShutdownFlushTimeoutMs.
+            var handler = new BlockingHandler();
+            var config = MakeConfig();
+            config.HttpHandler = handler;
+            config.ShutdownFlushTimeoutMs = 10_000;
+
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Track("ensure_nonempty_queue");
+            ImmutableAudience.FlushQueueToDiskForTesting();
+
+            // Phase 1 flips _initialized and releases the lock; Phase 2 enters
+            // the hanging final flush.
+            var shutdown = Task.Run(() => ImmutableAudience.Shutdown());
+
+            Assert.IsTrue(handler.EnteredSendAsync.Wait(TimeSpan.FromSeconds(5)),
+                "Shutdown should reach the hanging final flush inside Phase 2");
+
+            // Reset unconditionally acquires _initLock. If Phase 2 held the lock
+            // this would block for ~10s; post-refactor the lock is free, Reset
+            // sees !_initialized and returns in microseconds.
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            ImmutableAudience.Reset();
+            sw.Stop();
+
+            Assert.Less(sw.ElapsedMilliseconds, 500,
+                $"Reset must not block on Shutdown's Phase 2; took {sw.ElapsedMilliseconds}ms");
+
+            handler.Release.Set();
+            Assert.IsTrue(shutdown.Wait(TimeSpan.FromSeconds(15)),
+                "Shutdown should finish after handler release");
+        }
+
         // -----------------------------------------------------------------
         // Full -> Anonymous consent downgrade
         // -----------------------------------------------------------------
