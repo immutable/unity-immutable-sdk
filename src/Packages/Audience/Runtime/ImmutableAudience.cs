@@ -250,18 +250,39 @@ namespace Immutable.Audience
             Enqueue(msg);
         }
 
-        // Logs out the current player. Clears userId, mints a fresh anonymousId,
-        // discards queued events. Call FlushAsync() first to preserve queued events.
+        // Logs out the current player. Clears userId, discards queued events,
+        // mints a fresh anonymousId, and starts a new session. Matches Web SDK
+        // reset(): no session_end is emitted for the old session (it is enqueued
+        // and then purged). Call FlushAsync() first to preserve queued events.
         public static void Reset()
         {
-            if (!_initialized) return;
+            Session? sessionToStart = null;
+            AudienceConfig? config;
+            lock (_initLock)
+            {
+                if (!_initialized) return;
+                config = _config;
+                if (config == null) return;
 
-            var config = _config;
-            if (config == null) return;
+                // Dispose old session. session_end lands in the queue and is
+                // wiped by PurgeAll below — matches Web SDK's silent-teardown.
+                _session?.Dispose();
+                _session = null;
 
-            _userId = null;
-            _queue?.PurgeAll();
-            Identity.Reset(config.PersistentDataPath!);
+                _queue?.PurgeAll();
+                Identity.Reset(config.PersistentDataPath!);
+                _userId = null;
+
+                // Mint a new session if consent allows tracking.
+                if (_consent.CanTrack())
+                {
+                    _session = new Session(Track);
+                    sessionToStart = _session;
+                }
+            }
+
+            // Start outside _initLock — session_start → Track takes its own locks.
+            sessionToStart?.Start();
         }
 
         // Asks the backend to erase this player's data. Await for ack, or discard for fire-and-forget.
