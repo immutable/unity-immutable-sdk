@@ -99,9 +99,17 @@ namespace Immutable.Audience
 
                 if (statusCode >= 200 && statusCode < 300)
                 {
-                    // 2xx: server acked, drop the batch, healthy state.
+                    // 2xx: server acked. Parse {accepted, rejected} and surface
+                    // any partial rejections via onError — rejected events are
+                    // validation errors, won't succeed on retry.
+                    var rejected = await ParseRejectedCount(response).ConfigureAwait(false);
                     _store.Delete(batch);
                     ResetBackoff();
+                    if (rejected > 0)
+                    {
+                        NotifyError(AudienceErrorCode.ValidationRejected,
+                            $"Batch partially rejected: {rejected} of {batch.Count} events dropped");
+                    }
                 }
                 else if (statusCode >= 400 && statusCode < 500)
                 {
@@ -223,6 +231,39 @@ namespace Immutable.Audience
 
             sb.Append("]}");
             return sb.ToString();
+        }
+
+        // Reads the body and extracts "rejected". Returns 0 on any parse or
+        // read failure — the body is diagnostic, so a malformed one must not
+        // block the success path.
+        private static async Task<int> ParseRejectedCount(HttpResponseMessage response)
+        {
+            string body;
+            try
+            {
+                body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            }
+            catch
+            {
+                return 0;
+            }
+            if (string.IsNullOrEmpty(body)) return 0;
+
+            try
+            {
+                var parsed = JsonReader.DeserializeObject(body);
+                if (!parsed.TryGetValue("rejected", out var raw)) return 0;
+                return raw switch
+                {
+                    int i => i,
+                    long l => (int)l,
+                    _ => 0,
+                };
+            }
+            catch (FormatException)
+            {
+                return 0;
+            }
         }
 
         private void NotifyError(AudienceErrorCode code, string message)
