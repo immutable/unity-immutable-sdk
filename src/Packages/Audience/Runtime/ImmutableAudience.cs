@@ -14,9 +14,10 @@ namespace Immutable.Audience
     {
         // Reference fields are written inside _initLock; readers check the
         // `volatile _initialized` flag first so they never see a half-initialised state.
-        // _consent and _session are written only inside _initLock but read outside,
-        // so they stay `volatile` to make writes visible across threads.
-        // _userId is written outside the lock (Identify) — `volatile` for the same reason.
+        // _state (consent level + userId) and _session are volatile: writes
+        // happen inside _initLock, reads happen outside. A ConsentState swap
+        // publishes level + userId together so callers never observe
+        // (Anonymous, oldUserId).
         //
         // Init / Shutdown / Reset / SetConsent hold _initLock only to flip state
         // and capture references; they release the lock before running blocking
@@ -30,8 +31,7 @@ namespace Immutable.Audience
         private static HttpClient? _controlClient;
         private static CancellationTokenSource? _shutdownCancellationSource;
         private static Timer? _sendTimer;
-        private static volatile ConsentLevel _consent;
-        private static volatile string? _userId;
+        private static volatile ConsentState _state = ConsentState.None;
         private static volatile bool _initialized;
         private static readonly object _initLock = new object();
 
@@ -76,7 +76,8 @@ namespace Immutable.Audience
                 _config = config;
                 Log.Enabled = config.Debug;
                 // Persisted consent overrides the config default (prior downgrade survives restart).
-                _consent = ConsentStore.Load(config.PersistentDataPath) ?? config.Consent;
+                var initialLevel = ConsentStore.Load(config.PersistentDataPath) ?? config.Consent;
+                _state = new ConsentState(initialLevel, null);
 
                 _store = new DiskStore(config.PersistentDataPath);
                 _queue = new EventQueue(_store, config.FlushIntervalSeconds, config.FlushSize);
@@ -94,11 +95,11 @@ namespace Immutable.Audience
                 _initialized = true;
 
                 // Snapshot so a racing SetConsent(None) can't drop the launch event.
-                consentAtInit = _consent;
+                consentAtInit = initialLevel;
 
                 // Session created under the lock; Start() deferred until after
                 // release because session_start → Track takes its own locks.
-                if (consentAtInit.CanTrack())
+                if (initialLevel.CanTrack())
                     _session = new Session(Track);
 
                 // Captured reference: a later SetConsent(None) may dispose this
@@ -136,7 +137,8 @@ namespace Immutable.Audience
         // IEvent implementations validate required fields at compile time.
         public static void Track(IEvent evt)
         {
-            if (!CanTrack()) return;
+            var state = _state;
+            if (!_initialized || !state.Level.CanTrack()) return;
             if (evt == null)
             {
                 Log.Warn("Track(IEvent) called with null event — dropping.");
@@ -166,10 +168,11 @@ namespace Immutable.Audience
                 return;
             }
 
-            var anonymousId = Identity.GetOrCreate(config.PersistentDataPath!, _consent);
+            var anonymousId = Identity.GetOrCreate(config.PersistentDataPath!, state.Level);
             // ToProperties returns a fresh dict per call, so no snapshot needed.
-            var msg = MessageBuilder.Track(eventName, anonymousId, _userId, config.PackageVersion, properties);
-            Enqueue(msg);
+            var userId = state.Level == ConsentLevel.Full ? state.UserId : null;
+            var msg = MessageBuilder.Track(eventName, anonymousId, userId, config.PackageVersion, properties);
+            EnqueueTrack(msg);
         }
 
         // Sends a custom event. For predefined names (purchase, progression,
@@ -177,7 +180,8 @@ namespace Immutable.Audience
         // validates required fields.
         public static void Track(string eventName, Dictionary<string, object>? properties = null)
         {
-            if (!CanTrack()) return;
+            var state = _state;
+            if (!_initialized || !state.Level.CanTrack()) return;
             if (string.IsNullOrEmpty(eventName))
             {
                 Log.Warn("Track(string) called with null or empty event name — dropping.");
@@ -187,10 +191,11 @@ namespace Immutable.Audience
             var config = _config;
             if (config == null) return;
 
-            var anonymousId = Identity.GetOrCreate(config.PersistentDataPath!, _consent);
-            var msg = MessageBuilder.Track(eventName, anonymousId, _userId, config.PackageVersion,
+            var anonymousId = Identity.GetOrCreate(config.PersistentDataPath!, state.Level);
+            var userId = state.Level == ConsentLevel.Full ? state.UserId : null;
+            var msg = MessageBuilder.Track(eventName, anonymousId, userId, config.PackageVersion,
                 SnapshotCallerDict(properties));
-            Enqueue(msg);
+            EnqueueTrack(msg);
         }
 
         // -----------------------------------------------------------------
@@ -213,21 +218,29 @@ namespace Immutable.Audience
                 Log.Warn("Identify called with null or empty userId — dropping.");
                 return;
             }
-            if (!_consent.CanIdentify())
+
+            AudienceConfig? config;
+            ConsentLevel level;
+            // Update _state under _initLock so (consent, userId) stays a consistent pair.
+            lock (_initLock)
             {
-                Log.Warn($"Identify discarded — requires Full consent, current is {_consent}");
-                return;
+                if (!_initialized) return;
+                var current = _state;
+                level = current.Level;
+                if (!level.CanIdentify())
+                {
+                    Log.Warn($"Identify discarded — requires Full consent, current is {level}");
+                    return;
+                }
+                config = _config;
+                if (config == null) return;
+                _state = current with { UserId = userId };
             }
 
-            var config = _config;
-            if (config == null) return;
-
-            _userId = userId;
-
-            var anonymousId = Identity.GetOrCreate(config.PersistentDataPath!, _consent);
+            var anonymousId = Identity.GetOrCreate(config.PersistentDataPath!, level);
             var msg = MessageBuilder.Identify(anonymousId, userId, identityType, config.PackageVersion,
                 SnapshotCallerDict(traits));
-            Enqueue(msg);
+            EnqueueIdentity(msg);
         }
 
         // Links two user ids for the same player.
@@ -245,9 +258,10 @@ namespace Immutable.Audience
                 Log.Warn("Alias called with null or empty fromId/toId — dropping.");
                 return;
             }
-            if (!_consent.CanIdentify())
+            var state = _state;
+            if (!state.Level.CanIdentify())
             {
-                Log.Warn($"Alias discarded — requires Full consent, current is {_consent}");
+                Log.Warn($"Alias discarded — requires Full consent, current is {state.Level}");
                 return;
             }
 
@@ -255,7 +269,7 @@ namespace Immutable.Audience
             if (config == null) return;
 
             var msg = MessageBuilder.Alias(fromId, fromType, toId, toType, config.PackageVersion);
-            Enqueue(msg);
+            EnqueueIdentity(msg);
         }
 
         // Logs out the current player. Clears userId, discards queued events,
@@ -264,9 +278,10 @@ namespace Immutable.Audience
         // and then purged). Call FlushAsync() first to preserve queued events.
         public static void Reset()
         {
-            // Phase 1 under _initLock: swap _session and clear _userId. Blocking
-            // work (session drain, disk purge, identity wipe, new session_start)
-            // runs outside the lock so callers racing on _initLock don't wait.
+            // Phase 1 under _initLock: atomic _state.UserId clear + _session swap.
+            // Blocking work (session drain, disk purge, identity wipe, new
+            // session_start) runs outside the lock so callers racing on
+            // _initLock don't wait.
             AudienceConfig? config;
             Session? oldSession;
             Session? newSession = null;
@@ -280,11 +295,11 @@ namespace Immutable.Audience
 
                 oldSession = _session;
                 queueForPurge = _queue;
-                _userId = null;
+                _state = _state with { UserId = null };
 
                 // Swap under the lock so racing SetConsent/OnPause/OnResume see
                 // either the old, the new, or null — never a torn reference.
-                _session = _consent.CanTrack() ? new Session(Track) : null;
+                _session = _state.Level.CanTrack() ? new Session(Track) : null;
                 newSession = _session;
             }
 
@@ -378,13 +393,13 @@ namespace Immutable.Audience
             if (config == null) return;
 
             // Snapshot check before any I/O: no-op if already at target consent.
-            var snapshotPrevious = _consent;
+            var snapshotPrevious = _state.Level;
             if (level == snapshotPrevious) return;
 
             // Capture anonymousId for the PUT audit trail outside _initLock.
             // Identity methods hold their own _sync lock; disk I/O on a cold
             // cache (None → Anonymous/Full upgrade creates the UUID file) does
-            // not block _initLock. A racing SetConsent may change _consent
+            // not block _initLock. A racing SetConsent may change _state
             // between this read and our lock acquire — acceptable, the racing
             // call fires its own PUT and our slightly-stale ID still
             // identifies the user.
@@ -392,7 +407,7 @@ namespace Immutable.Audience
                 ? Identity.GetOrCreate(config.PersistentDataPath!, level)
                 : Identity.Get(config.PersistentDataPath!);
 
-            // Phase 1 under _initLock: flip _consent and swap _session / _userId.
+            // Phase 1 under _initLock: atomic _state swap and _session swap.
             // Phase 2 outside the lock runs the blocking side effects (persist,
             // dispose, purge, downgrade, backend sync, new session_start) so a
             // concurrent Shutdown / Init / Reset isn't held waiting on them.
@@ -410,10 +425,16 @@ namespace Immutable.Audience
                 queue = _queue;
                 if (config == null) return;
 
-                previous = _consent;
+                var previousState = _state;
+                previous = previousState.Level;
                 if (level == previous) return;
 
-                _consent = level;
+                // Atomic swap: Level + UserId publish together. Drop UserId on
+                // any downgrade out of Full so a racing Track/Identify cannot
+                // observe (Anonymous, oldUserId).
+                _state = new ConsentState(
+                    level,
+                    level == ConsentLevel.Full ? previousState.UserId : null);
 
                 if (level == ConsentLevel.None)
                 {
@@ -425,7 +446,6 @@ namespace Immutable.Audience
                 }
                 else if (previous == ConsentLevel.Full && level == ConsentLevel.Anonymous)
                 {
-                    _userId = null;
                     downgradeFullToAnonymous = true;
                 }
                 else if (previous == ConsentLevel.None && _session == null)
@@ -599,7 +619,7 @@ namespace Immutable.Audience
 
                 _config = null;
                 _store = null;
-                _userId = null;
+                _state = _state with { UserId = null };
             }
 
             // Phase 2 outside _initLock: end session, drain timers, flush, dispose.
@@ -667,7 +687,7 @@ namespace Immutable.Audience
 
             lock (_initLock)
             {
-                _consent = ConsentLevel.None;
+                _state = ConsentState.None;
                 // Defensive: Shutdown nulls _session too, but a future refactor
                 // that bails before that null must not leak a stale Session.
                 _session = null;
@@ -675,7 +695,7 @@ namespace Immutable.Audience
             }
         }
 
-        internal static ConsentLevel CurrentConsentForTesting => _consent;
+        internal static ConsentLevel CurrentConsentForTesting => _state.Level;
 
         internal static void FlushQueueToDiskForTesting() => _queue?.FlushSync();
 
@@ -691,7 +711,7 @@ namespace Immutable.Audience
 
         private static bool CanTrack()
         {
-            return _initialized && _consent.CanTrack();
+            return _initialized && _state.Level.CanTrack();
         }
 
         // Copy the dictionary so the caller editing it later can't corrupt the
@@ -699,13 +719,25 @@ namespace Immutable.Audience
         private static Dictionary<string, object>? SnapshotCallerDict(Dictionary<string, object>? src) =>
             src != null ? new Dictionary<string, object>(src) : null;
 
-        private static void Enqueue(Dictionary<string, object>? msg)
+        // Re-reads _state under _drainLock to close the Track-races-SetConsent
+        // window: drops on downgrade to None, strips userId on downgrade to Anonymous.
+        private static void EnqueueTrack(Dictionary<string, object>? msg)
         {
-            var queue = _queue;
-            if (queue == null) return;
+            _queue?.EnqueueChecked(msg, m =>
+            {
+                var state = _state;
+                if (!state.Level.CanTrack()) return null;
+                if (state.Level != ConsentLevel.Full)
+                    m.Remove(MessageFields.UserId);
+                return m;
+            });
+        }
 
-            // Re-check consent inside _drainLock so a racing SetConsent(None) can't leak past the purge.
-            queue.EnqueueChecked(msg, () => _consent.CanTrack());
+        // Identify / Alias require Full; drop if consent has downgraded.
+        private static void EnqueueIdentity(Dictionary<string, object>? msg)
+        {
+            _queue?.EnqueueChecked(msg, m =>
+                _state.Level == ConsentLevel.Full ? m : null);
         }
 
         private static void SendBatch()

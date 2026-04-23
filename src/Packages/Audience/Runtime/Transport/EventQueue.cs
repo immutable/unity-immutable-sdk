@@ -64,16 +64,25 @@ namespace Immutable.Audience
                 _flushGate.Set();
         }
 
-        // Enqueues under _drainLock, re-checking stillAllowed inside the lock.
-        // Closes the window where a concurrent PurgeAll could complete between
-        // the caller's check and the enqueue, leaking the event past revocation.
-        internal void EnqueueChecked(Dictionary<string, object>? msg, Func<bool>? stillAllowed)
+        // Enqueues under _drainLock, giving the caller a transform callback
+        // that runs inside the lock. The transform returns the (possibly
+        // mutated) message or null to drop. Serialises the decision against
+        // PurgeAll / ApplyAnonymousDowngrade so consent-race leaks and stale
+        // userIds can be dropped or stripped atomically.
+        internal void EnqueueChecked(
+            Dictionary<string, object>? msg,
+            Func<Dictionary<string, object>, Dictionary<string, object>?>? transform)
         {
             if (_disposed || msg == null) return;
 
             lock (_drainLock)
             {
-                if (stillAllowed != null && !stillAllowed()) return;
+                if (transform != null)
+                {
+                    var transformed = transform(msg);
+                    if (transformed == null) return;
+                    msg = transformed;
+                }
                 _memory.Enqueue(msg);
             }
 
