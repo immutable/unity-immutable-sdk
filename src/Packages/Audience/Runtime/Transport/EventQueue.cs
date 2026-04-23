@@ -49,6 +49,12 @@ namespace Immutable.Audience
             _drainThread.Start();
         }
 
+        // Approximate count of events currently in the in-memory queue
+        // awaiting drain to disk. Lock-free read on ConcurrentQueue.Count
+        // — a snapshot that can race with concurrent enqueue / dequeue.
+        // Good enough for status-panel display; not an invariant.
+        internal int InMemoryCount => _memory.Count;
+
         // Enqueues a message dictionary. Lock-free; safe from any thread.
         // The dictionary is not copied -- callers must not mutate it after
         // enqueue. Serialisation happens on the drain thread so Track() stays

@@ -48,6 +48,76 @@ namespace Immutable.Audience
         // assignments from SetConsent without taking _initLock.
         private static volatile Session? _session;
 
+        // -----------------------------------------------------------------
+        // Diagnostic accessors
+        //
+        // Public so studios can build debug HUDs, settings-screen displays,
+        // and integration tests against live SDK state without reaching
+        // into internals. Every getter is safe to call any time — before
+        // Init, after Shutdown, between threads — and returns a safe
+        // default (false / null / 0 / ConsentLevel.None) when the SDK is
+        // not in a state that can answer. Values are snapshots and can
+        // drift by a tick against the background drain thread; fine for
+        // display, do not use for invariants.
+        // -----------------------------------------------------------------
+
+        // True between Init and Shutdown. Flips back to false on Shutdown
+        // and ResetState. Studios can gate UI ("SDK connecting…") on this.
+        public static bool Initialized => _initialized;
+
+        // Current consent level. Reflects the persisted value, which can
+        // differ from AudienceConfig.Consent if the player changed it on
+        // a previous run.
+        public static ConsentLevel CurrentConsent => _consent;
+
+        // The userId most recently passed to Identify, or null if the SDK
+        // is uninitialised, consent is below Full, or the caller has not
+        // called Identify. Cleared by Reset.
+        public static string? UserId => _userId;
+
+        // Persisted anonymousId, or null when uninitialised or consent is
+        // None. Reset and SetConsent(None) wipe it, so it is not a stable
+        // identifier across sessions — use for display, not correlation.
+        public static string? AnonymousId
+        {
+            get
+            {
+                if (!_initialized) return null;
+                var config = _config;
+                if (config == null || !_consent.CanTrack()) return null;
+                // PersistentDataPath is validated non-null in Init; compiler can't propagate that.
+                return Identity.Get(config.PersistentDataPath!);
+            }
+        }
+
+        // Current sessionId, or null when no session is active. A session
+        // starts on Init (when consent allows tracking), on upgrade from
+        // None, and on resume after an extended pause (>30s).
+        public static string? SessionId => _session?.SessionId;
+
+        // Events waiting to send, summed across the in-memory queue and
+        // on-disk store. Neither count is locked against the drain thread,
+        // so the value can drift by a few events — fine for a status
+        // panel, not for invariants.
+        public static int QueueSize
+        {
+            get
+            {
+                // Fence off the volatile _initialized load first, matching
+                // the protocol documented on the reference fields. Without
+                // this, a weak-memory-order reader could observe
+                // _initialized=true but _queue/_store still null — the ?.
+                // short-circuits to 0 in that case, but the inconsistency
+                // would break the protocol the file claims to follow.
+                if (!_initialized) return 0;
+                var queue = _queue;
+                var store = _store;
+                var memory = queue?.InMemoryCount ?? 0;
+                var disk = store?.Count() ?? 0;
+                return memory + disk;
+            }
+        }
+
         // Starts the SDK. Call once at launch.
         public static void Init(AudienceConfig config)
         {
