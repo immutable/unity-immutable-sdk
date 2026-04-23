@@ -543,8 +543,9 @@ namespace Immutable.Audience
         // Flush / Shutdown
         // -----------------------------------------------------------------
 
-        // Sends all pending events now.
-        public static async Task FlushAsync()
+        // Sends all pending events now. Respects cancellationToken for both
+        // the gate wait and the HTTP send.
+        public static async Task FlushAsync(CancellationToken cancellationToken = default)
         {
             if (!_initialized) return;
 
@@ -560,15 +561,21 @@ namespace Immutable.Audience
             // (timer SendBatch or a racing FlushAsync) holds the gate.
             while (Interlocked.CompareExchange(ref _sendInFlight, 1, 0) != 0)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 await Task.Yield();
             }
 
             try
             {
                 while (!transport.IsInBackoffWindow &&
-                       await transport.SendBatchAsync().ConfigureAwait(false))
+                       await transport.SendBatchAsync(cancellationToken).ConfigureAwait(false))
                 {
                 }
+            }
+            catch (ObjectDisposedException)
+            {
+                // Concurrent Shutdown disposed the transport. Exit silently —
+                // caller is tearing down.
             }
             finally
             {
