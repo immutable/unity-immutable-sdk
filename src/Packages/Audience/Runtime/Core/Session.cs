@@ -122,7 +122,11 @@ namespace Immutable.Audience
                 // Keep the original anchor. Shifting forward shrinks Resume's
                 // pauseDuration (and ComputeEngagedSecondsLocked's live pause
                 // when End fires while paused), over-crediting engagement.
-                if (_pausedAt.HasValue) return;
+                if (_pausedAt.HasValue)
+                {
+                    Log.Debug("Session: Pause while already paused — ignoring.");
+                    return;
+                }
                 _pausedAt = _getUtcNow();
             }
         }
