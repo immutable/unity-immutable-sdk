@@ -749,6 +749,72 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
+        public void SetConsent_DowngradeToAnonymous_StressTest_NoUserIdLeak()
+        {
+            // Full → Anonymous race: Track reads _state with userId still set,
+            // then SetConsent flips _state to Anonymous and calls
+            // ApplyAnonymousDowngrade (one-shot rewrite). If Track's enqueue
+            // lands after the rewrite, the msg with userId is not stripped.
+            //
+            // With the ConsentState + EnqueueChecked transform in place, Track's
+            // transform runs under _drainLock and strips userId when current state
+            // is not Full. Zero leaks across all iterations.
+            //
+            // Sabotage: remove the `m.Remove(MessageFields.UserId)` in
+            // EnqueueTrack and this test leaks reproducibly.
+            const int iterations = 200;
+            const int trackersPerIteration = 4;
+            const string testUserId = "user_race_stress";
+
+            for (int iter = 0; iter < iterations; iter++)
+            {
+                ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
+                ImmutableAudience.Identify(testUserId, "steam");
+
+                // Clear Init events so only race events can leak.
+                ImmutableAudience.FlushQueueToDiskForTesting();
+                var queueDir = AudiencePaths.QueueDir(_testDir);
+                if (Directory.Exists(queueDir))
+                    foreach (var f in Directory.GetFiles(queueDir, "*.json")) File.Delete(f);
+
+                var barrier = new Barrier(trackersPerIteration + 1);
+                var trackers = new Task[trackersPerIteration];
+                for (int t = 0; t < trackersPerIteration; t++)
+                {
+                    trackers[t] = Task.Run(() =>
+                    {
+                        barrier.SignalAndWait();
+                        ImmutableAudience.Track("race_stress");
+                    });
+                }
+
+                barrier.SignalAndWait();
+                ImmutableAudience.SetConsent(ConsentLevel.Anonymous);
+                Task.WaitAll(trackers, TimeSpan.FromSeconds(5));
+
+                ImmutableAudience.FlushQueueToDiskForTesting();
+
+                int userIdLeaks = 0;
+                if (Directory.Exists(queueDir))
+                {
+                    userIdLeaks = Directory.GetFiles(queueDir, "*.json")
+                        .Select(File.ReadAllText)
+                        .Count(c => c.Contains($"\"{testUserId}\""));
+                }
+
+                if (userIdLeaks > 0)
+                {
+                    Assert.Fail(
+                        $"iteration {iter}: {userIdLeaks} track events retained userId past SetConsent(Anonymous)");
+                }
+
+                ImmutableAudience.ResetState();
+                if (Directory.Exists(AudiencePaths.AudienceDir(_testDir)))
+                    Directory.Delete(AudiencePaths.AudienceDir(_testDir), recursive: true);
+            }
+        }
+
+        [Test]
         public void ResetState_ClearsIdentityCache_AcrossInitWithDifferentPath()
         {
             // First init: mints and caches an anonymousId under _testDir.
