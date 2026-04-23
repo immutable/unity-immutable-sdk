@@ -15,9 +15,9 @@ namespace Immutable.Audience
         // Reference fields are written inside _initLock; readers check the
         // `volatile _initialized` flag first so they never see a half-initialised state.
         // _state (consent level + userId) and _session are volatile so a write
-        // on one thread is visible on any other. Writes happen under _initLock
-        // (Identify / Reset / SetConsent also take it) so level and userId
-        // always move together — callers never observe (Anonymous, oldUserId).
+        // on one thread is visible on any other. Every _state write happens
+        // under _initLock so level and userId always move together — callers
+        // never observe (Anonymous, oldUserId).
         //
         // Init / Shutdown / Reset / SetConsent hold _initLock only to flip state
         // and capture references; they release the lock before running blocking
@@ -789,7 +789,7 @@ namespace Immutable.Audience
             timer.Change(nextMs, sendIntervalMs);
         }
 
-        // consentAtInit only gates the launch; Track still checks live _consent via CanTrack.
+        // consentAtInit only gates the launch; Track still checks live _state via CanTrack.
         private static void FireGameLaunch(AudienceConfig config, ConsentLevel consentAtInit)
         {
             if (!consentAtInit.CanTrack()) return;

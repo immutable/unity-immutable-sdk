@@ -568,7 +568,7 @@ namespace Immutable.Audience.Tests
             // before SetConsent starts on a fast machine. This stress variant runs
             // the race many times with many concurrent Track threads so at least
             // some iterations are guaranteed to land the enqueue inside the
-            // _consent=None/PurgeAll window.
+            // _state=None/PurgeAll window.
             //
             // Without the EnqueueChecked re-check, this test leaks events
             // reproducibly. With the fix, zero leaks across all iterations.
