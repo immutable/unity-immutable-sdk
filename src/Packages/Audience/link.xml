@@ -12,6 +12,7 @@ framework dependency.
 -->
 <linker>
   <assembly fullname="Immutable.Audience.Runtime" preserve="all" />
+  <assembly fullname="Immutable.Audience.Unity" preserve="all" />
 
   <assembly fullname="System.Net.Http">
     <type fullname="System.Net.Http.HttpClient" preserve="all" />

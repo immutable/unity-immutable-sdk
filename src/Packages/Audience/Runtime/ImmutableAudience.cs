@@ -38,12 +38,14 @@ namespace Immutable.Audience
         // Gate against overlapping timer ticks (Timer callbacks run on independent ThreadPool threads).
         private static int _sendInFlight;
 
-        // AudienceUnityHooks sets these at SubsystemRegistration.
-        // DefaultPersistentDataPathProvider fills PersistentDataPath from
-        // Application.persistentDataPath. LaunchContextProvider supplies
-        // Unity context for game_launch without Core referencing UnityEngine.
-        internal static Func<string>? DefaultPersistentDataPathProvider;
-        internal static Func<Dictionary<string, object>>? LaunchContextProvider;
+        // volatile: assigned on the Unity main thread at SubsystemRegistration,
+        // read from the drain thread in Track / Identify / heartbeat paths.
+        // The assignments happen before any event can fire in practice, but
+        // volatile documents the cross-thread publish contract explicitly.
+        internal static volatile Func<string>? DefaultPersistentDataPathProvider;
+        internal static volatile Func<IReadOnlyDictionary<string, object>>? LaunchContextProvider;
+        internal static volatile Func<IReadOnlyDictionary<string, object>>? ContextProvider;
+        internal static volatile Func<Dictionary<string, object>>? PerformanceSnapshotProvider;
 
         // Active session. Created at Init (or on upgrade from None) and disposed
         // on Shutdown or SetConsent(None). Volatile so OnPause/OnResume see
@@ -100,7 +102,7 @@ namespace Immutable.Audience
                 // Session created under the lock; Start() deferred until after
                 // release because session_start → Track takes its own locks.
                 if (initialLevel.CanTrack())
-                    _session = new Session(Track);
+                    _session = new Session(Track, PerformanceSnapshotProvider);
 
                 // Captured reference: a later SetConsent(None) may dispose this
                 // Session (Start then no-ops on _disposed). Either way no duplicate
@@ -300,7 +302,7 @@ namespace Immutable.Audience
 
                 // Swap under the lock so racing SetConsent/OnPause/OnResume see
                 // either the old, the new, or null — never a torn reference.
-                _session = _state.Level.CanTrack() ? new Session(Track) : null;
+                _session = _state.Level.CanTrack() ? new Session(Track, PerformanceSnapshotProvider) : null;
                 newSession = _session;
             }
 
@@ -454,7 +456,7 @@ namespace Immutable.Audience
                     // Upgrade from None: allocate + publish the new Session under
                     // the lock so a concurrent SetConsent / Init sees the new
                     // reference and the double-allocation guard above fires.
-                    newSession = new Session(Track);
+                    newSession = new Session(Track, PerformanceSnapshotProvider);
                     _session = newSession;
                 }
             }
@@ -701,9 +703,7 @@ namespace Immutable.Audience
         // Internal — shared with tests and AudienceUnityHooks
         // -----------------------------------------------------------------
 
-        // Shuts down (if initialised) and clears per-session state. Used on
-        // test teardown and Unity SubsystemRegistration to survive "disable
-        // domain reload". LaunchContextProvider is re-assigned by AudienceUnityHooks.
+        // Providers reassigned by SubsystemRegistration.
         internal static void ResetState()
         {
             // Shutdown manages its own serialisation and releases _initLock before
@@ -743,6 +743,7 @@ namespace Immutable.Audience
         // Anonymous the userId is stripped.
         private static void EnqueueTrack(Dictionary<string, object>? msg)
         {
+            MergeUnityContext(msg);
             _queue?.EnqueueChecked(msg, m =>
             {
                 var state = _state;
@@ -756,8 +757,39 @@ namespace Immutable.Audience
         // Identify / Alias require Full; drop if consent has downgraded.
         private static void EnqueueIdentity(Dictionary<string, object>? msg)
         {
+            MergeUnityContext(msg);
             _queue?.EnqueueChecked(msg, m =>
                 _state.Level == ConsentLevel.Full ? m : null);
+        }
+
+        private static void MergeUnityContext(Dictionary<string, object>? msg)
+        {
+            if (msg == null) return;
+
+            var provider = ContextProvider;
+            if (provider == null) return;
+
+            IReadOnlyDictionary<string, object>? extra;
+            try
+            {
+                extra = provider();
+            }
+            catch (Exception ex)
+            {
+                Log.Warn($"ContextProvider threw {ex.GetType().Name}: {ex.Message}. " +
+                         "Event ships with base context only.");
+                return;
+            }
+            if (extra == null) return;
+
+            if (!(msg.TryGetValue("context", out var ctxObj) && ctxObj is Dictionary<string, object> ctx))
+            {
+                ctx = new Dictionary<string, object>();
+                msg["context"] = ctx;
+            }
+
+            foreach (var kv in extra)
+                ctx[kv.Key] = kv.Value;
         }
 
         private static void SendBatch()
@@ -825,7 +857,7 @@ namespace Immutable.Audience
             var provider = LaunchContextProvider;
             if (provider != null)
             {
-                Dictionary<string, object>? unityContext = null;
+                IReadOnlyDictionary<string, object>? unityContext = null;
                 try { unityContext = provider(); }
                 catch (Exception ex)
                 {
