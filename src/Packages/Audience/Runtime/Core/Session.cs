@@ -6,6 +6,11 @@ using System.Threading;
 
 namespace Immutable.Audience
 {
+    // Fires a session event (session_start / session_heartbeat / session_end)
+    // through ImmutableAudience.Track. Declared as a named delegate so Session
+    // can be driven by tests with a mock without touching the static SDK surface.
+    internal delegate void TrackDelegate(string eventName, Dictionary<string, object> properties);
+
     // Unity session lifecycle. Emits session_start / session_heartbeat / session_end.
     // duration is engagement time (excludes pause). Heartbeat fires off-thread;
     // public methods run on the caller's thread. _track fires outside _lock.
@@ -16,7 +21,7 @@ namespace Immutable.Audience
         // 30s: alt-tab beyond this rolls the session on Resume.
         internal const int PauseTimeoutMs = 30_000;
 
-        private readonly Action<string, Dictionary<string, object>> _track;
+        private readonly TrackDelegate _track;
         private readonly Func<Dictionary<string, object>>? _performanceSnapshot;
         private readonly Func<DateTime> _getUtcNow;
         private readonly int _heartbeatIntervalMs;
@@ -39,7 +44,7 @@ namespace Immutable.Audience
         // track: fires session events. performanceSnapshot: merges fps/memory
         // into heartbeats (null on non-Unity). getUtcNow/heartbeatIntervalMs: test seams.
         internal Session(
-            Action<string, Dictionary<string, object>> track,
+            TrackDelegate track,
             Func<Dictionary<string, object>>? performanceSnapshot = null,
             Func<DateTime>? getUtcNow = null,
             int heartbeatIntervalMs = HeartbeatIntervalMs)
