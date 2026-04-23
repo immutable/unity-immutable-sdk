@@ -119,8 +119,9 @@ namespace Immutable.Audience
             lock (_lock)
             {
                 if (_disposed || _sessionId == null) return;
-                // Keep the original anchor; double-Pause would shift it forward
-                // and under-count the pause window.
+                // Keep the original anchor. Shifting forward shrinks Resume's
+                // pauseDuration (and ComputeEngagedSecondsLocked's live pause
+                // when End fires while paused), over-crediting engagement.
                 if (_pausedAt.HasValue) return;
                 _pausedAt = _getUtcNow();
             }
