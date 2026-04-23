@@ -10,6 +10,16 @@
 [Ll]ogs/
 [Uu]ser[Ss]ettings/
 
+# dotnet build outputs redirected here via Directory.Build.props files
+# so bin/obj don't sit inside Unity package folders and get scanned.
+/artifacts/
+
+# IDE and MSBuild extensibility sidecars Unity emits .meta for when the
+# files land inside the package root.
+*.DotSettings.user.meta
+Directory.Build.props.meta
+Directory.Build.targets.meta
+
 # MemoryCaptures can get excessive in size.
 # They also could contain extremely sensitive data
 /[Mm]emoryCaptures/

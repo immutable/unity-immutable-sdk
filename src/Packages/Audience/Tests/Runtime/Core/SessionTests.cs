@@ -57,7 +57,7 @@ namespace Immutable.Audience.Tests
         public void End_FiresSessionEnd_WithDuration()
         {
             var now = new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc);
-            using var session = new Session(MockTrack, performanceSnapshot: null, getUtcNow: () => now);
+            using var session = new Session(MockTrack, getUtcNow: () => now);
             session.Start();
             now = now.AddSeconds(2);
             session.End();
@@ -126,87 +126,6 @@ namespace Immutable.Audience.Tests
             }
         }
 
-        [Test]
-        public void Heartbeat_WithoutPerformanceSnapshot_OnlyCarriesCoreProperties()
-        {
-            using var session = new Session(MockTrack);
-            session.Start();
-
-            session.OnHeartbeat();
-
-            var beat = _events.Last(e => e.name == "session_heartbeat");
-            CollectionAssert.AreEquivalent(
-                new[] { "sessionId", "durationSec" },
-                beat.props.Keys);
-        }
-
-        [Test]
-        public void Heartbeat_MergesPerformanceSnapshotProperties()
-        {
-            Func<Dictionary<string, object>> snapshot = () => new Dictionary<string, object>
-            {
-                ["fpsAvg"] = 58.4,
-                ["fpsMin"] = 42.1,
-                ["memoryUsedMb"] = 512L,
-                ["memoryReservedMb"] = 768L,
-            };
-            using var session = new Session(MockTrack, snapshot);
-            session.Start();
-
-            session.OnHeartbeat();
-
-            var beat = _events.Last(e => e.name == "session_heartbeat");
-            Assert.AreEqual(58.4, beat.props["fpsAvg"]);
-            Assert.AreEqual(42.1, beat.props["fpsMin"]);
-            Assert.AreEqual(512L, beat.props["memoryUsedMb"]);
-            Assert.AreEqual(768L, beat.props["memoryReservedMb"]);
-            Assert.IsTrue(beat.props.ContainsKey("sessionId"));
-            Assert.IsTrue(beat.props.ContainsKey("durationSec"));
-        }
-
-        [Test]
-        public void Heartbeat_SnapshotCannotOverwriteCoreFields()
-        {
-            // Core fields (sessionId, duration) are owned by Session. A
-            // provider that returns a dictionary containing either key must
-            // not be able to clobber the wire values — otherwise a buggy
-            // studio-side snapshot could silently rewrite session identity
-            // or engagement arithmetic on every heartbeat. Sabotage: removing
-            // the ContainsKey guard lets "spoofed-id" and 99999L land on the
-            // wire and both assertions below fail.
-            Func<Dictionary<string, object>> snapshot = () => new Dictionary<string, object>
-            {
-                ["sessionId"] = "spoofed-id",
-                ["durationSec"] = 99999L,
-                ["fpsAvg"] = 60.0,
-            };
-            using var session = new Session(MockTrack, snapshot);
-            session.Start();
-
-            session.OnHeartbeat();
-
-            var beat = _events.Last(e => e.name == "session_heartbeat");
-            Assert.AreNotEqual("spoofed-id", (string)beat.props["sessionId"],
-                "snapshot must not overwrite Session-owned sessionId");
-            Assert.AreNotEqual(99999L, (long)beat.props["durationSec"],
-                "snapshot must not overwrite Session-owned duration");
-            Assert.AreEqual(60.0, beat.props["fpsAvg"],
-                "non-colliding snapshot fields should still merge");
-        }
-
-        [Test]
-        public void Heartbeat_SnapshotReturningNull_DoesNotThrowAndOmitsFields()
-        {
-            Func<Dictionary<string, object>> snapshot = () => null;
-            using var session = new Session(MockTrack, snapshot);
-            session.Start();
-
-            session.OnHeartbeat();
-
-            var beat = _events.Last(e => e.name == "session_heartbeat");
-            Assert.IsFalse(beat.props.ContainsKey("fpsAvg"));
-        }
-
         // -----------------------------------------------------------------
         // Pause / Resume
         // -----------------------------------------------------------------
@@ -215,7 +134,7 @@ namespace Immutable.Audience.Tests
         public void Pause_ThenResume_ShortPause_ContinuesSession()
         {
             var now = new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc);
-            using var session = new Session(MockTrack, performanceSnapshot: null, getUtcNow: () => now);
+            using var session = new Session(MockTrack, getUtcNow: () => now);
             session.Start();
             var originalId = session.SessionId;
 
@@ -234,7 +153,7 @@ namespace Immutable.Audience.Tests
             // Uses the injected clock to jump past the 30-second threshold
             // without sleeping.
             var now = new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc);
-            using var session = new Session(MockTrack, performanceSnapshot: null, getUtcNow: () => now);
+            using var session = new Session(MockTrack, getUtcNow: () => now);
             session.Start();
             var id1 = session.SessionId;
 
@@ -263,7 +182,7 @@ namespace Immutable.Audience.Tests
             var now = new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc);
             DateTime Clock() => now;
 
-            using var session = new Session(MockTrack, performanceSnapshot: null, getUtcNow: Clock);
+            using var session = new Session(MockTrack, getUtcNow: Clock);
             session.Start();
 
             now = now.AddSeconds(5);
@@ -314,7 +233,7 @@ namespace Immutable.Audience.Tests
             var now = new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc);
             DateTime Clock() => now;
 
-            using var session = new Session(MockTrack, performanceSnapshot: null, getUtcNow: Clock);
+            using var session = new Session(MockTrack, getUtcNow: Clock);
             session.Start();
 
             now = now.AddSeconds(10); // 10 s engaged
@@ -351,7 +270,7 @@ namespace Immutable.Audience.Tests
             var now = new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc);
             DateTime Clock() => now;
 
-            using var session = new Session(MockTrack, performanceSnapshot: null, getUtcNow: Clock);
+            using var session = new Session(MockTrack, getUtcNow: Clock);
             session.Start();
 
             now = now.AddSeconds(-3); // clock rewinds after Start, no pause
@@ -377,7 +296,7 @@ namespace Immutable.Audience.Tests
             var now = new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc);
             DateTime Clock() => now;
 
-            using var session = new Session(MockTrack, performanceSnapshot: null, getUtcNow: Clock);
+            using var session = new Session(MockTrack, getUtcNow: Clock);
             session.Start();
 
             now = now.AddSeconds(10);
@@ -399,7 +318,7 @@ namespace Immutable.Audience.Tests
             var now = new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc);
             DateTime Clock() => now;
 
-            using var session = new Session(MockTrack, performanceSnapshot: null, getUtcNow: Clock);
+            using var session = new Session(MockTrack, getUtcNow: Clock);
             session.Start();
 
             now = now.AddSeconds(4);
@@ -424,7 +343,7 @@ namespace Immutable.Audience.Tests
             var now = new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc);
             DateTime Clock() => now;
 
-            using var session = new Session(MockTrack, performanceSnapshot: null, getUtcNow: Clock);
+            using var session = new Session(MockTrack, getUtcNow: Clock);
             session.Start();
 
             now = now.AddSeconds(5);
@@ -452,7 +371,7 @@ namespace Immutable.Audience.Tests
             var now = new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc);
             DateTime Clock() => now;
 
-            using var session = new Session(MockTrack, performanceSnapshot: null, getUtcNow: Clock);
+            using var session = new Session(MockTrack, getUtcNow: Clock);
             session.Start();
 
             now = now.AddSeconds(10); // 10 s engaged before pause
@@ -474,7 +393,7 @@ namespace Immutable.Audience.Tests
             var now = new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc);
             DateTime Clock() => now;
 
-            using var session = new Session(MockTrack, performanceSnapshot: null, getUtcNow: Clock);
+            using var session = new Session(MockTrack, getUtcNow: Clock);
             session.Start();
 
             now = now.AddSeconds(4);
@@ -640,43 +559,6 @@ namespace Immutable.Audience.Tests
                 {
                     Assert.IsTrue(warnings.Any(w => w.Contains("session_heartbeat track callback threw")),
                         "SafeTrack must log a warning when the callback throws");
-                }
-            }
-            finally { Log.Writer = prevWriter; }
-        }
-
-        [Test]
-        public void OnHeartbeat_PerformanceSnapshotThrows_ShipsHeartbeatWithoutPerfFields()
-        {
-            // PerformanceSnapshotProvider is studio-supplied and crosses an
-            // API boundary. A throwing provider must not prevent the
-            // heartbeat from shipping — the SafePerformanceSnapshot wrapper
-            // returns null on exception so the heartbeat ships with the
-            // core fields only.
-            var warnings = new List<string>();
-            var prevWriter = Log.Writer;
-            Log.Writer = line => { lock (warnings) warnings.Add(line); };
-            try
-            {
-                Func<Dictionary<string, object>> snapshot = () =>
-                    throw new InvalidOperationException("perf explode");
-
-                using var session = new Session(MockTrack, snapshot);
-                session.Start();
-
-                Assert.DoesNotThrow(() => session.OnHeartbeat(),
-                    "a throwing performance snapshot must not escape Session");
-
-                var beat = _events.Last(e => e.name == "session_heartbeat");
-                CollectionAssert.AreEquivalent(
-                    new[] { "sessionId", "durationSec" },
-                    beat.props.Keys,
-                    "heartbeat should carry only the core fields when the snapshot throws");
-
-                lock (warnings)
-                {
-                    Assert.IsTrue(warnings.Any(w => w.Contains("performance snapshot threw")),
-                        "SafePerformanceSnapshot must log a warning when the provider throws");
                 }
             }
             finally { Log.Writer = prevWriter; }

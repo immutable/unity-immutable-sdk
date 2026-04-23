@@ -29,7 +29,6 @@ namespace Immutable.Audience
         internal const int PauseTimeoutMs = 30_000;
 
         private readonly TrackDelegate _track;
-        private readonly Func<Dictionary<string, object>>? _performanceSnapshot;
         private readonly Func<DateTime> _getUtcNow;
         private readonly int _heartbeatIntervalMs;
         private readonly object _lock = new object();
@@ -48,16 +47,13 @@ namespace Immutable.Audience
             get { lock (_lock) return _sessionId; }
         }
 
-        // track: fires session events. performanceSnapshot: merges fps/memory
-        // into heartbeats (null on non-Unity). getUtcNow/heartbeatIntervalMs: test seams.
+        // track: fires session events. getUtcNow/heartbeatIntervalMs: test seams.
         internal Session(
             TrackDelegate track,
-            Func<Dictionary<string, object>>? performanceSnapshot = null,
             Func<DateTime>? getUtcNow = null,
             int heartbeatIntervalMs = HeartbeatIntervalMs)
         {
             _track = track ?? throw new ArgumentNullException(nameof(track));
-            _performanceSnapshot = performanceSnapshot;
             _getUtcNow = getUtcNow ?? (() => DateTime.UtcNow);
             _heartbeatIntervalMs = heartbeatIntervalMs;
         }
@@ -252,23 +248,12 @@ namespace Immutable.Audience
                 duration = ComputeEngagedSecondsLocked();
             }
 
-            // Build outside _lock so snapshot + track don't re-enter.
+            // Build outside _lock so track doesn't re-enter.
             var properties = new Dictionary<string, object>
             {
                 ["sessionId"] = sessionId,
                 ["durationSec"] = duration
             };
-
-            var perf = SafePerformanceSnapshot();
-            if (perf != null)
-            {
-                foreach (var kv in perf)
-                {
-                    // Don't let the provider clobber core fields.
-                    if (properties.ContainsKey(kv.Key)) continue;
-                    properties[kv.Key] = kv.Value;
-                }
-            }
 
             SafeTrack("session_heartbeat", properties);
         }
@@ -286,22 +271,6 @@ namespace Immutable.Audience
             catch (Exception ex)
             {
                 Log.Warn($"Session: {eventName} track callback threw {ex.GetType().Name}. Event dropped.");
-            }
-        }
-
-        // Stops exceptions from the studio-supplied snapshot callback from
-        // reaching the background timer.
-        private Dictionary<string, object>? SafePerformanceSnapshot()
-        {
-            if (_performanceSnapshot == null) return null;
-            try
-            {
-                return _performanceSnapshot();
-            }
-            catch (Exception ex)
-            {
-                Log.Warn($"Session: performance snapshot threw {ex.GetType().Name}. Heartbeat ships without performance fields.");
-                return null;
             }
         }
 
