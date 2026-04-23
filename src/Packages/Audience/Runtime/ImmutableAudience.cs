@@ -47,12 +47,14 @@ namespace Immutable.Audience
         public static void Init(AudienceConfig config)
         {
             if (config == null) throw new ArgumentNullException(nameof(config));
-            if (string.IsNullOrEmpty(config.PublishableKey))
-                throw new ArgumentException("PublishableKey is required", nameof(config));
 
             // Copy the caller's config so filling in PersistentDataPath below
-            // doesn't change the object they passed in.
+            // doesn't change the object they passed in. Validating after the
+            // clone keeps the compiler's null-flow analysis for PublishableKey
+            // alive through the HttpTransport constructor below.
             config = config.Clone();
+            if (string.IsNullOrEmpty(config.PublishableKey))
+                throw new ArgumentException("PublishableKey is required", nameof(config));
             if (string.IsNullOrEmpty(config.PersistentDataPath))
                 config.PersistentDataPath = DefaultPersistentDataPathProvider?.Invoke();
             if (string.IsNullOrEmpty(config.PersistentDataPath))
