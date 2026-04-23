@@ -364,6 +364,35 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
+        public void End_ClockRewindsWhilePaused_DoesNotInflateDuration()
+        {
+            // Wall-clock rewinds while the session is still paused (e.g. the
+            // app is backgrounded and NTP corrects backwards before Shutdown
+            // fires End). Without the livePause ≥ 0 clamp in
+            // ComputeEngagedSecondsLocked, livePause goes negative and,
+            // being subtracted, inflates duration past the wall-clock window
+            // — the final engagedSeconds ≥ 0 clamp only catches negatives,
+            // not over-credit. Sabotage: removing the livePause clamp lets
+            // this test report 15s instead of the ≤ 5s wall-clock window.
+            var now = new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc);
+            DateTime Clock() => now;
+
+            using var session = new Session(MockTrack, performanceSnapshot: null, getUtcNow: Clock);
+            session.Start();
+
+            now = now.AddSeconds(10);
+            session.Pause();
+
+            now = now.AddSeconds(-5); // clock rewinds 5s while paused
+            session.End();
+
+            var sessionEnd = _events.Last(e => e.name == "session_end");
+            var duration = (long)sessionEnd.props["durationSec"];
+            Assert.LessOrEqual(duration, 5L,
+                "clock rewind while paused must not over-credit engagement past the wall-clock window");
+        }
+
+        [Test]
         public void End_AfterShortPause_ReportsDurationMinusPause()
         {
             // 10 seconds session, 3 seconds paused inside it → 7 seconds engaged.
