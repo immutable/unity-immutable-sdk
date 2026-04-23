@@ -677,7 +677,7 @@ namespace Immutable.Audience.Tests
                 //     early-returns, Init then initialises with Anonymous.
                 //   - Init runs first: Init sets Anonymous, SetConsent flips
                 //     to None under the lock, consent ends at None.
-                var finalConsent = ImmutableAudience.CurrentConsentForTesting;
+                var finalConsent = ImmutableAudience.CurrentConsent;
                 Assert.That(finalConsent,
                     Is.EqualTo(ConsentLevel.None).Or.EqualTo(ConsentLevel.Anonymous),
                     $"iteration {iter}: unexpected final consent {finalConsent}");
@@ -879,7 +879,7 @@ namespace Immutable.Audience.Tests
             // Re-init with the *original* (Anonymous) config — persisted Full should win.
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));
 
-            Assert.AreEqual(ConsentLevel.Full, ImmutableAudience.CurrentConsentForTesting,
+            Assert.AreEqual(ConsentLevel.Full, ImmutableAudience.CurrentConsent,
                 "persisted consent must override the config default after restart");
         }
 
