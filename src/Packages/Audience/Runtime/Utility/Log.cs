@@ -22,12 +22,25 @@ namespace Immutable.Audience
 
         private static void Emit(string line)
         {
-            if (Writer != null)
+            // Swallow anything the Writer (or Console.WriteLine) throws so
+            // callers can treat Log.Warn / Log.Debug as never-throwing. The
+            // SDK's safety wrappers (Session.SafeTrack, SafePerformanceSnapshot,
+            // Shutdown's flush-timeout path) log from inside their own catch
+            // blocks; a throwing Writer would otherwise escape the wrapper and
+            // propagate to the Timer thread (process kill on .NET 5+) or to
+            // Application.quitting (blocking shutdown).
+            try
             {
-                Writer(line);
-                return;
+                if (Writer != null)
+                {
+                    Writer(line);
+                    return;
+                }
+                Console.WriteLine(line);
             }
-            Console.WriteLine(line);
+            catch
+            {
+            }
         }
     }
 }
