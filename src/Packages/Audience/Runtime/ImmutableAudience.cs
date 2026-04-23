@@ -554,9 +554,25 @@ namespace Immutable.Audience
 
             queue.FlushSync();
 
-            while (!transport.IsInBackoffWindow &&
-                   await transport.SendBatchAsync().ConfigureAwait(false))
+            // Serialise SendBatchAsync via _sendInFlight. Without the gate,
+            // two concurrent FlushAsync callers both call ReadBatch with the
+            // same paths and double-POST. Poll cheaply while another caller
+            // (timer SendBatch or a racing FlushAsync) holds the gate.
+            while (Interlocked.CompareExchange(ref _sendInFlight, 1, 0) != 0)
             {
+                await Task.Yield();
+            }
+
+            try
+            {
+                while (!transport.IsInBackoffWindow &&
+                       await transport.SendBatchAsync().ConfigureAwait(false))
+                {
+                }
+            }
+            finally
+            {
+                Interlocked.Exchange(ref _sendInFlight, 0);
             }
         }
 
