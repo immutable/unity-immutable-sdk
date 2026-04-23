@@ -1145,6 +1145,39 @@ namespace Immutable.Audience.Tests
                 "overlapping tick must not issue a second HTTP request");
         }
 
+        [Test]
+        public void FlushAsync_ConcurrentCallers_OnlyOneReachesTransport()
+        {
+            // Two parallel FlushAsync calls must serialise on _sendInFlight so
+            // ReadBatch/POST pairs do not double-send. Sabotage: remove the
+            // gate in FlushAsync and this test sees RequestCount > 1.
+            var handler = new BlockingHandler();
+            var config = MakeConfig();
+            config.HttpHandler = handler;
+
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Track("event_to_send");
+            ImmutableAudience.FlushQueueToDiskForTesting();
+
+            // First caller enters SendAsync and blocks on handler.Release.
+            var flush1 = Task.Run(() => ImmutableAudience.FlushAsync());
+            Assert.IsTrue(handler.EnteredSendAsync.Wait(TimeSpan.FromSeconds(2)),
+                "first FlushAsync should reach the HTTP handler");
+
+            // Second caller starts while the first holds the gate — it must
+            // wait, not issue a second request.
+            var flush2 = Task.Run(() => ImmutableAudience.FlushAsync());
+
+            // Give the second caller a moment to try (and back off).
+            Thread.Sleep(200);
+            Assert.AreEqual(1, handler.RequestCount,
+                "second FlushAsync must not issue a second HTTP request while the first is in-flight");
+
+            handler.Release.Set();
+            Assert.IsTrue(Task.WaitAll(new[] { flush1, flush2 }, TimeSpan.FromSeconds(10)),
+                "both FlushAsync calls should complete after release");
+        }
+
         private class BlockingHandler : HttpMessageHandler
         {
             public readonly ManualResetEventSlim EnteredSendAsync = new ManualResetEventSlim(false);
