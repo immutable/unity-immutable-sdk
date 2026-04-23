@@ -12,9 +12,11 @@ namespace Immutable.Audience
     // Entry point for the Immutable Audience SDK.
     public static class ImmutableAudience
     {
-        // Reference fields are written inside _initLock; readers fence off the volatile _initialized load.
-        // _consent, _session are written in _initLock, read outside → volatile.
-        // _userId is written outside the lock (Identify, Reset) → volatile.
+        // Reference fields are written inside _initLock; readers check the
+        // `volatile _initialized` flag first so they never see a half-initialised state.
+        // _consent and _session are written only inside _initLock but read outside,
+        // so they stay `volatile` to make writes visible across threads.
+        // _userId is written outside the lock (Identify, Reset) — `volatile` for the same reason.
         private static AudienceConfig? _config;
         private static DiskStore? _store;
         private static EventQueue? _queue;
@@ -610,7 +612,8 @@ namespace Immutable.Audience
             return _initialized && _consent.CanTrack();
         }
 
-        // Shallow-copy so post-call mutation can't race the drain-thread serialiser.
+        // Copy the dictionary so the caller editing it later can't corrupt the
+        // message while the background thread is writing it to disk.
         private static Dictionary<string, object>? SnapshotCallerDict(Dictionary<string, object>? src) =>
             src != null ? new Dictionary<string, object>(src) : null;
 
@@ -625,8 +628,8 @@ namespace Immutable.Audience
 
         private static void SendBatch()
         {
-            // CAS the gate; a previous tick still running → skip (including reschedule,
-            // which the in-flight tick handles in its finally).
+            // If a previous send is still running, skip this one. That send
+            // will reschedule the next tick when it finishes.
             if (Interlocked.CompareExchange(ref _sendInFlight, 1, 0) != 0)
                 return;
 

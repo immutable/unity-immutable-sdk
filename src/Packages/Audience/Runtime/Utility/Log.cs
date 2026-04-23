@@ -22,9 +22,10 @@ namespace Immutable.Audience
 
         private static void Emit(string line)
         {
-            // Swallow Writer/Console throws so Log.Warn/Debug is never-throwing.
-            // SDK safety wrappers log from inside their own catches; a throwing
-            // Writer would otherwise reach the Timer thread (process kill on .NET 5+).
+            // Swallow anything the Writer or Console throws so Log.Warn and
+            // Log.Debug never throw themselves. If they did, an exception from
+            // logging inside a catch block would reach the background timer
+            // and crash the game on modern .NET.
             try
             {
                 if (Writer != null)
