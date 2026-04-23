@@ -5,6 +5,7 @@ namespace Immutable.Audience
     internal static class Constants
     {
         internal const string TestKeyPrefix = "pk_imapik-test-";
+        internal const string DevBaseUrl = "https://api.dev.immutable.com";
         internal const string SandboxBaseUrl = "https://api.sandbox.immutable.com";
         internal const string ProductionBaseUrl = "https://api.immutable.com";
 
@@ -26,14 +27,35 @@ namespace Immutable.Audience
 
         internal const string PublishableKeyHeader = "x-immutable-publishable-key";
 
-        internal static string MessagesUrl(string? publishableKey) => BaseUrl(publishableKey) + MessagesPath;
-        internal static string ConsentUrl(string? publishableKey) => BaseUrl(publishableKey) + ConsentPath;
-        internal static string DataUrl(string? publishableKey) => BaseUrl(publishableKey) + DataPath;
+        internal static string MessagesUrl(string? publishableKey, AudienceEnvironment environment = AudienceEnvironment.Auto)
+            => BaseUrl(publishableKey, environment) + MessagesPath;
+        internal static string ConsentUrl(string? publishableKey, AudienceEnvironment environment = AudienceEnvironment.Auto)
+            => BaseUrl(publishableKey, environment) + ConsentPath;
+        internal static string DataUrl(string? publishableKey, AudienceEnvironment environment = AudienceEnvironment.Auto)
+            => BaseUrl(publishableKey, environment) + DataPath;
 
-        internal static string BaseUrl(string? publishableKey) =>
-            publishableKey != null && publishableKey.StartsWith(TestKeyPrefix)
-                ? SandboxBaseUrl
-                : ProductionBaseUrl;
+        // Resolves Auto to Sandbox or Production based on the key prefix.
+        // Never returns Auto — callers can rely on the result naming a
+        // concrete environment. Explicit non-Auto values pass through
+        // unchanged, which is how a studio overrides the key-based default.
+        internal static AudienceEnvironment ResolveEnvironment(string? publishableKey, AudienceEnvironment environment)
+        {
+            if (environment != AudienceEnvironment.Auto) return environment;
+            return publishableKey != null && publishableKey.StartsWith(TestKeyPrefix)
+                ? AudienceEnvironment.Sandbox
+                : AudienceEnvironment.Production;
+        }
+
+        internal static string BaseUrl(string? publishableKey, AudienceEnvironment environment) =>
+            ResolveEnvironment(publishableKey, environment) switch
+            {
+                AudienceEnvironment.Dev => DevBaseUrl,
+                AudienceEnvironment.Sandbox => SandboxBaseUrl,
+                AudienceEnvironment.Production => ProductionBaseUrl,
+                // ResolveEnvironment never returns Auto; default guards
+                // a future enum addition we forget to wire up.
+                _ => ProductionBaseUrl,
+            };
     }
 
     // Message type values written to (and read back from) the "type" field.

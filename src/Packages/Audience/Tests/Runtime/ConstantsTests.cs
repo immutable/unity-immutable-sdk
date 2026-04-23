@@ -6,6 +6,98 @@ namespace Immutable.Audience.Tests
     [TestFixture]
     internal class ConstantsTests
     {
+        // -----------------------------------------------------------------
+        // Environment resolution
+        // -----------------------------------------------------------------
+
+        [Test]
+        public void ResolveEnvironment_AutoTestKey_ReturnsSandbox()
+        {
+            Assert.AreEqual(AudienceEnvironment.Sandbox,
+                Constants.ResolveEnvironment("pk_imapik-test-abc", AudienceEnvironment.Auto));
+        }
+
+        [Test]
+        public void ResolveEnvironment_AutoNonTestKey_ReturnsProduction()
+        {
+            Assert.AreEqual(AudienceEnvironment.Production,
+                Constants.ResolveEnvironment("pk_imapik-prodkey", AudienceEnvironment.Auto));
+        }
+
+        [Test]
+        public void ResolveEnvironment_AutoNullKey_ReturnsProduction()
+        {
+            // Null key is the misconfiguration path; default to Production
+            // so the request hits the env most likely to surface a 401 fast
+            // rather than silently sending to sandbox.
+            Assert.AreEqual(AudienceEnvironment.Production,
+                Constants.ResolveEnvironment(null, AudienceEnvironment.Auto));
+        }
+
+        [Test]
+        public void ResolveEnvironment_ExplicitDev_PassesThrough()
+        {
+            // Explicit env overrides the key prefix. Studios can stage a
+            // test key against any backend without renaming the key.
+            Assert.AreEqual(AudienceEnvironment.Dev,
+                Constants.ResolveEnvironment("pk_imapik-test-abc", AudienceEnvironment.Dev));
+        }
+
+        [Test]
+        public void ResolveEnvironment_ExplicitSandbox_PassesThrough()
+        {
+            Assert.AreEqual(AudienceEnvironment.Sandbox,
+                Constants.ResolveEnvironment("pk_imapik-prodkey", AudienceEnvironment.Sandbox));
+        }
+
+        [Test]
+        public void ResolveEnvironment_ExplicitProduction_PassesThrough()
+        {
+            // Explicit Production overrides a test-key prefix — useful for
+            // QA running tests against prod infra.
+            Assert.AreEqual(AudienceEnvironment.Production,
+                Constants.ResolveEnvironment("pk_imapik-test-abc", AudienceEnvironment.Production));
+        }
+
+        [Test]
+        public void BaseUrl_Dev_ReturnsDevHost()
+        {
+            Assert.AreEqual(Constants.DevBaseUrl,
+                Constants.BaseUrl("pk_imapik-test-abc", AudienceEnvironment.Dev));
+        }
+
+        [Test]
+        public void BaseUrl_Sandbox_ReturnsSandboxHost()
+        {
+            Assert.AreEqual(Constants.SandboxBaseUrl,
+                Constants.BaseUrl("pk_imapik-test-abc", AudienceEnvironment.Sandbox));
+        }
+
+        [Test]
+        public void BaseUrl_Production_ReturnsProductionHost()
+        {
+            Assert.AreEqual(Constants.ProductionBaseUrl,
+                Constants.BaseUrl("pk_imapik-test-abc", AudienceEnvironment.Production));
+        }
+
+        [Test]
+        public void BaseUrl_AutoTestKey_ReturnsSandboxHost()
+        {
+            Assert.AreEqual(Constants.SandboxBaseUrl,
+                Constants.BaseUrl("pk_imapik-test-abc", AudienceEnvironment.Auto));
+        }
+
+        [Test]
+        public void BaseUrl_AutoProdKey_ReturnsProductionHost()
+        {
+            Assert.AreEqual(Constants.ProductionBaseUrl,
+                Constants.BaseUrl("pk_imapik-prodkey", AudienceEnvironment.Auto));
+        }
+
+        // -----------------------------------------------------------------
+        // Library version
+        // -----------------------------------------------------------------
+
         [Test]
         public void LibraryVersion_MatchesPackageJson()
         {

@@ -81,6 +81,38 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
+        public void CurrentEnvironment_AutoTestKey_ResolvesToSandbox()
+        {
+            // MakeConfig() returns AudienceConfig with PublishableKey
+            // pk_imapik-test-key1 and Environment defaulting to Auto.
+            // Auto must collapse to Sandbox for a test-prefixed key so
+            // diagnostics never leak the unresolved Auto value to UI.
+            ImmutableAudience.Init(MakeConfig());
+            Assert.AreEqual(AudienceEnvironment.Sandbox,
+                ImmutableAudience.CurrentEnvironment);
+        }
+
+        [Test]
+        public void CurrentEnvironment_ExplicitDev_PassesThrough()
+        {
+            var config = MakeConfig();
+            config.Environment = AudienceEnvironment.Dev;
+            ImmutableAudience.Init(config);
+            Assert.AreEqual(AudienceEnvironment.Dev,
+                ImmutableAudience.CurrentEnvironment);
+        }
+
+        [Test]
+        public void CurrentEnvironment_BeforeInit_ReturnsAuto()
+        {
+            // Before Init the SDK has no config to resolve from. Returning
+            // Auto rather than Sandbox/Production is the truthful answer
+            // — UI can render "(uninitialised)" if it cares.
+            Assert.AreEqual(AudienceEnvironment.Auto,
+                ImmutableAudience.CurrentEnvironment);
+        }
+
+        [Test]
         public void CurrentConsent_ReflectsLatestSetConsent()
         {
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));

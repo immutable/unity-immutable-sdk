@@ -153,6 +153,40 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
+        public async Task SendBatchAsync_ExplicitDevEnvironment_OverridesKeyPrefix()
+        {
+            // A test-prefixed key would resolve to Sandbox under Auto. Explicit
+            // Dev wins so studios can stage either key shape against any env.
+            _store.Write("{\"type\":\"track\"}");
+
+            HttpRequestMessage captured = null;
+            var handler = new MockHandler(HttpStatusCode.OK, "{\"accepted\":1,\"rejected\":0}",
+                onRequest: req => captured = req);
+            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+                environment: AudienceEnvironment.Dev, handler: handler);
+
+            await transport.SendBatchAsync();
+
+            StringAssert.StartsWith(Constants.DevBaseUrl, captured.RequestUri.ToString());
+        }
+
+        [Test]
+        public async Task SendBatchAsync_ExplicitProductionEnvironment_OverridesTestKey()
+        {
+            _store.Write("{\"type\":\"track\"}");
+
+            HttpRequestMessage captured = null;
+            var handler = new MockHandler(HttpStatusCode.OK, "{\"accepted\":1,\"rejected\":0}",
+                onRequest: req => captured = req);
+            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+                environment: AudienceEnvironment.Production, handler: handler);
+
+            await transport.SendBatchAsync();
+
+            StringAssert.StartsWith(Constants.ProductionBaseUrl, captured.RequestUri.ToString());
+        }
+
+        [Test]
         public async Task SendBatchAsync_EmptyQueue_ReturnsFalse()
         {
             var handler = new MockHandler(HttpStatusCode.OK, "{}");
