@@ -40,5 +40,10 @@ namespace Immutable.Audience
 
         // Test seam for HttpTransport; not part of the public API.
         internal System.Net.Http.HttpMessageHandler? HttpHandler { get; set; }
+
+        // Shallow copy so Init can populate PersistentDataPath without mutating
+        // the caller's object. Reference-typed properties (OnError, HttpHandler)
+        // are intentionally shared — cloning delegates/handlers is wrong.
+        internal AudienceConfig Clone() => (AudienceConfig)MemberwiseClone();
     }
 }
