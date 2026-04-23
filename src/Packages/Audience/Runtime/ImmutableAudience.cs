@@ -531,6 +531,14 @@ namespace Immutable.Audience
         // Flushes and stops the SDK.
         public static void Shutdown()
         {
+            // Fire session_end before taking _initLock. _initialized is still
+            // true here so Track's CanTrack gate lets it through. Idempotent
+            // under concurrent Shutdown / SetConsent(None) via the _sessionId
+            // reset inside EmitEndAndSeal — a second call finds _sessionId
+            // null and no-ops. Heartbeat timer drain still runs in Phase 2
+            // via session.Dispose(); its re-emission inside End() also no-ops.
+            _session?.EmitEndAndSeal();
+
             // Phase 1 under _initLock: flip _initialized and capture references.
             // Other callers racing on _initLock re-check _initialized once they
             // acquire and early-return, so they don't wait on Phase 2's drain /
@@ -546,13 +554,6 @@ namespace Immutable.Audience
             lock (_initLock)
             {
                 if (!_initialized) return;
-
-                // Emit session_end inside the lock while _initialized is still
-                // true so Track's CanTrack gate lets it through. Heartbeat timer
-                // drain is deferred to Phase 2; the second emission from
-                // session.Dispose → End() no-ops because EmitEndAndSeal reset
-                // _sessionId.
-                _session?.EmitEndAndSeal();
 
                 // Flip the gate. Init / SetConsent / Reset acquiring after
                 // this see _initialized == false and return cleanly.
