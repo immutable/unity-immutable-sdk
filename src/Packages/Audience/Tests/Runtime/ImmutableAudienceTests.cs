@@ -648,8 +648,8 @@ namespace Immutable.Audience.Tests
             const int iterations = 50;
             for (int iter = 0; iter < iterations; iter++)
             {
-                Exception? initEx = null;
-                Exception? setConsentEx = null;
+                Exception initEx = null;
+                Exception setConsentEx = null;
 
                 var setConsentTask = Task.Run(() =>
                 {
