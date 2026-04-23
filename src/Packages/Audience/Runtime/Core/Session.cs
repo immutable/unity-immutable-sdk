@@ -250,7 +250,7 @@ namespace Immutable.Audience
             }
             catch (Exception ex)
             {
-                Log.Warn($"Session: {eventName} track callback threw {ex.GetType().Name}: {ex.Message}. Event dropped.");
+                Log.Warn($"Session: {eventName} track callback threw {ex.GetType().Name}. Event dropped.");
             }
         }
 
@@ -264,7 +264,7 @@ namespace Immutable.Audience
             }
             catch (Exception ex)
             {
-                Log.Warn($"Session: performance snapshot threw {ex.GetType().Name}: {ex.Message}. Heartbeat ships without performance fields.");
+                Log.Warn($"Session: performance snapshot threw {ex.GetType().Name}. Heartbeat ships without performance fields.");
                 return null;
             }
         }
