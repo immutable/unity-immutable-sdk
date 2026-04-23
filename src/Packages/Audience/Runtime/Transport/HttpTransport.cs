@@ -131,10 +131,15 @@ namespace Immutable.Audience
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
             {
-                // Caller cancelled the token (e.g. on shutdown). Events stay on
-                // disk, no failure recorded. HttpClient timeouts throw the same
-                // exception but without ct.IsCancellationRequested set, so they
-                // fall through to the Exception branch below and trigger backoff.
+                // Caller cancelled the token (e.g. on shutdown). Events stay
+                // on disk, no failure recorded. Rethrow so the caller's send
+                // loop exits — swallowing here returns `true`, and the loop
+                // would re-enter on the same cancelled token and spin because
+                // the batch is still on disk. HttpClient timeouts throw the
+                // same exception but without ct.IsCancellationRequested set,
+                // so they fall through to the Exception branch below and
+                // trigger backoff.
+                throw;
             }
             catch (Exception ex)
             {
