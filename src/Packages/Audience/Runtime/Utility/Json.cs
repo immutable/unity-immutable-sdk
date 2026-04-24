@@ -10,11 +10,23 @@ namespace Immutable.Audience
         internal static string Serialize(Dictionary<string, object> data)
         {
             var sb = new StringBuilder();
-            WriteObject(sb, data);
+            WriteObject(sb, data, indent: 0, depth: 0);
             return sb.ToString();
         }
 
-        private static void WriteValue(StringBuilder sb, object value)
+        // Pretty-prints `data` with `indent` spaces per nesting level.
+        // Round-trips through Deserialize identically. Indent ≤ 0 returns
+        // the compact form. Use for human-readable output; wire payloads
+        // use the compact overload.
+        internal static string Serialize(Dictionary<string, object> data, int indent)
+        {
+            if (indent <= 0) return Serialize(data);
+            var sb = new StringBuilder();
+            WriteObject(sb, data, indent, depth: 0);
+            return sb.ToString();
+        }
+
+        private static void WriteValue(StringBuilder sb, object value, int indent, int depth)
         {
             if (value == null)
             {
@@ -56,11 +68,11 @@ namespace Immutable.Audience
             }
             else if (value is Dictionary<string, object> dict)
             {
-                WriteObject(sb, dict);
+                WriteObject(sb, dict, indent, depth);
             }
             else if (value is IList list)
             {
-                WriteArray(sb, list);
+                WriteArray(sb, list, indent, depth);
             }
             else
             {
@@ -68,32 +80,46 @@ namespace Immutable.Audience
             }
         }
 
-        private static void WriteObject(StringBuilder sb, Dictionary<string, object> dict)
+        private static void WriteObject(StringBuilder sb, Dictionary<string, object> dict, int indent, int depth)
         {
             sb.Append('{');
+            if (dict.Count == 0) { sb.Append('}'); return; }
+
+            var pretty = indent > 0;
             var first = true;
             foreach (var kvp in dict)
             {
-                if (!first)
-                    sb.Append(',');
+                if (!first) sb.Append(',');
                 first = false;
+                if (pretty) AppendNewline(sb, indent, depth + 1);
                 WriteString(sb, kvp.Key);
-                sb.Append(':');
-                WriteValue(sb, kvp.Value);
+                sb.Append(pretty ? ": " : ":");
+                WriteValue(sb, kvp.Value, indent, depth + 1);
             }
+            if (pretty) AppendNewline(sb, indent, depth);
             sb.Append('}');
         }
 
-        private static void WriteArray(StringBuilder sb, IList list)
+        private static void WriteArray(StringBuilder sb, IList list, int indent, int depth)
         {
             sb.Append('[');
+            if (list.Count == 0) { sb.Append(']'); return; }
+
+            var pretty = indent > 0;
             for (var i = 0; i < list.Count; i++)
             {
-                if (i > 0)
-                    sb.Append(',');
-                WriteValue(sb, list[i]);
+                if (i > 0) sb.Append(',');
+                if (pretty) AppendNewline(sb, indent, depth + 1);
+                WriteValue(sb, list[i], indent, depth + 1);
             }
+            if (pretty) AppendNewline(sb, indent, depth);
             sb.Append(']');
+        }
+
+        private static void AppendNewline(StringBuilder sb, int indent, int depth)
+        {
+            sb.Append('\n');
+            sb.Append(' ', indent * depth);
         }
 
         private static void WriteString(StringBuilder sb, string s)
