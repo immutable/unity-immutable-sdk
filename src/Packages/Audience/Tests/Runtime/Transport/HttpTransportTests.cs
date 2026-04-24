@@ -87,7 +87,7 @@ namespace Immutable.Audience.Tests
             Assert.AreEqual("gzip", capturedContentEncoding);
 
             var decompressed = DecompressGzip(capturedBody);
-            StringAssert.StartsWith("{\"batch\":[", decompressed);
+            StringAssert.StartsWith("{\"messages\":[", decompressed);
             StringAssert.EndsWith("]}", decompressed);
             StringAssert.Contains("\"eventName\":\"test\"", decompressed);
         }
@@ -116,7 +116,7 @@ namespace Immutable.Audience.Tests
             Assert.AreEqual("pk_imapik-test-key1", capturedKey);
             Assert.AreEqual("application/json", capturedContentType);
             Assert.AreEqual(0, capturedContentEncodingCount, "no Content-Encoding header is permitted in v1");
-            StringAssert.StartsWith("{\"batch\":[", capturedBody);
+            StringAssert.StartsWith("{\"messages\":[", capturedBody);
             StringAssert.EndsWith("]}", capturedBody);
             StringAssert.Contains("\"eventName\":\"test\"", capturedBody);
         }
@@ -186,7 +186,8 @@ namespace Immutable.Audience.Tests
         {
             _store.Write("{\"type\":\"track\"}");
 
-            var handler = new MockHandler(HttpStatusCode.BadRequest, "");
+            var handler = new MockHandler(HttpStatusCode.BadRequest,
+                "{\"error\":\"invalid eventName format at /batch/0/eventName\"}");
             AudienceError reportedError = null;
             using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
                 onError: e => reportedError = e, handler: handler);
@@ -197,6 +198,9 @@ namespace Immutable.Audience.Tests
             Assert.IsFalse(transport.IsInBackoffWindow);
             Assert.IsNotNull(reportedError);
             Assert.AreEqual(AudienceErrorCode.ValidationRejected, reportedError.Code);
+            // Backend-supplied diagnostic must reach the studio, otherwise a 400
+            // collapses to "something broke, good luck" with no actionable signal.
+            StringAssert.Contains("invalid eventName format", reportedError.Message);
         }
 
         [Test]
