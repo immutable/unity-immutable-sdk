@@ -56,12 +56,15 @@ namespace Immutable.Audience
         // zero-value default (false / null / 0 / ConsentLevel.None) outside
         // Init..Shutdown. Values are tick-level snapshots, not invariants.
 
+        // Flipped true at the end of a successful Init, false by Shutdown.
         public static bool Initialized => _initialized;
 
         // Persisted value, which may differ from AudienceConfig.Consent if
         // a prior session changed it.
         public static ConsentLevel CurrentConsent => _state.Level;
 
+        // Last value passed to Identify(). Cleared by Reset and any consent
+        // downgrade out of Full.
         public static string? UserId => _state.UserId;
 
         // Display-only — Reset and SetConsent(None) wipe it, so it is not
@@ -78,6 +81,7 @@ namespace Immutable.Audience
             }
         }
 
+        // Changes on extended-pause rollover. Also null while consent is None.
         public static string? SessionId => _session?.SessionId;
 
         // Memory + disk counts are read without holding the drain lock, so
