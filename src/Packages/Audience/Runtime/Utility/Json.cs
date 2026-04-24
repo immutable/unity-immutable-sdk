@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -7,10 +8,14 @@ namespace Immutable.Audience
 {
     internal static class Json
     {
+        // Depth cap so a pathological input throws FormatException
+        // instead of blowing the stack (StackOverflow is uncatchable).
+        internal const int MaxDepth = 64;
+
         internal static string Serialize(Dictionary<string, object> data)
         {
             var sb = new StringBuilder();
-            WriteObject(sb, data, indent: 0, depth: 0);
+            WriteObject(sb, data, indent: 0, depth: 0, visited: null);
             return sb.ToString();
         }
 
@@ -22,11 +27,11 @@ namespace Immutable.Audience
         {
             if (indent <= 0) return Serialize(data);
             var sb = new StringBuilder();
-            WriteObject(sb, data, indent, depth: 0);
+            WriteObject(sb, data, indent, depth: 0, visited: null);
             return sb.ToString();
         }
 
-        private static void WriteValue(StringBuilder sb, object value, int indent, int depth)
+        private static void WriteValue(StringBuilder sb, object value, int indent, int depth, HashSet<object> visited)
         {
             if (value == null)
             {
@@ -68,11 +73,11 @@ namespace Immutable.Audience
             }
             else if (value is Dictionary<string, object> dict)
             {
-                WriteObject(sb, dict, indent, depth);
+                WriteObject(sb, dict, indent, depth, visited);
             }
             else if (value is IList list)
             {
-                WriteArray(sb, list, indent, depth);
+                WriteArray(sb, list, indent, depth, visited);
             }
             else
             {
@@ -80,10 +85,13 @@ namespace Immutable.Audience
             }
         }
 
-        private static void WriteObject(StringBuilder sb, Dictionary<string, object> dict, int indent, int depth)
+        private static void WriteObject(StringBuilder sb, Dictionary<string, object> dict, int indent, int depth, HashSet<object> visited)
         {
+            GuardDepth(depth);
+            visited = EnterContainer(dict, visited);
+
             sb.Append('{');
-            if (dict.Count == 0) { sb.Append('}'); return; }
+            if (dict.Count == 0) { sb.Append('}'); visited.Remove(dict); return; }
 
             var pretty = indent > 0;
             var first = true;
@@ -94,32 +102,60 @@ namespace Immutable.Audience
                 if (pretty) AppendNewline(sb, indent, depth + 1);
                 WriteString(sb, kvp.Key);
                 sb.Append(pretty ? ": " : ":");
-                WriteValue(sb, kvp.Value, indent, depth + 1);
+                WriteValue(sb, kvp.Value, indent, depth + 1, visited);
             }
             if (pretty) AppendNewline(sb, indent, depth);
             sb.Append('}');
+            visited.Remove(dict);
         }
 
-        private static void WriteArray(StringBuilder sb, IList list, int indent, int depth)
+        private static void WriteArray(StringBuilder sb, IList list, int indent, int depth, HashSet<object> visited)
         {
+            GuardDepth(depth);
+            visited = EnterContainer(list, visited);
+
             sb.Append('[');
-            if (list.Count == 0) { sb.Append(']'); return; }
+            if (list.Count == 0) { sb.Append(']'); visited.Remove(list); return; }
 
             var pretty = indent > 0;
             for (var i = 0; i < list.Count; i++)
             {
                 if (i > 0) sb.Append(',');
                 if (pretty) AppendNewline(sb, indent, depth + 1);
-                WriteValue(sb, list[i], indent, depth + 1);
+                WriteValue(sb, list[i], indent, depth + 1, visited);
             }
             if (pretty) AppendNewline(sb, indent, depth);
             sb.Append(']');
+            visited.Remove(list);
         }
 
         private static void AppendNewline(StringBuilder sb, int indent, int depth)
         {
             sb.Append('\n');
             sb.Append(' ', indent * depth);
+        }
+
+        private static void GuardDepth(int depth)
+        {
+            if (depth >= MaxDepth)
+                throw new FormatException(
+                    $"JSON nesting exceeds {MaxDepth} levels — refusing to serialize. " +
+                    "Check for a cyclic or excessively deep dictionary/list.");
+        }
+
+        private static HashSet<object> EnterContainer(object container, HashSet<object> visited)
+        {
+            visited ??= new HashSet<object>(ReferenceEqualityComparer.Instance);
+            if (!visited.Add(container))
+                throw new FormatException("JSON graph contains a cycle — refusing to serialize.");
+            return visited;
+        }
+
+        private sealed class ReferenceEqualityComparer : IEqualityComparer<object>
+        {
+            internal static readonly ReferenceEqualityComparer Instance = new ReferenceEqualityComparer();
+            public new bool Equals(object x, object y) => ReferenceEquals(x, y);
+            public int GetHashCode(object obj) => System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(obj);
         }
 
         private static void WriteString(StringBuilder sb, string s)
