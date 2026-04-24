@@ -15,4 +15,12 @@
   <ItemGroup>
     <ProjectReference Include="../Runtime/Audience.Runtime.csproj" />
   </ItemGroup>
+  <!--
+    Exclude Tests/Editor/ from the headless dotnet build. Those tests reference
+    Unity-only types (MonoBehaviour, VisualElement, SampleApp MonoBehaviour)
+    and run inside the Unity Test Framework in-editor.
+  -->
+  <ItemGroup>
+    <Compile Remove="Editor/**/*.cs" />
+  </ItemGroup>
 </Project>
