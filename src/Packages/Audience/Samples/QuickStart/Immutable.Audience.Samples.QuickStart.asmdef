@@ -1,0 +1,14 @@
+{
+    "name": "Immutable.Audience.Samples.QuickStart",
+    "rootNamespace": "Immutable.Audience.Samples.QuickStart",
+    "references": ["Immutable.Audience.Runtime"],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
