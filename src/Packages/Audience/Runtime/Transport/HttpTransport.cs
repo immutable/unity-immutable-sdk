@@ -119,10 +119,22 @@ namespace Immutable.Audience
                 {
                     // 4xx: server rejected the payload. Drop it (retry won't help) and
                     // reset backoff — server is healthy, our data was the problem.
+                    // Pull the response body so the studio has something actionable:
+                    // the status code alone just says "something is wrong"; the body
+                    // names which field or event broke validation. Truncated to keep
+                    // logs sane if the backend ever returns a long diagnostic.
+                    string? body = null;
+                    try { body = await response.Content.ReadAsStringAsync().ConfigureAwait(false); }
+                    catch { /* Content read failed (disposed, network) — fall through with body=null. */ }
+
                     _store.Delete(batch);
                     ResetBackoff();
-                    NotifyError(AudienceErrorCode.ValidationRejected,
-                        $"Batch rejected with {statusCode}");
+
+                    const int maxBodyLen = 500;
+                    var message = string.IsNullOrEmpty(body)
+                        ? $"Batch rejected with {statusCode}"
+                        : $"Batch rejected with {statusCode}: {(body.Length > maxBodyLen ? body.Substring(0, maxBodyLen) + "…" : body)}";
+                    NotifyError(AudienceErrorCode.ValidationRejected, message);
                 }
                 else
                 {
@@ -210,11 +222,11 @@ namespace Immutable.Audience
         }
 
         // Reads each path and wraps the concatenated JSON bodies in
-        // {"batch":[msg1,msg2,...]}. Returns null if every path was
+        // {"messages":[msg1,msg2,...]}. Returns null if every path was
         // unreadable; the caller treats null as "nothing to send".
         private static string? BuildPayload(IReadOnlyList<string> paths)
         {
-            var sb = new StringBuilder("{\"batch\":[");
+            var sb = new StringBuilder("{\"messages\":[");
             var count = 0;
 
             for (var i = 0; i < paths.Count; i++)

@@ -29,7 +29,7 @@ namespace Immutable.Audience.Tests
         public void Compress_OutputIsSmallerThanInput_ForRealisticPayload()
         {
             // Repeated field names compress well in JSON batches.
-            var sb = new StringBuilder("{\"batch\":[");
+            var sb = new StringBuilder("{\"messages\":[");
             for (var i = 0; i < 20; i++)
             {
                 if (i > 0) sb.Append(',');
