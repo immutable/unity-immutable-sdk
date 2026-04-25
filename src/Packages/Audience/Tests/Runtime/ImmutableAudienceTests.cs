@@ -60,6 +60,117 @@ namespace Immutable.Audience.Tests
         }
 
         // -----------------------------------------------------------------
+        // Diagnostic getters (Initialized / CurrentConsent / UserId /
+        // AnonymousId / SessionId / QueueSize)
+        // -----------------------------------------------------------------
+
+        [Test]
+        public void Initialized_FlipsAroundInitAndShutdown()
+        {
+            Assert.IsFalse(ImmutableAudience.Initialized,
+                "Initialized should be false before Init");
+
+            ImmutableAudience.Init(MakeConfig());
+            Assert.IsTrue(ImmutableAudience.Initialized,
+                "Initialized should flip true after Init");
+
+            ImmutableAudience.Shutdown();
+            Assert.IsFalse(ImmutableAudience.Initialized,
+                "Initialized should flip back to false after Shutdown");
+        }
+
+        [Test]
+        public void CurrentConsent_ReflectsLatestSetConsent()
+        {
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));
+            Assert.AreEqual(ConsentLevel.Anonymous, ImmutableAudience.CurrentConsent);
+
+            ImmutableAudience.SetConsent(ConsentLevel.Full);
+            Assert.AreEqual(ConsentLevel.Full, ImmutableAudience.CurrentConsent);
+
+            ImmutableAudience.SetConsent(ConsentLevel.None);
+            Assert.AreEqual(ConsentLevel.None, ImmutableAudience.CurrentConsent);
+        }
+
+        [Test]
+        public void UserId_Uninitialised_ReturnsNull()
+        {
+            Assert.IsNull(ImmutableAudience.UserId);
+        }
+
+        [Test]
+        public void UserId_AfterIdentifyAndReset_TracksState()
+        {
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
+            Assert.IsNull(ImmutableAudience.UserId,
+                "UserId should be null until Identify is called");
+
+            ImmutableAudience.Identify("player-42", IdentityType.Custom);
+            Assert.AreEqual("player-42", ImmutableAudience.UserId,
+                "UserId must reflect the most recent Identify call");
+
+            ImmutableAudience.Reset();
+            Assert.IsNull(ImmutableAudience.UserId,
+                "Reset must clear UserId so the next player is not attributed to the previous one");
+        }
+
+        [Test]
+        public void AnonymousId_ConsentNone_ReturnsNull()
+        {
+            // Anonymous identifier is consent-gated: below tracking consent,
+            // no stable id should leak through the getter.
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.None));
+
+            Assert.IsNull(ImmutableAudience.AnonymousId);
+        }
+
+        [Test]
+        public void AnonymousId_ConsentAnonymous_ReturnsPersistedId()
+        {
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));
+            // Track once so Identity.GetOrCreate runs and writes the id file.
+            ImmutableAudience.Track("warmup_event");
+
+            var id = ImmutableAudience.AnonymousId;
+            Assert.IsFalse(string.IsNullOrEmpty(id),
+                "AnonymousId should return the persisted id once tracking has created one");
+        }
+
+        [Test]
+        public void SessionId_MirrorsSessionLifecycle()
+        {
+            Assert.IsNull(ImmutableAudience.SessionId,
+                "SessionId should be null before Init");
+
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));
+            Assert.IsFalse(string.IsNullOrEmpty(ImmutableAudience.SessionId),
+                "SessionId should be non-null once Init creates a session");
+
+            ImmutableAudience.Shutdown();
+            Assert.IsNull(ImmutableAudience.SessionId,
+                "SessionId should be null after Shutdown disposes the session");
+        }
+
+        [Test]
+        public void QueueSize_ZeroBeforeInit_GrowsWithEnqueue()
+        {
+            Assert.AreEqual(0, ImmutableAudience.QueueSize,
+                "QueueSize should be 0 before Init");
+
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));
+            // Init enqueues session_start + game_launch; those stay
+            // in-memory until a flush. QueueSize sums memory + disk so the
+            // pre-flush snapshot must be > 0.
+            var afterInit = ImmutableAudience.QueueSize;
+            Assert.Greater(afterInit, 0,
+                "QueueSize should include session_start and game_launch after Init");
+
+            ImmutableAudience.Track("explicit_track_event");
+            Assert.Greater(ImmutableAudience.QueueSize, afterInit,
+                "QueueSize should grow when a new event is enqueued");
+        }
+
+        // -----------------------------------------------------------------
         // Unity context provider
         // -----------------------------------------------------------------
 

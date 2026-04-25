@@ -51,6 +51,56 @@ namespace Immutable.Audience
         // assignments from SetConsent without taking _initLock.
         private static volatile Session? _session;
 
+        // True between Init() and Shutdown().
+        public static bool Initialized => _initialized;
+
+        // The consent level the SDK is currently honouring.
+        public static ConsentLevel CurrentConsent => _state.Level;
+
+        // The user ID from the most recent Identify() call. Null after
+        // Reset() or when consent is below Full.
+        public static string? UserId => _state.UserId;
+
+        // An anonymous, persistent ID — unlike SessionId (rotates per
+        // session) and UserId (identifies the user). Reset() and
+        // SetConsent(None) wipe it; null while consent is None.
+        public static string? AnonymousId
+        {
+            get
+            {
+                if (!_initialized) return null;
+                var config = _config;
+                if (config == null || !_state.Level.CanTrack()) return null;
+                // PersistentDataPath is validated non-null in Init; compiler can't propagate that.
+                return Identity.Get(config.PersistentDataPath!);
+            }
+        }
+
+        // The current session's ID. A new ID is assigned at Init(), at Reset(),
+        // and when the app resumes after the previous session has timed out.
+        // Null while consent is None.
+        public static string? SessionId => _session?.SessionId;
+
+        // Number of unsent events (in memory and on disk).
+        public static int QueueSize
+        {
+            get
+            {
+                // Fence off the volatile _initialized load first, matching
+                // the protocol documented on the reference fields. Without
+                // this, a weak-memory-order reader could observe
+                // _initialized=true but _queue/_store still null — the ?.
+                // short-circuits to 0 in that case, but the inconsistency
+                // would break the protocol the file claims to follow.
+                if (!_initialized) return 0;
+                var queue = _queue;
+                var store = _store;
+                var memory = queue?.InMemoryCount ?? 0;
+                var disk = store?.Count() ?? 0;
+                return memory + disk;
+            }
+        }
+
         // Starts the SDK. Call once at launch.
         public static void Init(AudienceConfig config)
         {
@@ -82,7 +132,7 @@ namespace Immutable.Audience
 
                 _store = new DiskStore(config.PersistentDataPath);
                 _queue = new EventQueue(_store, config.FlushIntervalSeconds, config.FlushSize);
-                _transport = new HttpTransport(_store, config.PublishableKey, config.OnError, config.HttpHandler);
+                _transport = new HttpTransport(_store, config.PublishableKey, config.BaseUrl, config.OnError, config.HttpHandler);
                 _controlClient = config.HttpHandler != null
                     ? new HttpClient(config.HttpHandler, disposeHandler: false)
                     : new HttpClient();
@@ -338,7 +388,7 @@ namespace Immutable.Audience
                 query = "anonymousId=" + Uri.EscapeDataString(anonymousId);
             }
 
-            var url = Constants.DataUrl(config.PublishableKey) + "?" + query;
+            var url = Constants.DataUrl(config.PublishableKey, config.BaseUrl) + "?" + query;
             var onError = config.OnError;
             var publishableKey = config.PublishableKey;
             var cancellationToken = _shutdownCancellationSource?.Token ?? CancellationToken.None;
@@ -500,7 +550,7 @@ namespace Immutable.Audience
             var client = _controlClient;
             if (client == null) return;
 
-            var url = Constants.ConsentUrl(config.PublishableKey);
+            var url = Constants.ConsentUrl(config.PublishableKey, config.BaseUrl);
             var publishableKey = config.PublishableKey;
             var onError = config.OnError;
             var cancellationToken = _shutdownCancellationSource?.Token ?? CancellationToken.None;
@@ -718,8 +768,6 @@ namespace Immutable.Audience
                 Identity.ClearCache();
             }
         }
-
-        internal static ConsentLevel CurrentConsent => _state.Level;
 
         internal static void FlushQueueToDiskForTesting() => _queue?.FlushSync();
 
