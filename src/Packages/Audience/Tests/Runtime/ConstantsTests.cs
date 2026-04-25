@@ -6,6 +6,54 @@ namespace Immutable.Audience.Tests
     [TestFixture]
     internal class ConstantsTests
     {
+        // -----------------------------------------------------------------
+        // BaseUrl resolution
+        // -----------------------------------------------------------------
+
+        [Test]
+        public void BaseUrl_TestKey_ResolvesToSandbox()
+        {
+            Assert.AreEqual(Constants.SandboxBaseUrl,
+                Constants.BaseUrl("pk_imapik-test-abc"));
+        }
+
+        [Test]
+        public void BaseUrl_NonTestKey_ResolvesToProduction()
+        {
+            Assert.AreEqual(Constants.ProductionBaseUrl,
+                Constants.BaseUrl("pk_imapik-prod-abc"));
+        }
+
+        [Test]
+        public void BaseUrl_NullKey_ResolvesToProduction()
+        {
+            Assert.AreEqual(Constants.ProductionBaseUrl,
+                Constants.BaseUrl(null));
+        }
+
+        [Test]
+        public void BaseUrl_Override_WinsOverKeyPrefix()
+        {
+            // Override wins even for a test-prefixed key that would
+            // otherwise derive to Sandbox.
+            const string custom = "https://api.dev.immutable.com";
+            Assert.AreEqual(custom,
+                Constants.BaseUrl("pk_imapik-test-abc", custom));
+        }
+
+        [Test]
+        public void BaseUrl_EmptyOverride_FallsBackToKeyDerivation()
+        {
+            // Empty-string override is treated as "no override" so the
+            // key-prefix fallback still kicks in.
+            Assert.AreEqual(Constants.SandboxBaseUrl,
+                Constants.BaseUrl("pk_imapik-test-abc", ""));
+        }
+
+        // -----------------------------------------------------------------
+        // Library version
+        // -----------------------------------------------------------------
+
         [Test]
         public void LibraryVersion_MatchesPackageJson()
         {
