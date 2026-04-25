@@ -10,6 +10,11 @@ namespace Immutable.Audience
         // Studio API key. Required — Init throws if null.
         public string? PublishableKey { get; set; }
 
+        // Override the default API base URL. When null, keys starting with
+        // "pk_imapik-test-" resolve to Sandbox and all other keys resolve
+        // to Production. Set explicitly to target a different backend.
+        public string? BaseUrl { get; set; }
+
         // Initial consent level.
         public ConsentLevel Consent { get; set; } = ConsentLevel.None;
 

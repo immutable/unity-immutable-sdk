@@ -153,6 +153,25 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
+        public async Task SendBatchAsync_BaseUrlOverride_WinsOverKeyPrefix()
+        {
+            _store.Write("{\"type\":\"track\"}");
+
+            HttpRequestMessage captured = null;
+            var handler = new MockHandler(HttpStatusCode.OK, "{\"accepted\":1,\"rejected\":0}",
+                onRequest: req => captured = req);
+            const string custom = "https://api.dev.immutable.com";
+            // Test-prefixed key would resolve to Sandbox on its own; the
+            // explicit override must win.
+            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+                baseUrlOverride: custom, handler: handler);
+
+            await transport.SendBatchAsync();
+
+            StringAssert.StartsWith(custom, captured.RequestUri.ToString());
+        }
+
+        [Test]
         public async Task SendBatchAsync_EmptyQueue_ReturnsFalse()
         {
             var handler = new MockHandler(HttpStatusCode.OK, "{}");
