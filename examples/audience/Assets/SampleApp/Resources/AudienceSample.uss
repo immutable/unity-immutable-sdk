@@ -1,0 +1,1526 @@
+/*
+ * Port of sample-app.css (web) to USS for Unity 2021.3.
+ *
+ * Deviations from web (USS 2021.3 dialect limits):
+ *   - No box-shadow
+ *   - No display: grid — flex only
+ *   - No @media — desktop layout only
+ *   - No :first-child / :last-child / :nth-child / :not — use .first / .last classes
+ *   - No text-transform — UXML pre-uppercases
+ *   - No cursor / line-height
+ *   - var(...) in token block uses a * selector (2021.3 has no :root)
+ */
+
+* {
+    --bg: rgb(247, 248, 250);
+    --panel-bg: rgb(255, 255, 255);
+    --panel-border: rgb(230, 232, 236);
+    --panel-border-strong: rgb(220, 222, 227);
+    --text: rgb(19, 19, 19);
+    --text-muted: rgb(134, 134, 134);
+    --text-dim: rgb(168, 168, 168);
+    --text-on-accent: rgb(255, 255, 255);
+    --accent: rgb(19, 19, 19);
+    --accent-hover: rgb(42, 42, 42);
+    --ok: rgb(20, 133, 48);
+    --warn: rgb(160, 122, 0);
+    --err: rgb(187, 48, 73);
+    --debug: rgb(99, 102, 241);
+    --chip-bg: rgb(238, 240, 243);
+    --chip-bg-hover: rgb(243, 244, 246);
+    --input-border: rgb(212, 215, 221);
+    --prod-red: rgb(220, 38, 38);
+    --transparent: rgba(0, 0, 0, 0);
+
+    /* TextField drag-to-select renders with no visible highlight unless
+       this is set — Unity's default selection color is transparent in
+       runtime UIDocument panels. Paired with black text via --text-bg
+       for a high-contrast readable selection. */
+    --unity-selection-color: rgba(19, 19, 19, 0.18);
+}
+
+/* ---------- Root + layout ---------- */
+
+.root {
+    flex-grow: 1;
+    flex-direction: column;
+    background-color: var(--bg);
+    -unity-font: resource("Roboto-Regular");
+    color: var(--text);
+    font-size: 14px;
+    align-items: stretch;
+    min-height: 0;
+}
+
+/* GenericDropdownMenu — the popup widget DropdownField opens on click.
+   Unity's editor stylesheet styles every USS class on this widget, but
+   that stylesheet does not load in runtime panels. Without these rules
+   the popup renders unstyled: position falls back to relative (so the
+   panel-wide menu container joins flex flow and pushes neighbors), the
+   outer container has no background (renders as a black void), items
+   have no padding/font. We rebuild the runtime styling here using the
+   class names defined in GenericDropdownMenu.cs. */
+
+/* Full-panel click-dismiss layer. Sized to panel by C# (left/top/
+   width/height set inline). Transparent so it does not paint over
+   the page; absolute so it does not displace siblings. */
+.unity-base-dropdown {
+    position: absolute;
+    background-color: var(--transparent);
+}
+
+/* The actual popup box. C# sets left/top to position it below the
+   field; we supply the visual chrome (background, border, rounding)
+   the editor stylesheet would normally provide. */
+.unity-base-dropdown__container-outer {
+    position: absolute;
+    background-color: var(--panel-bg);
+    border-width: 1px;
+    border-color: var(--panel-border);
+    border-radius: 6px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+.unity-base-dropdown__container-inner {
+    flex-shrink: 1;
+    min-height: 0;
+}
+
+.unity-base-dropdown__item {
+    -unity-font: resource("Roboto-Regular");
+    color: var(--text);
+    font-size: 13px;
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+.unity-base-dropdown__item:hover:enabled {
+    background-color: var(--chip-bg);
+}
+
+.unity-base-dropdown__checkmark {
+    color: var(--accent);
+}
+
+.page-scroll {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.page-scroll > .unity-scroll-view__content-viewport {
+    flex-grow: 1;
+    /* Yoga's default min-height is "auto" — which for a flex item means
+       "at least as tall as my content." That makes the viewport grow to
+       fit the content-container, which then grows the outer ScrollView,
+       which grows the page — layout-wise nothing ever overflows and the
+       scroller never engages. Forcing min-height: 0 tells Yoga the
+       viewport is allowed to be shorter than its content, so the content-
+       container's overflow is what the scroller scrolls. */
+    min-height: 0;
+}
+
+.page-scroll > .unity-scroll-view__content-viewport > .unity-scroll-view__content-container {
+    flex-direction: column;
+    align-items: stretch;
+    /* Same flex-shrink cascade fix as .log. Without this, when .main's
+       content (e.g. a user-resized log panel or a long controls column)
+       grows past the viewport, the content-container collapses to match
+       the viewport instead of overflowing — and the page scroller never
+       has anything to scroll. Keep it at its natural height so the outer
+       ScrollView engages whenever content is taller than the window. */
+    flex-shrink: 0;
+}
+
+.page-scroll .unity-scroller {
+    background-color: var(--transparent);
+}
+
+.page-scroll .unity-scroller--vertical {
+    width: 8px;
+}
+
+.page-scroll .unity-base-slider__dragger {
+    background-color: var(--panel-border);
+    border-radius: 4px;
+    border-width: 0;
+    min-height: 20px;
+}
+
+.page-scroll .unity-scroller__slider {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.page-scroll .unity-scroller__low-button,
+.page-scroll .unity-scroller__high-button {
+    display: none;
+}
+
+.main {
+    flex-grow: 0;
+    flex-shrink: 0;
+    max-width: 1400px;
+    width: 100%;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 0;
+    padding-bottom: 64px;
+    margin-left: auto;
+    margin-right: auto;
+    flex-direction: column;
+    align-self: center;
+}
+
+/* ---------- Prod warning ---------- */
+
+.prod-warning {
+    background-color: var(--prod-red);
+    color: var(--text-on-accent);
+    padding-top: 14px;
+    padding-bottom: 14px;
+    padding-left: 16px;
+    padding-right: 16px;
+    font-size: 16px;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+    -unity-text-align: middle-center;
+}
+
+.prod-warning.hidden {
+    display: none;
+}
+
+/* ---------- Sticky top (header + status bar + tabs) ---------- */
+
+.sticky-outer {
+    flex-grow: 0;
+    flex-shrink: 0;
+    background-color: var(--bg);
+    z-index: 10;
+}
+
+.sticky-top-main {
+    max-width: 1400px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 24px;
+    padding-bottom: 0;
+}
+
+.header-row {
+    margin-bottom: 16px;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.title {
+    font-size: 28px;
+    -unity-font-style: bold;
+    color: var(--text);
+    letter-spacing: -0.3px;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.sdk-version {
+    -unity-font: resource("RobotoMono-Regular");
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-left: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    border-color: var(--panel-border);
+    border-width: 1px;
+    /* Explicit half-height radius. Unity 2021.3 UI Toolkit sometimes
+       under-clamps border-radius: 999px on auto-sized Labels, producing
+       a near-rectangular shape. An explicit radius paired with min-height
+       keeps the pill shape deterministic. */
+    border-radius: 14px;
+    min-height: 24px;
+    -unity-text-align: middle-center;
+    background-color: var(--panel-bg);
+}
+
+/* ---------- Surface (card) ---------- */
+
+.surface {
+    background-color: var(--panel-bg);
+    border-color: var(--panel-border);
+    border-bottom-color: var(--panel-border-strong);
+    border-width: 1px;
+    border-bottom-width: 2px;
+    border-radius: 8px;
+}
+
+/* ---------- Status bar ---------- */
+
+.status-bar {
+    padding-top: 14px;
+    padding-bottom: 14px;
+    padding-left: 20px;
+    padding-right: 20px;
+    margin-bottom: 0;
+    flex-direction: column;
+    font-size: 13px;
+    -unity-font: resource("RobotoMono-Regular");
+    flex-shrink: 0;
+}
+
+.status-top-row {
+    flex-direction: row;
+    /* Wrap groups to a second line when the panel is too narrow to fit all
+       cells on one row. The vertical-rule between groups stays inline; if
+       it ends up at the start of a wrapped line it just adds a small
+       leading bar — acceptable tradeoff for never truncating values. */
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.status-group {
+    flex-direction: row;
+    /* Within a group cells stay on one line — they flow as a unit when the
+       parent wraps. */
+    flex-wrap: nowrap;
+    align-items: center;
+    margin-right: 20px;
+}
+
+.status-vertical-rule {
+    width: 2px;
+    background-color: var(--panel-border);
+    align-self: stretch;
+    min-height: 24px;
+    margin-left: 0;
+    margin-right: 20px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.status-cell {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    margin-right: 24px;
+    margin-bottom: 0;
+    margin-top: 0;
+    flex-shrink: 0;
+}
+
+/* Gap between the cell's label ("ENDPOINT") and value ("https://..."). Without
+   this they render flush against each other ("ENDPOINThttps://..."). */
+.status-label {
+    margin-right: 8px;
+}
+
+.status-value {
+    color: var(--text);
+    -unity-font: resource("RobotoMono-Regular");
+    font-size: 13px;
+    flex-shrink: 0;
+    /* Web sizes status values to content — don't clamp widths. `—` placeholder
+       collapses to its own width; URLs and UUIDs stretch their cell naturally.
+       white-space: nowrap keeps multi-word values on one line. */
+    white-space: nowrap;
+    /* Transparent 1px border baked in so the hover rule only changes its
+       colour — adding a border on :hover would shift the cell by 1px. */
+    border-bottom-width: 1px;
+    border-bottom-color: var(--transparent);
+}
+
+/* Identity state values: UUIDs can be long but mustn't push the panel wider. */
+.identity-state-value {
+    overflow: hidden;
+}
+
+.status-value.dim {
+    color: var(--text-dim);
+}
+
+/* Hover affordance: underline colour flips on pointer-over so users see
+   these cells are clickable-to-copy. Paired with the tooltip="Click to
+   copy" set in UXML (surfaced at runtime by InstallRuntimeTooltips).
+   Empty cells (showing the "—" glyph) still underline on hover, which is
+   fine — clicking them is a safe no-op. */
+.status-value:hover {
+    border-bottom-color: var(--text-muted);
+}
+
+.status-value.copied {
+    color: var(--ok);
+}
+
+/* After-copy flash also shows the underline in the success colour so
+   the hover state and the success state compose cleanly. */
+.status-value.copied:hover {
+    border-bottom-color: var(--ok);
+}
+
+.status-value.state-ok {
+    color: var(--ok);
+}
+
+.status-value.state-warn {
+    color: var(--warn);
+}
+
+.status-value.state-err {
+    color: var(--err);
+}
+
+/* ---------- Tab bar ---------- */
+
+.tab-bar {
+    flex-direction: row;
+    flex-shrink: 0;
+    min-height: 38px;
+    margin-bottom: 16px;
+    border-bottom-color: var(--panel-border);
+    border-bottom-width: 1px;
+}
+
+.tab {
+    padding-top: 8px;
+    padding-bottom: 8px;
+    padding-left: 14px;
+    padding-right: 14px;
+    margin-right: 2px;
+    background-color: var(--transparent);
+    border-color: var(--transparent);
+    border-width: 1px;
+    border-bottom-width: 2px;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    -unity-font: resource("Roboto-Regular");
+    font-size: 12px;
+    -unity-font-style: bold;
+    letter-spacing: 0.7px;
+    color: var(--text);
+    white-space: nowrap;
+}
+
+/* Specificity boost — .tab-bar .tab beats the base Button:hover rule. */
+.tab-bar .tab:hover:enabled {
+    background-color: var(--transparent);
+    border-color: var(--transparent);
+    border-bottom-color: var(--text-dim);
+    color: var(--text);
+}
+
+.tab-bar .tab.active {
+    background-color: var(--panel-bg);
+    border-color: var(--panel-border);
+    border-bottom-color: var(--accent);
+    border-width: 1px;
+    border-bottom-width: 2px;
+    color: var(--text);
+}
+
+.tab-bar .tab.active:hover:enabled {
+    background-color: var(--panel-bg);
+    border-color: var(--panel-border);
+    border-bottom-color: var(--accent);
+}
+
+/* Tab-bar-specific focus override.
+ *
+ * The global `Button:focus` rule (see bottom of this file) bumps every
+ * button's border-width to 2px on all sides to render a focus ring.
+ * That's fine for action buttons — they grow 1px on each side and the
+ * surrounding layout absorbs it. Tabs are the exception: clicking a tab
+ * focuses it, and without this override the focused tab jumps wider
+ * than its siblings, shifting the whole tab bar.
+ *
+ * Tabs already show their state via the `.active` class (accent
+ * bottom-border, panel-bg fill). The focus ring is redundant here and
+ * the layout shift is not. Pin focused-tab border widths to the same
+ * 1px/1px/1px/2px tab rhythm, and let color change freely if needed. */
+.tab-bar .tab:focus {
+    border-color: var(--transparent);
+    border-width: 1px;
+    border-bottom-width: 2px;
+}
+
+.tab-bar .tab.active:focus {
+    border-color: var(--panel-border);
+    border-bottom-color: var(--accent);
+    border-width: 1px;
+    border-bottom-width: 2px;
+}
+
+/* ---------- Sample-app grid (left controls + right log) ---------- */
+
+.sample-app-grid {
+    flex-direction: row;
+    /* flex-grow dropped. In .main (column flex), flex-grow: 1 would
+       pull the grid vertically — conflicting with the natural-height
+       measurement the content-container needs to report so the outer
+       page-scroll's scrollable range covers the full log. Natural
+       height (tallest child) is what we want here. */
+    flex-shrink: 0;
+    align-items: flex-start;
+}
+
+.controls-column {
+    flex-grow: 0;
+    flex-shrink: 0;
+    width: 50%;
+    margin-right: 16px;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.log-column {
+    flex-grow: 1;
+    /* flex-shrink: 0 on the vertical axis within the grid — matches the
+       other links in the chain (sample-app-grid, main, content-container).
+       Without this, the drag-resized log panel's height doesn't propagate
+       up to the outer page-scroll and the page can't scroll to reveal the
+       log's bottom edge. */
+    flex-shrink: 0;
+    width: 48%;
+    flex-direction: column;
+    /* No max-height — the log panel inside is resizable via its drag
+       handle, so the column must be free to grow with it. Vertical
+       overflow past the viewport is handled by the outer .page-scroll. */
+    min-width: 0;
+}
+
+/* Narrow-viewport stack: controls above, log below.
+   USS 2021.3 has no @media, so RegisterResponsiveLayout in the C# UI
+   partial toggles the .narrow class on .sample-app-grid when the panel
+   width drops below 1024px — mirroring the web sample's
+   `@media (min-width: 1024px)` rule that flips its CSS grid from two
+   columns back to a single column. Selectors are scoped under
+   `.sample-app-grid.narrow` so the column variants only apply inside
+   the responsive grid (not to any other element that happens to share
+   a class name in the future). */
+.sample-app-grid.narrow {
+    flex-direction: column;
+}
+
+.sample-app-grid.narrow .controls-column {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 16px;
+}
+
+.sample-app-grid.narrow .log-column {
+    width: 100%;
+}
+
+/* ---------- Panels ---------- */
+
+.panel {
+    padding-top: 16px;
+    padding-bottom: 16px;
+    padding-left: 20px;
+    padding-right: 20px;
+    margin-bottom: 16px;
+    display: none;
+}
+
+.panel.active {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ---------- Section label + helper text ---------- */
+
+.section-label {
+    -unity-font: resource("Roboto-Regular");
+    font-size: 11px;
+    -unity-font-style: bold;
+    letter-spacing: 0.7px;
+    color: var(--text-muted);
+    margin-top: 16px;
+    margin-bottom: 8px;
+    padding-top: 16px;
+    border-top-color: var(--panel-border);
+    border-top-width: 1px;
+}
+
+.section-label.first {
+    margin-top: 0;
+    padding-top: 0;
+    border-top-width: 0;
+}
+
+.helper-text {
+    color: var(--text-muted);
+    font-size: 11px;
+    margin-top: 0;
+    margin-bottom: 0;
+    white-space: normal;
+}
+
+.helper-text.below-field {
+    margin-top: 4px;
+}
+
+.helper-text-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 4px;
+}
+
+.helper-text-row .helper-text {
+    flex-shrink: 0;
+}
+
+.code-chip {
+    -unity-font: resource("RobotoMono-Regular");
+    font-size: 11px;
+    background-color: var(--chip-bg);
+    color: var(--text-muted);
+    padding-left: 6px;
+    padding-right: 6px;
+    padding-top: 1px;
+    padding-bottom: 1px;
+    border-radius: 4px;
+    margin-left: 3px;
+    margin-right: 3px;
+}
+
+/* ---------- Placeholder overlay ----------
+   USS 2021.3 TextField has no placeholder. Fake one with a Label absolutely
+   positioned over the input, hidden when the field is focused or non-empty.
+*/
+.placeholder-host {
+    position: relative;
+}
+
+.field-placeholder {
+    position: absolute;
+    left: 12px;
+    top: 24px;
+    color: var(--text-dim);
+    -unity-font: resource("RobotoMono-Regular");
+    font-size: 12px;
+    -unity-font-style: normal;
+    -unity-text-align: middle-left;
+}
+
+/* Multiline textareas grow downward — pin placeholder near the top. */
+.field-placeholder.placeholder-multiline {
+    top: 22px;
+}
+
+.placeholder-host.has-value .field-placeholder,
+.placeholder-host.is-focused .field-placeholder {
+    display: none;
+}
+
+/* ---------- Field + inputs ---------- */
+
+.field {
+    flex-direction: column;
+    margin-bottom: 8px;
+}
+
+.field-label {
+    -unity-font: resource("Roboto-Regular");
+    font-size: 11px;
+    -unity-font-style: bold;
+    letter-spacing: 0.7px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+/* Unity TextField root + internal input (2021.3 class names) */
+.field .unity-text-field {
+    margin: 0;
+}
+
+.field .unity-text-field > .unity-text-field__input,
+.field .unity-base-text-field__input {
+    background-color: var(--panel-bg);
+    border-color: var(--input-border);
+    border-width: 1px;
+    border-radius: 8px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    -unity-font: resource("RobotoMono-Regular");
+    font-size: 12px;
+    color: var(--text);
+    min-height: 30px;
+}
+
+.field .unity-text-field > .unity-text-field__input:focus,
+.field .unity-base-text-field__input:focus {
+    border-color: var(--accent);
+    border-width: 2px;
+    padding-left: 9px;
+    padding-right: 9px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+/* Multiline textarea */
+.field .unity-text-field.multiline > .unity-text-field__input,
+.field .unity-base-text-field--multiline > .unity-base-text-field__input {
+    min-height: 64px;
+    white-space: normal;
+}
+
+/* Unity DropdownField */
+.field .unity-popup-field {
+    margin: 0;
+}
+
+.field .unity-popup-field__input {
+    background-color: var(--panel-bg);
+    border-color: var(--input-border);
+    border-width: 1px;
+    border-radius: 8px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    -unity-font: resource("RobotoMono-Regular");
+    font-size: 12px;
+    color: var(--text);
+    min-height: 30px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.field .unity-popup-field__input:focus {
+    border-color: var(--accent);
+    border-width: 2px;
+}
+
+.field .unity-popup-field__input .unity-base-popup-field__text {
+    flex-grow: 1;
+}
+
+.field .unity-popup-field__text {
+    color: var(--text);
+    -unity-font: resource("RobotoMono-Regular");
+    font-size: 12px;
+}
+
+.field .unity-popup-field__arrow,
+.field .unity-base-popup-field__arrow {
+    -unity-background-image-tint-color: var(--text-muted);
+    width: 12px;
+    height: 12px;
+    margin-right: 4px;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Custom DropdownField popup — a ScrollView rooted inside our panel.
+   Unity 2021.3.45f2's GenericDropdownMenu has too many layout bugs in
+   runtime panels (panel-wide inline width, negative container-outer
+   height, wheel-over-popup goes to dismiss instead of scroll), so we
+   build our own. Position / width / height are set inline in
+   PositionDropdownPopup; rules below cover chrome + item states. */
+.dropdown-popup {
+    position: absolute;
+    background-color: var(--panel-bg);
+    border-color: var(--panel-border);
+    border-bottom-color: rgb(200, 202, 207);
+    border-width: 1px;
+    border-bottom-width: 2px;
+    border-radius: 8px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 4px;
+    padding-right: 4px;
+    min-width: 140px;
+    overflow: hidden;
+}
+
+/*
+ * Like .log, the viewport needs an explicit flex-grow: 1 or UI Toolkit
+ * will size the viewport to the content — so the scroller never engages
+ * even when the item list is taller than max-height. With the IdentityType
+ * enum at 8 items the popup fits within the 240px cap today, but adding
+ * two more options would overflow silently without this.
+ */
+.dropdown-popup > .unity-scroll-view__content-viewport {
+    flex-grow: 1;
+    /* Same Yoga min-height: auto fix as .page-scroll and .log. */
+    min-height: 0;
+}
+
+.dropdown-popup > .unity-scroll-view__content-viewport > .unity-scroll-view__content-container {
+    flex-direction: column;
+}
+
+.dropdown-popup .unity-scroller--vertical {
+    width: 6px;
+}
+
+.dropdown-popup .unity-base-slider__dragger {
+    background-color: var(--panel-border);
+    border-radius: 3px;
+    border-width: 0;
+}
+
+.dropdown-popup .unity-scroller__low-button,
+.dropdown-popup .unity-scroller__high-button {
+    display: none;
+}
+
+.dropdown-popup-item {
+    background-color: var(--transparent);
+    border-width: 0;
+    margin: 0;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    padding-left: 10px;
+    padding-right: 10px;
+    min-height: 0;
+    color: var(--text);
+    -unity-font: resource("RobotoMono-Regular");
+    font-size: 12px;
+    -unity-font-style: normal;
+    -unity-text-align: middle-left;
+    border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.dropdown-popup-item:hover:enabled {
+    background-color: var(--chip-bg);
+}
+
+.dropdown-popup-item.is-selected {
+    background-color: var(--chip-bg);
+    -unity-font-style: bold;
+}
+
+/* Runtime tooltip — Unity's tooltip attribute renders nothing in runtime
+   panels on 2021.3; this class styles our own floating Label that
+   InstallRuntimeTooltips spawns at the cursor. */
+.runtime-tooltip {
+    position: absolute;
+    background-color: var(--accent);
+    color: var(--text-on-accent);
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 8px;
+    padding-right: 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    -unity-font: resource("Roboto-Regular");
+    max-width: 240px;
+    white-space: normal;
+}
+
+/* Unity Toggle — hand-styled because 2021.3 ships no default runtime theme.
+   We flip the label order so the checkbox appears before the text (matches web). */
+.field .unity-toggle {
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    align-items: center;
+    margin: 0;
+}
+
+.field .unity-toggle .unity-toggle__input {
+    margin-right: 0;
+    margin-left: 0;
+    flex-grow: 0;
+}
+
+.field .unity-toggle__checkmark {
+    width: 16px;
+    height: 16px;
+    background-color: var(--panel-bg);
+    border-color: var(--input-border);
+    border-width: 1px;
+    border-radius: 4px;
+    -unity-background-image-tint-color: var(--transparent);
+    background-image: none;
+    margin-right: 8px;
+}
+
+.field .unity-toggle:checked .unity-toggle__checkmark {
+    background-color: var(--debug);
+    border-color: var(--debug);
+    -unity-background-image-tint-color: var(--text-on-accent);
+    align-items: center;
+    justify-content: center;
+}
+
+/* Tick glyph injected into the checkmark element by C# (BindElements). USS
+   hides it by default and reveals it when the parent toggle is :checked,
+   matching the web sample's native check-on-checkbox behaviour. */
+.debug-tick {
+    color: var(--text-on-accent);
+    font-size: 12px;
+    -unity-font: resource("Roboto-Regular");
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    width: 100%;
+    height: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: -2px;
+    margin-bottom: 0;
+    padding: 0;
+    display: none;
+}
+
+.field .unity-toggle:checked .debug-tick {
+    display: flex;
+}
+
+.field .unity-toggle > .unity-label,
+.field .unity-toggle .unity-toggle__text {
+    -unity-font: resource("Roboto-Regular");
+    font-size: 11px;
+    -unity-font-style: bold;
+    letter-spacing: 0.7px;
+    color: var(--text-muted);
+    margin-left: 0;
+    flex-grow: 1;
+    min-width: auto;
+}
+
+/* ---------- Advanced two-column grid (simulated via flex) ---------- */
+
+.advanced-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.advanced-grid .advanced-field {
+    flex-grow: 0;
+    flex-shrink: 0;
+    width: 45%;
+    flex-basis: auto;
+    margin-right: 4%;
+    margin-bottom: 8px;
+    min-width: 0;
+}
+
+.advanced-grid .advanced-field.last {
+    margin-right: 0;
+}
+
+/* ---------- Actions + buttons ---------- */
+
+.actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-top: 16px;
+    margin-bottom: 16px;
+}
+
+.actions.last {
+    margin-bottom: 0;
+}
+
+Button {
+    background-color: var(--accent);
+    color: var(--text-on-accent);
+    /* Bake the 2px border in, transparent until :focus. UI Toolkit has no
+       outline support, so the focus indicator must use border. Without the
+       baked width the button grew 4px on click → visible jitter. Padding
+       reduced 2px each side to absorb the new border so total dimensions
+       stay the same as the prior unfocused size. */
+    border-width: 2px;
+    border-color: var(--transparent);
+    border-radius: 8px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    padding-left: 12px;
+    padding-right: 12px;
+    margin-right: 8px;
+    margin-bottom: 4px;
+    margin-top: 0;
+    margin-left: 0;
+    min-height: 32px;
+    -unity-font: resource("Roboto-Regular");
+    font-size: 12px;
+    -unity-font-style: bold;
+    white-space: nowrap;
+    -unity-text-align: middle-center;
+    align-items: center;
+    justify-content: center;
+}
+
+Button:hover:enabled {
+    background-color: var(--accent-hover);
+}
+
+Button:disabled {
+    background-color: var(--panel-border);
+    color: var(--text-dim);
+}
+
+/*
+ * Keyboard focus ring. Runtime panels in Unity 2021.3 UI Toolkit don't
+ * render any default focus indicator, so keyboard users who Tab around
+ * the sample (action buttons, typed-event fire buttons, tabs, accordions)
+ * have no idea where focus lives. Matches the web sample's
+ * `button:focus-visible { outline: 2px solid var(--debug); }`.
+ *
+ * Border width is pre-baked in the base Button rule — focus only swaps
+ * the colour, so the element doesn't grow on click and there's no
+ * layout jitter when the focus target changes.
+ */
+Button:focus {
+    border-color: var(--debug);
+}
+
+Button.secondary {
+    background-color: var(--panel-bg);
+    border-color: var(--panel-border);
+    /* border-width inherited from base (2px). Was 1px before — bumped so
+       focus rule can change colour without resizing. */
+    color: var(--text);
+}
+
+Button.secondary:hover:enabled {
+    background-color: var(--chip-bg-hover);
+    border-color: var(--input-border);
+}
+
+Button.active {
+    background-color: rgb(0, 0, 0);
+}
+
+Button.with-sig {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    -unity-text-align: middle-center;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    padding-left: 10px;
+    padding-right: 10px;
+    margin-right: 6px;
+    min-height: 46px;
+    min-width: 0;
+    flex-grow: 0;
+}
+
+Button.with-sig .btn-label {
+    -unity-text-align: middle-center;
+    margin: 0;
+    padding: 0;
+}
+
+Button.with-sig .btn-sig {
+    -unity-text-align: middle-center;
+    margin-top: 2px;
+    margin-bottom: 0;
+    padding: 0;
+}
+
+.btn-label {
+    color: var(--text-on-accent);
+    -unity-font: resource("Roboto-Regular");
+    font-size: 12px;
+    -unity-font-style: bold;
+}
+
+Button:disabled .btn-label {
+    color: var(--text-dim);
+}
+
+Button.secondary .btn-label {
+    color: var(--text);
+}
+
+.btn-sig {
+    color: var(--text-on-accent);
+    -unity-font: resource("RobotoMono-Regular");
+    font-size: 10px;
+    margin-top: 2px;
+}
+
+Button:disabled .btn-sig {
+    color: var(--text-dim);
+}
+
+Button.secondary .btn-sig {
+    color: var(--text);
+}
+
+/* ---------- Consent grid (3 buttons side-by-side) ---------- */
+
+.consent-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.consent-choice {
+    flex-grow: 0;
+    flex-shrink: 0;
+    width: 31%;
+    flex-basis: auto;
+    flex-direction: column;
+    margin-right: 3%;
+    margin-bottom: 8px;
+    min-width: 0;
+}
+
+.consent-choice.last {
+    margin-right: 0;
+}
+
+.consent-choice Button {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 8px;
+}
+
+/* ---------- Accordion ---------- */
+
+.accordion-item {
+    background-color: var(--panel-bg);
+    border-color: var(--panel-border);
+    border-width: 1px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.accordion-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+.accordion-title {
+    -unity-font: resource("Roboto-Regular");
+    font-size: 11px;
+    -unity-font-style: bold;
+    letter-spacing: 0.7px;
+    color: var(--text-muted);
+}
+
+.accordion-item.open .accordion-title {
+    color: var(--text);
+}
+
+.accordion-arrow {
+    color: var(--text-muted);
+    font-size: 12px;
+    -unity-font: resource("Roboto-Regular");
+}
+
+.accordion-item.open .accordion-arrow {
+    color: var(--text);
+}
+
+.accordion-content {
+    padding-top: 4px;
+    padding-bottom: 16px;
+    padding-left: 16px;
+    padding-right: 16px;
+    display: none;
+}
+
+.accordion-item.open .accordion-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.accordion-content > .helper-text.top {
+    margin-bottom: 12px;
+}
+
+/* ---------- Alias grid ---------- */
+
+.alias-grid {
+    flex-direction: row;
+    align-items: center;
+}
+
+.alias-side {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    flex-direction: column;
+}
+
+.alias-arrow {
+    color: var(--text-muted);
+    font-size: 24px;
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
+/* ---------- Identity state list ---------- */
+
+.identity-state-list {
+    flex-direction: column;
+    margin-bottom: 16px;
+}
+
+.identity-state-row {
+    flex-direction: row;
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+.identity-state-key {
+    -unity-font: resource("Roboto-Regular");
+    font-size: 10px;
+    -unity-font-style: bold;
+    letter-spacing: 0.6px;
+    color: var(--text-muted);
+    width: 110px;
+    flex-shrink: 0;
+}
+
+.identity-state-value {
+    -unity-font: resource("RobotoMono-Regular");
+    font-size: 11px;
+    color: var(--text);
+    flex-grow: 1;
+    white-space: normal;
+}
+
+/* ---------- Log pane ---------- */
+
+.log-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 38px;
+    margin-bottom: 16px;
+    border-bottom-color: var(--panel-border);
+    border-bottom-width: 1px;
+}
+
+.panel-title {
+    -unity-font: resource("Roboto-Regular");
+    font-size: 11px;
+    -unity-font-style: bold;
+    letter-spacing: 0.7px;
+    color: var(--text-muted);
+    flex-direction: row;
+    align-items: center;
+}
+
+.log-count {
+    background-color: var(--chip-bg);
+    color: var(--text-muted);
+    font-size: 10px;
+    -unity-font: resource("RobotoMono-Regular");
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    border-radius: 999px;
+    margin-left: 6px;
+}
+
+.log-actions {
+    flex-direction: row;
+}
+
+.log-actions Button {
+    margin-left: 8px;
+    margin-right: 0;
+    margin-bottom: 0;
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+.log {
+    -unity-font: resource("RobotoMono-Regular");
+    font-size: 12px;
+    /*
+     * Matches the web sample (.log { height: 360px; min-height: 120px;
+     * resize: vertical }). UI Toolkit has no `resize` property, so the
+     * drag handle below (.log-resize-handle) updates this element's
+     * inline style.height from C#. A fixed default height gives the
+     * ScrollView a deterministic viewport bound — the flex chain above
+     * doesn't need to propagate a cap down.
+     */
+    height: 360px;
+    min-height: 120px;
+    flex-shrink: 0;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    padding-left: 20px;
+    padding-right: 20px;
+    overflow: hidden;
+}
+
+/*
+ * Drag handle beneath .log. Mirrors the web sample's browser-native
+ * `resize: vertical` on the log panel, which UI Toolkit doesn't have.
+ * Three short dashes in the centre hint at the drag affordance; the
+ * whole 10px strip is hit-testable.
+ */
+.log-resize-handle {
+    height: 10px;
+    margin-top: 4px;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.log-resize-handle:hover {
+    background-color: var(--chip-bg);
+    border-radius: 4px;
+}
+
+.log-resize-handle .log-resize-grip {
+    width: 24px;
+    height: 2px;
+    background-color: var(--panel-border);
+    border-radius: 1px;
+}
+
+.log-resize-handle:hover .log-resize-grip {
+    background-color: var(--text-muted);
+}
+
+/*
+ * ScrollView plumbing for the event log. Without an explicit flex-grow on
+ * the viewport, UI Toolkit sizes the viewport to its content — meaning the
+ * content never exceeds the viewport and the scroller never engages. This
+ * matches the pattern used for .page-scroll (lines 60-67).
+ */
+.log > .unity-scroll-view__content-viewport {
+    flex-grow: 1;
+    /* Same Yoga min-height: auto fix as the page-scroll — without this,
+       the viewport's intrinsic min size equals its content's size, the
+       scroller sees no overflow, and content taller than 360px silently
+       pushes the outer .log taller instead of scrolling inside it. */
+    min-height: 0;
+}
+
+.log > .unity-scroll-view__content-viewport > .unity-scroll-view__content-container {
+    flex-direction: column;
+    align-items: stretch;
+    /* flex-shrink: 0 is set in C# (BindElements: _logView.contentContainer
+       .style.flexShrink = 0) because this deep child selector does not
+       match Unity 2021.3 runtime panels — without the C# assignment the
+       container compresses to viewport height and the scroller never
+       engages. Style left here as documentation of intent. */
+}
+
+.log .unity-scroller {
+    background-color: var(--transparent);
+}
+
+.log .unity-scroller--vertical {
+    width: 8px;
+}
+
+.log .unity-base-slider__dragger {
+    background-color: var(--panel-border);
+    border-radius: 4px;
+    border-width: 0;
+    min-height: 20px;
+}
+
+.log .unity-scroller__slider {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.log .unity-scroller__low-button,
+.log .unity-scroller__high-button {
+    display: none;
+}
+
+/* ---------- Log rows ---------- */
+
+.log-row {
+    flex-direction: column;
+    /* Rows are children of a column flexbox inside the ScrollView's
+       content-container. UI Toolkit's default flex-shrink is 1 — when the
+       content-container is bounded by the viewport, rows get compressed
+       vertically instead of overflowing. The rows end up visibly tiny
+       (1-2 lines) and the scroller never engages because the content-
+       container never exceeds its viewport. flex-shrink: 0 keeps rows at
+       their natural size so the content-container grows past the viewport
+       and the scroller takes over, as intended. */
+    flex-shrink: 0;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom-color: var(--panel-border);
+    border-bottom-width: 1px;
+    overflow: hidden;
+    max-width: 100%;
+}
+
+.log-row.last {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom-width: 0;
+}
+
+.log-row-head {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.log-row-arrow {
+    color: var(--text-muted);
+    font-size: 10px;
+    margin-right: 4px;
+    width: 10px;
+}
+
+.log-row.non-collapsible .log-row-arrow {
+    color: var(--transparent);
+}
+
+.log-ts {
+    color: var(--text-dim);
+    -unity-font: resource("RobotoMono-Regular");
+    font-size: 11px;
+    margin-right: 8px;
+}
+
+.log-badge {
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-left: 8px;
+    padding-right: 8px;
+    /* Explicit half-height radius + min-height. border-radius: 999px
+       under-clamps on small Labels in Unity 2021.3 UI Toolkit, so the
+       APP / SDK pills render near-rectangular without this. */
+    border-radius: 8px;
+    min-height: 16px;
+    font-size: 9px;
+    -unity-font-style: bold;
+    letter-spacing: 0.5px;
+    margin-right: 8px;
+    -unity-font: resource("Roboto-Regular");
+    -unity-text-align: middle-center;
+}
+
+.log-badge.badge-app {
+    color: var(--text);
+    background-color: var(--chip-bg);
+}
+
+.log-badge.badge-sdk {
+    color: var(--text-on-accent);
+    background-color: var(--debug);
+}
+
+.log-label {
+    -unity-font-style: bold;
+    -unity-font: resource("Roboto-Regular");
+    font-size: 12px;
+    color: var(--text);
+    flex-grow: 1;
+}
+
+.log-row.log-ok .log-label {
+    color: var(--ok);
+}
+
+.log-row.log-warn .log-label {
+    color: var(--warn);
+}
+
+.log-row.log-err .log-label {
+    color: var(--err);
+}
+
+.log-row.log-info .log-label {
+    color: var(--text-muted);
+}
+
+.log-row.log-debug .log-label {
+    color: var(--debug);
+    -unity-font-style: bold-and-italic;
+}
+
+/* Per-row copy button: 20×20 hit area containing two USS-drawn 10×10
+   squares positioned to overlap (clipboard-icon visual). Hidden until
+   the row is hovered (or .copied during the post-click flash). USS
+   instead of a font glyph — Roboto-Regular doesn't carry the
+   Miscellaneous Technical block reliably. */
+.log-copy {
+    background-color: var(--transparent);
+    border-width: 0;
+    margin-left: auto;
+    margin-right: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: 2px;
+    min-height: 0;
+    min-width: 0;
+    width: 20px;
+    height: 20px;
+    opacity: 0;
+}
+
+.log-copy:hover:enabled {
+    background-color: var(--chip-bg);
+    border-radius: 4px;
+}
+
+.log-copy .log-copy-back,
+.log-copy .log-copy-front {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-color: var(--text-muted);
+    border-width: 1px;
+    border-radius: 2px;
+    background-color: var(--panel-bg);
+}
+
+.log-copy .log-copy-back  { right: 2px; top: 2px; }
+.log-copy .log-copy-front { left: 2px; bottom: 2px; }
+
+.log-row:hover .log-copy {
+    opacity: 1;
+}
+
+.log-copy.copied {
+    opacity: 1;
+}
+
+.log-copy.copied .log-copy-back,
+.log-copy.copied .log-copy-front {
+    border-color: var(--ok);
+}
+
+.log-body {
+    -unity-font: resource("RobotoMono-Regular");
+    font-size: 11px;
+    color: var(--text);
+    white-space: normal;
+    padding-left: 18px;
+    margin-top: 2px;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.log-row.collapsed .log-body {
+    display: none;
+}
+
+/* ---------- Identify accordion has 'open' by default — matches web ---------- */
+/* Handled at instantiation time in C# */

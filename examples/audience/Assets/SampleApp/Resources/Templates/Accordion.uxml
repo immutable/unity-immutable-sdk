@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement name="accordion-item" class="accordion-item">
+        <ui:VisualElement name="accordion-header" class="accordion-header" focusable="true" tabindex="0">
+            <ui:Label name="accordion-title" class="accordion-title" text="ACCORDION" />
+            <ui:Label name="accordion-arrow" class="accordion-arrow" text="▸" />
+        </ui:VisualElement>
+        <ui:VisualElement name="accordion-content" class="accordion-content" />
+    </ui:VisualElement>
+</ui:UXML>
