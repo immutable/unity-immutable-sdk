@@ -87,7 +87,7 @@ namespace Immutable.Audience.Tests
             Assert.AreEqual("gzip", capturedContentEncoding);
 
             var decompressed = DecompressGzip(capturedBody);
-            StringAssert.StartsWith("{\"batch\":[", decompressed);
+            StringAssert.StartsWith("{\"messages\":[", decompressed);
             StringAssert.EndsWith("]}", decompressed);
             StringAssert.Contains("\"eventName\":\"test\"", decompressed);
         }
@@ -116,7 +116,7 @@ namespace Immutable.Audience.Tests
             Assert.AreEqual("pk_imapik-test-key1", capturedKey);
             Assert.AreEqual("application/json", capturedContentType);
             Assert.AreEqual(0, capturedContentEncodingCount, "no Content-Encoding header is permitted in v1");
-            StringAssert.StartsWith("{\"batch\":[", capturedBody);
+            StringAssert.StartsWith("{\"messages\":[", capturedBody);
             StringAssert.EndsWith("]}", capturedBody);
             StringAssert.Contains("\"eventName\":\"test\"", capturedBody);
         }
@@ -416,7 +416,7 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
-        public void SendBatchAsync_CallerCancelled_Throws_DoesNotDeleteOrRecordFailure()
+        public async Task SendBatchAsync_CallerCancelled_Throws_DoesNotDeleteOrRecordFailure()
         {
             // Regression guard for PR #701 review: caller cancellation must
             // propagate. If the `when (ct.IsCancellationRequested)` branch
@@ -434,11 +434,19 @@ namespace Immutable.Audience.Tests
             using var cts = new CancellationTokenSource();
             cts.Cancel();
 
-            // CatchAsync (not ThrowsAsync) because HttpClient re-wraps our mock's
-            // OperationCanceledException as TaskCanceledException before rethrowing.
-            // We want to assert the cancellation *family*, not a specific subclass.
-            Assert.CatchAsync<OperationCanceledException>(
-                async () => await transport.SendBatchAsync(cts.Token));
+            // Unity's NUnit doesn't ship CatchAsync. Use try/catch on the
+            // async call to assert the cancellation *family* (TaskCanceledException
+            // inherits from OperationCanceledException; HttpClient re-wraps our
+            // mock's OCE as TCE before rethrowing).
+            try
+            {
+                await transport.SendBatchAsync(cts.Token);
+                Assert.Fail("expected OperationCanceledException");
+            }
+            catch (OperationCanceledException)
+            {
+                // expected
+            }
 
             Assert.AreEqual(1, _store.Count(), "cancelled send must not delete the batch");
             Assert.IsFalse(transport.IsInBackoffWindow, "cancel is not a failure — no backoff engaged");
@@ -479,6 +487,8 @@ namespace Immutable.Audience.Tests
                 onError: _ => throw new InvalidOperationException("callback bug"),
                 handler: handler);
 
+            // Reaching the end of the method without the await rethrowing IS
+            // the assertion (Unity's NUnit lacks DoesNotThrowAsync).
             await transport.SendBatchAsync();
         }
 

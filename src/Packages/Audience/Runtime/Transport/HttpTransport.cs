@@ -118,17 +118,23 @@ namespace Immutable.Audience
                 {
                     // 4xx: server rejected the payload. Drop it (retry won't help) and
                     // reset backoff — server is healthy, our data was the problem.
+                    // Capture the response body so the caller's OnError surfaces
+                    // the server's reason string ("unknown publishable key",
+                    // "missing field X", etc.) rather than a bare status code.
+                    var rejectionBody = await ReadBodyForErrorAsync(response).ConfigureAwait(false);
                     _store.Delete(batch);
                     ResetBackoff();
                     NotifyError(AudienceErrorCode.ValidationRejected,
-                        $"Batch rejected with {statusCode}");
+                        FormatHttpError("Batch rejected", statusCode, rejectionBody));
                 }
                 else
                 {
                     // 5xx (or other non-2xx/4xx): server is unhealthy or the response
                     // is anomalous. Keep batch on disk, back off, retry later.
+                    var serverBody = await ReadBodyForErrorAsync(response).ConfigureAwait(false);
                     RecordFailure();
-                    NotifyError(AudienceErrorCode.FlushFailed, $"Server error {statusCode}, will retry");
+                    NotifyError(AudienceErrorCode.FlushFailed,
+                        FormatHttpError("Server error, will retry", statusCode, serverBody));
                 }
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
@@ -209,11 +215,13 @@ namespace Immutable.Audience
         }
 
         // Reads each path and wraps the concatenated JSON bodies in
-        // {"batch":[msg1,msg2,...]}. Returns null if every path was
+        // {"messages":[msg1,msg2,...]}. Returns null if every path was
         // unreadable; the caller treats null as "nothing to send".
+        // Wire-format envelope key matches the backend's MessagesRequest
+        // schema (#/components/schemas/MessagesRequest property "messages").
         private static string? BuildPayload(IReadOnlyList<string> paths)
         {
-            var sb = new StringBuilder("{\"batch\":[");
+            var sb = new StringBuilder("{\"messages\":[");
             var count = 0;
 
             for (var i = 0; i < paths.Count; i++)
@@ -273,6 +281,36 @@ namespace Immutable.Audience
                 return 0;
             }
         }
+
+        // Cap the response-body excerpt the caller sees. Backends sometimes
+        // return verbose stack traces or HTML error pages; trimming keeps
+        // OnError consumers (loggers, UI) from being flooded.
+        private const int MaxErrorBodyChars = 500;
+
+        // Reads the response body for inclusion in an error message. Failures
+        // (read throws, body is empty) collapse to null so the caller can fall
+        // back to "<status code> only" formatting without nesting nulls.
+        private static async Task<string?> ReadBodyForErrorAsync(HttpResponseMessage response)
+        {
+            try
+            {
+                var body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                if (string.IsNullOrWhiteSpace(body)) return null;
+                body = body.Trim();
+                return body.Length > MaxErrorBodyChars
+                    ? body.Substring(0, MaxErrorBodyChars) + "…"
+                    : body;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static string FormatHttpError(string prefix, int statusCode, string? body) =>
+            string.IsNullOrEmpty(body)
+                ? $"{prefix} with {statusCode}"
+                : $"{prefix} with {statusCode}: {body}";
 
         private void NotifyError(AudienceErrorCode code, string message)
         {
