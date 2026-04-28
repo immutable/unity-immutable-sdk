@@ -282,11 +282,6 @@ namespace Immutable.Audience
             }
         }
 
-        // Cap the response-body excerpt the caller sees. Backends sometimes
-        // return verbose stack traces or HTML error pages; trimming keeps
-        // OnError consumers (loggers, UI) from being flooded.
-        private const int MaxErrorBodyChars = 500;
-
         // Best-effort body extraction; null on read failure.
         // Catches narrowed so OOM, OperationCanceledException, and ThreadAbortException
         // propagate — body extraction must not mask process-level faults.
@@ -295,11 +290,7 @@ namespace Immutable.Audience
             try
             {
                 var body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                if (string.IsNullOrWhiteSpace(body)) return null;
-                body = body.Trim();
-                return body.Length > MaxErrorBodyChars
-                    ? body.Substring(0, MaxErrorBodyChars) + "…"
-                    : body;
+                return string.IsNullOrWhiteSpace(body) ? null : body.Trim();
             }
             catch (HttpRequestException) { return null; }
             catch (IOException) { return null; }
