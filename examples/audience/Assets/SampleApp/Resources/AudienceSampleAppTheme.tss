@@ -1,0 +1,136 @@
+/*
+ * Theme stylesheet for the Audience sample-app PanelSettings.
+ *
+ * GenericDropdownMenu (the popup widget DropdownField opens on click)
+ * is appended to the panel's top-level root container — ABOVE
+ * UIDocument.rootVisualElement, where AudienceSample.uss is attached.
+ * Stylesheet scope means USS rules attached to rootVisualElement never
+ * reach the popup. The TSS, in contrast, is the panel-wide theme — its
+ * rules apply to the whole panel tree, popup included.
+ *
+ * The dropdown popup rules are inlined here (rather than @imported
+ * from AudienceSample.uss) with hardcoded colors so the rules take
+ * effect even though the var(--*) tokens defined in AudienceSample.uss
+ * are scoped to its attached element and would not resolve in the
+ * popup.
+ */
+
+VisualElement {
+    color: rgb(19, 19, 19);
+    font-size: 12px;
+    -unity-font: resource("RobotoMono-Regular");
+}
+
+/* Full-panel click-dismiss layer Unity sizes inline. Transparent so it
+   does not paint over the page; absolute so it does not displace
+   siblings. Font set here too so it cascades to every child element
+   regardless of which class Unity actually attaches the text to. */
+.unity-base-dropdown {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0);
+    -unity-font: resource("RobotoMono-Regular");
+    font-size: 12px;
+    color: rgb(19, 19, 19);
+}
+
+/* The actual popup box. No padding here — gutters live on the inner
+   container's margin so the bottom gap is visible regardless of how
+   Unity's ScrollView positions its content viewport. */
+.unity-base-dropdown__container-outer {
+    position: absolute;
+    flex-direction: column;
+    background-color: rgb(255, 255, 255);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgb(230, 232, 236);
+    border-right-color: rgb(230, 232, 236);
+    border-top-color: rgb(230, 232, 236);
+    border-bottom-color: rgb(230, 232, 236);
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    padding-top: 0;
+    padding-bottom: 0;
+    min-width: 140px;
+    min-height: 48px;
+    max-height: 320px;
+    /* overflow:hidden clips item backgrounds (including :hover) to the
+       rounded corners. Required to stop the last item's hover fill
+       from painting a square corner against the rounded outer edge. */
+    overflow: hidden;
+    -unity-font: resource("RobotoMono-Regular");
+    font-size: 12px;
+    color: rgb(19, 19, 19);
+}
+
+/* Inner ScrollView holds the items. Margin (not padding) provides the
+   visible top/bottom gutter — padding on the outer would be eaten by
+   ScrollView's content viewport, which positions its content at its
+   own bounds regardless of parent padding. */
+.unity-base-dropdown__container-inner {
+    margin-top: 6px;
+    margin-bottom: 6px;
+    flex-grow: 1;
+    flex-shrink: 0;
+}
+
+.unity-base-dropdown__container-inner > .unity-scroll-view__content-viewport {
+    flex-grow: 1;
+    flex-shrink: 0;
+}
+
+.unity-base-dropdown__container-inner > .unity-scroll-view__content-viewport > .unity-scroll-view__content-container {
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+/* Items: fixed height with zero internal padding-top/bottom so :hover
+   does not change geometry. Borders pre-allocated transparent on both
+   states so a default hover-border on Unity's side cannot shift the
+   row by 2px. Font + size pinned here AND on every child class so
+   Unity's runtime defaults cannot override them via inheritance. */
+.unity-base-dropdown__item {
+    flex-direction: row;
+    align-items: center;
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-top: 0;
+    padding-bottom: 0;
+    height: 28px;
+    flex-shrink: 0;
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+    -unity-font: resource("RobotoMono-Regular");
+    color: rgb(19, 19, 19);
+    font-size: 12px;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.unity-base-dropdown__item:hover:enabled {
+    background-color: rgb(238, 240, 243);
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+    height: 28px;
+    -unity-font: resource("RobotoMono-Regular");
+    font-size: 12px;
+}
+
+.unity-base-dropdown__label {
+    -unity-font: resource("RobotoMono-Regular");
+    color: rgb(19, 19, 19);
+    font-size: 12px;
+    flex-grow: 1;
+}
+
+.unity-base-dropdown__checkmark {
+    -unity-font: resource("RobotoMono-Regular");
+    color: rgb(19, 19, 19);
+    font-size: 12px;
+}
