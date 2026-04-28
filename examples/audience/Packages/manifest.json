@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.immutable.audience": "file:../../../src/Packages/Audience",
     "com.unity.collab-proxy": "2.5.2",
     "com.unity.feature.development": "1.0.1",
     "com.unity.ide.rider": "3.0.31",
