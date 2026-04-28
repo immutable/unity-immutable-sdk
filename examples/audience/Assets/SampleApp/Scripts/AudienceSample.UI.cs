@@ -28,7 +28,6 @@ namespace Immutable.Audience.Samples.SampleApp
 
         private static readonly string[] StateClasses = { "state-ok", "state-warn", "state-err", "dim" };
 
-        private const int LogCapacity = 200;
         private const int CollapseThreshold = 240;
         private const int StatusPollIntervalMs = 500;
         private const float NarrowBreakpointPx = 1024f;
@@ -697,9 +696,6 @@ namespace Immutable.Audience.Samples.SampleApp
                 _mainSyncContext.Post(_ => AppendLog(label, body, level, source), null);
                 return;
             }
-
-            if (_logView.contentContainer.childCount >= LogCapacity)
-                _logView.contentContainer.RemoveAt(0);
 
             // Snapshot "was at bottom?" before adding — stateless per-row check.
             var s = _logView.verticalScroller;
