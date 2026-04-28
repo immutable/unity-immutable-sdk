@@ -1,0 +1,14 @@
+{
+    "name": "Immutable.Audience.Samples.SampleApp",
+    "rootNamespace": "Immutable.Audience.Samples.SampleApp",
+    "references": ["Immutable.Audience.Runtime"],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
