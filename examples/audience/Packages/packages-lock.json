@@ -1,5 +1,11 @@
 {
   "dependencies": {
+    "com.immutable.audience": {
+      "version": "file:../../../src/Packages/Audience",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
     "com.unity.collab-proxy": {
       "version": "2.5.2",
       "depth": 0,

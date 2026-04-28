@@ -1,0 +1,388 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="AudienceSample.uss" />
+
+    <ui:VisualElement name="root" class="root">
+
+        <ui:Label name="prod-warning" class="prod-warning hidden"
+                  text="⚠ USING PROD ENDPOINT — ACTIONS HERE AFFECT PROD DATA ⚠" />
+
+        <ui:VisualElement name="sticky-outer" class="sticky-outer">
+            <ui:VisualElement class="sticky-top-main">
+
+                <ui:VisualElement name="header" class="header-row">
+                    <ui:Label class="title" text="Immutable Audience SDK — Sample App" />
+                    <ui:Label name="sdk-version" class="sdk-version" text="—" />
+                </ui:VisualElement>
+
+                <ui:VisualElement name="status-bar" class="surface status-bar">
+
+                    <ui:VisualElement class="status-top-row">
+                        <ui:VisualElement class="status-group">
+                            <ui:VisualElement class="status-cell">
+                                <ui:Label class="status-label" text="ENDPOINT" />
+                                <ui:Label name="status-endpoint" class="status-value dim" text="—" tooltip="Click to copy" />
+                            </ui:VisualElement>
+                            <ui:VisualElement class="status-cell">
+                                <ui:Label class="status-label" text="CONSENT" />
+                                <ui:Label name="status-consent" class="status-value dim" text="—" tooltip="Click to copy" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+
+                        <ui:VisualElement class="status-vertical-rule" />
+
+                        <ui:VisualElement class="status-group">
+                            <ui:VisualElement class="status-cell">
+                                <ui:Label class="status-label" text="ANON ID" />
+                                <ui:Label name="status-anon" class="status-value dim" text="—" tooltip="Click to copy" />
+                            </ui:VisualElement>
+                            <ui:VisualElement class="status-cell">
+                                <ui:Label class="status-label" text="USER ID" />
+                                <ui:Label name="status-user" class="status-value dim" text="—" tooltip="Click to copy" />
+                            </ui:VisualElement>
+                            <ui:VisualElement class="status-cell">
+                                <ui:Label class="status-label" text="SESSION ID" />
+                                <ui:Label name="status-session" class="status-value dim" text="—" tooltip="Click to copy" />
+                            </ui:VisualElement>
+                            <ui:VisualElement class="status-cell">
+                                <ui:Label class="status-label" text="QUEUE" />
+                                <ui:Label name="status-queue" class="status-value dim" text="—" tooltip="Click to copy" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+
+                </ui:VisualElement>
+
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:ScrollView name="page-scroll" class="page-scroll"
+                       horizontal-scroller-visibility="Hidden"
+                       vertical-scroller-visibility="Auto">
+
+        <ui:VisualElement name="main" class="main">
+
+            <ui:VisualElement name="sample-app-grid" class="sample-app-grid">
+
+                <ui:VisualElement name="controls-column" class="controls-column">
+
+                    <ui:VisualElement name="tab-bar" class="tab-bar" focusable="true">
+                        <ui:Button name="tab-setup"         text="SETUP"    class="tab active" tabindex="0"  tooltip="Setup"    />
+                        <ui:Button name="tab-consent"       text="CONSENT"  class="tab"        tabindex="-1" tooltip="Consent"  />
+                        <ui:Button name="tab-typed-events"  text="EVENTS"   class="tab"        tabindex="-1" tooltip="Events"   />
+                        <ui:Button name="tab-identity"      text="IDENTITY" class="tab"        tabindex="-1" tooltip="Identity" />
+                    </ui:VisualElement>
+
+                    <!-- ================ SETUP PANEL ================ -->
+                    <ui:VisualElement name="panel-setup" class="surface panel active">
+
+                        <ui:VisualElement class="field placeholder-host">
+                            <ui:Label class="field-label" text="PUBLISHABLE KEY" />
+                            <ui:TextField name="publishable-key" />
+                            <ui:Label class="field-placeholder" text="pk_imapik-test-yourkey" />
+                        </ui:VisualElement>
+
+                        <ui:VisualElement class="field">
+                            <ui:Label class="field-label" text="INITIAL CONSENT" />
+                            <ui:DropdownField name="initial-consent" />
+                            <ui:VisualElement class="helper-text-row">
+                                <ui:Label class="helper-text" text="Passed to " />
+                                <ui:Label class="code-chip" text="init()" />
+                                <ui:Label class="helper-text" text=". Use the Consent tab to transition live after init." />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+
+                        <ui:Label class="section-label" text="ADVANCED" />
+
+                        <ui:VisualElement class="field">
+                            <ui:Toggle name="debug" label="DEBUG" value="true" />
+                            <ui:Label class="helper-text below-field"
+                                     text="Mirror SDK internal log output into the in-page event log below." />
+                        </ui:VisualElement>
+
+                        <ui:VisualElement class="field placeholder-host">
+                            <ui:Label class="field-label" text="BASE URL OVERRIDE" />
+                            <ui:TextField name="base-url" />
+                            <ui:Label class="field-placeholder" text="(derived from key)" />
+                            <ui:Label class="helper-text below-field"
+                                     text="Bypass the SDK's prefix-based routing and target a specific backend. Leave empty to derive from the publishable key." />
+                        </ui:VisualElement>
+
+                        <ui:VisualElement class="advanced-grid">
+                            <ui:VisualElement class="field advanced-field placeholder-host">
+                                <ui:Label class="field-label" text="FLUSH INTERVAL (MS)" />
+                                <ui:TextField name="flush-interval" />
+                                <ui:Label class="field-placeholder" text="5000" />
+                            </ui:VisualElement>
+                            <ui:VisualElement class="field advanced-field last placeholder-host">
+                                <ui:Label class="field-label" text="FLUSH SIZE" />
+                                <ui:TextField name="flush-size" />
+                                <ui:Label class="field-placeholder" text="20" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+
+                        <ui:Label class="section-label" text="INIT / TEARDOWN" />
+
+                        <ui:VisualElement class="actions last">
+                            <ui:Button name="btn-init" text="Init" />
+
+                            <ui:Button name="btn-page" class="with-sig">
+                                <ui:Label class="btn-label" text="Page" />
+                                <ui:Label class="btn-sig" text="page()" />
+                            </ui:Button>
+
+                            <ui:Button name="btn-flush" class="with-sig">
+                                <ui:Label class="btn-label" text="Flush" />
+                                <ui:Label class="btn-sig" text="flush()" />
+                            </ui:Button>
+
+                            <ui:Button name="btn-reset" class="with-sig">
+                                <ui:Label class="btn-label" text="Reset" />
+                                <ui:Label class="btn-sig" text="reset()" />
+                            </ui:Button>
+
+                            <ui:Button name="btn-shutdown" class="with-sig">
+                                <ui:Label class="btn-label" text="Shutdown" />
+                                <ui:Label class="btn-sig" text="shutdown()" />
+                            </ui:Button>
+
+                            <ui:Button name="btn-delete-data" class="with-sig">
+                                <ui:Label class="btn-label" text="Delete data" />
+                                <ui:Label class="btn-sig" text="deleteData()" />
+                            </ui:Button>
+                        </ui:VisualElement>
+
+                    </ui:VisualElement>
+
+                    <!-- ================ CONSENT PANEL ================ -->
+                    <ui:VisualElement name="panel-consent" class="surface panel">
+
+                        <ui:VisualElement class="consent-grid">
+
+                            <ui:VisualElement class="consent-choice">
+                                <ui:Button name="btn-consent-none" class="with-sig">
+                                    <ui:Label class="btn-label" text="None" />
+                                    <ui:Label class="btn-sig" text="setConsent('none')" />
+                                </ui:Button>
+                                <ui:Label class="helper-text"
+                                         text="No tracking. Anonymous ID is cleared; queued events are purged." />
+                            </ui:VisualElement>
+
+                            <ui:VisualElement class="consent-choice">
+                                <ui:Button name="btn-consent-anon" class="with-sig">
+                                    <ui:Label class="btn-label" text="Anonymous" />
+                                    <ui:Label class="btn-sig" text="setConsent('anonymous')" />
+                                </ui:Button>
+                                <ui:VisualElement class="helper-text-row">
+                                    <ui:Label class="helper-text" text="Page views and events without a player identity. No " />
+                                    <ui:Label class="code-chip" text="identify()" />
+                                    <ui:Label class="helper-text" text="." />
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+
+                            <ui:VisualElement class="consent-choice last">
+                                <ui:Button name="btn-consent-full" class="with-sig">
+                                    <ui:Label class="btn-label" text="Full" />
+                                    <ui:Label class="btn-sig" text="setConsent('full')" />
+                                </ui:Button>
+                                <ui:VisualElement class="helper-text-row">
+                                    <ui:Label class="helper-text" text="Everything, including " />
+                                    <ui:Label class="code-chip" text="identify()" />
+                                    <ui:Label class="helper-text" text=" and " />
+                                    <ui:Label class="code-chip" text="alias()" />
+                                    <ui:Label class="helper-text" text="." />
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+
+                        </ui:VisualElement>
+
+                    </ui:VisualElement>
+
+                    <!-- ================ EVENTS PANEL ================ -->
+                    <ui:VisualElement name="panel-typed-events" class="surface panel">
+
+                        <!-- C# populates this with 11 accordion rows from AUDIENCE_EVENTS -->
+                        <ui:VisualElement name="typed-events-host" />
+
+                        <!-- Custom event accordion (static) -->
+                        <ui:VisualElement name="custom-event-accordion" class="accordion-item">
+                            <ui:VisualElement name="custom-event-header" class="accordion-header" focusable="true" tabindex="0">
+                                <ui:Label class="accordion-title" text="CUSTOM EVENT" />
+                                <ui:Label name="custom-event-arrow" class="accordion-arrow" text="▸" />
+                            </ui:VisualElement>
+                            <ui:VisualElement name="custom-event-content" class="accordion-content">
+                                <ui:VisualElement class="field placeholder-host">
+                                    <ui:Label class="field-label" text="EVENT NAME" />
+                                    <ui:TextField name="custom-event-name" />
+                                    <ui:Label class="field-placeholder" text="my_custom_event" />
+                                </ui:VisualElement>
+                                <ui:VisualElement class="field placeholder-host">
+                                    <ui:Label class="field-label" text="PROPERTIES (JSON)" />
+                                    <ui:TextField name="custom-event-props" multiline="true" class="multiline" />
+                                    <ui:Label class="field-placeholder placeholder-multiline" text='{"foo": "bar"}' />
+                                </ui:VisualElement>
+                                <ui:VisualElement class="actions last">
+                                    <ui:Button name="btn-custom-event" text="Send" />
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+
+                    </ui:VisualElement>
+
+                    <!-- ================ IDENTITY PANEL ================ -->
+                    <ui:VisualElement name="panel-identity" class="surface panel">
+
+                        <ui:Label class="section-label first" text="IDENTITY STATE" />
+                        <ui:VisualElement name="identity-state-list" class="identity-state-list">
+                            <ui:VisualElement class="identity-state-row">
+                                <ui:Label class="identity-state-key" text="USERID" />
+                                <ui:Label name="identity-user-id" class="identity-state-value" text="—" />
+                            </ui:VisualElement>
+                            <ui:VisualElement class="identity-state-row">
+                                <ui:Label class="identity-state-key" text="IDENTITYTYPE" />
+                                <ui:Label name="identity-identity-type" class="identity-state-value" text="—" />
+                            </ui:VisualElement>
+                            <ui:VisualElement class="identity-state-row">
+                                <ui:Label class="identity-state-key" text="TRAITS" />
+                                <ui:Label name="identity-traits" class="identity-state-value" text="—" />
+                            </ui:VisualElement>
+                            <ui:VisualElement class="identity-state-row">
+                                <ui:Label class="identity-state-key" text="ALIASES" />
+                                <ui:Label name="identity-aliases" class="identity-state-value" text="—" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+
+                        <!-- Identify accordion (open by default) -->
+                        <ui:VisualElement name="identify-accordion" class="accordion-item open">
+                            <ui:VisualElement name="identify-header" class="accordion-header" focusable="true" tabindex="0">
+                                <ui:Label class="accordion-title" text="IDENTIFY" />
+                                <ui:Label name="identify-arrow" class="accordion-arrow" text="▾" />
+                            </ui:VisualElement>
+                            <ui:VisualElement name="identify-content" class="accordion-content">
+                                <ui:Label class="helper-text top"
+                                         text="Use when a player signs up or logs in with a known ID." />
+                                <ui:VisualElement class="field placeholder-host">
+                                    <ui:Label class="field-label" text="ID" />
+                                    <ui:TextField name="id-id" />
+                                    <ui:Label class="field-placeholder" text="player_12345" />
+                                </ui:VisualElement>
+                                <ui:VisualElement class="field">
+                                    <ui:Label class="field-label" text="IDENTITY TYPE" />
+                                    <ui:DropdownField name="id-type" />
+                                </ui:VisualElement>
+                                <ui:VisualElement class="field placeholder-host">
+                                    <ui:Label class="field-label" text="TRAITS (JSON, OPTIONAL)" />
+                                    <ui:TextField name="id-traits" multiline="true" class="multiline" />
+                                    <ui:Label class="field-placeholder placeholder-multiline" text='{"name":"Jane","plan":"pro","signupMonth":"2026-03"}' />
+                                </ui:VisualElement>
+                                <ui:VisualElement class="actions last">
+                                    <ui:Button name="btn-identify" class="with-sig">
+                                        <ui:Label class="btn-label" text="Identify user" />
+                                        <ui:Label class="btn-sig" text="identify(id, type, traits)" />
+                                    </ui:Button>
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+
+                        <!-- Update traits accordion -->
+                        <ui:VisualElement name="traits-accordion" class="accordion-item">
+                            <ui:VisualElement name="traits-header" class="accordion-header" focusable="true" tabindex="0">
+                                <ui:Label class="accordion-title" text="UPDATE TRAITS" />
+                                <ui:Label name="traits-arrow" class="accordion-arrow" text="▸" />
+                            </ui:VisualElement>
+                            <ui:VisualElement name="traits-content" class="accordion-content">
+                                <ui:Label class="helper-text top"
+                                         text="Update an existing player's traits without re-identifying." />
+                                <ui:VisualElement class="field placeholder-host">
+                                    <ui:Label class="field-label" text="TRAITS (JSON)" />
+                                    <ui:TextField name="traits-update" multiline="true" class="multiline" />
+                                    <ui:Label class="field-placeholder placeholder-multiline" text='{"plan":"pro","region":"AU"}' />
+                                </ui:VisualElement>
+                                <ui:VisualElement class="actions last">
+                                    <ui:Button name="btn-identify-traits" class="with-sig">
+                                        <ui:Label class="btn-label" text="Update traits only" />
+                                        <ui:Label class="btn-sig" text="identify(currentId, currentType, traits)" />
+                                    </ui:Button>
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+
+                        <!-- Alias accordion -->
+                        <ui:VisualElement name="alias-accordion" class="accordion-item">
+                            <ui:VisualElement name="alias-header" class="accordion-header" focusable="true" tabindex="0">
+                                <ui:Label class="accordion-title" text="ALIAS" />
+                                <ui:Label name="alias-arrow" class="accordion-arrow" text="▸" />
+                            </ui:VisualElement>
+                            <ui:VisualElement name="alias-content" class="accordion-content">
+                                <ui:Label class="helper-text top"
+                                         text="Link two identities together — e.g. merge guest into registered." />
+                                <ui:VisualElement class="alias-grid">
+                                    <ui:VisualElement class="alias-side">
+                                        <ui:VisualElement class="field">
+                                            <ui:Label class="field-label" text="FROM ID" />
+                                            <ui:TextField name="alias-from-id" />
+                                        </ui:VisualElement>
+                                        <ui:VisualElement class="field">
+                                            <ui:Label class="field-label" text="FROM TYPE" />
+                                            <ui:DropdownField name="alias-from-type" />
+                                        </ui:VisualElement>
+                                    </ui:VisualElement>
+                                    <ui:Label class="alias-arrow" text="→" />
+                                    <ui:VisualElement class="alias-side">
+                                        <ui:VisualElement class="field">
+                                            <ui:Label class="field-label" text="TO ID" />
+                                            <ui:TextField name="alias-to-id" />
+                                        </ui:VisualElement>
+                                        <ui:VisualElement class="field">
+                                            <ui:Label class="field-label" text="TO TYPE" />
+                                            <ui:DropdownField name="alias-to-type" />
+                                        </ui:VisualElement>
+                                    </ui:VisualElement>
+                                </ui:VisualElement>
+                                <ui:VisualElement class="actions last">
+                                    <ui:Button name="btn-alias" class="with-sig">
+                                        <ui:Label class="btn-label" text="Link identities" />
+                                        <ui:Label class="btn-sig" text="alias(from, to)" />
+                                    </ui:Button>
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+
+                    </ui:VisualElement>
+
+                </ui:VisualElement>
+
+                <!-- ================ LOG COLUMN ================ -->
+                <ui:VisualElement name="log-column" class="log-column">
+
+                    <ui:VisualElement class="log-header">
+                        <ui:VisualElement class="panel-title">
+                            <ui:Label text="EVENT LOG" />
+                            <ui:Label name="log-count" class="log-count" text="0" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="log-actions">
+                            <ui:Button name="btn-copy-log" class="secondary" text="Copy" />
+                            <ui:Button name="btn-clear-log" class="secondary" text="Clear" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+
+                    <ui:ScrollView name="log" class="surface log"
+                                   horizontal-scroller-visibility="Hidden"
+                                   vertical-scroller-visibility="Auto" />
+
+                    <!-- Drag-to-resize grip beneath the log panel, matching the
+                         web sample's `resize: vertical` affordance. -->
+                    <ui:VisualElement name="log-resize-handle" class="log-resize-handle"
+                                      tooltip="Drag to resize the log">
+                        <ui:VisualElement class="log-resize-grip" />
+                    </ui:VisualElement>
+
+                </ui:VisualElement>
+
+            </ui:VisualElement>
+
+        </ui:VisualElement>
+
+        </ui:ScrollView>
+
+    </ui:VisualElement>
+</ui:UXML>
