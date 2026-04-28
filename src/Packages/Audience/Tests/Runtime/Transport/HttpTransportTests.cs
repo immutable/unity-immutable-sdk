@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.IO;
 #if IMMUTABLE_AUDIENCE_GZIP
@@ -15,14 +17,14 @@ namespace Immutable.Audience.Tests
     [TestFixture]
     internal class HttpTransportTests
     {
-        private string _testDir;
-        private DiskStore _store;
+        private string _testDir = null!;
+        private DiskStore _store = null!;
 
         // Controllable clock for timing-sensitive tests. Tests that care about
         // backoff windows or NextAttemptAt pass `getUtcNow: _getUtcNow` to the transport
         // and use Advance(ms) to move time forward deterministically.
         private DateTime _utcNow;
-        private Func<DateTime> _getUtcNow;
+        private Func<DateTime> _getUtcNow = null!;
 
         [SetUp]
         public void SetUp()
@@ -65,16 +67,16 @@ namespace Immutable.Audience.Tests
         {
             _store.Write("{\"type\":\"track\",\"eventName\":\"test\"}");
 
-            byte[] capturedBody = null;
-            string capturedKey = null;
-            string capturedContentType = null;
-            string capturedContentEncoding = null;
+            byte[]? capturedBody = null;
+            string? capturedKey = null;
+            string? capturedContentType = null;
+            string? capturedContentEncoding = null;
             // Read body inside the callback — the request content is disposed after SendAsync returns.
             var handler = new MockHandler(HttpStatusCode.OK, "{\"accepted\":1,\"rejected\":0}",
                 onRequest: req =>
                 {
                     capturedKey = string.Join("", req.Headers.GetValues("x-immutable-publishable-key"));
-                    capturedContentType = req.Content.Headers.ContentType.MediaType;
+                    capturedContentType = req.Content!.Headers.ContentType!.MediaType;
                     capturedContentEncoding = string.Join("", req.Content.Headers.ContentEncoding);
                     capturedBody = req.Content.ReadAsByteArrayAsync().Result;
                 });
@@ -86,8 +88,8 @@ namespace Immutable.Audience.Tests
             Assert.AreEqual("application/json", capturedContentType);
             Assert.AreEqual("gzip", capturedContentEncoding);
 
-            var decompressed = DecompressGzip(capturedBody);
-            StringAssert.StartsWith("{\"batch\":[", decompressed);
+            var decompressed = DecompressGzip(capturedBody!);
+            StringAssert.StartsWith("{\"messages\":[", decompressed);
             StringAssert.EndsWith("]}", decompressed);
             StringAssert.Contains("\"eventName\":\"test\"", decompressed);
         }
@@ -97,15 +99,15 @@ namespace Immutable.Audience.Tests
         {
             _store.Write("{\"type\":\"track\",\"eventName\":\"test\"}");
 
-            string capturedKey = null;
-            string capturedContentType = null;
+            string? capturedKey = null;
+            string? capturedContentType = null;
             int capturedContentEncodingCount = -1;
-            string capturedBody = null;
+            string? capturedBody = null;
             var handler = new MockHandler(HttpStatusCode.OK, "{\"accepted\":1,\"rejected\":0}",
                 onRequest: req =>
                 {
                     capturedKey = string.Join("", req.Headers.GetValues("x-immutable-publishable-key"));
-                    capturedContentType = req.Content.Headers.ContentType.MediaType;
+                    capturedContentType = req.Content!.Headers.ContentType!.MediaType;
                     capturedContentEncodingCount = req.Content.Headers.ContentEncoding.Count;
                     capturedBody = req.Content.ReadAsStringAsync().Result;
                 });
@@ -116,7 +118,7 @@ namespace Immutable.Audience.Tests
             Assert.AreEqual("pk_imapik-test-key1", capturedKey);
             Assert.AreEqual("application/json", capturedContentType);
             Assert.AreEqual(0, capturedContentEncodingCount, "no Content-Encoding header is permitted in v1");
-            StringAssert.StartsWith("{\"batch\":[", capturedBody);
+            StringAssert.StartsWith("{\"messages\":[", capturedBody);
             StringAssert.EndsWith("]}", capturedBody);
             StringAssert.Contains("\"eventName\":\"test\"", capturedBody);
         }
@@ -127,14 +129,14 @@ namespace Immutable.Audience.Tests
         {
             _store.Write("{\"type\":\"track\"}");
 
-            HttpRequestMessage captured = null;
+            HttpRequestMessage? captured = null;
             var handler = new MockHandler(HttpStatusCode.OK, "{\"accepted\":1,\"rejected\":0}",
                 onRequest: req => captured = req);
             using var transport = new HttpTransport(_store, "pk_imapik-test-key1", handler: handler);
 
             await transport.SendBatchAsync();
 
-            StringAssert.StartsWith(Constants.SandboxBaseUrl, captured.RequestUri.ToString());
+            StringAssert.StartsWith(Constants.SandboxBaseUrl, captured!.RequestUri!.ToString());
         }
 
         [Test]
@@ -142,14 +144,14 @@ namespace Immutable.Audience.Tests
         {
             _store.Write("{\"type\":\"track\"}");
 
-            HttpRequestMessage captured = null;
+            HttpRequestMessage? captured = null;
             var handler = new MockHandler(HttpStatusCode.OK, "{\"accepted\":1,\"rejected\":0}",
                 onRequest: req => captured = req);
             using var transport = new HttpTransport(_store, "pk_imapik-prodkey", handler: handler);
 
             await transport.SendBatchAsync();
 
-            StringAssert.StartsWith(Constants.ProductionBaseUrl, captured.RequestUri.ToString());
+            StringAssert.StartsWith(Constants.ProductionBaseUrl, captured!.RequestUri!.ToString());
         }
 
         [Test]
@@ -157,7 +159,7 @@ namespace Immutable.Audience.Tests
         {
             _store.Write("{\"type\":\"track\"}");
 
-            HttpRequestMessage captured = null;
+            HttpRequestMessage? captured = null;
             var handler = new MockHandler(HttpStatusCode.OK, "{\"accepted\":1,\"rejected\":0}",
                 onRequest: req => captured = req);
             const string custom = "https://api.dev.immutable.com";
@@ -168,7 +170,7 @@ namespace Immutable.Audience.Tests
 
             await transport.SendBatchAsync();
 
-            StringAssert.StartsWith(custom, captured.RequestUri.ToString());
+            StringAssert.StartsWith(custom, captured!.RequestUri!.ToString());
         }
 
         [Test]
@@ -189,7 +191,7 @@ namespace Immutable.Audience.Tests
             _store.Write("{\"type\":\"track\"}");
 
             var handler = new MockHandler(HttpStatusCode.BadRequest, "");
-            AudienceError reportedError = null;
+            AudienceError? reportedError = null;
             using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
                 onError: e => reportedError = e, handler: handler);
 
@@ -198,7 +200,7 @@ namespace Immutable.Audience.Tests
             Assert.AreEqual(0, _store.Count(), "4xx should delete files — won't succeed on retry");
             Assert.IsFalse(transport.IsInBackoffWindow);
             Assert.IsNotNull(reportedError);
-            Assert.AreEqual(AudienceErrorCode.ValidationRejected, reportedError.Code);
+            Assert.AreEqual(AudienceErrorCode.ValidationRejected, reportedError!.Code);
         }
 
         [Test]
@@ -212,7 +214,7 @@ namespace Immutable.Audience.Tests
             _store.Write("{\"type\":\"track\",\"eventName\":\"b\"}");
 
             var handler = new MockHandler(HttpStatusCode.OK, "{\"accepted\":1,\"rejected\":1}");
-            AudienceError reportedError = null;
+            AudienceError? reportedError = null;
             using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
                 onError: e => reportedError = e, handler: handler);
 
@@ -220,7 +222,7 @@ namespace Immutable.Audience.Tests
 
             Assert.AreEqual(0, _store.Count(), "200 with rejected>0 should still delete the batch");
             Assert.IsNotNull(reportedError, "partial rejection must surface via onError");
-            Assert.AreEqual(AudienceErrorCode.ValidationRejected, reportedError.Code);
+            Assert.AreEqual(AudienceErrorCode.ValidationRejected, reportedError!.Code);
             StringAssert.Contains("1", reportedError.Message, "message should include the rejected count");
         }
 
@@ -230,7 +232,7 @@ namespace Immutable.Audience.Tests
             _store.Write("{\"type\":\"track\",\"eventName\":\"a\"}");
 
             var handler = new MockHandler(HttpStatusCode.OK, "{\"accepted\":1,\"rejected\":0}");
-            AudienceError reportedError = null;
+            AudienceError? reportedError = null;
             using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
                 onError: e => reportedError = e, handler: handler);
 
@@ -246,7 +248,7 @@ namespace Immutable.Audience.Tests
             _store.Write("{\"type\":\"track\",\"eventName\":\"a\"}");
 
             var handler = new MockHandler(HttpStatusCode.OK, "not-json");
-            AudienceError reportedError = null;
+            AudienceError? reportedError = null;
             using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
                 onError: e => reportedError = e, handler: handler);
 
@@ -262,7 +264,7 @@ namespace Immutable.Audience.Tests
             _store.Write("{\"type\":\"track\"}");
 
             var handler = new MockHandler(HttpStatusCode.InternalServerError, "");
-            AudienceError reportedError = null;
+            AudienceError? reportedError = null;
             using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
                 onError: e => reportedError = e, handler: handler);
 
@@ -272,7 +274,7 @@ namespace Immutable.Audience.Tests
             Assert.IsTrue(transport.IsInBackoffWindow);
             Assert.AreEqual(5000, transport.BackoffMs, "first failure = 5s backoff");
             Assert.IsNotNull(reportedError);
-            Assert.AreEqual(AudienceErrorCode.FlushFailed, reportedError.Code);
+            Assert.AreEqual(AudienceErrorCode.FlushFailed, reportedError!.Code);
         }
 
         [Test]
@@ -378,7 +380,7 @@ namespace Immutable.Audience.Tests
             _store.Write("{\"type\":\"track\"}");
 
             var handler = new MockHandler(() => throw new HttpRequestException("connection refused"));
-            AudienceError reportedError = null;
+            AudienceError? reportedError = null;
             using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
                 onError: e => reportedError = e, handler: handler);
 
@@ -387,7 +389,7 @@ namespace Immutable.Audience.Tests
             Assert.AreEqual(1, _store.Count(), "network error should keep files for retry");
             Assert.IsTrue(transport.IsInBackoffWindow);
             Assert.IsNotNull(reportedError);
-            Assert.AreEqual(AudienceErrorCode.NetworkError, reportedError.Code);
+            Assert.AreEqual(AudienceErrorCode.NetworkError, reportedError!.Code);
         }
 
         [Test]
@@ -401,7 +403,7 @@ namespace Immutable.Audience.Tests
             _store.Write("{\"type\":\"track\"}");
 
             var handler = new MockHandler(() => throw new TaskCanceledException("Request timed out"));
-            AudienceError reportedError = null;
+            AudienceError? reportedError = null;
             using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
                 onError: e => reportedError = e, handler: handler);
 
@@ -412,11 +414,11 @@ namespace Immutable.Audience.Tests
             Assert.AreEqual(1, _store.Count(), "timeout should keep files for retry");
             Assert.IsTrue(transport.IsInBackoffWindow, "timeout must increment failures and engage backoff");
             Assert.IsNotNull(reportedError, "NetworkError callback must fire on timeout");
-            Assert.AreEqual(AudienceErrorCode.NetworkError, reportedError.Code);
+            Assert.AreEqual(AudienceErrorCode.NetworkError, reportedError!.Code);
         }
 
         [Test]
-        public void SendBatchAsync_CallerCancelled_Throws_DoesNotDeleteOrRecordFailure()
+        public async Task SendBatchAsync_CallerCancelled_Throws_DoesNotDeleteOrRecordFailure()
         {
             // Regression guard for PR #701 review: caller cancellation must
             // propagate. If the `when (ct.IsCancellationRequested)` branch
@@ -427,18 +429,26 @@ namespace Immutable.Audience.Tests
             _store.Write("{\"type\":\"track\"}");
 
             var handler = new MockHandler(() => throw new OperationCanceledException("simulated"));
-            AudienceError reportedError = null;
+            AudienceError? reportedError = null;
             using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
                 onError: e => reportedError = e, handler: handler);
 
             using var cts = new CancellationTokenSource();
             cts.Cancel();
 
-            // CatchAsync (not ThrowsAsync) because HttpClient re-wraps our mock's
-            // OperationCanceledException as TaskCanceledException before rethrowing.
-            // We want to assert the cancellation *family*, not a specific subclass.
-            Assert.CatchAsync<OperationCanceledException>(
-                async () => await transport.SendBatchAsync(cts.Token));
+            // Unity's NUnit doesn't ship CatchAsync. Use try/catch on the
+            // async call to assert the cancellation *family* (TaskCanceledException
+            // inherits from OperationCanceledException; HttpClient re-wraps our
+            // mock's OCE as TCE before rethrowing).
+            try
+            {
+                await transport.SendBatchAsync(cts.Token);
+                Assert.Fail("expected OperationCanceledException");
+            }
+            catch (OperationCanceledException)
+            {
+                // expected
+            }
 
             Assert.AreEqual(1, _store.Count(), "cancelled send must not delete the batch");
             Assert.IsFalse(transport.IsInBackoffWindow, "cancel is not a failure — no backoff engaged");
@@ -479,6 +489,8 @@ namespace Immutable.Audience.Tests
                 onError: _ => throw new InvalidOperationException("callback bug"),
                 handler: handler);
 
+            // Reaching the end of the method without the await rethrowing IS
+            // the assertion (Unity's NUnit lacks DoesNotThrowAsync).
             await transport.SendBatchAsync();
         }
 
@@ -497,11 +509,11 @@ namespace Immutable.Audience.Tests
         private class MockHandler : HttpMessageHandler
         {
             private readonly Func<HttpResponseMessage> _factory;
-            private readonly Action<HttpRequestMessage> _onRequest;
+            private readonly Action<HttpRequestMessage>? _onRequest;
 
             internal int CallCount { get; private set; }
 
-            internal MockHandler(HttpStatusCode status, string body, Action<HttpRequestMessage> onRequest = null)
+            internal MockHandler(HttpStatusCode status, string body, Action<HttpRequestMessage>? onRequest = null)
             {
                 _factory = () => new HttpResponseMessage(status)
                 {
@@ -510,7 +522,7 @@ namespace Immutable.Audience.Tests
                 _onRequest = onRequest;
             }
 
-            internal MockHandler(Func<HttpResponseMessage> factory, Action<HttpRequestMessage> onRequest = null)
+            internal MockHandler(Func<HttpResponseMessage> factory, Action<HttpRequestMessage>? onRequest = null)
             {
                 _factory = factory;
                 _onRequest = onRequest;
