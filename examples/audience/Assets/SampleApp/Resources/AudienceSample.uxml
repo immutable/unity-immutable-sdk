@@ -235,11 +235,11 @@
                         <ui:VisualElement name="identity-state-list" class="identity-state-list">
                             <ui:VisualElement class="identity-state-row">
                                 <ui:Label class="identity-state-key" text="USERID" />
-                                <ui:Label name="identity-userId" class="identity-state-value" text="—" />
+                                <ui:Label name="identity-user-id" class="identity-state-value" text="—" />
                             </ui:VisualElement>
                             <ui:VisualElement class="identity-state-row">
                                 <ui:Label class="identity-state-key" text="IDENTITYTYPE" />
-                                <ui:Label name="identity-identityType" class="identity-state-value" text="—" />
+                                <ui:Label name="identity-identity-type" class="identity-state-value" text="—" />
                             </ui:VisualElement>
                             <ui:VisualElement class="identity-state-row">
                                 <ui:Label class="identity-state-key" text="TRAITS" />
