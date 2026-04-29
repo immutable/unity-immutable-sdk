@@ -154,7 +154,9 @@ namespace Immutable.Audience.Samples.SampleApp
             var f = CaptureCustomEventForm();
             var props = string.IsNullOrEmpty(f.RawProps) ? null : JsonReader.DeserializeObject(f.RawProps);
             ImmutableAudience.Track(f.Name, props);
-            return Json.Serialize(new Dictionary<string, object> { ["event"] = f.Name, ["properties"] = props }, 2);
+            var echo = new Dictionary<string, object> { ["event"] = f.Name };
+            if (props != null) echo["properties"] = props;
+            return Json.Serialize(echo, 2);
         });
 
         // ---- SDK action handlers: consent ----
@@ -349,12 +351,13 @@ namespace Immutable.Audience.Samples.SampleApp
         }
 
         // Keeps the pk_imapik-test- / pk_imapik- prefix visible; masks the rest.
-        private static string? RedactPublishableKey(string? key)
+        // Caller must guard against null/empty; signature non-nullable so the
+        // dictionary insertion in BuildInitConfigEcho doesn't trip CS8601.
+        private static string RedactPublishableKey(string key)
         {
-            if (string.IsNullOrEmpty(key)) return key;
             const int PrefixChars = 16;
             const string Mask = "…****";
-            return key!.Length <= PrefixChars ? Mask : key.Substring(0, PrefixChars) + Mask;
+            return key.Length <= PrefixChars ? Mask : key.Substring(0, PrefixChars) + Mask;
         }
 
         // ---- Identity helpers ----
