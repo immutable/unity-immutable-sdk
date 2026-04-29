@@ -204,6 +204,118 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
+        public async Task SendBatchAsync_429_NoRetryAfter_KeepsFilesAndUsesExpoBackoff_NoError()
+        {
+            _store.Write("{\"type\":\"track\"}");
+
+            var handler = new MockHandler((HttpStatusCode)429, "");
+            AudienceError? reportedError = null;
+            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+                onError: e => reportedError = e, handler: handler, getUtcNow: _getUtcNow);
+
+            await transport.SendBatchAsync();
+
+            Assert.AreEqual(1, _store.Count(), "429 must keep files for retry");
+            Assert.IsTrue(transport.IsInBackoffWindow);
+            Assert.AreEqual(5_000, transport.BackoffMs);
+            Assert.IsNull(reportedError, "429 is transient — must not fire onError");
+        }
+
+        [Test]
+        public async Task SendBatchAsync_429_RetryAfterDeltaSeconds_OverridesExpoBackoff()
+        {
+            _store.Write("{\"type\":\"track\"}");
+
+            var handler = new MockHandler(() =>
+            {
+                var resp = new HttpResponseMessage((HttpStatusCode)429);
+                resp.Headers.Add("Retry-After", "12");
+                return resp;
+            });
+            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+                handler: handler, getUtcNow: _getUtcNow);
+
+            await transport.SendBatchAsync();
+
+            Assert.IsTrue(transport.IsInBackoffWindow);
+            Assert.AreEqual(_utcNow.AddSeconds(12), transport.NextAttemptAt);
+        }
+
+        [Test]
+        public async Task SendBatchAsync_429_RetryAfterHttpDate_OverridesExpoBackoff()
+        {
+            // ParseRetryAfter computes the delta against DateTimeOffset.UtcNow,
+            // which we can't pin from outside; assert only that a future date
+            // engages the window. The seconds-form test above pins exact math.
+            _store.Write("{\"type\":\"track\"}");
+
+            var handler = new MockHandler(() =>
+            {
+                var resp = new HttpResponseMessage((HttpStatusCode)429);
+                resp.Headers.Add("Retry-After", DateTimeOffset.UtcNow.AddSeconds(20).ToString("R"));
+                return resp;
+            });
+            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+                handler: handler, getUtcNow: _getUtcNow);
+
+            await transport.SendBatchAsync();
+
+            Assert.AreEqual(1, _store.Count());
+            Assert.IsTrue(transport.IsInBackoffWindow);
+        }
+
+        [Test]
+        public async Task SendBatchAsync_429_PastRetryAfterDate_FallsBackToExpoBackoff()
+        {
+            // Past Retry-After (clock skew or server bug) must not let
+            // IsInBackoffWindow flip false and trigger instant retry.
+            _store.Write("{\"type\":\"track\"}");
+
+            var handler = new MockHandler(() =>
+            {
+                var resp = new HttpResponseMessage((HttpStatusCode)429);
+                resp.Headers.Add("Retry-After", DateTimeOffset.UtcNow.AddSeconds(-30).ToString("R"));
+                return resp;
+            });
+            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+                handler: handler, getUtcNow: _getUtcNow);
+
+            await transport.SendBatchAsync();
+
+            Assert.AreEqual(5_000, transport.BackoffMs);
+            Assert.IsTrue(transport.IsInBackoffWindow);
+        }
+
+        [Test]
+        public async Task SendBatchAsync_429ThenSuccess_DeliversBatchAndClearsBackoff()
+        {
+            _store.Write("{\"type\":\"track\"}");
+
+            var callCount = 0;
+            var handler = new MockHandler(() =>
+            {
+                callCount++;
+                return callCount == 1
+                    ? new HttpResponseMessage((HttpStatusCode)429)
+                    : new HttpResponseMessage(HttpStatusCode.OK)
+                    { Content = new StringContent("{\"accepted\":1,\"rejected\":0}") };
+            });
+            AudienceError? reportedError = null;
+            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+                onError: e => reportedError = e, handler: handler, getUtcNow: _getUtcNow);
+
+            await transport.SendBatchAsync();
+            Assert.AreEqual(1, _store.Count(), "429 keeps the batch");
+            Assert.AreEqual(5_000, transport.BackoffMs);
+
+            Advance(5_001);
+            await transport.SendBatchAsync();
+            Assert.AreEqual(0, _store.Count(), "200 on retry deletes the batch");
+            Assert.AreEqual(0, transport.BackoffMs, "backoff resets after success");
+            Assert.IsNull(reportedError, "neither 429 nor success must fire onError");
+        }
+
+        [Test]
         public async Task SendBatchAsync_200_WithRejected_DeletesFilesAndSurfacesValidationRejected()
         {
             // Per Unity Implementation Plan §4.6, a 200 with rejected>0 means

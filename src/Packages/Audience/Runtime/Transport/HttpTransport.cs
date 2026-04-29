@@ -114,13 +114,26 @@ namespace Immutable.Audience
                             $"Batch partially rejected: {rejected} of {batch.Count} events dropped");
                     }
                 }
+                else if (statusCode == 429)
+                {
+                    // 429 is retryable (RFC 6585). Keep the batch, honor Retry-After
+                    // if present else use the existing 5xx backoff schedule. No
+                    // onError — next flush tick retries; persistent rate-limits
+                    // surface as a growing on-disk queue.
+                    var retryAfter = HttpRetry.ParseRetryAfter(response);
+                    if (retryAfter.HasValue)
+                        SetBackoffUntil(_getUtcNow() + retryAfter.Value);
+                    else
+                        RecordFailure();
+                }
                 else if (statusCode >= 400 && statusCode < 500)
                 {
-                    // 4xx: server rejected the payload. Drop it (retry won't help) and
-                    // reset backoff — server is healthy, our data was the problem.
-                    // Capture the response body so the caller's OnError surfaces
-                    // the server's reason string ("unknown publishable key",
-                    // "missing field X", etc.) rather than a bare status code.
+                    // 4xx (non-429): server rejected the payload. Drop it (retry
+                    // won't help) and reset backoff — server is healthy, our data
+                    // was the problem. Capture the response body so the caller's
+                    // OnError surfaces the server's reason string ("unknown
+                    // publishable key", "missing field X", etc.) rather than a
+                    // bare status code.
                     var rejectionBody = await ReadBodyForErrorAsync(response).ConfigureAwait(false);
                     _store.Delete(batch);
                     ResetBackoff();
@@ -202,6 +215,16 @@ namespace Immutable.Audience
                 if (now < _nextAttemptAt) return;  // inside prior window — don't compound backoff
                 _consecutiveFailures++;
                 _nextAttemptAt = now.AddMilliseconds(BackoffMsLocked());
+            }
+        }
+
+        // Server-supplied Retry-After is authoritative; bypasses BackoffMsLocked.
+        private void SetBackoffUntil(DateTime nextAt)
+        {
+            lock (_backoffLock)
+            {
+                _consecutiveFailures++;
+                _nextAttemptAt = nextAt;
             }
         }
 
