@@ -13,6 +13,11 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
     [TestFixture]
     internal class SampleAppLiveFireTests
     {
+        // Cached allocations for fixed-delay yields (SDK needs time to flush
+        // rather than "wait up to N seconds for a condition"). Static readonly
+        // so the WaitForSecondsRealtime instance is created once per class load.
+        private static readonly WaitForSecondsRealtime _twoSeconds = new(2f);
+
         private VisualElement? _root;
         private string _key = "";
 
@@ -84,7 +89,11 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
             yield return SceneManager.LoadSceneAsync(SampleAppUi.SceneName, LoadSceneMode.Single);
             yield return null;  // one extra frame for Awake/InitializeUi
 
-            var sample = UnityEngine.Object.FindObjectOfType<AudienceSample>();
+#if UNITY_2023_1_OR_NEWER
+            var sample = UnityEngine.Object.FindFirstObjectByType<AudienceSample>(FindObjectsInactive.Include);
+#else
+            var sample = UnityEngine.Object.FindObjectOfType<AudienceSample>(includeInactive: true);
+#endif
             Assume.That(sample, Is.Not.Null, "AudienceSample MonoBehaviour expected in scene");
 
             _root = sample!.GetComponent<UIDocument>().rootVisualElement;
@@ -226,7 +235,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
 
             // Flushing after revocation should be a no-op (queue purged) — no error.
             _root.Q<Button>(SampleAppUi.Buttons.Flush).Click();
-            yield return new WaitForSecondsRealtime(2f);
+            yield return _twoSeconds;
 
             AssertNoErrors();
         }
@@ -329,11 +338,12 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
 
             _root.Q<Button>(SampleAppUi.Buttons.Init).Click();
             // Two INIT@Ok rows now; WaitForLogEntry returns on the first
-            // match it sees, but the original is already in the log so we
-            // wait one frame for the second click to land then assert by
-            // count instead.
+            // match it sees, but the original is already in the log so poll
+            // by count until the second Ok row appears or the deadline elapses.
             yield return null;
-            yield return new WaitForSecondsRealtime(0.5f);
+            yield return SampleAppTestHelpers.WaitForCondition(
+                () => SampleAppTestHelpers.CountLogEntriesAtLevel(_root, LogLevels.Ok) > 1,
+                2f, "second INIT@Ok row after re-init");
             Assert.Greater(SampleAppTestHelpers.CountLogEntriesAtLevel(_root, LogLevels.Ok), 1,
                 "expected a second INIT@Ok row after re-init");
 
@@ -554,7 +564,11 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
 
             // Dropdown is still at default Anonymous; re-Init must read disk.
             _root.Q<Button>(SampleAppUi.Buttons.Init).Click();
-            yield return new WaitForSecondsRealtime(0.5f);  // OnSdkStateChanged + RefreshStatusBar
+            // Poll until OnSdkStateChanged + RefreshStatusBar has run and the
+            // label reflects the re-loaded consent level.
+            yield return SampleAppTestHelpers.WaitForCondition(
+                () => _root.Q<Label>(SampleAppUi.StatusBar.Consent).text == SampleAppUi.Consent.Full,
+                2f, "status-consent label to show Full after re-Init from persisted consent");
 
             var statusConsent = _root.Q<Label>(SampleAppUi.StatusBar.Consent).text;
             Assert.AreEqual(SampleAppUi.Consent.Full, statusConsent,

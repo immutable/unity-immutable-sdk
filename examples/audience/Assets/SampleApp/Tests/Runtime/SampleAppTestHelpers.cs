@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -14,6 +15,23 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
     // the log pane via the userData stash on each log row.
     internal static class SampleAppTestHelpers
     {
+        // Polls predicate once per frame until it returns true or the deadline
+        // elapses. Calls Assert.Fail with description when the deadline is hit.
+        // Use this instead of WaitForSecondsRealtime when a test is waiting
+        // "at most N seconds for X to become true" — the polling exits as soon
+        // as the condition is satisfied rather than burning the full N seconds.
+        internal static IEnumerator WaitForCondition(
+            Func<bool> predicate, float timeoutSeconds, string description)
+        {
+            var deadline = Time.realtimeSinceStartup + timeoutSeconds;
+            while (Time.realtimeSinceStartup < deadline)
+            {
+                if (predicate()) yield break;
+                yield return null;
+            }
+            Assert.Fail($"Timed out after {timeoutSeconds:F1}s waiting for: {description}");
+        }
+
         // Wait until the log pane contains an entry whose label matches `label`
         // and whose level matches `level`. Yields one frame per check.
         // Throws TimeoutException on deadline.

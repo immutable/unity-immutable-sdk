@@ -1,0 +1,16 @@
+{
+    "name": "Immutable.Audience.Samples.SampleApp.Editor",
+    "rootNamespace": "Immutable.Audience.Samples.SampleApp.Editor",
+    "references": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
