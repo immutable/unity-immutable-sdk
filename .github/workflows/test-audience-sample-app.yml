@@ -40,6 +40,26 @@ jobs:
             unity: 2021.3.45f2
             changeset: 88f88f591b2e
             runner: [self-hosted, macOS, ARM64]
+          - target: StandaloneWindows64
+            backend: IL2CPP
+            unity: 6000.4.0f1
+            changeset: 8cf496087c8f
+            runner: [self-hosted, Windows, X64]
+          - target: StandaloneWindows64
+            backend: Mono2x
+            unity: 6000.4.0f1
+            changeset: 8cf496087c8f
+            runner: [self-hosted, Windows, X64]
+          - target: StandaloneOSX
+            backend: IL2CPP
+            unity: 6000.4.0f1
+            changeset: 8cf496087c8f
+            runner: [self-hosted, macOS, ARM64]
+          - target: StandaloneOSX
+            backend: Mono2x
+            unity: 6000.4.0f1
+            changeset: 8cf496087c8f
+            runner: [self-hosted, macOS, ARM64]
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
 
@@ -243,13 +263,19 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p artifacts
+          # Tee Unity's stdout to artifacts/unity.log so the annotation step has a
+          # file to scan, while still streaming progress to the job log. pipefail
+          # propagates Unity's exit code through tee. The annotation step reads this
+          # file in-job; the actions/upload-artifact step below also uploads it so
+          # compile failures retain a full post-mortem (annotations are matched-line
+          # only and drop IL2CPP linker output, build config dumps, etc).
           "$UNITY_PATH" \
             -batchmode -nographics \
             -projectPath examples/audience \
             -runTests \
             -testPlatform ${{ matrix.target }} \
             -testResults "$(pwd)/artifacts/test-results.xml" \
-            -logFile -
+            -logFile - 2>&1 | tee "$(pwd)/artifacts/unity.log"
 
       - name: Run PlayMode tests (Windows)
         if: runner.os == 'Windows'
@@ -283,6 +309,51 @@ jobs:
         run: |
           git config --global --add safe.directory $env:GITHUB_WORKSPACE.Replace('\','/')
 
+      - name: Surface Unity compile errors as annotations (macOS)
+        if: always() && runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -uo pipefail
+          # Unity writes compile errors as 'error CS####:' or 'Compilation failed: <n>'.
+          # When a cell fails compile (vs fails a test), the test-results.xml is empty
+          # and the only signal otherwise is the artifact zip. Promote those lines to
+          # ::error:: annotations so the PR UI shows the cause inline.
+          LOG_FILE="artifacts/unity.log"
+          if [ ! -f "$LOG_FILE" ]; then
+            echo "::notice::No Unity log file at $LOG_FILE."
+            exit 0
+          fi
+          # `|| true` guards the success path: with `pipefail`, grep exits 1 when no
+          # matches (the clean-build case), which would otherwise propagate as the
+          # step's exit code and falsely mark every green cell red.
+          grep -E '(error CS[0-9]+:|Compilation failed:)' "$LOG_FILE" | sort -u | while IFS= read -r line; do
+            trimmed="${line#"${line%%[![:space:]]*}"}"
+            # Sanitize '::' so log lines containing workflow commands (e.g. ::endgroup::)
+            # cannot terminate the annotation early or inject other commands.
+            sanitized="${trimmed//::/%3A%3A}"
+            echo "::error::$sanitized"
+          done || true
+
+      - name: Surface Unity compile errors as annotations (Windows)
+        if: always() && runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $logFile = "artifacts\unity.log"
+          if (-not (Test-Path $logFile)) {
+            Write-Host "::notice::No Unity log file at $logFile."
+            exit 0
+          }
+          Get-Content $logFile |
+            Select-String -Pattern '(error CS\d+:|Compilation failed:)' |
+            ForEach-Object { $_.Line.Trim() } |
+            Sort-Object -Unique |
+            ForEach-Object {
+              # Sanitize '::' so log lines containing workflow commands cannot
+              # terminate the annotation early or inject other commands.
+              $sanitized = $_ -replace '::', '%3A%3A'
+              Write-Host "::error::$sanitized"
+            }
+
       - name: Publish test report
         uses: dorny/test-reporter@v3
         if: always()
@@ -298,4 +369,5 @@ jobs:
           name: playmode-${{ matrix.backend }}-${{ matrix.target }}-${{ matrix.unity }}
           path: |
             artifacts/test-results.xml
+            artifacts/unity.log
             examples/audience/Logs/**
