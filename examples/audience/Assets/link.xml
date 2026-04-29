@@ -1,0 +1,30 @@
+<!--
+Project-side link.xml that forwards to the audience SDK's preservation rules.
+
+The SDK ships its own src/Packages/Audience/link.xml, but Unity's linker
+discovery skips it when the package is embedded via a "file:" path that
+points outside the project tree (which is how the sample project loads
+the SDK during development). Mirroring the rules here keeps the
+Immutable.Audience.Unity assembly alive so [RuntimeInitializeOnLoadMethod]
+hooks fire under IL2CPP with stripping High.
+-->
+<linker>
+  <assembly fullname="Immutable.Audience.Runtime" preserve="all" />
+  <assembly fullname="Immutable.Audience.Unity" preserve="all" />
+
+  <assembly fullname="System.Net.Http">
+    <type fullname="System.Net.Http.HttpClient" preserve="all" />
+    <type fullname="System.Net.Http.HttpClientHandler" preserve="all" />
+    <type fullname="System.Net.Http.HttpMessageHandler" preserve="all" />
+    <type fullname="System.Net.Http.HttpRequestMessage" preserve="all" />
+    <type fullname="System.Net.Http.HttpResponseMessage" preserve="all" />
+    <type fullname="System.Net.Http.StringContent" preserve="all" />
+    <type fullname="System.Net.Http.ByteArrayContent" preserve="all" />
+    <type fullname="System.Net.Http.Headers.MediaTypeHeaderValue" preserve="all" />
+  </assembly>
+
+  <assembly fullname="System.IO.Compression">
+    <type fullname="System.IO.Compression.GZipStream" preserve="all" />
+    <type fullname="System.IO.Compression.CompressionLevel" preserve="all" />
+  </assembly>
+</linker>
