@@ -124,6 +124,8 @@ namespace Immutable.Audience
                     return;
                 }
 
+                WarnIfKeyEnvironmentMismatch(config.PublishableKey, config.BaseUrl);
+
                 _config = config;
                 Log.Enabled = config.Debug;
                 // Persisted consent overrides the config default (prior downgrade survives restart).
@@ -719,16 +721,8 @@ namespace Immutable.Audience
             // End session first so session_end hits the queue before the final flush.
             session?.Dispose();
 
-            // Drain in-flight timer callbacks before disposing dependents.
             // Parameterless Timer.Dispose would return immediately and race SendBatch.
-            if (timer != null)
-            {
-                using var disposed = new ManualResetEvent(false);
-                if (timer.Dispose(disposed))
-                {
-                    disposed.WaitOne(TimeSpan.FromSeconds(2));
-                }
-            }
+            TimerDisposal.DisposeAndWait(timer, TimeSpan.FromSeconds(2));
 
             // Clear the gate in case WaitOne timed out with SendBatch still running
             // — a later Init would otherwise be stranded at 1.
@@ -800,6 +794,31 @@ namespace Immutable.Audience
         // Shallow-copy the caller's dict so a post-call mutation cannot race the drain-thread serialiser.
         private static Dictionary<string, object>? SnapshotCallerDict(Dictionary<string, object>? src) =>
             src != null ? new Dictionary<string, object>(src) : null;
+
+        // Only the exact production/sandbox swap is flagged; custom dev/staging
+        // URLs are intentional and left alone.
+        private static void WarnIfKeyEnvironmentMismatch(string publishableKey, string? baseUrlOverride)
+        {
+            if (string.IsNullOrEmpty(baseUrlOverride)) return;
+
+            var trimmed = baseUrlOverride!.TrimEnd('/');
+            var isTestKey = publishableKey.StartsWith(Constants.TestKeyPrefix);
+
+            if (isTestKey && trimmed == Constants.ProductionBaseUrl)
+            {
+                Log.Warn(
+                    $"Publishable key has the test prefix ({Constants.TestKeyPrefix}) but BaseUrl points to production. " +
+                    "The backend will reject events with 401. Either remove the BaseUrl override (test keys " +
+                    "default to sandbox) or use a non-test publishable key.");
+            }
+            else if (!isTestKey && trimmed == Constants.SandboxBaseUrl)
+            {
+                Log.Warn(
+                    "Publishable key is not a test key but BaseUrl points to sandbox. " +
+                    "The backend will reject events with 401. Either remove the BaseUrl override (non-test " +
+                    $"keys default to production) or use a test publishable key ({Constants.TestKeyPrefix}).");
+            }
+        }
 
         // Checks the current consent inside the drain lock. If consent has
         // since dropped to None the message is discarded. If it dropped to

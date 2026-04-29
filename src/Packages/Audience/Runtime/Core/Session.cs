@@ -77,19 +77,8 @@ namespace Immutable.Audience
                 }
             }
 
-            if (oldTimer != null)
-            {
-                using var waited = new ManualResetEvent(false);
-                try
-                {
-                    // 500ms budget (double-Start is a misuse path).
-                    if (oldTimer.Dispose(waited))
-                        waited.WaitOne(TimeSpan.FromMilliseconds(500));
-                }
-                catch (ObjectDisposedException)
-                {
-                }
-            }
+            // 500ms budget — double-Start is a misuse path.
+            TimerDisposal.DisposeAndWait(oldTimer, TimeSpan.FromMilliseconds(500));
 
             // Phase 2: populate new state. Re-check _disposed (may have flipped during drain).
             string sessionId;
@@ -286,22 +275,10 @@ namespace Immutable.Audience
             }
             if (timer == null) return;
 
-            using var waited = new ManualResetEvent(false);
-            try
+            if (!TimerDisposal.DisposeAndWait(timer, TimeSpan.FromSeconds(1)))
             {
-                // Timer was already disposed. The signal handle won't fire, so
-                // don't wait for it.
-                if (!timer.Dispose(waited))
-                    return;
-
-                if (!waited.WaitOne(TimeSpan.FromSeconds(1)))
-                {
-                    Log.Warn("Session: heartbeat callback did not complete within 1s on timer stop. " +
-                             "A trailing session_heartbeat may race with the next session lifecycle event.");
-                }
-            }
-            catch (ObjectDisposedException)
-            {
+                Log.Warn("Session: heartbeat callback did not complete within 1s on timer stop. " +
+                         "A trailing session_heartbeat may race with the next session lifecycle event.");
             }
         }
 
