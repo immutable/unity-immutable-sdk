@@ -1,7 +1,6 @@
 {
   "dependencies": {
     "com.immutable.audience": "file:../../../src/Packages/Audience",
-    "com.unity.collab-proxy": "2.5.2",
     "com.unity.test-framework": "1.4.5",
     "com.unity.textmeshpro": "3.0.6",
     "com.unity.timeline": "1.6.5",
