@@ -60,6 +60,26 @@ jobs:
             unity: 6000.4.0f1
             changeset: 8cf496087c8f
             runner: [self-hosted, macOS, ARM64]
+          - target: StandaloneWindows64
+            backend: IL2CPP
+            unity: 2022.3.62f2
+            changeset: 7670c08855a9
+            runner: [self-hosted, Windows, X64]
+          - target: StandaloneWindows64
+            backend: Mono2x
+            unity: 2022.3.62f2
+            changeset: 7670c08855a9
+            runner: [self-hosted, Windows, X64]
+          - target: StandaloneOSX
+            backend: IL2CPP
+            unity: 2022.3.62f2
+            changeset: 7670c08855a9
+            runner: [self-hosted, macOS, ARM64]
+          - target: StandaloneOSX
+            backend: Mono2x
+            unity: 2022.3.62f2
+            changeset: 7670c08855a9
+            runner: [self-hosted, macOS, ARM64]
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
 
