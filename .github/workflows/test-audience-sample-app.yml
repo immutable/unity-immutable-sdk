@@ -329,6 +329,40 @@ jobs:
         run: |
           git config --global --add safe.directory $env:GITHUB_WORKSPACE.Replace('\','/')
 
+      - name: Capture player log (macOS)
+        if: always() && runner.os == 'macOS'
+        shell: bash
+        run: |
+          # The test-runner builds + launches a player binary that writes its own
+          # log separately from Unity's editor log. When the editor reports
+          # "Test execution timed out. No activity received from the player ..."
+          # the editor unity.log alone cannot tell us whether the player crashed,
+          # hung, or never started. Copy whatever Player.log files Unity wrote
+          # into artifacts/ so the upload-artifact step preserves them.
+          mkdir -p artifacts
+          src="$HOME/Library/Logs"
+          if [ -d "$src" ]; then
+            find "$src" -name "Player.log" 2>/dev/null | while IFS= read -r f; do
+              cp "$f" "artifacts/Player-$(basename "$(dirname "$f")").log" 2>/dev/null || true
+            done
+          fi
+
+      - name: Capture player log (Windows)
+        if: always() && runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          # See macOS counterpart for rationale. Windows player log location:
+          # %USERPROFILE%\AppData\LocalLow\<CompanyName>\<ProductName>\Player.log
+          New-Item -ItemType Directory -Force -Path artifacts | Out-Null
+          $src = "$env:USERPROFILE\AppData\LocalLow"
+          if (Test-Path $src) {
+            Get-ChildItem -Path $src -Recurse -Filter "Player.log" -ErrorAction SilentlyContinue |
+              ForEach-Object {
+                $name = $_.Directory.Name
+                Copy-Item -Path $_.FullName -Destination "artifacts/Player-$name.log" -ErrorAction SilentlyContinue
+              }
+          }
+
       - name: Surface Unity compile errors as annotations (macOS)
         if: always() && runner.os == 'macOS'
         shell: bash
@@ -390,4 +424,5 @@ jobs:
           path: |
             artifacts/test-results.xml
             artifacts/unity.log
+            artifacts/Player-*.log
             examples/audience/Logs/**
