@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using NUnit.Framework;
 
 namespace Immutable.Audience.Tests
@@ -96,6 +98,69 @@ namespace Immutable.Audience.Tests
             Assert.AreEqual("unity", track["surface"]);
             Assert.AreEqual("unity", identify["surface"]);
             Assert.AreEqual("unity", alias["surface"]);
+        }
+
+        [Test]
+        public void AllMessages_MessageId_ParsesAsGuid()
+        {
+            foreach (var msg in EveryMessageType())
+            {
+                var id = (string)msg["messageId"];
+                Assert.IsTrue(Guid.TryParse(id, out _),
+                    $"messageId must parse as Guid; got: '{id}'");
+            }
+        }
+
+        [Test]
+        public void Track_MessageId_IsUniquePerCall()
+        {
+            // Backend deduplicates on messageId; collisions silently drop events.
+            var ids = new HashSet<string>();
+            for (var i = 0; i < 1000; i++)
+                ids.Add((string)MessageBuilder.Track("evt", null, null, PackageVersion)["messageId"]);
+            Assert.AreEqual(1000, ids.Count);
+        }
+
+        [Test]
+        public void AllMessages_EventTimestamp_IsRoundTripIso8601Utc()
+        {
+            // SDK uses DateTime.UtcNow.ToString("o") — round-trippable ISO 8601.
+            // Backend schema requires this exact shape; previously only verified
+            // indirectly via backend rejection.
+            var before = DateTime.UtcNow.AddSeconds(-2);
+            foreach (var msg in EveryMessageType())
+            {
+                var ts = (string)msg["eventTimestamp"];
+                Assert.IsTrue(
+                    DateTime.TryParseExact(ts, "o", CultureInfo.InvariantCulture,
+                        DateTimeStyles.RoundtripKind, out var parsed),
+                    $"eventTimestamp must parse as ISO 8601 round-trip ('o') format; got: '{ts}'");
+                Assert.AreEqual(DateTimeKind.Utc, parsed.Kind, "eventTimestamp must be UTC");
+                Assert.That(parsed, Is.GreaterThanOrEqualTo(before),
+                    "eventTimestamp must be ~now, not stale");
+                Assert.That(parsed, Is.LessThanOrEqualTo(DateTime.UtcNow.AddSeconds(2)),
+                    "eventTimestamp must be ~now, not future-dated");
+            }
+        }
+
+        [Test]
+        public void AllMessages_Context_LibraryAndLibraryVersionAreNonEmptyStrings()
+        {
+            foreach (var msg in EveryMessageType())
+            {
+                var ctx = (Dictionary<string, object>)msg["context"];
+                var library = ctx["library"] as string;
+                var libraryVersion = ctx["libraryVersion"] as string;
+                Assert.IsFalse(string.IsNullOrEmpty(library), "context.library must be non-empty string");
+                Assert.IsFalse(string.IsNullOrEmpty(libraryVersion), "context.libraryVersion must be non-empty string");
+            }
+        }
+
+        private static IEnumerable<Dictionary<string, object>> EveryMessageType()
+        {
+            yield return MessageBuilder.Track("evt", null, null, PackageVersion);
+            yield return MessageBuilder.Identify(null, "u1", "steam", PackageVersion);
+            yield return MessageBuilder.Alias("f", "t1", "t", "t2", PackageVersion);
         }
     }
 }
