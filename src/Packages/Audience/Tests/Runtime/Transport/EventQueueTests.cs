@@ -150,5 +150,20 @@ namespace Immutable.Audience.Tests
             var written = File.ReadAllText(_store.ReadBatch(10)[0]);
             StringAssert.Contains("\"v\":99", written);
         }
+
+        [Test]
+        public void PurgeAll_ClearsMemoryAndDisk()
+        {
+            using var queue = new EventQueue(_store, flushIntervalSeconds: 60, flushSize: 100);
+
+            queue.Enqueue(new Dictionary<string, object> { ["type"] = "track", ["eventName"] = "a" });
+            queue.FlushSync();
+            queue.Enqueue(new Dictionary<string, object> { ["type"] = "track", ["eventName"] = "b" });
+
+            queue.PurgeAll();
+
+            Assert.AreEqual(0, _store.Count(),
+                "PurgeAll should clear both in-memory queue and disk");
+        }
     }
 }
