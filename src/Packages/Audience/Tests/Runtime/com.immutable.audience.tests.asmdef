@@ -1,14 +1,18 @@
 {
     "name": "Immutable.Audience.Runtime.Tests",
     "rootNamespace": "Immutable.Audience.Tests",
-    "references": ["Immutable.Audience.Runtime"],
-    "includePlatforms": ["Editor"],
+    "references": [
+        "Immutable.Audience.Runtime",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": ["Editor", "LinuxStandalone64", "macOSStandalone", "WindowsStandalone64"],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
+    "overrideReferences": true,
+    "precompiledReferences": ["nunit.framework.dll"],
     "autoReferenced": false,
-    "defineConstraints": [],
+    "defineConstraints": ["UNITY_INCLUDE_TESTS"],
     "versionDefines": [],
     "noEngineReferences": false
 }
