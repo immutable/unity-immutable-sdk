@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 
 namespace Immutable.Audience
@@ -9,7 +11,7 @@ namespace Immutable.Audience
         internal static bool Enabled { get; set; }
 
         // Tests set this to capture output; AudienceUnityHooks sets it to Debug.Log.
-        internal static Action<string> Writer { get; set; }
+        internal static Action<string>? Writer { get; set; }
 
         internal static void Debug(string message)
         {

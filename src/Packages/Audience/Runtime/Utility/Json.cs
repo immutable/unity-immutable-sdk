@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -31,7 +33,7 @@ namespace Immutable.Audience
             return sb.ToString();
         }
 
-        private static void WriteValue(StringBuilder sb, object value, int indent, int depth, HashSet<object> visited)
+        private static void WriteValue(StringBuilder sb, object? value, int indent, int depth, HashSet<object>? visited)
         {
             if (value == null)
             {
@@ -81,11 +83,11 @@ namespace Immutable.Audience
             }
             else
             {
-                WriteString(sb, value.ToString());
+                WriteString(sb, value.ToString() ?? string.Empty);
             }
         }
 
-        private static void WriteObject(StringBuilder sb, Dictionary<string, object> dict, int indent, int depth, HashSet<object> visited)
+        private static void WriteObject(StringBuilder sb, Dictionary<string, object> dict, int indent, int depth, HashSet<object>? visited)
         {
             GuardDepth(depth);
             visited = EnterContainer(dict, visited);
@@ -109,7 +111,7 @@ namespace Immutable.Audience
             visited.Remove(dict);
         }
 
-        private static void WriteArray(StringBuilder sb, IList list, int indent, int depth, HashSet<object> visited)
+        private static void WriteArray(StringBuilder sb, IList list, int indent, int depth, HashSet<object>? visited)
         {
             GuardDepth(depth);
             visited = EnterContainer(list, visited);
@@ -143,7 +145,7 @@ namespace Immutable.Audience
                     "Check for a cyclic or excessively deep dictionary/list.");
         }
 
-        private static HashSet<object> EnterContainer(object container, HashSet<object> visited)
+        private static HashSet<object> EnterContainer(object container, HashSet<object>? visited)
         {
             visited ??= new HashSet<object>(ReferenceEqualityComparer.Instance);
             if (!visited.Add(container))
