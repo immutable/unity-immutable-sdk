@@ -105,7 +105,7 @@ namespace Immutable.Audience
                     // rejected; if any, tell the studio via onError. Rejected
                     // messages are validation failures — retrying won't help,
                     // so the batch is deleted either way.
-                    var rejected = await ParseRejectedCount(response).ConfigureAwait(false);
+                    var rejected = await ParseRejectedCount(response, ct).ConfigureAwait(false);
                     _store.Delete(batch);
                     ResetBackoff();
                     if (rejected > 0)
@@ -275,15 +275,20 @@ namespace Immutable.Audience
         // Reads the response body and pulls out the "rejected" count. Returns
         // 0 if the body is missing or unreadable — the body is only for
         // reporting, so failing to read it must not break the success path.
-        private static async Task<int> ParseRejectedCount(HttpResponseMessage response)
+        private static async Task<int> ParseRejectedCount(HttpResponseMessage response, CancellationToken ct = default)
         {
             string body;
             try
             {
+                // .NET Standard 2.1 (Unity's apiCompatibilityLevel 6) only exposes
+                // the parameterless ReadAsStringAsync; the (CancellationToken)
+                // overload is .NET 5+. Observe the token at the call boundary.
+                ct.ThrowIfCancellationRequested();
                 body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             }
-            catch
+            catch (Exception ex)
             {
+                Log.Warn($"ParseRejectedCount threw {ex.GetType().Name}: {ex.Message}");
                 return 0;
             }
             if (string.IsNullOrEmpty(body)) return 0;
@@ -332,10 +337,9 @@ namespace Immutable.Audience
             {
                 _onError(new AudienceError(code, message));
             }
-            catch
+            catch (Exception ex)
             {
-                // Consumer callback threw. Swallow: the SDK must not surface
-                // exceptions through the error-reporting path itself.
+                Log.Warn($"_onError threw {ex.GetType().Name}: {ex.Message}");
             }
         }
     }

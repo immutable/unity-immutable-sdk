@@ -426,9 +426,9 @@ namespace Immutable.Audience
             {
                 onError(new AudienceError(code, message));
             }
-            catch
+            catch (Exception ex)
             {
-                // Swallow: a buggy OnError must not crash the SDK.
+                Log.Warn($"onError threw {ex.GetType().Name}: {ex.Message}");
             }
         }
 
