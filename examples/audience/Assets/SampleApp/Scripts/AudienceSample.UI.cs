@@ -457,6 +457,7 @@ namespace Immutable.Audience.Samples.SampleApp
                         input = dd;
                     }
                     else input = new TextField();
+                    input.name = $"typed-{spec.Name.Replace('_', '-')}-{field.Key.ToLowerInvariant().Replace('_', '-')}";
 
                     var row = new VisualElement();
                     row.AddToClassList("field");
@@ -473,6 +474,7 @@ namespace Immutable.Audience.Samples.SampleApp
                 actions.AddToClassList("actions");
                 actions.AddToClassList("last");
                 var send = new Button { text = "Send" };
+                send.name = $"btn-typed-{spec.Name.Replace('_', '-')}";
                 send.SetEnabled(false);
                 var capturedSpec = spec;
                 send.clicked += () => OnSendCatalogueEvent(capturedSpec, inputs);
