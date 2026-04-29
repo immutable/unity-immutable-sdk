@@ -36,7 +36,11 @@ namespace Immutable.Audience
                 if (!File.Exists(filePath)) return null;
 
                 var text = File.ReadAllText(filePath).Trim();
-                if (int.TryParse(text, out var raw) && Enum.IsDefined(typeof(ConsentLevel), raw))
+                // Range check is reflection-free (Enum.IsDefined uses reflection; under
+                // Unity 6's tighter IL2CPP stripping the metadata it walks may be
+                // stripped even with link.xml preserve="all" on the assembly).
+                if (int.TryParse(text, out var raw)
+                    && raw >= (int)ConsentLevel.None && raw <= (int)ConsentLevel.Full)
                     return (ConsentLevel)raw;
             }
             catch (IOException)
