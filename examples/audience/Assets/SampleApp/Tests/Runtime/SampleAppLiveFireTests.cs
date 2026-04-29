@@ -89,7 +89,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
             yield return SceneManager.LoadSceneAsync(SampleAppUi.SceneName, LoadSceneMode.Single);
             yield return null;  // one extra frame for Awake/InitializeUi
 
-#if UNITY_2023_1_OR_NEWER
+#if UNITY_2022_2_OR_NEWER
             var sample = UnityEngine.Object.FindFirstObjectByType<AudienceSample>(FindObjectsInactive.Include);
 #else
             var sample = UnityEngine.Object.FindObjectOfType<AudienceSample>(includeInactive: true);
