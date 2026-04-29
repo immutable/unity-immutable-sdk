@@ -565,17 +565,33 @@ namespace Immutable.Audience
 
             Task.Run(async () =>
             {
+                // 429 retried up to 4 attempts (1s/2s/4s or Retry-After).
+                // Other non-2xx fail fast.
+                const int maxAttempts = 4;
+                var attempt = 0;
                 try
                 {
-                    using var request = new HttpRequestMessage(HttpMethod.Put, url);
-                    request.Headers.Add(Constants.PublishableKeyHeader, publishableKey);
-                    request.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
-                    using var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-                    if (!response.IsSuccessStatusCode)
+                    while (true)
                     {
+                        attempt++;
+                        using var request = new HttpRequestMessage(HttpMethod.Put, url);
+                        request.Headers.Add(Constants.PublishableKeyHeader, publishableKey);
+                        request.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
+                        using var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
+
+                        if (response.IsSuccessStatusCode) return;
+
+                        if ((int)response.StatusCode == 429 && attempt < maxAttempts)
+                        {
+                            var delay = HttpRetry.ParseRetryAfter(response)
+                                ?? TimeSpan.FromMilliseconds(1_000 * (1 << (attempt - 1)));
+                            await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+                            continue;
+                        }
+
                         NotifyErrorCallback(onError, AudienceErrorCode.ConsentSyncFailed,
                             $"Consent sync failed with status {(int)response.StatusCode}");
+                        return;
                     }
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
