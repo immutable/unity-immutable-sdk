@@ -132,7 +132,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         }
 
         [UnityTest]
-        public IEnumerator TypedEvent_Progression_FlushReportsOk()
+        public IEnumerator Event_Progression_FlushReportsOk()
         {
             // Progression's only required field is `status` (enum, defaults to "start").
             yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent("progression"));

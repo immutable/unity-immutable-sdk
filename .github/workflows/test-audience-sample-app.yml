@@ -1,0 +1,301 @@
+name: Audience SDK — PlayMode (IL2CPP + Mono)
+
+on:
+  pull_request:
+    paths:
+      - 'src/Packages/Audience/**'
+      - 'examples/audience/**'
+      - '.github/workflows/test-audience-sample-app.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  playmode:
+    if: github.event.pull_request.head.repo.fork == false || github.event_name == 'workflow_dispatch'
+    name: ${{ matrix.target }} / ${{ matrix.backend }} / Unity ${{ matrix.unity }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: StandaloneWindows64
+            backend: IL2CPP
+            unity: 2021.3.45f2
+            changeset: 88f88f591b2e
+            runner: [self-hosted, Windows, X64]
+          - target: StandaloneWindows64
+            backend: Mono2x
+            unity: 2021.3.45f2
+            changeset: 88f88f591b2e
+            runner: [self-hosted, Windows, X64]
+          - target: StandaloneOSX
+            backend: IL2CPP
+            unity: 2021.3.45f2
+            changeset: 88f88f591b2e
+            runner: [self-hosted, macOS, ARM64]
+          - target: StandaloneOSX
+            backend: Mono2x
+            unity: 2021.3.45f2
+            changeset: 88f88f591b2e
+            runner: [self-hosted, macOS, ARM64]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+
+    steps:
+      - name: Kill stale Unity processes (Windows pre-checkout)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          # actions/checkout@v4 deletes the prior workspace before cloning. If a
+          # previous run's Unity Editor / IL2CPP build process is still holding
+          # handles inside examples/audience, checkout dies with EBUSY. Kill any
+          # leftover Unity-family process here so checkout's cleanup succeeds.
+          Get-Process | Where-Object {
+            $_.Name -like 'Unity*' -or
+            $_.Name -like 'il2cpp*' -or
+            $_.Name -like 'UnityShaderCompiler*' -or
+            $_.Name -like 'UnityCrashHandler*'
+          } | ForEach-Object {
+            Write-Host "Killing stale process: $($_.Name) (pid $($_.Id))"
+            Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+          }
+          Start-Sleep -Seconds 2
+
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: examples/audience/Library
+          key: Library-${{ matrix.backend }}-${{ matrix.target }}-${{ matrix.unity }}-${{ hashFiles('examples/audience/Assets/**', 'examples/audience/Packages/**', 'examples/audience/ProjectSettings/**', 'src/Packages/Audience/**') }}
+          restore-keys: |
+            Library-${{ matrix.backend }}-${{ matrix.target }}-${{ matrix.unity }}-
+            Library-${{ matrix.backend }}-${{ matrix.target }}-
+
+      - name: Ensure MSVC + Windows 10 SDK (Windows IL2CPP)
+        if: runner.os == 'Windows' && matrix.backend == 'IL2CPP'
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+
+          # Match Unity's detection logic exactly: vswhere requires VC.Tools
+          # (any version), registry probe for any Win10 SDK at v10.0/InstallationFolder.
+          # Pinning a specific SDK version in -requires is too strict — VCTools
+          # ships with whatever Win10 SDK is current, and Unity accepts any.
+          function Test-Toolchain {
+            $vc = if (Test-Path $vswhere) {
+              & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath 2>$null
+            } else { '' }
+            $sdk = (Get-ItemProperty 'HKLM:\SOFTWARE\Wow6432Node\Microsoft\Microsoft SDKs\Windows\v10.0' -ErrorAction SilentlyContinue).InstallationFolder
+            return @{ VcTools = $vc; Win10Sdk = $sdk }
+          }
+
+          $state = Test-Toolchain
+          if ($state.VcTools -and $state.Win10Sdk) {
+            Write-Host "VC.Tools at: $($state.VcTools)"
+            Write-Host "Win10 SDK at: $($state.Win10Sdk)"
+            exit 0
+          }
+          Write-Host "Toolchain incomplete. VC.Tools='$($state.VcTools)' Win10Sdk='$($state.Win10Sdk)'"
+
+          Write-Host "::group::Install VS 2022 Build Tools (VCTools + Win10 SDK)"
+          $installer = "$env:RUNNER_TEMP\vs_BuildTools.exe"
+          Invoke-WebRequest -Uri 'https://aka.ms/vs/17/release/vs_BuildTools.exe' -OutFile $installer
+
+          $installArgs = @(
+            '--quiet','--wait','--norestart','--nocache',
+            '--add','Microsoft.VisualStudio.Workload.VCTools',
+            '--add','Microsoft.VisualStudio.Component.VC.Tools.x86.x64',
+            '--add','Microsoft.VisualStudio.Component.Windows10SDK.20348',
+            '--includeRecommended'
+          )
+          $p = Start-Process -FilePath $installer -ArgumentList $installArgs -Wait -PassThru -NoNewWindow
+          # 3010 = success, reboot pending (tools are usable without reboot).
+          if ($p.ExitCode -ne 0 -and $p.ExitCode -ne 3010) {
+            Write-Host "::error::VS Build Tools installer exited $($p.ExitCode)"
+            exit $p.ExitCode
+          }
+          Write-Host "::endgroup::"
+
+          $state = Test-Toolchain
+          if (-not ($state.VcTools -and $state.Win10Sdk)) {
+            Write-Host "::group::diagnostic"
+            Write-Host "VC.Tools path (vswhere): '$($state.VcTools)'"
+            Write-Host "Win10 SDK (registry v10.0/InstallationFolder): '$($state.Win10Sdk)'"
+            Write-Host "--- all VS installations ---"
+            if (Test-Path $vswhere) { & $vswhere -all -products * -format json }
+            Write-Host "--- HKLM Win10 SDK roots ---"
+            Get-ChildItem 'HKLM:\SOFTWARE\Wow6432Node\Microsoft\Microsoft SDKs\Windows' -ErrorAction SilentlyContinue | Format-List
+            Write-Host "::endgroup::"
+            Write-Host "::error::Install reported success but VC.Tools or Win10 SDK still not detected — runner service account likely lacks admin to install system-wide. Install VS Build Tools manually on IMX_SDKBUILD: vs_BuildTools.exe --quiet --wait --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
+            exit 1
+          }
+          Write-Host "Verified VC.Tools at: $($state.VcTools)"
+          Write-Host "Verified Win10 SDK at: $($state.Win10Sdk)"
+
+      - name: Resolve Unity ${{ matrix.unity }} (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          UNITY_VER: ${{ matrix.unity }}
+          UNITY_CS: ${{ matrix.changeset }}
+        run: |
+          set -uo pipefail
+          HUB="/Applications/Unity Hub.app/Contents/MacOS/Unity Hub"
+
+          echo "::group::install editor"
+          "$HUB" -- --headless install \
+            --version "$UNITY_VER" --changeset "$UNITY_CS" --architecture arm64 \
+            || echo "(install non-zero — OK if 'Editor already installed in this location')"
+          echo "::endgroup::"
+
+          if [ "${{ matrix.backend }}" = "IL2CPP" ]; then
+            echo "::group::install mac-il2cpp module"
+            "$HUB" -- --headless install-modules \
+              --version "$UNITY_VER" --changeset "$UNITY_CS" --architecture arm64 \
+              --module mac-il2cpp \
+              || echo "(install-modules non-zero — OK if 'No modules found to install')"
+            echo "::endgroup::"
+          fi
+
+          EDITOR_APP=""
+          for cand in \
+            "/Applications/Unity/Hub/Editor/$UNITY_VER-arm64/Unity.app" \
+            "/Applications/Unity/Hub/Editor/$UNITY_VER/Unity.app"; do
+            if [ -x "$cand/Contents/MacOS/Unity" ]; then EDITOR_APP="$cand"; break; fi
+          done
+
+          IL2CPP_DIR=""
+          if [ "${{ matrix.backend }}" = "IL2CPP" ] && [ -n "$EDITOR_APP" ]; then
+            for d in \
+              "$EDITOR_APP/Contents/PlaybackEngines/MacStandaloneSupport/Variations/macos_arm64_player_nondevelopment_il2cpp" \
+              "$EDITOR_APP/Contents/PlaybackEngines/MacStandaloneSupport/Variations/macos_x64_player_nondevelopment_il2cpp"; do
+              if [ -d "$d" ]; then IL2CPP_DIR="$d"; break; fi
+            done
+          fi
+
+          MISSING=""
+          [ -z "$EDITOR_APP" ] && MISSING="editor"
+          [ "${{ matrix.backend }}" = "IL2CPP" ] && [ -z "$IL2CPP_DIR" ] && MISSING="${MISSING:+$MISSING+}mac-il2cpp"
+          if [ -n "$MISSING" ]; then
+            echo "::error::Unity $UNITY_VER missing: $MISSING"
+            ls -la /Applications/Unity/Hub/Editor/ 2>&1 || true
+            "$HUB" -- --headless editors --installed 2>&1 || true
+            exit 1
+          fi
+
+          echo "Found Unity:  $EDITOR_APP/Contents/MacOS/Unity"
+          [ -n "$IL2CPP_DIR" ] && echo "Found IL2CPP: $IL2CPP_DIR"
+          echo "UNITY_PATH=$EDITOR_APP/Contents/MacOS/Unity" >> "$GITHUB_ENV"
+
+      - name: Resolve Unity ${{ matrix.unity }} (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          UNITY_VER: ${{ matrix.unity }}
+          UNITY_CS: ${{ matrix.changeset }}
+        run: |
+          $hub = "C:\Program Files\Unity Hub\Unity Hub.exe"
+
+          Write-Host "::group::install editor"
+          $installArgs = @('--','--headless','install','--version',$env:UNITY_VER,'--changeset',$env:UNITY_CS,'--architecture','x86_64')
+          & $hub @installArgs 2>&1 | Write-Host
+          if ($LASTEXITCODE -ne 0) { Write-Host "(install non-zero — OK if 'Editor already installed in this location')" }
+          $global:LASTEXITCODE = 0
+          Write-Host "::endgroup::"
+
+          if ('${{ matrix.backend }}' -eq 'IL2CPP') {
+            Write-Host "::group::install windows-il2cpp module"
+            $modArgs = @('--','--headless','install-modules','--version',$env:UNITY_VER,'--changeset',$env:UNITY_CS,'--architecture','x86_64','--module','windows-il2cpp')
+            & $hub @modArgs 2>&1 | Write-Host
+            if ($LASTEXITCODE -ne 0) { Write-Host "(install-modules non-zero — OK if 'No modules found to install')" }
+            $global:LASTEXITCODE = 0
+            Write-Host "::endgroup::"
+          }
+
+          $editor = "C:\Program Files\Unity\Hub\Editor\$env:UNITY_VER\Editor\Unity.exe"
+          $il2cpp = "C:\Program Files\Unity\Hub\Editor\$env:UNITY_VER\Editor\Data\PlaybackEngines\windowsstandalonesupport\Variations\win64_player_nondevelopment_il2cpp"
+          $missing = @()
+          if (-not (Test-Path $editor)) { $missing += 'editor' }
+          if ('${{ matrix.backend }}' -eq 'IL2CPP' -and -not (Test-Path $il2cpp)) { $missing += 'windows-il2cpp' }
+          if ($missing.Count -gt 0) {
+            Write-Host "::error::Unity $env:UNITY_VER missing: $($missing -join '+')"
+            Get-ChildItem "C:\Program Files\Unity\Hub\Editor\" -ErrorAction SilentlyContinue | Format-Table
+            & $hub -- --headless editors --installed
+            exit 1
+          }
+
+          Write-Host "Found Unity:  $editor"
+          if ('${{ matrix.backend }}' -eq 'IL2CPP') { Write-Host "Found IL2CPP: $il2cpp" }
+          "UNITY_PATH=$editor" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Run PlayMode tests (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          AUDIENCE_TEST_PUBLISHABLE_KEY: ${{ secrets.AUDIENCE_TEST_PUBLISHABLE_KEY }}
+          AUDIENCE_SCRIPTING_BACKEND: ${{ matrix.backend }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          "$UNITY_PATH" \
+            -batchmode -nographics \
+            -projectPath examples/audience \
+            -runTests \
+            -testPlatform ${{ matrix.target }} \
+            -testResults "$(pwd)/artifacts/test-results.xml" \
+            -logFile -
+
+      - name: Run PlayMode tests (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          AUDIENCE_TEST_PUBLISHABLE_KEY: ${{ secrets.AUDIENCE_TEST_PUBLISHABLE_KEY }}
+          AUDIENCE_SCRIPTING_BACKEND: ${{ matrix.backend }}
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts | Out-Null
+          $logFile = "$pwd\artifacts\unity.log"
+          $unityArgs = @(
+            '-batchmode','-nographics',
+            '-projectPath','examples/audience',
+            '-runTests',
+            '-testPlatform','${{ matrix.target }}',
+            '-testResults',"$pwd\artifacts\test-results.xml",
+            '-logFile',$logFile
+          )
+          Write-Host "Launching Unity: $env:UNITY_PATH $($unityArgs -join ' ')"
+          $p = Start-Process -FilePath $env:UNITY_PATH -ArgumentList $unityArgs -Wait -PassThru -NoNewWindow
+          $exit = $p.ExitCode
+          Write-Host "::group::Unity log"
+          Get-Content $logFile -ErrorAction SilentlyContinue | Write-Host
+          Write-Host "::endgroup::"
+          Write-Host "Unity exited with code $exit"
+          if ($exit -ne 0) { exit $exit }
+
+      - name: Mark workspace safe for git (Windows)
+        if: always() && runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          git config --global --add safe.directory $env:GITHUB_WORKSPACE.Replace('\','/')
+
+      - name: Publish test report
+        uses: dorny/test-reporter@v3
+        if: always()
+        with:
+          name: PlayMode (${{ matrix.backend }} / ${{ matrix.target }})
+          path: artifacts/test-results.xml
+          reporter: dotnet-nunit
+          fail-on-error: true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playmode-${{ matrix.backend }}-${{ matrix.target }}-${{ matrix.unity }}
+          path: |
+            artifacts/test-results.xml
+            examples/audience/Logs/**
