@@ -3,8 +3,14 @@ name: Audience SDK — PlayMode (IL2CPP + Mono)
 on:
   pull_request:
     paths:
-      - 'src/Packages/Audience/**'
-      - 'examples/audience/**'
+      - 'src/Packages/Audience/Runtime/**'
+      - 'src/Packages/Audience/Tests/**'
+      - 'src/Packages/Audience/package.json'
+      - 'src/Packages/Audience/Directory.Build.props'
+      - 'src/Packages/Audience/link.xml'
+      - 'examples/audience/Assets/**'
+      - 'examples/audience/Packages/**'
+      - 'examples/audience/ProjectSettings/**'
       - '.github/workflows/test-audience-sample-app.yml'
   workflow_dispatch:
 

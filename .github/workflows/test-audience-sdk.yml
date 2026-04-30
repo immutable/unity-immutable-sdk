@@ -4,11 +4,19 @@ on:
   push:
     branches: [main]
     paths:
-      - 'src/Packages/Audience/**'
+      - 'src/Packages/Audience/Runtime/**'
+      - 'src/Packages/Audience/Tests/**'
+      - 'src/Packages/Audience/package.json'
+      - 'src/Packages/Audience/Directory.Build.props'
+      - 'src/Packages/Audience/link.xml'
       - '.github/workflows/test-audience-sdk.yml'
   pull_request:
     paths:
-      - 'src/Packages/Audience/**'
+      - 'src/Packages/Audience/Runtime/**'
+      - 'src/Packages/Audience/Tests/**'
+      - 'src/Packages/Audience/package.json'
+      - 'src/Packages/Audience/Directory.Build.props'
+      - 'src/Packages/Audience/link.xml'
       - '.github/workflows/test-audience-sdk.yml'
 
 jobs:
