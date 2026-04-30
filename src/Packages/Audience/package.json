@@ -5,5 +5,7 @@
   "displayName": "Immutable Audience",
   "author": {"name": "Immutable", "url": "https://immutable.com"},
   "keywords": ["unity", "immutable", "audience", "analytics"],
-  "unity": "2021.3"
+  "unity": "2021.3",
+  "documentationUrl": "https://docs.immutable.com/docs/products/audience/unity-sdk",
+  "licensesUrl": "https://github.com/immutable/unity-immutable-sdk/blob/main/LICENSE.md"
 }
