@@ -308,20 +308,7 @@ namespace Immutable.Audience
         /// <param name="userId">The player's identifier within the chosen provider.</param>
         /// <param name="identityType">The identity provider that issued <paramref name="userId"/>.</param>
         /// <param name="traits">Optional player attributes (email, name, etc.).</param>
-        public static void Identify(string userId, IdentityType identityType, Dictionary<string, object>? traits = null) =>
-            Identify(userId, identityType.ToLowercaseString(), traits);
-
-        /// <summary>
-        /// Attaches a known user ID to subsequent events. String overload
-        /// for providers outside the <see cref="IdentityType"/> enum.
-        /// </summary>
-        /// <param name="userId">The player's identifier within the chosen provider.</param>
-        /// <param name="identityType">
-        /// The identity provider name. Required. Data-deletion requests
-        /// match events by this namespace.
-        /// </param>
-        /// <param name="traits">Optional player attributes (email, name, etc.).</param>
-        public static void Identify(string userId, string identityType, Dictionary<string, object>? traits = null)
+        public static void Identify(string userId, IdentityType identityType, Dictionary<string, object>? traits = null)
         {
             if (!_initialized) return;
 
@@ -352,8 +339,8 @@ namespace Immutable.Audience
             }
 
             var anonymousId = Identity.GetOrCreate(config.PersistentDataPath!, level);
-            var msg = MessageBuilder.Identify(anonymousId, userId, identityType, config.PackageVersion,
-                SnapshotCallerDict(traits));
+            var msg = MessageBuilder.Identify(anonymousId, userId, identityType.ToLowercaseString(),
+                config.PackageVersion, SnapshotCallerDict(traits));
             EnqueueIdentity(msg);
         }
 
@@ -364,23 +351,7 @@ namespace Immutable.Audience
         /// <param name="fromType">Identity provider for <paramref name="fromId"/>.</param>
         /// <param name="toId">The new identifier.</param>
         /// <param name="toType">Identity provider for <paramref name="toId"/>.</param>
-        public static void Alias(string fromId, IdentityType fromType, string toId, IdentityType toType) =>
-            Alias(fromId, fromType.ToLowercaseString(), toId, toType.ToLowercaseString());
-
-        /// <summary>
-        /// Links two user IDs for the same player. String overload for
-        /// providers outside the <see cref="IdentityType"/> enum.
-        /// </summary>
-        /// <param name="fromId">The previously-known identifier.</param>
-        /// <param name="fromType">
-        /// Identity provider for <paramref name="fromId"/>. Required.
-        /// Data-deletion requests match events by this namespace.
-        /// </param>
-        /// <param name="toId">The new identifier.</param>
-        /// <param name="toType">
-        /// Identity provider for <paramref name="toId"/>. Required.
-        /// </param>
-        public static void Alias(string fromId, string fromType, string toId, string toType)
+        public static void Alias(string fromId, IdentityType fromType, string toId, IdentityType toType)
         {
             if (!_initialized) return;
 
@@ -399,7 +370,8 @@ namespace Immutable.Audience
             var config = _config;
             if (config == null) return;
 
-            var msg = MessageBuilder.Alias(fromId, fromType, toId, toType, config.PackageVersion);
+            var msg = MessageBuilder.Alias(fromId, fromType.ToLowercaseString(), toId, toType.ToLowercaseString(),
+                config.PackageVersion);
             EnqueueIdentity(msg);
         }
 

@@ -618,7 +618,7 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
 
-            ImmutableAudience.Identify("76561198012345", "steam");
+            ImmutableAudience.Identify("76561198012345", IdentityType.Steam);
             ImmutableAudience.Shutdown();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
@@ -633,7 +633,7 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));
 
-            ImmutableAudience.Identify("user1", "steam");
+            ImmutableAudience.Identify("user1", IdentityType.Steam);
             ImmutableAudience.Shutdown();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
@@ -648,7 +648,7 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
 
-            ImmutableAudience.Alias("steam123", "steam", "user_456", "passport");
+            ImmutableAudience.Alias("steam123", IdentityType.Steam, "user_456", IdentityType.Passport);
             ImmutableAudience.Shutdown();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
@@ -971,7 +971,7 @@ namespace Immutable.Audience.Tests
             for (int iter = 0; iter < iterations; iter++)
             {
                 ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
-                ImmutableAudience.Identify(testUserId, "steam");
+                ImmutableAudience.Identify(testUserId, IdentityType.Steam);
 
                 // Clear Init events so only race events can leak.
                 ImmutableAudience.FlushQueueToDiskForTesting();
