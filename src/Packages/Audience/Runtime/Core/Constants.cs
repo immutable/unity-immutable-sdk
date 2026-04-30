@@ -60,13 +60,26 @@ namespace Immutable.Audience
         internal const string UserId = "userId";
     }
 
-    // Common distribution platform values for AudienceConfig.DistributionPlatform.
+    /// <summary>
+    /// Common values for <see cref="AudienceConfig.DistributionPlatform"/>.
+    /// </summary>
     public static class DistributionPlatforms
     {
+        /// <summary>Steam.</summary>
         public const string Steam = "steam";
+
+        /// <summary>Epic Games Store.</summary>
         public const string Epic = "epic";
+
+        /// <summary>GOG.com.</summary>
         public const string GOG = "gog";
+
+        /// <summary>itch.io.</summary>
         public const string Itch = "itch";
+
+        /// <summary>
+        /// Standalone build, distributed outside any storefront.
+        /// </summary>
         public const string Standalone = "standalone";
     }
 }

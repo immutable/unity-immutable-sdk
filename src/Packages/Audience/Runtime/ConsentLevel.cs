@@ -2,14 +2,29 @@
 
 namespace Immutable.Audience
 {
-    // How much data the Audience SDK is allowed to collect.
+    /// <summary>
+    /// How much data the Audience SDK is allowed to collect.
+    /// </summary>
+    /// <seealso cref="ImmutableAudience.SetConsent"/>
     public enum ConsentLevel
     {
-        // No tracking
+        /// <summary>
+        /// No tracking.
+        /// </summary>
         None,
-        // Anonymous tracking only
+
+        /// <summary>
+        /// Anonymous tracking. Events carry the device's anonymous ID. Identifying
+        /// the player via
+        /// <see cref="ImmutableAudience.Identify(string, IdentityType, System.Collections.Generic.Dictionary{string, object})"/>
+        /// is rejected at this level.
+        /// </summary>
         Anonymous,
-        // Full tracking
+
+        /// <summary>
+        /// Full tracking. Events may carry a known user ID set via
+        /// <see cref="ImmutableAudience.Identify(string, IdentityType, System.Collections.Generic.Dictionary{string, object})"/>.
+        /// </summary>
         Full
     }
 
