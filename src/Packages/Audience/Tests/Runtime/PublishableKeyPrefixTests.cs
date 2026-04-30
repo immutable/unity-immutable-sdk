@@ -105,7 +105,7 @@ namespace Immutable.Audience.Tests
                 ImmutableAudience.Init(MakeConfig(TestPrefixKey, SandboxUrl));
 
                 Assert.That(lines.Where(l => l.Contains("BaseUrl")), Is.Empty,
-                    "test-key + sandbox-URL is the canonical pairing — no warning expected");
+                    "test-key + sandbox-URL is the canonical pairing; no warning expected");
             }
             finally { Log.Writer = null; }
         }
@@ -136,7 +136,7 @@ namespace Immutable.Audience.Tests
                 ImmutableAudience.Init(MakeConfig(TestPrefixKey, baseUrl: null));
 
                 Assert.That(lines.Where(l => l.Contains("BaseUrl")), Is.Empty,
-                    "no override means no mismatch — no warning expected");
+                    "no override means no mismatch; no warning expected");
             }
             finally { Log.Writer = null; }
         }

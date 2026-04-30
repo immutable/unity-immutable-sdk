@@ -11,7 +11,7 @@ namespace System.Runtime.CompilerServices
 namespace Immutable.Audience
 {
     // Pairs the consent level with the user id so the two always move
-    // together. Updates swap the whole pair at once — a reader never sees
+    // together. Updates swap the whole pair at once. A reader never sees
     // the new consent level alongside a leftover user id.
     internal sealed record ConsentState(ConsentLevel Level, string? UserId)
     {

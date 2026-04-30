@@ -22,7 +22,7 @@ namespace Immutable.Audience
             {
                 if (!timer.Dispose(handle))
                 {
-                    // Already disposed — no signal to wait for.
+                    // Already disposed: no signal to wait for.
                     return true;
                 }
 

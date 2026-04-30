@@ -103,8 +103,8 @@ namespace Immutable.Audience
                 {
                     // Server accepted the batch. Count how many messages it
                     // rejected; if any, tell the studio via onError. Rejected
-                    // messages are validation failures — retrying won't help,
-                    // so the batch is deleted either way.
+                    // messages are validation failures, so retrying won't help.
+                    // The batch is deleted either way.
                     var rejected = await ParseRejectedCount(response, ct).ConfigureAwait(false);
                     _store.Delete(batch);
                     ResetBackoff();
@@ -118,7 +118,7 @@ namespace Immutable.Audience
                 {
                     // 429 is retryable (RFC 6585). Keep the batch, honor Retry-After
                     // if present else use the existing 5xx backoff schedule. No
-                    // onError — next flush tick retries; persistent rate-limits
+                    // onError. The next flush tick retries; persistent rate-limits
                     // surface as a growing on-disk queue.
                     var retryAfter = HttpRetry.ParseRetryAfter(response);
                     if (retryAfter.HasValue)
@@ -129,8 +129,8 @@ namespace Immutable.Audience
                 else if (statusCode >= 400 && statusCode < 500)
                 {
                     // 4xx (non-429): server rejected the payload. Drop it (retry
-                    // won't help) and reset backoff — server is healthy, our data
-                    // was the problem. Capture the response body so the caller's
+                    // won't help) and reset backoff. The server is healthy, our
+                    // data was the problem. Capture the response body so the caller's
                     // OnError surfaces the server's reason string ("unknown
                     // publishable key", "missing field X", etc.) rather than a
                     // bare status code.
@@ -154,7 +154,7 @@ namespace Immutable.Audience
             {
                 // Caller cancelled the token (e.g. on shutdown). Events stay
                 // on disk, no failure recorded. Rethrow so the caller's send
-                // loop exits — swallowing here returns `true`, and the loop
+                // loop exits. Swallowing here returns `true`, and the loop
                 // would re-enter on the same cancelled token and spin because
                 // the batch is still on disk. HttpClient timeouts throw the
                 // same exception but without ct.IsCancellationRequested set,
@@ -212,7 +212,7 @@ namespace Immutable.Audience
             lock (_backoffLock)
             {
                 var now = _getUtcNow();
-                if (now < _nextAttemptAt) return;  // inside prior window — don't compound backoff
+                if (now < _nextAttemptAt) return;  // inside prior window; don't compound backoff
                 _consecutiveFailures++;
                 _nextAttemptAt = now.AddMilliseconds(BackoffMsLocked());
             }
@@ -259,7 +259,7 @@ namespace Immutable.Audience
                 catch (IOException)
                 {
                     // Transient disk race: the file was deleted or locked between
-                    // ReadBatch and now. Safe to skip — the remaining paths in the
+                    // ReadBatch and now. Safe to skip; the remaining paths in the
                     // batch may still read fine. Non-IOException failures escape
                     // and are handled by the caller (SendBatchAsync) as a batch-
                     // wide storage error.
@@ -273,7 +273,7 @@ namespace Immutable.Audience
         }
 
         // Reads the response body and pulls out the "rejected" count. Returns
-        // 0 if the body is missing or unreadable — the body is only for
+        // 0 if the body is missing or unreadable. The body is only for
         // reporting, so failing to read it must not break the success path.
         private static async Task<int> ParseRejectedCount(HttpResponseMessage response, CancellationToken ct = default)
         {
@@ -312,7 +312,7 @@ namespace Immutable.Audience
 
         // Best-effort body extraction; null on read failure.
         // Catches narrowed so OOM, OperationCanceledException, and ThreadAbortException
-        // propagate — body extraction must not mask process-level faults.
+        // propagate. Body extraction must not mask process-level faults.
         private static async Task<string?> ReadBodyForErrorAsync(HttpResponseMessage response)
         {
             try

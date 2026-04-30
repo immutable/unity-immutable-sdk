@@ -50,8 +50,8 @@ namespace Immutable.Audience
         }
 
         // Approximate count of events currently in the in-memory queue
-        // awaiting drain to disk. Lock-free read on ConcurrentQueue.Count
-        // — a snapshot that can race with concurrent enqueue / dequeue.
+        // awaiting drain to disk. Lock-free read on ConcurrentQueue.Count:
+        // a snapshot that can race with concurrent enqueue / dequeue.
         // Good enough for status-panel display; not an invariant.
         internal int InMemoryCount => _memory.Count;
 
@@ -71,7 +71,7 @@ namespace Immutable.Audience
         }
 
         // Queues the message under the drain lock. The caller supplies a
-        // transform that runs while the lock is held — it can edit the
+        // transform that runs while the lock is held; it can edit the
         // message or return null to drop it. Running under the lock means
         // PurgeAll and ApplyAnonymousDowngrade can't slip in mid-decision, so
         // a Track that races a consent downgrade gets its userId stripped or
@@ -144,7 +144,7 @@ namespace Immutable.Audience
         {
             if (_disposed) return;
 
-            // Stop accepting new events first — closes the race window where
+            // Stop accepting new events first. This closes the race window where
             // events enqueued between Cancel and final drain would be lost.
             _disposed = true;
 
@@ -186,8 +186,8 @@ namespace Immutable.Audience
                 {
                     try
                     {
-                        // Serialise on the drain thread, not on the caller thread —
-                        // keeps Track() lock-free and allocation-light.
+                        // Serialise on the drain thread, not on the caller thread.
+                        // Keeps Track() lock-free and allocation-light.
                         _store.Write(Json.Serialize(msg));
                     }
                     catch (IOException)

@@ -84,7 +84,7 @@ namespace Immutable.Audience
         public Dictionary<string, object> ToProperties()
         {
             if (Status is null)
-                throw new ArgumentException("Progression.Status is required — set it before calling Track(IEvent)");
+                throw new ArgumentException("Progression.Status is required. Set it before calling Track(IEvent).");
 
             var props = new Dictionary<string, object>
             {
@@ -169,11 +169,11 @@ namespace Immutable.Audience
         public Dictionary<string, object> ToProperties()
         {
             if (Flow is null)
-                throw new ArgumentException("Resource.Flow is required — set it before calling Track(IEvent)");
+                throw new ArgumentException("Resource.Flow is required. Set it before calling Track(IEvent).");
             if (string.IsNullOrEmpty(Currency))
-                throw new ArgumentException("Resource.Currency is required — set a non-empty string before calling Track(IEvent)");
+                throw new ArgumentException("Resource.Currency is required. Set a non-empty string before calling Track(IEvent).");
             if (Amount is null)
-                throw new ArgumentException("Resource.Amount is required — set it before calling Track(IEvent)");
+                throw new ArgumentException("Resource.Amount is required. Set it before calling Track(IEvent).");
 
             var props = new Dictionary<string, object>
             {
@@ -248,7 +248,7 @@ namespace Immutable.Audience
                 throw new ArgumentException(
                     $"Purchase.Currency '{Currency}' must be a three-letter uppercase ISO 4217 code");
             if (Value is null)
-                throw new ArgumentException("Purchase.Value is required — set it before calling Track(IEvent)");
+                throw new ArgumentException("Purchase.Value is required. Set it before calling Track(IEvent).");
 
             var props = new Dictionary<string, object>
             {

@@ -71,7 +71,7 @@ namespace Immutable.Audience.Tests
             string? capturedKey = null;
             string? capturedContentType = null;
             string? capturedContentEncoding = null;
-            // Read body inside the callback — the request content is disposed after SendAsync returns.
+            // Read body inside the callback. The request content is disposed after SendAsync returns.
             var handler = new MockHandler(HttpStatusCode.OK, "{\"accepted\":1,\"rejected\":0}",
                 onRequest: req =>
                 {
@@ -197,7 +197,7 @@ namespace Immutable.Audience.Tests
 
             await transport.SendBatchAsync();
 
-            Assert.AreEqual(0, _store.Count(), "4xx should delete files — won't succeed on retry");
+            Assert.AreEqual(0, _store.Count(), "4xx should delete files; won't succeed on retry");
             Assert.IsFalse(transport.IsInBackoffWindow);
             Assert.IsNotNull(reportedError);
             Assert.AreEqual(AudienceErrorCode.ValidationRejected, reportedError!.Code);
@@ -218,7 +218,7 @@ namespace Immutable.Audience.Tests
             Assert.AreEqual(1, _store.Count(), "429 must keep files for retry");
             Assert.IsTrue(transport.IsInBackoffWindow);
             Assert.AreEqual(5_000, transport.BackoffMs);
-            Assert.IsNull(reportedError, "429 is transient — must not fire onError");
+            Assert.IsNull(reportedError, "429 is transient; must not fire onError");
         }
 
         [Test]
@@ -444,7 +444,7 @@ namespace Immutable.Audience.Tests
             Assert.AreEqual(firstDeadline, transport.NextAttemptAt,
                 "NextAttemptAt should not move when the window hasn't elapsed");
 
-            // Another premature retry — still no escalation.
+            // Another premature retry: still no escalation.
             Advance(3_000);
             await transport.SendBatchAsync();
             Assert.AreEqual(5_000, transport.BackoffMs);
@@ -509,7 +509,7 @@ namespace Immutable.Audience.Tests
         {
             // Regression guard: HttpClient.Timeout throws TaskCanceledException, which
             // derives from OperationCanceledException. Without a `when (ct.IsCancellationRequested)`
-            // guard, timeouts would be silently swallowed as "shutdown" — no backoff, no error
+            // guard, timeouts would be silently swallowed as "shutdown": no backoff, no error
             // callback, next cycle hot-loops. This test ensures timeouts flow through the
             // NetworkError path.
             _store.Write("{\"type\":\"track\"}");
@@ -519,7 +519,7 @@ namespace Immutable.Audience.Tests
             using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
                 onError: e => reportedError = e, handler: handler);
 
-            // Pass default CancellationToken so ct.IsCancellationRequested is false — this
+            // Pass default CancellationToken so ct.IsCancellationRequested is false; this
             // simulates a real HttpClient timeout (not a caller-initiated cancellation).
             await transport.SendBatchAsync();
 
@@ -537,7 +537,7 @@ namespace Immutable.Audience.Tests
             // swallowed the exception, SendBatchAsync would return `true`
             // with the batch still on disk, and a FlushAsync loop watching
             // that return value would re-enter on the same cancelled token
-            // forever — nothing ever drains, nothing ever throws.
+            // forever: nothing ever drains, nothing ever throws.
             _store.Write("{\"type\":\"track\"}");
 
             var handler = new MockHandler(() => throw new OperationCanceledException("simulated"));
@@ -563,8 +563,8 @@ namespace Immutable.Audience.Tests
             }
 
             Assert.AreEqual(1, _store.Count(), "cancelled send must not delete the batch");
-            Assert.IsFalse(transport.IsInBackoffWindow, "cancel is not a failure — no backoff engaged");
-            Assert.IsNull(reportedError, "cancel is caller-initiated — no onError fires");
+            Assert.IsFalse(transport.IsInBackoffWindow, "cancel is not a failure; no backoff engaged");
+            Assert.IsNull(reportedError, "cancel is caller-initiated; no onError fires");
         }
 
         [Test]
@@ -582,11 +582,11 @@ namespace Immutable.Audience.Tests
             Assert.IsTrue(transport.IsInBackoffWindow, "within window immediately after failure");
             Assert.AreEqual(now.AddMilliseconds(5_000), transport.NextAttemptAt);
 
-            // Advance the clock just before NextAttemptAt — still backing off.
+            // Advance the clock just before NextAttemptAt: still backing off.
             now = now.AddMilliseconds(4_999);
             Assert.IsTrue(transport.IsInBackoffWindow);
 
-            // Advance past NextAttemptAt — window closed, next send may proceed.
+            // Advance past NextAttemptAt: window closed, next send may proceed.
             now = now.AddMilliseconds(2);
             Assert.IsFalse(transport.IsInBackoffWindow, "window closes at NextAttemptAt");
         }

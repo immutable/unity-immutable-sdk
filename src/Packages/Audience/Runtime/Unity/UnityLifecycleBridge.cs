@@ -33,7 +33,7 @@ namespace Immutable.Audience.Unity
         }
 
 #if !UNITY_ANDROID && !UNITY_IOS
-        // Desktop only — mobile focus events fire spuriously (soft keyboard, notifications).
+        // Desktop only. Mobile focus events fire spuriously (soft keyboard, notifications).
         private void OnApplicationFocus(bool hasFocus)
         {
             if (!hasFocus) ImmutableAudience.OnPause();

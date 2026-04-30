@@ -61,7 +61,7 @@ namespace Immutable.Audience.Tests
             var batch = _store.ReadBatch(10);
 
             Assert.AreEqual(3, batch.Count);
-            // Filenames are {ticks}_{uuid}.json — lexicographic sort == oldest first
+            // Filenames are {ticks}_{uuid}.json: lexicographic sort == oldest first
             var names = batch.Select(Path.GetFileName).ToList();
             Assert.That(names, Is.Ordered.Ascending);
         }

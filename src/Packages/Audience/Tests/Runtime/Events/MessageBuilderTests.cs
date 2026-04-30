@@ -124,7 +124,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void AllMessages_EventTimestamp_IsRoundTripIso8601Utc()
         {
-            // SDK uses DateTime.UtcNow.ToString("o") — round-trippable ISO 8601.
+            // SDK uses DateTime.UtcNow.ToString("o"): round-trippable ISO 8601.
             // Backend schema requires this exact shape; previously only verified
             // indirectly via backend rejection.
             var before = DateTime.UtcNow.AddSeconds(-2);

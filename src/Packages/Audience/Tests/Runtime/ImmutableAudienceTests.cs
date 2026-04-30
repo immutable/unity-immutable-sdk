@@ -41,7 +41,7 @@ namespace Immutable.Audience.Tests
                 PublishableKey = "pk_imapik-test-key1",
                 Consent = consent,
                 PersistentDataPath = _testDir,
-                FlushIntervalSeconds = 600, // large — we flush manually in tests
+                FlushIntervalSeconds = 600, // large; we flush manually in tests
                 FlushSize = 1000,
                 HttpHandler = new KeepOnDiskHandler()
             };
@@ -205,7 +205,7 @@ namespace Immutable.Audience.Tests
         public void ContextProvider_Set_MergesOnIdentifyPath()
         {
             // EnqueueIdentity must merge ContextProvider fields the same way
-            // EnqueueTrack does — otherwise Identify events ship without the
+            // EnqueueTrack does. Otherwise Identify events ship without the
             // userAgent / locale / timezone / screen context every other
             // event carries.
             ImmutableAudience.ContextProvider = () => new Dictionary<string, object>
@@ -317,7 +317,7 @@ namespace Immutable.Audience.Tests
             Log.Writer = lines.Add;
             try
             {
-                // Purchase with no Value set — ToProperties throws; Track must
+                // Purchase with no Value set: ToProperties throws; Track must
                 // catch, warn, and drop rather than ship an incomplete event.
                 Assert.DoesNotThrow(() => ImmutableAudience.Track(new Purchase { Currency = "USD" }));
                 Assert.That(lines, Has.Some.Contains("Purchase"));
@@ -346,7 +346,7 @@ namespace Immutable.Audience.Tests
             // Assert the invariant directly: no enqueued message carries a
             // null or empty eventName. Earlier versions counted files
             // before/after the Track calls, which raced with the async
-            // disk drain — Init enqueues session_start + game_launch, and
+            // disk drain: Init enqueues session_start + game_launch, and
             // Shutdown adds session_end, so the file count after Shutdown
             // is deterministic but the before-count is not. Counting is
             // the wrong axis: what the test actually wants to pin is
@@ -478,7 +478,7 @@ namespace Immutable.Audience.Tests
         }
 
         // -----------------------------------------------------------------
-        // Track — custom events
+        // Track: custom events
         // -----------------------------------------------------------------
 
         [Test]
@@ -529,7 +529,7 @@ namespace Immutable.Audience.Tests
             var queueDir = AudiencePaths.QueueDir(_testDir);
             if (!Directory.Exists(queueDir))
             {
-                Assert.Pass("queue directory not created — no events");
+                Assert.Pass("queue directory not created; no events");
                 return;
             }
 
@@ -537,7 +537,7 @@ namespace Immutable.Audience.Tests
         }
 
         // -----------------------------------------------------------------
-        // Track — typed events
+        // Track: typed events
         // -----------------------------------------------------------------
 
         private class NullNameEvent : IEvent
@@ -697,7 +697,7 @@ namespace Immutable.Audience.Tests
         }
 
         // -----------------------------------------------------------------
-        // SetConsent — purge + persistence
+        // SetConsent: purge + persistence
         // -----------------------------------------------------------------
 
         [Test]
@@ -723,7 +723,7 @@ namespace Immutable.Audience.Tests
         public void SetConsent_DowngradeToNone_DropsInFlightTrack_ThatRacesThePurge()
         {
             // Reproduces the window where a Track call observed consent=Anonymous,
-            // built its message, and is about to enqueue — while a concurrent
+            // built its message, and is about to enqueue, while a concurrent
             // SetConsent(None) sets consent and purges. Without the re-check inside
             // the drain lock, the enqueue lands after the purge and the event leaks
             // to disk past revocation.
@@ -737,7 +737,7 @@ namespace Immutable.Audience.Tests
 
             // Gate the Track thread so it's poised to enqueue at the moment SetConsent
             // completes its purge. We approximate the race by kicking Track off a
-            // threadpool thread and racing SetConsent after a tiny stagger — if the
+            // threadpool thread and racing SetConsent after a tiny stagger; if the
             // re-check is missing, this leaks deterministically under contention over
             // repeated runs.
             var trackStarted = new ManualResetEventSlim(false);
@@ -789,7 +789,7 @@ namespace Immutable.Audience.Tests
 
                 // All trackers spin up and block on the barrier so they all release
                 // simultaneously. The main thread joins the barrier too and fires
-                // SetConsent immediately after release — maximising contention.
+                // SetConsent immediately after release, maximising contention.
                 var barrier = new Barrier(trackersPerIteration + 1);
                 var trackers = new Task[trackersPerIteration];
                 for (int t = 0; t < trackersPerIteration; t++)
@@ -840,7 +840,7 @@ namespace Immutable.Audience.Tests
             //
             // Limitation: the race window is narrow and not deterministically
             // reproducible without a test hook inside Init. This is a
-            // probabilistic guard — many iterations of concurrent Init /
+            // probabilistic guard: many iterations of concurrent Init /
             // SetConsent(None) from two threads, asserting only that the
             // final state is consistent (consent is whichever the last lock
             // holder set, no exceptions escape, Init did not silently ignore
@@ -1078,7 +1078,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.SetConsent(ConsentLevel.Full);
             ImmutableAudience.Shutdown();
 
-            // Re-init with the *original* (Anonymous) config — persisted Full should win.
+            // Re-init with the *original* (Anonymous) config. Persisted Full should win.
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));
 
             Assert.AreEqual(ConsentLevel.Full, ImmutableAudience.CurrentConsent,
@@ -1265,7 +1265,7 @@ namespace Immutable.Audience.Tests
         {
             // Hanging handler: the final flush inside Shutdown's Phase 2 will
             // block in transport.SendBatchAsync().Wait(timeoutMs). Pre-refactor,
-            // _initLock was held across that wait — SetConsent / Reset on another
+            // _initLock was held across that wait; SetConsent / Reset on another
             // thread would be stranded for the full ShutdownFlushTimeoutMs.
             var handler = new BlockingHandler();
             var config = MakeConfig();
@@ -1353,7 +1353,7 @@ namespace Immutable.Audience.Tests
         }
 
         // -----------------------------------------------------------------
-        // SendBatch — overlapping timer tick guard
+        // SendBatch: overlapping timer tick guard
         // -----------------------------------------------------------------
 
         [Test]
@@ -1367,7 +1367,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.Track("event_to_send");
             ImmutableAudience.FlushQueueToDiskForTesting();
 
-            // Kick off one SendBatch on a worker — it will block inside the
+            // Kick off one SendBatch on a worker. It will block inside the
             // handler until we signal, holding _sendInFlight = 1.
             var blocked = Task.Run(() => ImmutableAudience.SendBatchForTesting());
 
@@ -1375,7 +1375,7 @@ namespace Immutable.Audience.Tests
             Assert.IsTrue(handler.EnteredSendAsync.Wait(TimeSpan.FromSeconds(2)),
                 "first SendBatch should have reached the HTTP handler");
 
-            // Second tick while the first is still in flight — must return
+            // Second tick while the first is still in flight: must return
             // immediately without issuing another request.
             ImmutableAudience.SendBatchForTesting();
 
@@ -1407,7 +1407,7 @@ namespace Immutable.Audience.Tests
             Assert.IsTrue(handler.EnteredSendAsync.Wait(TimeSpan.FromSeconds(2)),
                 "first FlushAsync should reach the HTTP handler");
 
-            // Second caller starts while the first holds the gate — it must
+            // Second caller starts while the first holds the gate; it must
             // wait, not issue a second request.
             var flush2 = Task.Run(() => ImmutableAudience.FlushAsync());
 
@@ -1451,7 +1451,7 @@ namespace Immutable.Audience.Tests
             Assert.LessOrEqual(handler.CallCount, 1,
                 "a cancelled token must not drive repeated SendAsync attempts");
 
-            // Gate must be released by the finally block — a follow-up flush
+            // Gate must be released by the finally block; a follow-up flush
             // on an uncancelled token should proceed, proving _sendInFlight
             // is not stranded at 1.
             handler.AcceptNextAsSuccess = true;
