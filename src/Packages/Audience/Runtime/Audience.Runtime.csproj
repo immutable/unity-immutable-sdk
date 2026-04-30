@@ -5,6 +5,10 @@
     <Nullable>disable</Nullable>
     <!-- Match the Unity asmdef assembly name so InternalsVisibleTo works in both contexts -->
     <AssemblyName>Immutable.Audience.Runtime</AssemblyName>
+    <!-- Emit Immutable.Audience.Runtime.xml so Rider/IntelliSense show summaries.
+         CS1591 (missing XML comment on publicly visible type or member) is
+         enabled so future undocumented public members break the build. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <!--
     The Unity/ subtree belongs to the sibling Immutable.Audience.Unity asmdef.

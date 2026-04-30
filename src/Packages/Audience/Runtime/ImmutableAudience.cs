@@ -9,7 +9,9 @@ using System.Threading.Tasks;
 
 namespace Immutable.Audience
 {
-    // Entry point for the Immutable Audience SDK.
+    /// <summary>
+    /// Entry point for the Immutable Audience SDK.
+    /// </summary>
     public static class ImmutableAudience
     {
         // Reference fields are written inside _initLock; readers check the
@@ -51,19 +53,38 @@ namespace Immutable.Audience
         // assignments from SetConsent without taking _initLock.
         private static volatile Session? _session;
 
-        // True between Init() and Shutdown().
+        /// <summary>
+        /// True between <see cref="Init"/> and <see cref="Shutdown"/>.
+        /// </summary>
         public static bool Initialized => _initialized;
 
-        // The consent level the SDK is currently honouring.
+        /// <summary>
+        /// The consent level the SDK is currently honouring.
+        /// </summary>
+        /// <seealso cref="SetConsent"/>
         public static ConsentLevel CurrentConsent => _state.Level;
 
-        // The user ID from the most recent Identify() call. Null after
-        // Reset() or when consent is below Full.
+        /// <summary>
+        /// The user ID from the most recent
+        /// <see cref="Identify(string, IdentityType, Dictionary{string, object})"/>
+        /// call.
+        /// </summary>
+        /// <remarks>
+        /// Null after <see cref="Reset"/> or when consent is below
+        /// <see cref="ConsentLevel.Full"/>.
+        /// </remarks>
         public static string? UserId => _state.UserId;
 
-        // An anonymous, persistent ID — unlike SessionId (rotates per
-        // session) and UserId (identifies the user). Reset() and
-        // SetConsent(None) wipe it; null while consent is None.
+        /// <summary>
+        /// An anonymous, persistent ID for this device.
+        /// </summary>
+        /// <remarks>
+        /// Unlike <see cref="SessionId"/> (rotates per session) and
+        /// <see cref="UserId"/> (identifies the player), this stays stable
+        /// across sessions. <see cref="Reset"/> and <see cref="SetConsent"/>
+        /// with <see cref="ConsentLevel.None"/> wipe it. Null while consent
+        /// is None.
+        /// </remarks>
         public static string? AnonymousId
         {
             get
@@ -76,12 +97,19 @@ namespace Immutable.Audience
             }
         }
 
-        // The current session's ID. A new ID is assigned at Init(), at Reset(),
-        // and when the app resumes after the previous session has timed out.
-        // Null while consent is None.
+        /// <summary>
+        /// The current session's ID.
+        /// </summary>
+        /// <remarks>
+        /// A new ID is assigned at <see cref="Init"/>, at <see cref="Reset"/>,
+        /// and when the app resumes after the previous session has timed
+        /// out. Null while consent is None.
+        /// </remarks>
         public static string? SessionId => _session?.SessionId;
 
-        // Number of unsent events (in memory and on disk).
+        /// <summary>
+        /// Number of unsent events, in memory and on disk.
+        /// </summary>
         public static int QueueSize
         {
             get
@@ -101,7 +129,12 @@ namespace Immutable.Audience
             }
         }
 
-        // Starts the SDK. Call once at launch.
+        /// <summary>
+        /// Starts the SDK. Call once at launch.
+        /// </summary>
+        /// <param name="config">
+        /// SDK configuration. <see cref="AudienceConfig.PublishableKey"/> is required.
+        /// </param>
         public static void Init(AudienceConfig config)
         {
             if (config == null) throw new ArgumentNullException(nameof(config));
@@ -186,8 +219,11 @@ namespace Immutable.Audience
         // Track
         // -----------------------------------------------------------------
 
-        // Sends a typed event. Prefer this over the string overload —
-        // IEvent implementations validate required fields at compile time.
+        /// <summary>
+        /// Sends a typed event. Prefer over the string overload for
+        /// compile-time required-field validation.
+        /// </summary>
+        /// <param name="evt">The event to send.</param>
         public static void Track(IEvent evt)
         {
             var state = _state;
@@ -228,9 +264,13 @@ namespace Immutable.Audience
             EnqueueTrack(msg);
         }
 
-        // Sends a custom event. For predefined names (purchase, progression,
-        // resource, milestone_reached), prefer the typed overload which
-        // validates required fields.
+        /// <summary>
+        /// Sends a custom event. For <c>purchase</c>, <c>progression</c>,
+        /// <c>resource</c>, and <c>milestone_reached</c>, prefer the typed
+        /// overload.
+        /// </summary>
+        /// <param name="eventName">The wire-format event name.</param>
+        /// <param name="properties">Optional event properties.</param>
         public static void Track(string eventName, Dictionary<string, object>? properties = null)
         {
             var state = _state;
@@ -255,12 +295,25 @@ namespace Immutable.Audience
         // Identity
         // -----------------------------------------------------------------
 
-        // Attaches a known user id to subsequent events.
+        /// <summary>
+        /// Attaches a known user ID to subsequent events.
+        /// </summary>
+        /// <param name="userId">The player's identifier within the chosen provider.</param>
+        /// <param name="identityType">The identity provider that issued <paramref name="userId"/>.</param>
+        /// <param name="traits">Optional player attributes (email, name, etc.).</param>
         public static void Identify(string userId, IdentityType identityType, Dictionary<string, object>? traits = null) =>
             Identify(userId, identityType.ToLowercaseString(), traits);
 
-        // String overload for providers outside the IdentityType enum.
-        // identityType is required — data-deletion matches events by this namespace.
+        /// <summary>
+        /// Attaches a known user ID to subsequent events. String overload
+        /// for providers outside the <see cref="IdentityType"/> enum.
+        /// </summary>
+        /// <param name="userId">The player's identifier within the chosen provider.</param>
+        /// <param name="identityType">
+        /// The identity provider name. Required. Data-deletion requests
+        /// match events by this namespace.
+        /// </param>
+        /// <param name="traits">Optional player attributes (email, name, etc.).</param>
         public static void Identify(string userId, string identityType, Dictionary<string, object>? traits = null)
         {
             if (!_initialized) return;
@@ -297,12 +350,29 @@ namespace Immutable.Audience
             EnqueueIdentity(msg);
         }
 
-        // Links two user ids for the same player.
+        /// <summary>
+        /// Links two user IDs for the same player.
+        /// </summary>
+        /// <param name="fromId">The previously-known identifier.</param>
+        /// <param name="fromType">Identity provider for <paramref name="fromId"/>.</param>
+        /// <param name="toId">The new identifier.</param>
+        /// <param name="toType">Identity provider for <paramref name="toId"/>.</param>
         public static void Alias(string fromId, IdentityType fromType, string toId, IdentityType toType) =>
             Alias(fromId, fromType.ToLowercaseString(), toId, toType.ToLowercaseString());
 
-        // String overload for providers outside the IdentityType enum.
-        // from/toType are required — data-deletion matches by these namespaces.
+        /// <summary>
+        /// Links two user IDs for the same player. String overload for
+        /// providers outside the <see cref="IdentityType"/> enum.
+        /// </summary>
+        /// <param name="fromId">The previously-known identifier.</param>
+        /// <param name="fromType">
+        /// Identity provider for <paramref name="fromId"/>. Required.
+        /// Data-deletion requests match events by this namespace.
+        /// </param>
+        /// <param name="toId">The new identifier.</param>
+        /// <param name="toType">
+        /// Identity provider for <paramref name="toId"/>. Required.
+        /// </param>
         public static void Alias(string fromId, string fromType, string toId, string toType)
         {
             if (!_initialized) return;
@@ -326,10 +396,10 @@ namespace Immutable.Audience
             EnqueueIdentity(msg);
         }
 
-        // Logs out the current player. Clears userId, discards queued events,
-        // mints a fresh anonymousId, and starts a new session. Matches Web SDK
-        // reset(): no session_end is emitted for the old session (it is enqueued
-        // and then purged). Call FlushAsync() first to preserve queued events.
+        /// <summary>
+        /// Logs out the current player. Call <see cref="FlushAsync"/> first
+        /// to preserve queued events.
+        /// </summary>
         public static void Reset()
         {
             // Phase 1 under _initLock: atomic _state.UserId clear + _session swap.
@@ -367,7 +437,14 @@ namespace Immutable.Audience
             newSession?.Start();
         }
 
-        // Asks the backend to erase this player's data. Await for ack, or discard for fire-and-forget.
+        /// <summary>
+        /// Asks the backend to erase this player's data.
+        /// </summary>
+        /// <param name="userId">
+        /// Optional. The known user ID to delete. When null, the SDK uses
+        /// the device's persisted anonymous ID.
+        /// </param>
+        /// <returns>A task that completes when the backend has responded.</returns>
         public static Task DeleteData(string? userId = null)
         {
             if (!_initialized) return Task.CompletedTask;
@@ -438,7 +515,10 @@ namespace Immutable.Audience
         // Consent
         // -----------------------------------------------------------------
 
-        // Changes the player's consent level.
+        /// <summary>
+        /// Changes the player's consent level. Persists across restart.
+        /// </summary>
+        /// <param name="level">The new consent level.</param>
         public static void SetConsent(ConsentLevel level)
         {
             if (!_initialized) return;
@@ -612,8 +692,11 @@ namespace Immutable.Audience
         // Flush / Shutdown
         // -----------------------------------------------------------------
 
-        // Sends all pending events now. Respects cancellationToken for both
-        // the gate wait and the HTTP send.
+        /// <summary>
+        /// Sends all pending events now.
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>A task that completes when the flush finishes.</returns>
         public static async Task FlushAsync(CancellationToken cancellationToken = default)
         {
             if (!_initialized) return;
@@ -652,7 +735,9 @@ namespace Immutable.Audience
             }
         }
 
-        // Flushes and stops the SDK.
+        /// <summary>
+        /// Flushes and stops the SDK.
+        /// </summary>
         public static void Shutdown()
         {
             // Fire session_end before taking _initLock. _initialized is still

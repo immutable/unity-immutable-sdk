@@ -4,46 +4,89 @@ using System;
 
 namespace Immutable.Audience
 {
-    // Configuration passed to ImmutableAudience.Init.
+    /// <summary>
+    /// Configuration passed to <see cref="ImmutableAudience.Init"/>.
+    /// </summary>
     public class AudienceConfig
     {
-        // Studio API key. Required — Init throws if null.
+        /// <summary>
+        /// Studio API key issued by Immutable Hub.
+        /// </summary>
+        /// <remarks>
+        /// Required. <see cref="ImmutableAudience.Init"/> throws if null or empty.
+        /// </remarks>
         public string? PublishableKey { get; set; }
 
-        // Override the default API base URL. When null, keys starting with
-        // "pk_imapik-test-" resolve to Sandbox and all other keys resolve
-        // to Production. Set explicitly to target a different backend.
+        /// <summary>
+        /// Override the default API base URL.
+        /// </summary>
+        /// <remarks>
+        /// When null, publishable keys starting with <c>pk_imapik-test-</c>
+        /// resolve to Sandbox. All other keys resolve to Production. Set
+        /// explicitly to target a different backend.
+        /// </remarks>
         public string? BaseUrl { get; set; }
 
-        // Initial consent level.
+        /// <summary>
+        /// Initial consent level.
+        /// </summary>
+        /// <remarks>
+        /// If the SDK persisted a different level on a previous launch, that
+        /// persisted level overrides this default at
+        /// <see cref="ImmutableAudience.Init"/>.
+        /// </remarks>
         public ConsentLevel Consent { get; set; } = ConsentLevel.None;
 
-        // Distribution platform the game is running on.
+        /// <summary>
+        /// Distribution platform the game is running on.
+        /// </summary>
+        /// <seealso cref="DistributionPlatforms"/>
         public string? DistributionPlatform { get; set; }
 
-        // Enable debug logging.
+        /// <summary>
+        /// Whether the SDK emits debug log lines for every event, flush,
+        /// and consent change.
+        /// </summary>
         public bool Debug { get; set; } = false;
 
-        // How often pending events are flushed to the backend.
+        /// <summary>
+        /// Interval between automatic flushes to the backend, in seconds.
+        /// </summary>
         public int FlushIntervalSeconds { get; set; } = Constants.DefaultFlushIntervalSeconds;
 
-        // Flush as soon as this many events are queued.
+        /// <summary>
+        /// Queued-event threshold that triggers an automatic flush before the
+        /// next interval tick.
+        /// </summary>
         public int FlushSize { get; set; } = Constants.DefaultFlushSize;
 
-        // Optional error callback.
+        /// <summary>
+        /// Callback fired when the SDK encounters a recoverable failure.
+        /// </summary>
+        /// <remarks>
+        /// Exceptions thrown from the callback are swallowed so a bad handler
+        /// cannot wedge the SDK.
+        /// </remarks>
         public Action<AudienceError>? OnError { get; set; }
 
-        // Directory the SDK uses for identity, consent, and queued events.
-        // Unity hooks populate this from Application.persistentDataPath.
+        /// <summary>
+        /// Directory the SDK uses for identity, consent, and queued events.
+        /// Usually populated automatically by Unity hooks.
+        /// </summary>
         public string? PersistentDataPath { get; set; }
 
-        // Library version sent on every message.
+        /// <summary>
+        /// Library version sent on every message.
+        /// </summary>
         public string PackageVersion { get; set; } = Constants.LibraryVersion;
 
-        // Maximum time Shutdown waits for the final flush.
+        /// <summary>
+        /// Maximum time <see cref="ImmutableAudience.Shutdown"/> waits for
+        /// the final flush, in milliseconds.
+        /// </summary>
         public int ShutdownFlushTimeoutMs { get; set; } = 2_000;
 
-        // Test seam for HttpTransport; not part of the public API.
+        // Test seam for HttpTransport. Not part of the public API.
         internal System.Net.Http.HttpMessageHandler? HttpHandler { get; set; }
     }
 }
