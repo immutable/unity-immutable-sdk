@@ -189,7 +189,7 @@ namespace Immutable.Audience.Samples.SampleApp
         {
             var f = CaptureIdentifyForm();
             var traits = ParseTraits(f.RawTraits);
-            ImmutableAudience.Identify(f.Id, f.Type, traits);
+            ImmutableAudience.Identify(f.Id, ParseIdentityType(f.Type), traits);
             // SDK drops via Log.Warn when id is empty or consent < Full. Mirror
             // only when accepted — otherwise the panel would show stale state.
             var accepted = !string.IsNullOrEmpty(f.Id)
@@ -212,7 +212,7 @@ namespace Immutable.Audience.Samples.SampleApp
             if (string.IsNullOrEmpty(userId)) throw new InvalidOperationException("no active identity — call Identify first");
             var traits = ParseTraits(CaptureTraitsUpdate());
             if (traits == null || traits.Count == 0) throw new InvalidOperationException("traits required");
-            ImmutableAudience.Identify(userId, _mirrorIdentityType ?? IdentityType.Custom.ToLowercaseString(), traits);
+            ImmutableAudience.Identify(userId, ParseIdentityType(_mirrorIdentityType), traits);
             _mirrorTraits = traits;
             OnSdkStateChanged();
             return Json.Serialize(traits, 2);
@@ -221,7 +221,7 @@ namespace Immutable.Audience.Samples.SampleApp
         private void OnAlias() => RunAndLog("alias()", () =>
         {
             var f = CaptureAliasForm();
-            ImmutableAudience.Alias(f.FromId, f.FromType, f.ToId, f.ToType);
+            ImmutableAudience.Alias(f.FromId, ParseIdentityType(f.FromType), f.ToId, ParseIdentityType(f.ToType));
             // SDK drops via Log.Warn when fromId/toId is empty or consent < Full.
             // The IsAliasReady gate keeps empty endpoints unreachable from the
             // UI; this post-call check is defense-in-depth.
@@ -371,5 +371,20 @@ namespace Immutable.Audience.Samples.SampleApp
 
         private static Dictionary<string, object>? ParseTraits(string? raw) =>
             string.IsNullOrWhiteSpace(raw) ? null : JsonReader.DeserializeObject(raw!);
+
+        // Parses a wire-format identity string (e.g. "steam") back into the
+        // IdentityType enum the SDK now requires. Falls back to Custom for
+        // unknown or empty values.
+        private static IdentityType ParseIdentityType(string? value) => (value ?? "").ToLowerInvariant() switch
+        {
+            "passport" => IdentityType.Passport,
+            "steam"    => IdentityType.Steam,
+            "epic"     => IdentityType.Epic,
+            "google"   => IdentityType.Google,
+            "apple"    => IdentityType.Apple,
+            "discord"  => IdentityType.Discord,
+            "email"    => IdentityType.Email,
+            _          => IdentityType.Custom,
+        };
     }
 }
