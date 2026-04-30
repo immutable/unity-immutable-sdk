@@ -112,7 +112,7 @@ namespace Immutable.Audience
                 // when End fires while paused), over-crediting engagement.
                 if (_pausedAt.HasValue)
                 {
-                    Log.Debug("Session: Pause while already paused. Ignoring.");
+                    Log.Debug(AudienceLogs.SessionPauseAlreadyPaused);
                     return;
                 }
                 _pausedAt = _getUtcNow();
@@ -259,7 +259,7 @@ namespace Immutable.Audience
             }
             catch (Exception ex)
             {
-                Log.Warn($"Session: {eventName} track callback threw {ex.GetType().Name}. Event dropped.");
+                Log.Warn(AudienceLogs.SessionTrackCallbackThrew(eventName, ex));
             }
         }
 
@@ -277,8 +277,7 @@ namespace Immutable.Audience
 
             if (!TimerDisposal.DisposeAndWait(timer, TimeSpan.FromSeconds(1)))
             {
-                Log.Warn("Session: heartbeat callback did not complete within 1s on timer stop. " +
-                         "A trailing session_heartbeat may race with the next session lifecycle event.");
+                Log.Warn(AudienceLogs.SessionHeartbeatTimeout);
             }
         }
 

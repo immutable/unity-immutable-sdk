@@ -303,7 +303,7 @@ namespace Immutable.Audience.Tests
             try
             {
                 Assert.DoesNotThrow(() => ImmutableAudience.Track((IEvent)null));
-                Assert.That(lines, Has.Some.Contains("null event"));
+                Assert.That(lines, Has.Some.Contains(AudienceLogs.TrackIEventNull));
             }
             finally { Log.Writer = null; }
         }
@@ -320,7 +320,9 @@ namespace Immutable.Audience.Tests
                 // Purchase with no Value set: ToProperties throws; Track must
                 // catch, warn, and drop rather than ship an incomplete event.
                 Assert.DoesNotThrow(() => ImmutableAudience.Track(new Purchase { Currency = "USD" }));
-                Assert.That(lines, Has.Some.Contains("Purchase"));
+                // Assert the stable parts (event-type name and trailing "Dropping")
+                // so the test survives any change to the exception type or message.
+                Assert.That(lines, Has.Some.Contains(nameof(Purchase)));
                 Assert.That(lines, Has.Some.Contains("Dropping"));
             }
             finally { Log.Writer = null; }
@@ -430,7 +432,7 @@ namespace Immutable.Audience.Tests
                 ImmutableAudience.Init(MakeConfig());
                 ImmutableAudience.Init(MakeConfig());
 
-                Assert.That(lines, Has.Some.Contains("Init called more than once"),
+                Assert.That(lines, Has.Some.Contains(AudienceLogs.InitCalledTwice),
                     "second Init must surface a warning so a developer notices the silent no-op");
             }
             finally
@@ -467,7 +469,7 @@ namespace Immutable.Audience.Tests
 
                 foreach (var t in threads) t.Join(TimeSpan.FromSeconds(5));
 
-                var warningCount = lines.Count(l => l.Contains("Init called more than once"));
+                var warningCount = lines.Count(l => l.Contains(AudienceLogs.InitCalledTwice));
                 Assert.AreEqual(threadCount - 1, warningCount,
                     "exactly one thread should initialise; the other (threadCount - 1) should hit the duplicate-call warning branch");
             }
