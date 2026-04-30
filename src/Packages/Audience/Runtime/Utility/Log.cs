@@ -42,4 +42,99 @@ namespace Immutable.Audience
             }
         }
     }
+
+    internal static class AudienceLogs
+    {
+        // ---- Init / config validation ----
+
+        internal const string InitCalledTwice =
+            "Init called more than once. Ignoring; original config retained. " +
+            "Call Shutdown() first if reconfiguring is intended.";
+
+        internal static readonly string TestKeyAgainstProduction =
+            $"Publishable key has the test prefix ({Constants.TestKeyPrefix}) but BaseUrl points to production. " +
+            "The backend will reject events with 401. Either remove the BaseUrl override (test keys " +
+            "default to sandbox) or use a non-test publishable key.";
+
+        internal static readonly string NonTestKeyAgainstSandbox =
+            "Publishable key is not a test key but BaseUrl points to sandbox. " +
+            "The backend will reject events with 401. Either remove the BaseUrl override (non-test " +
+            $"keys default to production) or use a test publishable key ({Constants.TestKeyPrefix}).";
+
+        // ---- Track ----
+
+        internal const string TrackIEventNull =
+            "Track(IEvent) called with null event. Dropping.";
+
+        internal const string TrackStringEmptyName =
+            "Track(string) called with null or empty event name. Dropping.";
+
+        internal static string TrackIEventThrew(string evtTypeName, Exception ex) =>
+            $"Track(IEvent): {evtTypeName}.ToProperties()/EventName threw {ex.GetType().Name}: {ex.Message}. Dropping.";
+
+        internal static string TrackIEventEmptyName(string evtTypeName) =>
+            $"Track(IEvent): {evtTypeName}.EventName returned null or empty. Dropping.";
+
+        // ---- Identify / Alias ----
+
+        internal const string IdentifyEmptyUserId =
+            "Identify called with null or empty userId. Dropping.";
+
+        internal const string AliasEmptyIds =
+            "Alias called with null or empty fromId/toId. Dropping.";
+
+        internal static string IdentifyDiscarded(ConsentLevel current) =>
+            $"Identify discarded. Requires Full consent, current is {current}.";
+
+        internal static string AliasDiscarded(ConsentLevel current) =>
+            $"Alias discarded. Requires Full consent, current is {current}.";
+
+        // ---- Consent / Shutdown ----
+
+        internal static string ConsentPersistFailed(Exception ex) =>
+            $"SetConsent: failed to persist consent level. {ex.GetType().Name}: {ex.Message}. " +
+            "In-memory level is updated but will revert on next launch.";
+
+        internal static string ShutdownFlushExceeded(int timeoutMs) =>
+            $"Shutdown flush exceeded {timeoutMs}ms. Abandoning. " +
+            "Queued events remain on disk and will retry on next startup.";
+
+        internal static string ShutdownFlushThrew(Exception ex) =>
+            $"Shutdown flush threw: {ex.GetType().Name}: {ex.Message}";
+
+        // ---- onError handler swallow ----
+
+        internal static string OnErrorThrew(Exception ex) =>
+            $"onError threw {ex.GetType().Name}: {ex.Message}";
+
+        // ---- Send loop ----
+
+        internal static string SendBatchUnexpected(Exception ex) =>
+            $"SendBatch unexpected exception: {ex.GetType().Name}: {ex.Message}";
+
+        internal static string ParseRejectedCountThrew(Exception ex) =>
+            $"ParseRejectedCount threw {ex.GetType().Name}: {ex.Message}";
+
+        // ---- Session ----
+
+        internal const string SessionPauseAlreadyPaused =
+            "Session: Pause while already paused. Ignoring.";
+
+        internal const string SessionHeartbeatTimeout =
+            "Session: heartbeat callback did not complete within 1s on timer stop. " +
+            "A trailing session_heartbeat may race with the next session lifecycle event.";
+
+        internal static string SessionTrackCallbackThrew(string eventName, Exception ex) =>
+            $"Session: {eventName} track callback threw {ex.GetType().Name}. Event dropped.";
+
+        // ---- Context providers ----
+
+        internal static string ContextProviderThrew(Exception ex) =>
+            $"ContextProvider threw {ex.GetType().Name}: {ex.Message}. " +
+            "Event ships with base context only.";
+
+        internal static string LaunchContextProviderThrew(Exception ex) =>
+            $"LaunchContextProvider threw {ex.GetType().Name}: {ex.Message}. " +
+            "game_launch will ship without auto-detected Unity context.";
+    }
 }

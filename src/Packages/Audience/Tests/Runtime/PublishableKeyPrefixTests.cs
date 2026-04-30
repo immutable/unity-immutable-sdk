@@ -74,7 +74,7 @@ namespace Immutable.Audience.Tests
             {
                 ImmutableAudience.Init(MakeConfig(TestPrefixKey, ProductionUrl));
 
-                Assert.That(lines, Has.Some.Contains("test prefix").And.Contains("production"),
+                Assert.That(lines, Has.Some.Contains(AudienceLogs.TestKeyAgainstProduction),
                     "Init must warn when a test-prefix key is paired with the production BaseUrl");
             }
             finally { Log.Writer = null; }
@@ -89,7 +89,7 @@ namespace Immutable.Audience.Tests
             {
                 ImmutableAudience.Init(MakeConfig(NonTestKey, SandboxUrl));
 
-                Assert.That(lines, Has.Some.Contains("not a test key").And.Contains("sandbox"),
+                Assert.That(lines, Has.Some.Contains(AudienceLogs.NonTestKeyAgainstSandbox),
                     "Init must warn when a non-test key is paired with the sandbox BaseUrl");
             }
             finally { Log.Writer = null; }
@@ -104,7 +104,11 @@ namespace Immutable.Audience.Tests
             {
                 ImmutableAudience.Init(MakeConfig(TestPrefixKey, SandboxUrl));
 
-                Assert.That(lines.Where(l => l.Contains("BaseUrl")), Is.Empty,
+                Assert.That(
+                    lines.Where(l =>
+                        l.Contains(AudienceLogs.TestKeyAgainstProduction) ||
+                        l.Contains(AudienceLogs.NonTestKeyAgainstSandbox)),
+                    Is.Empty,
                     "test-key + sandbox-URL is the canonical pairing; no warning expected");
             }
             finally { Log.Writer = null; }
@@ -120,7 +124,11 @@ namespace Immutable.Audience.Tests
                 // Fake fixture URL on purpose.
                 ImmutableAudience.Init(MakeConfig(TestPrefixKey, "https://api.dev.example.com"));
 
-                Assert.That(lines.Where(l => l.Contains("BaseUrl")), Is.Empty,
+                Assert.That(
+                    lines.Where(l =>
+                        l.Contains(AudienceLogs.TestKeyAgainstProduction) ||
+                        l.Contains(AudienceLogs.NonTestKeyAgainstSandbox)),
+                    Is.Empty,
                     "custom BaseUrl must not be flagged as a mismatch");
             }
             finally { Log.Writer = null; }
@@ -135,7 +143,11 @@ namespace Immutable.Audience.Tests
             {
                 ImmutableAudience.Init(MakeConfig(TestPrefixKey, baseUrl: null));
 
-                Assert.That(lines.Where(l => l.Contains("BaseUrl")), Is.Empty,
+                Assert.That(
+                    lines.Where(l =>
+                        l.Contains(AudienceLogs.TestKeyAgainstProduction) ||
+                        l.Contains(AudienceLogs.NonTestKeyAgainstSandbox)),
+                    Is.Empty,
                     "no override means no mismatch; no warning expected");
             }
             finally { Log.Writer = null; }
@@ -150,7 +162,7 @@ namespace Immutable.Audience.Tests
             {
                 ImmutableAudience.Init(MakeConfig(TestPrefixKey, ProductionUrl + "/"));
 
-                Assert.That(lines, Has.Some.Contains("test prefix").And.Contains("production"),
+                Assert.That(lines, Has.Some.Contains(AudienceLogs.TestKeyAgainstProduction),
                     "trailing slash on the production URL must not bypass the mismatch check");
             }
             finally { Log.Writer = null; }

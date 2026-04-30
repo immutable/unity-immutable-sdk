@@ -159,8 +159,7 @@ namespace Immutable.Audience
             {
                 if (_initialized)
                 {
-                    Log.Warn("Init called more than once. Ignoring; original config retained. " +
-                             "Call Shutdown() first if reconfiguring is intended.");
+                    Log.Warn(AudienceLogs.InitCalledTwice);
                     return;
                 }
 
@@ -237,7 +236,7 @@ namespace Immutable.Audience
             if (!_initialized || !state.Level.CanTrack()) return;
             if (evt == null)
             {
-                Log.Warn("Track(IEvent) called with null event. Dropping.");
+                Log.Warn(AudienceLogs.TrackIEventNull);
                 return;
             }
 
@@ -254,13 +253,13 @@ namespace Immutable.Audience
             }
             catch (Exception ex)
             {
-                Log.Warn($"Track(IEvent): {evt.GetType().Name}.ToProperties()/EventName threw {ex.GetType().Name}: {ex.Message}. Dropping.");
+                Log.Warn(AudienceLogs.TrackIEventThrew(evt.GetType().Name, ex));
                 return;
             }
 
             if (string.IsNullOrEmpty(eventName))
             {
-                Log.Warn($"Track(IEvent): {evt.GetType().Name}.EventName returned null or empty. Dropping.");
+                Log.Warn(AudienceLogs.TrackIEventEmptyName(evt.GetType().Name));
                 return;
             }
 
@@ -284,7 +283,7 @@ namespace Immutable.Audience
             if (!_initialized || !state.Level.CanTrack()) return;
             if (string.IsNullOrEmpty(eventName))
             {
-                Log.Warn("Track(string) called with null or empty event name. Dropping.");
+                Log.Warn(AudienceLogs.TrackStringEmptyName);
                 return;
             }
 
@@ -315,7 +314,7 @@ namespace Immutable.Audience
             // Validate inputs before consent so null-arg callers get the right warning.
             if (string.IsNullOrEmpty(userId))
             {
-                Log.Warn("Identify called with null or empty userId. Dropping.");
+                Log.Warn(AudienceLogs.IdentifyEmptyUserId);
                 return;
             }
 
@@ -330,7 +329,7 @@ namespace Immutable.Audience
                 level = current.Level;
                 if (!level.CanIdentify())
                 {
-                    Log.Warn($"Identify discarded. Requires Full consent, current is {level}.");
+                    Log.Warn(AudienceLogs.IdentifyDiscarded(level));
                     return;
                 }
                 config = _config;
@@ -357,13 +356,13 @@ namespace Immutable.Audience
 
             if (string.IsNullOrEmpty(fromId) || string.IsNullOrEmpty(toId))
             {
-                Log.Warn("Alias called with null or empty fromId/toId. Dropping.");
+                Log.Warn(AudienceLogs.AliasEmptyIds);
                 return;
             }
             var state = _state;
             if (!state.Level.CanIdentify())
             {
-                Log.Warn($"Alias discarded. Requires Full consent, current is {state.Level}.");
+                Log.Warn(AudienceLogs.AliasDiscarded(state.Level));
                 return;
             }
 
@@ -486,7 +485,7 @@ namespace Immutable.Audience
             }
             catch (Exception ex)
             {
-                Log.Warn($"onError threw {ex.GetType().Name}: {ex.Message}");
+                Log.Warn(AudienceLogs.OnErrorThrew(ex));
             }
         }
 
@@ -579,8 +578,7 @@ namespace Immutable.Audience
             }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
             {
-                Log.Warn($"SetConsent: failed to persist consent level. {ex.GetType().Name}: {ex.Message}. " +
-                         "In-memory level is updated but will revert on next launch.");
+                Log.Warn(AudienceLogs.ConsentPersistFailed(ex));
                 NotifyErrorCallback(config.OnError, AudienceErrorCode.ConsentPersistFailed,
                     $"Consent persist failed: {ex.Message}");
             }
@@ -802,13 +800,12 @@ namespace Immutable.Audience
                     var send = transport.SendBatchAsync();
                     if (!send.Wait(timeoutMs))
                     {
-                        Log.Warn($"Shutdown flush exceeded {timeoutMs}ms. Abandoning. " +
-                                 "Queued events remain on disk and will retry on next startup.");
+                        Log.Warn(AudienceLogs.ShutdownFlushExceeded(timeoutMs));
                     }
                 }
                 catch (Exception ex)
                 {
-                    Log.Warn($"Shutdown flush threw: {ex.GetType().Name}: {ex.Message}");
+                    Log.Warn(AudienceLogs.ShutdownFlushThrew(ex));
                 }
             }
 
@@ -870,17 +867,11 @@ namespace Immutable.Audience
 
             if (isTestKey && trimmed == Constants.ProductionBaseUrl)
             {
-                Log.Warn(
-                    $"Publishable key has the test prefix ({Constants.TestKeyPrefix}) but BaseUrl points to production. " +
-                    "The backend will reject events with 401. Either remove the BaseUrl override (test keys " +
-                    "default to sandbox) or use a non-test publishable key.");
+                Log.Warn(AudienceLogs.TestKeyAgainstProduction);
             }
             else if (!isTestKey && trimmed == Constants.SandboxBaseUrl)
             {
-                Log.Warn(
-                    "Publishable key is not a test key but BaseUrl points to sandbox. " +
-                    "The backend will reject events with 401. Either remove the BaseUrl override (non-test " +
-                    $"keys default to production) or use a test publishable key ({Constants.TestKeyPrefix}).");
+                Log.Warn(AudienceLogs.NonTestKeyAgainstSandbox);
             }
         }
 
@@ -922,8 +913,7 @@ namespace Immutable.Audience
             }
             catch (Exception ex)
             {
-                Log.Warn($"ContextProvider threw {ex.GetType().Name}: {ex.Message}. " +
-                         "Event ships with base context only.");
+                Log.Warn(AudienceLogs.ContextProviderThrew(ex));
                 return;
             }
             if (extra == null) return;
@@ -959,7 +949,7 @@ namespace Immutable.Audience
                     catch (Exception ex)
                     {
                         // Timer-thread callback; no caller above to catch.
-                        Log.Warn($"SendBatch unexpected exception: {ex.GetType().Name}: {ex.Message}");
+                        Log.Warn(AudienceLogs.SendBatchUnexpected(ex));
                     }
                 }
 
@@ -1007,8 +997,7 @@ namespace Immutable.Audience
                 try { unityContext = provider(); }
                 catch (Exception ex)
                 {
-                    Log.Warn($"LaunchContextProvider threw {ex.GetType().Name}: {ex.Message}. " +
-                             "game_launch will ship without auto-detected Unity context.");
+                    Log.Warn(AudienceLogs.LaunchContextProviderThrew(ex));
                 }
 
                 if (unityContext != null)

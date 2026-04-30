@@ -288,7 +288,7 @@ namespace Immutable.Audience
             }
             catch (Exception ex)
             {
-                Log.Warn($"ParseRejectedCount threw {ex.GetType().Name}: {ex.Message}");
+                Log.Warn(AudienceLogs.ParseRejectedCountThrew(ex));
                 return 0;
             }
             if (string.IsNullOrEmpty(body)) return 0;
@@ -339,7 +339,7 @@ namespace Immutable.Audience
             }
             catch (Exception ex)
             {
-                Log.Warn($"_onError threw {ex.GetType().Name}: {ex.Message}");
+                Log.Warn(AudienceLogs.OnErrorThrew(ex));
             }
         }
     }

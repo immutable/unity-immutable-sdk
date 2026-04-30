@@ -499,7 +499,7 @@ namespace Immutable.Audience.Tests
 
                 lock (warnings)
                 {
-                    Assert.IsTrue(warnings.Any(w => w.Contains("heartbeat callback did not complete")),
+                    Assert.IsTrue(warnings.Any(w => w.Contains(AudienceLogs.SessionHeartbeatTimeout)),
                         "End must log the drain-timeout warning when an in-flight heartbeat exceeds 1 s");
                 }
             }
@@ -557,7 +557,8 @@ namespace Immutable.Audience.Tests
 
                 lock (warnings)
                 {
-                    Assert.IsTrue(warnings.Any(w => w.Contains("session_heartbeat track callback threw")),
+                    var expected = AudienceLogs.SessionTrackCallbackThrew("session_heartbeat", new InvalidOperationException());
+                    Assert.IsTrue(warnings.Any(w => w.Contains(expected)),
                         "SafeTrack must log a warning when the callback throws");
                 }
             }
@@ -590,7 +591,8 @@ namespace Immutable.Audience.Tests
 
                 lock (warnings)
                 {
-                    Assert.IsTrue(warnings.Any(w => w.Contains("session_start track callback threw")),
+                    var expected = AudienceLogs.SessionTrackCallbackThrew("session_start", new InvalidOperationException());
+                    Assert.IsTrue(warnings.Any(w => w.Contains(expected)),
                         "SafeTrack must log a warning when the Start callback throws");
                 }
             }
@@ -625,7 +627,8 @@ namespace Immutable.Audience.Tests
 
                 lock (warnings)
                 {
-                    Assert.IsTrue(warnings.Any(w => w.Contains("session_end track callback threw")),
+                    var expected = AudienceLogs.SessionTrackCallbackThrew("session_end", new InvalidOperationException());
+                    Assert.IsTrue(warnings.Any(w => w.Contains(expected)),
                         "SafeTrack must log a warning when the End callback throws");
                 }
             }
