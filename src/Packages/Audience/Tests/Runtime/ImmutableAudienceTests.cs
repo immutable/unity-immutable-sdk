@@ -1118,6 +1118,47 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
+        public void Init_LowercasesDistributionPlatform_WhenCallerPassesMixedCase()
+        {
+            var config = MakeConfig();
+            config.DistributionPlatform = "Steam";
+            ImmutableAudience.Init(config);
+
+            Assert.AreEqual("steam", config.DistributionPlatform,
+                "Init should lowercase mixed-case DistributionPlatform so dashboards aggregate consistently.");
+        }
+
+        [Test]
+        public void Init_LowercasesDistributionPlatform_WhenCallerPassesAllUpperCase()
+        {
+            var config = MakeConfig();
+            config.DistributionPlatform = "STEAM";
+            ImmutableAudience.Init(config);
+
+            Assert.AreEqual("steam", config.DistributionPlatform);
+        }
+
+        [Test]
+        public void Init_LeavesDistributionPlatformUnchanged_WhenAlreadyLowercase()
+        {
+            var config = MakeConfig();
+            config.DistributionPlatform = "steam";
+            ImmutableAudience.Init(config);
+
+            Assert.AreEqual("steam", config.DistributionPlatform);
+        }
+
+        [Test]
+        public void Init_LeavesDistributionPlatformNull_WhenNotSet()
+        {
+            var config = MakeConfig();
+            Assert.IsNull(config.DistributionPlatform);
+            ImmutableAudience.Init(config);
+
+            Assert.IsNull(config.DistributionPlatform);
+        }
+
+        [Test]
         public void Init_ConsentNone_DoesNotFireGameLaunch()
         {
             ImmutableAudience.Init(MakeConfig(ConsentLevel.None));

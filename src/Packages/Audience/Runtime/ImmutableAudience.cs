@@ -146,6 +146,13 @@ namespace Immutable.Audience
             if (string.IsNullOrEmpty(config.PersistentDataPath))
                 throw new ArgumentException("PersistentDataPath is required", nameof(config));
 
+            // Normalize casing so dashboards aggregate consistently. The
+            // DistributionPlatforms constants ship lowercase; a studio that
+            // passes "Steam" or "STEAM" would otherwise split rows from
+            // constant-using studios in the same project.
+            if (!string.IsNullOrEmpty(config.DistributionPlatform))
+                config.DistributionPlatform = config.DistributionPlatform.ToLowerInvariant();
+
             ConsentLevel consentAtInit;
             Session? sessionToStart;
             lock (_initLock)
