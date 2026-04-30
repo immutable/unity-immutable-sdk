@@ -141,7 +141,7 @@ namespace Immutable.Audience
         {
             if (depth >= MaxDepth)
                 throw new FormatException(
-                    $"JSON nesting exceeds {MaxDepth} levels — refusing to serialize. " +
+                    $"JSON nesting exceeds {MaxDepth} levels. Refusing to serialize. " +
                     "Check for a cyclic or excessively deep dictionary/list.");
         }
 
@@ -149,7 +149,7 @@ namespace Immutable.Audience
         {
             visited ??= new HashSet<object>(ReferenceEqualityComparer.Instance);
             if (!visited.Add(container))
-                throw new FormatException("JSON graph contains a cycle — refusing to serialize.");
+                throw new FormatException("JSON graph contains a cycle. Refusing to serialize.");
             return visited;
         }
 

@@ -29,8 +29,8 @@ namespace Immutable.Audience.Tests
             //
             // An unknown enum value must throw so the bug surfaces at the
             // cast site. Returning a default string instead would ship the
-            // event with a blank identityType — invisible to the deletion
-            // lookup — and hide the bug.
+            // event with a blank identityType (invisible to the deletion
+            // lookup) and hide the bug.
             var invalid = (IdentityType)999;
 
             Assert.Throws<ArgumentOutOfRangeException>(() => invalid.ToLowercaseString());

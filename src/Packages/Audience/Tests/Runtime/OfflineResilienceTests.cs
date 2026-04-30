@@ -103,7 +103,7 @@ namespace Immutable.Audience.Tests
 
         [Test]
         [Ignore("Target behaviour: memory-only fallback without losing in-flight events. " +
-                "EventQueue currently drops on IOException — remove [Ignore] once it retains.")]
+                "EventQueue currently drops on IOException; remove [Ignore] once it retains.")]
         public void Track_DiskWritesBlocked_RetainsEventsInMemory_AndSurfacesOnError()
         {
             var errors = new ConcurrentBag<AudienceError>();

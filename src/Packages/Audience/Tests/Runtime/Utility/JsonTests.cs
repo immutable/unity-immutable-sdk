@@ -136,7 +136,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Serialize_FloatValue_LargeExponent_PreservesValue()
         {
-            // 1e30f in scientific notation is valid JSON — must not be silently zeroed
+            // 1e30f in scientific notation is valid JSON; must not be silently zeroed
             var data = new Dictionary<string, object> { { "v", 1e30f } };
             var result = Json.Serialize(data);
             var serialised = result.Substring(result.IndexOf(':') + 1, result.Length - result.IndexOf(':') - 2);
@@ -147,7 +147,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Serialize_FloatValue_SmallNegativeExponent_PreservesValue()
         {
-            // 1e-30f — the old F6 fallback turned this into "0.000000"
+            // 1e-30f: the old F6 fallback turned this into "0.000000"
             var data = new Dictionary<string, object> { { "v", 1e-30f } };
             var result = Json.Serialize(data);
             var serialised = result.Substring(result.IndexOf(':') + 1, result.Length - result.IndexOf(':') - 2);

@@ -75,7 +75,7 @@ namespace Immutable.Audience.Tests
             // package directory. Originally this hard-coded four "../" hops
             // which only worked when bin/ sat inside Tests/. Directory.Build
             // .props redirects bin/ to the repo-root /artifacts/ folder so
-            // dotnet build outputs don't leak into Unity's scan path — the
+            // dotnet build outputs don't leak into Unity's scan path; the
             // relative walk no longer resolves to the package. Searching
             // upward is robust against either layout.
             var current = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);

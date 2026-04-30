@@ -18,7 +18,7 @@ namespace Immutable.Audience
     //
     // Start / End / Dispose are not safe to call from multiple threads at once.
     // Callers run them one at a time (ImmutableAudience holds its init lock while
-    // calling Init / SetConsent / Shutdown / Reset — the only public entry points
+    // calling Init / SetConsent / Shutdown / Reset, the only public entry points
     // that touch a Session). Pause / Resume / OnHeartbeat are safe to call from
     // any thread.
     internal sealed class Session : IDisposable
@@ -63,7 +63,7 @@ namespace Immutable.Audience
         {
             // Phase 1: shut down the old timer with the internal lock released
             // (the callback takes that lock itself). Old state left intact so a
-            // trailing callback sends a heartbeat for the old session — the
+            // trailing callback sends a heartbeat for the old session, and the
             // backend receives it before the new session_start.
             Timer? oldTimer;
             lock (_lock)
@@ -77,7 +77,7 @@ namespace Immutable.Audience
                 }
             }
 
-            // 500ms budget — double-Start is a misuse path.
+            // 500ms budget. Double-Start is a misuse path.
             TimerDisposal.DisposeAndWait(oldTimer, TimeSpan.FromMilliseconds(500));
 
             // Phase 2: populate new state. Re-check _disposed (may have flipped during drain).
@@ -112,7 +112,7 @@ namespace Immutable.Audience
                 // when End fires while paused), over-crediting engagement.
                 if (_pausedAt.HasValue)
                 {
-                    Log.Debug("Session: Pause while already paused — ignoring.");
+                    Log.Debug("Session: Pause while already paused. Ignoring.");
                     return;
                 }
                 _pausedAt = _getUtcNow();
@@ -248,7 +248,7 @@ namespace Immutable.Audience
         }
 
         // Stops exceptions from the track callback from reaching upstream.
-        // Heartbeat runs on a background timer — an uncaught exception there
+        // Heartbeat runs on a background timer, where an uncaught exception
         // crashes the game on modern .NET. Start / End run on the caller's
         // thread, where it would bubble into Init / Shutdown.
         private void SafeTrack(string eventName, Dictionary<string, object> properties)

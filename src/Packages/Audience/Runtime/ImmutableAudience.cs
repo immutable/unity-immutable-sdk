@@ -18,7 +18,7 @@ namespace Immutable.Audience
         // `volatile _initialized` flag first so they never see a half-initialised state.
         // _state (consent level + userId) and _session are volatile so a write
         // on one thread is visible on any other. Every _state write happens
-        // under _initLock so level and userId always move together — callers
+        // under _initLock so level and userId always move together. Callers
         // never observe (Anonymous, oldUserId).
         //
         // Init / Shutdown / Reset / SetConsent hold _initLock only to flip state
@@ -117,7 +117,7 @@ namespace Immutable.Audience
                 // Fence off the volatile _initialized load first, matching
                 // the protocol documented on the reference fields. Without
                 // this, a weak-memory-order reader could observe
-                // _initialized=true but _queue/_store still null — the ?.
+                // _initialized=true but _queue/_store still null; the ?.
                 // short-circuits to 0 in that case, but the inconsistency
                 // would break the protocol the file claims to follow.
                 if (!_initialized) return 0;
@@ -152,7 +152,7 @@ namespace Immutable.Audience
             {
                 if (_initialized)
                 {
-                    Log.Warn("Init called more than once — ignoring; original config retained. " +
+                    Log.Warn("Init called more than once. Ignoring; original config retained. " +
                              "Call Shutdown() first if reconfiguring is intended.");
                     return;
                 }
@@ -230,7 +230,7 @@ namespace Immutable.Audience
             if (!_initialized || !state.Level.CanTrack()) return;
             if (evt == null)
             {
-                Log.Warn("Track(IEvent) called with null event — dropping.");
+                Log.Warn("Track(IEvent) called with null event. Dropping.");
                 return;
             }
 
@@ -247,13 +247,13 @@ namespace Immutable.Audience
             }
             catch (Exception ex)
             {
-                Log.Warn($"Track(IEvent) — {evt.GetType().Name}.ToProperties()/EventName threw {ex.GetType().Name}: {ex.Message}. Dropping.");
+                Log.Warn($"Track(IEvent): {evt.GetType().Name}.ToProperties()/EventName threw {ex.GetType().Name}: {ex.Message}. Dropping.");
                 return;
             }
 
             if (string.IsNullOrEmpty(eventName))
             {
-                Log.Warn($"Track(IEvent) — {evt.GetType().Name}.EventName returned null or empty. Dropping.");
+                Log.Warn($"Track(IEvent): {evt.GetType().Name}.EventName returned null or empty. Dropping.");
                 return;
             }
 
@@ -277,7 +277,7 @@ namespace Immutable.Audience
             if (!_initialized || !state.Level.CanTrack()) return;
             if (string.IsNullOrEmpty(eventName))
             {
-                Log.Warn("Track(string) called with null or empty event name — dropping.");
+                Log.Warn("Track(string) called with null or empty event name. Dropping.");
                 return;
             }
 
@@ -321,14 +321,14 @@ namespace Immutable.Audience
             // Validate inputs before consent so null-arg callers get the right warning.
             if (string.IsNullOrEmpty(userId))
             {
-                Log.Warn("Identify called with null or empty userId — dropping.");
+                Log.Warn("Identify called with null or empty userId. Dropping.");
                 return;
             }
 
             AudienceConfig? config;
             ConsentLevel level;
             // Update consent + userId under the init lock so they always move
-            // together — another thread reading _state never sees one half-updated.
+            // together; another thread reading _state never sees one half-updated.
             lock (_initLock)
             {
                 if (!_initialized) return;
@@ -336,7 +336,7 @@ namespace Immutable.Audience
                 level = current.Level;
                 if (!level.CanIdentify())
                 {
-                    Log.Warn($"Identify discarded — requires Full consent, current is {level}");
+                    Log.Warn($"Identify discarded. Requires Full consent, current is {level}.");
                     return;
                 }
                 config = _config;
@@ -379,13 +379,13 @@ namespace Immutable.Audience
 
             if (string.IsNullOrEmpty(fromId) || string.IsNullOrEmpty(toId))
             {
-                Log.Warn("Alias called with null or empty fromId/toId — dropping.");
+                Log.Warn("Alias called with null or empty fromId/toId. Dropping.");
                 return;
             }
             var state = _state;
             if (!state.Level.CanIdentify())
             {
-                Log.Warn($"Alias discarded — requires Full consent, current is {state.Level}");
+                Log.Warn($"Alias discarded. Requires Full consent, current is {state.Level}.");
                 return;
             }
 
@@ -422,7 +422,7 @@ namespace Immutable.Audience
                 _state = _state with { UserId = null };
 
                 // Swap under the lock so racing SetConsent/OnPause/OnResume see
-                // either the old, the new, or null — never a torn reference.
+                // either the old, the new, or null; never a torn reference.
                 _session = _state.Level.CanTrack() ? new Session(Track) : null;
                 newSession = _session;
             }
@@ -488,7 +488,7 @@ namespace Immutable.Audience
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
-                    // Shutdown cancelled — caller is tearing down, no error fired.
+                    // Shutdown cancelled; caller is tearing down, no error fired.
                 }
                 catch (Exception ex)
                 {
@@ -534,7 +534,7 @@ namespace Immutable.Audience
             // Identity methods hold their own _sync lock; disk I/O on a cold
             // cache (None → Anonymous/Full upgrade creates the UUID file) does
             // not block _initLock. A racing SetConsent may change _state
-            // between this read and our lock acquire — acceptable, the racing
+            // between this read and our lock acquire (acceptable, the racing
             // call fires its own PUT and our slightly-stale ID still
             // identifies the user.
             var anonymousIdForPut = snapshotPrevious == ConsentLevel.None
@@ -600,7 +600,7 @@ namespace Immutable.Audience
             }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
             {
-                Log.Warn($"SetConsent — failed to persist consent level: {ex.GetType().Name}: {ex.Message}. " +
+                Log.Warn($"SetConsent: failed to persist consent level. {ex.GetType().Name}: {ex.Message}. " +
                          "In-memory level is updated but will revert on next launch.");
                 NotifyErrorCallback(config.OnError, AudienceErrorCode.ConsentPersistFailed,
                     $"Consent persist failed: {ex.Message}");
@@ -726,7 +726,7 @@ namespace Immutable.Audience
             }
             catch (ObjectDisposedException)
             {
-                // Concurrent Shutdown disposed the transport. Exit silently —
+                // Concurrent Shutdown disposed the transport. Exit silently;
                 // caller is tearing down.
             }
             finally
@@ -743,7 +743,7 @@ namespace Immutable.Audience
             // Fire session_end before taking _initLock. _initialized is still
             // true here so Track's CanTrack gate lets it through. Idempotent
             // under concurrent Shutdown / SetConsent(None) via the _sessionId
-            // reset inside EmitEndAndSeal — a second call finds _sessionId
+            // reset inside EmitEndAndSeal: a second call finds _sessionId
             // null and no-ops. Heartbeat timer drain still runs in Phase 2
             // via session.Dispose(); its re-emission inside End() also no-ops.
             _session?.EmitEndAndSeal();
@@ -770,7 +770,7 @@ namespace Immutable.Audience
                 // before the flag flip. Idempotent on the same instance (no-op
                 // via _sessionId null check); the slow path only runs when
                 // Reset fully completed its Start() between the outside-lock
-                // call above and this point — a narrow window.
+                // call above and this point (a narrow window).
                 _session?.EmitEndAndSeal();
 
                 // Flip the gate. Init / SetConsent / Reset acquiring after
@@ -810,7 +810,7 @@ namespace Immutable.Audience
             TimerDisposal.DisposeAndWait(timer, TimeSpan.FromSeconds(2));
 
             // Clear the gate in case WaitOne timed out with SendBatch still running
-            // — a later Init would otherwise be stranded at 1.
+            // (a later Init would otherwise be stranded at 1).
             Interlocked.Exchange(ref _sendInFlight, 0);
 
             queue?.Shutdown();
@@ -823,7 +823,7 @@ namespace Immutable.Audience
                     var send = transport.SendBatchAsync();
                     if (!send.Wait(timeoutMs))
                     {
-                        Log.Warn($"Shutdown flush exceeded {timeoutMs}ms — abandoning. " +
+                        Log.Warn($"Shutdown flush exceeded {timeoutMs}ms. Abandoning. " +
                                  "Queued events remain on disk and will retry on next startup.");
                     }
                 }
@@ -844,7 +844,7 @@ namespace Immutable.Audience
         }
 
         // -----------------------------------------------------------------
-        // Internal — shared with tests and AudienceUnityHooks
+        // Internal: shared with tests and AudienceUnityHooks
         // -----------------------------------------------------------------
 
         // Providers reassigned by SubsystemRegistration.

@@ -54,7 +54,7 @@ namespace Immutable.Audience.Tests
             };
 
         // -----------------------------------------------------------------
-        // Track — sustained throughput across N threads
+        // Track: sustained throughput across N threads
         // -----------------------------------------------------------------
 
         [Test]
@@ -108,7 +108,7 @@ namespace Immutable.Audience.Tests
             sw.Stop();
 
             CollectionAssert.IsEmpty(exceptions,
-                $"sustained Track load must not throw — observed {exceptions.Count} exception(s)");
+                $"sustained Track load must not throw; observed {exceptions.Count} exception(s)");
 
             int totalFired = firedPerThread.Sum();
             double perThreadRate = totalFired / (double)threadCount / sw.Elapsed.TotalSeconds;
@@ -117,7 +117,7 @@ namespace Immutable.Audience.Tests
                 $"Track threads={threadCount} fired={totalFired} elapsed={sw.Elapsed.TotalSeconds:F2}s rate={perThreadRate:F0}/sec/thread");
 
             Assert.GreaterOrEqual(perThreadRate, 200,
-                $"sustained Track throughput collapsed below floor — observed {perThreadRate:F0}/sec/thread");
+                $"sustained Track throughput collapsed below floor; observed {perThreadRate:F0}/sec/thread");
 
             ImmutableAudience.FlushQueueToDiskForTesting();
 
@@ -196,7 +196,7 @@ namespace Immutable.Audience.Tests
             foreach (var th in threads) th.Join();
 
             CollectionAssert.IsEmpty(exceptions,
-                $"concurrent Track / Identify / SetConsent must not throw — observed {exceptions.Count} exception(s)");
+                $"concurrent Track / Identify / SetConsent must not throw; observed {exceptions.Count} exception(s)");
             Assert.IsTrue(ImmutableAudience.Initialized,
                 "SDK should remain initialised after the mixed-workload run");
 
@@ -207,7 +207,7 @@ namespace Immutable.Audience.Tests
         }
 
         // -----------------------------------------------------------------
-        // Allocation profile — bounded growth + no Gen 2 churn
+        // Allocation profile: bounded growth + no Gen 2 churn
         // -----------------------------------------------------------------
 
         [Test]

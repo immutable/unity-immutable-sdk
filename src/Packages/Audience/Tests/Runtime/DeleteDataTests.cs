@@ -113,7 +113,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void DeleteData_NoUserId_NoAnonymousId_DoesNotFireRequest()
         {
-            // Use Consent.None so Init's game_launch is suppressed — the only way
+            // Use Consent.None so Init's game_launch is suppressed: the only way
             // to guarantee no HTTP request fires at all.
             var handler = new CapturingHandler();
             ImmutableAudience.Init(MakeConfig(handler, ConsentLevel.None));
@@ -165,7 +165,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void DeleteData_BeforeInit_ReturnsCompletedTask()
         {
-            // Not initialised — must not throw, must return a completed Task.
+            // Not initialised: must not throw, must return a completed Task.
             ImmutableAudience.ResetState();
 
             var task = ImmutableAudience.DeleteData(userId: "player-42");

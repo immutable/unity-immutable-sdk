@@ -13,7 +13,7 @@ namespace Immutable.Audience
     // Reset() at startup to ensure a clean state in that scenario.
     internal sealed class Identity
     {
-        // In-memory cache — volatile so background threads always see the latest write.
+        // In-memory cache. Volatile so background threads always see the latest write.
         private static volatile string? _cachedId;
         private static readonly object _sync = new object();
 
@@ -66,11 +66,11 @@ namespace Immutable.Audience
             if (!consent.CanTrack())
                 return null;
 
-            // Fast path — already loaded this session, no lock needed.
+            // Fast path: already loaded this session, no lock needed.
             if (_cachedId != null)
                 return _cachedId;
 
-            // Slow path — first call or after Reset(). Only one thread does the work.
+            // Slow path: first call or after Reset(). Only one thread does the work.
             lock (_sync)
             {
                 // Re-check after acquiring the lock in case another thread beat us here.
@@ -82,14 +82,14 @@ namespace Immutable.Audience
 
                 var filePath = AudiencePaths.IdentityFile(persistentDataPath);
 
-                // Returning player — read the ID we wrote on a previous launch.
+                // Returning player: read the ID we wrote on a previous launch.
                 if (File.Exists(filePath))
                 {
                     _cachedId = File.ReadAllText(filePath).Trim();
                     return _cachedId;
                 }
 
-                // New install — generate a UUID and persist it atomically.
+                // New install: generate a UUID and persist it atomically.
                 // Write to a .tmp file first so a crash mid-write leaves no corrupt file.
                 var newId = Guid.NewGuid().ToString();
                 var tmpPath = filePath + ".tmp";
@@ -101,7 +101,7 @@ namespace Immutable.Audience
                 }
                 catch (IOException)
                 {
-                    // Unexpected — file appeared between our Exists check and Move (shouldn't happen in practice).
+                    // Unexpected: file appeared between our Exists check and Move (shouldn't happen in practice).
                     // Delete and retry to ensure a clean state.
                     File.Delete(filePath);
                     File.Move(tmpPath, filePath);
@@ -128,7 +128,7 @@ namespace Immutable.Audience
                 }
                 catch (Exception e) when (e is FileNotFoundException || e is DirectoryNotFoundException)
                 {
-                    // File was never written (e.g. consent was None) — nothing to do.
+                    // File was never written (e.g. consent was None). Nothing to do.
                 }
             }
         }

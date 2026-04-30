@@ -189,7 +189,7 @@ namespace Immutable.Audience.Tests
             session.Pause(); // first Pause anchors _pausedAt at T=5
 
             now = now.AddSeconds(3);
-            session.Pause(); // second Pause at T=8 — should be ignored
+            session.Pause(); // second Pause at T=8, should be ignored
 
             now = now.AddSeconds(2); // paused for another 2s
             session.Resume(); // resume at T=10, pause window spans T=5 to T=10
@@ -251,7 +251,7 @@ namespace Immutable.Audience.Tests
             // pause duration was clamped to 0, so engaged seconds = 7 - 0 = 7.
             // Without the clamp, _accumulatedPause would be -5, the
             // subtraction would over-credit, and engaged seconds would
-            // be 12 — well outside the wall-clock window.
+            // be 12, well outside the wall-clock window.
             Assert.AreEqual(7L, duration,
                 "negative pauseDuration must clamp to zero so the accumulator does not over-credit engagement");
         }
@@ -290,8 +290,8 @@ namespace Immutable.Audience.Tests
             // fires End). Without the livePause ≥ 0 clamp in
             // ComputeEngagedSecondsLocked, livePause goes negative and,
             // being subtracted, inflates duration past the wall-clock window
-            // — the final engagedSeconds ≥ 0 clamp only catches negatives,
-            // not over-credit. Sabotage: removing the livePause clamp lets
+            // (the final engagedSeconds ≥ 0 clamp only catches negatives,
+            // not over-credit). Sabotage: removing the livePause clamp lets
             // this test report 15s instead of the ≤ 5s wall-clock window.
             var now = new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc);
             DateTime Clock() => now;
@@ -377,7 +377,7 @@ namespace Immutable.Audience.Tests
             now = now.AddSeconds(10); // 10 s engaged before pause
             session.Pause();
 
-            now = now.AddSeconds(40); // 40 s paused — extended (>30 s threshold)
+            now = now.AddSeconds(40); // 40 s paused: extended (>30 s threshold)
             session.Resume();
 
             var sessionEnd = _events.First(e => e.name == "session_end");
@@ -761,7 +761,7 @@ namespace Immutable.Audience.Tests
             //
             // Signature-pin (rename / parameter change) also still holds
             // via the direct ImmutableAudience.OnPause() / OnResume() call
-            // sites — a change there breaks compilation here.
+            // sites; a change there breaks compilation here.
             ImmutableAudience.Init(MakeConfig());
 
             ImmutableAudience.OnPause();
@@ -770,7 +770,7 @@ namespace Immutable.Audience.Tests
 
             Assert.IsFalse(
                 ReadQueueFiles().Any(c => c.Contains("\"session_heartbeat\"")),
-                "OnPause must route to Session.Pause — paused sessions quiesce heartbeats");
+                "OnPause must route to Session.Pause; paused sessions quiesce heartbeats");
 
             ImmutableAudience.OnResume();
             ImmutableAudience.InvokeSessionHeartbeatForTesting();
@@ -778,7 +778,7 @@ namespace Immutable.Audience.Tests
 
             Assert.IsTrue(
                 ReadQueueFiles().Any(c => c.Contains("\"session_heartbeat\"")),
-                "OnResume must route to Session.Resume — resumed sessions emit heartbeats again");
+                "OnResume must route to Session.Resume; resumed sessions emit heartbeats again");
 
             ImmutableAudience.Shutdown();
         }
@@ -798,7 +798,7 @@ namespace Immutable.Audience.Tests
         {
             // Reset must end the old session and start a new one so subsequent
             // Track events carry a fresh sessionId alongside the fresh
-            // anonymousId — matches Web SDK reset() semantics. The old
+            // anonymousId; matches Web SDK reset() semantics. The old
             // session's session_end is enqueued by Session.Dispose but wiped
             // by the PurgeAll in Reset, so the wire sees only a session_start
             // for the new session.

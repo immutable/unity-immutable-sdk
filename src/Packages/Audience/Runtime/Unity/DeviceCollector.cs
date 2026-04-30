@@ -92,7 +92,7 @@ namespace Immutable.Audience.Unity
         private static string Truncate(string s, int max)
         {
             if (string.IsNullOrEmpty(s) || s.Length <= max) return s;
-            // Step back one if the cut would split a surrogate pair — leaving
+            // Step back one if the cut would split a surrogate pair. Leaving
             // a lone high-surrogate produces invalid UTF-16 on the wire.
             var cut = max;
             if (char.IsHighSurrogate(s[cut - 1])) cut--;
