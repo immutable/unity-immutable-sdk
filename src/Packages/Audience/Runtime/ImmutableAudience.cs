@@ -1016,7 +1016,7 @@ namespace Immutable.Audience
 
             // Config-supplied distributionPlatform overrides the provider value.
             if (config.DistributionPlatform != null)
-                properties["distributionPlatform"] = config.DistributionPlatform;
+                properties[GameLaunchPropertyKeys.DistributionPlatform] = config.DistributionPlatform;
 
             // No sessionId on game_launch per Event Reference. Pipeline correlates
             // via eventTimestamp with the session_start that fires just before.

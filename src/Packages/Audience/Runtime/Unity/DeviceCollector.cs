@@ -14,17 +14,17 @@ namespace Immutable.Audience.Unity
             // 256-char cap mirrors Web SDK's identifier truncation.
             var ctx = new Dictionary<string, object>
             {
-                ["userAgent"] = Truncate(SystemInfo.operatingSystem, 256),
+                [ContextKeys.UserAgent] = Truncate(SystemInfo.operatingSystem, Constants.MaxFieldLength),
             };
 
             var timezone = SafeTimezone();
-            if (timezone != null) ctx["timezone"] = Truncate(timezone, 256);
+            if (timezone != null) ctx[ContextKeys.Timezone] = Truncate(timezone, Constants.MaxFieldLength);
 
             var locale = LocaleString();
-            if (locale != null) ctx["locale"] = Truncate(locale, 256);
+            if (locale != null) ctx[ContextKeys.Locale] = Truncate(locale, Constants.MaxFieldLength);
 
             var screen = TryResolveScreenString();
-            if (screen != null) ctx["screen"] = Truncate(screen, 256);
+            if (screen != null) ctx[ContextKeys.Screen] = Truncate(screen, Constants.MaxFieldLength);
 
             return ctx;
         }
@@ -49,22 +49,22 @@ namespace Immutable.Audience.Unity
         {
             var props = new Dictionary<string, object>
             {
-                ["platform"] = Application.platform.ToString(),
-                ["version"] = Truncate(Application.version, 256),
-                ["buildGuid"] = Truncate(Application.buildGUID, 256),
-                ["unityVersion"] = Truncate(Application.unityVersion, 256),
-                ["osFamily"] = SystemInfo.operatingSystemFamily.ToString(),
-                ["deviceModel"] = Truncate(SystemInfo.deviceModel, 256),
-                ["gpu"] = Truncate(SystemInfo.graphicsDeviceName, 256),
-                ["gpuVendor"] = Truncate(SystemInfo.graphicsDeviceVendor, 256),
-                ["cpu"] = Truncate(SystemInfo.processorType, 256),
-                ["cpuCores"] = SystemInfo.processorCount,
-                ["ramMb"] = SystemInfo.systemMemorySize,
+                [GameLaunchPropertyKeys.Platform] = Application.platform.ToString(),
+                [GameLaunchPropertyKeys.Version] = Truncate(Application.version, Constants.MaxFieldLength),
+                [GameLaunchPropertyKeys.BuildGuid] = Truncate(Application.buildGUID, Constants.MaxFieldLength),
+                [GameLaunchPropertyKeys.UnityVersion] = Truncate(Application.unityVersion, Constants.MaxFieldLength),
+                [GameLaunchPropertyKeys.OsFamily] = SystemInfo.operatingSystemFamily.ToString(),
+                [GameLaunchPropertyKeys.DeviceModel] = Truncate(SystemInfo.deviceModel, Constants.MaxFieldLength),
+                [GameLaunchPropertyKeys.Gpu] = Truncate(SystemInfo.graphicsDeviceName, Constants.MaxFieldLength),
+                [GameLaunchPropertyKeys.GpuVendor] = Truncate(SystemInfo.graphicsDeviceVendor, Constants.MaxFieldLength),
+                [GameLaunchPropertyKeys.Cpu] = Truncate(SystemInfo.processorType, Constants.MaxFieldLength),
+                [GameLaunchPropertyKeys.CpuCores] = SystemInfo.processorCount,
+                [GameLaunchPropertyKeys.RamMb] = SystemInfo.systemMemorySize,
             };
 
             // Screen.dpi can be 0 on some Linux WMs.
             var dpi = (int)Screen.dpi;
-            if (dpi > 0) props["screenDpi"] = dpi;
+            if (dpi > 0) props[GameLaunchPropertyKeys.ScreenDpi] = dpi;
 
             return props;
         }

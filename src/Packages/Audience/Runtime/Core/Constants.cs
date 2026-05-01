@@ -62,6 +62,33 @@ namespace Immutable.Audience
         internal const string Alias = "alias";
     }
 
+    // Property keys for the auto-fired game_launch event.
+    internal static class GameLaunchPropertyKeys
+    {
+        internal const string Platform = "platform";
+        internal const string Version = "version";
+        internal const string BuildGuid = "buildGuid";
+        internal const string UnityVersion = "unityVersion";
+        internal const string OsFamily = "osFamily";
+        internal const string DeviceModel = "deviceModel";
+        internal const string Gpu = "gpu";
+        internal const string GpuVendor = "gpuVendor";
+        internal const string Cpu = "cpu";
+        internal const string CpuCores = "cpuCores";
+        internal const string RamMb = "ramMb";
+        internal const string ScreenDpi = "screenDpi";
+        internal const string DistributionPlatform = "distributionPlatform";
+    }
+
+    // Keys merged into every event's context dictionary.
+    internal static class ContextKeys
+    {
+        internal const string UserAgent = "userAgent";
+        internal const string Timezone = "timezone";
+        internal const string Locale = "locale";
+        internal const string Screen = "screen";
+    }
+
     // JSON keys for the consent-sync PUT body.
     internal static class ConsentBodyFields
     {
