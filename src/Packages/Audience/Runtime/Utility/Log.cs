@@ -43,6 +43,25 @@ namespace Immutable.Audience
         }
     }
 
+    // ArgumentException messages thrown from public SDK methods.
+    internal static class AudienceArgumentMessages
+    {
+        // Init / config validation
+        internal const string PublishableKeyRequired = "PublishableKey is required";
+        internal const string PersistentDataPathRequired = "PersistentDataPath is required";
+
+        // Typed-event ToProperties validation
+        internal const string ProgressionStatusRequired = "Progression.Status is required. Set it before calling Track(IEvent).";
+        internal const string ResourceFlowRequired = "Resource.Flow is required. Set it before calling Track(IEvent).";
+        internal const string ResourceCurrencyRequired = "Resource.Currency is required. Set a non-empty string before calling Track(IEvent).";
+        internal const string ResourceAmountRequired = "Resource.Amount is required. Set it before calling Track(IEvent).";
+        internal const string PurchaseValueRequired = "Purchase.Value is required. Set it before calling Track(IEvent).";
+        internal const string MilestoneReachedNameRequired = "MilestoneReached.Name must not be null or empty";
+
+        internal static string PurchaseCurrencyInvalid(string? currency) =>
+            $"Purchase.Currency '{currency}' must be a three-letter uppercase ISO 4217 code";
+    }
+
     // Error messages we pass to AudienceConfig.OnError.
     internal static class AudienceErrorMessages
     {

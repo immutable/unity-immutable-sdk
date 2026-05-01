@@ -146,12 +146,12 @@ namespace Immutable.Audience
         {
             if (config == null) throw new ArgumentNullException(nameof(config));
             if (string.IsNullOrEmpty(config.PublishableKey))
-                throw new ArgumentException("PublishableKey is required", nameof(config));
+                throw new ArgumentException(AudienceArgumentMessages.PublishableKeyRequired, nameof(config));
 
             if (string.IsNullOrEmpty(config.PersistentDataPath))
                 config.PersistentDataPath = DefaultPersistentDataPathProvider?.Invoke();
             if (string.IsNullOrEmpty(config.PersistentDataPath))
-                throw new ArgumentException("PersistentDataPath is required", nameof(config));
+                throw new ArgumentException(AudienceArgumentMessages.PersistentDataPathRequired, nameof(config));
 
             // Normalize casing so dashboards aggregate consistently. The
             // DistributionPlatforms constants ship lowercase; a studio that
