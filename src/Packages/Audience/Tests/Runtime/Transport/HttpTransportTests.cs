@@ -85,8 +85,8 @@ namespace Immutable.Audience.Tests
             await transport.SendBatchAsync();
 
             Assert.AreEqual("pk_imapik-test-key1", capturedKey);
-            Assert.AreEqual("application/json", capturedContentType);
-            Assert.AreEqual("gzip", capturedContentEncoding);
+            Assert.AreEqual(Constants.MediaTypeJson, capturedContentType);
+            Assert.AreEqual(Constants.GzipEncoding, capturedContentEncoding);
 
             var decompressed = DecompressGzip(capturedBody!);
             StringAssert.StartsWith("{\"messages\":[", decompressed);
@@ -116,7 +116,7 @@ namespace Immutable.Audience.Tests
             await transport.SendBatchAsync();
 
             Assert.AreEqual("pk_imapik-test-key1", capturedKey);
-            Assert.AreEqual("application/json", capturedContentType);
+            Assert.AreEqual(Constants.MediaTypeJson, capturedContentType);
             Assert.AreEqual(0, capturedContentEncodingCount, "no Content-Encoding header is permitted in v1");
             StringAssert.StartsWith("{\"messages\":[", capturedBody);
             StringAssert.EndsWith("]}", capturedBody);

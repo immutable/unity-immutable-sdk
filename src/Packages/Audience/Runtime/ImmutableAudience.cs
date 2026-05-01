@@ -635,7 +635,7 @@ namespace Immutable.Audience
                         attempt++;
                         using var request = new HttpRequestMessage(HttpMethod.Put, url);
                         request.Headers.Add(Constants.PublishableKeyHeader, publishableKey);
-                        request.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
+                        request.Content = new StringContent(body, System.Text.Encoding.UTF8, Constants.MediaTypeJson);
                         using var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
                         if (response.IsSuccessStatusCode) return;

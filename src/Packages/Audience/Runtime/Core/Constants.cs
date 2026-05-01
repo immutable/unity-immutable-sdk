@@ -25,6 +25,10 @@ namespace Immutable.Audience
         internal const string ConsentSource = "UnitySDK";
 
         internal const string PublishableKeyHeader = "x-immutable-publishable-key";
+        internal const string ContentEncodingHeader = "Content-Encoding";
+
+        internal const string MediaTypeJson = "application/json";
+        internal const string GzipEncoding = "gzip";
 
         internal static string MessagesUrl(string? publishableKey, string? baseUrlOverride = null) =>
             BaseUrl(publishableKey, baseUrlOverride) + MessagesPath;

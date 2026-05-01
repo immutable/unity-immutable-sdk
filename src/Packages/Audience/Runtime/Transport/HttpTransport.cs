@@ -89,10 +89,10 @@ namespace Immutable.Audience
 #if IMMUTABLE_AUDIENCE_GZIP
                 var compressed = Gzip.Compress(payload);
                 request.Content = new ByteArrayContent(compressed);
-                request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                request.Content.Headers.Add("Content-Encoding", "gzip");
+                request.Content.Headers.ContentType = new MediaTypeHeaderValue(Constants.MediaTypeJson);
+                request.Content.Headers.Add(Constants.ContentEncodingHeader, Constants.GzipEncoding);
 #else
-                request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+                request.Content = new StringContent(payload, Encoding.UTF8, Constants.MediaTypeJson);
 #endif
 
                 using var response = await _client.SendAsync(request, ct).ConfigureAwait(false);
