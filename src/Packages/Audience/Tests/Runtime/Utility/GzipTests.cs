@@ -12,7 +12,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Compress_ProducesValidGzip_ThatDecompressesToOriginal()
         {
-            const string original = "{\"type\":\"track\",\"eventName\":\"test\"}";
+            var original = WireFixture.Track((MessageFields.EventName, "test"));
 
             var compressed = Gzip.Compress(original);
 
@@ -33,7 +33,9 @@ namespace Immutable.Audience.Tests
             for (var i = 0; i < 20; i++)
             {
                 if (i > 0) sb.Append(',');
-                sb.Append($"{{\"type\":\"track\",\"eventName\":\"level_complete\",\"anonymousId\":\"anon-{i}\"}}");
+                sb.Append(WireFixture.Track(
+                    (MessageFields.EventName, "level_complete"),
+                    (MessageFields.AnonymousId, $"anon-{i}")));
             }
 
             sb.Append("]}");
