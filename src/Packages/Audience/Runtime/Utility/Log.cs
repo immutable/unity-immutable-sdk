@@ -6,7 +6,9 @@ namespace Immutable.Audience
 {
     internal static class Log
     {
-        private const string Prefix = "[ImmutableAudience]";
+        // Prepended to every SDK log line. Internal so the sample-app log adapter can strip it.
+        internal const string Prefix = "[ImmutableAudience]";
+        internal const string WarnPrefix = Prefix + " WARN:";
 
         internal static bool Enabled { get; set; }
 
@@ -20,7 +22,7 @@ namespace Immutable.Audience
         }
 
         internal static void Warn(string message) =>
-            Emit($"{Prefix} WARN: {message}");
+            Emit($"{WarnPrefix} {message}");
 
         private static void Emit(string line)
         {
