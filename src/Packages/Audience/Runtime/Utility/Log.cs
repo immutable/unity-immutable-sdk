@@ -43,6 +43,25 @@ namespace Immutable.Audience
         }
     }
 
+    // Error messages we pass to AudienceConfig.OnError.
+    internal static class AudienceErrorMessages
+    {
+        internal static string LocalStorageReadFailed(Exception ex) =>
+            $"Local storage read failed: {ex.Message}";
+
+        internal static string BatchPartiallyRejected(int rejected, int total) =>
+            $"Batch partially rejected: {rejected} of {total} events dropped";
+
+        internal const string BatchRejectedPrefix = "Batch rejected";
+        internal const string ServerErrorWillRetryPrefix = "Server error, will retry";
+
+        internal static string ConsentSyncFailedWithStatus(int statusCode) =>
+            $"Consent sync failed with status {statusCode}";
+
+        internal static string ConsentSyncThrew(Exception ex) =>
+            $"Consent sync threw: {ex.Message}";
+    }
+
     internal static class AudienceLogs
     {
         // ---- Init / config validation ----

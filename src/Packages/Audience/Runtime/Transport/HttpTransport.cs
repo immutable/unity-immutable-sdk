@@ -81,7 +81,7 @@ namespace Immutable.Audience
                 // Non-IOException = unrecoverable storage failure (e.g. permissions);
                 // retry won't help. Drop the batch, report via onError.
                 _store.Delete(batch);
-                NotifyError(AudienceErrorCode.FlushFailed, $"Local storage read failed: {ex.Message}");
+                NotifyError(AudienceErrorCode.FlushFailed, AudienceErrorMessages.LocalStorageReadFailed(ex));
                 return true;
             }
 
@@ -122,7 +122,7 @@ namespace Immutable.Audience
                     if (rejected > 0)
                     {
                         NotifyError(AudienceErrorCode.ValidationRejected,
-                            $"Batch partially rejected: {rejected} of {batch.Count} events dropped");
+                            AudienceErrorMessages.BatchPartiallyRejected(rejected, batch.Count));
                     }
                 }
                 else if (statusCode == (int)HttpStatusCode.TooManyRequests)
@@ -149,7 +149,7 @@ namespace Immutable.Audience
                     _store.Delete(batch);
                     ResetBackoff();
                     NotifyError(AudienceErrorCode.ValidationRejected,
-                        FormatHttpError("Batch rejected", statusCode, rejectionBody));
+                        FormatHttpError(AudienceErrorMessages.BatchRejectedPrefix, statusCode, rejectionBody));
                 }
                 else
                 {
@@ -158,7 +158,7 @@ namespace Immutable.Audience
                     var serverBody = await ReadBodyForErrorAsync(response).ConfigureAwait(false);
                     RecordFailure();
                     NotifyError(AudienceErrorCode.FlushFailed,
-                        FormatHttpError("Server error, will retry", statusCode, serverBody));
+                        FormatHttpError(AudienceErrorMessages.ServerErrorWillRetryPrefix, statusCode, serverBody));
                 }
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)

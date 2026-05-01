@@ -656,7 +656,7 @@ namespace Immutable.Audience
                         }
 
                         NotifyErrorCallback(onError, AudienceErrorCode.ConsentSyncFailed,
-                            $"Consent sync failed with status {(int)response.StatusCode}");
+                            AudienceErrorMessages.ConsentSyncFailedWithStatus((int)response.StatusCode));
                         return;
                     }
                 }
@@ -667,7 +667,7 @@ namespace Immutable.Audience
                 catch (Exception ex)
                 {
                     NotifyErrorCallback(onError, AudienceErrorCode.ConsentSyncFailed,
-                        $"Consent sync threw: {ex.Message}");
+                        AudienceErrorMessages.ConsentSyncThrew(ex));
                 }
             });
         }
