@@ -144,35 +144,35 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         public IEnumerator Event_Progression_FlushReportsOk()
         {
             // Progression's only required field is `status` (enum, defaults to "start").
-            yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent("progression"));
+            yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent(EventNames.Progression));
         }
 
         [UnityTest]
         public IEnumerator TypedEvent_Resource_FlushReportsOk()
         {
-            yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent("resource"), root =>
+            yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent(EventNames.Resource), root =>
             {
-                root.Q<TextField>(SampleAppUi.TypedEventField("resource", "currency")).value = "GOLD";
-                root.Q<TextField>(SampleAppUi.TypedEventField("resource", "amount")).value = "100";
+                root.Q<TextField>(SampleAppUi.TypedEventField(EventNames.Resource, "currency")).value = "GOLD";
+                root.Q<TextField>(SampleAppUi.TypedEventField(EventNames.Resource, "amount")).value = "100";
             });
         }
 
         [UnityTest]
         public IEnumerator TypedEvent_Purchase_FlushReportsOk()
         {
-            yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent("purchase"), root =>
+            yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent(EventNames.Purchase), root =>
             {
-                root.Q<TextField>(SampleAppUi.TypedEventField("purchase", "currency")).value = "USD";
-                root.Q<TextField>(SampleAppUi.TypedEventField("purchase", "value")).value = "9.99";
+                root.Q<TextField>(SampleAppUi.TypedEventField(EventNames.Purchase, "currency")).value = "USD";
+                root.Q<TextField>(SampleAppUi.TypedEventField(EventNames.Purchase, "value")).value = "9.99";
             });
         }
 
         [UnityTest]
         public IEnumerator TypedEvent_MilestoneReached_FlushReportsOk()
         {
-            yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent("milestone_reached"), root =>
+            yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent(EventNames.MilestoneReached), root =>
             {
-                root.Q<TextField>(SampleAppUi.TypedEventField("milestone_reached", "name")).value = "il2cpp_smoke";
+                root.Q<TextField>(SampleAppUi.TypedEventField(EventNames.MilestoneReached, "name")).value = "il2cpp_smoke";
             });
         }
 

@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using UnityEngine.UIElements;
 
 namespace Immutable.Audience.Samples.SampleApp
@@ -38,6 +39,18 @@ namespace Immutable.Audience.Samples.SampleApp
 
         private const string OptionalEnumSentinel = "(not set)";
 
+        private static readonly string[] ProgressionStatusValues =
+            Enum.GetValues(typeof(ProgressionStatus))
+                .Cast<ProgressionStatus>()
+                .Select(s => s.ToLowercaseString())
+                .ToArray();
+
+        private static readonly string[] ResourceFlowValues =
+            Enum.GetValues(typeof(ResourceFlow))
+                .Cast<ResourceFlow>()
+                .Select(f => f.ToLowercaseString())
+                .ToArray();
+
         // ---- Event catalogue ----
 
         internal static readonly EventSpec[] Catalogue =
@@ -63,7 +76,7 @@ namespace Immutable.Audience.Samples.SampleApp
             // it as auto-tracked on Init with no public typed class; firing it
             // from the Send button would double-emit.
             new EventSpec(EventNames.Progression, new[] {
-                EventField.Enum(EventPropertyKeys.Status, new[] { "start", "complete", "fail" }),
+                EventField.Enum(EventPropertyKeys.Status, ProgressionStatusValues),
                 EventField.Text(EventPropertyKeys.World,         optional: true),
                 EventField.Text(EventPropertyKeys.Level,         optional: true),
                 EventField.Text(EventPropertyKeys.Stage,         optional: true),
@@ -71,7 +84,7 @@ namespace Immutable.Audience.Samples.SampleApp
                 EventField.Number(EventPropertyKeys.DurationSec, optional: true),
             }),
             new EventSpec(EventNames.Resource, new[] {
-                EventField.Enum(EventPropertyKeys.Flow, new[] { "sink", "source" }),
+                EventField.Enum(EventPropertyKeys.Flow, ResourceFlowValues),
                 EventField.Text(EventPropertyKeys.Currency),
                 EventField.Number(EventPropertyKeys.Amount),
                 EventField.Text(EventPropertyKeys.ItemType, optional: true),
@@ -103,33 +116,33 @@ namespace Immutable.Audience.Samples.SampleApp
                     return new Progression
                     {
                         Status = ParseProgressionStatus(props),
-                        World = OptionalString(props, "world"),
-                        Level = OptionalString(props, "level"),
-                        Stage = OptionalString(props, "stage"),
-                        Score = OptionalInt(props, "score"),
-                        DurationSec = OptionalFloat(props, "durationSec"),
+                        World = OptionalString(props, EventPropertyKeys.World),
+                        Level = OptionalString(props, EventPropertyKeys.Level),
+                        Stage = OptionalString(props, EventPropertyKeys.Stage),
+                        Score = OptionalInt(props, EventPropertyKeys.Score),
+                        DurationSec = OptionalFloat(props, EventPropertyKeys.DurationSec),
                     };
                 case EventNames.Resource:
                     return new Resource
                     {
                         Flow = ParseResourceFlow(props),
-                        Currency = OptionalString(props, "currency") ?? "",
-                        Amount = OptionalFloat(props, "amount") ?? 0f,
-                        ItemType = OptionalString(props, "itemType"),
-                        ItemId = OptionalString(props, "itemId"),
+                        Currency = OptionalString(props, EventPropertyKeys.Currency) ?? "",
+                        Amount = OptionalFloat(props, EventPropertyKeys.Amount) ?? 0f,
+                        ItemType = OptionalString(props, EventPropertyKeys.ItemType),
+                        ItemId = OptionalString(props, EventPropertyKeys.ItemId),
                     };
                 case EventNames.Purchase:
                     return new Purchase
                     {
-                        Currency = OptionalString(props, "currency") ?? "",
-                        Value = OptionalDecimal(props, "value") ?? 0m,
-                        ItemId = OptionalString(props, "itemId"),
-                        ItemName = OptionalString(props, "itemName"),
-                        Quantity = OptionalInt(props, "quantity"),
-                        TransactionId = OptionalString(props, "transactionId"),
+                        Currency = OptionalString(props, EventPropertyKeys.Currency) ?? "",
+                        Value = OptionalDecimal(props, EventPropertyKeys.Value) ?? 0m,
+                        ItemId = OptionalString(props, EventPropertyKeys.ItemId),
+                        ItemName = OptionalString(props, EventPropertyKeys.ItemName),
+                        Quantity = OptionalInt(props, EventPropertyKeys.Quantity),
+                        TransactionId = OptionalString(props, EventPropertyKeys.TransactionId),
                     };
                 case EventNames.MilestoneReached:
-                    return new MilestoneReached { Name = OptionalString(props, "name") ?? "" };
+                    return new MilestoneReached { Name = OptionalString(props, EventPropertyKeys.Name) ?? "" };
                 default:
                     return null;
             }
@@ -137,27 +150,20 @@ namespace Immutable.Audience.Samples.SampleApp
 
         private static ProgressionStatus? ParseProgressionStatus(Dictionary<string, object> props)
         {
-            var s = OptionalString(props, "status");
+            var s = OptionalString(props, EventPropertyKeys.Status);
             if (string.IsNullOrEmpty(s)) return null;
-            return s switch
-            {
-                "start"    => ProgressionStatus.Start,
-                "complete" => ProgressionStatus.Complete,
-                "fail"     => ProgressionStatus.Fail,
-                _          => (ProgressionStatus?)null,
-            };
+            foreach (ProgressionStatus value in Enum.GetValues(typeof(ProgressionStatus)))
+                if (value.ToLowercaseString() == s) return value;
+            return null;
         }
 
         private static ResourceFlow? ParseResourceFlow(Dictionary<string, object> props)
         {
-            var s = OptionalString(props, "flow");
+            var s = OptionalString(props, EventPropertyKeys.Flow);
             if (string.IsNullOrEmpty(s)) return null;
-            return s switch
-            {
-                "source" => ResourceFlow.Source,
-                "sink"   => ResourceFlow.Sink,
-                _        => (ResourceFlow?)null,
-            };
+            foreach (ResourceFlow value in Enum.GetValues(typeof(ResourceFlow)))
+                if (value.ToLowercaseString() == s) return value;
+            return null;
         }
 
         private static string? OptionalString(Dictionary<string, object> props, string key) =>

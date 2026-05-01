@@ -55,7 +55,7 @@ namespace Immutable.Audience.Samples.SampleApp
 
         // ---- SDK action handlers: SDK lifecycle ----
 
-        private void OnInit() => RunAndLog("INIT", () =>
+        private void OnInit() => RunAndLog(SampleAppUi.LogLabels.Init, () =>
         {
             var form = CaptureInitForm();
             var config = BuildAudienceConfig(form, OnSdkError);
@@ -65,7 +65,7 @@ namespace Immutable.Audience.Samples.SampleApp
             return Json.Serialize(BuildConfigEcho(config), 2);
         });
 
-        private void OnShutdown() => RunAndLog("shutdown()", () =>
+        private void OnShutdown() => RunAndLog(SampleAppUi.LogLabels.Shutdown, () =>
         {
             ImmutableAudience.Shutdown();
             _initialised = false;
@@ -74,7 +74,7 @@ namespace Immutable.Audience.Samples.SampleApp
             return "SDK stopped";
         });
 
-        private void OnReset() => RunAndLog("reset()", () =>
+        private void OnReset() => RunAndLog(SampleAppUi.LogLabels.Reset, () =>
         {
             ImmutableAudience.Reset();
             ResetIdentityMirror();
@@ -84,21 +84,21 @@ namespace Immutable.Audience.Samples.SampleApp
 
         private async Task OnFlushAsync()
         {
-            try { await ImmutableAudience.FlushAsync(); AppendLog("flush()", "queue flushed", LogLevel.Ok, LogSource.App); OnSdkStateChanged(); }
-            catch (Exception ex) { AppendLog("flush()", ex.Message, LogLevel.Err, LogSource.App); }
+            try { await ImmutableAudience.FlushAsync(); AppendLog(SampleAppUi.LogLabels.Flush, "queue flushed", LogLevel.Ok, LogSource.App); OnSdkStateChanged(); }
+            catch (Exception ex) { AppendLog(SampleAppUi.LogLabels.Flush, ex.Message, LogLevel.Err, LogSource.App); }
         }
 
         private async Task OnDeleteDataAsync()
         {
-            AppendLog("deleteData()", "erasure request dispatched", LogLevel.Info, LogSource.App);
+            AppendLog(SampleAppUi.LogLabels.DeleteData, "erasure request dispatched", LogLevel.Info, LogSource.App);
             try
             {
                 await ImmutableAudience.DeleteData();
-                AppendLog("deleteData()", "backend acknowledged", LogLevel.Ok, LogSource.App);
+                AppendLog(SampleAppUi.LogLabels.DeleteData, "backend acknowledged", LogLevel.Ok, LogSource.App);
             }
             catch (Exception ex)
             {
-                AppendLog("deleteData()", ex.Message, LogLevel.Err, LogSource.App);
+                AppendLog(SampleAppUi.LogLabels.DeleteData, ex.Message, LogLevel.Err, LogSource.App);
             }
         }
 
@@ -106,7 +106,7 @@ namespace Immutable.Audience.Samples.SampleApp
 
         // v1 has no typed Screen API; Plan §10 specifies a custom Track call
         // as the studio-facing pattern for scene coverage. Demo follows that.
-        private void OnPage() => RunAndLog("page()", () =>
+        private void OnPage() => RunAndLog(SampleAppUi.LogLabels.Page, () =>
         {
             GuardConsentForTrack();
             var screen = SceneManager.GetActiveScene().name;
@@ -120,7 +120,7 @@ namespace Immutable.Audience.Samples.SampleApp
         // rest stay on the string overload. Typed validation errors are
         // expected for user input — let them propagate through RunAndLog.
         private void OnSendCatalogueEvent(EventSpec spec, Dictionary<string, VisualElement> inputs) =>
-            RunAndLog("track()", () =>
+            RunAndLog(SampleAppUi.LogLabels.Track, () =>
             {
                 GuardConsentForTrack();
                 var props = BuildPropsDictionary(spec, inputs);
@@ -148,7 +148,7 @@ namespace Immutable.Audience.Samples.SampleApp
         // SDK drops via Log.Warn when name is empty or consent is None; that
         // warning surfaces in the pane via Log.Writer, so no sample-side
         // check is needed beyond GuardConsentForTrack.
-        private void OnSendCustomEvent() => RunAndLog("track()", () =>
+        private void OnSendCustomEvent() => RunAndLog(SampleAppUi.LogLabels.Track, () =>
         {
             GuardConsentForTrack();
             var f = CaptureCustomEventForm();
@@ -164,7 +164,7 @@ namespace Immutable.Audience.Samples.SampleApp
         // None purges the queue + clears the anonymous ID; dropping below Full
         // clears UserId. Mirror is reset whenever the new level can no longer
         // identify.
-        private void OnSetConsent(ConsentLevel level) => RunAndLog("setConsent()", () =>
+        private void OnSetConsent(ConsentLevel level) => RunAndLog(SampleAppUi.LogLabels.SetConsent, () =>
         {
             var previous = ImmutableAudience.CurrentConsent;
             ImmutableAudience.SetConsent(level);
@@ -175,9 +175,9 @@ namespace Immutable.Audience.Samples.SampleApp
                 ["to"] = level.ToLowercaseString(),
             };
             var effects = new List<string>();
-            if (previous == ConsentLevel.None && level != ConsentLevel.None) effects.Add("queue started, session created");
-            if (level == ConsentLevel.None) effects.Add("queue purged, anonymous ID cleared");
-            if (!level.CanIdentify() && previous.CanIdentify()) effects.Add("userId cleared");
+            if (previous == ConsentLevel.None && level != ConsentLevel.None) effects.Add(SampleAppUi.Messages.QueueStartedSessionCreated);
+            if (level == ConsentLevel.None) effects.Add(SampleAppUi.Messages.QueuePurgedAnonymousIdCleared);
+            if (!level.CanIdentify() && previous.CanIdentify()) effects.Add(SampleAppUi.Messages.UserIdCleared);
             if (effects.Count > 0) payload["effects"] = effects;
             OnSdkStateChanged();
             return Json.Serialize(payload, 2);
@@ -185,7 +185,7 @@ namespace Immutable.Audience.Samples.SampleApp
 
         // ---- SDK action handlers: identity ----
 
-        private void OnIdentify() => RunAndLog("identify()", () =>
+        private void OnIdentify() => RunAndLog(SampleAppUi.LogLabels.Identify, () =>
         {
             var f = CaptureIdentifyForm();
             var traits = ParseTraits(f.RawTraits);
@@ -198,27 +198,27 @@ namespace Immutable.Audience.Samples.SampleApp
             OnSdkStateChanged();
             var payload = new Dictionary<string, object>
             {
-                ["id"]           = f.Id,
+                ["id"]                       = f.Id,
                 [MessageFields.IdentityType] = f.Type,
-                ["accepted"]     = accepted,
+                ["accepted"]                 = accepted,
             };
             if (traits != null) payload[MessageFields.Traits] = traits;
             return Json.Serialize(payload, 2);
         });
 
-        private void OnIdentifyTraits() => RunAndLog("identify(traits)", () =>
+        private void OnIdentifyTraits() => RunAndLog(SampleAppUi.LogLabels.IdentifyTraits, () =>
         {
             var userId = ImmutableAudience.UserId;
-            if (string.IsNullOrEmpty(userId)) throw new InvalidOperationException("no active identity — call Identify first");
+            if (string.IsNullOrEmpty(userId)) throw new InvalidOperationException(SampleAppUi.Messages.NoActiveIdentity);
             var traits = ParseTraits(CaptureTraitsUpdate());
-            if (traits == null || traits.Count == 0) throw new InvalidOperationException("traits required");
+            if (traits == null || traits.Count == 0) throw new InvalidOperationException(SampleAppUi.Messages.TraitsRequired);
             ImmutableAudience.Identify(userId, ParseIdentityType(_mirrorIdentityType), traits);
             _mirrorTraits = traits;
             OnSdkStateChanged();
             return Json.Serialize(traits, 2);
         });
 
-        private void OnAlias() => RunAndLog("alias()", () =>
+        private void OnAlias() => RunAndLog(SampleAppUi.LogLabels.Alias, () =>
         {
             var f = CaptureAliasForm();
             ImmutableAudience.Alias(f.FromId, ParseIdentityType(f.FromType), f.ToId, ParseIdentityType(f.ToType));
@@ -244,7 +244,7 @@ namespace Immutable.Audience.Samples.SampleApp
         // Fires from background flush threads; AppendLog marshals to main.
         // Body is JSON for parity with handler "Copy" output.
         private void OnSdkError(AudienceError err) =>
-            AppendLog("onError", Json.Serialize(new Dictionary<string, object>
+            AppendLog(SampleAppUi.LogLabels.OnError, Json.Serialize(new Dictionary<string, object>
             {
                 ["code"] = err.Code.ToString(),
                 ["message"] = err.Message,
@@ -254,20 +254,18 @@ namespace Immutable.Audience.Samples.SampleApp
         // the main-thread marshal.
         private void RouteSdkLogToPane(string msg)
         {
-            const string warnTag = "[ImmutableAudience] WARN:";
-            const string prefix = "[ImmutableAudience]";
             string body = msg;
             var level = LogLevel.Debug;
-            if (msg.StartsWith(warnTag, StringComparison.Ordinal))
+            if (msg.StartsWith(Immutable.Audience.Log.WarnPrefix, StringComparison.Ordinal))
             {
                 level = LogLevel.Warn;
-                body = msg.Substring(warnTag.Length).TrimStart();
+                body = msg.Substring(Immutable.Audience.Log.WarnPrefix.Length).TrimStart();
             }
-            else if (msg.StartsWith(prefix, StringComparison.Ordinal))
+            else if (msg.StartsWith(Immutable.Audience.Log.Prefix, StringComparison.Ordinal))
             {
-                body = msg.Substring(prefix.Length).TrimStart();
+                body = msg.Substring(Immutable.Audience.Log.Prefix.Length).TrimStart();
             }
-            AppendLog("sdk", body, level, LogSource.Sdk);
+            AppendLog(SampleAppUi.LogLabels.Sdk, body, level, LogSource.Sdk);
         }
 
         // ---- Handler scaffolding ----
@@ -322,7 +320,7 @@ namespace Immutable.Audience.Samples.SampleApp
             if (form.FlushIntervalMs is int flushMs && flushMs > 0)
             {
                 if (flushMs < 1000)
-                    AppendLog("INIT", $"flushInterval {flushMs}ms below 1s — clamped", LogLevel.Warn, LogSource.App);
+                    AppendLog(SampleAppUi.LogLabels.Init, $"flushInterval {flushMs}ms below 1s — clamped", LogLevel.Warn, LogSource.App);
                 config.FlushIntervalSeconds = Math.Max(1, flushMs / 1000);
             }
             if (form.FlushSize is int flushSize && flushSize > 0)
@@ -372,9 +370,6 @@ namespace Immutable.Audience.Samples.SampleApp
         private static Dictionary<string, object>? ParseTraits(string? raw) =>
             string.IsNullOrWhiteSpace(raw) ? null : JsonReader.DeserializeObject(raw!);
 
-        // Parses a wire-format identity string (e.g. "steam") back into the
-        // IdentityType enum the SDK now requires. Falls back to Custom for
-        // unknown or empty values.
         private static IdentityType ParseIdentityType(string? value) =>
             IdentityTypeExtensions.ParseLowercaseString(value);
     }
