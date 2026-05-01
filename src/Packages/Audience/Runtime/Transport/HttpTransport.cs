@@ -15,6 +15,17 @@ namespace Immutable.Audience
     // Sends queued events from DiskStore to the Audience backend.
     internal sealed class HttpTransport : IDisposable
     {
+        // How long we wait for one POST before giving up.
+        // Without this, one stuck request can block everything else.
+        internal const int RequestTimeoutSeconds = 30;
+
+        // How long we wait before retrying after a failed POST. Doubles each time.
+        internal const int Backoff1stMs = 5_000;
+        internal const int Backoff2ndMs = 10_000;
+        internal const int Backoff3rdMs = 20_000;
+        internal const int Backoff4thMs = 40_000;
+        internal const int BackoffCapMs = 60_000;
+
         private readonly DiskStore _store;
         private readonly string _url;
         private readonly string _publishableKey;
@@ -48,7 +59,7 @@ namespace Immutable.Audience
             _client = handler != null
                 ? new HttpClient(handler, disposeHandler: false)
                 : new HttpClient();
-            _client.Timeout = TimeSpan.FromSeconds(30);
+            _client.Timeout = TimeSpan.FromSeconds(RequestTimeoutSeconds);
             _getUtcNow = getUtcNow ?? (() => DateTime.UtcNow);
         }
 
@@ -182,11 +193,11 @@ namespace Immutable.Audience
         private int BackoffMsLocked() => _consecutiveFailures switch
         {
             <= 0 => 0,
-            1 => 5_000,
-            2 => 10_000,
-            3 => 20_000,
-            4 => 40_000,
-            _ => 60_000,
+            1 => Backoff1stMs,
+            2 => Backoff2ndMs,
+            3 => Backoff3rdMs,
+            4 => Backoff4thMs,
+            _ => BackoffCapMs,
         };
 
         // Earliest UTC time at which the next attempt may run.
