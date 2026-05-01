@@ -53,7 +53,7 @@ namespace Immutable.Audience.Tests
             _store.Write("{\"type\":\"track\",\"eventName\":\"b\"}");
 
             var handler = new MockHandler(HttpStatusCode.OK, $"{{\"accepted\":2,\"{ResponseFields.Rejected}\":0}}");
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1", handler: handler);
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey, handler: handler);
 
             var sent = await transport.SendBatchAsync();
 
@@ -80,11 +80,11 @@ namespace Immutable.Audience.Tests
                     capturedContentEncoding = string.Join("", req.Content.Headers.ContentEncoding);
                     capturedBody = req.Content.ReadAsByteArrayAsync().Result;
                 });
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1", handler: handler);
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey, handler: handler);
 
             await transport.SendBatchAsync();
 
-            Assert.AreEqual("pk_imapik-test-key1", capturedKey);
+            Assert.AreEqual(TestDefaults.PublishableKey, capturedKey);
             Assert.AreEqual(Constants.MediaTypeJson, capturedContentType);
             Assert.AreEqual(Constants.GzipEncoding, capturedContentEncoding);
 
@@ -111,11 +111,11 @@ namespace Immutable.Audience.Tests
                     capturedContentEncodingCount = req.Content.Headers.ContentEncoding.Count;
                     capturedBody = req.Content.ReadAsStringAsync().Result;
                 });
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1", handler: handler);
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey, handler: handler);
 
             await transport.SendBatchAsync();
 
-            Assert.AreEqual("pk_imapik-test-key1", capturedKey);
+            Assert.AreEqual(TestDefaults.PublishableKey, capturedKey);
             Assert.AreEqual(Constants.MediaTypeJson, capturedContentType);
             Assert.AreEqual(0, capturedContentEncodingCount, "no Content-Encoding header is permitted in v1");
             StringAssert.StartsWith($"{{\"{ResponseFields.MessagesEnvelope}\":[", capturedBody);
@@ -132,7 +132,7 @@ namespace Immutable.Audience.Tests
             HttpRequestMessage? captured = null;
             var handler = new MockHandler(HttpStatusCode.OK, $"{{\"accepted\":1,\"{ResponseFields.Rejected}\":0}}",
                 onRequest: req => captured = req);
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1", handler: handler);
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey, handler: handler);
 
             await transport.SendBatchAsync();
 
@@ -165,7 +165,7 @@ namespace Immutable.Audience.Tests
             const string custom = "https://api.dev.immutable.com";
             // Test-prefixed key would resolve to Sandbox on its own; the
             // explicit override must win.
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 baseUrlOverride: custom, handler: handler);
 
             await transport.SendBatchAsync();
@@ -177,7 +177,7 @@ namespace Immutable.Audience.Tests
         public async Task SendBatchAsync_EmptyQueue_ReturnsFalse()
         {
             var handler = new MockHandler(HttpStatusCode.OK, "{}");
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1", handler: handler);
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey, handler: handler);
 
             var sent = await transport.SendBatchAsync();
 
@@ -192,7 +192,7 @@ namespace Immutable.Audience.Tests
 
             var handler = new MockHandler(HttpStatusCode.BadRequest, "");
             AudienceError? reportedError = null;
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 onError: e => reportedError = e, handler: handler);
 
             await transport.SendBatchAsync();
@@ -210,7 +210,7 @@ namespace Immutable.Audience.Tests
 
             var handler = new MockHandler((HttpStatusCode)429, "");
             AudienceError? reportedError = null;
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 onError: e => reportedError = e, handler: handler, getUtcNow: _getUtcNow);
 
             await transport.SendBatchAsync();
@@ -232,7 +232,7 @@ namespace Immutable.Audience.Tests
                 resp.Headers.Add("Retry-After", "12");
                 return resp;
             });
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 handler: handler, getUtcNow: _getUtcNow);
 
             await transport.SendBatchAsync();
@@ -255,7 +255,7 @@ namespace Immutable.Audience.Tests
                 resp.Headers.Add("Retry-After", DateTimeOffset.UtcNow.AddSeconds(20).ToString("R"));
                 return resp;
             });
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 handler: handler, getUtcNow: _getUtcNow);
 
             await transport.SendBatchAsync();
@@ -277,7 +277,7 @@ namespace Immutable.Audience.Tests
                 resp.Headers.Add("Retry-After", DateTimeOffset.UtcNow.AddSeconds(-30).ToString("R"));
                 return resp;
             });
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 handler: handler, getUtcNow: _getUtcNow);
 
             await transport.SendBatchAsync();
@@ -301,7 +301,7 @@ namespace Immutable.Audience.Tests
                     { Content = new StringContent($"{{\"accepted\":1,\"{ResponseFields.Rejected}\":0}}") };
             });
             AudienceError? reportedError = null;
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 onError: e => reportedError = e, handler: handler, getUtcNow: _getUtcNow);
 
             await transport.SendBatchAsync();
@@ -327,7 +327,7 @@ namespace Immutable.Audience.Tests
 
             var handler = new MockHandler(HttpStatusCode.OK, $"{{\"accepted\":1,\"{ResponseFields.Rejected}\":1}}");
             AudienceError? reportedError = null;
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 onError: e => reportedError = e, handler: handler);
 
             await transport.SendBatchAsync();
@@ -345,7 +345,7 @@ namespace Immutable.Audience.Tests
 
             var handler = new MockHandler(HttpStatusCode.OK, $"{{\"accepted\":1,\"{ResponseFields.Rejected}\":0}}");
             AudienceError? reportedError = null;
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 onError: e => reportedError = e, handler: handler);
 
             await transport.SendBatchAsync();
@@ -361,7 +361,7 @@ namespace Immutable.Audience.Tests
 
             var handler = new MockHandler(HttpStatusCode.OK, "not-json");
             AudienceError? reportedError = null;
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 onError: e => reportedError = e, handler: handler);
 
             await transport.SendBatchAsync();
@@ -377,7 +377,7 @@ namespace Immutable.Audience.Tests
 
             var handler = new MockHandler(HttpStatusCode.InternalServerError, "");
             AudienceError? reportedError = null;
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 onError: e => reportedError = e, handler: handler);
 
             await transport.SendBatchAsync();
@@ -394,7 +394,7 @@ namespace Immutable.Audience.Tests
         {
             _store.Write("{\"type\":\"track\"}");
             var handler = new MockHandler(HttpStatusCode.InternalServerError, "");
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 handler: handler, getUtcNow: _getUtcNow);
 
             // Schedule: 5s → 10s → 20s → 40s → 60s cap.
@@ -428,7 +428,7 @@ namespace Immutable.Audience.Tests
         {
             _store.Write("{\"type\":\"track\"}");
             var handler = new MockHandler(HttpStatusCode.InternalServerError, "");
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 handler: handler, getUtcNow: _getUtcNow);
 
             await transport.SendBatchAsync();
@@ -470,7 +470,7 @@ namespace Immutable.Audience.Tests
                     : new HttpResponseMessage(HttpStatusCode.OK)
                     { Content = new StringContent($"{{\"accepted\":1,\"{ResponseFields.Rejected}\":0}}") };
             });
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 handler: handler, getUtcNow: _getUtcNow);
 
             await transport.SendBatchAsync();
@@ -493,7 +493,7 @@ namespace Immutable.Audience.Tests
 
             var handler = new MockHandler(() => throw new HttpRequestException("connection refused"));
             AudienceError? reportedError = null;
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 onError: e => reportedError = e, handler: handler);
 
             await transport.SendBatchAsync();
@@ -516,7 +516,7 @@ namespace Immutable.Audience.Tests
 
             var handler = new MockHandler(() => throw new TaskCanceledException("Request timed out"));
             AudienceError? reportedError = null;
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 onError: e => reportedError = e, handler: handler);
 
             // Pass default CancellationToken so ct.IsCancellationRequested is false; this
@@ -542,7 +542,7 @@ namespace Immutable.Audience.Tests
 
             var handler = new MockHandler(() => throw new OperationCanceledException("simulated"));
             AudienceError? reportedError = null;
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 onError: e => reportedError = e, handler: handler);
 
             using var cts = new CancellationTokenSource();
@@ -574,7 +574,7 @@ namespace Immutable.Audience.Tests
 
             var now = new DateTime(2026, 4, 17, 12, 0, 0, DateTimeKind.Utc);
             var handler = new MockHandler(HttpStatusCode.InternalServerError, "");
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 handler: handler, getUtcNow: () => now);
 
             await transport.SendBatchAsync();
@@ -597,7 +597,7 @@ namespace Immutable.Audience.Tests
             _store.Write("{\"type\":\"track\"}");
 
             var handler = new MockHandler(HttpStatusCode.BadRequest, "");
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 onError: _ => throw new InvalidOperationException("callback bug"),
                 handler: handler);
 

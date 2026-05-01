@@ -38,7 +38,7 @@ namespace Immutable.Audience.Tests
         {
             return new AudienceConfig
             {
-                PublishableKey = "pk_imapik-test-key1",
+                PublishableKey = TestDefaults.PublishableKey,
                 Consent = consent,
                 PersistentDataPath = _testDir,
                 FlushIntervalSeconds = 600, // large; we flush manually in tests
