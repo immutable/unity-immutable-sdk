@@ -45,8 +45,8 @@ namespace Immutable.Audience.Tests
             Assert.AreEqual(Constants.ConsentUrl("pk_imapik-test-key1"), put.Url);
             Assert.AreEqual(ConsentLevel.Full.ToLowercaseString(), body[ConsentBodyFields.Status]);
             Assert.AreEqual(Constants.ConsentSource, body[ConsentBodyFields.Source]);
-            Assert.IsTrue(body.ContainsKey("anonymousId"));
-            Assert.IsNotNull(body["anonymousId"], "upgrade PUT must carry the current anonymousId");
+            Assert.IsTrue(body.ContainsKey(MessageFields.AnonymousId));
+            Assert.IsNotNull(body[MessageFields.AnonymousId], "upgrade PUT must carry the current anonymousId");
         }
 
         [Test]
@@ -67,7 +67,7 @@ namespace Immutable.Audience.Tests
             var body = JsonReader.DeserializeObject(put.Body);
 
             Assert.AreEqual(ConsentLevel.None.ToLowercaseString(), body[ConsentBodyFields.Status]);
-            Assert.AreEqual(seeded, body["anonymousId"],
+            Assert.AreEqual(seeded, body[MessageFields.AnonymousId],
                 "revocation PUT must carry the id that was revoked, not null");
             Assert.IsFalse(File.Exists(AudiencePaths.IdentityFile(_testDir)),
                 "precondition: Identity.Reset ran");

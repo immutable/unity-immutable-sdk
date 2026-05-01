@@ -441,7 +441,7 @@ namespace Immutable.Audience
             string query;
             if (!string.IsNullOrEmpty(userId))
             {
-                query = "userId=" + Uri.EscapeDataString(userId);
+                query = $"{MessageFields.UserId}=" + Uri.EscapeDataString(userId);
             }
             else
             {
@@ -449,7 +449,7 @@ namespace Immutable.Audience
                 var anonymousId = Identity.Get(config.PersistentDataPath!);
                 if (string.IsNullOrEmpty(anonymousId))
                     return Task.CompletedTask;
-                query = "anonymousId=" + Uri.EscapeDataString(anonymousId);
+                query = $"{MessageFields.AnonymousId}=" + Uri.EscapeDataString(anonymousId);
             }
 
             var url = Constants.DataUrl(config.PublishableKey, config.BaseUrl) + "?" + query;
@@ -626,7 +626,7 @@ namespace Immutable.Audience
                 [ConsentBodyFields.Status] = level.ToLowercaseString(),
                 [ConsentBodyFields.Source] = Constants.ConsentSource,
                 // Explicit null lets the backend distinguish "unknown" from a missing field.
-                ["anonymousId"] = anonymousId!,
+                [MessageFields.AnonymousId] = anonymousId!,
             });
 
             Task.Run(async () =>
@@ -925,10 +925,10 @@ namespace Immutable.Audience
             }
             if (extra == null) return;
 
-            if (!(msg.TryGetValue("context", out var ctxObj) && ctxObj is Dictionary<string, object> ctx))
+            if (!(msg.TryGetValue(MessageFields.Context, out var ctxObj) && ctxObj is Dictionary<string, object> ctx))
             {
                 ctx = new Dictionary<string, object>();
-                msg["context"] = ctx;
+                msg[MessageFields.Context] = ctx;
             }
 
             foreach (var kv in extra)

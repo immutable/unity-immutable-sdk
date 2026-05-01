@@ -132,7 +132,7 @@ namespace Immutable.Audience.Samples.SampleApp
                     {
                         ["event"] = spec.Name,
                         ["overload"] = "typed",
-                        ["properties"] = typed.ToProperties(),
+                        [MessageFields.Properties] = typed.ToProperties(),
                     }, 2);
                 }
 
@@ -141,7 +141,7 @@ namespace Immutable.Audience.Samples.SampleApp
                 {
                     ["event"] = spec.Name,
                     ["overload"] = "string",
-                    ["properties"] = props,
+                    [MessageFields.Properties] = props,
                 }, 2);
             });
 
@@ -155,7 +155,7 @@ namespace Immutable.Audience.Samples.SampleApp
             var props = string.IsNullOrEmpty(f.RawProps) ? null : JsonReader.DeserializeObject(f.RawProps);
             ImmutableAudience.Track(f.Name, props);
             var echo = new Dictionary<string, object> { ["event"] = f.Name };
-            if (props != null) echo["properties"] = props;
+            if (props != null) echo[MessageFields.Properties] = props;
             return Json.Serialize(echo, 2);
         });
 
@@ -199,10 +199,10 @@ namespace Immutable.Audience.Samples.SampleApp
             var payload = new Dictionary<string, object>
             {
                 ["id"]           = f.Id,
-                ["identityType"] = f.Type,
+                [MessageFields.IdentityType] = f.Type,
                 ["accepted"]     = accepted,
             };
-            if (traits != null) payload["traits"] = traits;
+            if (traits != null) payload[MessageFields.Traits] = traits;
             return Json.Serialize(payload, 2);
         });
 
@@ -233,8 +233,8 @@ namespace Immutable.Audience.Samples.SampleApp
             }
             return Json.Serialize(new Dictionary<string, object>
             {
-                ["from"]     = new Dictionary<string, object> { ["id"] = f.FromId, ["identityType"] = f.FromType },
-                ["to"]       = new Dictionary<string, object> { ["id"] = f.ToId,   ["identityType"] = f.ToType },
+                ["from"]     = new Dictionary<string, object> { ["id"] = f.FromId, [MessageFields.IdentityType] = f.FromType },
+                ["to"]       = new Dictionary<string, object> { ["id"] = f.ToId,   [MessageFields.IdentityType] = f.ToType },
                 ["accepted"] = accepted,
             }, 2);
         });

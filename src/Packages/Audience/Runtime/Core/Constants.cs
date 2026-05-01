@@ -80,8 +80,34 @@ namespace Immutable.Audience
     // (read by one module, written by another).
     internal static class MessageFields
     {
+        // Envelope keys present on every message
         internal const string Type = "type";
+        internal const string MessageId = "messageId";
+        internal const string EventTimestamp = "eventTimestamp";
+        internal const string Context = "context";
+        internal const string Surface = "surface";
+
+        // Track envelope
+        internal const string EventName = "eventName";
+        internal const string Properties = "properties";
+
+        // Identity envelope (track, identify, alias)
+        internal const string AnonymousId = "anonymousId";
         internal const string UserId = "userId";
+
+        // Identify envelope
+        internal const string IdentityType = "identityType";
+        internal const string Traits = "traits";
+
+        // Alias envelope
+        internal const string FromId = "fromId";
+        internal const string FromType = "fromType";
+        internal const string ToId = "toId";
+        internal const string ToType = "toType";
+
+        // Context dictionary keys
+        internal const string Library = "library";
+        internal const string LibraryVersion = "libraryVersion";
     }
 
     /// <summary>

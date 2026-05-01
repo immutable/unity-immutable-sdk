@@ -69,25 +69,25 @@ namespace Immutable.Audience.Tests
         {
             var original = new Dictionary<string, object>
             {
-                ["type"] = "track",
-                ["eventName"] = "progression",
-                ["properties"] = new Dictionary<string, object>
+                [MessageFields.Type] = "track",
+                [MessageFields.EventName] = "progression",
+                [MessageFields.Properties] = new Dictionary<string, object>
                 {
                     ["status"] = "complete",
                     ["score"] = 1500
                 },
-                ["anonymousId"] = "abc",
-                ["userId"] = "76561198012345"
+                [MessageFields.AnonymousId] = "abc",
+                [MessageFields.UserId] = "76561198012345"
             };
 
             var serialized = Json.Serialize(original);
             var parsed = JsonReader.DeserializeObject(serialized);
 
-            Assert.AreEqual("track", parsed["type"]);
-            Assert.AreEqual("progression", parsed["eventName"]);
-            Assert.AreEqual("abc", parsed["anonymousId"]);
-            Assert.AreEqual("76561198012345", parsed["userId"]);
-            var props = (Dictionary<string, object>)parsed["properties"];
+            Assert.AreEqual("track", parsed[MessageFields.Type]);
+            Assert.AreEqual("progression", parsed[MessageFields.EventName]);
+            Assert.AreEqual("abc", parsed[MessageFields.AnonymousId]);
+            Assert.AreEqual("76561198012345", parsed[MessageFields.UserId]);
+            var props = (Dictionary<string, object>)parsed[MessageFields.Properties];
             Assert.AreEqual("complete", props["status"]);
             Assert.AreEqual(1500, props["score"]);
         }

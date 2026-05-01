@@ -366,7 +366,7 @@ namespace Immutable.Audience.Tests
             foreach (var file in Directory.GetFiles(queueDir, AudiencePaths.QueueGlob))
             {
                 var msg = JsonReader.DeserializeObject(File.ReadAllText(file));
-                if ((string)msg["type"] != "track") continue;
+                if ((string)msg[MessageFields.Type] != "track") continue;
 
                 if (!msg.TryGetValue("eventName", out var eventNameObj))
                     Assert.Fail($"track message {Path.GetFileName(file)} missing eventName field");
@@ -1323,11 +1323,11 @@ namespace Immutable.Audience.Tests
             foreach (var f in files)
             {
                 var msg = JsonReader.DeserializeObject(File.ReadAllText(f));
-                var type = (string)msg["type"];
+                var type = (string)msg[MessageFields.Type];
                 Assert.AreNotEqual("identify", type, "identify must be purged on Full -> Anonymous");
                 Assert.AreNotEqual("alias", type, "alias must be purged on Full -> Anonymous");
                 if (type == "track")
-                    Assert.IsFalse(msg.ContainsKey("userId"), "userId must be stripped from queued track on Full -> Anonymous");
+                    Assert.IsFalse(msg.ContainsKey(MessageFields.UserId), "userId must be stripped from queued track on Full -> Anonymous");
             }
         }
 
@@ -1344,13 +1344,13 @@ namespace Immutable.Audience.Tests
             var queueDir = AudiencePaths.QueueDir(_testDir);
             var trackFiles = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(f => JsonReader.DeserializeObject(File.ReadAllText(f)))
-                .Where(m => (string)m["type"] == "track"
-                            && m.ContainsKey("eventName")
-                            && (string)m["eventName"] == "tracked_after_downgrade")
+                .Where(m => (string)m[MessageFields.Type] == "track"
+                            && m.ContainsKey(MessageFields.EventName)
+                            && (string)m[MessageFields.EventName] == "tracked_after_downgrade")
                 .ToList();
 
             Assert.AreEqual(1, trackFiles.Count);
-            Assert.IsFalse(trackFiles[0].ContainsKey("userId"),
+            Assert.IsFalse(trackFiles[0].ContainsKey(MessageFields.UserId),
                 "Track under Anonymous consent must not carry userId");
         }
 
