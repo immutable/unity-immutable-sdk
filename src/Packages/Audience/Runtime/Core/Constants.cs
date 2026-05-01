@@ -76,6 +76,38 @@ namespace Immutable.Audience
         internal const string Rejected = "rejected";
     }
 
+    // Keys inside each event's "properties" dict.
+    internal static class EventPropertyKeys
+    {
+        // Shared across multiple events (Session + Progression for DurationSec,
+        // Resource + Purchase for Currency / ItemId).
+        internal const string SessionId = "sessionId";
+        internal const string DurationSec = "durationSec";
+        internal const string Currency = "currency";
+        internal const string ItemId = "itemId";
+
+        // Progression-specific
+        internal const string Status = "status";
+        internal const string World = "world";
+        internal const string Level = "level";
+        internal const string Stage = "stage";
+        internal const string Score = "score";
+
+        // Resource-specific
+        internal const string Flow = "flow";
+        internal const string Amount = "amount";
+        internal const string ItemType = "itemType";
+
+        // Purchase-specific
+        internal const string Value = "value";
+        internal const string ItemName = "itemName";
+        internal const string Quantity = "quantity";
+        internal const string TransactionId = "transactionId";
+
+        // MilestoneReached-specific
+        internal const string Name = "name";
+    }
+
     // Event names we send on Track.
     internal static class EventNames
     {
