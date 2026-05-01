@@ -9,7 +9,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Progression_EventName_IsProgression()
         {
-            Assert.AreEqual("progression", new Progression().EventName);
+            Assert.AreEqual(EventNames.Progression, new Progression().EventName);
         }
 
         [Test]
@@ -35,11 +35,11 @@ namespace Immutable.Audience.Tests
 
             var props = evt.ToProperties();
 
-            Assert.AreEqual("complete", props["status"]);
-            Assert.AreEqual("tutorial", props["world"]);
-            Assert.AreEqual("1", props["level"]);
-            Assert.AreEqual(1500, props["score"]);
-            Assert.AreEqual(120.5f, props["durationSec"]);
+            Assert.AreEqual(ProgressionStatus.Complete.ToLowercaseString(), props[EventPropertyKeys.Status]);
+            Assert.AreEqual("tutorial", props[EventPropertyKeys.World]);
+            Assert.AreEqual("1", props[EventPropertyKeys.Level]);
+            Assert.AreEqual(1500, props[EventPropertyKeys.Score]);
+            Assert.AreEqual(120.5f, props[EventPropertyKeys.DurationSec]);
         }
 
         [Test]
@@ -47,12 +47,12 @@ namespace Immutable.Audience.Tests
         {
             var props = new Progression { Status = ProgressionStatus.Start }.ToProperties();
 
-            Assert.IsTrue(props.ContainsKey("status"));
-            Assert.IsFalse(props.ContainsKey("world"));
-            Assert.IsFalse(props.ContainsKey("level"));
-            Assert.IsFalse(props.ContainsKey("stage"));
-            Assert.IsFalse(props.ContainsKey("score"));
-            Assert.IsFalse(props.ContainsKey("durationSec"));
+            Assert.IsTrue(props.ContainsKey(EventPropertyKeys.Status));
+            Assert.IsFalse(props.ContainsKey(EventPropertyKeys.World));
+            Assert.IsFalse(props.ContainsKey(EventPropertyKeys.Level));
+            Assert.IsFalse(props.ContainsKey(EventPropertyKeys.Stage));
+            Assert.IsFalse(props.ContainsKey(EventPropertyKeys.Score));
+            Assert.IsFalse(props.ContainsKey(EventPropertyKeys.DurationSec));
         }
 
         [Test]
@@ -69,17 +69,17 @@ namespace Immutable.Audience.Tests
 
             var props = evt.ToProperties();
 
-            Assert.AreEqual("source", props["flow"]);
-            Assert.AreEqual("gold", props["currency"]);
-            Assert.AreEqual(100m, props["amount"]);
-            Assert.AreEqual("quest_reward", props["itemType"]);
-            Assert.AreEqual("main_quest_01", props["itemId"]);
+            Assert.AreEqual(ResourceFlow.Source.ToLowercaseString(), props[EventPropertyKeys.Flow]);
+            Assert.AreEqual("gold", props[EventPropertyKeys.Currency]);
+            Assert.AreEqual(100m, props[EventPropertyKeys.Amount]);
+            Assert.AreEqual("quest_reward", props[EventPropertyKeys.ItemType]);
+            Assert.AreEqual("main_quest_01", props[EventPropertyKeys.ItemId]);
         }
 
         [Test]
         public void Resource_EventName_IsResource()
         {
-            Assert.AreEqual("resource", new Resource().EventName);
+            Assert.AreEqual(EventNames.Resource, new Resource().EventName);
         }
 
         [Test]
@@ -124,12 +124,12 @@ namespace Immutable.Audience.Tests
 
             var props = evt.ToProperties();
 
-            Assert.AreEqual("USD", props["currency"]);
-            Assert.AreEqual(9.99m, props["value"]);
-            Assert.AreEqual("gem_pack_01", props["itemId"]);
-            Assert.AreEqual("Starter Gem Pack", props["itemName"]);
-            Assert.AreEqual(1, props["quantity"]);
-            Assert.AreEqual("txn_abc123", props["transactionId"]);
+            Assert.AreEqual("USD", props[EventPropertyKeys.Currency]);
+            Assert.AreEqual(9.99m, props[EventPropertyKeys.Value]);
+            Assert.AreEqual("gem_pack_01", props[EventPropertyKeys.ItemId]);
+            Assert.AreEqual("Starter Gem Pack", props[EventPropertyKeys.ItemName]);
+            Assert.AreEqual(1, props[EventPropertyKeys.Quantity]);
+            Assert.AreEqual("txn_abc123", props[EventPropertyKeys.TransactionId]);
         }
 
         [Test]
@@ -137,18 +137,18 @@ namespace Immutable.Audience.Tests
         {
             var props = new Purchase { Currency = "EUR", Value = 5.00m }.ToProperties();
 
-            Assert.IsTrue(props.ContainsKey("currency"));
-            Assert.IsTrue(props.ContainsKey("value"));
-            Assert.IsFalse(props.ContainsKey("itemId"));
-            Assert.IsFalse(props.ContainsKey("itemName"));
-            Assert.IsFalse(props.ContainsKey("quantity"));
-            Assert.IsFalse(props.ContainsKey("transactionId"));
+            Assert.IsTrue(props.ContainsKey(EventPropertyKeys.Currency));
+            Assert.IsTrue(props.ContainsKey(EventPropertyKeys.Value));
+            Assert.IsFalse(props.ContainsKey(EventPropertyKeys.ItemId));
+            Assert.IsFalse(props.ContainsKey(EventPropertyKeys.ItemName));
+            Assert.IsFalse(props.ContainsKey(EventPropertyKeys.Quantity));
+            Assert.IsFalse(props.ContainsKey(EventPropertyKeys.TransactionId));
         }
 
         [Test]
         public void Purchase_EventName_IsPurchase()
         {
-            Assert.AreEqual("purchase", new Purchase().EventName);
+            Assert.AreEqual(EventNames.Purchase, new Purchase().EventName);
         }
 
         [Test]
@@ -174,14 +174,14 @@ namespace Immutable.Audience.Tests
         {
             var props = new MilestoneReached { Name = "first_boss_defeated" }.ToProperties();
 
-            Assert.AreEqual("first_boss_defeated", props["name"]);
+            Assert.AreEqual("first_boss_defeated", props[EventPropertyKeys.Name]);
             Assert.AreEqual(1, props.Count);
         }
 
         [Test]
         public void MilestoneReached_EventName_IsMilestoneReached()
         {
-            Assert.AreEqual("milestone_reached", new MilestoneReached().EventName);
+            Assert.AreEqual(EventNames.MilestoneReached, new MilestoneReached().EventName);
         }
     }
 }

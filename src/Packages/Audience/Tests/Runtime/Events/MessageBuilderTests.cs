@@ -15,7 +15,7 @@ namespace Immutable.Audience.Tests
         {
             var result = MessageBuilder.Track("level_complete", "anon-1", null, PackageVersion);
 
-            Assert.AreEqual("track", result[MessageFields.Type]);
+            Assert.AreEqual(MessageTypes.Track, result[MessageFields.Type]);
             Assert.IsTrue(result.ContainsKey(MessageFields.MessageId));
             Assert.IsTrue(result.ContainsKey(MessageFields.EventTimestamp));
             Assert.IsTrue(result.ContainsKey(MessageFields.Context));
@@ -53,31 +53,34 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Identify_TypeAndIdentityFieldsPresent()
         {
-            var result = MessageBuilder.Identify("anon-42", "user-42", "steam", PackageVersion);
+            var result = MessageBuilder.Identify("anon-42", "user-42", IdentityType.Steam.ToLowercaseString(), PackageVersion);
 
-            Assert.AreEqual("identify", result[MessageFields.Type]);
+            Assert.AreEqual(MessageTypes.Identify, result[MessageFields.Type]);
             Assert.AreEqual("anon-42", result[MessageFields.AnonymousId]);
             Assert.AreEqual("user-42", result[MessageFields.UserId]);
-            Assert.AreEqual("steam", result[MessageFields.IdentityType]);
+            Assert.AreEqual(IdentityType.Steam.ToLowercaseString(), result[MessageFields.IdentityType]);
         }
 
         [Test]
         public void Alias_AllFourFieldsPresent()
         {
-            var result = MessageBuilder.Alias("from-id", "email", "to-id", "steam", PackageVersion);
+            var result = MessageBuilder.Alias(
+                "from-id", IdentityType.Email.ToLowercaseString(),
+                "to-id", IdentityType.Steam.ToLowercaseString(),
+                PackageVersion);
 
-            Assert.AreEqual("alias", result[MessageFields.Type]);
+            Assert.AreEqual(MessageTypes.Alias, result[MessageFields.Type]);
             Assert.AreEqual("from-id", result[MessageFields.FromId]);
-            Assert.AreEqual("email", result[MessageFields.FromType]);
+            Assert.AreEqual(IdentityType.Email.ToLowercaseString(), result[MessageFields.FromType]);
             Assert.AreEqual("to-id", result[MessageFields.ToId]);
-            Assert.AreEqual("steam", result[MessageFields.ToType]);
+            Assert.AreEqual(IdentityType.Steam.ToLowercaseString(), result[MessageFields.ToType]);
         }
 
         [Test]
         public void AllMessages_ContextContainsLibraryAndLibraryVersion()
         {
             var track = MessageBuilder.Track("evt", null, null, PackageVersion);
-            var identify = MessageBuilder.Identify(null, "u1", "steam", PackageVersion);
+            var identify = MessageBuilder.Identify(null, "u1", IdentityType.Steam.ToLowercaseString(), PackageVersion);
             var alias = MessageBuilder.Alias("f", "t1", "t", "t2", PackageVersion);
 
             foreach (var msg in new[] { track, identify, alias })
@@ -92,12 +95,12 @@ namespace Immutable.Audience.Tests
         public void AllMessages_SurfaceIsUnity()
         {
             var track = MessageBuilder.Track("evt", null, null, PackageVersion);
-            var identify = MessageBuilder.Identify(null, "u1", "steam", PackageVersion);
+            var identify = MessageBuilder.Identify(null, "u1", IdentityType.Steam.ToLowercaseString(), PackageVersion);
             var alias = MessageBuilder.Alias("f", "t1", "t", "t2", PackageVersion);
 
-            Assert.AreEqual("unity", track[MessageFields.Surface]);
-            Assert.AreEqual("unity", identify[MessageFields.Surface]);
-            Assert.AreEqual("unity", alias[MessageFields.Surface]);
+            Assert.AreEqual(Constants.Surface, track[MessageFields.Surface]);
+            Assert.AreEqual(Constants.Surface, identify[MessageFields.Surface]);
+            Assert.AreEqual(Constants.Surface, alias[MessageFields.Surface]);
         }
 
         [Test]
@@ -132,9 +135,9 @@ namespace Immutable.Audience.Tests
             {
                 var ts = (string)msg[MessageFields.EventTimestamp];
                 Assert.IsTrue(
-                    DateTime.TryParseExact(ts, "o", CultureInfo.InvariantCulture,
+                    DateTime.TryParseExact(ts, Constants.IsoTimestampFormat, CultureInfo.InvariantCulture,
                         DateTimeStyles.RoundtripKind, out var parsed),
-                    $"eventTimestamp must parse as ISO 8601 round-trip ('o') format; got: '{ts}'");
+                    $"eventTimestamp must parse as ISO 8601 round-trip ('{Constants.IsoTimestampFormat}') format; got: '{ts}'");
                 Assert.AreEqual(DateTimeKind.Utc, parsed.Kind, "eventTimestamp must be UTC");
                 Assert.That(parsed, Is.GreaterThanOrEqualTo(before),
                     "eventTimestamp must be ~now, not stale");
@@ -159,7 +162,7 @@ namespace Immutable.Audience.Tests
         private static IEnumerable<Dictionary<string, object>> EveryMessageType()
         {
             yield return MessageBuilder.Track("evt", null, null, PackageVersion);
-            yield return MessageBuilder.Identify(null, "u1", "steam", PackageVersion);
+            yield return MessageBuilder.Identify(null, "u1", IdentityType.Steam.ToLowercaseString(), PackageVersion);
             yield return MessageBuilder.Alias("f", "t1", "t", "t2", PackageVersion);
         }
     }

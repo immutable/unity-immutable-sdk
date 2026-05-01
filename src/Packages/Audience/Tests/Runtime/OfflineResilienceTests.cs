@@ -61,7 +61,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.FlushQueueToDiskForTesting();
             if (Directory.Exists(queueDir))
             {
-                foreach (var f in Directory.GetFiles(queueDir, "*.json")) File.Delete(f);
+                foreach (var f in Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)) File.Delete(f);
                 Directory.Delete(queueDir);
             }
             File.WriteAllText(queueDir, "blocker");

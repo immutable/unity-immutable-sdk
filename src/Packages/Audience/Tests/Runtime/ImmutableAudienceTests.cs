@@ -179,25 +179,25 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.ContextProvider = () => new Dictionary<string, object>
             {
-                ["userAgent"] = "TestOS 1.0",
-                ["locale"] = "en-GB",
-                ["timezone"] = "Europe/London",
-                ["screen"] = "1920x1080",
+                [ContextKeys.UserAgent] = "TestOS 1.0",
+                [ContextKeys.Locale] = "en-GB",
+                [ContextKeys.Timezone] = "Europe/London",
+                [ContextKeys.Screen] = "1920x1080",
             };
 
             ImmutableAudience.Init(MakeConfig());
             ImmutableAudience.Track("unit_test_event");
             ImmutableAudience.Shutdown();
 
-            var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
+            var queueDir = AudiencePaths.QueueDir(_testDir);
             var blobs = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob).Select(File.ReadAllText).ToList();
 
             Assert.IsTrue(blobs.Any(b =>
-                b.Contains("\"userAgent\":\"TestOS 1.0\"") &&
-                b.Contains("\"locale\":\"en-GB\"") &&
-                b.Contains("\"timezone\":\"Europe/London\"") &&
-                b.Contains("\"screen\":\"1920x1080\"") &&
-                b.Contains("\"library\":")),
+                b.Contains($"\"{ContextKeys.UserAgent}\":\"TestOS 1.0\"") &&
+                b.Contains($"\"{ContextKeys.Locale}\":\"en-GB\"") &&
+                b.Contains($"\"{ContextKeys.Timezone}\":\"Europe/London\"") &&
+                b.Contains($"\"{ContextKeys.Screen}\":\"1920x1080\"") &&
+                b.Contains($"\"{MessageFields.Library}\":")),
                 "Enqueue should merge ContextProvider fields into msg.context alongside library/libraryVersion");
         }
 
@@ -210,21 +210,21 @@ namespace Immutable.Audience.Tests
             // event carries.
             ImmutableAudience.ContextProvider = () => new Dictionary<string, object>
             {
-                ["userAgent"] = "TestOS 1.0",
-                ["locale"] = "en-GB",
+                [ContextKeys.UserAgent] = "TestOS 1.0",
+                [ContextKeys.Locale] = "en-GB",
             };
 
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
             ImmutableAudience.Identify("player-42", IdentityType.Custom);
             ImmutableAudience.Shutdown();
 
-            var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
+            var queueDir = AudiencePaths.QueueDir(_testDir);
             var blobs = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob).Select(File.ReadAllText).ToList();
 
             Assert.IsTrue(blobs.Any(b =>
-                b.Contains("\"type\":\"identify\"") &&
-                b.Contains("\"userAgent\":\"TestOS 1.0\"") &&
-                b.Contains("\"locale\":\"en-GB\"")),
+                b.Contains($"\"{MessageFields.Type}\":\"{MessageTypes.Identify}\"") &&
+                b.Contains($"\"{ContextKeys.UserAgent}\":\"TestOS 1.0\"") &&
+                b.Contains($"\"{ContextKeys.Locale}\":\"en-GB\"")),
                 "Identify message must carry ContextProvider fields in msg.context");
         }
 
@@ -237,10 +237,10 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.Track("unit_test_event");
             ImmutableAudience.Shutdown();
 
-            var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
+            var queueDir = AudiencePaths.QueueDir(_testDir);
             var blobs = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob).Select(File.ReadAllText).ToList();
 
-            Assert.IsTrue(blobs.Any(b => b.Contains("\"unit_test_event\"") && b.Contains("\"library\":")),
+            Assert.IsTrue(blobs.Any(b => b.Contains("\"unit_test_event\"") && b.Contains($"\"{MessageFields.Library}\":")),
                 "event should still ship with base context when ContextProvider throws");
         }
 
@@ -253,10 +253,10 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.Track("unit_test_event");
             ImmutableAudience.Shutdown();
 
-            var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
+            var queueDir = AudiencePaths.QueueDir(_testDir);
             var blobs = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob).Select(File.ReadAllText).ToList();
 
-            Assert.IsTrue(blobs.Any(b => b.Contains("\"unit_test_event\"") && b.Contains("\"library\":")),
+            Assert.IsTrue(blobs.Any(b => b.Contains("\"unit_test_event\"") && b.Contains($"\"{MessageFields.Library}\":")),
                 "event should still ship with base context when ContextProvider returns null");
         }
 
@@ -366,9 +366,9 @@ namespace Immutable.Audience.Tests
             foreach (var file in Directory.GetFiles(queueDir, AudiencePaths.QueueGlob))
             {
                 var msg = JsonReader.DeserializeObject(File.ReadAllText(file));
-                if ((string)msg[MessageFields.Type] != "track") continue;
+                if ((string)msg[MessageFields.Type] != MessageTypes.Track) continue;
 
-                if (!msg.TryGetValue("eventName", out var eventNameObj))
+                if (!msg.TryGetValue(MessageFields.EventName, out var eventNameObj))
                     Assert.Fail($"track message {Path.GetFileName(file)} missing eventName field");
 
                 Assert.IsNotNull(eventNameObj,
@@ -1100,7 +1100,7 @@ namespace Immutable.Audience.Tests
             var queueDir = AudiencePaths.QueueDir(_testDir);
             var contents = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText).ToList();
-            Assert.IsTrue(contents.Any(c => c.Contains("\"game_launch\"")),
+            Assert.IsTrue(contents.Any(c => c.Contains($"\"{EventNames.GameLaunch}\"")),
                 "Init should auto-fire game_launch");
         }
 
@@ -1116,7 +1116,8 @@ namespace Immutable.Audience.Tests
             var contents = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText).ToList();
             Assert.IsTrue(contents.Any(c =>
-                c.Contains("\"game_launch\"") && c.Contains("\"steam\"")));
+                c.Contains($"\"{EventNames.GameLaunch}\"")
+                && c.Contains($"\"{GameLaunchPropertyKeys.DistributionPlatform}\":\"{DistributionPlatforms.Steam}\"")));
         }
 
         [Test]
@@ -1126,7 +1127,7 @@ namespace Immutable.Audience.Tests
             config.DistributionPlatform = "Steam";
             ImmutableAudience.Init(config);
 
-            Assert.AreEqual("steam", config.DistributionPlatform,
+            Assert.AreEqual(DistributionPlatforms.Steam, config.DistributionPlatform,
                 "Init should lowercase mixed-case DistributionPlatform so dashboards aggregate consistently.");
         }
 
@@ -1137,17 +1138,17 @@ namespace Immutable.Audience.Tests
             config.DistributionPlatform = "STEAM";
             ImmutableAudience.Init(config);
 
-            Assert.AreEqual("steam", config.DistributionPlatform);
+            Assert.AreEqual(DistributionPlatforms.Steam, config.DistributionPlatform);
         }
 
         [Test]
         public void Init_LeavesDistributionPlatformUnchanged_WhenAlreadyLowercase()
         {
             var config = MakeConfig();
-            config.DistributionPlatform = "steam";
+            config.DistributionPlatform = DistributionPlatforms.Steam;
             ImmutableAudience.Init(config);
 
-            Assert.AreEqual("steam", config.DistributionPlatform);
+            Assert.AreEqual(DistributionPlatforms.Steam, config.DistributionPlatform);
         }
 
         [Test]
@@ -1175,7 +1176,7 @@ namespace Immutable.Audience.Tests
 
             var contents = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText).ToList();
-            Assert.IsFalse(contents.Any(c => c.Contains("\"game_launch\"")));
+            Assert.IsFalse(contents.Any(c => c.Contains($"\"{EventNames.GameLaunch}\"")));
         }
 
         [Test]
@@ -1183,10 +1184,10 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.LaunchContextProvider = () => new Dictionary<string, object>
             {
-                ["platform"] = "WindowsPlayer",
-                ["version"] = "1.2.3",
-                ["buildGuid"] = "a1b2c3d4e5f6",
-                ["unityVersion"] = "2022.3.20f1",
+                [GameLaunchPropertyKeys.Platform] = "WindowsPlayer",
+                [GameLaunchPropertyKeys.Version] = "1.2.3",
+                [GameLaunchPropertyKeys.BuildGuid] = "a1b2c3d4e5f6",
+                [GameLaunchPropertyKeys.UnityVersion] = "2022.3.20f1",
             };
 
             ImmutableAudience.Init(MakeConfig());
@@ -1195,12 +1196,12 @@ namespace Immutable.Audience.Tests
             var queueDir = AudiencePaths.QueueDir(_testDir);
             var launchFile = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText)
-                .FirstOrDefault(c => c.Contains("\"game_launch\""));
+                .FirstOrDefault(c => c.Contains($"\"{EventNames.GameLaunch}\""));
             Assert.IsNotNull(launchFile, "game_launch should have been enqueued");
-            StringAssert.Contains("\"platform\":\"WindowsPlayer\"", launchFile);
-            StringAssert.Contains("\"version\":\"1.2.3\"", launchFile);
-            StringAssert.Contains("\"buildGuid\":\"a1b2c3d4e5f6\"", launchFile);
-            StringAssert.Contains("\"unityVersion\":\"2022.3.20f1\"", launchFile);
+            StringAssert.Contains($"\"{GameLaunchPropertyKeys.Platform}\":\"WindowsPlayer\"", launchFile);
+            StringAssert.Contains($"\"{GameLaunchPropertyKeys.Version}\":\"1.2.3\"", launchFile);
+            StringAssert.Contains($"\"{GameLaunchPropertyKeys.BuildGuid}\":\"a1b2c3d4e5f6\"", launchFile);
+            StringAssert.Contains($"\"{GameLaunchPropertyKeys.UnityVersion}\":\"2022.3.20f1\"", launchFile);
         }
 
         [Test]
@@ -1208,7 +1209,7 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.LaunchContextProvider = () => new Dictionary<string, object>
             {
-                ["distributionPlatform"] = "provider_value",
+                [GameLaunchPropertyKeys.DistributionPlatform] = "provider_value",
             };
 
             var config = MakeConfig();
@@ -1219,8 +1220,8 @@ namespace Immutable.Audience.Tests
             var queueDir = AudiencePaths.QueueDir(_testDir);
             var launchFile = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText)
-                .First(c => c.Contains("\"game_launch\""));
-            StringAssert.Contains("\"distributionPlatform\":\"steam\"", launchFile);
+                .First(c => c.Contains($"\"{EventNames.GameLaunch}\""));
+            StringAssert.Contains($"\"{GameLaunchPropertyKeys.DistributionPlatform}\":\"{DistributionPlatforms.Steam}\"", launchFile);
             Assert.IsFalse(launchFile.Contains("provider_value"),
                 "config.DistributionPlatform should win over the provider's value");
         }
@@ -1237,7 +1238,7 @@ namespace Immutable.Audience.Tests
             var queueDir = AudiencePaths.QueueDir(_testDir);
             var contents = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText).ToList();
-            Assert.IsTrue(contents.Any(c => c.Contains("\"game_launch\"")),
+            Assert.IsTrue(contents.Any(c => c.Contains($"\"{EventNames.GameLaunch}\"")),
                 "game_launch must still ship when the context provider throws");
         }
 
@@ -1324,9 +1325,9 @@ namespace Immutable.Audience.Tests
             {
                 var msg = JsonReader.DeserializeObject(File.ReadAllText(f));
                 var type = (string)msg[MessageFields.Type];
-                Assert.AreNotEqual("identify", type, "identify must be purged on Full -> Anonymous");
-                Assert.AreNotEqual("alias", type, "alias must be purged on Full -> Anonymous");
-                if (type == "track")
+                Assert.AreNotEqual(MessageTypes.Identify, type, "identify must be purged on Full -> Anonymous");
+                Assert.AreNotEqual(MessageTypes.Alias, type, "alias must be purged on Full -> Anonymous");
+                if (type == MessageTypes.Track)
                     Assert.IsFalse(msg.ContainsKey(MessageFields.UserId), "userId must be stripped from queued track on Full -> Anonymous");
             }
         }
@@ -1344,7 +1345,7 @@ namespace Immutable.Audience.Tests
             var queueDir = AudiencePaths.QueueDir(_testDir);
             var trackFiles = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(f => JsonReader.DeserializeObject(File.ReadAllText(f)))
-                .Where(m => (string)m[MessageFields.Type] == "track"
+                .Where(m => (string)m[MessageFields.Type] == MessageTypes.Track
                             && m.ContainsKey(MessageFields.EventName)
                             && (string)m[MessageFields.EventName] == "tracked_after_downgrade")
                 .ToList();
