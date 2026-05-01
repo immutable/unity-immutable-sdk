@@ -12,7 +12,7 @@ namespace Immutable.Audience
             Directory.CreateDirectory(AudiencePaths.AudienceDir(persistentDataPath));
 
             var filePath = AudiencePaths.ConsentFile(persistentDataPath);
-            var tmpPath = filePath + ".tmp";
+            var tmpPath = filePath + AudiencePaths.TempFileSuffix;
 
             File.WriteAllText(tmpPath, ((int)level).ToString());
 

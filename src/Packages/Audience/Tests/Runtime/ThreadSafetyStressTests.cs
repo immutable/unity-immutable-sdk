@@ -73,7 +73,7 @@ namespace Immutable.Audience.Tests
             // measures only what our threads enqueue.
             ImmutableAudience.FlushQueueToDiskForTesting();
             var queueDir = AudiencePaths.QueueDir(_testDir);
-            foreach (var f in Directory.GetFiles(queueDir, "*.json")) File.Delete(f);
+            foreach (var f in Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)) File.Delete(f);
 
             var threads = new Thread[threadCount];
             var firedPerThread = new int[threadCount];
@@ -121,7 +121,7 @@ namespace Immutable.Audience.Tests
 
             ImmutableAudience.FlushQueueToDiskForTesting();
 
-            int onDisk = Directory.GetFiles(queueDir, "*.json").Length;
+            int onDisk = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob).Length;
             Assert.AreEqual(totalFired, onDisk,
                 $"every Track should land on disk; fired={totalFired} onDisk={onDisk} delta={totalFired - onDisk}");
         }

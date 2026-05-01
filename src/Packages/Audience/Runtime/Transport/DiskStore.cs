@@ -23,17 +23,17 @@ namespace Immutable.Audience
 
         internal DiskStore(string persistentDataPath)
         {
-            _queueDir = Path.Combine(persistentDataPath, "imtbl_audience", "queue");
+            _queueDir = AudiencePaths.QueueDir(persistentDataPath);
             Directory.CreateDirectory(_queueDir);
-            _cachedCount = Directory.GetFiles(_queueDir, "*.json").Length;
+            _cachedCount = Directory.GetFiles(_queueDir, AudiencePaths.QueueGlob).Length;
         }
 
         // Atomically writes json as a new event file.
         internal void Write(string json)
         {
-            var fileName = $"{DateTime.UtcNow.Ticks}_{Guid.NewGuid():N}.json";
+            var fileName = $"{DateTime.UtcNow.Ticks}_{Guid.NewGuid():N}{AudiencePaths.QueueFileExtension}";
             var finalPath = Path.Combine(_queueDir, fileName);
-            var tmpPath = finalPath + ".tmp";
+            var tmpPath = finalPath + AudiencePaths.TempFileSuffix;
 
             File.WriteAllText(tmpPath, json);
 
@@ -66,7 +66,7 @@ namespace Immutable.Audience
             var result = new List<string>();
 
             // Sort by filename (ticks prefix) → oldest first
-            var files = Directory.GetFiles(_queueDir, "*.json")
+            var files = Directory.GetFiles(_queueDir, AudiencePaths.QueueGlob)
                 .OrderBy(f => Path.GetFileName(f), StringComparer.Ordinal);
 
             foreach (var path in files)
@@ -116,7 +116,7 @@ namespace Immutable.Audience
         internal void DeleteAll()
         {
             string[] paths;
-            try { paths = Directory.GetFiles(_queueDir, "*.json"); }
+            try { paths = Directory.GetFiles(_queueDir, AudiencePaths.QueueGlob); }
             catch (DirectoryNotFoundException) { return; }
 
             foreach (var path in paths)
@@ -128,7 +128,7 @@ namespace Immutable.Audience
         internal void ApplyAnonymousDowngrade()
         {
             string[] paths;
-            try { paths = Directory.GetFiles(_queueDir, "*.json"); }
+            try { paths = Directory.GetFiles(_queueDir, AudiencePaths.QueueGlob); }
             catch (DirectoryNotFoundException) { return; }
 
             foreach (var path in paths)
@@ -179,7 +179,7 @@ namespace Immutable.Audience
             try
             {
                 var rewritten = Json.Serialize(msg);
-                var tmp = path + ".tmp";
+                var tmp = path + AudiencePaths.TempFileSuffix;
                 File.WriteAllText(tmp, rewritten);
                 try { File.Move(tmp, path); }
                 catch (IOException)

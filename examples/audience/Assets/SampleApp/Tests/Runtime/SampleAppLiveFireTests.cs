@@ -36,7 +36,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
             // (and identity/queue) to disk under <persistentDataPath>/imtbl_audience.
             // Without wiping it, a SetConsent(None) from a prior test leaks into
             // the next test's Init via ConsentStore.Load.
-            var sdkDir = System.IO.Path.Combine(Application.persistentDataPath, SampleAppUi.SdkPersistedDirName);
+            var sdkDir = AudiencePaths.AudienceDir(Application.persistentDataPath);
             if (System.IO.Directory.Exists(sdkDir))
                 System.IO.Directory.Delete(sdkDir, recursive: true);
 

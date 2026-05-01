@@ -33,7 +33,7 @@ namespace Immutable.Audience.Tests
             _store.Write("{\"event\":\"test\"}");
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
-            var files = Directory.GetFiles(queueDir, "*.json");
+            var files = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob);
             Assert.AreEqual(1, files.Length, "should have written exactly one event file");
         }
 
@@ -44,7 +44,7 @@ namespace Immutable.Audience.Tests
             _store.Write(json);
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
-            var file = Directory.GetFiles(queueDir, "*.json").Single();
+            var file = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob).Single();
             Assert.AreEqual(json, File.ReadAllText(file));
         }
 

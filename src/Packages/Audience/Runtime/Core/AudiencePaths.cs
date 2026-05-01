@@ -9,6 +9,13 @@ namespace Immutable.Audience
         private const string ConsentFileName = "consent";
         private const string QueueDirName = "queue";
 
+        // Queue files are named <ticks>_<uuid>.json.
+        internal const string QueueFileExtension = ".json";
+        internal const string QueueGlob = "*" + QueueFileExtension;
+
+        // Files ending in this suffix are mid-write and must not be read.
+        internal const string TempFileSuffix = ".tmp";
+
         internal static string AudienceDir(string persistentDataPath) =>
             Path.Combine(persistentDataPath, RootDirName);
 
