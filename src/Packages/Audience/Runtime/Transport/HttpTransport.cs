@@ -125,7 +125,7 @@ namespace Immutable.Audience
                             $"Batch partially rejected: {rejected} of {batch.Count} events dropped");
                     }
                 }
-                else if (statusCode == 429)
+                else if (statusCode == (int)HttpStatusCode.TooManyRequests)
                 {
                     // 429 is retryable (RFC 6585). Keep the batch, honor Retry-After
                     // if present else use the existing 5xx backoff schedule. No

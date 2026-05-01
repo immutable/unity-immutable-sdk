@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -640,7 +641,7 @@ namespace Immutable.Audience
 
                         if (response.IsSuccessStatusCode) return;
 
-                        if ((int)response.StatusCode == 429 && attempt < maxAttempts)
+                        if (response.StatusCode == HttpStatusCode.TooManyRequests && attempt < maxAttempts)
                         {
                             var delay = HttpRetry.ParseRetryAfter(response)
                                 ?? TimeSpan.FromMilliseconds(1_000 * (1 << (attempt - 1)));
