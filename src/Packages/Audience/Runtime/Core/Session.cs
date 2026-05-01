@@ -28,6 +28,12 @@ namespace Immutable.Audience
         // 30s: alt-tab beyond this rolls the session on Resume.
         internal const int PauseTimeoutMs = 30_000;
 
+        // How long we wait for an in-flight heartbeat callback to finish during teardown.
+        internal const int HeartbeatDrainTimeoutMs = 1_000;
+
+        // How long we wait for the previous heartbeat to clear when Start is called twice.
+        internal const int StartDrainTimeoutMs = 500;
+
         private readonly TrackDelegate _track;
         private readonly Func<DateTime> _getUtcNow;
         private readonly int _heartbeatIntervalMs;
@@ -77,8 +83,8 @@ namespace Immutable.Audience
                 }
             }
 
-            // 500ms budget. Double-Start is a misuse path.
-            TimerDisposal.DisposeAndWait(oldTimer, TimeSpan.FromMilliseconds(500));
+            // Double-Start is a misuse path; StartDrainTimeoutMs caps the wait.
+            TimerDisposal.DisposeAndWait(oldTimer, TimeSpan.FromMilliseconds(StartDrainTimeoutMs));
 
             // Phase 2: populate new state. Re-check _disposed (may have flipped during drain).
             string sessionId;
@@ -264,7 +270,8 @@ namespace Immutable.Audience
         }
 
         // Stops the timer and waits for the in-flight callback. Runs outside
-        // _lock (OnHeartbeat re-enters). 1s budget (quits must not hang). Warns on timeout.
+        // _lock (OnHeartbeat re-enters). HeartbeatDrainTimeoutMs caps the
+        // wait so quits don't hang. Warns on timeout.
         private void DrainHeartbeatTimer()
         {
             Timer? timer;
@@ -275,7 +282,7 @@ namespace Immutable.Audience
             }
             if (timer == null) return;
 
-            if (!TimerDisposal.DisposeAndWait(timer, TimeSpan.FromSeconds(1)))
+            if (!TimerDisposal.DisposeAndWait(timer, TimeSpan.FromMilliseconds(HeartbeatDrainTimeoutMs)))
             {
                 Log.Warn(AudienceLogs.SessionHeartbeatTimeout);
             }
