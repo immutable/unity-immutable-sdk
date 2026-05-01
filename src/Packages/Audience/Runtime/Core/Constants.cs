@@ -62,6 +62,20 @@ namespace Immutable.Audience
         internal const string Alias = "alias";
     }
 
+    // JSON keys for the consent-sync PUT body.
+    internal static class ConsentBodyFields
+    {
+        internal const string Status = "status";
+        internal const string Source = "source";
+    }
+
+    // JSON keys for the messages POST envelope and response.
+    internal static class ResponseFields
+    {
+        internal const string MessagesEnvelope = "messages";
+        internal const string Rejected = "rejected";
+    }
+
     // Wire-format field names that cross module boundaries inside the SDK
     // (read by one module, written by another).
     internal static class MessageFields

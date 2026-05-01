@@ -623,8 +623,8 @@ namespace Immutable.Audience
 
             var body = Json.Serialize(new Dictionary<string, object>
             {
-                ["status"] = level.ToLowercaseString(),
-                ["source"] = Constants.ConsentSource,
+                [ConsentBodyFields.Status] = level.ToLowercaseString(),
+                [ConsentBodyFields.Source] = Constants.ConsentSource,
                 // Explicit null lets the backend distinguish "unknown" from a missing field.
                 ["anonymousId"] = anonymousId!,
             });

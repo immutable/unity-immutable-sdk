@@ -255,7 +255,7 @@ namespace Immutable.Audience
         // schema (#/components/schemas/MessagesRequest property "messages").
         private static string? BuildPayload(IReadOnlyList<string> paths)
         {
-            var sb = new StringBuilder("{\"messages\":[");
+            var sb = new StringBuilder($"{{\"{ResponseFields.MessagesEnvelope}\":[");
             var count = 0;
 
             for (var i = 0; i < paths.Count; i++)
@@ -307,7 +307,7 @@ namespace Immutable.Audience
             try
             {
                 var parsed = JsonReader.DeserializeObject(body);
-                if (!parsed.TryGetValue("rejected", out var raw)) return 0;
+                if (!parsed.TryGetValue(ResponseFields.Rejected, out var raw)) return 0;
                 return raw switch
                 {
                     int i => i,
