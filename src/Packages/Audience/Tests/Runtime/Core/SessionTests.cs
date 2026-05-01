@@ -158,11 +158,11 @@ namespace Immutable.Audience.Tests
             var id1 = session.SessionId;
 
             session.Pause();
-            now = now.AddMilliseconds(Session.PauseTimeoutMs + 1000);
+            now = now.AddMilliseconds(Constants.SessionPauseTimeoutMs + 1000);
             session.Resume();
 
             Assert.AreNotEqual(id1, session.SessionId,
-                "pause longer than PauseTimeoutMs should end the old session and start a new one");
+                "pause longer than SessionPauseTimeoutMs should end the old session and start a new one");
             Assert.IsTrue(_events.Any(e => e.name == EventNames.SessionEnd),
                 "old session should have fired session_end");
             Assert.AreEqual(2, _events.Count(e => e.name == EventNames.SessionStart),

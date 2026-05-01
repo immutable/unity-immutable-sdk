@@ -27,12 +27,6 @@ namespace Immutable.Audience
         // teardown (Session.Dispose, timer drain, queue shutdown, transport
         // flush, disposes). This keeps the hold time to nanoseconds so a caller
         // arriving on a different thread is not stranded behind those budgets.
-        // How many times we retry the consent-sync PUT after a 429.
-        internal const int ConsentSyncMaxAttempts = 4;
-
-        // How long we wait before the first consent-sync retry. Doubles each time.
-        internal const int ConsentSyncBaseRetryMs = 1_000;
-
         private static AudienceConfig? _config;
         private static DiskStore? _store;
         private static EventQueue? _queue;
@@ -631,9 +625,8 @@ namespace Immutable.Audience
 
             Task.Run(async () =>
             {
-                // 429 retried up to ConsentSyncMaxAttempts attempts (1s/2s/4s
-                // or Retry-After). Other non-2xx fail fast.
-                const int maxAttempts = ConsentSyncMaxAttempts;
+                // 429 retries up to Constants.ConsentSyncMaxAttempts; other non-2xx fail fast.
+                const int maxAttempts = Constants.ConsentSyncMaxAttempts;
                 var attempt = 0;
                 try
                 {
@@ -650,7 +643,7 @@ namespace Immutable.Audience
                         if (response.StatusCode == HttpStatusCode.TooManyRequests && attempt < maxAttempts)
                         {
                             var delay = HttpRetry.ParseRetryAfter(response)
-                                ?? TimeSpan.FromMilliseconds(ConsentSyncBaseRetryMs * (1 << (attempt - 1)));
+                                ?? TimeSpan.FromMilliseconds(Constants.ConsentSyncBaseRetryMs * (1 << (attempt - 1)));
                             await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
                             continue;
                         }
