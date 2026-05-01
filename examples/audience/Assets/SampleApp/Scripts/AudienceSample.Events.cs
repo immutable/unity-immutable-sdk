@@ -51,7 +51,7 @@ namespace Immutable.Audience.Samples.SampleApp
                 EventField.Text("platform", optional: true),
             }),
             new EventSpec("wishlist_remove", new[] { EventField.Text("gameId") }),
-            new EventSpec("purchase",        new[] {
+            new EventSpec(EventNames.Purchase, new[] {
                 EventField.Text("currency"),
                 EventField.Number("value"),
                 EventField.Text("itemId",        optional: true),
@@ -62,7 +62,7 @@ namespace Immutable.Audience.Samples.SampleApp
             // game_launch is deliberately absent. The Event Reference v1 defines
             // it as auto-tracked on Init with no public typed class; firing it
             // from the Send button would double-emit.
-            new EventSpec("progression", new[] {
+            new EventSpec(EventNames.Progression, new[] {
                 EventField.Enum("status", new[] { "start", "complete", "fail" }),
                 EventField.Text("world",         optional: true),
                 EventField.Text("level",         optional: true),
@@ -70,14 +70,14 @@ namespace Immutable.Audience.Samples.SampleApp
                 EventField.Number("score",       optional: true),
                 EventField.Number("durationSec", optional: true),
             }),
-            new EventSpec("resource", new[] {
+            new EventSpec(EventNames.Resource, new[] {
                 EventField.Enum("flow", new[] { "sink", "source" }),
                 EventField.Text("currency"),
                 EventField.Number("amount"),
                 EventField.Text("itemType", optional: true),
                 EventField.Text("itemId",   optional: true),
             }),
-            new EventSpec("milestone_reached", new[] { EventField.Text("name") }),
+            new EventSpec(EventNames.MilestoneReached, new[] { EventField.Text("name") }),
             new EventSpec("game_page_viewed",  new[] {
                 EventField.Text("gameId"),
                 EventField.Text("gameName", optional: true),
@@ -99,7 +99,7 @@ namespace Immutable.Audience.Samples.SampleApp
         {
             switch (name)
             {
-                case "progression":
+                case EventNames.Progression:
                     return new Progression
                     {
                         Status = ParseProgressionStatus(props),
@@ -109,7 +109,7 @@ namespace Immutable.Audience.Samples.SampleApp
                         Score = OptionalInt(props, "score"),
                         DurationSec = OptionalFloat(props, "durationSec"),
                     };
-                case "resource":
+                case EventNames.Resource:
                     return new Resource
                     {
                         Flow = ParseResourceFlow(props),
@@ -118,7 +118,7 @@ namespace Immutable.Audience.Samples.SampleApp
                         ItemType = OptionalString(props, "itemType"),
                         ItemId = OptionalString(props, "itemId"),
                     };
-                case "purchase":
+                case EventNames.Purchase:
                     return new Purchase
                     {
                         Currency = OptionalString(props, "currency") ?? "",
@@ -128,7 +128,7 @@ namespace Immutable.Audience.Samples.SampleApp
                         Quantity = OptionalInt(props, "quantity"),
                         TransactionId = OptionalString(props, "transactionId"),
                     };
-                case "milestone_reached":
+                case EventNames.MilestoneReached:
                     return new MilestoneReached { Name = OptionalString(props, "name") ?? "" };
                 default:
                     return null;

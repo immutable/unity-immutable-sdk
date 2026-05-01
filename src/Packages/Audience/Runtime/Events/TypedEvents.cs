@@ -78,7 +78,7 @@ namespace Immutable.Audience
         public float? DurationSec { get; set; }
 
         /// <inheritdoc/>
-        public string EventName => "progression";
+        public string EventName => EventNames.Progression;
 
         /// <inheritdoc/>
         public Dictionary<string, object> ToProperties()
@@ -163,7 +163,7 @@ namespace Immutable.Audience
         public string? ItemId { get; set; }
 
         /// <inheritdoc/>
-        public string EventName => "resource";
+        public string EventName => EventNames.Resource;
 
         /// <inheritdoc/>
         public Dictionary<string, object> ToProperties()
@@ -227,7 +227,7 @@ namespace Immutable.Audience
         public string? TransactionId { get; set; }
 
         /// <inheritdoc/>
-        public string EventName => "purchase";
+        public string EventName => EventNames.Purchase;
 
         // Hand-rolled to avoid pulling System.Text.RegularExpressions into the IL2CPP build.
         private static bool IsIso4217(string s)
@@ -278,7 +278,7 @@ namespace Immutable.Audience
         public string? Name { get; set; }
 
         /// <inheritdoc/>
-        public string EventName => "milestone_reached";
+        public string EventName => EventNames.MilestoneReached;
 
         /// <inheritdoc/>
         public Dictionary<string, object> ToProperties()

@@ -1020,7 +1020,7 @@ namespace Immutable.Audience
 
             // No sessionId on game_launch per Event Reference. Pipeline correlates
             // via eventTimestamp with the session_start that fires just before.
-            Track("game_launch", properties.Count > 0 ? properties : null);
+            Track(EventNames.GameLaunch, properties.Count > 0 ? properties : null);
         }
     }
 }

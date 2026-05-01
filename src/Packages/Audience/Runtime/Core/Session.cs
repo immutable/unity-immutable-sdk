@@ -101,7 +101,7 @@ namespace Immutable.Audience
                 _heartbeatTimer = new Timer(_ => OnHeartbeat(), null, _heartbeatIntervalMs, _heartbeatIntervalMs);
             }
 
-            SafeTrack("session_start", new Dictionary<string, object>
+            SafeTrack(EventNames.SessionStart, new Dictionary<string, object>
             {
                 ["sessionId"] = sessionId
             });
@@ -177,7 +177,7 @@ namespace Immutable.Audience
 
             // duration is engagement-aware (excludes pause). Web SDK emits
             // wall-clock; dashboards should not assume parity.
-            SafeTrack("session_end", new Dictionary<string, object>
+            SafeTrack(EventNames.SessionEnd, new Dictionary<string, object>
             {
                 ["sessionId"] = sessionId,
                 ["durationSec"] = duration
@@ -202,7 +202,7 @@ namespace Immutable.Audience
                 ResetSessionStateLocked();
             }
 
-            SafeTrack("session_end", new Dictionary<string, object>
+            SafeTrack(EventNames.SessionEnd, new Dictionary<string, object>
             {
                 ["sessionId"] = sessionId,
                 ["durationSec"] = duration
@@ -250,7 +250,7 @@ namespace Immutable.Audience
                 ["durationSec"] = duration
             };
 
-            SafeTrack("session_heartbeat", properties);
+            SafeTrack(EventNames.SessionHeartbeat, properties);
         }
 
         // Stops exceptions from the track callback from reaching upstream.

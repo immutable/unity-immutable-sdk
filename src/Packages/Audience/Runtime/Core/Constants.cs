@@ -76,6 +76,24 @@ namespace Immutable.Audience
         internal const string Rejected = "rejected";
     }
 
+    // Event names we send on Track.
+    internal static class EventNames
+    {
+        // Session lifecycle (auto-fired)
+        internal const string SessionStart = "session_start";
+        internal const string SessionEnd = "session_end";
+        internal const string SessionHeartbeat = "session_heartbeat";
+
+        // Init lifecycle (auto-fired)
+        internal const string GameLaunch = "game_launch";
+
+        // Typed events (IEvent implementations)
+        internal const string Progression = "progression";
+        internal const string Resource = "resource";
+        internal const string Purchase = "purchase";
+        internal const string MilestoneReached = "milestone_reached";
+    }
+
     // Wire-format field names that cross module boundaries inside the SDK
     // (read by one module, written by another).
     internal static class MessageFields
