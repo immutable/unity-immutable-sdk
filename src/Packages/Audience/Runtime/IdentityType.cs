@@ -56,5 +56,18 @@ namespace Immutable.Audience
             _ => throw new System.ArgumentOutOfRangeException(nameof(type), type,
                 "Unknown IdentityType value; cast an out-of-range value."),
         };
+
+        internal static IdentityType ParseLowercaseString(string? value) =>
+            (value ?? string.Empty).ToLowerInvariant() switch
+            {
+                "passport" => IdentityType.Passport,
+                "steam" => IdentityType.Steam,
+                "epic" => IdentityType.Epic,
+                "google" => IdentityType.Google,
+                "apple" => IdentityType.Apple,
+                "discord" => IdentityType.Discord,
+                "email" => IdentityType.Email,
+                _ => IdentityType.Custom,
+            };
     }
 }

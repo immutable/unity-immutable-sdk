@@ -375,16 +375,7 @@ namespace Immutable.Audience.Samples.SampleApp
         // Parses a wire-format identity string (e.g. "steam") back into the
         // IdentityType enum the SDK now requires. Falls back to Custom for
         // unknown or empty values.
-        private static IdentityType ParseIdentityType(string? value) => (value ?? "").ToLowerInvariant() switch
-        {
-            "passport" => IdentityType.Passport,
-            "steam"    => IdentityType.Steam,
-            "epic"     => IdentityType.Epic,
-            "google"   => IdentityType.Google,
-            "apple"    => IdentityType.Apple,
-            "discord"  => IdentityType.Discord,
-            "email"    => IdentityType.Email,
-            _          => IdentityType.Custom,
-        };
+        private static IdentityType ParseIdentityType(string? value) =>
+            IdentityTypeExtensions.ParseLowercaseString(value);
     }
 }
