@@ -79,7 +79,7 @@ namespace Immutable.Audience
             {
                 [MessageFields.Type] = type,
                 ["messageId"] = Guid.NewGuid().ToString(),
-                ["eventTimestamp"] = DateTime.UtcNow.ToString("o"),
+                ["eventTimestamp"] = DateTime.UtcNow.ToString(Constants.IsoTimestampFormat),
                 ["context"] = new Dictionary<string, object>
                 {
                     ["library"] = Constants.LibraryName,

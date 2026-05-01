@@ -17,6 +17,12 @@ namespace Immutable.Audience
         internal const int MaxBatchSize = 100;
         internal const int StaleEventDays = 30;
         internal const int MaxFieldLength = 256; // Backend schema limit.
+
+        // Timestamp format the backend wants on every event.
+        internal const string IsoTimestampFormat = "o";
+
+        // Format that lets numbers survive a JSON round-trip unchanged.
+        internal const string RoundTripNumberFormat = "R";
         internal const int ControlPlaneRequestTimeoutSeconds = 30;
 
         internal const string LibraryName = "com.immutable.audience";
