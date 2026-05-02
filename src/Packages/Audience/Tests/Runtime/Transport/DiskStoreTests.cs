@@ -9,6 +9,11 @@ namespace Immutable.Audience.Tests
     [TestFixture]
     internal class DiskStoreTests
     {
+        // File body fixtures for queue scenarios: stale, surviving, malformed.
+        private const string StaleFileBody = "{\"stale\":true}";
+        private const string SurvivingFileBody = "{\"survived\":true}";
+        private const string MalformedFileBody = "{not valid json";
+
         private string _testDir;
         private DiskStore _store;
 
@@ -98,7 +103,7 @@ namespace Immutable.Audience.Tests
             var staleTime = DateTime.UtcNow.AddDays(-(Constants.StaleEventDays + 1));
             var staleName = $"{staleTime.Ticks}_{Guid.NewGuid():N}{AudiencePaths.QueueFileExtension}";
             var queueDir = AudiencePaths.QueueDir(_testDir);
-            File.WriteAllText(Path.Combine(queueDir, staleName), "{\"stale\":true}");
+            File.WriteAllText(Path.Combine(queueDir, staleName), StaleFileBody);
 
             var batch = _store.ReadBatch(10);
 
@@ -152,7 +157,7 @@ namespace Immutable.Audience.Tests
             // Simulate a previous run by writing a file directly
             var queueDir = AudiencePaths.QueueDir(_testDir);
             var survivingName = $"{DateTime.UtcNow.Ticks}_{Guid.NewGuid():N}{AudiencePaths.QueueFileExtension}";
-            File.WriteAllText(Path.Combine(queueDir, survivingName), "{\"survived\":true}");
+            File.WriteAllText(Path.Combine(queueDir, survivingName), SurvivingFileBody);
 
             // Create a new DiskStore instance pointing at the same path (simulates restart)
             var store2 = new DiskStore(_testDir);
@@ -233,7 +238,7 @@ namespace Immutable.Audience.Tests
             // downgrade cannot leave it to potentially leak identified data.
             var queueDir = AudiencePaths.QueueDir(_testDir);
             var badName = $"{DateTime.UtcNow.Ticks}_{Guid.NewGuid():N}{AudiencePaths.QueueFileExtension}";
-            File.WriteAllText(Path.Combine(queueDir, badName), "{not valid json");
+            File.WriteAllText(Path.Combine(queueDir, badName), MalformedFileBody);
 
             _store.ApplyAnonymousDowngrade();
 
