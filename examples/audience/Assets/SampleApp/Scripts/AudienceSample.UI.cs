@@ -533,17 +533,17 @@ namespace Immutable.Audience.Samples.SampleApp
             string? derivedFromKey = keyEmpty ? null : (isTest ? Constants.SandboxBaseUrl : Constants.ProductionBaseUrl);
             string? endpoint = hasOverride ? overrideUrl : derivedFromKey;
             bool warnState = hasOverride || (!keyEmpty && !isTest);
-            SetStatusCell(_statusEndpoint, endpoint, warnState ? "state-warn" : "state-ok");
+            SetStatusCell(_statusEndpoint, endpoint, warnState ? SampleAppUi.Css.StateWarn : SampleAppUi.Css.StateOk);
             _prodWarning.EnableInClassList(SampleAppUi.HiddenClass, hasOverride || keyEmpty || isTest);
 
             var consent = _initialised ? ImmutableAudience.CurrentConsent : ConsentOrder[Mathf.Clamp(_initialConsent?.index ?? 0, 0, ConsentOrder.Length - 1)];
             int cIdx = Array.IndexOf(ConsentOrder, consent);
-            SetStatusCell(_statusConsent, consent.ToLowercaseString(), cIdx >= 0 ? ConsentStateClass[cIdx] : "dim");
+            SetStatusCell(_statusConsent, consent.ToLowercaseString(), cIdx >= 0 ? ConsentStateClass[cIdx] : SampleAppUi.Css.Dim);
 
-            SetStatusCell(_statusAnon,    _initialised ? ImmutableAudience.AnonymousId : null, "dim");
-            SetStatusCell(_statusUser,    _initialised ? ImmutableAudience.UserId      : null, "dim");
-            SetStatusCell(_statusSession, _initialised ? ImmutableAudience.SessionId   : null, "dim");
-            SetStatusCell(_statusQueue,   _initialised ? ImmutableAudience.QueueSize.ToString(CultureInfo.InvariantCulture) : null, "dim");
+            SetStatusCell(_statusAnon,    _initialised ? ImmutableAudience.AnonymousId : null, SampleAppUi.Css.Dim);
+            SetStatusCell(_statusUser,    _initialised ? ImmutableAudience.UserId      : null, SampleAppUi.Css.Dim);
+            SetStatusCell(_statusSession, _initialised ? ImmutableAudience.SessionId   : null, SampleAppUi.Css.Dim);
+            SetStatusCell(_statusQueue,   _initialised ? ImmutableAudience.QueueSize.ToString(CultureInfo.InvariantCulture) : null, SampleAppUi.Css.Dim);
         }
 
         private void RefreshConsentPills()
