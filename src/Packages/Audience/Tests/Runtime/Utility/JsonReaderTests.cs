@@ -6,6 +6,24 @@ namespace Immutable.Audience.Tests
     [TestFixture]
     public class JsonReaderTests
     {
+        // Per-scenario fixture keys / values used by the deserialise tests.
+        private const string IntFixtureKey = "small";
+        private const string LongFixtureKey = "big";
+        private const string BoolTrueKey = "t";
+        private const string BoolFalseKey = "f";
+        private const string NullKey = "n";
+        private const string ArrayKey = "arr";
+        private const string StringElementValue = "two";
+
+        // Anonymous ID placeholder for RoundTripViaSerializer.
+        private const string AnonymousIdFixture = "abc";
+
+        // MalformedThrows test: three deliberately invalid JSON inputs that
+        // exercise distinct parser failure modes.
+        private const string MalformedNotValid = "{not valid}";
+        private const string MalformedEmptyValue = "{\"a\":}";
+        private const string MalformedUnterminatedString = "{\"a\":\"unterminated";
+
         [Test]
         public void EmptyObject()
         {
@@ -30,18 +48,18 @@ namespace Immutable.Audience.Tests
         [Test]
         public void IntAndLong()
         {
-            var result = JsonReader.DeserializeObject("{\"small\":42,\"big\":12345678901234}");
-            Assert.AreEqual(42, result["small"]);
-            Assert.AreEqual(12345678901234L, result["big"]);
+            var result = JsonReader.DeserializeObject($"{{\"{IntFixtureKey}\":42,\"{LongFixtureKey}\":12345678901234}}");
+            Assert.AreEqual(42, result[IntFixtureKey]);
+            Assert.AreEqual(12345678901234L, result[LongFixtureKey]);
         }
 
         [Test]
         public void BoolAndNull()
         {
-            var result = JsonReader.DeserializeObject("{\"t\":true,\"f\":false,\"n\":null}");
-            Assert.AreEqual(true, result["t"]);
-            Assert.AreEqual(false, result["f"]);
-            Assert.IsNull(result["n"]);
+            var result = JsonReader.DeserializeObject($"{{\"{BoolTrueKey}\":true,\"{BoolFalseKey}\":false,\"{NullKey}\":null}}");
+            Assert.AreEqual(true, result[BoolTrueKey]);
+            Assert.AreEqual(false, result[BoolFalseKey]);
+            Assert.IsNull(result[NullKey]);
         }
 
         [Test]
@@ -55,11 +73,11 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Array()
         {
-            var result = JsonReader.DeserializeObject("{\"arr\":[1,\"two\",true,null]}");
-            var arr = (List<object>)result["arr"];
+            var result = JsonReader.DeserializeObject($"{{\"{ArrayKey}\":[1,\"{StringElementValue}\",true,null]}}");
+            var arr = (List<object>)result[ArrayKey];
             Assert.AreEqual(4, arr.Count);
             Assert.AreEqual(1, arr[0]);
-            Assert.AreEqual("two", arr[1]);
+            Assert.AreEqual(StringElementValue, arr[1]);
             Assert.AreEqual(true, arr[2]);
             Assert.IsNull(arr[3]);
         }
@@ -76,8 +94,8 @@ namespace Immutable.Audience.Tests
                     [EventPropertyKeys.Status] = ProgressionStatus.Complete.ToLowercaseString(),
                     [EventPropertyKeys.Score] = 1500
                 },
-                [MessageFields.AnonymousId] = "abc",
-                [MessageFields.UserId] = "76561198012345"
+                [MessageFields.AnonymousId] = AnonymousIdFixture,
+                [MessageFields.UserId] = TestFixtures.SteamId64
             };
 
             var serialized = Json.Serialize(original);
@@ -85,8 +103,8 @@ namespace Immutable.Audience.Tests
 
             Assert.AreEqual(MessageTypes.Track, parsed[MessageFields.Type]);
             Assert.AreEqual(EventNames.Progression, parsed[MessageFields.EventName]);
-            Assert.AreEqual("abc", parsed[MessageFields.AnonymousId]);
-            Assert.AreEqual("76561198012345", parsed[MessageFields.UserId]);
+            Assert.AreEqual(AnonymousIdFixture, parsed[MessageFields.AnonymousId]);
+            Assert.AreEqual(TestFixtures.SteamId64, parsed[MessageFields.UserId]);
             var props = (Dictionary<string, object>)parsed[MessageFields.Properties];
             Assert.AreEqual(ProgressionStatus.Complete.ToLowercaseString(), props[EventPropertyKeys.Status]);
             Assert.AreEqual(1500, props[EventPropertyKeys.Score]);
@@ -95,9 +113,9 @@ namespace Immutable.Audience.Tests
         [Test]
         public void MalformedThrows()
         {
-            Assert.Throws<System.FormatException>(() => JsonReader.DeserializeObject("{not valid}"));
-            Assert.Throws<System.FormatException>(() => JsonReader.DeserializeObject("{\"a\":}"));
-            Assert.Throws<System.FormatException>(() => JsonReader.DeserializeObject("{\"a\":\"unterminated"));
+            Assert.Throws<System.FormatException>(() => JsonReader.DeserializeObject(MalformedNotValid));
+            Assert.Throws<System.FormatException>(() => JsonReader.DeserializeObject(MalformedEmptyValue));
+            Assert.Throws<System.FormatException>(() => JsonReader.DeserializeObject(MalformedUnterminatedString));
         }
     }
 }
