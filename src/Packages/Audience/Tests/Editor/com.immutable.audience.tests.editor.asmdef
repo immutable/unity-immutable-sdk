@@ -1,0 +1,19 @@
+{
+    "name": "Immutable.Audience.Editor.Tests",
+    "rootNamespace": "Immutable.Audience.Tests.Editor",
+    "references": [
+        "Immutable.Audience.Runtime",
+        "Immutable.Audience.Unity",
+        "UnityEditor.TestRunner",
+        "UnityEngine.TestRunner"
+    ],
+    "includePlatforms": ["Editor"],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": ["nunit.framework.dll"],
+    "autoReferenced": false,
+    "defineConstraints": ["UNITY_INCLUDE_TESTS"],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
