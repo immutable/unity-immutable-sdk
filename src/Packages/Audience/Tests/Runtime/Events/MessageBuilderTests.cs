@@ -80,8 +80,8 @@ namespace Immutable.Audience.Tests
         public void AllMessages_ContextContainsLibraryAndLibraryVersion()
         {
             var track = MessageBuilder.Track(TestEventNames.PlaceholderEvt, null, null, PackageVersion);
-            var identify = MessageBuilder.Identify(null, "u1", IdentityType.Steam.ToLowercaseString(), PackageVersion);
-            var alias = MessageBuilder.Alias("f", "t1", "t", "t2", PackageVersion);
+            var identify = MessageBuilder.Identify(null, TestFixtures.GenericUserId, IdentityType.Steam.ToLowercaseString(), PackageVersion);
+            var alias = MessageBuilder.Alias(TestFixtures.GenericFromId, TestFixtures.GenericFromType, TestFixtures.GenericToId, TestFixtures.GenericToType, PackageVersion);
 
             foreach (var msg in new[] { track, identify, alias })
             {
@@ -95,8 +95,8 @@ namespace Immutable.Audience.Tests
         public void AllMessages_SurfaceIsUnity()
         {
             var track = MessageBuilder.Track(TestEventNames.PlaceholderEvt, null, null, PackageVersion);
-            var identify = MessageBuilder.Identify(null, "u1", IdentityType.Steam.ToLowercaseString(), PackageVersion);
-            var alias = MessageBuilder.Alias("f", "t1", "t", "t2", PackageVersion);
+            var identify = MessageBuilder.Identify(null, TestFixtures.GenericUserId, IdentityType.Steam.ToLowercaseString(), PackageVersion);
+            var alias = MessageBuilder.Alias(TestFixtures.GenericFromId, TestFixtures.GenericFromType, TestFixtures.GenericToId, TestFixtures.GenericToType, PackageVersion);
 
             Assert.AreEqual(Constants.Surface, track[MessageFields.Surface]);
             Assert.AreEqual(Constants.Surface, identify[MessageFields.Surface]);
@@ -162,8 +162,8 @@ namespace Immutable.Audience.Tests
         private static IEnumerable<Dictionary<string, object>> EveryMessageType()
         {
             yield return MessageBuilder.Track(TestEventNames.PlaceholderEvt, null, null, PackageVersion);
-            yield return MessageBuilder.Identify(null, "u1", IdentityType.Steam.ToLowercaseString(), PackageVersion);
-            yield return MessageBuilder.Alias("f", "t1", "t", "t2", PackageVersion);
+            yield return MessageBuilder.Identify(null, TestFixtures.GenericUserId, IdentityType.Steam.ToLowercaseString(), PackageVersion);
+            yield return MessageBuilder.Alias(TestFixtures.GenericFromId, TestFixtures.GenericFromType, TestFixtures.GenericToId, TestFixtures.GenericToType, PackageVersion);
         }
     }
 }

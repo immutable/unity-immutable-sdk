@@ -136,7 +136,7 @@ namespace Immutable.Audience.Tests
             var handler = new CapturingHandler();
             ImmutableAudience.Init(MakeConfig(handler, ConsentLevel.None));
 
-            ImmutableAudience.DeleteData(userId: "some-user");
+            ImmutableAudience.DeleteData(userId: TestFixtures.SomeUser);
             // Even with a userId request, the anonymousId file must not materialise.
             Thread.Sleep(250);
 

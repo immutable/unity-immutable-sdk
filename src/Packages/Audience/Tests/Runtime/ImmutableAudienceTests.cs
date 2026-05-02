@@ -490,7 +490,7 @@ namespace Immutable.Audience.Tests
 
             ImmutableAudience.Track(TestEventNames.CraftingStarted, new Dictionary<string, object>
             {
-                { "recipe_id", "iron_sword" }
+                { TestFixtures.CustomPropKeyRecipeId, TestFixtures.CraftingRecipeIronSword }
             });
 
             // Flush memory → disk
@@ -968,7 +968,7 @@ namespace Immutable.Audience.Tests
             // EnqueueTrack and this test leaks reproducibly.
             const int iterations = 200;
             const int trackersPerIteration = 4;
-            const string testUserId = "user_race_stress";
+            const string testUserId = TestFixtures.UserRaceStress;
 
             for (int iter = 0; iter < iterations; iter++)
             {
@@ -1224,7 +1224,7 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.LaunchContextProvider = () => new Dictionary<string, object>
             {
-                [GameLaunchPropertyKeys.DistributionPlatform] = "provider_value",
+                [GameLaunchPropertyKeys.DistributionPlatform] = TestFixtures.ProviderValue,
             };
 
             var config = MakeConfig();
@@ -1237,7 +1237,7 @@ namespace Immutable.Audience.Tests
                 .Select(File.ReadAllText)
                 .First(c => c.Contains($"\"{EventNames.GameLaunch}\""));
             StringAssert.Contains($"\"{GameLaunchPropertyKeys.DistributionPlatform}\":\"{DistributionPlatforms.Steam}\"", launchFile);
-            Assert.IsFalse(launchFile.Contains("provider_value"),
+            Assert.IsFalse(launchFile.Contains(TestFixtures.ProviderValue),
                 "config.DistributionPlatform should win over the provider's value");
         }
 
