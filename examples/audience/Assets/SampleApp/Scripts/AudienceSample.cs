@@ -71,7 +71,7 @@ namespace Immutable.Audience.Samples.SampleApp
             _initialised = false;
             ResetIdentityMirror();
             OnSdkStateChanged();
-            return "SDK stopped";
+            return SampleAppUi.Messages.SdkStopped;
         });
 
         private void OnReset() => RunAndLog(SampleAppUi.LogLabels.Reset, () =>
@@ -79,22 +79,22 @@ namespace Immutable.Audience.Samples.SampleApp
             ImmutableAudience.Reset();
             ResetIdentityMirror();
             OnSdkStateChanged();
-            return "anonymous ID regenerated, queue cleared";
+            return SampleAppUi.Messages.AnonymousIdRegeneratedQueueCleared;
         });
 
         private async Task OnFlushAsync()
         {
-            try { await ImmutableAudience.FlushAsync(); AppendLog(SampleAppUi.LogLabels.Flush, "queue flushed", LogLevel.Ok, LogSource.App); OnSdkStateChanged(); }
+            try { await ImmutableAudience.FlushAsync(); AppendLog(SampleAppUi.LogLabels.Flush, SampleAppUi.Messages.QueueFlushed, LogLevel.Ok, LogSource.App); OnSdkStateChanged(); }
             catch (Exception ex) { AppendLog(SampleAppUi.LogLabels.Flush, ex.Message, LogLevel.Err, LogSource.App); }
         }
 
         private async Task OnDeleteDataAsync()
         {
-            AppendLog(SampleAppUi.LogLabels.DeleteData, "erasure request dispatched", LogLevel.Info, LogSource.App);
+            AppendLog(SampleAppUi.LogLabels.DeleteData, SampleAppUi.Messages.ErasureRequestDispatched, LogLevel.Info, LogSource.App);
             try
             {
                 await ImmutableAudience.DeleteData();
-                AppendLog(SampleAppUi.LogLabels.DeleteData, "backend acknowledged", LogLevel.Ok, LogSource.App);
+                AppendLog(SampleAppUi.LogLabels.DeleteData, SampleAppUi.Messages.BackendAcknowledged, LogLevel.Ok, LogSource.App);
             }
             catch (Exception ex)
             {
@@ -288,7 +288,7 @@ namespace Immutable.Audience.Samples.SampleApp
             var consent = ImmutableAudience.CurrentConsent;
             if (!consent.CanTrack())
                 throw new InvalidOperationException(
-                    $"track dropped — consent is {consent.ToLowercaseString()}; raise to anonymous or full to queue events");
+                    string.Format(SampleAppUi.Messages.TrackDroppedConsentFmt, consent.ToLowercaseString()));
         }
 
         // Refresh* are idempotent reads, so calling all four every time is
@@ -320,7 +320,7 @@ namespace Immutable.Audience.Samples.SampleApp
             if (form.FlushIntervalMs is int flushMs && flushMs > 0)
             {
                 if (flushMs < 1000)
-                    AppendLog(SampleAppUi.LogLabels.Init, $"flushInterval {flushMs}ms below 1s — clamped", LogLevel.Warn, LogSource.App);
+                    AppendLog(SampleAppUi.LogLabels.Init, string.Format(SampleAppUi.Messages.FlushIntervalBelowOneSecondClampedFmt, flushMs), LogLevel.Warn, LogSource.App);
                 config.FlushIntervalSeconds = Math.Max(1, flushMs / 1000);
             }
             if (form.FlushSize is int flushSize && flushSize > 0)
