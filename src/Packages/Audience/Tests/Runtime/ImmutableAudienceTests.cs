@@ -620,14 +620,14 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
 
-            ImmutableAudience.Identify("76561198012345", IdentityType.Steam);
+            ImmutableAudience.Identify(TestFixtures.SteamId64, IdentityType.Steam);
             ImmutableAudience.Shutdown();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
             var contents = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText).ToList();
             Assert.IsTrue(contents.Any(c =>
-                c.Contains($"\"{MessageTypes.Identify}\"") && c.Contains("\"76561198012345\"")));
+                c.Contains($"\"{MessageTypes.Identify}\"") && c.Contains($"\"{TestFixtures.SteamId64}\"")));
         }
 
         [Test]
@@ -635,7 +635,7 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));
 
-            ImmutableAudience.Identify("user1", IdentityType.Steam);
+            ImmutableAudience.Identify(TestFixtures.GenericUserSingleId, IdentityType.Steam);
             ImmutableAudience.Shutdown();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
@@ -650,14 +650,14 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
 
-            ImmutableAudience.Alias("steam123", IdentityType.Steam, "user_456", IdentityType.Passport);
+            ImmutableAudience.Alias(TestFixtures.SteamId, IdentityType.Steam, TestFixtures.PassportId, IdentityType.Passport);
             ImmutableAudience.Shutdown();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
             var contents = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText).ToList();
             Assert.IsTrue(contents.Any(c =>
-                c.Contains($"\"{MessageTypes.Alias}\"") && c.Contains("\"steam123\"")));
+                c.Contains($"\"{MessageTypes.Alias}\"") && c.Contains($"\"{TestFixtures.SteamId}\"")));
         }
 
         // -----------------------------------------------------------------
