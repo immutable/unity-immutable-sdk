@@ -34,6 +34,8 @@ namespace Immutable.Audience.Tests
         // Placeholder event names for tests where the event name itself is irrelevant.
         internal const string PlaceholderA = "a";
         internal const string PlaceholderB = "b";
+        internal const string PlaceholderX = "x";
+        internal const string PlaceholderY = "y";
         internal const string PlaceholderTest = "test";
         internal const string PlaceholderTrack = "track";
         internal const string PlaceholderIgnored = "ignored";

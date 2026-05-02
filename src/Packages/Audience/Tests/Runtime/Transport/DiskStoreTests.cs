@@ -165,18 +165,18 @@ namespace Immutable.Audience.Tests
         public void ApplyAnonymousDowngrade_DeletesIdentifyAndAlias_StripsUserIdFromTrack()
         {
             _store.Write(WireFixture.Identify(
-                (MessageFields.AnonymousId, "a"),
-                (MessageFields.UserId, "u")));
+                (MessageFields.AnonymousId, TestFixtures.MinimalIdentifierA),
+                (MessageFields.UserId, TestFixtures.MinimalIdentifierU)));
             _store.Write(WireFixture.Alias(
-                (MessageFields.FromId, "a"),
-                (MessageFields.ToId, "u")));
+                (MessageFields.FromId, TestFixtures.MinimalIdentifierA),
+                (MessageFields.ToId, TestFixtures.MinimalIdentifierU)));
             _store.Write(WireFixture.Track(
-                (MessageFields.EventName, "x"),
-                (MessageFields.AnonymousId, "a"),
-                (MessageFields.UserId, "u")));
+                (MessageFields.EventName, TestEventNames.PlaceholderX),
+                (MessageFields.AnonymousId, TestFixtures.MinimalIdentifierA),
+                (MessageFields.UserId, TestFixtures.MinimalIdentifierU)));
             _store.Write(WireFixture.Track(
-                (MessageFields.EventName, "y"),
-                (MessageFields.AnonymousId, "a")));
+                (MessageFields.EventName, TestEventNames.PlaceholderY),
+                (MessageFields.AnonymousId, TestFixtures.MinimalIdentifierA)));
 
             _store.ApplyAnonymousDowngrade();
 
@@ -209,8 +209,8 @@ namespace Immutable.Audience.Tests
 
                 var json = $"{{\"{MessageFields.Type}\":\"{MessageTypes.Track}\","
                     + $"\"{MessageFields.EventName}\":\"{EventNames.Purchase}\","
-                    + $"\"{MessageFields.AnonymousId}\":\"{TestEventNames.PlaceholderA}\","
-                    + $"\"{MessageFields.UserId}\":\"u\","
+                    + $"\"{MessageFields.AnonymousId}\":\"{TestFixtures.MinimalIdentifierA}\","
+                    + $"\"{MessageFields.UserId}\":\"{TestFixtures.MinimalIdentifierU}\","
                     + $"\"{MessageFields.Properties}\":{{"
                     + $"\"{EventPropertyKeys.Currency}\":\"{TestFixtures.UsdCurrency}\","
                     + $"\"{EventPropertyKeys.Value}\":{amount}}}}}";

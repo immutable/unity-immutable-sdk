@@ -115,27 +115,27 @@ namespace Immutable.Audience.Tests
             var evt = new Purchase
             {
                 Currency = TestFixtures.UsdCurrency,
-                Value = 9.99m,
+                Value = TestFixtures.PurchaseValueFixture,
                 ItemId = TestFixtures.PurchaseItemId,
                 ItemName = TestFixtures.PurchaseItemName,
-                Quantity = 1,
+                Quantity = TestFixtures.PurchaseQuantityFixture,
                 TransactionId = TestFixtures.PurchaseTransactionId
             };
 
             var props = evt.ToProperties();
 
             Assert.AreEqual(TestFixtures.UsdCurrency, props[EventPropertyKeys.Currency]);
-            Assert.AreEqual(9.99m, props[EventPropertyKeys.Value]);
+            Assert.AreEqual(TestFixtures.PurchaseValueFixture, props[EventPropertyKeys.Value]);
             Assert.AreEqual(TestFixtures.PurchaseItemId, props[EventPropertyKeys.ItemId]);
             Assert.AreEqual(TestFixtures.PurchaseItemName, props[EventPropertyKeys.ItemName]);
-            Assert.AreEqual(1, props[EventPropertyKeys.Quantity]);
+            Assert.AreEqual(TestFixtures.PurchaseQuantityFixture, props[EventPropertyKeys.Quantity]);
             Assert.AreEqual(TestFixtures.PurchaseTransactionId, props[EventPropertyKeys.TransactionId]);
         }
 
         [Test]
         public void Purchase_OptionalFieldsOmitted_WhenNull()
         {
-            var props = new Purchase { Currency = TestFixtures.EurCurrency, Value = 5.00m }.ToProperties();
+            var props = new Purchase { Currency = TestFixtures.EurCurrency, Value = TestFixtures.PurchaseValueLowFixture }.ToProperties();
 
             Assert.IsTrue(props.ContainsKey(EventPropertyKeys.Currency));
             Assert.IsTrue(props.ContainsKey(EventPropertyKeys.Value));
@@ -154,7 +154,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Purchase_WithoutCurrency_ThrowsOnToProperties()
         {
-            var evt = new Purchase { Value = 9.99m };
+            var evt = new Purchase { Value = TestFixtures.PurchaseValueFixture };
 
             var ex = Assert.Throws<ArgumentException>(() => evt.ToProperties());
             Assert.That(ex!.Message, Does.Contain(nameof(Purchase.Currency)));

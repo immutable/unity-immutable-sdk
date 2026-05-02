@@ -601,7 +601,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.Track(new Purchase
             {
                 Currency = TestFixtures.UsdCurrency,
-                Value = 9.99m
+                Value = TestFixtures.PurchaseValueFixture
             });
             ImmutableAudience.Shutdown();
 
