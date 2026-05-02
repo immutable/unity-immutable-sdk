@@ -395,7 +395,7 @@ namespace Immutable.Audience.Tests
             var invalid = (IdentityType)999;
 
             Assert.Throws<ArgumentOutOfRangeException>(
-                () => ImmutableAudience.Identify("user1", invalid),
+                () => ImmutableAudience.Identify(TestFixtures.GenericUserSingleId, invalid),
                 "invalid enum cast must throw so a broken call fails loud rather than " +
                 "shipping an identify event that cannot be matched for deletion");
         }
@@ -1124,7 +1124,7 @@ namespace Immutable.Audience.Tests
         public void Init_LowercasesDistributionPlatform_WhenCallerPassesMixedCase()
         {
             var config = MakeConfig();
-            config.DistributionPlatform = TestFixtures.DistributionPlatformSteamCased;
+            config.DistributionPlatform = TestFixtures.SteamPascalCase;
             ImmutableAudience.Init(config);
 
             Assert.AreEqual(DistributionPlatforms.Steam, config.DistributionPlatform,
@@ -1135,7 +1135,7 @@ namespace Immutable.Audience.Tests
         public void Init_LowercasesDistributionPlatform_WhenCallerPassesAllUpperCase()
         {
             var config = MakeConfig();
-            config.DistributionPlatform = TestFixtures.DistributionPlatformSteamUppercase;
+            config.DistributionPlatform = TestFixtures.SteamUpperCase;
             ImmutableAudience.Init(config);
 
             Assert.AreEqual(DistributionPlatforms.Steam, config.DistributionPlatform);

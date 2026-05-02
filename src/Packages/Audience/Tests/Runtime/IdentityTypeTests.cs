@@ -46,9 +46,9 @@ namespace Immutable.Audience.Tests
             Assert.AreEqual("custom", IdentityTypeWireFormat.Custom);
         }
 
-        [TestCase("Steam", IdentityType.Steam)]
-        [TestCase("STEAM", IdentityType.Steam)]
-        [TestCase("Passport", IdentityType.Passport)]
+        [TestCase(TestFixtures.SteamPascalCase, IdentityType.Steam)]
+        [TestCase(TestFixtures.SteamUpperCase, IdentityType.Steam)]
+        [TestCase(TestFixtures.PassportPascalCase, IdentityType.Passport)]
         public void ParseLowercaseString_AcceptsMixedCase(string wire, IdentityType expected)
         {
             Assert.AreEqual(expected, IdentityTypeExtensions.ParseLowercaseString(wire));
@@ -57,7 +57,7 @@ namespace Immutable.Audience.Tests
         [TestCase(null)]
         [TestCase("")]
         [TestCase(TestFixtures.UnknownProvider)]
-        [TestCase("steamX")]
+        [TestCase(TestFixtures.SteamSuffixed)]
         public void ParseLowercaseString_FallsBackToCustomForUnknownOrEmpty(string? wire)
         {
             // ParseLowercaseString never throws; unknown values map to Custom.
