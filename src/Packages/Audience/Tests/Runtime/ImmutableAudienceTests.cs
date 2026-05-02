@@ -1151,6 +1151,21 @@ namespace Immutable.Audience.Tests
             Assert.AreEqual(DistributionPlatforms.Steam, config.DistributionPlatform);
         }
 
+        // Lowercase normalisation must apply to every DistributionPlatforms value.
+        [TestCase(DistributionPlatforms.Steam)]
+        [TestCase(DistributionPlatforms.Epic)]
+        [TestCase(DistributionPlatforms.GOG)]
+        [TestCase(DistributionPlatforms.Itch)]
+        [TestCase(DistributionPlatforms.Standalone)]
+        public void Init_LowercasesDistributionPlatform_AcrossAllPublicValues(string canonical)
+        {
+            var config = MakeConfig();
+            config.DistributionPlatform = canonical.ToUpperInvariant();
+            ImmutableAudience.Init(config);
+
+            Assert.AreEqual(canonical, config.DistributionPlatform);
+        }
+
         [Test]
         public void Init_LeavesDistributionPlatformNull_WhenNotSet()
         {
