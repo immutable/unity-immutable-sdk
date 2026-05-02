@@ -36,7 +36,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Track_NullUserId_NotPresentInDict()
         {
-            var result = MessageBuilder.Track("evt", TestFixtures.AnonId1, null, PackageVersion);
+            var result = MessageBuilder.Track(TestEventNames.PlaceholderEvt, TestFixtures.AnonId1, null, PackageVersion);
 
             Assert.IsFalse(result.ContainsKey(MessageFields.UserId));
         }
@@ -44,7 +44,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Track_NonNullUserId_PresentInDict()
         {
-            var result = MessageBuilder.Track("evt", TestFixtures.AnonId1, TestFixtures.UserId99, PackageVersion);
+            var result = MessageBuilder.Track(TestEventNames.PlaceholderEvt, TestFixtures.AnonId1, TestFixtures.UserId99, PackageVersion);
 
             Assert.IsTrue(result.ContainsKey(MessageFields.UserId));
             Assert.AreEqual(TestFixtures.UserId99, result[MessageFields.UserId]);
@@ -79,7 +79,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void AllMessages_ContextContainsLibraryAndLibraryVersion()
         {
-            var track = MessageBuilder.Track("evt", null, null, PackageVersion);
+            var track = MessageBuilder.Track(TestEventNames.PlaceholderEvt, null, null, PackageVersion);
             var identify = MessageBuilder.Identify(null, "u1", IdentityType.Steam.ToLowercaseString(), PackageVersion);
             var alias = MessageBuilder.Alias("f", "t1", "t", "t2", PackageVersion);
 
@@ -94,7 +94,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void AllMessages_SurfaceIsUnity()
         {
-            var track = MessageBuilder.Track("evt", null, null, PackageVersion);
+            var track = MessageBuilder.Track(TestEventNames.PlaceholderEvt, null, null, PackageVersion);
             var identify = MessageBuilder.Identify(null, "u1", IdentityType.Steam.ToLowercaseString(), PackageVersion);
             var alias = MessageBuilder.Alias("f", "t1", "t", "t2", PackageVersion);
 
@@ -120,7 +120,7 @@ namespace Immutable.Audience.Tests
             // Backend deduplicates on messageId; collisions silently drop events.
             var ids = new HashSet<string>();
             for (var i = 0; i < 1000; i++)
-                ids.Add((string)MessageBuilder.Track("evt", null, null, PackageVersion)[MessageFields.MessageId]);
+                ids.Add((string)MessageBuilder.Track(TestEventNames.PlaceholderEvt, null, null, PackageVersion)[MessageFields.MessageId]);
             Assert.AreEqual(1000, ids.Count);
         }
 
@@ -161,7 +161,7 @@ namespace Immutable.Audience.Tests
 
         private static IEnumerable<Dictionary<string, object>> EveryMessageType()
         {
-            yield return MessageBuilder.Track("evt", null, null, PackageVersion);
+            yield return MessageBuilder.Track(TestEventNames.PlaceholderEvt, null, null, PackageVersion);
             yield return MessageBuilder.Identify(null, "u1", IdentityType.Steam.ToLowercaseString(), PackageVersion);
             yield return MessageBuilder.Alias("f", "t1", "t", "t2", PackageVersion);
         }

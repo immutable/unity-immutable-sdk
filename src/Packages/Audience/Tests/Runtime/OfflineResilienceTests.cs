@@ -79,7 +79,7 @@ namespace Immutable.Audience.Tests
 
             Assert.DoesNotThrow(() =>
             {
-                for (int i = 0; i < 50; i++) ImmutableAudience.Track($"blocked_{i}");
+                for (int i = 0; i < 50; i++) ImmutableAudience.Track($"{TestEventNames.BlockedPrefix}{i}");
                 ImmutableAudience.FlushQueueToDiskForTesting();
             }, "Track must not propagate disk-write IOException to callers");
 
@@ -95,7 +95,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.Init(MakeConfig());
             ImmutableAudience.Track(TestEventNames.EventPreBlock);
             BlockDiskWrites();
-            for (int i = 0; i < 20; i++) ImmutableAudience.Track($"blocked_{i}");
+            for (int i = 0; i < 20; i++) ImmutableAudience.Track($"{TestEventNames.BlockedPrefix}{i}");
 
             Assert.DoesNotThrow(() => ImmutableAudience.Shutdown(),
                 "Shutdown must absorb disk-write failure during the final drain");
@@ -114,7 +114,7 @@ namespace Immutable.Audience.Tests
             BlockDiskWrites();
 
             const int eventCount = 50;
-            for (int i = 0; i < eventCount; i++) ImmutableAudience.Track($"blocked_{i}");
+            for (int i = 0; i < eventCount; i++) ImmutableAudience.Track($"{TestEventNames.BlockedPrefix}{i}");
             ImmutableAudience.FlushQueueToDiskForTesting();
 
             Assert.GreaterOrEqual(ImmutableAudience.QueueSize, eventCount,

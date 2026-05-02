@@ -49,8 +49,8 @@ namespace Immutable.Audience.Tests
         [Test]
         public async Task SendBatchAsync_200_DeletesFilesFromDisk()
         {
-            _store.Write(WireFixture.Track((MessageFields.EventName, "a")));
-            _store.Write(WireFixture.Track((MessageFields.EventName, "b")));
+            _store.Write(WireFixture.Track((MessageFields.EventName, TestEventNames.PlaceholderA)));
+            _store.Write(WireFixture.Track((MessageFields.EventName, TestEventNames.PlaceholderB)));
 
             var handler = new MockHandler(HttpStatusCode.OK, $"{{\"accepted\":2,\"{ResponseFields.Rejected}\":0}}");
             using var transport = new HttpTransport(_store, TestDefaults.PublishableKey, handler: handler);
@@ -65,7 +65,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public async Task SendBatchAsync_200_SendsGzippedPayloadWithCorrectHeaders()
         {
-            _store.Write(WireFixture.Track((MessageFields.EventName, "test")));
+            _store.Write(WireFixture.Track((MessageFields.EventName, TestEventNames.PlaceholderTest)));
 
             byte[]? capturedBody = null;
             string? capturedKey = null;
@@ -97,7 +97,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public async Task SendBatchAsync_200_SendsPlainJsonPayloadWithoutContentEncoding()
         {
-            _store.Write(WireFixture.Track((MessageFields.EventName, "test")));
+            _store.Write(WireFixture.Track((MessageFields.EventName, TestEventNames.PlaceholderTest)));
 
             string? capturedKey = null;
             string? capturedContentType = null;
@@ -322,8 +322,8 @@ namespace Immutable.Audience.Tests
             // per-message validation errors. The batch is deleted (retries
             // would not help) and the count is surfaced via onError so
             // studios can observe silently dropped events.
-            _store.Write(WireFixture.Track((MessageFields.EventName, "a")));
-            _store.Write(WireFixture.Track((MessageFields.EventName, "b")));
+            _store.Write(WireFixture.Track((MessageFields.EventName, TestEventNames.PlaceholderA)));
+            _store.Write(WireFixture.Track((MessageFields.EventName, TestEventNames.PlaceholderB)));
 
             var handler = new MockHandler(HttpStatusCode.OK, $"{{\"accepted\":1,\"{ResponseFields.Rejected}\":1}}");
             AudienceError? reportedError = null;
@@ -341,7 +341,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public async Task SendBatchAsync_200_ZeroRejected_DoesNotFireOnError()
         {
-            _store.Write(WireFixture.Track((MessageFields.EventName, "a")));
+            _store.Write(WireFixture.Track((MessageFields.EventName, TestEventNames.PlaceholderA)));
 
             var handler = new MockHandler(HttpStatusCode.OK, $"{{\"accepted\":1,\"{ResponseFields.Rejected}\":0}}");
             AudienceError? reportedError = null;
@@ -357,7 +357,7 @@ namespace Immutable.Audience.Tests
         public async Task SendBatchAsync_200_MalformedBody_TreatsAsZeroRejected()
         {
             // Malformed diagnostic body must not block the success path.
-            _store.Write(WireFixture.Track((MessageFields.EventName, "a")));
+            _store.Write(WireFixture.Track((MessageFields.EventName, TestEventNames.PlaceholderA)));
 
             var handler = new MockHandler(HttpStatusCode.OK, "not-json");
             AudienceError? reportedError = null;
