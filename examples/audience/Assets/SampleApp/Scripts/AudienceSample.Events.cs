@@ -55,15 +55,15 @@ namespace Immutable.Audience.Samples.SampleApp
 
         internal static readonly EventSpec[] Catalogue =
         {
-            new EventSpec("sign_up",        new[] { EventField.Text("method", optional: true) }),
-            new EventSpec("sign_in",        new[] { EventField.Text("method", optional: true) }),
-            new EventSpec("email_acquired", new[] { EventField.Text("source", optional: true) }),
-            new EventSpec("wishlist_add",   new[] {
+            new EventSpec(SampleAppCustomEvents.SignUp,        new[] { EventField.Text("method", optional: true) }),
+            new EventSpec(SampleAppCustomEvents.SignIn,        new[] { EventField.Text("method", optional: true) }),
+            new EventSpec(SampleAppCustomEvents.EmailAcquired, new[] { EventField.Text("source", optional: true) }),
+            new EventSpec(SampleAppCustomEvents.WishlistAdd,   new[] {
                 EventField.Text("gameId"),
                 EventField.Text("source",   optional: true),
                 EventField.Text("platform", optional: true),
             }),
-            new EventSpec("wishlist_remove", new[] { EventField.Text("gameId") }),
+            new EventSpec(SampleAppCustomEvents.WishlistRemove, new[] { EventField.Text("gameId") }),
             new EventSpec(EventNames.Purchase, new[] {
                 EventField.Text(EventPropertyKeys.Currency),
                 EventField.Number(EventPropertyKeys.Value),
@@ -91,12 +91,12 @@ namespace Immutable.Audience.Samples.SampleApp
                 EventField.Text(EventPropertyKeys.ItemId,   optional: true),
             }),
             new EventSpec(EventNames.MilestoneReached, new[] { EventField.Text(EventPropertyKeys.Name) }),
-            new EventSpec("game_page_viewed",  new[] {
+            new EventSpec(SampleAppCustomEvents.GamePageViewed,  new[] {
                 EventField.Text("gameId"),
                 EventField.Text("gameName", optional: true),
                 EventField.Text("slug",     optional: true),
             }),
-            new EventSpec("link_clicked", new[] {
+            new EventSpec(SampleAppCustomEvents.LinkClicked, new[] {
                 EventField.Text("url"),
                 EventField.Text("label",  optional: true),
                 EventField.Text("source", optional: true),
