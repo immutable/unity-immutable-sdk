@@ -45,7 +45,7 @@ namespace Immutable.Audience.Tests
         private AudienceConfig MakeConfig(ConsentLevel consent = ConsentLevel.Full) =>
             new AudienceConfig
             {
-                PublishableKey = "pk_imapik-test-stress",
+                PublishableKey = TestDefaults.PublishableKey,
                 Consent = consent,
                 PersistentDataPath = _testDir,
                 FlushIntervalSeconds = TestDefaults.FlushIntervalSeconds,
