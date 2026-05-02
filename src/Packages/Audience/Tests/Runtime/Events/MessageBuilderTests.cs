@@ -13,14 +13,14 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Track_RequiredFieldsPresent()
         {
-            var result = MessageBuilder.Track("level_complete", "anon-1", null, PackageVersion);
+            var result = MessageBuilder.Track(TestEventNames.LevelComplete, "anon-1", null, PackageVersion);
 
             Assert.AreEqual(MessageTypes.Track, result[MessageFields.Type]);
             Assert.IsTrue(result.ContainsKey(MessageFields.MessageId));
             Assert.IsTrue(result.ContainsKey(MessageFields.EventTimestamp));
             Assert.IsTrue(result.ContainsKey(MessageFields.Context));
             Assert.IsTrue(result.ContainsKey(MessageFields.Surface));
-            Assert.AreEqual("level_complete", result[MessageFields.EventName]);
+            Assert.AreEqual(TestEventNames.LevelComplete, result[MessageFields.EventName]);
         }
 
         [Test]

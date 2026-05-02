@@ -34,7 +34,7 @@ namespace Immutable.Audience.Tests
             {
                 if (i > 0) sb.Append(',');
                 sb.Append(WireFixture.Track(
-                    (MessageFields.EventName, "level_complete"),
+                    (MessageFields.EventName, TestEventNames.LevelComplete),
                     (MessageFields.AnonymousId, $"anon-{i}")));
             }
 

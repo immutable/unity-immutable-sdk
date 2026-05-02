@@ -182,7 +182,7 @@ namespace Immutable.Audience.Tests
             var data = new Dictionary<string, object>
             {
                 { MessageFields.Type, MessageTypes.Track },
-                { MessageFields.EventName, "level_complete" },
+                { MessageFields.EventName, TestEventNames.LevelComplete },
                 { MessageFields.AnonymousId, "anon-123" },
                 { MessageFields.UserId, null },
                 { MessageFields.Properties, new Dictionary<string, object>

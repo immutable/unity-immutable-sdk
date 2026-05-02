@@ -92,7 +92,7 @@ namespace Immutable.Audience.Tests
                         int count = 0;
                         while (DateTime.UtcNow < deadline)
                         {
-                            ImmutableAudience.Track("stress_track");
+                            ImmutableAudience.Track(TestEventNames.StressTrack);
                             count++;
                         }
                         firedPerThread[idx] = count;
@@ -155,7 +155,7 @@ namespace Immutable.Audience.Tests
                     {
                         barrier.SignalAndWait();
                         while (DateTime.UtcNow < deadline)
-                            ImmutableAudience.Track("mixed_load_track");
+                            ImmutableAudience.Track(TestEventNames.MixedLoadTrack);
                     }
                     catch (Exception ex) { exceptions.Add(ex); }
                 });
@@ -216,7 +216,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.Init(MakeConfig());
 
             // Warm up so JIT and one-time allocations are out of the measured window.
-            for (int i = 0; i < 200; i++) ImmutableAudience.Track("warmup");
+            for (int i = 0; i < 200; i++) ImmutableAudience.Track(TestEventNames.Warmup);
             ImmutableAudience.FlushQueueToDiskForTesting();
             GC.Collect();
             GC.WaitForPendingFinalizers();
@@ -226,7 +226,7 @@ namespace Immutable.Audience.Tests
 
             const int iterations = 10_000;
             for (int i = 0; i < iterations; i++)
-                ImmutableAudience.Track("steady_state");
+                ImmutableAudience.Track(TestEventNames.SteadyState);
 
             long allocDelta = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
             double bytesPerCall = (double)allocDelta / iterations;
