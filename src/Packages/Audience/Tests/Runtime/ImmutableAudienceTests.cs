@@ -323,7 +323,7 @@ namespace Immutable.Audience.Tests
                 // Assert the stable parts (event-type name and trailing "Dropping")
                 // so the test survives any change to the exception type or message.
                 Assert.That(lines, Has.Some.Contains(nameof(Purchase)));
-                Assert.That(lines, Has.Some.Contains("Dropping"));
+                Assert.That(lines, Has.Some.Contains(AudienceLogs.DroppingMarker));
             }
             finally { Log.Writer = null; }
 
@@ -331,7 +331,7 @@ namespace Immutable.Audience.Tests
             var queueDir = AudiencePaths.QueueDir(_testDir);
             var contents = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText).ToList();
-            Assert.IsFalse(contents.Any(c => c.Contains("\"purchase\"")),
+            Assert.IsFalse(contents.Any(c => c.Contains($"\"{EventNames.Purchase}\"")),
                 "purchase event with missing required Value must be dropped, not enqueued");
         }
 
@@ -608,7 +608,7 @@ namespace Immutable.Audience.Tests
             var queueDir = AudiencePaths.QueueDir(_testDir);
             var contents = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText).ToList();
-            Assert.IsTrue(contents.Any(c => c.Contains("\"purchase\"")));
+            Assert.IsTrue(contents.Any(c => c.Contains($"\"{EventNames.Purchase}\"")));
         }
 
         // -----------------------------------------------------------------
@@ -627,7 +627,7 @@ namespace Immutable.Audience.Tests
             var contents = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText).ToList();
             Assert.IsTrue(contents.Any(c =>
-                c.Contains("\"identify\"") && c.Contains("\"76561198012345\"")));
+                c.Contains($"\"{MessageTypes.Identify}\"") && c.Contains("\"76561198012345\"")));
         }
 
         [Test]
@@ -641,7 +641,7 @@ namespace Immutable.Audience.Tests
             var queueDir = AudiencePaths.QueueDir(_testDir);
             var contents = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText).ToList();
-            Assert.IsFalse(contents.Any(c => c.Contains("\"identify\"")),
+            Assert.IsFalse(contents.Any(c => c.Contains($"\"{MessageTypes.Identify}\"")),
                 "identify should be discarded at Anonymous consent");
         }
 
@@ -657,7 +657,7 @@ namespace Immutable.Audience.Tests
             var contents = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText).ToList();
             Assert.IsTrue(contents.Any(c =>
-                c.Contains("\"alias\"") && c.Contains("\"steam123\"")));
+                c.Contains($"\"{MessageTypes.Alias}\"") && c.Contains("\"steam123\"")));
         }
 
         // -----------------------------------------------------------------

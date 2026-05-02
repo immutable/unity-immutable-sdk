@@ -85,6 +85,10 @@ namespace Immutable.Audience
 
     internal static class AudienceLogs
     {
+        // Marker shared by Track / Identify / Alias dropped-event log messages.
+        internal const string DroppingMarker = "Dropping";
+
+
         // ---- Init / config validation ----
 
         internal const string InitCalledTwice =
