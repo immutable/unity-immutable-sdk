@@ -217,7 +217,7 @@ namespace Immutable.Audience.Tests
 
             Assert.AreEqual(1, _store.Count(), "429 must keep files for retry");
             Assert.IsTrue(transport.IsInBackoffWindow);
-            Assert.AreEqual(5_000, transport.BackoffMs);
+            Assert.AreEqual(Constants.HttpBackoff1stMs, transport.BackoffMs);
             Assert.IsNull(reportedError, "429 is transient; must not fire onError");
         }
 
@@ -282,7 +282,7 @@ namespace Immutable.Audience.Tests
 
             await transport.SendBatchAsync();
 
-            Assert.AreEqual(5_000, transport.BackoffMs);
+            Assert.AreEqual(Constants.HttpBackoff1stMs, transport.BackoffMs);
             Assert.IsTrue(transport.IsInBackoffWindow);
         }
 
@@ -306,7 +306,7 @@ namespace Immutable.Audience.Tests
 
             await transport.SendBatchAsync();
             Assert.AreEqual(1, _store.Count(), "429 keeps the batch");
-            Assert.AreEqual(5_000, transport.BackoffMs);
+            Assert.AreEqual(Constants.HttpBackoff1stMs, transport.BackoffMs);
 
             Advance(5_001);
             await transport.SendBatchAsync();
@@ -384,7 +384,7 @@ namespace Immutable.Audience.Tests
 
             Assert.AreEqual(1, _store.Count(), "5xx should keep files for retry");
             Assert.IsTrue(transport.IsInBackoffWindow);
-            Assert.AreEqual(5000, transport.BackoffMs, "first failure = 5s backoff");
+            Assert.AreEqual(Constants.HttpBackoff1stMs, transport.BackoffMs, "first failure = HttpBackoff1stMs");
             Assert.IsNotNull(reportedError);
             Assert.AreEqual(AudienceErrorCode.FlushFailed, reportedError!.Code);
         }
@@ -400,27 +400,27 @@ namespace Immutable.Audience.Tests
             // Schedule: 5s → 10s → 20s → 40s → 60s cap.
             // Each escalation requires the previous window to have elapsed.
             await transport.SendBatchAsync();
-            Assert.AreEqual(5_000, transport.BackoffMs);
+            Assert.AreEqual(Constants.HttpBackoff1stMs, transport.BackoffMs);
 
             Advance(5_001);
             await transport.SendBatchAsync();
-            Assert.AreEqual(10_000, transport.BackoffMs);
+            Assert.AreEqual(Constants.HttpBackoff2ndMs, transport.BackoffMs);
 
             Advance(10_001);
             await transport.SendBatchAsync();
-            Assert.AreEqual(20_000, transport.BackoffMs);
+            Assert.AreEqual(Constants.HttpBackoff3rdMs, transport.BackoffMs);
 
             Advance(20_001);
             await transport.SendBatchAsync();
-            Assert.AreEqual(40_000, transport.BackoffMs);
+            Assert.AreEqual(Constants.HttpBackoff4thMs, transport.BackoffMs);
 
             Advance(40_001);
             await transport.SendBatchAsync();
-            Assert.AreEqual(60_000, transport.BackoffMs, "reaches 60s cap after 40s step");
+            Assert.AreEqual(Constants.HttpBackoffCapMs, transport.BackoffMs, "reaches cap after 4th step");
 
             Advance(60_001);
             await transport.SendBatchAsync();
-            Assert.AreEqual(60_000, transport.BackoffMs, "stays at cap");
+            Assert.AreEqual(Constants.HttpBackoffCapMs, transport.BackoffMs, "stays at cap");
         }
 
         [Test]
@@ -432,7 +432,7 @@ namespace Immutable.Audience.Tests
                 handler: handler, getUtcNow: _getUtcNow);
 
             await transport.SendBatchAsync();
-            Assert.AreEqual(5_000, transport.BackoffMs);
+            Assert.AreEqual(Constants.HttpBackoff1stMs, transport.BackoffMs);
             var firstDeadline = transport.NextAttemptAt;
             Assert.IsNotNull(firstDeadline);
 
@@ -447,12 +447,12 @@ namespace Immutable.Audience.Tests
             // Another premature retry: still no escalation.
             Advance(3_000);
             await transport.SendBatchAsync();
-            Assert.AreEqual(5_000, transport.BackoffMs);
+            Assert.AreEqual(Constants.HttpBackoff1stMs, transport.BackoffMs);
 
             // Wait out the window, fail again → now we escalate.
             _utcNow = firstDeadline.Value.AddMilliseconds(1);
             await transport.SendBatchAsync();
-            Assert.AreEqual(10_000, transport.BackoffMs);
+            Assert.AreEqual(Constants.HttpBackoff2ndMs, transport.BackoffMs);
         }
 
         [Test]
@@ -474,11 +474,11 @@ namespace Immutable.Audience.Tests
                 handler: handler, getUtcNow: _getUtcNow);
 
             await transport.SendBatchAsync();
-            Assert.AreEqual(5_000, transport.BackoffMs);
+            Assert.AreEqual(Constants.HttpBackoff1stMs, transport.BackoffMs);
 
             Advance(5_001);
             await transport.SendBatchAsync();
-            Assert.AreEqual(10_000, transport.BackoffMs);
+            Assert.AreEqual(Constants.HttpBackoff2ndMs, transport.BackoffMs);
 
             Advance(10_001);
             await transport.SendBatchAsync();
@@ -580,7 +580,7 @@ namespace Immutable.Audience.Tests
             await transport.SendBatchAsync();
 
             Assert.IsTrue(transport.IsInBackoffWindow, "within window immediately after failure");
-            Assert.AreEqual(now.AddMilliseconds(5_000), transport.NextAttemptAt);
+            Assert.AreEqual(now.AddMilliseconds(Constants.HttpBackoff1stMs), transport.NextAttemptAt);
 
             // Advance the clock just before NextAttemptAt: still backing off.
             now = now.AddMilliseconds(4_999);
