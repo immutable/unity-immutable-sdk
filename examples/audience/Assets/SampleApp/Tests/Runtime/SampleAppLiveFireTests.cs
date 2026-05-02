@@ -172,7 +172,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         {
             yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent(EventNames.MilestoneReached), root =>
             {
-                root.Q<TextField>(SampleAppUi.TypedEventField(EventNames.MilestoneReached, EventPropertyKeys.Name)).value = "il2cpp_smoke";
+                root.Q<TextField>(SampleAppUi.TypedEventField(EventNames.MilestoneReached, EventPropertyKeys.Name)).value = SampleAppLiveFireFixtures.MilestoneSmokeName;
             });
         }
 
@@ -262,7 +262,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
 
             // Custom event name + JSON props (the sample app parses props as JSON
             // and forwards them as Dictionary<string, object> to ImmutableAudience.Track).
-            _root!.Q<TextField>(SampleAppUi.CustomEvent.Name).value = "il2cpp_smoke";
+            _root!.Q<TextField>(SampleAppUi.CustomEvent.Name).value = SampleAppLiveFireFixtures.MilestoneSmokeName;
             _root.Q<TextField>(SampleAppUi.CustomEvent.Props).value =
                 "{\"int_field\":42,\"str_field\":\"hello\",\"bool_field\":true,\"nested\":{\"a\":1}}";
             _root.Q<Button>(SampleAppUi.Buttons.CustomEvent).Click();
@@ -423,7 +423,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         {
             yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent(SampleAppCustomEvents.WishlistAdd), root =>
             {
-                root.Q<TextField>(SampleAppUi.TypedEventField(SampleAppCustomEvents.WishlistAdd, SampleAppCustomEventPropertyKeys.GameId)).value = "il2cpp_game_1";
+                root.Q<TextField>(SampleAppUi.TypedEventField(SampleAppCustomEvents.WishlistAdd, SampleAppCustomEventPropertyKeys.GameId)).value = SampleAppLiveFireFixtures.GameId;
             });
         }
 
@@ -432,7 +432,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         {
             yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent(SampleAppCustomEvents.WishlistRemove), root =>
             {
-                root.Q<TextField>(SampleAppUi.TypedEventField(SampleAppCustomEvents.WishlistRemove, SampleAppCustomEventPropertyKeys.GameId)).value = "il2cpp_game_1";
+                root.Q<TextField>(SampleAppUi.TypedEventField(SampleAppCustomEvents.WishlistRemove, SampleAppCustomEventPropertyKeys.GameId)).value = SampleAppLiveFireFixtures.GameId;
             });
         }
 
@@ -441,7 +441,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         {
             yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent(SampleAppCustomEvents.GamePageViewed), root =>
             {
-                root.Q<TextField>(SampleAppUi.TypedEventField(SampleAppCustomEvents.GamePageViewed, SampleAppCustomEventPropertyKeys.GameId)).value = "il2cpp_game_1";
+                root.Q<TextField>(SampleAppUi.TypedEventField(SampleAppCustomEvents.GamePageViewed, SampleAppCustomEventPropertyKeys.GameId)).value = SampleAppLiveFireFixtures.GameId;
             });
         }
 
@@ -450,7 +450,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         {
             yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent(SampleAppCustomEvents.LinkClicked), root =>
             {
-                root.Q<TextField>(SampleAppUi.TypedEventField(SampleAppCustomEvents.LinkClicked, SampleAppCustomEventPropertyKeys.Url)).value = "https://example.com/il2cpp";
+                root.Q<TextField>(SampleAppUi.TypedEventField(SampleAppCustomEvents.LinkClicked, SampleAppCustomEventPropertyKeys.Url)).value = SampleAppLiveFireFixtures.LinkUrl;
             });
         }
 
