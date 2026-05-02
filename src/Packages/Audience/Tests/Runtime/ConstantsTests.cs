@@ -6,6 +6,19 @@ namespace Immutable.Audience.Tests
     [TestFixture]
     internal class ConstantsTests
     {
+        // Publishable key fixtures used by the BaseUrl resolution tests.
+        private const string TestPrefixKeyFixture = "pk_imapik-test-abc";
+        private const string ProdPrefixKeyFixture = "pk_imapik-prod-abc";
+        private const string CustomBaseUrlOverride = "https://api.dev.immutable.com";
+
+        // package.json upward-walk components and the JSON fields parsed back.
+        private const string SrcDirectoryName = "src";
+        private const string PackagesDirectoryName = "Packages";
+        private const string AudiencePackageDirectoryName = "Audience";
+        private const string PackageJsonFileName = "package.json";
+        private const string PackageJsonVersionField = "version";
+        private const string PackageJsonNameField = "name";
+
         // -----------------------------------------------------------------
         // BaseUrl resolution
         // -----------------------------------------------------------------
@@ -14,14 +27,14 @@ namespace Immutable.Audience.Tests
         public void BaseUrl_TestKey_ResolvesToSandbox()
         {
             Assert.AreEqual(Constants.SandboxBaseUrl,
-                Constants.BaseUrl("pk_imapik-test-abc"));
+                Constants.BaseUrl(TestPrefixKeyFixture));
         }
 
         [Test]
         public void BaseUrl_NonTestKey_ResolvesToProduction()
         {
             Assert.AreEqual(Constants.ProductionBaseUrl,
-                Constants.BaseUrl("pk_imapik-prod-abc"));
+                Constants.BaseUrl(ProdPrefixKeyFixture));
         }
 
         [Test]
@@ -36,9 +49,8 @@ namespace Immutable.Audience.Tests
         {
             // Override wins even for a test-prefixed key that would
             // otherwise derive to Sandbox.
-            const string custom = "https://api.dev.immutable.com";
-            Assert.AreEqual(custom,
-                Constants.BaseUrl("pk_imapik-test-abc", custom));
+            Assert.AreEqual(CustomBaseUrlOverride,
+                Constants.BaseUrl(TestPrefixKeyFixture, CustomBaseUrlOverride));
         }
 
         [Test]
@@ -47,7 +59,7 @@ namespace Immutable.Audience.Tests
             // Empty-string override is treated as "no override" so the
             // key-prefix fallback still kicks in.
             Assert.AreEqual(Constants.SandboxBaseUrl,
-                Constants.BaseUrl("pk_imapik-test-abc", ""));
+                Constants.BaseUrl(TestPrefixKeyFixture, ""));
         }
 
         // -----------------------------------------------------------------
@@ -63,7 +75,7 @@ namespace Immutable.Audience.Tests
             var packageJson = ReadPackageJson();
             var parsed = JsonReader.DeserializeObject(packageJson);
 
-            Assert.IsTrue(parsed.TryGetValue("version", out var versionObj),
+            Assert.IsTrue(parsed.TryGetValue(PackageJsonVersionField, out var versionObj),
                 "package.json is missing a \"version\" field");
             Assert.AreEqual(Constants.LibraryVersion, versionObj,
                 "Constants.LibraryVersion must match package.json version");
@@ -77,7 +89,7 @@ namespace Immutable.Audience.Tests
             var packageJson = ReadPackageJson();
             var parsed = JsonReader.DeserializeObject(packageJson);
 
-            Assert.IsTrue(parsed.TryGetValue("name", out var nameObj),
+            Assert.IsTrue(parsed.TryGetValue(PackageJsonNameField, out var nameObj),
                 "package.json is missing a \"name\" field");
             Assert.AreEqual(Constants.LibraryName, nameObj,
                 "Constants.LibraryName must match package.json name");
@@ -95,14 +107,14 @@ namespace Immutable.Audience.Tests
             var current = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
             while (current != null)
             {
-                var candidate = Path.Combine(current.FullName, "src", "Packages", "Audience", "package.json");
+                var candidate = Path.Combine(current.FullName, SrcDirectoryName, PackagesDirectoryName, AudiencePackageDirectoryName, PackageJsonFileName);
                 if (File.Exists(candidate)) return File.ReadAllText(candidate);
 
                 // Also try the direct-inside case (package root itself is
                 // the ancestor), which handles consuming-project layouts
                 // that embed the package without the src/Packages prefix.
-                var direct = Path.Combine(current.FullName, "package.json");
-                if (File.Exists(direct) && current.Name == "Audience") return File.ReadAllText(direct);
+                var direct = Path.Combine(current.FullName, PackageJsonFileName);
+                if (File.Exists(direct) && current.Name == AudiencePackageDirectoryName) return File.ReadAllText(direct);
 
                 current = current.Parent;
             }
