@@ -12,4 +12,18 @@ namespace Immutable.Audience.Samples.SampleApp
         internal const string LinkClicked = "link_clicked";
         internal const string ScreenViewed = "screen_viewed";
     }
+
+    // Property keys for the sample-app demo events.
+    internal static class SampleAppCustomEventPropertyKeys
+    {
+        internal const string Method = "method";
+        internal const string Source = "source";
+        internal const string GameId = "gameId";
+        internal const string Platform = "platform";
+        internal const string GameName = "gameName";
+        internal const string Slug = "slug";
+        internal const string Url = "url";
+        internal const string Label = "label";
+        internal const string Path = "path";
+    }
 }

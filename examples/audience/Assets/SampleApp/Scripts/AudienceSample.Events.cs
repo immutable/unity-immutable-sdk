@@ -55,15 +55,15 @@ namespace Immutable.Audience.Samples.SampleApp
 
         internal static readonly EventSpec[] Catalogue =
         {
-            new EventSpec(SampleAppCustomEvents.SignUp,        new[] { EventField.Text("method", optional: true) }),
-            new EventSpec(SampleAppCustomEvents.SignIn,        new[] { EventField.Text("method", optional: true) }),
-            new EventSpec(SampleAppCustomEvents.EmailAcquired, new[] { EventField.Text("source", optional: true) }),
+            new EventSpec(SampleAppCustomEvents.SignUp,        new[] { EventField.Text(SampleAppCustomEventPropertyKeys.Method, optional: true) }),
+            new EventSpec(SampleAppCustomEvents.SignIn,        new[] { EventField.Text(SampleAppCustomEventPropertyKeys.Method, optional: true) }),
+            new EventSpec(SampleAppCustomEvents.EmailAcquired, new[] { EventField.Text(SampleAppCustomEventPropertyKeys.Source, optional: true) }),
             new EventSpec(SampleAppCustomEvents.WishlistAdd,   new[] {
-                EventField.Text("gameId"),
-                EventField.Text("source",   optional: true),
-                EventField.Text("platform", optional: true),
+                EventField.Text(SampleAppCustomEventPropertyKeys.GameId),
+                EventField.Text(SampleAppCustomEventPropertyKeys.Source,   optional: true),
+                EventField.Text(SampleAppCustomEventPropertyKeys.Platform, optional: true),
             }),
-            new EventSpec(SampleAppCustomEvents.WishlistRemove, new[] { EventField.Text("gameId") }),
+            new EventSpec(SampleAppCustomEvents.WishlistRemove, new[] { EventField.Text(SampleAppCustomEventPropertyKeys.GameId) }),
             new EventSpec(EventNames.Purchase, new[] {
                 EventField.Text(EventPropertyKeys.Currency),
                 EventField.Number(EventPropertyKeys.Value),
@@ -92,15 +92,15 @@ namespace Immutable.Audience.Samples.SampleApp
             }),
             new EventSpec(EventNames.MilestoneReached, new[] { EventField.Text(EventPropertyKeys.Name) }),
             new EventSpec(SampleAppCustomEvents.GamePageViewed,  new[] {
-                EventField.Text("gameId"),
-                EventField.Text("gameName", optional: true),
-                EventField.Text("slug",     optional: true),
+                EventField.Text(SampleAppCustomEventPropertyKeys.GameId),
+                EventField.Text(SampleAppCustomEventPropertyKeys.GameName, optional: true),
+                EventField.Text(SampleAppCustomEventPropertyKeys.Slug,     optional: true),
             }),
             new EventSpec(SampleAppCustomEvents.LinkClicked, new[] {
-                EventField.Text("url"),
-                EventField.Text("label",  optional: true),
-                EventField.Text("source", optional: true),
-                EventField.Text("gameId", optional: true),
+                EventField.Text(SampleAppCustomEventPropertyKeys.Url),
+                EventField.Text(SampleAppCustomEventPropertyKeys.Label,  optional: true),
+                EventField.Text(SampleAppCustomEventPropertyKeys.Source, optional: true),
+                EventField.Text(SampleAppCustomEventPropertyKeys.GameId, optional: true),
             }),
         };
 

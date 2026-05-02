@@ -423,7 +423,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         {
             yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent(SampleAppCustomEvents.WishlistAdd), root =>
             {
-                root.Q<TextField>(SampleAppUi.TypedEventField(SampleAppCustomEvents.WishlistAdd, "gameId")).value = "il2cpp_game_1";
+                root.Q<TextField>(SampleAppUi.TypedEventField(SampleAppCustomEvents.WishlistAdd, SampleAppCustomEventPropertyKeys.GameId)).value = "il2cpp_game_1";
             });
         }
 
@@ -432,7 +432,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         {
             yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent(SampleAppCustomEvents.WishlistRemove), root =>
             {
-                root.Q<TextField>(SampleAppUi.TypedEventField(SampleAppCustomEvents.WishlistRemove, "gameId")).value = "il2cpp_game_1";
+                root.Q<TextField>(SampleAppUi.TypedEventField(SampleAppCustomEvents.WishlistRemove, SampleAppCustomEventPropertyKeys.GameId)).value = "il2cpp_game_1";
             });
         }
 
@@ -441,7 +441,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         {
             yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent(SampleAppCustomEvents.GamePageViewed), root =>
             {
-                root.Q<TextField>(SampleAppUi.TypedEventField(SampleAppCustomEvents.GamePageViewed, "gameId")).value = "il2cpp_game_1";
+                root.Q<TextField>(SampleAppUi.TypedEventField(SampleAppCustomEvents.GamePageViewed, SampleAppCustomEventPropertyKeys.GameId)).value = "il2cpp_game_1";
             });
         }
 
@@ -450,7 +450,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         {
             yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent(SampleAppCustomEvents.LinkClicked), root =>
             {
-                root.Q<TextField>(SampleAppUi.TypedEventField(SampleAppCustomEvents.LinkClicked, "url")).value = "https://example.com/il2cpp";
+                root.Q<TextField>(SampleAppUi.TypedEventField(SampleAppCustomEvents.LinkClicked, SampleAppCustomEventPropertyKeys.Url)).value = "https://example.com/il2cpp";
             });
         }
 

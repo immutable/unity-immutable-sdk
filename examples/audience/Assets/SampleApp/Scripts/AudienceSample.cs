@@ -110,7 +110,7 @@ namespace Immutable.Audience.Samples.SampleApp
         {
             GuardConsentForTrack();
             var screen = SceneManager.GetActiveScene().name;
-            var props = new Dictionary<string, object> { ["path"] = screen };
+            var props = new Dictionary<string, object> { [SampleAppCustomEventPropertyKeys.Path] = screen };
             ImmutableAudience.Track(SampleAppCustomEvents.ScreenViewed, props);
             return Json.Serialize(props, 2);
         });
