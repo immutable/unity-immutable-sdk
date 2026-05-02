@@ -64,7 +64,7 @@ namespace Immutable.Audience.Tests
                 foreach (var f in Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)) File.Delete(f);
                 Directory.Delete(queueDir);
             }
-            File.WriteAllText(queueDir, "blocker");
+            File.WriteAllText(queueDir, TestFixtures.DiskBlockerContent);
         }
 
         // -----------------------------------------------------------------

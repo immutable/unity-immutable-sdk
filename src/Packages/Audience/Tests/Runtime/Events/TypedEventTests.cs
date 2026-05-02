@@ -15,7 +15,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Progression_WithoutStatus_ThrowsOnToProperties()
         {
-            var evt = new Progression { World = "tutorial" };
+            var evt = new Progression { World = TestFixtures.ProgressionWorldTutorial };
 
             var ex = Assert.Throws<ArgumentException>(() => evt.ToProperties());
             Assert.That(ex!.Message, Does.Contain("Status"));
@@ -27,7 +27,7 @@ namespace Immutable.Audience.Tests
             var evt = new Progression
             {
                 Status = ProgressionStatus.Complete,
-                World = "tutorial",
+                World = TestFixtures.ProgressionWorldTutorial,
                 Level = "1",
                 Score = 1500,
                 DurationSec = 120.5f
@@ -36,7 +36,7 @@ namespace Immutable.Audience.Tests
             var props = evt.ToProperties();
 
             Assert.AreEqual(ProgressionStatus.Complete.ToLowercaseString(), props[EventPropertyKeys.Status]);
-            Assert.AreEqual("tutorial", props[EventPropertyKeys.World]);
+            Assert.AreEqual(TestFixtures.ProgressionWorldTutorial, props[EventPropertyKeys.World]);
             Assert.AreEqual("1", props[EventPropertyKeys.Level]);
             Assert.AreEqual(1500, props[EventPropertyKeys.Score]);
             Assert.AreEqual(120.5f, props[EventPropertyKeys.DurationSec]);
@@ -114,7 +114,7 @@ namespace Immutable.Audience.Tests
         {
             var evt = new Purchase
             {
-                Currency = "USD",
+                Currency = TestFixtures.UsdCurrency,
                 Value = 9.99m,
                 ItemId = TestFixtures.PurchaseItemId,
                 ItemName = TestFixtures.PurchaseItemName,
@@ -124,7 +124,7 @@ namespace Immutable.Audience.Tests
 
             var props = evt.ToProperties();
 
-            Assert.AreEqual("USD", props[EventPropertyKeys.Currency]);
+            Assert.AreEqual(TestFixtures.UsdCurrency, props[EventPropertyKeys.Currency]);
             Assert.AreEqual(9.99m, props[EventPropertyKeys.Value]);
             Assert.AreEqual(TestFixtures.PurchaseItemId, props[EventPropertyKeys.ItemId]);
             Assert.AreEqual(TestFixtures.PurchaseItemName, props[EventPropertyKeys.ItemName]);
@@ -135,7 +135,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Purchase_OptionalFieldsOmitted_WhenNull()
         {
-            var props = new Purchase { Currency = "EUR", Value = 5.00m }.ToProperties();
+            var props = new Purchase { Currency = TestFixtures.EurCurrency, Value = 5.00m }.ToProperties();
 
             Assert.IsTrue(props.ContainsKey(EventPropertyKeys.Currency));
             Assert.IsTrue(props.ContainsKey(EventPropertyKeys.Value));
@@ -163,7 +163,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Purchase_WithoutValue_ThrowsOnToProperties()
         {
-            var evt = new Purchase { Currency = "USD" };
+            var evt = new Purchase { Currency = TestFixtures.UsdCurrency };
 
             var ex = Assert.Throws<ArgumentException>(() => evt.ToProperties());
             Assert.That(ex!.Message, Does.Contain("Value"));

@@ -66,5 +66,31 @@ namespace Immutable.Audience.Tests
         internal const string GenericToId = "t";
         internal const string GenericFromType = "t1";
         internal const string GenericToType = "t2";
+
+        // ISO 4217 currency codes used by Purchase / Resource tests.
+        internal const string UsdCurrency = "USD";
+        internal const string EurCurrency = "EUR";
+
+        // Progression.World fixture (used in three typed-event tests).
+        internal const string ProgressionWorldTutorial = "tutorial";
+
+        // Exception message fixture for the ContextProvider sabotage test.
+        internal const string ContextProviderBoomMessage = "boom";
+
+        // File body that occupies the queue directory path so directory creation fails.
+        internal const string DiskBlockerContent = "blocker";
+
+        // DistributionPlatform mixed-case fixtures for Init's lowercase
+        // normalisation test.
+        internal const string DistributionPlatformSteamCased = "Steam";
+        internal const string DistributionPlatformSteamUppercase = "STEAM";
+
+        // Unity Application.platform string for the GameLaunch.Platform test.
+        internal const string PlatformWindows = "WindowsPlayer";
+
+        // Longer generic alias endpoint fixtures, for readability in Alias calls.
+        internal const string GenericAliasFromId = "fromId";
+        internal const string GenericAliasToId = "toId";
+        internal const string GenericAliasFromShort = "from";
     }
 }
