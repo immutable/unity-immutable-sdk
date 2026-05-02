@@ -105,8 +105,8 @@ namespace Immutable.Audience.Tests
             Assert.IsNull(ImmutableAudience.UserId,
                 "UserId should be null until Identify is called");
 
-            ImmutableAudience.Identify("player-42", IdentityType.Custom);
-            Assert.AreEqual("player-42", ImmutableAudience.UserId,
+            ImmutableAudience.Identify(TestFixtures.PlayerCustomId, IdentityType.Custom);
+            Assert.AreEqual(TestFixtures.PlayerCustomId, ImmutableAudience.UserId,
                 "UserId must reflect the most recent Identify call");
 
             ImmutableAudience.Reset();
@@ -215,7 +215,7 @@ namespace Immutable.Audience.Tests
             };
 
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
-            ImmutableAudience.Identify("player-42", IdentityType.Custom);
+            ImmutableAudience.Identify(TestFixtures.PlayerCustomId, IdentityType.Custom);
             ImmutableAudience.Shutdown();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
@@ -1325,8 +1325,8 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
 
-            ImmutableAudience.Identify("player_steam", IdentityType.Steam);
-            ImmutableAudience.Alias("player_steam", IdentityType.Steam, "player_passport", IdentityType.Passport);
+            ImmutableAudience.Identify(TestFixtures.PlayerSteamId, IdentityType.Steam);
+            ImmutableAudience.Alias(TestFixtures.PlayerSteamId, IdentityType.Steam, TestFixtures.PlayerPassportId, IdentityType.Passport);
             ImmutableAudience.Track(TestEventNames.TrackedBeforeDowngrade);
 
             ImmutableAudience.FlushQueueToDiskForTesting();
@@ -1351,7 +1351,7 @@ namespace Immutable.Audience.Tests
         public void FullToAnonymous_FutureTracksOmitUserId()
         {
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
-            ImmutableAudience.Identify("player_steam", IdentityType.Steam);
+            ImmutableAudience.Identify(TestFixtures.PlayerSteamId, IdentityType.Steam);
             ImmutableAudience.SetConsent(ConsentLevel.Anonymous);
 
             ImmutableAudience.Track(TestEventNames.TrackedAfterDowngrade);

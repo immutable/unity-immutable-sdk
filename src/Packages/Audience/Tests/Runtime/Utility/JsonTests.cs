@@ -183,7 +183,7 @@ namespace Immutable.Audience.Tests
             {
                 { MessageFields.Type, MessageTypes.Track },
                 { MessageFields.EventName, TestEventNames.LevelComplete },
-                { MessageFields.AnonymousId, "anon-123" },
+                { MessageFields.AnonymousId, TestFixtures.AnonId123 },
                 { MessageFields.UserId, null },
                 { MessageFields.Properties, new Dictionary<string, object>
                     {
