@@ -152,8 +152,8 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         {
             yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent(EventNames.Resource), root =>
             {
-                root.Q<TextField>(SampleAppUi.TypedEventField(EventNames.Resource, "currency")).value = "GOLD";
-                root.Q<TextField>(SampleAppUi.TypedEventField(EventNames.Resource, "amount")).value = "100";
+                root.Q<TextField>(SampleAppUi.TypedEventField(EventNames.Resource, EventPropertyKeys.Currency)).value = "GOLD";
+                root.Q<TextField>(SampleAppUi.TypedEventField(EventNames.Resource, EventPropertyKeys.Amount)).value = "100";
             });
         }
 
@@ -162,8 +162,8 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         {
             yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent(EventNames.Purchase), root =>
             {
-                root.Q<TextField>(SampleAppUi.TypedEventField(EventNames.Purchase, "currency")).value = "USD";
-                root.Q<TextField>(SampleAppUi.TypedEventField(EventNames.Purchase, "value")).value = "9.99";
+                root.Q<TextField>(SampleAppUi.TypedEventField(EventNames.Purchase, EventPropertyKeys.Currency)).value = "USD";
+                root.Q<TextField>(SampleAppUi.TypedEventField(EventNames.Purchase, EventPropertyKeys.Value)).value = "9.99";
             });
         }
 
@@ -172,7 +172,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         {
             yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent(EventNames.MilestoneReached), root =>
             {
-                root.Q<TextField>(SampleAppUi.TypedEventField(EventNames.MilestoneReached, "name")).value = "il2cpp_smoke";
+                root.Q<TextField>(SampleAppUi.TypedEventField(EventNames.MilestoneReached, EventPropertyKeys.Name)).value = "il2cpp_smoke";
             });
         }
 
