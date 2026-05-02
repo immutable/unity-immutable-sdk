@@ -41,8 +41,8 @@ namespace Immutable.Audience.Tests
                 PublishableKey = TestDefaults.PublishableKey,
                 Consent = consent,
                 PersistentDataPath = _testDir,
-                FlushIntervalSeconds = 600, // large; we flush manually in tests
-                FlushSize = 1000,
+                FlushIntervalSeconds = TestDefaults.FlushIntervalSeconds, // large; we flush manually in tests
+                FlushSize = TestDefaults.FlushSize,
                 HttpHandler = new KeepOnDiskHandler()
             };
         }
