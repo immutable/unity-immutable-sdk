@@ -6,6 +6,14 @@ namespace Immutable.Audience.Tests
     [TestFixture]
     internal class LogTests
     {
+        // Inputs to Log.Debug / Log.Warn used across the fixture.
+        private const string SilentDebugInput = "silent";
+        private const string EnabledDebugInput = "hello";
+        private const string WarnInput = "something off";
+
+        // Substring marker that Log.Warn injects between the prefix and the user message.
+        private const string WarnMarker = "WARN";
+
         private List<string> _captured;
 
         [SetUp]
@@ -28,7 +36,7 @@ namespace Immutable.Audience.Tests
         {
             Log.Enabled = false;
 
-            Log.Debug("silent");
+            Log.Debug(SilentDebugInput);
 
             Assert.AreEqual(0, _captured.Count);
         }
@@ -38,11 +46,11 @@ namespace Immutable.Audience.Tests
         {
             Log.Enabled = true;
 
-            Log.Debug("hello");
+            Log.Debug(EnabledDebugInput);
 
             Assert.AreEqual(1, _captured.Count);
-            StringAssert.StartsWith("[ImmutableAudience]", _captured[0]);
-            StringAssert.Contains("hello", _captured[0]);
+            StringAssert.StartsWith(Log.Prefix, _captured[0]);
+            StringAssert.Contains(EnabledDebugInput, _captured[0]);
         }
 
         [Test]
@@ -50,11 +58,11 @@ namespace Immutable.Audience.Tests
         {
             Log.Enabled = false;
 
-            Log.Warn("something off");
+            Log.Warn(WarnInput);
 
             Assert.AreEqual(1, _captured.Count);
-            StringAssert.Contains("WARN", _captured[0]);
-            StringAssert.Contains("something off", _captured[0]);
+            StringAssert.Contains(WarnMarker, _captured[0]);
+            StringAssert.Contains(WarnInput, _captured[0]);
         }
     }
 }
