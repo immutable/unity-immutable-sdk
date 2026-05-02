@@ -160,6 +160,10 @@ namespace Immutable.Audience.Samples.SampleApp
             internal const string Send = "Send";
             internal const string Copy = "Copy";
             internal const string Copied = "Copied";
+
+            // Click-to-copy flash on status cells (transient label override).
+            // Distinct from Copied which is the post-click button label.
+            internal const string CopiedFlash = "Copied!";
         }
 
         // ---- Resources paths ----

@@ -365,7 +365,7 @@ namespace Immutable.Audience.Samples.SampleApp
                     if (label.ClassListContains(SampleAppUi.Css.Copied)) return;
                     if (string.IsNullOrEmpty(label.text) || label.text == SampleAppUi.StatusBar.EmptyText) return;
                     GUIUtility.systemCopyBuffer = label.text;
-                    label.text = "Copied!";
+                    label.text = SampleAppUi.ButtonText.CopiedFlash;
                     FlashCopied(label);
                 });
         }
