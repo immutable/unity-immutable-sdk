@@ -16,15 +16,15 @@ namespace Immutable.Audience.Tests
         [Test]
         public void StringValue()
         {
-            var result = JsonReader.DeserializeObject("{\"key\":\"hello\"}");
-            Assert.AreEqual("hello", result["key"]);
+            var result = JsonReader.DeserializeObject(JsonRoundTripFixtures.KeyHelloEncoded);
+            Assert.AreEqual(JsonRoundTripFixtures.HelloValue, result[JsonRoundTripFixtures.KeyName]);
         }
 
         [Test]
         public void StringWithEscapes()
         {
-            var result = JsonReader.DeserializeObject("{\"val\":\"say \\\"hi\\\"\\nback\\\\slash\\ttab\"}");
-            Assert.AreEqual("say \"hi\"\nback\\slash\ttab", result["val"]);
+            var result = JsonReader.DeserializeObject(JsonRoundTripFixtures.ValEscapeRichEncoded);
+            Assert.AreEqual(JsonRoundTripFixtures.EscapeRichString, result[JsonRoundTripFixtures.ValName]);
         }
 
         [Test]
@@ -47,9 +47,9 @@ namespace Immutable.Audience.Tests
         [Test]
         public void NestedObject()
         {
-            var result = JsonReader.DeserializeObject("{\"outer\":{\"inner\":\"value\"}}");
-            var inner = (Dictionary<string, object>)result["outer"];
-            Assert.AreEqual("value", inner["inner"]);
+            var result = JsonReader.DeserializeObject(JsonRoundTripFixtures.OuterInnerEncoded);
+            var inner = (Dictionary<string, object>)result[JsonRoundTripFixtures.OuterKey];
+            Assert.AreEqual(JsonRoundTripFixtures.InnerValue, inner[JsonRoundTripFixtures.InnerKey]);
         }
 
         [Test]

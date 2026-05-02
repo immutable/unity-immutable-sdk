@@ -18,11 +18,11 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Serialize_StringValue_ReturnsQuotedString()
         {
-            var data = new Dictionary<string, object> { { "key", "hello" } };
+            var data = new Dictionary<string, object> { { JsonRoundTripFixtures.KeyName, JsonRoundTripFixtures.HelloValue } };
 
             var result = Json.Serialize(data);
 
-            Assert.AreEqual("{\"key\":\"hello\"}", result);
+            Assert.AreEqual(JsonRoundTripFixtures.KeyHelloEncoded, result);
         }
 
         [Test]
@@ -30,12 +30,12 @@ namespace Immutable.Audience.Tests
         {
             var data = new Dictionary<string, object>
             {
-                { "val", "say \"hi\"\nback\\slash\ttab" }
+                { JsonRoundTripFixtures.ValName, JsonRoundTripFixtures.EscapeRichString }
             };
 
             var result = Json.Serialize(data);
 
-            Assert.AreEqual("{\"val\":\"say \\\"hi\\\"\\nback\\\\slash\\ttab\"}", result);
+            Assert.AreEqual(JsonRoundTripFixtures.ValEscapeRichEncoded, result);
         }
 
         [Test]
@@ -84,14 +84,14 @@ namespace Immutable.Audience.Tests
             var data = new Dictionary<string, object>
             {
                 {
-                    "outer", new Dictionary<string, object>
+                    JsonRoundTripFixtures.OuterKey, new Dictionary<string, object>
                     {
-                        { "inner", "value" }
+                        { JsonRoundTripFixtures.InnerKey, JsonRoundTripFixtures.InnerValue }
                     }
                 }
             };
 
-            Assert.AreEqual("{\"outer\":{\"inner\":\"value\"}}", Json.Serialize(data));
+            Assert.AreEqual(JsonRoundTripFixtures.OuterInnerEncoded, Json.Serialize(data));
         }
 
         [Test]
