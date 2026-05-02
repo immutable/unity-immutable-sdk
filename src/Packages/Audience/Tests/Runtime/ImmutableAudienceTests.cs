@@ -582,7 +582,7 @@ namespace Immutable.Audience.Tests
             {
                 Status = ProgressionStatus.Complete,
                 World = TestFixtures.ProgressionWorldTutorial,
-                Level = "1"
+                Level = TestFixtures.ProgressionLevelFixture
             });
             ImmutableAudience.Shutdown();
 
