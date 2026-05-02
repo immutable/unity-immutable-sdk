@@ -9,6 +9,9 @@ namespace Immutable.Audience.Tests
     [TestFixture]
     internal class EventQueueTests
     {
+        // Test-scaffold key used by the local Msg helper, not MessageFields.EventName.
+        private const string MsgEventKey = "event";
+
         private string _testDir;
         private DiskStore _store;
 
@@ -28,7 +31,7 @@ namespace Immutable.Audience.Tests
         }
 
         private static Dictionary<string, object> Msg(string evt) =>
-            new Dictionary<string, object> { ["event"] = evt };
+            new Dictionary<string, object> { [MsgEventKey] = evt };
 
         [Test]
         public void Enqueue_ThenFlushSync_PersistesEventToDisk()
