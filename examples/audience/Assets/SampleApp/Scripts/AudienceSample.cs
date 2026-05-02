@@ -130,8 +130,8 @@ namespace Immutable.Audience.Samples.SampleApp
                     ImmutableAudience.Track(typed);
                     return Json.Serialize(new Dictionary<string, object>
                     {
-                        ["event"] = spec.Name,
-                        ["overload"] = "typed",
+                        [SampleAppUi.LogPayloadKeys.Event] = spec.Name,
+                        [SampleAppUi.LogPayloadKeys.Overload] = SampleAppUi.LogPayloadKeys.OverloadValues.Typed,
                         [MessageFields.Properties] = typed.ToProperties(),
                     }, 2);
                 }
@@ -139,8 +139,8 @@ namespace Immutable.Audience.Samples.SampleApp
                 ImmutableAudience.Track(spec.Name, props.Count > 0 ? props : null);
                 return Json.Serialize(new Dictionary<string, object>
                 {
-                    ["event"] = spec.Name,
-                    ["overload"] = "string",
+                    [SampleAppUi.LogPayloadKeys.Event] = spec.Name,
+                    [SampleAppUi.LogPayloadKeys.Overload] = SampleAppUi.LogPayloadKeys.OverloadValues.String,
                     [MessageFields.Properties] = props,
                 }, 2);
             });
@@ -154,7 +154,7 @@ namespace Immutable.Audience.Samples.SampleApp
             var f = CaptureCustomEventForm();
             var props = string.IsNullOrEmpty(f.RawProps) ? null : JsonReader.DeserializeObject(f.RawProps);
             ImmutableAudience.Track(f.Name, props);
-            var echo = new Dictionary<string, object> { ["event"] = f.Name };
+            var echo = new Dictionary<string, object> { [SampleAppUi.LogPayloadKeys.Event] = f.Name };
             if (props != null) echo[MessageFields.Properties] = props;
             return Json.Serialize(echo, 2);
         });
@@ -171,14 +171,14 @@ namespace Immutable.Audience.Samples.SampleApp
             if (!level.CanIdentify()) ResetIdentityMirror();
             var payload = new Dictionary<string, object>
             {
-                ["from"] = previous.ToLowercaseString(),
-                ["to"] = level.ToLowercaseString(),
+                [SampleAppUi.LogPayloadKeys.From] = previous.ToLowercaseString(),
+                [SampleAppUi.LogPayloadKeys.To] = level.ToLowercaseString(),
             };
             var effects = new List<string>();
             if (previous == ConsentLevel.None && level != ConsentLevel.None) effects.Add(SampleAppUi.Messages.QueueStartedSessionCreated);
             if (level == ConsentLevel.None) effects.Add(SampleAppUi.Messages.QueuePurgedAnonymousIdCleared);
             if (!level.CanIdentify() && previous.CanIdentify()) effects.Add(SampleAppUi.Messages.UserIdCleared);
-            if (effects.Count > 0) payload["effects"] = effects;
+            if (effects.Count > 0) payload[SampleAppUi.LogPayloadKeys.Effects] = effects;
             OnSdkStateChanged();
             return Json.Serialize(payload, 2);
         });
@@ -198,9 +198,9 @@ namespace Immutable.Audience.Samples.SampleApp
             OnSdkStateChanged();
             var payload = new Dictionary<string, object>
             {
-                ["id"]                       = f.Id,
-                [MessageFields.IdentityType] = f.Type,
-                ["accepted"]                 = accepted,
+                [SampleAppUi.LogPayloadKeys.Id]       = f.Id,
+                [MessageFields.IdentityType]          = f.Type,
+                [SampleAppUi.LogPayloadKeys.Accepted] = accepted,
             };
             if (traits != null) payload[MessageFields.Traits] = traits;
             return Json.Serialize(payload, 2);
@@ -233,9 +233,9 @@ namespace Immutable.Audience.Samples.SampleApp
             }
             return Json.Serialize(new Dictionary<string, object>
             {
-                ["from"]     = new Dictionary<string, object> { ["id"] = f.FromId, [MessageFields.IdentityType] = f.FromType },
-                ["to"]       = new Dictionary<string, object> { ["id"] = f.ToId,   [MessageFields.IdentityType] = f.ToType },
-                ["accepted"] = accepted,
+                [SampleAppUi.LogPayloadKeys.From]     = new Dictionary<string, object> { [SampleAppUi.LogPayloadKeys.Id] = f.FromId, [MessageFields.IdentityType] = f.FromType },
+                [SampleAppUi.LogPayloadKeys.To]       = new Dictionary<string, object> { [SampleAppUi.LogPayloadKeys.Id] = f.ToId,   [MessageFields.IdentityType] = f.ToType },
+                [SampleAppUi.LogPayloadKeys.Accepted] = accepted,
             }, 2);
         });
 
@@ -246,8 +246,8 @@ namespace Immutable.Audience.Samples.SampleApp
         private void OnSdkError(AudienceError err) =>
             AppendLog(SampleAppUi.LogLabels.OnError, Json.Serialize(new Dictionary<string, object>
             {
-                ["code"] = err.Code.ToString(),
-                ["message"] = err.Message,
+                [SampleAppUi.LogPayloadKeys.Code] = err.Code.ToString(),
+                [SampleAppUi.LogPayloadKeys.Message] = err.Message,
             }, 2), LogLevel.Err, LogSource.Sdk);
 
         // SDK Log.Writer adapter. May fire from any thread; AppendLog handles
@@ -334,17 +334,17 @@ namespace Immutable.Audience.Samples.SampleApp
         {
             var echo = new Dictionary<string, object>
             {
-                ["consent"]                = config.Consent.ToString(),
-                ["debug"]                  = config.Debug,
-                ["flushIntervalSeconds"]   = config.FlushIntervalSeconds,
-                ["flushSize"]              = config.FlushSize,
-                ["packageVersion"]         = config.PackageVersion,
-                ["shutdownFlushTimeoutMs"] = config.ShutdownFlushTimeoutMs,
+                [SampleAppUi.LogPayloadKeys.Consent]                = config.Consent.ToString(),
+                [SampleAppUi.LogPayloadKeys.Debug]                  = config.Debug,
+                [SampleAppUi.LogPayloadKeys.FlushIntervalSeconds]   = config.FlushIntervalSeconds,
+                [SampleAppUi.LogPayloadKeys.FlushSize]              = config.FlushSize,
+                [SampleAppUi.LogPayloadKeys.PackageVersion]         = config.PackageVersion,
+                [SampleAppUi.LogPayloadKeys.ShutdownFlushTimeoutMs] = config.ShutdownFlushTimeoutMs,
             };
             if (!string.IsNullOrEmpty(config.PublishableKey))
-                echo["publishableKey"] = RedactPublishableKey(config.PublishableKey);
+                echo[SampleAppUi.LogPayloadKeys.PublishableKey] = RedactPublishableKey(config.PublishableKey);
             if (!string.IsNullOrEmpty(config.PersistentDataPath))
-                echo["persistentDataPath"] = config.PersistentDataPath;
+                echo[SampleAppUi.LogPayloadKeys.PersistentDataPath] = config.PersistentDataPath;
             return echo;
         }
 

@@ -301,5 +301,42 @@ namespace Immutable.Audience.Samples.SampleApp
             internal const string Anonymous = "anonymous";
             internal const string Full = "full";
         }
+
+        // Log payload JSON keys used by RunAndLog "Ok" row dictionaries.
+
+        internal static class LogPayloadKeys
+        {
+            // Track outcomes
+            internal const string Event = "event";
+            internal const string Overload = "overload";
+            internal const string Effects = "effects";
+
+            // Identify / Alias outcomes
+            internal const string Id = "id";
+            internal const string Accepted = "accepted";
+            internal const string From = "from";
+            internal const string To = "to";
+
+            // OnError row payload
+            internal const string Code = "code";
+            internal const string Message = "message";
+
+            // Init config echo
+            internal const string Consent = "consent";
+            internal const string Debug = "debug";
+            internal const string FlushIntervalSeconds = "flushIntervalSeconds";
+            internal const string FlushSize = "flushSize";
+            internal const string PackageVersion = "packageVersion";
+            internal const string ShutdownFlushTimeoutMs = "shutdownFlushTimeoutMs";
+            internal const string PublishableKey = "publishableKey";
+            internal const string PersistentDataPath = "persistentDataPath";
+
+            // Track overload values.
+            internal static class OverloadValues
+            {
+                internal const string Typed = "typed";
+                internal const string String = "string";
+            }
+        }
     }
 }
