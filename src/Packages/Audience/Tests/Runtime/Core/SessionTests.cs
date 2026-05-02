@@ -10,6 +10,9 @@ namespace Immutable.Audience.Tests
     [TestFixture]
     internal class SessionTests
     {
+        // Exception thrown by the ThrowingTrack sabotage delegate across four scenarios.
+        private const string TrackExplodeMessage = "track explode";
+
         private List<(string name, Dictionary<string, object> props)> _events;
 
         [SetUp]
@@ -546,7 +549,7 @@ namespace Immutable.Audience.Tests
                 void ThrowingTrack(string name, Dictionary<string, object> props)
                 {
                     if (name == EventNames.SessionHeartbeat)
-                        throw new InvalidOperationException("track explode");
+                        throw new InvalidOperationException(TrackExplodeMessage);
                 }
 
                 using var session = new Session(ThrowingTrack);
@@ -581,7 +584,7 @@ namespace Immutable.Audience.Tests
                 void ThrowingTrack(string name, Dictionary<string, object> props)
                 {
                     if (name == EventNames.SessionStart)
-                        throw new InvalidOperationException("track explode");
+                        throw new InvalidOperationException(TrackExplodeMessage);
                 }
 
                 using var session = new Session(ThrowingTrack);
@@ -616,7 +619,7 @@ namespace Immutable.Audience.Tests
                 void ThrowingTrack(string name, Dictionary<string, object> props)
                 {
                     if (name == EventNames.SessionEnd)
-                        throw new InvalidOperationException("track explode");
+                        throw new InvalidOperationException(TrackExplodeMessage);
                 }
 
                 using var session = new Session(ThrowingTrack);
@@ -652,7 +655,7 @@ namespace Immutable.Audience.Tests
                 void ThrowingTrack(string name, Dictionary<string, object> props)
                 {
                     if (name == EventNames.SessionHeartbeat)
-                        throw new InvalidOperationException("track explode");
+                        throw new InvalidOperationException(TrackExplodeMessage);
                 }
 
                 using var session = new Session(ThrowingTrack);
