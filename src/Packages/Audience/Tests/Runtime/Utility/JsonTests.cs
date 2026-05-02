@@ -7,6 +7,33 @@ namespace Immutable.Audience.Tests
     [TestFixture]
     public class JsonTests
     {
+        // Per-scenario fixture keys/values for the serialise tests.
+        private const string BoolFixtureKey = "flag";
+        private const string NumericFixtureKey = "n";
+        private const string NullFixtureKey = "x";
+        private const string VShortFixture = "v";
+        private const string ArrayFixtureKey = "items";
+
+        // RealisticEventPayload: nested keys and arrays exercise nested-list serialisation.
+        private const string PropLevelKey = "level";
+        private const string PropScoreKey = "score";
+        private const string PropPerfectKey = "perfect";
+        private const string PropTagsKey = "tags";
+        private const string TagFastValue = "fast";
+        private const string TagCleanValue = "clean";
+
+        // Cycle / depth guard fixtures.
+        private const string DeepNestNextKey = "next";
+        private const string SelfRefKey = "self";
+        private const string CycleErrorMarker = "cycle";
+        private const string NestingExceedsErrorMarker = "nesting exceeds";
+
+        // Diamond scenario (shared child under sibling keys is NOT a cycle).
+        private const string DiamondInnerKey = "k";
+        private const string DiamondInnerValue = "v";
+        private const string DiamondLeftKey = "a";
+        private const string DiamondRightKey = "b";
+
         [Test]
         public void Serialize_EmptyDict_ReturnsEmptyObject()
         {
@@ -41,41 +68,41 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Serialize_BoolTrue_ReturnsLowercaseTrue()
         {
-            var data = new Dictionary<string, object> { { "flag", true } };
+            var data = new Dictionary<string, object> { { BoolFixtureKey, true } };
 
-            Assert.AreEqual("{\"flag\":true}", Json.Serialize(data));
+            Assert.AreEqual($"{{\"{BoolFixtureKey}\":true}}", Json.Serialize(data));
         }
 
         [Test]
         public void Serialize_BoolFalse_ReturnsLowercaseFalse()
         {
-            var data = new Dictionary<string, object> { { "flag", false } };
+            var data = new Dictionary<string, object> { { BoolFixtureKey, false } };
 
-            Assert.AreEqual("{\"flag\":false}", Json.Serialize(data));
+            Assert.AreEqual($"{{\"{BoolFixtureKey}\":false}}", Json.Serialize(data));
         }
 
         [Test]
         public void Serialize_IntValue_ReturnsIntegerLiteral()
         {
-            var data = new Dictionary<string, object> { { "n", 42 } };
+            var data = new Dictionary<string, object> { { NumericFixtureKey, 42 } };
 
-            Assert.AreEqual("{\"n\":42}", Json.Serialize(data));
+            Assert.AreEqual($"{{\"{NumericFixtureKey}\":42}}", Json.Serialize(data));
         }
 
         [Test]
         public void Serialize_LongValue_ReturnsIntegerLiteral()
         {
-            var data = new Dictionary<string, object> { { "n", 9876543210L } };
+            var data = new Dictionary<string, object> { { NumericFixtureKey, 9876543210L } };
 
-            Assert.AreEqual("{\"n\":9876543210}", Json.Serialize(data));
+            Assert.AreEqual($"{{\"{NumericFixtureKey}\":9876543210}}", Json.Serialize(data));
         }
 
         [Test]
         public void Serialize_NullValue_ReturnsJsonNull()
         {
-            var data = new Dictionary<string, object> { { "x", null } };
+            var data = new Dictionary<string, object> { { NullFixtureKey, null } };
 
-            Assert.AreEqual("{\"x\":null}", Json.Serialize(data));
+            Assert.AreEqual($"{{\"{NullFixtureKey}\":null}}", Json.Serialize(data));
         }
 
         [Test]
@@ -97,47 +124,47 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Serialize_FloatNaN_SerializesAsNull()
         {
-            Assert.AreEqual("{\"v\":null}", Json.Serialize(new Dictionary<string, object> { { "v", float.NaN } }));
+            Assert.AreEqual($"{{\"{VShortFixture}\":null}}", Json.Serialize(new Dictionary<string, object> { { VShortFixture, float.NaN } }));
         }
 
         [Test]
         public void Serialize_FloatPositiveInfinity_SerializesAsNull()
         {
-            Assert.AreEqual("{\"v\":null}", Json.Serialize(new Dictionary<string, object> { { "v", float.PositiveInfinity } }));
+            Assert.AreEqual($"{{\"{VShortFixture}\":null}}", Json.Serialize(new Dictionary<string, object> { { VShortFixture, float.PositiveInfinity } }));
         }
 
         [Test]
         public void Serialize_FloatNegativeInfinity_SerializesAsNull()
         {
-            Assert.AreEqual("{\"v\":null}", Json.Serialize(new Dictionary<string, object> { { "v", float.NegativeInfinity } }));
+            Assert.AreEqual($"{{\"{VShortFixture}\":null}}", Json.Serialize(new Dictionary<string, object> { { VShortFixture, float.NegativeInfinity } }));
         }
 
         [Test]
         public void Serialize_DoubleNaN_SerializesAsNull()
         {
-            Assert.AreEqual("{\"v\":null}", Json.Serialize(new Dictionary<string, object> { { "v", double.NaN } }));
+            Assert.AreEqual($"{{\"{VShortFixture}\":null}}", Json.Serialize(new Dictionary<string, object> { { VShortFixture, double.NaN } }));
         }
 
         [Test]
         public void Serialize_DoubleInfinity_SerializesAsNull()
         {
-            Assert.AreEqual("{\"v\":null}", Json.Serialize(new Dictionary<string, object> { { "v", double.PositiveInfinity } }));
+            Assert.AreEqual($"{{\"{VShortFixture}\":null}}", Json.Serialize(new Dictionary<string, object> { { VShortFixture, double.PositiveInfinity } }));
         }
 
         [Test]
         public void Serialize_FloatValue_NormalRange()
         {
-            var data = new Dictionary<string, object> { { "v", 3.14f } };
+            var data = new Dictionary<string, object> { { VShortFixture, 3.14f } };
             var result = Json.Serialize(data);
-            StringAssert.Contains("\"v\":", result);
-            StringAssert.DoesNotContain("\"v\":\"", result); // must not be quoted
+            StringAssert.Contains($"\"{VShortFixture}\":", result);
+            StringAssert.DoesNotContain($"\"{VShortFixture}\":\"", result);
         }
 
         [Test]
         public void Serialize_FloatValue_LargeExponent_PreservesValue()
         {
             // 1e30f in scientific notation is valid JSON; must not be silently zeroed
-            var data = new Dictionary<string, object> { { "v", 1e30f } };
+            var data = new Dictionary<string, object> { { VShortFixture, 1e30f } };
             var result = Json.Serialize(data);
             var serialised = result.Substring(result.IndexOf(':') + 1, result.Length - result.IndexOf(':') - 2);
             Assert.AreNotEqual("0", serialised);
@@ -148,7 +175,7 @@ namespace Immutable.Audience.Tests
         public void Serialize_FloatValue_SmallNegativeExponent_PreservesValue()
         {
             // 1e-30f: the old F6 fallback turned this into "0.000000"
-            var data = new Dictionary<string, object> { { "v", 1e-30f } };
+            var data = new Dictionary<string, object> { { VShortFixture, 1e-30f } };
             var result = Json.Serialize(data);
             var serialised = result.Substring(result.IndexOf(':') + 1, result.Length - result.IndexOf(':') - 2);
             Assert.AreNotEqual("0", serialised);
@@ -158,7 +185,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Serialize_DoubleValue_SmallNegativeExponent_PreservesValue()
         {
-            var data = new Dictionary<string, object> { { "v", 1e-300 } };
+            var data = new Dictionary<string, object> { { VShortFixture, 1e-300 } };
             var result = Json.Serialize(data);
             var serialised = result.Substring(result.IndexOf(':') + 1, result.Length - result.IndexOf(':') - 2);
             Assert.AreNotEqual("0", serialised);
@@ -170,10 +197,10 @@ namespace Immutable.Audience.Tests
         {
             var data = new Dictionary<string, object>
             {
-                { "items", new List<object> { "a", 1, true } }
+                { ArrayFixtureKey, new List<object> { TestEventNames.PlaceholderA, 1, true } }
             };
 
-            Assert.AreEqual("{\"items\":[\"a\",1,true]}", Json.Serialize(data));
+            Assert.AreEqual($"{{\"{ArrayFixtureKey}\":[\"{TestEventNames.PlaceholderA}\",1,true]}}", Json.Serialize(data));
         }
 
         [Test]
@@ -187,10 +214,10 @@ namespace Immutable.Audience.Tests
                 { MessageFields.UserId, null },
                 { MessageFields.Properties, new Dictionary<string, object>
                     {
-                        { "level", 5 },
-                        { "score", 9800L },
-                        { "perfect", true },
-                        { "tags", new List<object> { "fast", "clean" } }
+                        { PropLevelKey, 5 },
+                        { PropScoreKey, 9800L },
+                        { PropPerfectKey, true },
+                        { PropTagsKey, new List<object> { TagFastValue, TagCleanValue } }
                     }
                 }
             };
@@ -198,11 +225,11 @@ namespace Immutable.Audience.Tests
             var result = Json.Serialize(data);
 
             StringAssert.Contains($"\"{MessageFields.Type}\":\"{MessageTypes.Track}\"", result);
-            StringAssert.Contains($"\"{MessageFields.EventName}\":\"level_complete\"", result);
+            StringAssert.Contains($"\"{MessageFields.EventName}\":\"{TestEventNames.LevelComplete}\"", result);
             StringAssert.Contains($"\"{MessageFields.UserId}\":null", result);
-            StringAssert.Contains("\"level\":5", result);
-            StringAssert.Contains("\"perfect\":true", result);
-            StringAssert.Contains("\"tags\":[\"fast\",\"clean\"]", result);
+            StringAssert.Contains($"\"{PropLevelKey}\":5", result);
+            StringAssert.Contains($"\"{PropPerfectKey}\":true", result);
+            StringAssert.Contains($"\"{PropTagsKey}\":[\"{TagFastValue}\",\"{TagCleanValue}\"]", result);
         }
 
         [Test]
@@ -213,39 +240,39 @@ namespace Immutable.Audience.Tests
             for (var i = 0; i < Json.MaxDepth; i++)
             {
                 var next = new Dictionary<string, object>();
-                current["next"] = next;
+                current[DeepNestNextKey] = next;
                 current = next;
             }
 
             var ex = Assert.Throws<FormatException>(() => Json.Serialize(root));
-            StringAssert.Contains("nesting exceeds", ex.Message);
+            StringAssert.Contains(NestingExceedsErrorMarker, ex.Message);
         }
 
         [Test]
         public void Serialize_SelfReferentialDict_ThrowsFormatException()
         {
             var root = new Dictionary<string, object>();
-            root["self"] = root;
+            root[SelfRefKey] = root;
 
             var ex = Assert.Throws<FormatException>(() => Json.Serialize(root));
-            StringAssert.Contains("cycle", ex.Message);
+            StringAssert.Contains(CycleErrorMarker, ex.Message);
         }
 
         [Test]
         public void Serialize_SharedChildInSiblingKeys_IsNotTreatedAsCycle()
         {
             // Diamond: visited set tracks the current recursion stack, not all objects ever seen.
-            var shared = new Dictionary<string, object> { ["k"] = "v" };
+            var shared = new Dictionary<string, object> { [DiamondInnerKey] = DiamondInnerValue };
             var root = new Dictionary<string, object>
             {
-                ["a"] = shared,
-                ["b"] = shared,
+                [DiamondLeftKey] = shared,
+                [DiamondRightKey] = shared,
             };
 
             var result = Json.Serialize(root);
 
-            StringAssert.Contains("\"a\":{\"k\":\"v\"}", result);
-            StringAssert.Contains("\"b\":{\"k\":\"v\"}", result);
+            StringAssert.Contains($"\"{DiamondLeftKey}\":{{\"{DiamondInnerKey}\":\"{DiamondInnerValue}\"}}", result);
+            StringAssert.Contains($"\"{DiamondRightKey}\":{{\"{DiamondInnerKey}\":\"{DiamondInnerValue}\"}}", result);
         }
     }
 }
