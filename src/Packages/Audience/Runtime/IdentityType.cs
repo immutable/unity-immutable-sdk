@@ -37,6 +37,19 @@ namespace Immutable.Audience
         Custom,
     }
 
+    // Strings emitted under MessageFields.IdentityType.
+    internal static class IdentityTypeWireFormat
+    {
+        internal const string Passport = "passport";
+        internal const string Steam = "steam";
+        internal const string Epic = "epic";
+        internal const string Google = "google";
+        internal const string Apple = "apple";
+        internal const string Discord = "discord";
+        internal const string Email = "email";
+        internal const string Custom = "custom";
+    }
+
     internal static class IdentityTypeExtensions
     {
         // Throws on unknown casts. Every identify / alias event must carry an
@@ -45,14 +58,14 @@ namespace Immutable.Audience
         // loudly rather than ship an event with a missing or empty namespace.
         internal static string ToLowercaseString(this IdentityType type) => type switch
         {
-            IdentityType.Passport => "passport",
-            IdentityType.Steam => "steam",
-            IdentityType.Epic => "epic",
-            IdentityType.Google => "google",
-            IdentityType.Apple => "apple",
-            IdentityType.Discord => "discord",
-            IdentityType.Email => "email",
-            IdentityType.Custom => "custom",
+            IdentityType.Passport => IdentityTypeWireFormat.Passport,
+            IdentityType.Steam => IdentityTypeWireFormat.Steam,
+            IdentityType.Epic => IdentityTypeWireFormat.Epic,
+            IdentityType.Google => IdentityTypeWireFormat.Google,
+            IdentityType.Apple => IdentityTypeWireFormat.Apple,
+            IdentityType.Discord => IdentityTypeWireFormat.Discord,
+            IdentityType.Email => IdentityTypeWireFormat.Email,
+            IdentityType.Custom => IdentityTypeWireFormat.Custom,
             _ => throw new System.ArgumentOutOfRangeException(nameof(type), type,
                 "Unknown IdentityType value; cast an out-of-range value."),
         };
@@ -60,13 +73,13 @@ namespace Immutable.Audience
         internal static IdentityType ParseLowercaseString(string? value) =>
             (value ?? string.Empty).ToLowerInvariant() switch
             {
-                "passport" => IdentityType.Passport,
-                "steam" => IdentityType.Steam,
-                "epic" => IdentityType.Epic,
-                "google" => IdentityType.Google,
-                "apple" => IdentityType.Apple,
-                "discord" => IdentityType.Discord,
-                "email" => IdentityType.Email,
+                IdentityTypeWireFormat.Passport => IdentityType.Passport,
+                IdentityTypeWireFormat.Steam => IdentityType.Steam,
+                IdentityTypeWireFormat.Epic => IdentityType.Epic,
+                IdentityTypeWireFormat.Google => IdentityType.Google,
+                IdentityTypeWireFormat.Apple => IdentityType.Apple,
+                IdentityTypeWireFormat.Discord => IdentityType.Discord,
+                IdentityTypeWireFormat.Email => IdentityType.Email,
                 _ => IdentityType.Custom,
             };
     }

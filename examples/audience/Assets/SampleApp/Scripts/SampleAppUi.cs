@@ -310,13 +310,13 @@ namespace Immutable.Audience.Samples.SampleApp
         }
 
         // ---- Consent dropdown / status values ----
-        // Mirrors ConsentLevel.ToLowercaseString().
+        // Mirrors ConsentLevel.ToLowercaseString() so the sample-app stays aligned with SDK output.
 
         internal static class Consent
         {
-            internal const string None = "none";
-            internal const string Anonymous = "anonymous";
-            internal const string Full = "full";
+            internal const string None = ConsentLevelWireFormat.None;
+            internal const string Anonymous = ConsentLevelWireFormat.Anonymous;
+            internal const string Full = ConsentLevelWireFormat.Full;
         }
 
         // Log payload JSON keys used by RunAndLog "Ok" row dictionaries.
