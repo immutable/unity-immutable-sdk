@@ -6,7 +6,9 @@ namespace Immutable.Audience
 {
     internal static class Log
     {
-        private const string Prefix = "[ImmutableAudience]";
+        // Prepended to every SDK log line. Internal so the sample-app log adapter can strip it.
+        internal const string Prefix = "[ImmutableAudience]";
+        internal const string WarnPrefix = Prefix + " WARN:";
 
         internal static bool Enabled { get; set; }
 
@@ -20,7 +22,7 @@ namespace Immutable.Audience
         }
 
         internal static void Warn(string message) =>
-            Emit($"{Prefix} WARN: {message}");
+            Emit($"{WarnPrefix} {message}");
 
         private static void Emit(string line)
         {
@@ -41,6 +43,44 @@ namespace Immutable.Audience
             {
             }
         }
+    }
+
+    // ArgumentException messages thrown from public SDK methods.
+    internal static class AudienceArgumentMessages
+    {
+        // Init / config validation
+        internal const string PublishableKeyRequired = "PublishableKey is required";
+        internal const string PersistentDataPathRequired = "PersistentDataPath is required";
+
+        // Typed-event ToProperties validation
+        internal const string ProgressionStatusRequired = "Progression.Status is required. Set it before calling Track(IEvent).";
+        internal const string ResourceFlowRequired = "Resource.Flow is required. Set it before calling Track(IEvent).";
+        internal const string ResourceCurrencyRequired = "Resource.Currency is required. Set a non-empty string before calling Track(IEvent).";
+        internal const string ResourceAmountRequired = "Resource.Amount is required. Set it before calling Track(IEvent).";
+        internal const string PurchaseValueRequired = "Purchase.Value is required. Set it before calling Track(IEvent).";
+        internal const string MilestoneReachedNameRequired = "MilestoneReached.Name must not be null or empty";
+
+        internal static string PurchaseCurrencyInvalid(string? currency) =>
+            $"Purchase.Currency '{currency}' must be a three-letter uppercase ISO 4217 code";
+    }
+
+    // Error messages we pass to AudienceConfig.OnError.
+    internal static class AudienceErrorMessages
+    {
+        internal static string LocalStorageReadFailed(Exception ex) =>
+            $"Local storage read failed: {ex.Message}";
+
+        internal static string BatchPartiallyRejected(int rejected, int total) =>
+            $"Batch partially rejected: {rejected} of {total} events dropped";
+
+        internal const string BatchRejectedPrefix = "Batch rejected";
+        internal const string ServerErrorWillRetryPrefix = "Server error, will retry";
+
+        internal static string ConsentSyncFailedWithStatus(int statusCode) =>
+            $"Consent sync failed with status {statusCode}";
+
+        internal static string ConsentSyncThrew(Exception ex) =>
+            $"Consent sync threw: {ex.Message}";
     }
 
     internal static class AudienceLogs

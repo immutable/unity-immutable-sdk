@@ -84,7 +84,7 @@ namespace Immutable.Audience
         public Dictionary<string, object> ToProperties()
         {
             if (Status is null)
-                throw new ArgumentException("Progression.Status is required. Set it before calling Track(IEvent).");
+                throw new ArgumentException(AudienceArgumentMessages.ProgressionStatusRequired);
 
             var props = new Dictionary<string, object>
             {
@@ -169,11 +169,11 @@ namespace Immutable.Audience
         public Dictionary<string, object> ToProperties()
         {
             if (Flow is null)
-                throw new ArgumentException("Resource.Flow is required. Set it before calling Track(IEvent).");
+                throw new ArgumentException(AudienceArgumentMessages.ResourceFlowRequired);
             if (string.IsNullOrEmpty(Currency))
-                throw new ArgumentException("Resource.Currency is required. Set a non-empty string before calling Track(IEvent).");
+                throw new ArgumentException(AudienceArgumentMessages.ResourceCurrencyRequired);
             if (Amount is null)
-                throw new ArgumentException("Resource.Amount is required. Set it before calling Track(IEvent).");
+                throw new ArgumentException(AudienceArgumentMessages.ResourceAmountRequired);
 
             var props = new Dictionary<string, object>
             {
@@ -245,10 +245,9 @@ namespace Immutable.Audience
         public Dictionary<string, object> ToProperties()
         {
             if (Currency == null || !IsIso4217(Currency))
-                throw new ArgumentException(
-                    $"Purchase.Currency '{Currency}' must be a three-letter uppercase ISO 4217 code");
+                throw new ArgumentException(AudienceArgumentMessages.PurchaseCurrencyInvalid(Currency));
             if (Value is null)
-                throw new ArgumentException("Purchase.Value is required. Set it before calling Track(IEvent).");
+                throw new ArgumentException(AudienceArgumentMessages.PurchaseValueRequired);
 
             var props = new Dictionary<string, object>
             {
@@ -284,7 +283,7 @@ namespace Immutable.Audience
         public Dictionary<string, object> ToProperties()
         {
             if (string.IsNullOrEmpty(Name))
-                throw new ArgumentException("MilestoneReached.Name must not be null or empty");
+                throw new ArgumentException(AudienceArgumentMessages.MilestoneReachedNameRequired);
 
             return new Dictionary<string, object>
             {

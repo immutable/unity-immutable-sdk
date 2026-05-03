@@ -181,11 +181,11 @@ namespace Immutable.Audience.Tests
         {
             var data = new Dictionary<string, object>
             {
-                { "type", "track" },
-                { "eventName", "level_complete" },
-                { "anonymousId", "anon-123" },
-                { "userId", null },
-                { "properties", new Dictionary<string, object>
+                { MessageFields.Type, MessageTypes.Track },
+                { MessageFields.EventName, "level_complete" },
+                { MessageFields.AnonymousId, "anon-123" },
+                { MessageFields.UserId, null },
+                { MessageFields.Properties, new Dictionary<string, object>
                     {
                         { "level", 5 },
                         { "score", 9800L },
@@ -197,9 +197,9 @@ namespace Immutable.Audience.Tests
 
             var result = Json.Serialize(data);
 
-            StringAssert.Contains("\"type\":\"track\"", result);
-            StringAssert.Contains("\"eventName\":\"level_complete\"", result);
-            StringAssert.Contains("\"userId\":null", result);
+            StringAssert.Contains($"\"{MessageFields.Type}\":\"{MessageTypes.Track}\"", result);
+            StringAssert.Contains($"\"{MessageFields.EventName}\":\"level_complete\"", result);
+            StringAssert.Contains($"\"{MessageFields.UserId}\":null", result);
             StringAssert.Contains("\"level\":5", result);
             StringAssert.Contains("\"perfect\":true", result);
             StringAssert.Contains("\"tags\":[\"fast\",\"clean\"]", result);

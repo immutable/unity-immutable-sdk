@@ -34,9 +34,9 @@ namespace Immutable.Audience.Tests
             session.Start();
 
             Assert.AreEqual(1, _events.Count);
-            Assert.AreEqual("session_start", _events[0].name);
-            Assert.IsTrue(_events[0].props.ContainsKey("sessionId"));
-            Assert.IsNotEmpty((string)_events[0].props["sessionId"]);
+            Assert.AreEqual(EventNames.SessionStart, _events[0].name);
+            Assert.IsTrue(_events[0].props.ContainsKey(EventPropertyKeys.SessionId));
+            Assert.IsNotEmpty((string)_events[0].props[EventPropertyKeys.SessionId]);
         }
 
         [Test]
@@ -62,11 +62,11 @@ namespace Immutable.Audience.Tests
             now = now.AddSeconds(2);
             session.End();
 
-            var endEvent = _events.FirstOrDefault(e => e.name == "session_end");
+            var endEvent = _events.FirstOrDefault(e => e.name == EventNames.SessionEnd);
             Assert.IsNotNull(endEvent.props);
-            Assert.IsTrue(endEvent.props.ContainsKey("sessionId"));
-            Assert.IsTrue(endEvent.props.ContainsKey("durationSec"));
-            Assert.AreEqual(2L, (long)endEvent.props["durationSec"]);
+            Assert.IsTrue(endEvent.props.ContainsKey(EventPropertyKeys.SessionId));
+            Assert.IsTrue(endEvent.props.ContainsKey(EventPropertyKeys.DurationSec));
+            Assert.AreEqual(2L, (long)endEvent.props[EventPropertyKeys.DurationSec]);
         }
 
         [Test]
@@ -76,7 +76,7 @@ namespace Immutable.Audience.Tests
             session.Start();
             session.Dispose();
 
-            Assert.IsTrue(_events.Any(e => e.name == "session_end"));
+            Assert.IsTrue(_events.Any(e => e.name == EventNames.SessionEnd));
         }
 
         [Test]
@@ -85,9 +85,9 @@ namespace Immutable.Audience.Tests
             var session = new Session(MockTrack);
             session.Start();
             session.Dispose();
-            var count = _events.Count(e => e.name == "session_end");
+            var count = _events.Count(e => e.name == EventNames.SessionEnd);
             session.Dispose();
-            Assert.AreEqual(count, _events.Count(e => e.name == "session_end"));
+            Assert.AreEqual(count, _events.Count(e => e.name == EventNames.SessionEnd));
         }
 
         // -----------------------------------------------------------------
@@ -108,7 +108,7 @@ namespace Immutable.Audience.Tests
             void Track(string name, Dictionary<string, object> props)
             {
                 lock (gate) events.Add((name, props));
-                if (name == "session_heartbeat") heartbeatFired.Set();
+                if (name == EventNames.SessionHeartbeat) heartbeatFired.Set();
             }
 
             using var session = new Session(Track, heartbeatIntervalMs: 50);
@@ -119,10 +119,10 @@ namespace Immutable.Audience.Tests
 
             lock (gate)
             {
-                var beat = events.FirstOrDefault(e => e.name == "session_heartbeat");
+                var beat = events.FirstOrDefault(e => e.name == EventNames.SessionHeartbeat);
                 Assert.IsNotNull(beat.props, "heartbeat event should carry a properties dictionary");
-                Assert.IsTrue(beat.props.ContainsKey("sessionId"));
-                Assert.IsTrue(beat.props.ContainsKey("durationSec"));
+                Assert.IsTrue(beat.props.ContainsKey(EventPropertyKeys.SessionId));
+                Assert.IsTrue(beat.props.ContainsKey(EventPropertyKeys.DurationSec));
             }
         }
 
@@ -143,7 +143,7 @@ namespace Immutable.Audience.Tests
             session.Resume();
 
             Assert.AreEqual(originalId, session.SessionId, "short pause should not change session");
-            Assert.IsFalse(_events.Any(e => e.name == "session_end"),
+            Assert.IsFalse(_events.Any(e => e.name == EventNames.SessionEnd),
                 "short pause should not fire session_end");
         }
 
@@ -158,14 +158,14 @@ namespace Immutable.Audience.Tests
             var id1 = session.SessionId;
 
             session.Pause();
-            now = now.AddSeconds(31); // > 30 second PauseTimeoutMs
+            now = now.AddMilliseconds(Constants.SessionPauseTimeoutMs + 1000);
             session.Resume();
 
             Assert.AreNotEqual(id1, session.SessionId,
-                "pause longer than PauseTimeoutMs should end the old session and start a new one");
-            Assert.IsTrue(_events.Any(e => e.name == "session_end"),
+                "pause longer than SessionPauseTimeoutMs should end the old session and start a new one");
+            Assert.IsTrue(_events.Any(e => e.name == EventNames.SessionEnd),
                 "old session should have fired session_end");
-            Assert.AreEqual(2, _events.Count(e => e.name == "session_start"),
+            Assert.AreEqual(2, _events.Count(e => e.name == EventNames.SessionStart),
                 "a new session_start should fire after the long pause");
         }
 
@@ -197,8 +197,8 @@ namespace Immutable.Audience.Tests
             now = now.AddSeconds(3); // 3s more engagement
             session.End();
 
-            var sessionEnd = _events.Last(e => e.name == "session_end");
-            var duration = (long)sessionEnd.props["durationSec"];
+            var sessionEnd = _events.Last(e => e.name == EventNames.SessionEnd);
+            var duration = (long)sessionEnd.props[EventPropertyKeys.DurationSec];
             // Wall-clock Start→End = 13s, paused from T=5 to T=10 = 5s, engaged = 8s.
             Assert.AreEqual(8L, duration,
                 "double Pause must preserve the first Pause timestamp so engagement arithmetic covers the full pause window");
@@ -245,8 +245,8 @@ namespace Immutable.Audience.Tests
             now = now.AddSeconds(2); // 2 s further engagement after resume
             session.End();
 
-            var sessionEnd = _events.Last(e => e.name == "session_end");
-            var duration = (long)sessionEnd.props["durationSec"];
+            var sessionEnd = _events.Last(e => e.name == EventNames.SessionEnd);
+            var duration = (long)sessionEnd.props[EventPropertyKeys.DurationSec];
             // Wall-clock from Start to End is 10 + (-5) + 2 = 7 s. The
             // pause duration was clamped to 0, so engaged seconds = 7 - 0 = 7.
             // Without the clamp, _accumulatedPause would be -5, the
@@ -276,8 +276,8 @@ namespace Immutable.Audience.Tests
             now = now.AddSeconds(-3); // clock rewinds after Start, no pause
             session.End();
 
-            var sessionEnd = _events.Last(e => e.name == "session_end");
-            var duration = (long)sessionEnd.props["durationSec"];
+            var sessionEnd = _events.Last(e => e.name == EventNames.SessionEnd);
+            var duration = (long)sessionEnd.props[EventPropertyKeys.DurationSec];
             Assert.AreEqual(0L, duration,
                 "negative engaged time from a wall-clock rewind must clamp to zero");
         }
@@ -305,8 +305,8 @@ namespace Immutable.Audience.Tests
             now = now.AddSeconds(-5); // clock rewinds 5s while paused
             session.End();
 
-            var sessionEnd = _events.Last(e => e.name == "session_end");
-            var duration = (long)sessionEnd.props["durationSec"];
+            var sessionEnd = _events.Last(e => e.name == EventNames.SessionEnd);
+            var duration = (long)sessionEnd.props[EventPropertyKeys.DurationSec];
             Assert.LessOrEqual(duration, 5L,
                 "clock rewind while paused must not over-credit engagement past the wall-clock window");
         }
@@ -330,8 +330,8 @@ namespace Immutable.Audience.Tests
             now = now.AddSeconds(3);
             session.End();
 
-            var sessionEnd = _events.Last(e => e.name == "session_end");
-            var duration = (long)sessionEnd.props["durationSec"];
+            var sessionEnd = _events.Last(e => e.name == EventNames.SessionEnd);
+            var duration = (long)sessionEnd.props[EventPropertyKeys.DurationSec];
             Assert.AreEqual(7L, duration,
                 "session_end duration should exclude the 3s paused interval");
         }
@@ -352,8 +352,8 @@ namespace Immutable.Audience.Tests
             now = now.AddSeconds(2);
             session.End(); // ends while paused
 
-            var sessionEnd = _events.Last(e => e.name == "session_end");
-            var duration = (long)sessionEnd.props["durationSec"];
+            var sessionEnd = _events.Last(e => e.name == EventNames.SessionEnd);
+            var duration = (long)sessionEnd.props[EventPropertyKeys.DurationSec];
             Assert.AreEqual(5L, duration,
                 "session_end fired while paused should count only pre-pause engaged time");
         }
@@ -380,8 +380,8 @@ namespace Immutable.Audience.Tests
             now = now.AddSeconds(40); // 40 s paused: extended (>30 s threshold)
             session.Resume();
 
-            var sessionEnd = _events.First(e => e.name == "session_end");
-            var duration = (long)sessionEnd.props["durationSec"];
+            var sessionEnd = _events.First(e => e.name == EventNames.SessionEnd);
+            var duration = (long)sessionEnd.props[EventPropertyKeys.DurationSec];
             Assert.AreEqual(10L, duration,
                 "session_end on extended-pause rollover should report pre-pause engaged time, not wall-clock");
         }
@@ -405,8 +405,8 @@ namespace Immutable.Audience.Tests
             now = now.AddSeconds(2);
             session.OnHeartbeat();
 
-            var heartbeat = _events.Last(e => e.name == "session_heartbeat");
-            var duration = (long)heartbeat.props["durationSec"];
+            var heartbeat = _events.Last(e => e.name == EventNames.SessionHeartbeat);
+            var duration = (long)heartbeat.props[EventPropertyKeys.DurationSec];
             Assert.AreEqual(6L, duration,
                 "heartbeat duration should exclude the 2s paused interval");
         }
@@ -431,7 +431,7 @@ namespace Immutable.Audience.Tests
             Assert.AreNotEqual(firstId, secondId,
                 "second Start should generate a fresh sessionId");
 
-            Assert.AreEqual(2, _events.Count(e => e.name == "session_start"),
+            Assert.AreEqual(2, _events.Count(e => e.name == EventNames.SessionStart),
                 "both session_start events should fire");
         }
 
@@ -453,7 +453,7 @@ namespace Immutable.Audience.Tests
 
             session.OnHeartbeat();
 
-            Assert.IsFalse(_events.Any(e => e.name == "session_heartbeat"),
+            Assert.IsFalse(_events.Any(e => e.name == EventNames.SessionHeartbeat),
                 "OnHeartbeat should not emit while the session is paused");
         }
 
@@ -480,7 +480,7 @@ namespace Immutable.Audience.Tests
                 using var beatStarted = new ManualResetEvent(false);
                 void Track(string name, Dictionary<string, object> props)
                 {
-                    if (name == "session_heartbeat")
+                    if (name == EventNames.SessionHeartbeat)
                     {
                         beatStarted.Set();
                         // Block past the 1 s drain budget so DrainHeartbeatTimer
@@ -521,7 +521,7 @@ namespace Immutable.Audience.Tests
 
             session.OnHeartbeat();
 
-            Assert.IsTrue(_events.Any(e => e.name == "session_heartbeat"),
+            Assert.IsTrue(_events.Any(e => e.name == EventNames.SessionHeartbeat),
                 "OnHeartbeat should emit again once the session is resumed");
         }
 
@@ -545,7 +545,7 @@ namespace Immutable.Audience.Tests
             {
                 void ThrowingTrack(string name, Dictionary<string, object> props)
                 {
-                    if (name == "session_heartbeat")
+                    if (name == EventNames.SessionHeartbeat)
                         throw new InvalidOperationException("track explode");
                 }
 
@@ -557,7 +557,7 @@ namespace Immutable.Audience.Tests
 
                 lock (warnings)
                 {
-                    var expected = AudienceLogs.SessionTrackCallbackThrew("session_heartbeat", new InvalidOperationException());
+                    var expected = AudienceLogs.SessionTrackCallbackThrew(EventNames.SessionHeartbeat, new InvalidOperationException());
                     Assert.IsTrue(warnings.Any(w => w.Contains(expected)),
                         "SafeTrack must log a warning when the callback throws");
                 }
@@ -580,7 +580,7 @@ namespace Immutable.Audience.Tests
             {
                 void ThrowingTrack(string name, Dictionary<string, object> props)
                 {
-                    if (name == "session_start")
+                    if (name == EventNames.SessionStart)
                         throw new InvalidOperationException("track explode");
                 }
 
@@ -591,7 +591,7 @@ namespace Immutable.Audience.Tests
 
                 lock (warnings)
                 {
-                    var expected = AudienceLogs.SessionTrackCallbackThrew("session_start", new InvalidOperationException());
+                    var expected = AudienceLogs.SessionTrackCallbackThrew(EventNames.SessionStart, new InvalidOperationException());
                     Assert.IsTrue(warnings.Any(w => w.Contains(expected)),
                         "SafeTrack must log a warning when the Start callback throws");
                 }
@@ -615,7 +615,7 @@ namespace Immutable.Audience.Tests
             {
                 void ThrowingTrack(string name, Dictionary<string, object> props)
                 {
-                    if (name == "session_end")
+                    if (name == EventNames.SessionEnd)
                         throw new InvalidOperationException("track explode");
                 }
 
@@ -627,7 +627,7 @@ namespace Immutable.Audience.Tests
 
                 lock (warnings)
                 {
-                    var expected = AudienceLogs.SessionTrackCallbackThrew("session_end", new InvalidOperationException());
+                    var expected = AudienceLogs.SessionTrackCallbackThrew(EventNames.SessionEnd, new InvalidOperationException());
                     Assert.IsTrue(warnings.Any(w => w.Contains(expected)),
                         "SafeTrack must log a warning when the End callback throws");
                 }
@@ -651,7 +651,7 @@ namespace Immutable.Audience.Tests
             {
                 void ThrowingTrack(string name, Dictionary<string, object> props)
                 {
-                    if (name == "session_heartbeat")
+                    if (name == EventNames.SessionHeartbeat)
                         throw new InvalidOperationException("track explode");
                 }
 
@@ -694,7 +694,7 @@ namespace Immutable.Audience.Tests
         {
             return new AudienceConfig
             {
-                PublishableKey = "pk_imapik-test-key1",
+                PublishableKey = TestDefaults.PublishableKey,
                 Consent = consent,
                 PersistentDataPath = _testDir,
                 FlushIntervalSeconds = 600,
@@ -710,7 +710,7 @@ namespace Immutable.Audience.Tests
         // masking the real signal.
         private string[] ReadQueueFiles()
         {
-            var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
+            var queueDir = AudiencePaths.QueueDir(_testDir);
             if (!Directory.Exists(queueDir)) return Array.Empty<string>();
             return Directory.GetFiles(queueDir, AudiencePaths.QueueGlob).Select(File.ReadAllText).ToArray();
         }
@@ -810,7 +810,7 @@ namespace Immutable.Audience.Tests
             // Drain game_launch + session_start for the initial session so we
             // only see post-Reset events.
             ImmutableAudience.FlushQueueToDiskForTesting();
-            var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
+            var queueDir = AudiencePaths.QueueDir(_testDir);
             foreach (var f in Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)) File.Delete(f);
 
             var firstAnonymousId = Identity.Get(_testDir);
@@ -851,7 +851,7 @@ namespace Immutable.Audience.Tests
         public void SetConsent_AnonymousToNone_DoesNotEmitSessionEnd()
         {
             // Consent revocation purges the queue and disposes the session.
-            // Session.Dispose fires End → Track("session_end"), but by the
+            // Session.Dispose fires End → Track(EventNames.SessionEnd), but by the
             // time End runs the consent level has already been flipped to
             // None, so CanTrack gates the track call. No session_end event
             // should appear on disk. Regression guard: a future reorder of

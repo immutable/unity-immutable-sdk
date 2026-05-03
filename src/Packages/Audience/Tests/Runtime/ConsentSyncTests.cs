@@ -42,7 +42,7 @@ namespace Immutable.Audience.Tests
             var put = WaitForPut(handler);
             var body = JsonReader.DeserializeObject(put.Body);
 
-            Assert.AreEqual(Constants.ConsentUrl("pk_imapik-test-key1"), put.Url);
+            Assert.AreEqual(Constants.ConsentUrl(TestDefaults.PublishableKey), put.Url);
             Assert.AreEqual(ConsentLevel.Full.ToLowercaseString(), body[ConsentBodyFields.Status]);
             Assert.AreEqual(Constants.ConsentSource, body[ConsentBodyFields.Source]);
             Assert.IsTrue(body.ContainsKey(MessageFields.AnonymousId));
@@ -165,7 +165,7 @@ namespace Immutable.Audience.Tests
         private AudienceConfig MakeConfig(CapturingHandler handler, ConsentLevel consent) =>
             new AudienceConfig
             {
-                PublishableKey = "pk_imapik-test-key1",
+                PublishableKey = TestDefaults.PublishableKey,
                 Consent = consent,
                 PersistentDataPath = _testDir,
                 FlushIntervalSeconds = 600,

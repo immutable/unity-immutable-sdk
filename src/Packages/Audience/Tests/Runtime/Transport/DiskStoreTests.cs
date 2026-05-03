@@ -96,7 +96,7 @@ namespace Immutable.Audience.Tests
 
             // Manually plant a stale file (ticks from 31 days ago)
             var staleTime = DateTime.UtcNow.AddDays(-(Constants.StaleEventDays + 1));
-            var staleName = $"{staleTime.Ticks}_{Guid.NewGuid():N}.json";
+            var staleName = $"{staleTime.Ticks}_{Guid.NewGuid():N}{AudiencePaths.QueueFileExtension}";
             var queueDir = AudiencePaths.QueueDir(_testDir);
             File.WriteAllText(Path.Combine(queueDir, staleName), "{\"stale\":true}");
 
@@ -151,7 +151,7 @@ namespace Immutable.Audience.Tests
         {
             // Simulate a previous run by writing a file directly
             var queueDir = AudiencePaths.QueueDir(_testDir);
-            var survivingName = $"{DateTime.UtcNow.Ticks}_{Guid.NewGuid():N}.json";
+            var survivingName = $"{DateTime.UtcNow.Ticks}_{Guid.NewGuid():N}{AudiencePaths.QueueFileExtension}";
             File.WriteAllText(Path.Combine(queueDir, survivingName), "{\"survived\":true}");
 
             // Create a new DiskStore instance pointing at the same path (simulates restart)
@@ -164,10 +164,19 @@ namespace Immutable.Audience.Tests
         [Test]
         public void ApplyAnonymousDowngrade_DeletesIdentifyAndAlias_StripsUserIdFromTrack()
         {
-            _store.Write("{\"type\":\"identify\",\"anonymousId\":\"a\",\"userId\":\"u\"}");
-            _store.Write("{\"type\":\"alias\",\"fromId\":\"a\",\"toId\":\"u\"}");
-            _store.Write("{\"type\":\"track\",\"eventName\":\"x\",\"anonymousId\":\"a\",\"userId\":\"u\"}");
-            _store.Write("{\"type\":\"track\",\"eventName\":\"y\",\"anonymousId\":\"a\"}");
+            _store.Write(WireFixture.Identify(
+                (MessageFields.AnonymousId, "a"),
+                (MessageFields.UserId, "u")));
+            _store.Write(WireFixture.Alias(
+                (MessageFields.FromId, "a"),
+                (MessageFields.ToId, "u")));
+            _store.Write(WireFixture.Track(
+                (MessageFields.EventName, "x"),
+                (MessageFields.AnonymousId, "a"),
+                (MessageFields.UserId, "u")));
+            _store.Write(WireFixture.Track(
+                (MessageFields.EventName, "y"),
+                (MessageFields.AnonymousId, "a")));
 
             _store.ApplyAnonymousDowngrade();
 
@@ -178,8 +187,8 @@ namespace Immutable.Audience.Tests
             {
                 var json = File.ReadAllText(path);
                 var msg = JsonReader.DeserializeObject(json);
-                Assert.AreEqual("track", msg["type"]);
-                Assert.IsFalse(msg.ContainsKey("userId"), "userId must be stripped from queued track messages");
+                Assert.AreEqual(MessageTypes.Track, msg[MessageFields.Type]);
+                Assert.IsFalse(msg.ContainsKey(MessageFields.UserId), "userId must be stripped from queued track messages");
             }
         }
 
@@ -218,7 +227,7 @@ namespace Immutable.Audience.Tests
             // Seed the queue directory with a file that is not valid JSON so the
             // downgrade cannot leave it to potentially leak identified data.
             var queueDir = AudiencePaths.QueueDir(_testDir);
-            var badName = $"{DateTime.UtcNow.Ticks}_{Guid.NewGuid():N}.json";
+            var badName = $"{DateTime.UtcNow.Ticks}_{Guid.NewGuid():N}{AudiencePaths.QueueFileExtension}";
             File.WriteAllText(Path.Combine(queueDir, badName), "{not valid json");
 
             _store.ApplyAnonymousDowngrade();

@@ -49,11 +49,11 @@ namespace Immutable.Audience.Tests
         [Test]
         public async Task SendBatchAsync_200_DeletesFilesFromDisk()
         {
-            _store.Write("{\"type\":\"track\",\"eventName\":\"a\"}");
-            _store.Write("{\"type\":\"track\",\"eventName\":\"b\"}");
+            _store.Write(WireFixture.Track((MessageFields.EventName, "a")));
+            _store.Write(WireFixture.Track((MessageFields.EventName, "b")));
 
             var handler = new MockHandler(HttpStatusCode.OK, $"{{\"accepted\":2,\"{ResponseFields.Rejected}\":0}}");
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1", handler: handler);
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey, handler: handler);
 
             var sent = await transport.SendBatchAsync();
 
@@ -65,7 +65,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public async Task SendBatchAsync_200_SendsGzippedPayloadWithCorrectHeaders()
         {
-            _store.Write("{\"type\":\"track\",\"eventName\":\"test\"}");
+            _store.Write(WireFixture.Track((MessageFields.EventName, "test")));
 
             byte[]? capturedBody = null;
             string? capturedKey = null;
@@ -75,29 +75,29 @@ namespace Immutable.Audience.Tests
             var handler = new MockHandler(HttpStatusCode.OK, $"{{\"accepted\":1,\"{ResponseFields.Rejected}\":0}}",
                 onRequest: req =>
                 {
-                    capturedKey = string.Join("", req.Headers.GetValues("x-immutable-publishable-key"));
+                    capturedKey = string.Join("", req.Headers.GetValues(Constants.PublishableKeyHeader));
                     capturedContentType = req.Content!.Headers.ContentType!.MediaType;
                     capturedContentEncoding = string.Join("", req.Content.Headers.ContentEncoding);
                     capturedBody = req.Content.ReadAsByteArrayAsync().Result;
                 });
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1", handler: handler);
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey, handler: handler);
 
             await transport.SendBatchAsync();
 
-            Assert.AreEqual("pk_imapik-test-key1", capturedKey);
+            Assert.AreEqual(TestDefaults.PublishableKey, capturedKey);
             Assert.AreEqual(Constants.MediaTypeJson, capturedContentType);
             Assert.AreEqual(Constants.GzipEncoding, capturedContentEncoding);
 
             var decompressed = DecompressGzip(capturedBody!);
             StringAssert.StartsWith($"{{\"{ResponseFields.MessagesEnvelope}\":[", decompressed);
             StringAssert.EndsWith("]}", decompressed);
-            StringAssert.Contains("\"eventName\":\"test\"", decompressed);
+            StringAssert.Contains($"\"{MessageFields.EventName}\":\"test\"", decompressed);
         }
 #else
         [Test]
         public async Task SendBatchAsync_200_SendsPlainJsonPayloadWithoutContentEncoding()
         {
-            _store.Write("{\"type\":\"track\",\"eventName\":\"test\"}");
+            _store.Write(WireFixture.Track((MessageFields.EventName, "test")));
 
             string? capturedKey = null;
             string? capturedContentType = null;
@@ -106,33 +106,33 @@ namespace Immutable.Audience.Tests
             var handler = new MockHandler(HttpStatusCode.OK, $"{{\"accepted\":1,\"{ResponseFields.Rejected}\":0}}",
                 onRequest: req =>
                 {
-                    capturedKey = string.Join("", req.Headers.GetValues("x-immutable-publishable-key"));
+                    capturedKey = string.Join("", req.Headers.GetValues(Constants.PublishableKeyHeader));
                     capturedContentType = req.Content!.Headers.ContentType!.MediaType;
                     capturedContentEncodingCount = req.Content.Headers.ContentEncoding.Count;
                     capturedBody = req.Content.ReadAsStringAsync().Result;
                 });
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1", handler: handler);
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey, handler: handler);
 
             await transport.SendBatchAsync();
 
-            Assert.AreEqual("pk_imapik-test-key1", capturedKey);
+            Assert.AreEqual(TestDefaults.PublishableKey, capturedKey);
             Assert.AreEqual(Constants.MediaTypeJson, capturedContentType);
             Assert.AreEqual(0, capturedContentEncodingCount, "no Content-Encoding header is permitted in v1");
             StringAssert.StartsWith($"{{\"{ResponseFields.MessagesEnvelope}\":[", capturedBody);
             StringAssert.EndsWith("]}", capturedBody);
-            StringAssert.Contains("\"eventName\":\"test\"", capturedBody);
+            StringAssert.Contains($"\"{MessageFields.EventName}\":\"test\"", capturedBody);
         }
 #endif
 
         [Test]
         public async Task SendBatchAsync_200_UsesCorrectUrlForTestKey()
         {
-            _store.Write("{\"type\":\"track\"}");
+            _store.Write(WireFixture.Track());
 
             HttpRequestMessage? captured = null;
             var handler = new MockHandler(HttpStatusCode.OK, $"{{\"accepted\":1,\"{ResponseFields.Rejected}\":0}}",
                 onRequest: req => captured = req);
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1", handler: handler);
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey, handler: handler);
 
             await transport.SendBatchAsync();
 
@@ -142,7 +142,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public async Task SendBatchAsync_200_UsesCorrectUrlForProdKey()
         {
-            _store.Write("{\"type\":\"track\"}");
+            _store.Write(WireFixture.Track());
 
             HttpRequestMessage? captured = null;
             var handler = new MockHandler(HttpStatusCode.OK, $"{{\"accepted\":1,\"{ResponseFields.Rejected}\":0}}",
@@ -157,7 +157,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public async Task SendBatchAsync_BaseUrlOverride_WinsOverKeyPrefix()
         {
-            _store.Write("{\"type\":\"track\"}");
+            _store.Write(WireFixture.Track());
 
             HttpRequestMessage? captured = null;
             var handler = new MockHandler(HttpStatusCode.OK, $"{{\"accepted\":1,\"{ResponseFields.Rejected}\":0}}",
@@ -165,7 +165,7 @@ namespace Immutable.Audience.Tests
             const string custom = "https://api.dev.immutable.com";
             // Test-prefixed key would resolve to Sandbox on its own; the
             // explicit override must win.
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 baseUrlOverride: custom, handler: handler);
 
             await transport.SendBatchAsync();
@@ -177,7 +177,7 @@ namespace Immutable.Audience.Tests
         public async Task SendBatchAsync_EmptyQueue_ReturnsFalse()
         {
             var handler = new MockHandler(HttpStatusCode.OK, "{}");
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1", handler: handler);
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey, handler: handler);
 
             var sent = await transport.SendBatchAsync();
 
@@ -188,11 +188,11 @@ namespace Immutable.Audience.Tests
         [Test]
         public async Task SendBatchAsync_4xx_DeletesFilesAndResetsBackoff()
         {
-            _store.Write("{\"type\":\"track\"}");
+            _store.Write(WireFixture.Track());
 
             var handler = new MockHandler(HttpStatusCode.BadRequest, "");
             AudienceError? reportedError = null;
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 onError: e => reportedError = e, handler: handler);
 
             await transport.SendBatchAsync();
@@ -206,11 +206,11 @@ namespace Immutable.Audience.Tests
         [Test]
         public async Task SendBatchAsync_429_NoRetryAfter_KeepsFilesAndUsesExpoBackoff_NoError()
         {
-            _store.Write("{\"type\":\"track\"}");
+            _store.Write(WireFixture.Track());
 
             var handler = new MockHandler((HttpStatusCode)429, "");
             AudienceError? reportedError = null;
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 onError: e => reportedError = e, handler: handler, getUtcNow: _getUtcNow);
 
             await transport.SendBatchAsync();
@@ -224,7 +224,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public async Task SendBatchAsync_429_RetryAfterDeltaSeconds_OverridesExpoBackoff()
         {
-            _store.Write("{\"type\":\"track\"}");
+            _store.Write(WireFixture.Track());
 
             var handler = new MockHandler(() =>
             {
@@ -232,7 +232,7 @@ namespace Immutable.Audience.Tests
                 resp.Headers.Add("Retry-After", "12");
                 return resp;
             });
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 handler: handler, getUtcNow: _getUtcNow);
 
             await transport.SendBatchAsync();
@@ -247,7 +247,7 @@ namespace Immutable.Audience.Tests
             // ParseRetryAfter computes the delta against DateTimeOffset.UtcNow,
             // which we can't pin from outside; assert only that a future date
             // engages the window. The seconds-form test above pins exact math.
-            _store.Write("{\"type\":\"track\"}");
+            _store.Write(WireFixture.Track());
 
             var handler = new MockHandler(() =>
             {
@@ -255,7 +255,7 @@ namespace Immutable.Audience.Tests
                 resp.Headers.Add("Retry-After", DateTimeOffset.UtcNow.AddSeconds(20).ToString("R"));
                 return resp;
             });
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 handler: handler, getUtcNow: _getUtcNow);
 
             await transport.SendBatchAsync();
@@ -269,7 +269,7 @@ namespace Immutable.Audience.Tests
         {
             // Past Retry-After (clock skew or server bug) must not let
             // IsInBackoffWindow flip false and trigger instant retry.
-            _store.Write("{\"type\":\"track\"}");
+            _store.Write(WireFixture.Track());
 
             var handler = new MockHandler(() =>
             {
@@ -277,7 +277,7 @@ namespace Immutable.Audience.Tests
                 resp.Headers.Add("Retry-After", DateTimeOffset.UtcNow.AddSeconds(-30).ToString("R"));
                 return resp;
             });
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 handler: handler, getUtcNow: _getUtcNow);
 
             await transport.SendBatchAsync();
@@ -289,7 +289,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public async Task SendBatchAsync_429ThenSuccess_DeliversBatchAndClearsBackoff()
         {
-            _store.Write("{\"type\":\"track\"}");
+            _store.Write(WireFixture.Track());
 
             var callCount = 0;
             var handler = new MockHandler(() =>
@@ -301,7 +301,7 @@ namespace Immutable.Audience.Tests
                     { Content = new StringContent($"{{\"accepted\":1,\"{ResponseFields.Rejected}\":0}}") };
             });
             AudienceError? reportedError = null;
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 onError: e => reportedError = e, handler: handler, getUtcNow: _getUtcNow);
 
             await transport.SendBatchAsync();
@@ -322,12 +322,12 @@ namespace Immutable.Audience.Tests
             // per-message validation errors. The batch is deleted (retries
             // would not help) and the count is surfaced via onError so
             // studios can observe silently dropped events.
-            _store.Write("{\"type\":\"track\",\"eventName\":\"a\"}");
-            _store.Write("{\"type\":\"track\",\"eventName\":\"b\"}");
+            _store.Write(WireFixture.Track((MessageFields.EventName, "a")));
+            _store.Write(WireFixture.Track((MessageFields.EventName, "b")));
 
             var handler = new MockHandler(HttpStatusCode.OK, $"{{\"accepted\":1,\"{ResponseFields.Rejected}\":1}}");
             AudienceError? reportedError = null;
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 onError: e => reportedError = e, handler: handler);
 
             await transport.SendBatchAsync();
@@ -341,11 +341,11 @@ namespace Immutable.Audience.Tests
         [Test]
         public async Task SendBatchAsync_200_ZeroRejected_DoesNotFireOnError()
         {
-            _store.Write("{\"type\":\"track\",\"eventName\":\"a\"}");
+            _store.Write(WireFixture.Track((MessageFields.EventName, "a")));
 
             var handler = new MockHandler(HttpStatusCode.OK, $"{{\"accepted\":1,\"{ResponseFields.Rejected}\":0}}");
             AudienceError? reportedError = null;
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 onError: e => reportedError = e, handler: handler);
 
             await transport.SendBatchAsync();
@@ -357,11 +357,11 @@ namespace Immutable.Audience.Tests
         public async Task SendBatchAsync_200_MalformedBody_TreatsAsZeroRejected()
         {
             // Malformed diagnostic body must not block the success path.
-            _store.Write("{\"type\":\"track\",\"eventName\":\"a\"}");
+            _store.Write(WireFixture.Track((MessageFields.EventName, "a")));
 
             var handler = new MockHandler(HttpStatusCode.OK, "not-json");
             AudienceError? reportedError = null;
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 onError: e => reportedError = e, handler: handler);
 
             await transport.SendBatchAsync();
@@ -373,11 +373,11 @@ namespace Immutable.Audience.Tests
         [Test]
         public async Task SendBatchAsync_5xx_KeepsFilesAndIncreasesBackoff()
         {
-            _store.Write("{\"type\":\"track\"}");
+            _store.Write(WireFixture.Track());
 
             var handler = new MockHandler(HttpStatusCode.InternalServerError, "");
             AudienceError? reportedError = null;
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 onError: e => reportedError = e, handler: handler);
 
             await transport.SendBatchAsync();
@@ -392,9 +392,9 @@ namespace Immutable.Audience.Tests
         [Test]
         public async Task BackoffMs_EscalatesOnlyAfterWindowElapsed()
         {
-            _store.Write("{\"type\":\"track\"}");
+            _store.Write(WireFixture.Track());
             var handler = new MockHandler(HttpStatusCode.InternalServerError, "");
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 handler: handler, getUtcNow: _getUtcNow);
 
             // Schedule: 5s → 10s → 20s → 40s → 60s cap.
@@ -426,9 +426,9 @@ namespace Immutable.Audience.Tests
         [Test]
         public async Task BackoffMs_DoesNotEscalateWhileInsidePreviousWindow()
         {
-            _store.Write("{\"type\":\"track\"}");
+            _store.Write(WireFixture.Track());
             var handler = new MockHandler(HttpStatusCode.InternalServerError, "");
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 handler: handler, getUtcNow: _getUtcNow);
 
             await transport.SendBatchAsync();
@@ -458,7 +458,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public async Task BackoffMs_ResetsAfterSuccess()
         {
-            _store.Write("{\"type\":\"track\"}");
+            _store.Write(WireFixture.Track());
 
             var callCount = 0;
             var handler = new MockHandler(() =>
@@ -470,7 +470,7 @@ namespace Immutable.Audience.Tests
                     : new HttpResponseMessage(HttpStatusCode.OK)
                     { Content = new StringContent($"{{\"accepted\":1,\"{ResponseFields.Rejected}\":0}}") };
             });
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 handler: handler, getUtcNow: _getUtcNow);
 
             await transport.SendBatchAsync();
@@ -489,11 +489,11 @@ namespace Immutable.Audience.Tests
         [Test]
         public async Task SendBatchAsync_NetworkError_KeepsFilesAndBacksOff()
         {
-            _store.Write("{\"type\":\"track\"}");
+            _store.Write(WireFixture.Track());
 
             var handler = new MockHandler(() => throw new HttpRequestException("connection refused"));
             AudienceError? reportedError = null;
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 onError: e => reportedError = e, handler: handler);
 
             await transport.SendBatchAsync();
@@ -512,11 +512,11 @@ namespace Immutable.Audience.Tests
             // guard, timeouts would be silently swallowed as "shutdown": no backoff, no error
             // callback, next cycle hot-loops. This test ensures timeouts flow through the
             // NetworkError path.
-            _store.Write("{\"type\":\"track\"}");
+            _store.Write(WireFixture.Track());
 
             var handler = new MockHandler(() => throw new TaskCanceledException("Request timed out"));
             AudienceError? reportedError = null;
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 onError: e => reportedError = e, handler: handler);
 
             // Pass default CancellationToken so ct.IsCancellationRequested is false; this
@@ -538,11 +538,11 @@ namespace Immutable.Audience.Tests
             // with the batch still on disk, and a FlushAsync loop watching
             // that return value would re-enter on the same cancelled token
             // forever: nothing ever drains, nothing ever throws.
-            _store.Write("{\"type\":\"track\"}");
+            _store.Write(WireFixture.Track());
 
             var handler = new MockHandler(() => throw new OperationCanceledException("simulated"));
             AudienceError? reportedError = null;
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 onError: e => reportedError = e, handler: handler);
 
             using var cts = new CancellationTokenSource();
@@ -570,11 +570,11 @@ namespace Immutable.Audience.Tests
         [Test]
         public async Task IsInBackoffWindow_ClearsAfterNextAttemptAtElapses()
         {
-            _store.Write("{\"type\":\"track\"}");
+            _store.Write(WireFixture.Track());
 
             var now = new DateTime(2026, 4, 17, 12, 0, 0, DateTimeKind.Utc);
             var handler = new MockHandler(HttpStatusCode.InternalServerError, "");
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 handler: handler, getUtcNow: () => now);
 
             await transport.SendBatchAsync();
@@ -594,10 +594,10 @@ namespace Immutable.Audience.Tests
         [Test]
         public async Task SendBatchAsync_ErrorCallbackThrows_DoesNotCrash()
         {
-            _store.Write("{\"type\":\"track\"}");
+            _store.Write(WireFixture.Track());
 
             var handler = new MockHandler(HttpStatusCode.BadRequest, "");
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+            using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 onError: _ => throw new InvalidOperationException("callback bug"),
                 handler: handler);
 

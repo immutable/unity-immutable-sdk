@@ -15,17 +15,6 @@ namespace Immutable.Audience
     // Sends queued events from DiskStore to the Audience backend.
     internal sealed class HttpTransport : IDisposable
     {
-        // How long we wait for one POST before giving up.
-        // Without this, one stuck request can block everything else.
-        internal const int RequestTimeoutSeconds = 30;
-
-        // How long we wait before retrying after a failed POST. Doubles each time.
-        internal const int Backoff1stMs = 5_000;
-        internal const int Backoff2ndMs = 10_000;
-        internal const int Backoff3rdMs = 20_000;
-        internal const int Backoff4thMs = 40_000;
-        internal const int BackoffCapMs = 60_000;
-
         private readonly DiskStore _store;
         private readonly string _url;
         private readonly string _publishableKey;
@@ -59,7 +48,7 @@ namespace Immutable.Audience
             _client = handler != null
                 ? new HttpClient(handler, disposeHandler: false)
                 : new HttpClient();
-            _client.Timeout = TimeSpan.FromSeconds(RequestTimeoutSeconds);
+            _client.Timeout = TimeSpan.FromSeconds(Constants.MessagesRequestTimeoutSeconds);
             _getUtcNow = getUtcNow ?? (() => DateTime.UtcNow);
         }
 
@@ -81,7 +70,7 @@ namespace Immutable.Audience
                 // Non-IOException = unrecoverable storage failure (e.g. permissions);
                 // retry won't help. Drop the batch, report via onError.
                 _store.Delete(batch);
-                NotifyError(AudienceErrorCode.FlushFailed, $"Local storage read failed: {ex.Message}");
+                NotifyError(AudienceErrorCode.FlushFailed, AudienceErrorMessages.LocalStorageReadFailed(ex));
                 return true;
             }
 
@@ -122,7 +111,7 @@ namespace Immutable.Audience
                     if (rejected > 0)
                     {
                         NotifyError(AudienceErrorCode.ValidationRejected,
-                            $"Batch partially rejected: {rejected} of {batch.Count} events dropped");
+                            AudienceErrorMessages.BatchPartiallyRejected(rejected, batch.Count));
                     }
                 }
                 else if (statusCode == (int)HttpStatusCode.TooManyRequests)
@@ -149,7 +138,7 @@ namespace Immutable.Audience
                     _store.Delete(batch);
                     ResetBackoff();
                     NotifyError(AudienceErrorCode.ValidationRejected,
-                        FormatHttpError("Batch rejected", statusCode, rejectionBody));
+                        FormatHttpError(AudienceErrorMessages.BatchRejectedPrefix, statusCode, rejectionBody));
                 }
                 else
                 {
@@ -158,7 +147,7 @@ namespace Immutable.Audience
                     var serverBody = await ReadBodyForErrorAsync(response).ConfigureAwait(false);
                     RecordFailure();
                     NotifyError(AudienceErrorCode.FlushFailed,
-                        FormatHttpError("Server error, will retry", statusCode, serverBody));
+                        FormatHttpError(AudienceErrorMessages.ServerErrorWillRetryPrefix, statusCode, serverBody));
                 }
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
@@ -193,11 +182,11 @@ namespace Immutable.Audience
         private int BackoffMsLocked() => _consecutiveFailures switch
         {
             <= 0 => 0,
-            1 => Backoff1stMs,
-            2 => Backoff2ndMs,
-            3 => Backoff3rdMs,
-            4 => Backoff4thMs,
-            _ => BackoffCapMs,
+            1 => Constants.HttpBackoff1stMs,
+            2 => Constants.HttpBackoff2ndMs,
+            3 => Constants.HttpBackoff3rdMs,
+            4 => Constants.HttpBackoff4thMs,
+            _ => Constants.HttpBackoffCapMs,
         };
 
         // Earliest UTC time at which the next attempt may run.

@@ -35,7 +35,7 @@ namespace Immutable.Audience.Tests
         {
             return new AudienceConfig
             {
-                PublishableKey = "pk_imapik-test-key1",
+                PublishableKey = TestDefaults.PublishableKey,
                 Consent = consent,
                 PersistentDataPath = _testDir,
                 FlushIntervalSeconds = 600,
@@ -84,8 +84,8 @@ namespace Immutable.Audience.Tests
 
             Assert.IsNotNull(deleteRequest, "expected a DELETE request");
             StringAssert.Contains(Constants.DataPath, deleteRequest.RequestUri!.ToString());
-            StringAssert.Contains("userId=player-42", deleteRequest.RequestUri.Query);
-            Assert.IsTrue(deleteRequest.Headers.Contains("x-immutable-publishable-key"),
+            StringAssert.Contains($"{MessageFields.UserId}=player-42", deleteRequest.RequestUri.Query);
+            Assert.IsTrue(deleteRequest.Headers.Contains(Constants.PublishableKeyHeader),
                 "publishable key header must be attached");
         }
 
@@ -107,7 +107,7 @@ namespace Immutable.Audience.Tests
                 if (r.Method == HttpMethod.Delete) { deleteRequest = r; break; }
 
             Assert.IsNotNull(deleteRequest);
-            StringAssert.Contains($"anonymousId={seeded}", deleteRequest.RequestUri!.Query);
+            StringAssert.Contains($"{MessageFields.AnonymousId}={seeded}", deleteRequest.RequestUri!.Query);
         }
 
         [Test]

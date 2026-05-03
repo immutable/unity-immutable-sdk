@@ -27,12 +27,6 @@ namespace Immutable.Audience
         // teardown (Session.Dispose, timer drain, queue shutdown, transport
         // flush, disposes). This keeps the hold time to nanoseconds so a caller
         // arriving on a different thread is not stranded behind those budgets.
-        // How many times we retry the consent-sync PUT after a 429.
-        internal const int ConsentSyncMaxAttempts = 4;
-
-        // How long we wait before the first consent-sync retry. Doubles each time.
-        internal const int ConsentSyncBaseRetryMs = 1_000;
-
         private static AudienceConfig? _config;
         private static DiskStore? _store;
         private static EventQueue? _queue;
@@ -146,12 +140,12 @@ namespace Immutable.Audience
         {
             if (config == null) throw new ArgumentNullException(nameof(config));
             if (string.IsNullOrEmpty(config.PublishableKey))
-                throw new ArgumentException("PublishableKey is required", nameof(config));
+                throw new ArgumentException(AudienceArgumentMessages.PublishableKeyRequired, nameof(config));
 
             if (string.IsNullOrEmpty(config.PersistentDataPath))
                 config.PersistentDataPath = DefaultPersistentDataPathProvider?.Invoke();
             if (string.IsNullOrEmpty(config.PersistentDataPath))
-                throw new ArgumentException("PersistentDataPath is required", nameof(config));
+                throw new ArgumentException(AudienceArgumentMessages.PersistentDataPathRequired, nameof(config));
 
             // Normalize casing so dashboards aggregate consistently. The
             // DistributionPlatforms constants ship lowercase; a studio that
@@ -631,9 +625,8 @@ namespace Immutable.Audience
 
             Task.Run(async () =>
             {
-                // 429 retried up to ConsentSyncMaxAttempts attempts (1s/2s/4s
-                // or Retry-After). Other non-2xx fail fast.
-                const int maxAttempts = ConsentSyncMaxAttempts;
+                // 429 retries up to Constants.ConsentSyncMaxAttempts; other non-2xx fail fast.
+                const int maxAttempts = Constants.ConsentSyncMaxAttempts;
                 var attempt = 0;
                 try
                 {
@@ -650,13 +643,13 @@ namespace Immutable.Audience
                         if (response.StatusCode == HttpStatusCode.TooManyRequests && attempt < maxAttempts)
                         {
                             var delay = HttpRetry.ParseRetryAfter(response)
-                                ?? TimeSpan.FromMilliseconds(ConsentSyncBaseRetryMs * (1 << (attempt - 1)));
+                                ?? TimeSpan.FromMilliseconds(Constants.ConsentSyncBaseRetryMs * (1 << (attempt - 1)));
                             await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
                             continue;
                         }
 
                         NotifyErrorCallback(onError, AudienceErrorCode.ConsentSyncFailed,
-                            $"Consent sync failed with status {(int)response.StatusCode}");
+                            AudienceErrorMessages.ConsentSyncFailedWithStatus((int)response.StatusCode));
                         return;
                     }
                 }
@@ -667,7 +660,7 @@ namespace Immutable.Audience
                 catch (Exception ex)
                 {
                     NotifyErrorCallback(onError, AudienceErrorCode.ConsentSyncFailed,
-                        $"Consent sync threw: {ex.Message}");
+                        AudienceErrorMessages.ConsentSyncThrew(ex));
                 }
             });
         }

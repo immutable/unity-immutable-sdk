@@ -25,6 +25,35 @@ namespace Immutable.Audience
         internal const string RoundTripNumberFormat = "R";
         internal const int ControlPlaneRequestTimeoutSeconds = 30;
 
+        // How long we wait for one POST before giving up.
+        // Without this, one stuck request can block everything else.
+        internal const int MessagesRequestTimeoutSeconds = 30;
+
+        // How long we wait before retrying after a failed POST. Doubles each time.
+        internal const int HttpBackoff1stMs = 5_000;
+        internal const int HttpBackoff2ndMs = 10_000;
+        internal const int HttpBackoff3rdMs = 20_000;
+        internal const int HttpBackoff4thMs = 40_000;
+        internal const int HttpBackoffCapMs = 60_000;
+
+        // How often a session_heartbeat is emitted while a session is live.
+        internal const int SessionHeartbeatIntervalMs = 60_000;
+
+        // How long a paused session can stay paused before Resume rolls it.
+        internal const int SessionPauseTimeoutMs = 30_000;
+
+        // How long we wait for an in-flight heartbeat callback to finish during teardown.
+        internal const int SessionHeartbeatDrainTimeoutMs = 1_000;
+
+        // How long we wait for the previous heartbeat to clear when Start is called twice.
+        internal const int SessionStartDrainTimeoutMs = 500;
+
+        // How many times we retry the consent-sync PUT after a 429.
+        internal const int ConsentSyncMaxAttempts = 4;
+
+        // How long we wait before the first consent-sync retry. Doubles each time.
+        internal const int ConsentSyncBaseRetryMs = 1_000;
+
         internal const string LibraryName = "com.immutable.audience";
         internal const string LibraryVersion = "0.1.0";
         internal const string Surface = "unity";

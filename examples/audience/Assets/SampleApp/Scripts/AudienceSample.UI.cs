@@ -16,21 +16,41 @@ namespace Immutable.Audience.Samples.SampleApp
         // ---- Constants & tables ----
 
         private static readonly ConsentLevel[] ConsentOrder = { ConsentLevel.None, ConsentLevel.Anonymous, ConsentLevel.Full };
-        private static readonly string[] ConsentStateClass = { "state-err", "state-warn", "state-ok" };
+        private static readonly string[] ConsentStateClass = { SampleAppUi.Css.StateErr, SampleAppUi.Css.StateWarn, SampleAppUi.Css.StateOk };
 
         private static readonly (string TabId, string PanelId)[] Tabs =
         {
-            ("tab-setup",        "panel-setup"),
-            ("tab-consent",      "panel-consent"),
-            ("tab-typed-events", "panel-typed-events"),
-            ("tab-identity",     "panel-identity"),
+            (SampleAppUi.Tabs.Setup,       SampleAppUi.Panels.Setup),
+            (SampleAppUi.Tabs.Consent,     SampleAppUi.Panels.Consent),
+            (SampleAppUi.Tabs.TypedEvents, SampleAppUi.Panels.TypedEvents),
+            (SampleAppUi.Tabs.Identity,    SampleAppUi.Panels.Identity),
         };
 
-        private static readonly string[] StateClasses = { "state-ok", "state-warn", "state-err", "dim" };
+        private static readonly string[] StateClasses = { SampleAppUi.Css.StateOk, SampleAppUi.Css.StateWarn, SampleAppUi.Css.StateErr, SampleAppUi.Css.Dim };
 
         private const int CollapseThreshold = 240;
         private const int StatusPollIntervalMs = 500;
         private const float NarrowBreakpointPx = 1024f;
+
+        // Log pane drag-resize bounds and main-column padding tracker.
+        private const float LogResizeMinHeight = 120f;
+        private const float LogResizeMaxHeight = 1400f;
+        private const float MainPaddingBottomPx = 64f;
+        // Pixel slack used when deciding whether the log was at the bottom
+        // before a content mutation; treated as "at bottom" if within this.
+        private const float LogScrollBottomEpsilonPx = 4f;
+
+        // Toast / flash timings.
+        private const int CopyButtonRevertMs = 800;
+        private const int CopiedFlashDurationMs = 1500;
+
+        // Local-time format for the per-row timestamp (header) and the
+        // round-trip ISO format used in the copy-to-clipboard payload.
+        private const string LogRowTimestampFormat = "HH:mm:ss.fff";
+
+        // ✓ glyph injected into the runtime Toggle so the checked state
+        // shows a tick rather than a bare coloured square.
+        private const string DebugToggleTickGlyph = "✓";
 
         // ---- UI document state ----
         // All fields below are populated by BindElements before any other access.
@@ -105,7 +125,7 @@ namespace Immutable.Audience.Samples.SampleApp
 
             _sdkVersionLabel.text = $"v{Immutable.Audience.Constants.LibraryVersion}";
             OnSdkStateChanged();
-            AppendLog("READY", "Sample app loaded. Paste a publishable key and click Init.", LogLevel.Info, LogSource.App);
+            AppendLog(SampleAppUi.LogLabels.Ready, SampleAppUi.Messages.Ready, LogLevel.Info, LogSource.App);
 
             // Status bar mirrors live SDK state (UserId, SessionId, QueueSize) —
             // poll instead of subscribing because the SDK doesn't expose changes.
@@ -120,9 +140,9 @@ namespace Immutable.Audience.Samples.SampleApp
         {
             var doc = GetComponent<UIDocument>() ?? gameObject.AddComponent<UIDocument>();
             if (doc.panelSettings == null)
-                doc.panelSettings = Resources.Load<PanelSettings>("AudienceSampleAppPanelSettings");
+                doc.panelSettings = Resources.Load<PanelSettings>(SampleAppUi.Resources.PanelSettings);
 
-            var tree = Resources.Load<VisualTreeAsset>("AudienceSample");
+            var tree = Resources.Load<VisualTreeAsset>(SampleAppUi.Resources.SampleAppTree);
             if (tree == null)
             {
                 Debug.LogError("[Audience Sample] missing Resources/AudienceSample.uxml");
@@ -137,7 +157,7 @@ namespace Immutable.Audience.Samples.SampleApp
 
             _root.Clear();
             tree.CloneTree(_root);
-            var uss = Resources.Load<StyleSheet>("AudienceSample");
+            var uss = Resources.Load<StyleSheet>(SampleAppUi.Resources.SampleAppStyleSheet);
             if (uss != null) _root.styleSheets.Add(uss);
             return true;
         }
@@ -150,71 +170,71 @@ namespace Immutable.Audience.Samples.SampleApp
 
         private void BindElements()
         {
-            _prodWarning      = Require<Label>("prod-warning");
-            _sdkVersionLabel  = Require<Label>("sdk-version");
+            _prodWarning      = Require<Label>(SampleAppUi.ProdWarning);
+            _sdkVersionLabel  = Require<Label>(SampleAppUi.Layout.SdkVersion);
 
-            _statusEndpoint = Require<Label>("status-endpoint");
-            _statusConsent  = Require<Label>("status-consent");
-            _statusAnon     = Require<Label>("status-anon");
-            _statusUser     = Require<Label>("status-user");
-            _statusSession  = Require<Label>("status-session");
-            _statusQueue    = Require<Label>("status-queue");
+            _statusEndpoint = Require<Label>(SampleAppUi.StatusBar.Endpoint);
+            _statusConsent  = Require<Label>(SampleAppUi.StatusBar.Consent);
+            _statusAnon     = Require<Label>(SampleAppUi.StatusBar.Anon);
+            _statusUser     = Require<Label>(SampleAppUi.StatusBar.User);
+            _statusSession  = Require<Label>(SampleAppUi.StatusBar.Session);
+            _statusQueue    = Require<Label>(SampleAppUi.StatusBar.Queue);
 
             foreach (var (tabId, _) in Tabs) _tabButtons.Add(Require<Button>(tabId));
 
-            _publishableKey = Require<TextField>("publishable-key");
-            _baseUrl        = Require<TextField>("base-url");
-            _initialConsent = Require<DropdownField>("initial-consent");
-            _debug          = Require<Toggle>("debug");
+            _publishableKey = Require<TextField>(SampleAppUi.Setup.PublishableKey);
+            _baseUrl        = Require<TextField>(SampleAppUi.Setup.BaseUrl);
+            _initialConsent = Require<DropdownField>(SampleAppUi.Setup.InitialConsent);
+            _debug          = Require<Toggle>(SampleAppUi.Setup.Debug);
             // Inject a tick Label — Unity 2021.3 runtime panels render the
             // checked state as a plain coloured square otherwise. USS hides
             // the tick when unchecked.
-            var debugCheckmark = _debug.Q<VisualElement>(className: "unity-toggle__checkmark");
+            var debugCheckmark = _debug.Q<VisualElement>(className: SampleAppUi.Css.UnityToggleCheckmark);
             if (debugCheckmark != null)
             {
-                var tick = new Label("✓");
-                tick.AddToClassList("debug-tick");
+                var tick = new Label(DebugToggleTickGlyph);
+                tick.AddToClassList(SampleAppUi.Css.DebugTick);
                 tick.pickingMode = PickingMode.Ignore;
                 debugCheckmark.Add(tick);
             }
-            _flushInterval = Require<TextField>("flush-interval");
-            _flushSize     = Require<TextField>("flush-size");
-            _btnInit       = Require<Button>("btn-init");
-            _btnPage       = Require<Button>("btn-page");
-            _btnFlush      = Require<Button>("btn-flush");
-            _btnReset      = Require<Button>("btn-reset");
-            _btnShutdown   = Require<Button>("btn-shutdown");
-            _btnDeleteData = Require<Button>("btn-delete-data");
+            _flushInterval = Require<TextField>(SampleAppUi.Setup.FlushInterval);
+            _flushSize     = Require<TextField>(SampleAppUi.Setup.FlushSize);
+            _btnInit       = Require<Button>(SampleAppUi.Buttons.Init);
+            _btnPage       = Require<Button>(SampleAppUi.Buttons.Page);
+            _btnFlush      = Require<Button>(SampleAppUi.Buttons.Flush);
+            _btnReset      = Require<Button>(SampleAppUi.Buttons.Reset);
+            _btnShutdown   = Require<Button>(SampleAppUi.Buttons.Shutdown);
+            _btnDeleteData = Require<Button>(SampleAppUi.Buttons.DeleteData);
 
             _consentPills = new Dictionary<ConsentLevel, Button>
             {
-                [ConsentLevel.None]      = Require<Button>("btn-consent-none"),
-                [ConsentLevel.Anonymous] = Require<Button>("btn-consent-anon"),
-                [ConsentLevel.Full]      = Require<Button>("btn-consent-full"),
+                [ConsentLevel.None]      = Require<Button>(SampleAppUi.Buttons.ConsentNone),
+                [ConsentLevel.Anonymous] = Require<Button>(SampleAppUi.Buttons.ConsentAnon),
+                [ConsentLevel.Full]      = Require<Button>(SampleAppUi.Buttons.ConsentFull),
             };
 
-            _typedEventsHost  = Require<VisualElement>("typed-events-host");
-            _customEventName  = Require<TextField>("custom-event-name");
-            _customEventProps = Require<TextField>("custom-event-props");
-            _btnCustomEvent   = Require<Button>("btn-custom-event");
+            _typedEventsHost  = Require<VisualElement>(SampleAppUi.Layout.TypedEventsHost);
+            _customEventName  = Require<TextField>(SampleAppUi.CustomEvent.Name);
+            _customEventProps = Require<TextField>(SampleAppUi.CustomEvent.Props);
+            _btnCustomEvent   = Require<Button>(SampleAppUi.Buttons.CustomEvent);
 
-            _identityUserId       = Require<Label>("identity-user-id");
-            _identityIdentityType = Require<Label>("identity-identity-type");
-            _identityTraits       = Require<Label>("identity-traits");
-            _identityAliases      = Require<Label>("identity-aliases");
-            _identifyId           = Require<TextField>("id-id");
-            _identifyType         = Require<DropdownField>("id-type");
-            _identifyTraits       = Require<TextField>("id-traits");
-            _btnIdentify          = Require<Button>("btn-identify");
-            _traitsUpdate         = Require<TextField>("traits-update");
-            _btnIdentifyTraits    = Require<Button>("btn-identify-traits");
-            _aliasFromId          = Require<TextField>("alias-from-id");
-            _aliasFromType        = Require<DropdownField>("alias-from-type");
-            _aliasToId            = Require<TextField>("alias-to-id");
-            _aliasToType          = Require<DropdownField>("alias-to-type");
-            _btnAlias             = Require<Button>("btn-alias");
+            _identityUserId       = Require<Label>(SampleAppUi.IdentityPanel.UserId);
+            _identityIdentityType = Require<Label>(SampleAppUi.IdentityPanel.IdentityType);
+            _identityTraits       = Require<Label>(SampleAppUi.IdentityPanel.Traits);
+            _identityAliases      = Require<Label>(SampleAppUi.IdentityPanel.Aliases);
+            _identifyId           = Require<TextField>(SampleAppUi.IdentityFields.Id);
+            _identifyType         = Require<DropdownField>(SampleAppUi.IdentityFields.Type);
+            _identifyTraits       = Require<TextField>(SampleAppUi.IdentityFields.Traits);
+            _btnIdentify          = Require<Button>(SampleAppUi.Buttons.Identify);
+            _traitsUpdate         = Require<TextField>(SampleAppUi.IdentityFields.TraitsUpdate);
+            _btnIdentifyTraits    = Require<Button>(SampleAppUi.Buttons.IdentifyTraits);
+            _aliasFromId          = Require<TextField>(SampleAppUi.IdentityFields.AliasFromId);
+            _aliasFromType        = Require<DropdownField>(SampleAppUi.IdentityFields.AliasFromType);
+            _aliasToId            = Require<TextField>(SampleAppUi.IdentityFields.AliasToId);
+            _aliasToType          = Require<DropdownField>(SampleAppUi.IdentityFields.AliasToType);
+            _btnAlias             = Require<Button>(SampleAppUi.Buttons.Alias);
 
-            _logView = Require<ScrollView>("log");
+            _logView = Require<ScrollView>(SampleAppUi.LogScrollView);
             _logView.mode = ScrollViewMode.Vertical;
 
             // USS selector for this property doesn't match in Unity 2021.3
@@ -223,7 +243,7 @@ namespace Immutable.Audience.Samples.SampleApp
             // scroller never engages.
             _logView.contentContainer.style.flexShrink = 0;
 
-            _logCount = Require<Label>("log-count");
+            _logCount = Require<Label>(SampleAppUi.Layout.LogCount);
         }
 
         private void PopulateDropdowns()
@@ -247,7 +267,7 @@ namespace Immutable.Audience.Samples.SampleApp
         private void RegisterHandlers()
         {
             // Log pane drag-resize — UI Toolkit has no `resize: vertical`.
-            var logHandle = Require<VisualElement>("log-resize-handle");
+            var logHandle = Require<VisualElement>(SampleAppUi.Layout.LogResizeHandle);
             float dragStartY = 0, dragStartH = 0;
             logHandle.RegisterCallback<PointerDownEvent>(evt =>
             {
@@ -261,8 +281,8 @@ namespace Immutable.Audience.Samples.SampleApp
                 // Snapshot "was at bottom?" before the resize so we re-pin
                 // once the new viewport height settles the scrollable rect.
                 var s = _logView.verticalScroller;
-                bool wasAtBottom = s.highValue <= 0 || (s.highValue - s.value) < 4f;
-                var h = Mathf.Clamp(dragStartH + evt.position.y - dragStartY, 120f, 1400f);
+                bool wasAtBottom = s.highValue <= 0 || (s.highValue - s.value) < LogScrollBottomEpsilonPx;
+                var h = Mathf.Clamp(dragStartH + evt.position.y - dragStartY, LogResizeMinHeight, LogResizeMaxHeight);
                 _logView.style.height = h;
                 _logView.style.minHeight = h;
                 _logView.style.maxHeight = h;
@@ -294,7 +314,7 @@ namespace Immutable.Audience.Samples.SampleApp
             _btnAlias.clicked += OnAlias;
             _btnCustomEvent.clicked += OnSendCustomEvent;
 
-            var btnCopyLog = Require<Button>("btn-copy-log");
+            var btnCopyLog = Require<Button>(SampleAppUi.Buttons.CopyLog);
             btnCopyLog.clicked += () =>
             {
                 var sb = new StringBuilder();
@@ -302,10 +322,10 @@ namespace Immutable.Audience.Samples.SampleApp
                     if (child.userData is LogEntry e)
                         sb.Append(FormatLogEntry(e, singleLine: true)).Append('\n');
                 GUIUtility.systemCopyBuffer = sb.ToString();
-                btnCopyLog.text = "Copied";
-                btnCopyLog.schedule.Execute(() => btnCopyLog.text = "Copy").StartingIn(800);
+                btnCopyLog.text = SampleAppUi.ButtonText.Copied;
+                btnCopyLog.schedule.Execute(() => btnCopyLog.text = SampleAppUi.ButtonText.Copy).StartingIn(CopyButtonRevertMs);
             };
-            Require<Button>("btn-clear-log").clicked += () => { _logView.Clear(); _logCount.text = "0"; };
+            Require<Button>(SampleAppUi.Buttons.ClearLog).clicked += () => { _logView.Clear(); _logCount.text = "0"; };
 
             foreach (var pill in _consentPills) pill.Value.clicked += () => OnSetConsent(pill.Key);
 
@@ -314,7 +334,7 @@ namespace Immutable.Audience.Samples.SampleApp
                 var panelId = Tabs.First(t => t.TabId == tab.name).PanelId;
                 tab.clicked += () => ActivateTab(panelId, moveFocus: false);
             }
-            Require<VisualElement>("tab-bar").RegisterCallback<KeyDownEvent>(evt =>
+            Require<VisualElement>(SampleAppUi.Layout.TabBar).RegisterCallback<KeyDownEvent>(evt =>
             {
                 int current = -1;
                 for (int i = 0; i < _tabButtons.Count; i++)
@@ -336,14 +356,14 @@ namespace Immutable.Audience.Samples.SampleApp
             foreach (var field in new INotifyValueChanged<string>[] { _aliasFromId, _aliasToId, _aliasFromType, _aliasToType })
                 field.RegisterValueChangedCallback(_ => _btnAlias.SetEnabled(_initialised && IsAliasReady()));
 
-            foreach (var label in _root.Query<Label>(className: "status-value").ToList())
+            foreach (var label in _root.Query<Label>(className: SampleAppUi.Css.StatusValue).ToList())
                 label.RegisterCallback<ClickEvent>(_ =>
                 {
                     // Ignore re-clicks during the flash — label.text is
                     // "Copied!" right now, so re-copying would put that
                     // on the clipboard.
-                    if (label.ClassListContains("copied")) return;
-                    if (string.IsNullOrEmpty(label.text) || label.text == "—") return;
+                    if (label.ClassListContains(SampleAppUi.Css.Copied)) return;
+                    if (string.IsNullOrEmpty(label.text) || label.text == SampleAppUi.StatusBar.EmptyText) return;
                     GUIUtility.systemCopyBuffer = label.text;
                     label.text = "Copied!";
                     FlashCopied(label);
@@ -355,27 +375,27 @@ namespace Immutable.Audience.Samples.SampleApp
         {
             if (field == null) return;
             var host = field.parent;
-            if (host == null || !host.ClassListContains("placeholder-host")) return;
-            var placeholder = host.Q<Label>(className: "field-placeholder");
+            if (host == null || !host.ClassListContains(SampleAppUi.Css.PlaceholderHost)) return;
+            var placeholder = host.Q<Label>(className: SampleAppUi.Css.FieldPlaceholder);
             if (placeholder != null) placeholder.pickingMode = PickingMode.Ignore;
-            void Refresh() => host.EnableInClassList("has-value", !string.IsNullOrEmpty(field.value));
+            void Refresh() => host.EnableInClassList(SampleAppUi.Css.HasValue, !string.IsNullOrEmpty(field.value));
             field.RegisterValueChangedCallback(_ => Refresh());
-            field.RegisterCallback<FocusInEvent>(_ => host.AddToClassList("is-focused"));
-            field.RegisterCallback<FocusOutEvent>(_ => host.RemoveFromClassList("is-focused"));
+            field.RegisterCallback<FocusInEvent>(_ => host.AddToClassList(SampleAppUi.Css.IsFocused));
+            field.RegisterCallback<FocusOutEvent>(_ => host.RemoveFromClassList(SampleAppUi.Css.IsFocused));
             Refresh();
         }
 
         // Click + Enter/Space toggle .open on every .accordion-header in the tree.
         private void RegisterAccordionToggles()
         {
-            foreach (var header in _root.Query<VisualElement>(className: "accordion-header").ToList())
+            foreach (var header in _root.Query<VisualElement>(className: SampleAppUi.Css.AccordionHeader).ToList())
             {
                 var item = header.parent;
-                var arrow = header.Q<Label>(className: "accordion-arrow");
+                var arrow = header.Q<Label>(className: SampleAppUi.Css.AccordionArrow);
                 void Toggle()
                 {
-                    var nowOpen = !item.ClassListContains("open");
-                    item.EnableInClassList("open", nowOpen);
+                    var nowOpen = !item.ClassListContains(SampleAppUi.Css.Open);
+                    item.EnableInClassList(SampleAppUi.Css.Open, nowOpen);
                     if (arrow != null) arrow.text = nowOpen ? "▾" : "▸";
                 }
                 header.RegisterCallback<ClickEvent>(evt => { if (!(evt.target is Button)) Toggle(); });
@@ -393,13 +413,12 @@ namespace Immutable.Audience.Samples.SampleApp
         // it — visible layout jump.
         private void RegisterPageLayoutTracking()
         {
-            var pageScroll = Require<ScrollView>("page-scroll");
-            var controls   = Require<VisualElement>("controls-column");
-            var logCol     = Require<VisualElement>("log-column");
-            const float MainPaddingBottom = 64f;
+            var pageScroll = Require<ScrollView>(SampleAppUi.Layout.PageScroll);
+            var controls   = Require<VisualElement>(SampleAppUi.Layout.ControlsColumn);
+            var logCol     = Require<VisualElement>(SampleAppUi.Layout.LogColumn);
             void Update()
             {
-                var needed = Mathf.Max(controls.layout.height, logCol.layout.height) + MainPaddingBottom;
+                var needed = Mathf.Max(controls.layout.height, logCol.layout.height) + MainPaddingBottomPx;
                 if (float.IsNaN(needed) || needed <= 0f) return;
                 pageScroll.contentContainer.style.minHeight = needed;
             }
@@ -413,16 +432,16 @@ namespace Immutable.Audience.Samples.SampleApp
         // GeometryChangedEvent. Idempotent — only mutates on the boolean flip.
         private void RegisterResponsiveLayout()
         {
-            var grid = Require<VisualElement>("sample-app-grid");
+            var grid = Require<VisualElement>(SampleAppUi.Layout.SampleAppGrid);
             void Update()
             {
                 var w = _root.layout.width;
                 if (float.IsNaN(w) || w <= 0f) return;
                 var shouldBeNarrow = w < NarrowBreakpointPx;
-                var isNarrow = grid.ClassListContains("narrow");
+                var isNarrow = grid.ClassListContains(SampleAppUi.Css.Narrow);
                 if (shouldBeNarrow == isNarrow) return;
-                if (shouldBeNarrow) grid.AddToClassList("narrow");
-                else grid.RemoveFromClassList("narrow");
+                if (shouldBeNarrow) grid.AddToClassList(SampleAppUi.Css.Narrow);
+                else grid.RemoveFromClassList(SampleAppUi.Css.Narrow);
             }
             _root.RegisterCallback<GeometryChangedEvent>(_ => Update());
             _root.schedule.Execute(Update).StartingIn(0);
@@ -435,14 +454,14 @@ namespace Immutable.Audience.Samples.SampleApp
         private void PopulateTypedEventAccordions()
         {
             _typedEventsHost.Clear();
-            var template = Resources.Load<VisualTreeAsset>("Templates/Accordion");
+            var template = Resources.Load<VisualTreeAsset>(SampleAppUi.Resources.AccordionTemplate);
             if (template == null) { Debug.LogError("[Audience Sample] missing Resources/Templates/Accordion.uxml"); return; }
 
             foreach (var spec in Catalogue)
             {
-                var item = template.Instantiate().Q<VisualElement>("accordion-item");
-                item.Q<Label>("accordion-title").text = spec.Name.ToUpperInvariant();
-                var content = item.Q<VisualElement>("accordion-content");
+                var item = template.Instantiate().Q<VisualElement>(SampleAppUi.Layout.AccordionItem);
+                item.Q<Label>(SampleAppUi.Layout.AccordionTitle).text = spec.Name.ToUpperInvariant();
+                var content = item.Q<VisualElement>(SampleAppUi.Layout.AccordionContent);
 
                 var inputs = new Dictionary<string, VisualElement>();
                 foreach (var field in spec.Fields)
@@ -460,10 +479,10 @@ namespace Immutable.Audience.Samples.SampleApp
                     input.name = $"typed-{spec.Name.Replace('_', '-')}-{field.Key.ToLowerInvariant().Replace('_', '-')}";
 
                     var row = new VisualElement();
-                    row.AddToClassList("field");
+                    row.AddToClassList(SampleAppUi.Css.Field);
                     var typeHint = field.EnumValues != null ? string.Join(" | ", field.EnumValues) : field.Kind.ToString().ToLowerInvariant();
                     var label = new Label((field.Key + (field.Optional ? "?" : "") + ": " + typeHint).ToUpperInvariant());
-                    label.AddToClassList("field-label");
+                    label.AddToClassList(SampleAppUi.Css.FieldLabel);
                     row.Add(label);
                     row.Add(input);
                     content.Add(row);
@@ -471,9 +490,9 @@ namespace Immutable.Audience.Samples.SampleApp
                 }
 
                 var actions = new VisualElement();
-                actions.AddToClassList("actions");
-                actions.AddToClassList("last");
-                var send = new Button { text = "Send" };
+                actions.AddToClassList(SampleAppUi.Css.Actions);
+                actions.AddToClassList(SampleAppUi.Css.Last);
+                var send = new Button { text = SampleAppUi.ButtonText.Send };
                 send.name = $"btn-typed-{spec.Name.Replace('_', '-')}";
                 send.SetEnabled(false);
                 var capturedSpec = spec;
@@ -492,12 +511,12 @@ namespace Immutable.Audience.Samples.SampleApp
             foreach (var tab in _tabButtons)
             {
                 bool isActive = Tabs.First(t => t.TabId == tab.name).PanelId == panelId;
-                tab.EnableInClassList("active", isActive);
+                tab.EnableInClassList(SampleAppUi.ActiveClass, isActive);
                 tab.tabIndex = isActive ? 0 : -1;
                 if (isActive && moveFocus) tab.Focus();
             }
             foreach (var (_, pId) in Tabs)
-                Require<VisualElement>(pId).EnableInClassList("active", pId == panelId);
+                Require<VisualElement>(pId).EnableInClassList(SampleAppUi.ActiveClass, pId == panelId);
         }
 
         // ---- Refresh / state-driven re-render ----
@@ -515,7 +534,7 @@ namespace Immutable.Audience.Samples.SampleApp
             string? endpoint = hasOverride ? overrideUrl : derivedFromKey;
             bool warnState = hasOverride || (!keyEmpty && !isTest);
             SetStatusCell(_statusEndpoint, endpoint, warnState ? "state-warn" : "state-ok");
-            _prodWarning.EnableInClassList("hidden", hasOverride || keyEmpty || isTest);
+            _prodWarning.EnableInClassList(SampleAppUi.HiddenClass, hasOverride || keyEmpty || isTest);
 
             var consent = _initialised ? ImmutableAudience.CurrentConsent : ConsentOrder[Mathf.Clamp(_initialConsent?.index ?? 0, 0, ConsentOrder.Length - 1)];
             int cIdx = Array.IndexOf(ConsentOrder, consent);
@@ -530,7 +549,7 @@ namespace Immutable.Audience.Samples.SampleApp
         private void RefreshConsentPills()
         {
             foreach (var kvp in _consentPills)
-                kvp.Value.EnableInClassList("active", _initialised && ImmutableAudience.CurrentConsent == kvp.Key);
+                kvp.Value.EnableInClassList(SampleAppUi.ActiveClass, _initialised && ImmutableAudience.CurrentConsent == kvp.Key);
         }
 
         private void RefreshInitState()
@@ -545,10 +564,10 @@ namespace Immutable.Audience.Samples.SampleApp
 
         private void RefreshIdentityPanel()
         {
-            _identityUserId.text       = ImmutableAudience.UserId ?? "—";
-            _identityIdentityType.text = _mirrorIdentityType ?? "—";
-            _identityTraits.text       = _mirrorTraits != null ? Json.Serialize(_mirrorTraits, 2) : "—";
-            _identityAliases.text      = _mirrorAliases.Count == 0 ? "—" : string.Join("\n", _mirrorAliases);
+            _identityUserId.text       = ImmutableAudience.UserId ?? SampleAppUi.StatusBar.EmptyText;
+            _identityIdentityType.text = _mirrorIdentityType ?? SampleAppUi.StatusBar.EmptyText;
+            _identityTraits.text       = _mirrorTraits != null ? Json.Serialize(_mirrorTraits, 2) : SampleAppUi.StatusBar.EmptyText;
+            _identityAliases.text      = _mirrorAliases.Count == 0 ? SampleAppUi.StatusBar.EmptyText : string.Join("\n", _mirrorAliases);
         }
 
         // ---- Form capture (UXML state → DTOs handed to main) ----
@@ -647,11 +666,11 @@ namespace Immutable.Audience.Samples.SampleApp
             // Don't overwrite a label mid-flash — without this the next
             // RefreshStatusBar poll tick would wipe "Copied!". FlashCopied
             // removes .copied when the flash window ends.
-            if (label.ClassListContains("copied")) return;
+            if (label.ClassListContains(SampleAppUi.Css.Copied)) return;
             bool empty = string.IsNullOrEmpty(value);
-            label.text = empty ? "—" : value;
+            label.text = empty ? SampleAppUi.StatusBar.EmptyText : value;
             foreach (var c in StateClasses) label.RemoveFromClassList(c);
-            label.AddToClassList(empty ? "dim" : stateClass);
+            label.AddToClassList(empty ? SampleAppUi.Css.Dim : stateClass);
         }
 
         private bool IsAliasReady()
@@ -667,8 +686,8 @@ namespace Immutable.Audience.Samples.SampleApp
 
         private static void FlashCopied(VisualElement ve)
         {
-            ve.AddToClassList("copied");
-            ve.schedule.Execute(() => ve.RemoveFromClassList("copied")).StartingIn(1500);
+            ve.AddToClassList(SampleAppUi.Css.Copied);
+            ve.schedule.Execute(() => ve.RemoveFromClassList(SampleAppUi.Css.Copied)).StartingIn(CopiedFlashDurationMs);
         }
 
         // ---- Log pane mechanics (types) ----
@@ -701,7 +720,7 @@ namespace Immutable.Audience.Samples.SampleApp
 
             // Snapshot "was at bottom?" before adding — stateless per-row check.
             var s = _logView.verticalScroller;
-            bool wasAtBottom = s.highValue <= 0 || (s.highValue - s.value) < 4f;
+            bool wasAtBottom = s.highValue <= 0 || (s.highValue - s.value) < LogScrollBottomEpsilonPx;
 
             var row = BuildLogRow(new LogEntry(DateTime.Now, label, body, level, source));
             _logView.Add(row);
@@ -726,35 +745,35 @@ namespace Immutable.Audience.Samples.SampleApp
             // children and reconstruct the clipboard payload — single source
             // of truth for log data is the visual tree.
             row.userData = entry;
-            row.AddToClassList("log-row");
-            row.AddToClassList("log-" + entry.Level.ToString().ToLowerInvariant());
+            row.AddToClassList(SampleAppUi.Css.LogRow);
+            row.AddToClassList(SampleAppUi.Css.LogLevelPrefix + entry.Level.ToString().ToLowerInvariant());
 
             var head = new VisualElement();
-            head.AddToClassList("log-row-head");
+            head.AddToClassList(SampleAppUi.Css.LogRowHead);
 
-            var ts = new Label(entry.Timestamp.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture));
-            ts.AddToClassList("log-ts");
+            var ts = new Label(entry.Timestamp.ToString(LogRowTimestampFormat, CultureInfo.InvariantCulture));
+            ts.AddToClassList(SampleAppUi.Css.LogTs);
             head.Add(ts);
 
-            var badge = new Label(entry.Source == LogSource.Sdk ? "SDK" : "APP");
-            badge.AddToClassList("log-badge");
-            badge.AddToClassList(entry.Source == LogSource.Sdk ? "badge-sdk" : "badge-app");
+            var badge = new Label(entry.Source == LogSource.Sdk ? SampleAppUi.LogBadgeText.Sdk : SampleAppUi.LogBadgeText.App);
+            badge.AddToClassList(SampleAppUi.Css.LogBadge);
+            badge.AddToClassList(entry.Source == LogSource.Sdk ? SampleAppUi.Css.BadgeSdk : SampleAppUi.Css.BadgeApp);
             head.Add(badge);
 
             var label = new Label(entry.Label);
-            label.AddToClassList("log-label");
+            label.AddToClassList(SampleAppUi.Css.LogLabel);
             head.Add(label);
 
             // Two overlapping 10×10 squares drawn entirely via USS borders —
             // font-independent, unlike a Unicode glyph which Roboto-Regular
             // doesn't reliably carry past the basic Latin range.
             var copy = new Button();
-            copy.AddToClassList("log-copy");
+            copy.AddToClassList(SampleAppUi.Css.LogCopy);
             var copyBack = new VisualElement();
-            copyBack.AddToClassList("log-copy-back");
+            copyBack.AddToClassList(SampleAppUi.Css.LogCopyBack);
             copyBack.pickingMode = PickingMode.Ignore;
             var copyFront = new VisualElement();
-            copyFront.AddToClassList("log-copy-front");
+            copyFront.AddToClassList(SampleAppUi.Css.LogCopyFront);
             copyFront.pickingMode = PickingMode.Ignore;
             copy.Add(copyBack);
             copy.Add(copyFront);
@@ -765,13 +784,13 @@ namespace Immutable.Audience.Samples.SampleApp
             if (!string.IsNullOrEmpty(entry.Body))
             {
                 var bodyLabel = new Label(entry.Body);
-                bodyLabel.AddToClassList("log-body");
+                bodyLabel.AddToClassList(SampleAppUi.Css.LogBody);
                 row.Add(bodyLabel);
-                if (entry.Body.Length > CollapseThreshold) row.AddToClassList("collapsed");
+                if (entry.Body.Length > CollapseThreshold) row.AddToClassList(SampleAppUi.Css.Collapsed);
                 head.RegisterCallback<ClickEvent>(evt =>
                 {
                     if (evt.target is Button) return;
-                    row.EnableInClassList("collapsed", !row.ClassListContains("collapsed"));
+                    row.EnableInClassList(SampleAppUi.Css.Collapsed, !row.ClassListContains(SampleAppUi.Css.Collapsed));
                 });
             }
             return row;
@@ -781,7 +800,7 @@ namespace Immutable.Audience.Samples.SampleApp
         {
             var sb = new StringBuilder()
                 .Append(entry.Timestamp.ToString(Constants.IsoTimestampFormat, CultureInfo.InvariantCulture))
-                .Append(" [").Append(entry.Source == LogSource.Sdk ? "SDK" : "APP").Append("] ")
+                .Append(" [").Append(entry.Source == LogSource.Sdk ? SampleAppUi.LogBadgeText.Sdk : SampleAppUi.LogBadgeText.App).Append("] ")
                 .Append(entry.Label);
             if (!string.IsNullOrEmpty(entry.Body))
                 sb.Append(singleLine ? ' ' : '\n').Append(entry.Body);
