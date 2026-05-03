@@ -69,6 +69,20 @@ namespace Immutable.Audience.Tests
                 "Constants.LibraryVersion must match package.json version");
         }
 
+        [Test]
+        public void LibraryName_MatchesPackageJson()
+        {
+            // Same idea as LibraryVersion: fails the build if
+            // Constants.LibraryName drifts from package.json "name".
+            var packageJson = ReadPackageJson();
+            var parsed = JsonReader.DeserializeObject(packageJson);
+
+            Assert.IsTrue(parsed.TryGetValue("name", out var nameObj),
+                "package.json is missing a \"name\" field");
+            Assert.AreEqual(Constants.LibraryName, nameObj,
+                "Constants.LibraryName must match package.json name");
+        }
+
         private static string ReadPackageJson()
         {
             // Walk up from the test binary location looking for the Audience

@@ -19,6 +19,37 @@ namespace Immutable.Audience.Tests
             Assert.AreEqual(expected, type.ToLowercaseString());
         }
 
+        [TestCase("passport", IdentityType.Passport)]
+        [TestCase("steam", IdentityType.Steam)]
+        [TestCase("epic", IdentityType.Epic)]
+        [TestCase("google", IdentityType.Google)]
+        [TestCase("apple", IdentityType.Apple)]
+        [TestCase("discord", IdentityType.Discord)]
+        [TestCase("email", IdentityType.Email)]
+        [TestCase("custom", IdentityType.Custom)]
+        public void ParseLowercaseString_MapsKnownStringToEnum(string wire, IdentityType expected)
+        {
+            Assert.AreEqual(expected, IdentityTypeExtensions.ParseLowercaseString(wire));
+        }
+
+        [TestCase("Steam", IdentityType.Steam)]
+        [TestCase("STEAM", IdentityType.Steam)]
+        [TestCase("Passport", IdentityType.Passport)]
+        public void ParseLowercaseString_AcceptsMixedCase(string wire, IdentityType expected)
+        {
+            Assert.AreEqual(expected, IdentityTypeExtensions.ParseLowercaseString(wire));
+        }
+
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("unknown_provider")]
+        [TestCase("steamX")]
+        public void ParseLowercaseString_FallsBackToCustomForUnknownOrEmpty(string? wire)
+        {
+            // ParseLowercaseString never throws; unknown values map to Custom.
+            Assert.AreEqual(IdentityType.Custom, IdentityTypeExtensions.ParseLowercaseString(wire));
+        }
+
         [Test]
         public void ToLowercaseString_UnknownValue_Throws()
         {

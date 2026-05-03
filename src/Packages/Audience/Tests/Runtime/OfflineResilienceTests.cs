@@ -93,7 +93,7 @@ namespace Immutable.Audience.Tests
             // Shutdown is invoked from app-quit handlers; an exception would
             // crash the process.
             ImmutableAudience.Init(MakeConfig());
-            ImmutableAudience.Track("event_pre_block");
+            ImmutableAudience.Track(TestEventNames.EventPreBlock);
             BlockDiskWrites();
             for (int i = 0; i < 20; i++) ImmutableAudience.Track($"blocked_{i}");
 

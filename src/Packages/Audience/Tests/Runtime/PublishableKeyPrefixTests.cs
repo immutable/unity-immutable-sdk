@@ -180,7 +180,7 @@ namespace Immutable.Audience.Tests
             config.OnError = errors.Add;
 
             ImmutableAudience.Init(config);
-            ImmutableAudience.Track("event_against_prod_with_test_key");
+            ImmutableAudience.Track(TestEventNames.EventAgainstProdWithTestKey);
             await ImmutableAudience.FlushAsync();
 
             Assert.IsTrue(errors.Any(e => e.Code == AudienceErrorCode.ValidationRejected),

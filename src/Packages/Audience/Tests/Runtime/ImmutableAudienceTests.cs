@@ -129,7 +129,7 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));
             // Track once so Identity.GetOrCreate runs and writes the id file.
-            ImmutableAudience.Track("warmup_event");
+            ImmutableAudience.Track(TestEventNames.WarmupEvent);
 
             var id = ImmutableAudience.AnonymousId;
             Assert.IsFalse(string.IsNullOrEmpty(id),
@@ -165,7 +165,7 @@ namespace Immutable.Audience.Tests
             Assert.Greater(afterInit, 0,
                 "QueueSize should include session_start and game_launch after Init");
 
-            ImmutableAudience.Track("explicit_track_event");
+            ImmutableAudience.Track(TestEventNames.ExplicitTrackEvent);
             Assert.Greater(ImmutableAudience.QueueSize, afterInit,
                 "QueueSize should grow when a new event is enqueued");
         }
@@ -186,7 +186,7 @@ namespace Immutable.Audience.Tests
             };
 
             ImmutableAudience.Init(MakeConfig());
-            ImmutableAudience.Track("unit_test_event");
+            ImmutableAudience.Track(TestEventNames.UnitTestEvent);
             ImmutableAudience.Shutdown();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
@@ -234,7 +234,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.ContextProvider = () => throw new InvalidOperationException("boom");
 
             ImmutableAudience.Init(MakeConfig());
-            ImmutableAudience.Track("unit_test_event");
+            ImmutableAudience.Track(TestEventNames.UnitTestEvent);
             ImmutableAudience.Shutdown();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
@@ -250,7 +250,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.ContextProvider = () => null;
 
             ImmutableAudience.Init(MakeConfig());
-            ImmutableAudience.Track("unit_test_event");
+            ImmutableAudience.Track(TestEventNames.UnitTestEvent);
             ImmutableAudience.Shutdown();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
@@ -488,7 +488,7 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.Init(MakeConfig());
 
-            ImmutableAudience.Track("crafting_started", new Dictionary<string, object>
+            ImmutableAudience.Track(TestEventNames.CraftingStarted, new Dictionary<string, object>
             {
                 { "recipe_id", "iron_sword" }
             });
@@ -511,7 +511,7 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.Init(MakeConfig());
 
-            ImmutableAudience.Track("main_menu_opened");
+            ImmutableAudience.Track(TestEventNames.MainMenuOpened);
             ImmutableAudience.Shutdown();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
@@ -525,7 +525,7 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.Init(MakeConfig(ConsentLevel.None));
 
-            ImmutableAudience.Track("should_not_appear");
+            ImmutableAudience.Track(TestEventNames.ShouldNotAppear);
             ImmutableAudience.Shutdown();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
@@ -669,12 +669,12 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.Init(MakeConfig());
 
-            ImmutableAudience.Track("before_reset");
+            ImmutableAudience.Track(TestEventNames.BeforeReset);
             var id1 = Identity.GetOrCreate(_testDir, ConsentLevel.Anonymous);
 
             ImmutableAudience.Reset();
 
-            ImmutableAudience.Track("after_reset");
+            ImmutableAudience.Track(TestEventNames.AfterReset);
             var id2 = Identity.GetOrCreate(_testDir, ConsentLevel.Anonymous);
 
             Assert.AreNotEqual(id1, id2, "Reset should generate a new anonymousId");
@@ -685,7 +685,7 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.Init(MakeConfig());
 
-            ImmutableAudience.Track("before_reset");
+            ImmutableAudience.Track(TestEventNames.BeforeReset);
             ImmutableAudience.FlushQueueToDiskForTesting();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
@@ -707,7 +707,7 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.Init(MakeConfig());
 
-            ImmutableAudience.Track("event_under_old_consent");
+            ImmutableAudience.Track(TestEventNames.EventUnderOldConsent);
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
             // Force memory → disk so we can verify the purge wipes both layers.
@@ -746,7 +746,7 @@ namespace Immutable.Audience.Tests
             var trackTask = Task.Run(() =>
             {
                 trackStarted.Set();
-                ImmutableAudience.Track("racing_event");
+                ImmutableAudience.Track(TestEventNames.RacingEvent);
             });
 
             trackStarted.Wait();
@@ -799,7 +799,7 @@ namespace Immutable.Audience.Tests
                     trackers[t] = Task.Run(() =>
                     {
                         barrier.SignalAndWait();
-                        ImmutableAudience.Track("race_stress");
+                        ImmutableAudience.Track(TestEventNames.RaceStress);
                     });
                 }
 
@@ -988,7 +988,7 @@ namespace Immutable.Audience.Tests
                     trackers[t] = Task.Run(() =>
                     {
                         barrier.SignalAndWait();
-                        ImmutableAudience.Track("race_stress");
+                        ImmutableAudience.Track(TestEventNames.RaceStress);
                     });
                 }
 
@@ -1151,6 +1151,21 @@ namespace Immutable.Audience.Tests
             Assert.AreEqual(DistributionPlatforms.Steam, config.DistributionPlatform);
         }
 
+        // Lowercase normalisation must apply to every DistributionPlatforms value.
+        [TestCase(DistributionPlatforms.Steam)]
+        [TestCase(DistributionPlatforms.Epic)]
+        [TestCase(DistributionPlatforms.GOG)]
+        [TestCase(DistributionPlatforms.Itch)]
+        [TestCase(DistributionPlatforms.Standalone)]
+        public void Init_LowercasesDistributionPlatform_AcrossAllPublicValues(string canonical)
+        {
+            var config = MakeConfig();
+            config.DistributionPlatform = canonical.ToUpperInvariant();
+            ImmutableAudience.Init(config);
+
+            Assert.AreEqual(canonical, config.DistributionPlatform);
+        }
+
         [Test]
         public void Init_LeavesDistributionPlatformNull_WhenNotSet()
         {
@@ -1260,7 +1275,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.Init(MakeConfig());
             ImmutableAudience.Shutdown();
 
-            Assert.DoesNotThrow(() => ImmutableAudience.Track("should_not_crash"));
+            Assert.DoesNotThrow(() => ImmutableAudience.Track(TestEventNames.ShouldNotCrash));
         }
 
         [Test]
@@ -1276,7 +1291,7 @@ namespace Immutable.Audience.Tests
             config.ShutdownFlushTimeoutMs = 10_000;
 
             ImmutableAudience.Init(config);
-            ImmutableAudience.Track("ensure_nonempty_queue");
+            ImmutableAudience.Track(TestEventNames.EnsureNonemptyQueue);
             ImmutableAudience.FlushQueueToDiskForTesting();
 
             // Phase 1 flips _initialized and releases the lock; Phase 2 enters
@@ -1312,7 +1327,7 @@ namespace Immutable.Audience.Tests
 
             ImmutableAudience.Identify("player_steam", IdentityType.Steam);
             ImmutableAudience.Alias("player_steam", IdentityType.Steam, "player_passport", IdentityType.Passport);
-            ImmutableAudience.Track("tracked_before_downgrade");
+            ImmutableAudience.Track(TestEventNames.TrackedBeforeDowngrade);
 
             ImmutableAudience.FlushQueueToDiskForTesting();
 
@@ -1339,7 +1354,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.Identify("player_steam", IdentityType.Steam);
             ImmutableAudience.SetConsent(ConsentLevel.Anonymous);
 
-            ImmutableAudience.Track("tracked_after_downgrade");
+            ImmutableAudience.Track(TestEventNames.TrackedAfterDowngrade);
             ImmutableAudience.FlushQueueToDiskForTesting();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
@@ -1347,7 +1362,7 @@ namespace Immutable.Audience.Tests
                 .Select(f => JsonReader.DeserializeObject(File.ReadAllText(f)))
                 .Where(m => (string)m[MessageFields.Type] == MessageTypes.Track
                             && m.ContainsKey(MessageFields.EventName)
-                            && (string)m[MessageFields.EventName] == "tracked_after_downgrade")
+                            && (string)m[MessageFields.EventName] == TestEventNames.TrackedAfterDowngrade)
                 .ToList();
 
             Assert.AreEqual(1, trackFiles.Count);
@@ -1367,7 +1382,7 @@ namespace Immutable.Audience.Tests
             config.HttpHandler = handler;
 
             ImmutableAudience.Init(config);
-            ImmutableAudience.Track("event_to_send");
+            ImmutableAudience.Track(TestEventNames.EventToSend);
             ImmutableAudience.FlushQueueToDiskForTesting();
 
             // Kick off one SendBatch on a worker. It will block inside the
@@ -1402,7 +1417,7 @@ namespace Immutable.Audience.Tests
             config.HttpHandler = handler;
 
             ImmutableAudience.Init(config);
-            ImmutableAudience.Track("event_to_send");
+            ImmutableAudience.Track(TestEventNames.EventToSend);
             ImmutableAudience.FlushQueueToDiskForTesting();
 
             // First caller enters SendAsync and blocks on handler.Release.
@@ -1438,7 +1453,7 @@ namespace Immutable.Audience.Tests
             config.HttpHandler = handler;
 
             ImmutableAudience.Init(config);
-            ImmutableAudience.Track("event_to_send");
+            ImmutableAudience.Track(TestEventNames.EventToSend);
             ImmutableAudience.FlushQueueToDiskForTesting();
 
             using var cts = new CancellationTokenSource();

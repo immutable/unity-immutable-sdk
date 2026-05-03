@@ -152,8 +152,8 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         {
             yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent(EventNames.Resource), root =>
             {
-                root.Q<TextField>(SampleAppUi.TypedEventField(EventNames.Resource, "currency")).value = "GOLD";
-                root.Q<TextField>(SampleAppUi.TypedEventField(EventNames.Resource, "amount")).value = "100";
+                root.Q<TextField>(SampleAppUi.TypedEventField(EventNames.Resource, EventPropertyKeys.Currency)).value = "GOLD";
+                root.Q<TextField>(SampleAppUi.TypedEventField(EventNames.Resource, EventPropertyKeys.Amount)).value = "100";
             });
         }
 
@@ -162,8 +162,8 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         {
             yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent(EventNames.Purchase), root =>
             {
-                root.Q<TextField>(SampleAppUi.TypedEventField(EventNames.Purchase, "currency")).value = "USD";
-                root.Q<TextField>(SampleAppUi.TypedEventField(EventNames.Purchase, "value")).value = "9.99";
+                root.Q<TextField>(SampleAppUi.TypedEventField(EventNames.Purchase, EventPropertyKeys.Currency)).value = "USD";
+                root.Q<TextField>(SampleAppUi.TypedEventField(EventNames.Purchase, EventPropertyKeys.Value)).value = "9.99";
             });
         }
 
@@ -172,7 +172,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         {
             yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent(EventNames.MilestoneReached), root =>
             {
-                root.Q<TextField>(SampleAppUi.TypedEventField(EventNames.MilestoneReached, "name")).value = "il2cpp_smoke";
+                root.Q<TextField>(SampleAppUi.TypedEventField(EventNames.MilestoneReached, EventPropertyKeys.Name)).value = "il2cpp_smoke";
             });
         }
 
@@ -403,54 +403,54 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         [UnityTest]
         public IEnumerator TypedEvent_SignUp_FlushReportsOk()
         {
-            yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent("sign_up"));
+            yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent(SampleAppCustomEvents.SignUp));
         }
 
         [UnityTest]
         public IEnumerator TypedEvent_SignIn_FlushReportsOk()
         {
-            yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent("sign_in"));
+            yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent(SampleAppCustomEvents.SignIn));
         }
 
         [UnityTest]
         public IEnumerator TypedEvent_EmailAcquired_FlushReportsOk()
         {
-            yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent("email_acquired"));
+            yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent(SampleAppCustomEvents.EmailAcquired));
         }
 
         [UnityTest]
         public IEnumerator TypedEvent_WishlistAdd_FlushReportsOk()
         {
-            yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent("wishlist_add"), root =>
+            yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent(SampleAppCustomEvents.WishlistAdd), root =>
             {
-                root.Q<TextField>(SampleAppUi.TypedEventField("wishlist_add", "gameId")).value = "il2cpp_game_1";
+                root.Q<TextField>(SampleAppUi.TypedEventField(SampleAppCustomEvents.WishlistAdd, SampleAppCustomEventPropertyKeys.GameId)).value = "il2cpp_game_1";
             });
         }
 
         [UnityTest]
         public IEnumerator TypedEvent_WishlistRemove_FlushReportsOk()
         {
-            yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent("wishlist_remove"), root =>
+            yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent(SampleAppCustomEvents.WishlistRemove), root =>
             {
-                root.Q<TextField>(SampleAppUi.TypedEventField("wishlist_remove", "gameId")).value = "il2cpp_game_1";
+                root.Q<TextField>(SampleAppUi.TypedEventField(SampleAppCustomEvents.WishlistRemove, SampleAppCustomEventPropertyKeys.GameId)).value = "il2cpp_game_1";
             });
         }
 
         [UnityTest]
         public IEnumerator TypedEvent_GamePageViewed_FlushReportsOk()
         {
-            yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent("game_page_viewed"), root =>
+            yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent(SampleAppCustomEvents.GamePageViewed), root =>
             {
-                root.Q<TextField>(SampleAppUi.TypedEventField("game_page_viewed", "gameId")).value = "il2cpp_game_1";
+                root.Q<TextField>(SampleAppUi.TypedEventField(SampleAppCustomEvents.GamePageViewed, SampleAppCustomEventPropertyKeys.GameId)).value = "il2cpp_game_1";
             });
         }
 
         [UnityTest]
         public IEnumerator TypedEvent_LinkClicked_FlushReportsOk()
         {
-            yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent("link_clicked"), root =>
+            yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent(SampleAppCustomEvents.LinkClicked), root =>
             {
-                root.Q<TextField>(SampleAppUi.TypedEventField("link_clicked", "url")).value = "https://example.com/il2cpp";
+                root.Q<TextField>(SampleAppUi.TypedEventField(SampleAppCustomEvents.LinkClicked, SampleAppCustomEventPropertyKeys.Url)).value = "https://example.com/il2cpp";
             });
         }
 
