@@ -6,12 +6,21 @@ namespace Immutable.Audience.Tests
     [TestFixture]
     internal class ConsentLevelTests
     {
-        [TestCase(ConsentLevel.None, "none")]
-        [TestCase(ConsentLevel.Anonymous, "anonymous")]
-        [TestCase(ConsentLevel.Full, "full")]
+        [TestCase(ConsentLevel.None, ConsentLevelWireFormat.None)]
+        [TestCase(ConsentLevel.Anonymous, ConsentLevelWireFormat.Anonymous)]
+        [TestCase(ConsentLevel.Full, ConsentLevelWireFormat.Full)]
         public void ToLowercaseString_MapsEachEnumValueToLowercaseBackendString(ConsentLevel level, string expected)
         {
             Assert.AreEqual(expected, level.ToLowercaseString());
+        }
+
+        [Test]
+        public void ConsentLevelWireFormat_PinsExactStringValues()
+        {
+            // Pins each emitted string directly so a typo or backend rename fails the build.
+            Assert.AreEqual("none", ConsentLevelWireFormat.None);
+            Assert.AreEqual("anonymous", ConsentLevelWireFormat.Anonymous);
+            Assert.AreEqual("full", ConsentLevelWireFormat.Full);
         }
 
         [Test]

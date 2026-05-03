@@ -12,6 +12,10 @@ namespace Immutable.Audience.Tests
     [TestFixture]
     internal class ConsentSyncTests
     {
+        // Standard HTTP header name (RFC 7231) the mock CapturingHandler sets
+        // on 429 responses to override the SDK's default backoff.
+        private const string RetryAfterHeader = "Retry-After";
+
         private string _testDir;
 
         [SetUp]
@@ -223,7 +227,7 @@ namespace Immutable.Audience.Tests
                 var response = new HttpResponseMessage(status);
                 if ((int)status == 429 && RetryAfterSeconds.HasValue)
                 {
-                    response.Headers.Add("Retry-After", RetryAfterSeconds.Value.ToString());
+                    response.Headers.Add(RetryAfterHeader, RetryAfterSeconds.Value.ToString());
                 }
                 return response;
             }

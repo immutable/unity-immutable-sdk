@@ -80,10 +80,13 @@ namespace Immutable.Audience.Tests
         // File body that occupies the queue directory path so directory creation fails.
         internal const string DiskBlockerContent = "blocker";
 
-        // DistributionPlatform mixed-case fixtures for Init's lowercase
-        // normalisation test.
-        internal const string DistributionPlatformSteamCased = "Steam";
-        internal const string DistributionPlatformSteamUppercase = "STEAM";
+        // Mixed-case "Steam" / "Passport" fixtures shared by DistributionPlatform and IdentityType tests.
+        internal const string SteamPascalCase = "Steam";
+        internal const string SteamUpperCase = "STEAM";
+        internal const string PassportPascalCase = "Passport";
+
+        // Steam-prefixed-but-not-exact-match fixture for the Custom-fallback test.
+        internal const string SteamSuffixed = "steamX";
 
         // Unity Application.platform string for the GameLaunch.Platform test.
         internal const string PlatformWindows = "WindowsPlayer";
@@ -92,5 +95,15 @@ namespace Immutable.Audience.Tests
         internal const string GenericAliasFromId = "fromId";
         internal const string GenericAliasToId = "toId";
         internal const string GenericAliasFromShort = "from";
+
+        // Real-shape 64-bit Steam community ID. Asserts the input is carried through faithfully.
+        internal const string SteamId64 = "76561198012345";
+
+        // Generic Steam / Passport ID fixtures used by alias and consent tests.
+        internal const string SteamId = "steam123";
+        internal const string PassportId = "user_456";
+
+        // Generic single-user fixture for tests that just need any userId.
+        internal const string GenericUserSingleId = "user1";
     }
 }

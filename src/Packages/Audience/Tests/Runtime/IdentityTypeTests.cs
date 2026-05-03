@@ -6,35 +6,49 @@ namespace Immutable.Audience.Tests
     [TestFixture]
     internal class IdentityTypeTests
     {
-        [TestCase(IdentityType.Passport, "passport")]
-        [TestCase(IdentityType.Steam, "steam")]
-        [TestCase(IdentityType.Epic, "epic")]
-        [TestCase(IdentityType.Google, "google")]
-        [TestCase(IdentityType.Apple, "apple")]
-        [TestCase(IdentityType.Discord, "discord")]
-        [TestCase(IdentityType.Email, "email")]
-        [TestCase(IdentityType.Custom, "custom")]
+        [TestCase(IdentityType.Passport, IdentityTypeWireFormat.Passport)]
+        [TestCase(IdentityType.Steam, IdentityTypeWireFormat.Steam)]
+        [TestCase(IdentityType.Epic, IdentityTypeWireFormat.Epic)]
+        [TestCase(IdentityType.Google, IdentityTypeWireFormat.Google)]
+        [TestCase(IdentityType.Apple, IdentityTypeWireFormat.Apple)]
+        [TestCase(IdentityType.Discord, IdentityTypeWireFormat.Discord)]
+        [TestCase(IdentityType.Email, IdentityTypeWireFormat.Email)]
+        [TestCase(IdentityType.Custom, IdentityTypeWireFormat.Custom)]
         public void ToLowercaseString_MapsEachEnumValueToLowercaseBackendString(IdentityType type, string expected)
         {
             Assert.AreEqual(expected, type.ToLowercaseString());
         }
 
-        [TestCase("passport", IdentityType.Passport)]
-        [TestCase("steam", IdentityType.Steam)]
-        [TestCase("epic", IdentityType.Epic)]
-        [TestCase("google", IdentityType.Google)]
-        [TestCase("apple", IdentityType.Apple)]
-        [TestCase("discord", IdentityType.Discord)]
-        [TestCase("email", IdentityType.Email)]
-        [TestCase("custom", IdentityType.Custom)]
+        [TestCase(IdentityTypeWireFormat.Passport, IdentityType.Passport)]
+        [TestCase(IdentityTypeWireFormat.Steam, IdentityType.Steam)]
+        [TestCase(IdentityTypeWireFormat.Epic, IdentityType.Epic)]
+        [TestCase(IdentityTypeWireFormat.Google, IdentityType.Google)]
+        [TestCase(IdentityTypeWireFormat.Apple, IdentityType.Apple)]
+        [TestCase(IdentityTypeWireFormat.Discord, IdentityType.Discord)]
+        [TestCase(IdentityTypeWireFormat.Email, IdentityType.Email)]
+        [TestCase(IdentityTypeWireFormat.Custom, IdentityType.Custom)]
         public void ParseLowercaseString_MapsKnownStringToEnum(string wire, IdentityType expected)
         {
             Assert.AreEqual(expected, IdentityTypeExtensions.ParseLowercaseString(wire));
         }
 
-        [TestCase("Steam", IdentityType.Steam)]
-        [TestCase("STEAM", IdentityType.Steam)]
-        [TestCase("Passport", IdentityType.Passport)]
+        [Test]
+        public void IdentityTypeWireFormat_PinsExactStringValues()
+        {
+            // Pins each constant's exact string so a typo or backend rename fails the build.
+            Assert.AreEqual("passport", IdentityTypeWireFormat.Passport);
+            Assert.AreEqual("steam", IdentityTypeWireFormat.Steam);
+            Assert.AreEqual("epic", IdentityTypeWireFormat.Epic);
+            Assert.AreEqual("google", IdentityTypeWireFormat.Google);
+            Assert.AreEqual("apple", IdentityTypeWireFormat.Apple);
+            Assert.AreEqual("discord", IdentityTypeWireFormat.Discord);
+            Assert.AreEqual("email", IdentityTypeWireFormat.Email);
+            Assert.AreEqual("custom", IdentityTypeWireFormat.Custom);
+        }
+
+        [TestCase(TestFixtures.SteamPascalCase, IdentityType.Steam)]
+        [TestCase(TestFixtures.SteamUpperCase, IdentityType.Steam)]
+        [TestCase(TestFixtures.PassportPascalCase, IdentityType.Passport)]
         public void ParseLowercaseString_AcceptsMixedCase(string wire, IdentityType expected)
         {
             Assert.AreEqual(expected, IdentityTypeExtensions.ParseLowercaseString(wire));
@@ -43,7 +57,7 @@ namespace Immutable.Audience.Tests
         [TestCase(null)]
         [TestCase("")]
         [TestCase(TestFixtures.UnknownProvider)]
-        [TestCase("steamX")]
+        [TestCase(TestFixtures.SteamSuffixed)]
         public void ParseLowercaseString_FallsBackToCustomForUnknownOrEmpty(string? wire)
         {
             // ParseLowercaseString never throws; unknown values map to Custom.

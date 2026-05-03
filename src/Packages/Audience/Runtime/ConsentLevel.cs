@@ -28,13 +28,21 @@ namespace Immutable.Audience
         Full
     }
 
+    // Strings the SDK emits for ConsentLevel.
+    internal static class ConsentLevelWireFormat
+    {
+        internal const string None = "none";
+        internal const string Anonymous = "anonymous";
+        internal const string Full = "full";
+    }
+
     internal static class ConsentLevelExtensions
     {
         internal static string ToLowercaseString(this ConsentLevel level) => level switch
         {
-            ConsentLevel.None => "none",
-            ConsentLevel.Anonymous => "anonymous",
-            ConsentLevel.Full => "full",
+            ConsentLevel.None => ConsentLevelWireFormat.None,
+            ConsentLevel.Anonymous => ConsentLevelWireFormat.Anonymous,
+            ConsentLevel.Full => ConsentLevelWireFormat.Full,
             _ => throw new System.ArgumentOutOfRangeException(
                 nameof(level), level, "Unhandled ConsentLevel"),
         };

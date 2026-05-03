@@ -207,8 +207,13 @@ namespace Immutable.Audience.Tests
                 TearDown();
                 SetUp();
 
-                var json = "{\"type\":\"track\",\"eventName\":\"purchase\",\"anonymousId\":\"a\",\"userId\":\"u\","
-                    + "\"properties\":{\"currency\":\"USD\",\"value\":" + amount + "}}";
+                var json = $"{{\"{MessageFields.Type}\":\"{MessageTypes.Track}\","
+                    + $"\"{MessageFields.EventName}\":\"{EventNames.Purchase}\","
+                    + $"\"{MessageFields.AnonymousId}\":\"{TestEventNames.PlaceholderA}\","
+                    + $"\"{MessageFields.UserId}\":\"u\","
+                    + $"\"{MessageFields.Properties}\":{{"
+                    + $"\"{EventPropertyKeys.Currency}\":\"{TestFixtures.UsdCurrency}\","
+                    + $"\"{EventPropertyKeys.Value}\":{amount}}}}}";
                 _store.Write(json);
 
                 _store.ApplyAnonymousDowngrade();

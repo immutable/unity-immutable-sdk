@@ -323,7 +323,7 @@ namespace Immutable.Audience.Tests
                 // Assert the stable parts (event-type name and trailing "Dropping")
                 // so the test survives any change to the exception type or message.
                 Assert.That(lines, Has.Some.Contains(nameof(Purchase)));
-                Assert.That(lines, Has.Some.Contains("Dropping"));
+                Assert.That(lines, Has.Some.Contains(AudienceLogs.DroppingMarker));
             }
             finally { Log.Writer = null; }
 
@@ -331,7 +331,7 @@ namespace Immutable.Audience.Tests
             var queueDir = AudiencePaths.QueueDir(_testDir);
             var contents = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText).ToList();
-            Assert.IsFalse(contents.Any(c => c.Contains("\"purchase\"")),
+            Assert.IsFalse(contents.Any(c => c.Contains($"\"{EventNames.Purchase}\"")),
                 "purchase event with missing required Value must be dropped, not enqueued");
         }
 
@@ -395,7 +395,7 @@ namespace Immutable.Audience.Tests
             var invalid = (IdentityType)999;
 
             Assert.Throws<ArgumentOutOfRangeException>(
-                () => ImmutableAudience.Identify("user1", invalid),
+                () => ImmutableAudience.Identify(TestFixtures.GenericUserSingleId, invalid),
                 "invalid enum cast must throw so a broken call fails loud rather than " +
                 "shipping an identify event that cannot be matched for deletion");
         }
@@ -608,7 +608,7 @@ namespace Immutable.Audience.Tests
             var queueDir = AudiencePaths.QueueDir(_testDir);
             var contents = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText).ToList();
-            Assert.IsTrue(contents.Any(c => c.Contains("\"purchase\"")));
+            Assert.IsTrue(contents.Any(c => c.Contains($"\"{EventNames.Purchase}\"")));
         }
 
         // -----------------------------------------------------------------
@@ -620,14 +620,14 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
 
-            ImmutableAudience.Identify("76561198012345", IdentityType.Steam);
+            ImmutableAudience.Identify(TestFixtures.SteamId64, IdentityType.Steam);
             ImmutableAudience.Shutdown();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
             var contents = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText).ToList();
             Assert.IsTrue(contents.Any(c =>
-                c.Contains("\"identify\"") && c.Contains("\"76561198012345\"")));
+                c.Contains($"\"{MessageTypes.Identify}\"") && c.Contains($"\"{TestFixtures.SteamId64}\"")));
         }
 
         [Test]
@@ -635,13 +635,13 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));
 
-            ImmutableAudience.Identify("user1", IdentityType.Steam);
+            ImmutableAudience.Identify(TestFixtures.GenericUserSingleId, IdentityType.Steam);
             ImmutableAudience.Shutdown();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
             var contents = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText).ToList();
-            Assert.IsFalse(contents.Any(c => c.Contains("\"identify\"")),
+            Assert.IsFalse(contents.Any(c => c.Contains($"\"{MessageTypes.Identify}\"")),
                 "identify should be discarded at Anonymous consent");
         }
 
@@ -650,14 +650,14 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
 
-            ImmutableAudience.Alias("steam123", IdentityType.Steam, "user_456", IdentityType.Passport);
+            ImmutableAudience.Alias(TestFixtures.SteamId, IdentityType.Steam, TestFixtures.PassportId, IdentityType.Passport);
             ImmutableAudience.Shutdown();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
             var contents = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText).ToList();
             Assert.IsTrue(contents.Any(c =>
-                c.Contains("\"alias\"") && c.Contains("\"steam123\"")));
+                c.Contains($"\"{MessageTypes.Alias}\"") && c.Contains($"\"{TestFixtures.SteamId}\"")));
         }
 
         // -----------------------------------------------------------------
@@ -1124,7 +1124,7 @@ namespace Immutable.Audience.Tests
         public void Init_LowercasesDistributionPlatform_WhenCallerPassesMixedCase()
         {
             var config = MakeConfig();
-            config.DistributionPlatform = TestFixtures.DistributionPlatformSteamCased;
+            config.DistributionPlatform = TestFixtures.SteamPascalCase;
             ImmutableAudience.Init(config);
 
             Assert.AreEqual(DistributionPlatforms.Steam, config.DistributionPlatform,
@@ -1135,7 +1135,7 @@ namespace Immutable.Audience.Tests
         public void Init_LowercasesDistributionPlatform_WhenCallerPassesAllUpperCase()
         {
             var config = MakeConfig();
-            config.DistributionPlatform = TestFixtures.DistributionPlatformSteamUppercase;
+            config.DistributionPlatform = TestFixtures.SteamUpperCase;
             ImmutableAudience.Init(config);
 
             Assert.AreEqual(DistributionPlatforms.Steam, config.DistributionPlatform);

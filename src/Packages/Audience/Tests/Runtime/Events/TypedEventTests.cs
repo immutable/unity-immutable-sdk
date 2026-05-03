@@ -18,7 +18,7 @@ namespace Immutable.Audience.Tests
             var evt = new Progression { World = TestFixtures.ProgressionWorldTutorial };
 
             var ex = Assert.Throws<ArgumentException>(() => evt.ToProperties());
-            Assert.That(ex!.Message, Does.Contain("Status"));
+            Assert.That(ex!.Message, Does.Contain(nameof(Progression.Status)));
         }
 
         [Test]
@@ -88,7 +88,7 @@ namespace Immutable.Audience.Tests
             var evt = new Resource { Currency = TestFixtures.ResourceCurrency, Amount = 100 };
 
             var ex = Assert.Throws<ArgumentException>(() => evt.ToProperties());
-            Assert.That(ex!.Message, Does.Contain("Flow"));
+            Assert.That(ex!.Message, Does.Contain(nameof(Resource.Flow)));
         }
 
         [Test]
@@ -97,7 +97,7 @@ namespace Immutable.Audience.Tests
             var evt = new Resource { Flow = ResourceFlow.Source, Amount = 100 };
 
             var ex = Assert.Throws<ArgumentException>(() => evt.ToProperties());
-            Assert.That(ex!.Message, Does.Contain("Currency"));
+            Assert.That(ex!.Message, Does.Contain(nameof(Resource.Currency)));
         }
 
         [Test]
@@ -106,7 +106,7 @@ namespace Immutable.Audience.Tests
             var evt = new Resource { Flow = ResourceFlow.Source, Currency = TestFixtures.ResourceCurrency };
 
             var ex = Assert.Throws<ArgumentException>(() => evt.ToProperties());
-            Assert.That(ex!.Message, Does.Contain("Amount"));
+            Assert.That(ex!.Message, Does.Contain(nameof(Resource.Amount)));
         }
 
         [Test]
@@ -157,7 +157,7 @@ namespace Immutable.Audience.Tests
             var evt = new Purchase { Value = 9.99m };
 
             var ex = Assert.Throws<ArgumentException>(() => evt.ToProperties());
-            Assert.That(ex!.Message, Does.Contain("Currency"));
+            Assert.That(ex!.Message, Does.Contain(nameof(Purchase.Currency)));
         }
 
         [Test]
@@ -166,7 +166,7 @@ namespace Immutable.Audience.Tests
             var evt = new Purchase { Currency = TestFixtures.UsdCurrency };
 
             var ex = Assert.Throws<ArgumentException>(() => evt.ToProperties());
-            Assert.That(ex!.Message, Does.Contain("Value"));
+            Assert.That(ex!.Message, Does.Contain(nameof(Purchase.Value)));
         }
 
         [Test]

@@ -44,7 +44,7 @@ namespace Immutable.Audience.Tests
 
         private AudienceConfig MakeConfig() => new AudienceConfig
         {
-            PublishableKey = "pk_imapik-test-key",
+            PublishableKey = TestDefaults.PublishableKey,
             Consent = ConsentLevel.Anonymous,
             PersistentDataPath = _testDir,
             FlushIntervalSeconds = TestDefaults.FlushIntervalSeconds,

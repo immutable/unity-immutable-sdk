@@ -17,6 +17,12 @@ namespace Immutable.Audience.Tests
     [TestFixture]
     internal class HttpTransportTests
     {
+        // Non-test-prefix publishable key. Must not carry pk_imapik-test- (asserts production BaseUrl).
+        private const string ProdPublishableKey = "pk_imapik-prodkey";
+
+        // Standard HTTP header (RFC 7231) the server sets to override the SDK's 429 backoff.
+        private const string RetryAfterHeader = "Retry-After";
+
         // Response body fixtures.
         private const string MalformedResponseBody = "not-json";
         private const string EmptyJsonObjectBody = "{}";
@@ -156,7 +162,7 @@ namespace Immutable.Audience.Tests
             HttpRequestMessage? captured = null;
             var handler = new MockHandler(HttpStatusCode.OK, $"{{\"accepted\":1,\"{ResponseFields.Rejected}\":0}}",
                 onRequest: req => captured = req);
-            using var transport = new HttpTransport(_store, "pk_imapik-prodkey", handler: handler);
+            using var transport = new HttpTransport(_store, ProdPublishableKey, handler: handler);
 
             await transport.SendBatchAsync();
 
@@ -238,7 +244,7 @@ namespace Immutable.Audience.Tests
             var handler = new MockHandler(() =>
             {
                 var resp = new HttpResponseMessage((HttpStatusCode)429);
-                resp.Headers.Add("Retry-After", "12");
+                resp.Headers.Add(RetryAfterHeader, "12");
                 return resp;
             });
             using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
@@ -261,7 +267,7 @@ namespace Immutable.Audience.Tests
             var handler = new MockHandler(() =>
             {
                 var resp = new HttpResponseMessage((HttpStatusCode)429);
-                resp.Headers.Add("Retry-After", DateTimeOffset.UtcNow.AddSeconds(20).ToString("R"));
+                resp.Headers.Add(RetryAfterHeader, DateTimeOffset.UtcNow.AddSeconds(20).ToString("R"));
                 return resp;
             });
             using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
@@ -283,7 +289,7 @@ namespace Immutable.Audience.Tests
             var handler = new MockHandler(() =>
             {
                 var resp = new HttpResponseMessage((HttpStatusCode)429);
-                resp.Headers.Add("Retry-After", DateTimeOffset.UtcNow.AddSeconds(-30).ToString("R"));
+                resp.Headers.Add(RetryAfterHeader, DateTimeOffset.UtcNow.AddSeconds(-30).ToString("R"));
                 return resp;
             });
             using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
