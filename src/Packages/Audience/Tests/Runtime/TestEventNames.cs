@@ -26,5 +26,20 @@ namespace Immutable.Audience.Tests
         internal const string MixedLoadTrack = "mixed_load_track";
         internal const string SteadyState = "steady_state";
         internal const string LevelComplete = "level_complete";
+
+        // EventQueue scenario names where the event name is meaningful in the test description.
+        internal const string IntervalFlush = "interval_flush";
+        internal const string DisposeTest = "dispose_test";
+
+        // Placeholder event names for tests where the event name itself is irrelevant.
+        internal const string PlaceholderA = "a";
+        internal const string PlaceholderB = "b";
+        internal const string PlaceholderTest = "test";
+        internal const string PlaceholderTrack = "track";
+        internal const string PlaceholderIgnored = "ignored";
+        internal const string PlaceholderEvt = "evt";
+
+        // Prefix for OfflineResilienceTests' $"blocked_{i}" loop.
+        internal const string BlockedPrefix = "blocked_";
     }
 }

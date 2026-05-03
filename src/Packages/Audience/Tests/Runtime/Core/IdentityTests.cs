@@ -39,7 +39,7 @@ namespace Immutable.Audience.Tests
         public void ExistingFile_ReturnsPreviousId_WithoutGeneratingNew()
         {
             // Simulate a returning player by pre-writing an identity file (as a previous launch would have done).
-            var expectedId = "pre-existing-id-from-last-launch";
+            var expectedId = TestFixtures.PreExistingIdFromLastLaunch;
             var dir = AudiencePaths.AudienceDir(_testDir);
             Directory.CreateDirectory(dir);
             File.WriteAllText(AudiencePaths.IdentityFile(_testDir), expectedId);
@@ -93,7 +93,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Get_ExistingFile_ReturnsPersistedId()
         {
-            var expectedId = "pre-existing-id";
+            var expectedId = TestFixtures.PreExistingId;
             var dir = AudiencePaths.AudienceDir(_testDir);
             Directory.CreateDirectory(dir);
             File.WriteAllText(AudiencePaths.IdentityFile(_testDir), expectedId);

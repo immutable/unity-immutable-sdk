@@ -35,7 +35,7 @@ namespace Immutable.Audience.Tests
         {
             using var queue = new EventQueue(_store, flushIntervalSeconds: 60, flushSize: 100);
 
-            queue.Enqueue(Msg("track"));
+            queue.Enqueue(Msg(TestEventNames.PlaceholderTrack));
             queue.FlushSync();
 
             Assert.AreEqual(1, _store.Count(), "event should be on disk after FlushSync");
@@ -77,8 +77,8 @@ namespace Immutable.Audience.Tests
         {
             var queue = new EventQueue(_store, flushIntervalSeconds: 60, flushSize: 100);
 
-            queue.Enqueue(Msg("a"));
-            queue.Enqueue(Msg("b"));
+            queue.Enqueue(Msg(TestEventNames.PlaceholderA));
+            queue.Enqueue(Msg(TestEventNames.PlaceholderB));
 
             queue.Shutdown();
 
@@ -99,7 +99,7 @@ namespace Immutable.Audience.Tests
             var queue = new EventQueue(_store, flushIntervalSeconds: 60, flushSize: 100);
             queue.Shutdown();
 
-            queue.Enqueue(Msg("ignored"));
+            queue.Enqueue(Msg(TestEventNames.PlaceholderIgnored));
 
             Assert.AreEqual(0, _store.Count(), "events enqueued after Shutdown should be discarded");
         }
@@ -110,7 +110,7 @@ namespace Immutable.Audience.Tests
             // Very short interval to make the test fast
             using var queue = new EventQueue(_store, flushIntervalSeconds: 1, flushSize: 100);
 
-            queue.Enqueue(Msg("interval_flush"));
+            queue.Enqueue(Msg(TestEventNames.IntervalFlush));
 
             // Wait slightly longer than the flush interval
             var deadline = DateTime.UtcNow.AddSeconds(4);
@@ -125,7 +125,7 @@ namespace Immutable.Audience.Tests
         {
             using (var queue = new EventQueue(_store, flushIntervalSeconds: 60, flushSize: 100))
             {
-                queue.Enqueue(Msg("dispose_test"));
+                queue.Enqueue(Msg(TestEventNames.DisposeTest));
             } // Dispose called here
 
             Assert.AreEqual(1, _store.Count(), "Dispose should flush events to disk");

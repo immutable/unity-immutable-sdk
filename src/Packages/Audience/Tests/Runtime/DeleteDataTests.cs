@@ -74,7 +74,7 @@ namespace Immutable.Audience.Tests
             var handler = new CapturingHandler();
             ImmutableAudience.Init(MakeConfig(handler));
 
-            ImmutableAudience.DeleteData(userId: "player-42");
+            ImmutableAudience.DeleteData(userId: TestFixtures.PlayerCustomId);
             WaitForRequest(handler);
 
             // Filter out the game_launch POST from Init.
@@ -136,7 +136,7 @@ namespace Immutable.Audience.Tests
             var handler = new CapturingHandler();
             ImmutableAudience.Init(MakeConfig(handler, ConsentLevel.None));
 
-            ImmutableAudience.DeleteData(userId: "some-user");
+            ImmutableAudience.DeleteData(userId: TestFixtures.SomeUser);
             // Even with a userId request, the anonymousId file must not materialise.
             Thread.Sleep(250);
 
@@ -151,7 +151,7 @@ namespace Immutable.Audience.Tests
             var handler = new CapturingHandler();
             ImmutableAudience.Init(MakeConfig(handler));
 
-            var task = ImmutableAudience.DeleteData(userId: "player-42");
+            var task = ImmutableAudience.DeleteData(userId: TestFixtures.PlayerCustomId);
             Assert.IsNotNull(task, "DeleteData must return a non-null Task");
 
             // Await directly: no need for the RequestSent gate when the task
@@ -168,7 +168,7 @@ namespace Immutable.Audience.Tests
             // Not initialised: must not throw, must return a completed Task.
             ImmutableAudience.ResetState();
 
-            var task = ImmutableAudience.DeleteData(userId: "player-42");
+            var task = ImmutableAudience.DeleteData(userId: TestFixtures.PlayerCustomId);
 
             Assert.IsNotNull(task);
             Assert.IsTrue(task.IsCompleted, "DeleteData before Init must return an already-completed Task");
@@ -189,7 +189,7 @@ namespace Immutable.Audience.Tests
             };
             ImmutableAudience.Init(config);
 
-            ImmutableAudience.DeleteData(userId: "player-42");
+            ImmutableAudience.DeleteData(userId: TestFixtures.PlayerCustomId);
 
             Assert.IsTrue(received.Wait(TimeSpan.FromSeconds(5)),
                 "OnError should fire when DeleteData's response is non-2xx");

@@ -105,8 +105,8 @@ namespace Immutable.Audience.Tests
             Assert.IsNull(ImmutableAudience.UserId,
                 "UserId should be null until Identify is called");
 
-            ImmutableAudience.Identify("player-42", IdentityType.Custom);
-            Assert.AreEqual("player-42", ImmutableAudience.UserId,
+            ImmutableAudience.Identify(TestFixtures.PlayerCustomId, IdentityType.Custom);
+            Assert.AreEqual(TestFixtures.PlayerCustomId, ImmutableAudience.UserId,
                 "UserId must reflect the most recent Identify call");
 
             ImmutableAudience.Reset();
@@ -215,7 +215,7 @@ namespace Immutable.Audience.Tests
             };
 
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
-            ImmutableAudience.Identify("player-42", IdentityType.Custom);
+            ImmutableAudience.Identify(TestFixtures.PlayerCustomId, IdentityType.Custom);
             ImmutableAudience.Shutdown();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
@@ -231,7 +231,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void ContextProvider_ThrowingDelegate_SwallowsAndShipsBaseContext()
         {
-            ImmutableAudience.ContextProvider = () => throw new InvalidOperationException("boom");
+            ImmutableAudience.ContextProvider = () => throw new InvalidOperationException(TestFixtures.ContextProviderBoomMessage);
 
             ImmutableAudience.Init(MakeConfig());
             ImmutableAudience.Track(TestEventNames.UnitTestEvent);
@@ -319,7 +319,7 @@ namespace Immutable.Audience.Tests
             {
                 // Purchase with no Value set: ToProperties throws; Track must
                 // catch, warn, and drop rather than ship an incomplete event.
-                Assert.DoesNotThrow(() => ImmutableAudience.Track(new Purchase { Currency = "USD" }));
+                Assert.DoesNotThrow(() => ImmutableAudience.Track(new Purchase { Currency = TestFixtures.UsdCurrency }));
                 // Assert the stable parts (event-type name and trailing "Dropping")
                 // so the test survives any change to the exception type or message.
                 Assert.That(lines, Has.Some.Contains(nameof(Purchase)));
@@ -408,7 +408,7 @@ namespace Immutable.Audience.Tests
             var invalid = (IdentityType)999;
 
             Assert.Throws<ArgumentOutOfRangeException>(
-                () => ImmutableAudience.Alias("fromId", invalid, "toId", IdentityType.Steam),
+                () => ImmutableAudience.Alias(TestFixtures.GenericAliasFromId, invalid, TestFixtures.GenericAliasToId, IdentityType.Steam),
                 "invalid enum cast must throw so a broken alias call fails loud rather " +
                 "than shipping an event that cannot be matched for deletion");
         }
@@ -419,7 +419,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
 
             Assert.DoesNotThrow(() => ImmutableAudience.Alias(null, IdentityType.Passport, "to", IdentityType.Steam));
-            Assert.DoesNotThrow(() => ImmutableAudience.Alias("from", IdentityType.Passport, "", IdentityType.Steam));
+            Assert.DoesNotThrow(() => ImmutableAudience.Alias(TestFixtures.GenericAliasFromShort, IdentityType.Passport, "", IdentityType.Steam));
         }
 
         [Test]
@@ -490,7 +490,7 @@ namespace Immutable.Audience.Tests
 
             ImmutableAudience.Track(TestEventNames.CraftingStarted, new Dictionary<string, object>
             {
-                { "recipe_id", "iron_sword" }
+                { TestFixtures.CustomPropKeyRecipeId, TestFixtures.CraftingRecipeIronSword }
             });
 
             // Flush memory → disk
@@ -581,7 +581,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.Track(new Progression
             {
                 Status = ProgressionStatus.Complete,
-                World = "tutorial",
+                World = TestFixtures.ProgressionWorldTutorial,
                 Level = "1"
             });
             ImmutableAudience.Shutdown();
@@ -600,7 +600,7 @@ namespace Immutable.Audience.Tests
 
             ImmutableAudience.Track(new Purchase
             {
-                Currency = "USD",
+                Currency = TestFixtures.UsdCurrency,
                 Value = 9.99m
             });
             ImmutableAudience.Shutdown();
@@ -968,7 +968,7 @@ namespace Immutable.Audience.Tests
             // EnqueueTrack and this test leaks reproducibly.
             const int iterations = 200;
             const int trackersPerIteration = 4;
-            const string testUserId = "user_race_stress";
+            const string testUserId = TestFixtures.UserRaceStress;
 
             for (int iter = 0; iter < iterations; iter++)
             {
@@ -1124,7 +1124,7 @@ namespace Immutable.Audience.Tests
         public void Init_LowercasesDistributionPlatform_WhenCallerPassesMixedCase()
         {
             var config = MakeConfig();
-            config.DistributionPlatform = "Steam";
+            config.DistributionPlatform = TestFixtures.DistributionPlatformSteamCased;
             ImmutableAudience.Init(config);
 
             Assert.AreEqual(DistributionPlatforms.Steam, config.DistributionPlatform,
@@ -1135,7 +1135,7 @@ namespace Immutable.Audience.Tests
         public void Init_LowercasesDistributionPlatform_WhenCallerPassesAllUpperCase()
         {
             var config = MakeConfig();
-            config.DistributionPlatform = "STEAM";
+            config.DistributionPlatform = TestFixtures.DistributionPlatformSteamUppercase;
             ImmutableAudience.Init(config);
 
             Assert.AreEqual(DistributionPlatforms.Steam, config.DistributionPlatform);
@@ -1199,7 +1199,7 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.LaunchContextProvider = () => new Dictionary<string, object>
             {
-                [GameLaunchPropertyKeys.Platform] = "WindowsPlayer",
+                [GameLaunchPropertyKeys.Platform] = TestFixtures.PlatformWindows,
                 [GameLaunchPropertyKeys.Version] = "1.2.3",
                 [GameLaunchPropertyKeys.BuildGuid] = "a1b2c3d4e5f6",
                 [GameLaunchPropertyKeys.UnityVersion] = "2022.3.20f1",
@@ -1224,7 +1224,7 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.LaunchContextProvider = () => new Dictionary<string, object>
             {
-                [GameLaunchPropertyKeys.DistributionPlatform] = "provider_value",
+                [GameLaunchPropertyKeys.DistributionPlatform] = TestFixtures.ProviderValue,
             };
 
             var config = MakeConfig();
@@ -1237,7 +1237,7 @@ namespace Immutable.Audience.Tests
                 .Select(File.ReadAllText)
                 .First(c => c.Contains($"\"{EventNames.GameLaunch}\""));
             StringAssert.Contains($"\"{GameLaunchPropertyKeys.DistributionPlatform}\":\"{DistributionPlatforms.Steam}\"", launchFile);
-            Assert.IsFalse(launchFile.Contains("provider_value"),
+            Assert.IsFalse(launchFile.Contains(TestFixtures.ProviderValue),
                 "config.DistributionPlatform should win over the provider's value");
         }
 
@@ -1325,8 +1325,8 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
 
-            ImmutableAudience.Identify("player_steam", IdentityType.Steam);
-            ImmutableAudience.Alias("player_steam", IdentityType.Steam, "player_passport", IdentityType.Passport);
+            ImmutableAudience.Identify(TestFixtures.PlayerSteamId, IdentityType.Steam);
+            ImmutableAudience.Alias(TestFixtures.PlayerSteamId, IdentityType.Steam, TestFixtures.PlayerPassportId, IdentityType.Passport);
             ImmutableAudience.Track(TestEventNames.TrackedBeforeDowngrade);
 
             ImmutableAudience.FlushQueueToDiskForTesting();
@@ -1351,7 +1351,7 @@ namespace Immutable.Audience.Tests
         public void FullToAnonymous_FutureTracksOmitUserId()
         {
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
-            ImmutableAudience.Identify("player_steam", IdentityType.Steam);
+            ImmutableAudience.Identify(TestFixtures.PlayerSteamId, IdentityType.Steam);
             ImmutableAudience.SetConsent(ConsentLevel.Anonymous);
 
             ImmutableAudience.Track(TestEventNames.TrackedAfterDowngrade);

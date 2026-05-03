@@ -13,7 +13,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Track_RequiredFieldsPresent()
         {
-            var result = MessageBuilder.Track(TestEventNames.LevelComplete, "anon-1", null, PackageVersion);
+            var result = MessageBuilder.Track(TestEventNames.LevelComplete, TestFixtures.AnonId1, null, PackageVersion);
 
             Assert.AreEqual(MessageTypes.Track, result[MessageFields.Type]);
             Assert.IsTrue(result.ContainsKey(MessageFields.MessageId));
@@ -36,7 +36,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Track_NullUserId_NotPresentInDict()
         {
-            var result = MessageBuilder.Track("evt", "anon-1", null, PackageVersion);
+            var result = MessageBuilder.Track(TestEventNames.PlaceholderEvt, TestFixtures.AnonId1, null, PackageVersion);
 
             Assert.IsFalse(result.ContainsKey(MessageFields.UserId));
         }
@@ -44,20 +44,20 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Track_NonNullUserId_PresentInDict()
         {
-            var result = MessageBuilder.Track("evt", "anon-1", "user-99", PackageVersion);
+            var result = MessageBuilder.Track(TestEventNames.PlaceholderEvt, TestFixtures.AnonId1, TestFixtures.UserId99, PackageVersion);
 
             Assert.IsTrue(result.ContainsKey(MessageFields.UserId));
-            Assert.AreEqual("user-99", result[MessageFields.UserId]);
+            Assert.AreEqual(TestFixtures.UserId99, result[MessageFields.UserId]);
         }
 
         [Test]
         public void Identify_TypeAndIdentityFieldsPresent()
         {
-            var result = MessageBuilder.Identify("anon-42", "user-42", IdentityType.Steam.ToLowercaseString(), PackageVersion);
+            var result = MessageBuilder.Identify(TestFixtures.AnonId42, TestFixtures.UserId42, IdentityType.Steam.ToLowercaseString(), PackageVersion);
 
             Assert.AreEqual(MessageTypes.Identify, result[MessageFields.Type]);
-            Assert.AreEqual("anon-42", result[MessageFields.AnonymousId]);
-            Assert.AreEqual("user-42", result[MessageFields.UserId]);
+            Assert.AreEqual(TestFixtures.AnonId42, result[MessageFields.AnonymousId]);
+            Assert.AreEqual(TestFixtures.UserId42, result[MessageFields.UserId]);
             Assert.AreEqual(IdentityType.Steam.ToLowercaseString(), result[MessageFields.IdentityType]);
         }
 
@@ -65,23 +65,23 @@ namespace Immutable.Audience.Tests
         public void Alias_AllFourFieldsPresent()
         {
             var result = MessageBuilder.Alias(
-                "from-id", IdentityType.Email.ToLowercaseString(),
-                "to-id", IdentityType.Steam.ToLowercaseString(),
+                TestFixtures.AliasFromId, IdentityType.Email.ToLowercaseString(),
+                TestFixtures.AliasToId, IdentityType.Steam.ToLowercaseString(),
                 PackageVersion);
 
             Assert.AreEqual(MessageTypes.Alias, result[MessageFields.Type]);
-            Assert.AreEqual("from-id", result[MessageFields.FromId]);
+            Assert.AreEqual(TestFixtures.AliasFromId, result[MessageFields.FromId]);
             Assert.AreEqual(IdentityType.Email.ToLowercaseString(), result[MessageFields.FromType]);
-            Assert.AreEqual("to-id", result[MessageFields.ToId]);
+            Assert.AreEqual(TestFixtures.AliasToId, result[MessageFields.ToId]);
             Assert.AreEqual(IdentityType.Steam.ToLowercaseString(), result[MessageFields.ToType]);
         }
 
         [Test]
         public void AllMessages_ContextContainsLibraryAndLibraryVersion()
         {
-            var track = MessageBuilder.Track("evt", null, null, PackageVersion);
-            var identify = MessageBuilder.Identify(null, "u1", IdentityType.Steam.ToLowercaseString(), PackageVersion);
-            var alias = MessageBuilder.Alias("f", "t1", "t", "t2", PackageVersion);
+            var track = MessageBuilder.Track(TestEventNames.PlaceholderEvt, null, null, PackageVersion);
+            var identify = MessageBuilder.Identify(null, TestFixtures.GenericUserId, IdentityType.Steam.ToLowercaseString(), PackageVersion);
+            var alias = MessageBuilder.Alias(TestFixtures.GenericFromId, TestFixtures.GenericFromType, TestFixtures.GenericToId, TestFixtures.GenericToType, PackageVersion);
 
             foreach (var msg in new[] { track, identify, alias })
             {
@@ -94,9 +94,9 @@ namespace Immutable.Audience.Tests
         [Test]
         public void AllMessages_SurfaceIsUnity()
         {
-            var track = MessageBuilder.Track("evt", null, null, PackageVersion);
-            var identify = MessageBuilder.Identify(null, "u1", IdentityType.Steam.ToLowercaseString(), PackageVersion);
-            var alias = MessageBuilder.Alias("f", "t1", "t", "t2", PackageVersion);
+            var track = MessageBuilder.Track(TestEventNames.PlaceholderEvt, null, null, PackageVersion);
+            var identify = MessageBuilder.Identify(null, TestFixtures.GenericUserId, IdentityType.Steam.ToLowercaseString(), PackageVersion);
+            var alias = MessageBuilder.Alias(TestFixtures.GenericFromId, TestFixtures.GenericFromType, TestFixtures.GenericToId, TestFixtures.GenericToType, PackageVersion);
 
             Assert.AreEqual(Constants.Surface, track[MessageFields.Surface]);
             Assert.AreEqual(Constants.Surface, identify[MessageFields.Surface]);
@@ -120,7 +120,7 @@ namespace Immutable.Audience.Tests
             // Backend deduplicates on messageId; collisions silently drop events.
             var ids = new HashSet<string>();
             for (var i = 0; i < 1000; i++)
-                ids.Add((string)MessageBuilder.Track("evt", null, null, PackageVersion)[MessageFields.MessageId]);
+                ids.Add((string)MessageBuilder.Track(TestEventNames.PlaceholderEvt, null, null, PackageVersion)[MessageFields.MessageId]);
             Assert.AreEqual(1000, ids.Count);
         }
 
@@ -161,9 +161,9 @@ namespace Immutable.Audience.Tests
 
         private static IEnumerable<Dictionary<string, object>> EveryMessageType()
         {
-            yield return MessageBuilder.Track("evt", null, null, PackageVersion);
-            yield return MessageBuilder.Identify(null, "u1", IdentityType.Steam.ToLowercaseString(), PackageVersion);
-            yield return MessageBuilder.Alias("f", "t1", "t", "t2", PackageVersion);
+            yield return MessageBuilder.Track(TestEventNames.PlaceholderEvt, null, null, PackageVersion);
+            yield return MessageBuilder.Identify(null, TestFixtures.GenericUserId, IdentityType.Steam.ToLowercaseString(), PackageVersion);
+            yield return MessageBuilder.Alias(TestFixtures.GenericFromId, TestFixtures.GenericFromType, TestFixtures.GenericToId, TestFixtures.GenericToType, PackageVersion);
         }
     }
 }
