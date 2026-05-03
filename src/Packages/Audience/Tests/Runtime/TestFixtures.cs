@@ -105,5 +105,24 @@ namespace Immutable.Audience.Tests
 
         // Generic single-user fixture for tests that just need any userId.
         internal const string GenericUserSingleId = "user1";
+
+        // Progression payload values used by TypedEventTests and the JsonReaderTests round-trip.
+        internal const string ProgressionLevelFixture = "1";
+        internal const int ProgressionScoreFixture = 1500;
+        internal const float ProgressionDurationSecFixture = 120.5f;
+
+        // Resource.Amount fixture used by three TypedEventTests scenarios
+        // (Source flow, WithoutFlow guard, WithoutAmount guard).
+        internal const float ResourceAmountFixture = 100f;
+
+        // Purchase.Value fixtures.
+        // PurchaseValueFixture (9.99m) is the standard shape; PurchaseValueLowFixture (5.00m) is the optional-fields-omitted variant.
+        internal const decimal PurchaseValueFixture = 9.99m;
+        internal const decimal PurchaseValueLowFixture = 5.00m;
+        internal const int PurchaseQuantityFixture = 1;
+
+        // One-char placeholders for identifier slots when the value content isn't tested.
+        internal const string MinimalIdentifierA = "a";
+        internal const string MinimalIdentifierU = "u";
     }
 }

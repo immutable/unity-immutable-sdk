@@ -159,7 +159,7 @@ namespace Immutable.Audience.Tests
         {
             using var queue = new EventQueue(_store, flushIntervalSeconds: 60, flushSize: 100);
 
-            queue.Enqueue(new Dictionary<string, object> { [MessageFields.Type] = MessageTypes.Track, [MessageFields.EventName] = "a" });
+            queue.Enqueue(new Dictionary<string, object> { [MessageFields.Type] = MessageTypes.Track, [MessageFields.EventName] = TestEventNames.PlaceholderA });
             queue.FlushSync();
             queue.Enqueue(new Dictionary<string, object> { [MessageFields.Type] = MessageTypes.Track, [MessageFields.EventName] = "b" });
 

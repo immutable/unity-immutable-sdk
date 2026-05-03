@@ -92,7 +92,7 @@ namespace Immutable.Audience.Tests
                 [MessageFields.Properties] = new Dictionary<string, object>
                 {
                     [EventPropertyKeys.Status] = ProgressionStatus.Complete.ToLowercaseString(),
-                    [EventPropertyKeys.Score] = 1500
+                    [EventPropertyKeys.Score] = TestFixtures.ProgressionScoreFixture
                 },
                 [MessageFields.AnonymousId] = AnonymousIdFixture,
                 [MessageFields.UserId] = TestFixtures.SteamId64
@@ -107,7 +107,7 @@ namespace Immutable.Audience.Tests
             Assert.AreEqual(TestFixtures.SteamId64, parsed[MessageFields.UserId]);
             var props = (Dictionary<string, object>)parsed[MessageFields.Properties];
             Assert.AreEqual(ProgressionStatus.Complete.ToLowercaseString(), props[EventPropertyKeys.Status]);
-            Assert.AreEqual(1500, props[EventPropertyKeys.Score]);
+            Assert.AreEqual(TestFixtures.ProgressionScoreFixture, props[EventPropertyKeys.Score]);
         }
 
         [Test]

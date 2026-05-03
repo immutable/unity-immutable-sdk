@@ -13,6 +13,12 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
     [TestFixture]
     internal class SampleAppLiveFireTests
     {
+        // Reflection target for ImmutableAudience.ResetState (invoked from SetUp).
+        private const string ResetStateMethodName = "ResetState";
+
+        // Per-test prefix combined with UtcNow.Ticks for a unique userId per Identify run.
+        private const string PanelUserPrefix = "panel-user-";
+
         // Cached allocations for fixed-delay yields (SDK needs time to flush
         // rather than "wait up to N seconds for a condition"). Static readonly
         // so the WaitForSecondsRealtime instance is created once per class load.
@@ -28,7 +34,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
             // ResetState is internal — reached via reflection (BindingFlags.NonPublic
             // bypasses C# access checks; no InternalsVisibleTo required).
             var t = typeof(ImmutableAudience);
-            var m = t.GetMethod("ResetState",
+            var m = t.GetMethod(ResetStateMethodName,
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
             m?.Invoke(null, null);
 
@@ -687,7 +693,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         {
             yield return LoadAndInit(initialConsent: SampleAppUi.Consent.Full);
 
-            var userId = "panel-user-" + DateTime.UtcNow.Ticks;
+            var userId = PanelUserPrefix + DateTime.UtcNow.Ticks;
             _root!.Q<TextField>(SampleAppUi.IdentityFields.Id).value = userId;
             _root.Q<Button>(SampleAppUi.Buttons.Identify).Click();
             yield return SampleAppTestHelpers.WaitForLogEntry(_root, SampleAppUi.LogLabels.Identify, LogLevels.Ok, 5f);

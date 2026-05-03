@@ -15,6 +15,9 @@ namespace Immutable.Audience
     // Call Shutdown before process exit.
     internal sealed class EventQueue : IDisposable
     {
+        // Drain thread name. Surfaces in profilers, debuggers, and crash dumps.
+        private const string DrainThreadName = "imtbl-audience-drain";
+
         private readonly DiskStore _store;
         private readonly int _flushIntervalMs;
         private readonly int _flushSize;
@@ -44,7 +47,7 @@ namespace Immutable.Audience
             _drainThread = new Thread(DrainLoop)
             {
                 IsBackground = true,
-                Name = "imtbl-audience-drain"
+                Name = DrainThreadName
             };
             _drainThread.Start();
         }

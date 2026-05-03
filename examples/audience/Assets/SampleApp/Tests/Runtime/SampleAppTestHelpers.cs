@@ -15,6 +15,15 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
     // the log pane via the userData stash on each log row.
     internal static class SampleAppTestHelpers
     {
+        // Reflection field names for AudienceSample's LogEntry.
+        // No InternalsVisibleTo on the sample-app assembly, so nameof() is unreachable.
+        private const string LogEntryLabelField = "Label";
+        private const string LogEntryBodyField = "Body";
+        private const string LogEntryLevelField = "Level";
+
+        // UI Toolkit's Clickable.clicked is non-public; ButtonTestExtensions.Click reflects through this name.
+        internal const string ClickableClickedField = "clicked";
+
         // Polls predicate once per frame until it returns true or the deadline
         // elapses. Calls Assert.Fail with description when the deadline is hit.
         // Use this instead of WaitForSecondsRealtime when a test is waiting
@@ -104,16 +113,16 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
             internal LogEntryShim(object entry) { _entry = entry; }
 
             internal string Label =>
-                (string)(_entry.GetType().GetField("Label")?.GetValue(_entry) ?? "");
+                (string)(_entry.GetType().GetField(LogEntryLabelField)?.GetValue(_entry) ?? "");
 
             internal string Body =>
-                (string)(_entry.GetType().GetField("Body")?.GetValue(_entry) ?? "");
+                (string)(_entry.GetType().GetField(LogEntryBodyField)?.GetValue(_entry) ?? "");
 
             internal int Level
             {
                 get
                 {
-                    var v = _entry.GetType().GetField("Level")?.GetValue(_entry);
+                    var v = _entry.GetType().GetField(LogEntryLevelField)?.GetValue(_entry);
                     return v == null ? -1 : Convert.ToInt32(v);
                 }
             }
@@ -146,7 +155,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         {
             var clickable = button?.clickable;
             if (clickable == null) return;
-            var field = typeof(Clickable).GetField("clicked",
+            var field = typeof(Clickable).GetField(SampleAppTestHelpers.ClickableClickedField,
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             var handler = field?.GetValue(clickable) as Delegate;
             handler?.DynamicInvoke();

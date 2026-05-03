@@ -13,6 +13,9 @@ namespace Immutable.Audience.Tests
         // Exception thrown by the ThrowingTrack sabotage delegate across four scenarios.
         private const string TrackExplodeMessage = "track explode";
 
+        // Fixed virtual "now" used as the starting point for every Session lifecycle test.
+        private static readonly DateTime FixedNowUtc = new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc);
+
         private List<(string name, Dictionary<string, object> props)> _events;
 
         [SetUp]
@@ -59,7 +62,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void End_FiresSessionEnd_WithDuration()
         {
-            var now = new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc);
+            var now = FixedNowUtc;
             using var session = new Session(MockTrack, getUtcNow: () => now);
             session.Start();
             now = now.AddSeconds(2);
@@ -136,7 +139,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Pause_ThenResume_ShortPause_ContinuesSession()
         {
-            var now = new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc);
+            var now = FixedNowUtc;
             using var session = new Session(MockTrack, getUtcNow: () => now);
             session.Start();
             var originalId = session.SessionId;
@@ -155,7 +158,7 @@ namespace Immutable.Audience.Tests
         {
             // Uses the injected clock to jump past the 30-second threshold
             // without sleeping.
-            var now = new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc);
+            var now = FixedNowUtc;
             using var session = new Session(MockTrack, getUtcNow: () => now);
             session.Start();
             var id1 = session.SessionId;
@@ -182,7 +185,7 @@ namespace Immutable.Audience.Tests
             // _pausedAt jump to the second Pause and this test reports a
             // larger duration (over-crediting engagement by the double-pause
             // gap).
-            var now = new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc);
+            var now = FixedNowUtc;
             DateTime Clock() => now;
 
             using var session = new Session(MockTrack, getUtcNow: Clock);
@@ -233,7 +236,7 @@ namespace Immutable.Audience.Tests
             // artificial engagement credit. Sabotage: removing the clamp
             // would let this test report a duration that exceeds the
             // wall-clock window, which the assertion below pins.
-            var now = new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc);
+            var now = FixedNowUtc;
             DateTime Clock() => now;
 
             using var session = new Session(MockTrack, getUtcNow: Clock);
@@ -270,7 +273,7 @@ namespace Immutable.Audience.Tests
             // because it only fires when _pausedAt was set. Sabotage:
             // removing `if (engagedSeconds < 0) return 0;` would let this
             // test report -3 instead of 0.
-            var now = new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc);
+            var now = FixedNowUtc;
             DateTime Clock() => now;
 
             using var session = new Session(MockTrack, getUtcNow: Clock);
@@ -296,7 +299,7 @@ namespace Immutable.Audience.Tests
             // (the final engagedSeconds ≥ 0 clamp only catches negatives,
             // not over-credit). Sabotage: removing the livePause clamp lets
             // this test report 15s instead of the ≤ 5s wall-clock window.
-            var now = new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc);
+            var now = FixedNowUtc;
             DateTime Clock() => now;
 
             using var session = new Session(MockTrack, getUtcNow: Clock);
@@ -318,7 +321,7 @@ namespace Immutable.Audience.Tests
         public void End_AfterShortPause_ReportsDurationMinusPause()
         {
             // 10 seconds session, 3 seconds paused inside it → 7 seconds engaged.
-            var now = new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc);
+            var now = FixedNowUtc;
             DateTime Clock() => now;
 
             using var session = new Session(MockTrack, getUtcNow: Clock);
@@ -343,7 +346,7 @@ namespace Immutable.Audience.Tests
         public void End_WhilePaused_ExcludesInFlightPauseFromDuration()
         {
             // Session running 5s, then paused for 2s and ended without resuming.
-            var now = new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc);
+            var now = FixedNowUtc;
             DateTime Clock() => now;
 
             using var session = new Session(MockTrack, getUtcNow: Clock);
@@ -371,7 +374,7 @@ namespace Immutable.Audience.Tests
             // for the extended-pause rollover path: a naive duration that
             // forgot to credit the in-flight pause before End fires would
             // ship wall-clock seconds and break engagement dashboards.
-            var now = new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc);
+            var now = FixedNowUtc;
             DateTime Clock() => now;
 
             using var session = new Session(MockTrack, getUtcNow: Clock);
@@ -393,7 +396,7 @@ namespace Immutable.Audience.Tests
         public void Heartbeat_AfterShortPause_ReportsPauseAdjustedDuration()
         {
             // Engaged 6s, paused 2s, resumed, then heartbeat → 6 s engaged.
-            var now = new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc);
+            var now = FixedNowUtc;
             DateTime Clock() => now;
 
             using var session = new Session(MockTrack, getUtcNow: Clock);
@@ -700,8 +703,8 @@ namespace Immutable.Audience.Tests
                 PublishableKey = TestDefaults.PublishableKey,
                 Consent = consent,
                 PersistentDataPath = _testDir,
-                FlushIntervalSeconds = 600,
-                FlushSize = 1000,
+                FlushIntervalSeconds = TestDefaults.FlushIntervalSeconds,
+                FlushSize = TestDefaults.FlushSize,
                 HttpHandler = new KeepOnDiskHandler()
             };
         }

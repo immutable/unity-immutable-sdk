@@ -12,7 +12,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Compress_ProducesValidGzip_ThatDecompressesToOriginal()
         {
-            var original = WireFixture.Track((MessageFields.EventName, "test"));
+            var original = WireFixture.Track((MessageFields.EventName, TestEventNames.PlaceholderTest));
 
             var compressed = Gzip.Compress(original);
 
