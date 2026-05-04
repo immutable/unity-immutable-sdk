@@ -24,12 +24,14 @@ on:
       - 'examples/passport/**'
       - 'examples/passport-unity6/**'
       - 'Plugins/**'
+      - '.github/workflows/ui-tests.yml'
   pull_request:
     paths:
       - 'src/Packages/Passport/**'
       - 'examples/passport/**'
       - 'examples/passport-unity6/**'
       - 'Plugins/**'
+      - '.github/workflows/ui-tests.yml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
