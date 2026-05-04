@@ -159,6 +159,26 @@ jobs:
           python-version: "3.13"
       - name: Install dependencies
         run: python -m pip install -r examples/passport-unity6/Tests/requirements-desktop.txt
+      - name: Check AltTester port (diagnostic)
+        working-directory: examples/passport-unity6/Tests
+        run: |
+          echo "=== macOS firewall status ==="
+          /usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate || true
+          echo "=== Firewall allow list ==="
+          /usr/libexec/ApplicationFirewall/socketfilterfw --listapps || true
+          echo "=== Launching app to check AltTester port ==="
+          open 'Sample Unity 6 macOS.app'
+          echo "Waiting 15s for app to initialise..."
+          sleep 15
+          echo "=== Checking port 13000 (AltTester default) ==="
+          lsof -i :13000 || echo "⚠️ Nothing listening on port 13000"
+          echo "=== All listening TCP ports ==="
+          lsof -i -P -n | grep LISTEN || echo "No listening ports found"
+          echo "=== Unity process check ==="
+          ps aux | grep -i "[S]ample Unity 6" || echo "No Unity process found"
+          echo "=== Killing diagnostic app instance ==="
+          pkill -f "Sample Unity 6 macOS" || true
+          sleep 3
       - name: Run UI tests
         env: 
           UNITY_APP_PATH: Sample Unity 6 macOS.app
@@ -329,6 +349,28 @@ jobs:
         if: always()
         run: |
           Get-Process | Where-Object { $_.Name -like "*brave*" -or $_.Name -eq "chromedriver" } | Stop-Process -Force -ErrorAction SilentlyContinue
+      - name: Check AltTester port (diagnostic)
+        working-directory: examples/passport-unity6/Tests
+        run: |
+          Write-Output "=== Windows Firewall status ==="
+          Get-NetFirewallProfile | Format-Table Name, Enabled -AutoSize
+          Write-Output "=== Firewall rules for Unity/AltTester (inbound allow) ==="
+          Get-NetFirewallRule -Direction Inbound -Action Allow -Enabled True | Where-Object { $_.DisplayName -match "Unity|AltTester|Sample|Immutable" } | Format-Table DisplayName, Profile, Direction, Action -AutoSize
+          Write-Output "=== All inbound allow rules on port 13000 ==="
+          Get-NetFirewallPortFilter | Where-Object { $_.LocalPort -eq "13000" } | ForEach-Object { Get-NetFirewallRule -AssociatedNetFirewallPortFilter $_ } | Format-Table DisplayName, Enabled, Action, Direction -AutoSize
+          Write-Output "=== Launching app to check AltTester port ==="
+          Start-Process -FilePath ".\Sample Unity 6 Windows.exe"
+          Write-Output "Waiting 15s for app to initialise..."
+          Start-Sleep -Seconds 15
+          Write-Output "=== Checking port 13000 (AltTester default) ==="
+          netstat -ano | Select-String "13000" || Write-Output "Nothing found on port 13000"
+          Write-Output "=== All listening TCP ports ==="
+          netstat -ano | Select-String "LISTENING"
+          Write-Output "=== Unity process check ==="
+          Get-Process | Where-Object { $_.Name -like "*Sample Unity 6*" } | Format-Table Id, ProcessName, MainWindowTitle -AutoSize
+          Write-Output "=== Killing diagnostic app instance ==="
+          Get-Process | Where-Object { $_.Name -like "*Sample Unity 6*" } | Stop-Process -Force -ErrorAction SilentlyContinue
+          Start-Sleep -Seconds 3
       - name: Run UI tests
         env: 
           UNITY_APP_PATH: Sample Unity 6 Windows.exe
@@ -419,6 +461,50 @@ jobs:
         if: matrix.targetPlatform == 'StandaloneWindows64' && always()
         run: |
           Get-Process | Where-Object { $_.Name -like "*brave*" -or $_.Name -eq "chromedriver" } | Stop-Process -Force -ErrorAction SilentlyContinue
+      - name: Check AltTester port - macOS (diagnostic)
+        if: contains(matrix.targetPlatform, 'StandaloneOSX') && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform)
+        working-directory: ${{ matrix.projectPath }}/Tests
+        run: |
+          echo "=== macOS firewall status ==="
+          /usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate || true
+          echo "=== Firewall allow list ==="
+          /usr/libexec/ApplicationFirewall/socketfilterfw --listapps || true
+          echo "=== Launching app to check AltTester port ==="
+          open '${{ matrix.unityAppName }}${{ matrix.unityAppExtension }}'
+          echo "Waiting 15s for app to initialise..."
+          sleep 15
+          echo "=== Checking port 13000 (AltTester default) ==="
+          lsof -i :13000 || echo "⚠️ Nothing listening on port 13000"
+          echo "=== All listening TCP ports ==="
+          lsof -i -P -n | grep LISTEN || echo "No listening ports found"
+          echo "=== Unity process check ==="
+          ps aux | grep -i "[S]ampleApp\|[I]mmutable" || echo "No Unity process found"
+          echo "=== Killing diagnostic app instance ==="
+          pkill -f "${{ matrix.unityAppName }}" || true
+          sleep 3
+      - name: Check AltTester port - Windows (diagnostic)
+        if: matrix.targetPlatform == 'StandaloneWindows64' && (github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == 'StandaloneWindows64')
+        working-directory: ${{ matrix.projectPath }}/Tests
+        run: |
+          Write-Output "=== Windows Firewall status ==="
+          Get-NetFirewallProfile | Format-Table Name, Enabled -AutoSize
+          Write-Output "=== Firewall rules for Unity/AltTester (inbound allow) ==="
+          Get-NetFirewallRule -Direction Inbound -Action Allow -Enabled True | Where-Object { $_.DisplayName -match "Unity|AltTester|Sample|Immutable" } | Format-Table DisplayName, Profile, Direction, Action -AutoSize
+          Write-Output "=== All inbound allow rules on port 13000 ==="
+          Get-NetFirewallPortFilter | Where-Object { $_.LocalPort -eq "13000" } | ForEach-Object { Get-NetFirewallRule -AssociatedNetFirewallPortFilter $_ } | Format-Table DisplayName, Enabled, Action, Direction -AutoSize
+          Write-Output "=== Launching app to check AltTester port ==="
+          Start-Process -FilePath ".\${{ matrix.unityAppName }}${{ matrix.unityAppExtension }}"
+          Write-Output "Waiting 15s for app to initialise..."
+          Start-Sleep -Seconds 15
+          Write-Output "=== Checking port 13000 (AltTester default) ==="
+          netstat -ano | Select-String "13000" || Write-Output "Nothing found on port 13000"
+          Write-Output "=== All listening TCP ports ==="
+          netstat -ano | Select-String "LISTENING"
+          Write-Output "=== Unity process check ==="
+          Get-Process | Where-Object { $_.Name -like "*${{ matrix.unityAppName }}*" } | Format-Table Id, ProcessName, MainWindowTitle -AutoSize
+          Write-Output "=== Killing diagnostic app instance ==="
+          Get-Process | Where-Object { $_.Name -like "*${{ matrix.unityAppName }}*" } | Stop-Process -Force -ErrorAction SilentlyContinue
+          Start-Sleep -Seconds 3
       - name: Run UI tests
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.targetPlatform == 'All' || github.event.inputs.targetPlatform == matrix.targetPlatform
         env: 
