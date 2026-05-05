@@ -18,9 +18,11 @@ namespace Immutable.Audience.Samples.SampleApp.Editor
     //   Mono   → Disabled (Mono studios rarely strip; High under Mono can
     //                      strip Net.Http SSL chain code paths).
     //
+    // Supported targets: Standalone, Android.
+    //
     // Usage:
     //   AUDIENCE_SCRIPTING_BACKEND=Mono2x Unity -batchmode -runTests ...
-    //   AUDIENCE_SCRIPTING_BACKEND=IL2CPP Unity -batchmode -runTests ...
+    //   AUDIENCE_SCRIPTING_BACKEND=IL2CPP Unity -batchmode -buildTarget Android ...
     //
     // Unset means "respect ProjectSettings.asset as-is".
     internal sealed class ScriptingBackendOverride : IPreprocessBuildWithReport
@@ -42,12 +44,15 @@ namespace Immutable.Audience.Samples.SampleApp.Editor
                     $"{EnvVar} must be 'IL2CPP' or 'Mono2x'; got '{requested}'"),
             };
 
-            var group = BuildTargetGroup.Standalone;
+            var group = report.summary.platformGroup;
+            if (group != BuildTargetGroup.Standalone && group != BuildTargetGroup.Android)
+                return;
+
             var currentBackend = PlayerSettings.GetScriptingBackend(group);
             if (currentBackend != backend)
             {
                 PlayerSettings.SetScriptingBackend(group, backend);
-                Debug.Log($"[{nameof(ScriptingBackendOverride)}] backend {currentBackend} → {backend}.");
+                Debug.Log($"[{nameof(ScriptingBackendOverride)}] {group} backend {currentBackend} → {backend}.");
             }
 
             var stripping = backend == ScriptingImplementation.IL2CPP
@@ -57,7 +62,7 @@ namespace Immutable.Audience.Samples.SampleApp.Editor
             if (currentStripping != stripping)
             {
                 PlayerSettings.SetManagedStrippingLevel(group, stripping);
-                Debug.Log($"[{nameof(ScriptingBackendOverride)}] managedStrippingLevel {currentStripping} → {stripping}.");
+                Debug.Log($"[{nameof(ScriptingBackendOverride)}] {group} managedStrippingLevel {currentStripping} → {stripping}.");
             }
         }
     }

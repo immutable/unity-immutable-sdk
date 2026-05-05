@@ -19,6 +19,7 @@
 *.DotSettings.user.meta
 Directory.Build.props.meta
 Directory.Build.targets.meta
+src/Packages/Audience/README.md.meta
 
 # MemoryCaptures can get excessive in size.
 # They also could contain extremely sensitive data
