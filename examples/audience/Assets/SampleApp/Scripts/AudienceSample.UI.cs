@@ -53,7 +53,7 @@ namespace Immutable.Audience.Samples.SampleApp
         private TextField _publishableKey, _baseUrl, _flushInterval, _flushSize;
         private DropdownField _initialConsent;
         private Toggle _debug;
-        private Button _btnInit, _btnPage, _btnFlush, _btnReset, _btnShutdown, _btnDeleteData;
+        private Button _btnInit, _btnFlush, _btnReset, _btnShutdown, _btnDeleteData;
 
         // ---- UXML element fields (Consent tab) ----
 
@@ -195,7 +195,7 @@ namespace Immutable.Audience.Samples.SampleApp
             _flushInterval = Require<TextField>("flush-interval");
             _flushSize     = Require<TextField>("flush-size");
             _btnInit       = Require<Button>("btn-init");
-            _btnPage       = Require<Button>("btn-page");
+
             _btnFlush      = Require<Button>("btn-flush");
             _btnReset      = Require<Button>("btn-reset");
             _btnShutdown   = Require<Button>("btn-shutdown");
@@ -304,7 +304,7 @@ namespace Immutable.Audience.Samples.SampleApp
             _baseUrl.RegisterValueChangedCallback(_ => RefreshStatusBar());
 
             _btnInit.clicked += OnInit;
-            _btnPage.clicked += OnPage;
+
             _btnFlush.clicked += async () => await OnFlushAsync();
             _btnReset.clicked += OnReset;
             _btnShutdown.clicked += OnShutdown;
@@ -614,7 +614,7 @@ namespace Immutable.Audience.Samples.SampleApp
 
         private void RefreshInitState()
         {
-            foreach (var b in new[] { _btnPage, _btnFlush, _btnReset, _btnShutdown, _btnDeleteData, _btnCustomEvent, _btnIdentify, _btnIdentifyTraits })
+            foreach (var b in new[] { _btnFlush, _btnReset, _btnShutdown, _btnDeleteData, _btnCustomEvent, _btnIdentify, _btnIdentifyTraits })
                 b.SetEnabled(_initialised);
             foreach (var p in _consentPills.Values) p.SetEnabled(_initialised);
             foreach (var btn in _typedEventsHost.Query<Button>().ToList()) btn.SetEnabled(_initialised);
