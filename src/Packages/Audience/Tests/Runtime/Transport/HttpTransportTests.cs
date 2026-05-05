@@ -52,7 +52,7 @@ namespace Immutable.Audience.Tests
             _store.Write("{\"type\":\"track\",\"eventName\":\"a\"}");
             _store.Write("{\"type\":\"track\",\"eventName\":\"b\"}");
 
-            var handler = new MockHandler(HttpStatusCode.OK, "{\"accepted\":2,\"rejected\":0}");
+            var handler = new MockHandler(HttpStatusCode.OK, $"{{\"accepted\":2,\"{ResponseFields.Rejected}\":0}}");
             using var transport = new HttpTransport(_store, "pk_imapik-test-key1", handler: handler);
 
             var sent = await transport.SendBatchAsync();
@@ -72,7 +72,7 @@ namespace Immutable.Audience.Tests
             string? capturedContentType = null;
             string? capturedContentEncoding = null;
             // Read body inside the callback. The request content is disposed after SendAsync returns.
-            var handler = new MockHandler(HttpStatusCode.OK, "{\"accepted\":1,\"rejected\":0}",
+            var handler = new MockHandler(HttpStatusCode.OK, $"{{\"accepted\":1,\"{ResponseFields.Rejected}\":0}}",
                 onRequest: req =>
                 {
                     capturedKey = string.Join("", req.Headers.GetValues("x-immutable-publishable-key"));
@@ -85,11 +85,11 @@ namespace Immutable.Audience.Tests
             await transport.SendBatchAsync();
 
             Assert.AreEqual("pk_imapik-test-key1", capturedKey);
-            Assert.AreEqual("application/json", capturedContentType);
-            Assert.AreEqual("gzip", capturedContentEncoding);
+            Assert.AreEqual(Constants.MediaTypeJson, capturedContentType);
+            Assert.AreEqual(Constants.GzipEncoding, capturedContentEncoding);
 
             var decompressed = DecompressGzip(capturedBody!);
-            StringAssert.StartsWith("{\"messages\":[", decompressed);
+            StringAssert.StartsWith($"{{\"{ResponseFields.MessagesEnvelope}\":[", decompressed);
             StringAssert.EndsWith("]}", decompressed);
             StringAssert.Contains("\"eventName\":\"test\"", decompressed);
         }
@@ -103,7 +103,7 @@ namespace Immutable.Audience.Tests
             string? capturedContentType = null;
             int capturedContentEncodingCount = -1;
             string? capturedBody = null;
-            var handler = new MockHandler(HttpStatusCode.OK, "{\"accepted\":1,\"rejected\":0}",
+            var handler = new MockHandler(HttpStatusCode.OK, $"{{\"accepted\":1,\"{ResponseFields.Rejected}\":0}}",
                 onRequest: req =>
                 {
                     capturedKey = string.Join("", req.Headers.GetValues("x-immutable-publishable-key"));
@@ -116,9 +116,9 @@ namespace Immutable.Audience.Tests
             await transport.SendBatchAsync();
 
             Assert.AreEqual("pk_imapik-test-key1", capturedKey);
-            Assert.AreEqual("application/json", capturedContentType);
+            Assert.AreEqual(Constants.MediaTypeJson, capturedContentType);
             Assert.AreEqual(0, capturedContentEncodingCount, "no Content-Encoding header is permitted in v1");
-            StringAssert.StartsWith("{\"messages\":[", capturedBody);
+            StringAssert.StartsWith($"{{\"{ResponseFields.MessagesEnvelope}\":[", capturedBody);
             StringAssert.EndsWith("]}", capturedBody);
             StringAssert.Contains("\"eventName\":\"test\"", capturedBody);
         }
@@ -130,7 +130,7 @@ namespace Immutable.Audience.Tests
             _store.Write("{\"type\":\"track\"}");
 
             HttpRequestMessage? captured = null;
-            var handler = new MockHandler(HttpStatusCode.OK, "{\"accepted\":1,\"rejected\":0}",
+            var handler = new MockHandler(HttpStatusCode.OK, $"{{\"accepted\":1,\"{ResponseFields.Rejected}\":0}}",
                 onRequest: req => captured = req);
             using var transport = new HttpTransport(_store, "pk_imapik-test-key1", handler: handler);
 
@@ -145,7 +145,7 @@ namespace Immutable.Audience.Tests
             _store.Write("{\"type\":\"track\"}");
 
             HttpRequestMessage? captured = null;
-            var handler = new MockHandler(HttpStatusCode.OK, "{\"accepted\":1,\"rejected\":0}",
+            var handler = new MockHandler(HttpStatusCode.OK, $"{{\"accepted\":1,\"{ResponseFields.Rejected}\":0}}",
                 onRequest: req => captured = req);
             using var transport = new HttpTransport(_store, "pk_imapik-prodkey", handler: handler);
 
@@ -160,7 +160,7 @@ namespace Immutable.Audience.Tests
             _store.Write("{\"type\":\"track\"}");
 
             HttpRequestMessage? captured = null;
-            var handler = new MockHandler(HttpStatusCode.OK, "{\"accepted\":1,\"rejected\":0}",
+            var handler = new MockHandler(HttpStatusCode.OK, $"{{\"accepted\":1,\"{ResponseFields.Rejected}\":0}}",
                 onRequest: req => captured = req);
             const string custom = "https://api.dev.immutable.com";
             // Test-prefixed key would resolve to Sandbox on its own; the
@@ -298,7 +298,7 @@ namespace Immutable.Audience.Tests
                 return callCount == 1
                     ? new HttpResponseMessage((HttpStatusCode)429)
                     : new HttpResponseMessage(HttpStatusCode.OK)
-                    { Content = new StringContent("{\"accepted\":1,\"rejected\":0}") };
+                    { Content = new StringContent($"{{\"accepted\":1,\"{ResponseFields.Rejected}\":0}}") };
             });
             AudienceError? reportedError = null;
             using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
@@ -325,7 +325,7 @@ namespace Immutable.Audience.Tests
             _store.Write("{\"type\":\"track\",\"eventName\":\"a\"}");
             _store.Write("{\"type\":\"track\",\"eventName\":\"b\"}");
 
-            var handler = new MockHandler(HttpStatusCode.OK, "{\"accepted\":1,\"rejected\":1}");
+            var handler = new MockHandler(HttpStatusCode.OK, $"{{\"accepted\":1,\"{ResponseFields.Rejected}\":1}}");
             AudienceError? reportedError = null;
             using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
                 onError: e => reportedError = e, handler: handler);
@@ -343,7 +343,7 @@ namespace Immutable.Audience.Tests
         {
             _store.Write("{\"type\":\"track\",\"eventName\":\"a\"}");
 
-            var handler = new MockHandler(HttpStatusCode.OK, "{\"accepted\":1,\"rejected\":0}");
+            var handler = new MockHandler(HttpStatusCode.OK, $"{{\"accepted\":1,\"{ResponseFields.Rejected}\":0}}");
             AudienceError? reportedError = null;
             using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
                 onError: e => reportedError = e, handler: handler);
@@ -468,7 +468,7 @@ namespace Immutable.Audience.Tests
                 return callCount <= 2
                     ? new HttpResponseMessage(HttpStatusCode.InternalServerError)
                     : new HttpResponseMessage(HttpStatusCode.OK)
-                    { Content = new StringContent("{\"accepted\":1,\"rejected\":0}") };
+                    { Content = new StringContent($"{{\"accepted\":1,\"{ResponseFields.Rejected}\":0}}") };
             });
             using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
                 handler: handler, getUtcNow: _getUtcNow);

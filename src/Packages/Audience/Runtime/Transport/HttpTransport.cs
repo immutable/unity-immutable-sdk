@@ -15,6 +15,17 @@ namespace Immutable.Audience
     // Sends queued events from DiskStore to the Audience backend.
     internal sealed class HttpTransport : IDisposable
     {
+        // How long we wait for one POST before giving up.
+        // Without this, one stuck request can block everything else.
+        internal const int RequestTimeoutSeconds = 30;
+
+        // How long we wait before retrying after a failed POST. Doubles each time.
+        internal const int Backoff1stMs = 5_000;
+        internal const int Backoff2ndMs = 10_000;
+        internal const int Backoff3rdMs = 20_000;
+        internal const int Backoff4thMs = 40_000;
+        internal const int BackoffCapMs = 60_000;
+
         private readonly DiskStore _store;
         private readonly string _url;
         private readonly string _publishableKey;
@@ -48,7 +59,7 @@ namespace Immutable.Audience
             _client = handler != null
                 ? new HttpClient(handler, disposeHandler: false)
                 : new HttpClient();
-            _client.Timeout = TimeSpan.FromSeconds(30);
+            _client.Timeout = TimeSpan.FromSeconds(RequestTimeoutSeconds);
             _getUtcNow = getUtcNow ?? (() => DateTime.UtcNow);
         }
 
@@ -89,10 +100,10 @@ namespace Immutable.Audience
 #if IMMUTABLE_AUDIENCE_GZIP
                 var compressed = Gzip.Compress(payload);
                 request.Content = new ByteArrayContent(compressed);
-                request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                request.Content.Headers.Add("Content-Encoding", "gzip");
+                request.Content.Headers.ContentType = new MediaTypeHeaderValue(Constants.MediaTypeJson);
+                request.Content.Headers.Add(Constants.ContentEncodingHeader, Constants.GzipEncoding);
 #else
-                request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+                request.Content = new StringContent(payload, Encoding.UTF8, Constants.MediaTypeJson);
 #endif
 
                 using var response = await _client.SendAsync(request, ct).ConfigureAwait(false);
@@ -114,7 +125,7 @@ namespace Immutable.Audience
                             $"Batch partially rejected: {rejected} of {batch.Count} events dropped");
                     }
                 }
-                else if (statusCode == 429)
+                else if (statusCode == (int)HttpStatusCode.TooManyRequests)
                 {
                     // 429 is retryable (RFC 6585). Keep the batch, honor Retry-After
                     // if present else use the existing 5xx backoff schedule. No
@@ -182,11 +193,11 @@ namespace Immutable.Audience
         private int BackoffMsLocked() => _consecutiveFailures switch
         {
             <= 0 => 0,
-            1 => 5_000,
-            2 => 10_000,
-            3 => 20_000,
-            4 => 40_000,
-            _ => 60_000,
+            1 => Backoff1stMs,
+            2 => Backoff2ndMs,
+            3 => Backoff3rdMs,
+            4 => Backoff4thMs,
+            _ => BackoffCapMs,
         };
 
         // Earliest UTC time at which the next attempt may run.
@@ -244,7 +255,7 @@ namespace Immutable.Audience
         // schema (#/components/schemas/MessagesRequest property "messages").
         private static string? BuildPayload(IReadOnlyList<string> paths)
         {
-            var sb = new StringBuilder("{\"messages\":[");
+            var sb = new StringBuilder($"{{\"{ResponseFields.MessagesEnvelope}\":[");
             var count = 0;
 
             for (var i = 0; i < paths.Count; i++)
@@ -296,7 +307,7 @@ namespace Immutable.Audience
             try
             {
                 var parsed = JsonReader.DeserializeObject(body);
-                if (!parsed.TryGetValue("rejected", out var raw)) return 0;
+                if (!parsed.TryGetValue(ResponseFields.Rejected, out var raw)) return 0;
                 return raw switch
                 {
                     int i => i,

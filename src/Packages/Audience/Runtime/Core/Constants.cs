@@ -17,6 +17,12 @@ namespace Immutable.Audience
         internal const int MaxBatchSize = 100;
         internal const int StaleEventDays = 30;
         internal const int MaxFieldLength = 256; // Backend schema limit.
+
+        // Timestamp format the backend wants on every event.
+        internal const string IsoTimestampFormat = "o";
+
+        // Format that lets numbers survive a JSON round-trip unchanged.
+        internal const string RoundTripNumberFormat = "R";
         internal const int ControlPlaneRequestTimeoutSeconds = 30;
 
         internal const string LibraryName = "com.immutable.audience";
@@ -25,6 +31,10 @@ namespace Immutable.Audience
         internal const string ConsentSource = "UnitySDK";
 
         internal const string PublishableKeyHeader = "x-immutable-publishable-key";
+        internal const string ContentEncodingHeader = "Content-Encoding";
+
+        internal const string MediaTypeJson = "application/json";
+        internal const string GzipEncoding = "gzip";
 
         internal static string MessagesUrl(string? publishableKey, string? baseUrlOverride = null) =>
             BaseUrl(publishableKey, baseUrlOverride) + MessagesPath;
@@ -52,12 +62,129 @@ namespace Immutable.Audience
         internal const string Alias = "alias";
     }
 
+    // Property keys for the auto-fired game_launch event.
+    internal static class GameLaunchPropertyKeys
+    {
+        internal const string Platform = "platform";
+        internal const string Version = "version";
+        internal const string BuildGuid = "buildGuid";
+        internal const string UnityVersion = "unityVersion";
+        internal const string OsFamily = "osFamily";
+        internal const string DeviceModel = "deviceModel";
+        internal const string Gpu = "gpu";
+        internal const string GpuVendor = "gpuVendor";
+        internal const string Cpu = "cpu";
+        internal const string CpuCores = "cpuCores";
+        internal const string RamMb = "ramMb";
+        internal const string ScreenDpi = "screenDpi";
+        internal const string DistributionPlatform = "distributionPlatform";
+    }
+
+    // Keys merged into every event's context dictionary.
+    internal static class ContextKeys
+    {
+        internal const string UserAgent = "userAgent";
+        internal const string Timezone = "timezone";
+        internal const string Locale = "locale";
+        internal const string Screen = "screen";
+    }
+
+    // JSON keys for the consent-sync PUT body.
+    internal static class ConsentBodyFields
+    {
+        internal const string Status = "status";
+        internal const string Source = "source";
+    }
+
+    // JSON keys for the messages POST envelope and response.
+    internal static class ResponseFields
+    {
+        internal const string MessagesEnvelope = "messages";
+        internal const string Rejected = "rejected";
+    }
+
+    // Keys inside each event's "properties" dict.
+    internal static class EventPropertyKeys
+    {
+        // Shared across multiple events (Session + Progression for DurationSec,
+        // Resource + Purchase for Currency / ItemId).
+        internal const string SessionId = "sessionId";
+        internal const string DurationSec = "durationSec";
+        internal const string Currency = "currency";
+        internal const string ItemId = "itemId";
+
+        // Progression-specific
+        internal const string Status = "status";
+        internal const string World = "world";
+        internal const string Level = "level";
+        internal const string Stage = "stage";
+        internal const string Score = "score";
+
+        // Resource-specific
+        internal const string Flow = "flow";
+        internal const string Amount = "amount";
+        internal const string ItemType = "itemType";
+
+        // Purchase-specific
+        internal const string Value = "value";
+        internal const string ItemName = "itemName";
+        internal const string Quantity = "quantity";
+        internal const string TransactionId = "transactionId";
+
+        // MilestoneReached-specific
+        internal const string Name = "name";
+    }
+
+    // Event names we send on Track.
+    internal static class EventNames
+    {
+        // Session lifecycle (auto-fired)
+        internal const string SessionStart = "session_start";
+        internal const string SessionEnd = "session_end";
+        internal const string SessionHeartbeat = "session_heartbeat";
+
+        // Init lifecycle (auto-fired)
+        internal const string GameLaunch = "game_launch";
+
+        // Typed events (IEvent implementations)
+        internal const string Progression = "progression";
+        internal const string Resource = "resource";
+        internal const string Purchase = "purchase";
+        internal const string MilestoneReached = "milestone_reached";
+    }
+
     // Wire-format field names that cross module boundaries inside the SDK
     // (read by one module, written by another).
     internal static class MessageFields
     {
+        // Envelope keys present on every message
         internal const string Type = "type";
+        internal const string MessageId = "messageId";
+        internal const string EventTimestamp = "eventTimestamp";
+        internal const string Context = "context";
+        internal const string Surface = "surface";
+
+        // Track envelope
+        internal const string EventName = "eventName";
+        internal const string Properties = "properties";
+
+        // Identity envelope (track, identify, alias)
+        internal const string AnonymousId = "anonymousId";
         internal const string UserId = "userId";
+
+        // Identify envelope
+        internal const string IdentityType = "identityType";
+        internal const string Traits = "traits";
+
+        // Alias envelope
+        internal const string FromId = "fromId";
+        internal const string FromType = "fromType";
+        internal const string ToId = "toId";
+        internal const string ToType = "toType";
+
+        // Context dictionary keys
+        internal const string Library = "library";
+        internal const string LibraryVersion = "libraryVersion";
     }
 
     /// <summary>

@@ -712,7 +712,7 @@ namespace Immutable.Audience.Tests
         {
             var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
             if (!Directory.Exists(queueDir)) return Array.Empty<string>();
-            return Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText).ToArray();
+            return Directory.GetFiles(queueDir, AudiencePaths.QueueGlob).Select(File.ReadAllText).ToArray();
         }
 
         [Test]
@@ -811,7 +811,7 @@ namespace Immutable.Audience.Tests
             // only see post-Reset events.
             ImmutableAudience.FlushQueueToDiskForTesting();
             var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
-            foreach (var f in Directory.GetFiles(queueDir, "*.json")) File.Delete(f);
+            foreach (var f in Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)) File.Delete(f);
 
             var firstAnonymousId = Identity.Get(_testDir);
             Assert.IsNotNull(firstAnonymousId, "first session should have minted an anonymousId");

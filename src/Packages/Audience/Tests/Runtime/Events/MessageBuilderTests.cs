@@ -15,12 +15,12 @@ namespace Immutable.Audience.Tests
         {
             var result = MessageBuilder.Track("level_complete", "anon-1", null, PackageVersion);
 
-            Assert.AreEqual("track", result["type"]);
-            Assert.IsTrue(result.ContainsKey("messageId"));
-            Assert.IsTrue(result.ContainsKey("eventTimestamp"));
-            Assert.IsTrue(result.ContainsKey("context"));
-            Assert.IsTrue(result.ContainsKey("surface"));
-            Assert.AreEqual("level_complete", result["eventName"]);
+            Assert.AreEqual("track", result[MessageFields.Type]);
+            Assert.IsTrue(result.ContainsKey(MessageFields.MessageId));
+            Assert.IsTrue(result.ContainsKey(MessageFields.EventTimestamp));
+            Assert.IsTrue(result.ContainsKey(MessageFields.Context));
+            Assert.IsTrue(result.ContainsKey(MessageFields.Surface));
+            Assert.AreEqual("level_complete", result[MessageFields.EventName]);
         }
 
         [Test]
@@ -30,7 +30,7 @@ namespace Immutable.Audience.Tests
 
             var result = MessageBuilder.Track(longName, null, null, PackageVersion);
 
-            Assert.AreEqual(256, ((string)result["eventName"]).Length);
+            Assert.AreEqual(256, ((string)result[MessageFields.EventName]).Length);
         }
 
         [Test]
@@ -38,7 +38,7 @@ namespace Immutable.Audience.Tests
         {
             var result = MessageBuilder.Track("evt", "anon-1", null, PackageVersion);
 
-            Assert.IsFalse(result.ContainsKey("userId"));
+            Assert.IsFalse(result.ContainsKey(MessageFields.UserId));
         }
 
         [Test]
@@ -46,8 +46,8 @@ namespace Immutable.Audience.Tests
         {
             var result = MessageBuilder.Track("evt", "anon-1", "user-99", PackageVersion);
 
-            Assert.IsTrue(result.ContainsKey("userId"));
-            Assert.AreEqual("user-99", result["userId"]);
+            Assert.IsTrue(result.ContainsKey(MessageFields.UserId));
+            Assert.AreEqual("user-99", result[MessageFields.UserId]);
         }
 
         [Test]
@@ -55,10 +55,10 @@ namespace Immutable.Audience.Tests
         {
             var result = MessageBuilder.Identify("anon-42", "user-42", "steam", PackageVersion);
 
-            Assert.AreEqual("identify", result["type"]);
-            Assert.AreEqual("anon-42", result["anonymousId"]);
-            Assert.AreEqual("user-42", result["userId"]);
-            Assert.AreEqual("steam", result["identityType"]);
+            Assert.AreEqual("identify", result[MessageFields.Type]);
+            Assert.AreEqual("anon-42", result[MessageFields.AnonymousId]);
+            Assert.AreEqual("user-42", result[MessageFields.UserId]);
+            Assert.AreEqual("steam", result[MessageFields.IdentityType]);
         }
 
         [Test]
@@ -66,11 +66,11 @@ namespace Immutable.Audience.Tests
         {
             var result = MessageBuilder.Alias("from-id", "email", "to-id", "steam", PackageVersion);
 
-            Assert.AreEqual("alias", result["type"]);
-            Assert.AreEqual("from-id", result["fromId"]);
-            Assert.AreEqual("email", result["fromType"]);
-            Assert.AreEqual("to-id", result["toId"]);
-            Assert.AreEqual("steam", result["toType"]);
+            Assert.AreEqual("alias", result[MessageFields.Type]);
+            Assert.AreEqual("from-id", result[MessageFields.FromId]);
+            Assert.AreEqual("email", result[MessageFields.FromType]);
+            Assert.AreEqual("to-id", result[MessageFields.ToId]);
+            Assert.AreEqual("steam", result[MessageFields.ToType]);
         }
 
         [Test]
@@ -82,9 +82,9 @@ namespace Immutable.Audience.Tests
 
             foreach (var msg in new[] { track, identify, alias })
             {
-                var ctx = (Dictionary<string, object>)msg["context"];
-                Assert.AreEqual(Constants.LibraryName, ctx["library"]);
-                Assert.AreEqual(PackageVersion, ctx["libraryVersion"]);
+                var ctx = (Dictionary<string, object>)msg[MessageFields.Context];
+                Assert.AreEqual(Constants.LibraryName, ctx[MessageFields.Library]);
+                Assert.AreEqual(PackageVersion, ctx[MessageFields.LibraryVersion]);
             }
         }
 
@@ -95,9 +95,9 @@ namespace Immutable.Audience.Tests
             var identify = MessageBuilder.Identify(null, "u1", "steam", PackageVersion);
             var alias = MessageBuilder.Alias("f", "t1", "t", "t2", PackageVersion);
 
-            Assert.AreEqual("unity", track["surface"]);
-            Assert.AreEqual("unity", identify["surface"]);
-            Assert.AreEqual("unity", alias["surface"]);
+            Assert.AreEqual("unity", track[MessageFields.Surface]);
+            Assert.AreEqual("unity", identify[MessageFields.Surface]);
+            Assert.AreEqual("unity", alias[MessageFields.Surface]);
         }
 
         [Test]
@@ -105,7 +105,7 @@ namespace Immutable.Audience.Tests
         {
             foreach (var msg in EveryMessageType())
             {
-                var id = (string)msg["messageId"];
+                var id = (string)msg[MessageFields.MessageId];
                 Assert.IsTrue(Guid.TryParse(id, out _),
                     $"messageId must parse as Guid; got: '{id}'");
             }
@@ -117,7 +117,7 @@ namespace Immutable.Audience.Tests
             // Backend deduplicates on messageId; collisions silently drop events.
             var ids = new HashSet<string>();
             for (var i = 0; i < 1000; i++)
-                ids.Add((string)MessageBuilder.Track("evt", null, null, PackageVersion)["messageId"]);
+                ids.Add((string)MessageBuilder.Track("evt", null, null, PackageVersion)[MessageFields.MessageId]);
             Assert.AreEqual(1000, ids.Count);
         }
 
@@ -130,7 +130,7 @@ namespace Immutable.Audience.Tests
             var before = DateTime.UtcNow.AddSeconds(-2);
             foreach (var msg in EveryMessageType())
             {
-                var ts = (string)msg["eventTimestamp"];
+                var ts = (string)msg[MessageFields.EventTimestamp];
                 Assert.IsTrue(
                     DateTime.TryParseExact(ts, "o", CultureInfo.InvariantCulture,
                         DateTimeStyles.RoundtripKind, out var parsed),
@@ -148,9 +148,9 @@ namespace Immutable.Audience.Tests
         {
             foreach (var msg in EveryMessageType())
             {
-                var ctx = (Dictionary<string, object>)msg["context"];
-                var library = ctx["library"] as string;
-                var libraryVersion = ctx["libraryVersion"] as string;
+                var ctx = (Dictionary<string, object>)msg[MessageFields.Context];
+                var library = ctx[MessageFields.Library] as string;
+                var libraryVersion = ctx[MessageFields.LibraryVersion] as string;
                 Assert.IsFalse(string.IsNullOrEmpty(library), "context.library must be non-empty string");
                 Assert.IsFalse(string.IsNullOrEmpty(libraryVersion), "context.libraryVersion must be non-empty string");
             }

@@ -15,10 +15,10 @@ namespace Immutable.Audience
             Dictionary<string, object>? properties = null)
         {
             var msg = BuildBase(MessageTypes.Track, packageVersion);
-            msg["eventName"] = Truncate(eventName, Constants.MaxFieldLength);
+            msg[MessageFields.EventName] = Truncate(eventName, Constants.MaxFieldLength);
 
             if (!string.IsNullOrEmpty(anonymousId))
-                msg["anonymousId"] = Truncate(anonymousId, Constants.MaxFieldLength);
+                msg[MessageFields.AnonymousId] = Truncate(anonymousId, Constants.MaxFieldLength);
 
             if (!string.IsNullOrEmpty(userId))
                 msg[MessageFields.UserId] = Truncate(userId, Constants.MaxFieldLength);
@@ -26,7 +26,7 @@ namespace Immutable.Audience
             if (properties != null && properties.Count > 0)
             {
                 TruncateStringValues(properties);
-                msg["properties"] = properties;
+                msg[MessageFields.Properties] = properties;
             }
 
             return msg;
@@ -42,17 +42,17 @@ namespace Immutable.Audience
             var msg = BuildBase(MessageTypes.Identify, packageVersion);
 
             if (!string.IsNullOrEmpty(anonymousId))
-                msg["anonymousId"] = Truncate(anonymousId, Constants.MaxFieldLength);
+                msg[MessageFields.AnonymousId] = Truncate(anonymousId, Constants.MaxFieldLength);
 
             if (!string.IsNullOrEmpty(userId))
                 msg[MessageFields.UserId] = Truncate(userId, Constants.MaxFieldLength);
 
-            msg["identityType"] = Truncate(identityType, Constants.MaxFieldLength);
+            msg[MessageFields.IdentityType] = Truncate(identityType, Constants.MaxFieldLength);
 
             if (traits != null && traits.Count > 0)
             {
                 TruncateStringValues(traits);
-                msg["traits"] = traits;
+                msg[MessageFields.Traits] = traits;
             }
 
             return msg;
@@ -66,10 +66,10 @@ namespace Immutable.Audience
             string packageVersion)
         {
             var msg = BuildBase(MessageTypes.Alias, packageVersion);
-            msg["fromId"] = Truncate(fromId, Constants.MaxFieldLength);
-            msg["fromType"] = Truncate(fromType, Constants.MaxFieldLength);
-            msg["toId"] = Truncate(toId, Constants.MaxFieldLength);
-            msg["toType"] = Truncate(toType, Constants.MaxFieldLength);
+            msg[MessageFields.FromId] = Truncate(fromId, Constants.MaxFieldLength);
+            msg[MessageFields.FromType] = Truncate(fromType, Constants.MaxFieldLength);
+            msg[MessageFields.ToId] = Truncate(toId, Constants.MaxFieldLength);
+            msg[MessageFields.ToType] = Truncate(toType, Constants.MaxFieldLength);
             return msg;
         }
 
@@ -78,14 +78,14 @@ namespace Immutable.Audience
             return new Dictionary<string, object>
             {
                 [MessageFields.Type] = type,
-                ["messageId"] = Guid.NewGuid().ToString(),
-                ["eventTimestamp"] = DateTime.UtcNow.ToString("o"),
-                ["context"] = new Dictionary<string, object>
+                [MessageFields.MessageId] = Guid.NewGuid().ToString(),
+                [MessageFields.EventTimestamp] = DateTime.UtcNow.ToString(Constants.IsoTimestampFormat),
+                [MessageFields.Context] = new Dictionary<string, object>
                 {
-                    ["library"] = Constants.LibraryName,
-                    ["libraryVersion"] = Truncate(packageVersion, Constants.MaxFieldLength)
+                    [MessageFields.Library] = Constants.LibraryName,
+                    [MessageFields.LibraryVersion] = Truncate(packageVersion, Constants.MaxFieldLength)
                 },
-                ["surface"] = Constants.Surface
+                [MessageFields.Surface] = Constants.Surface
             };
         }
 

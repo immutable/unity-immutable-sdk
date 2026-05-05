@@ -78,7 +78,7 @@ namespace Immutable.Audience
         public float? DurationSec { get; set; }
 
         /// <inheritdoc/>
-        public string EventName => "progression";
+        public string EventName => EventNames.Progression;
 
         /// <inheritdoc/>
         public Dictionary<string, object> ToProperties()
@@ -88,14 +88,14 @@ namespace Immutable.Audience
 
             var props = new Dictionary<string, object>
             {
-                ["status"] = Status.Value.ToLowercaseString()
+                [EventPropertyKeys.Status] = Status.Value.ToLowercaseString()
             };
 
-            if (World != null) props["world"] = World;
-            if (Level != null) props["level"] = Level;
-            if (Stage != null) props["stage"] = Stage;
-            if (Score.HasValue) props["score"] = Score.Value;
-            if (DurationSec.HasValue) props["durationSec"] = DurationSec.Value;
+            if (World != null) props[EventPropertyKeys.World] = World;
+            if (Level != null) props[EventPropertyKeys.Level] = Level;
+            if (Stage != null) props[EventPropertyKeys.Stage] = Stage;
+            if (Score.HasValue) props[EventPropertyKeys.Score] = Score.Value;
+            if (DurationSec.HasValue) props[EventPropertyKeys.DurationSec] = DurationSec.Value;
 
             return props;
         }
@@ -163,7 +163,7 @@ namespace Immutable.Audience
         public string? ItemId { get; set; }
 
         /// <inheritdoc/>
-        public string EventName => "resource";
+        public string EventName => EventNames.Resource;
 
         /// <inheritdoc/>
         public Dictionary<string, object> ToProperties()
@@ -177,13 +177,13 @@ namespace Immutable.Audience
 
             var props = new Dictionary<string, object>
             {
-                ["flow"] = Flow.Value.ToLowercaseString(),
-                ["currency"] = Currency,
-                ["amount"] = Amount.Value
+                [EventPropertyKeys.Flow] = Flow.Value.ToLowercaseString(),
+                [EventPropertyKeys.Currency] = Currency,
+                [EventPropertyKeys.Amount] = Amount.Value
             };
 
-            if (ItemType != null) props["itemType"] = ItemType;
-            if (ItemId != null) props["itemId"] = ItemId;
+            if (ItemType != null) props[EventPropertyKeys.ItemType] = ItemType;
+            if (ItemId != null) props[EventPropertyKeys.ItemId] = ItemId;
 
             return props;
         }
@@ -227,7 +227,7 @@ namespace Immutable.Audience
         public string? TransactionId { get; set; }
 
         /// <inheritdoc/>
-        public string EventName => "purchase";
+        public string EventName => EventNames.Purchase;
 
         // Hand-rolled to avoid pulling System.Text.RegularExpressions into the IL2CPP build.
         private static bool IsIso4217(string s)
@@ -252,14 +252,14 @@ namespace Immutable.Audience
 
             var props = new Dictionary<string, object>
             {
-                ["currency"] = Currency,
-                ["value"] = Value.Value
+                [EventPropertyKeys.Currency] = Currency,
+                [EventPropertyKeys.Value] = Value.Value
             };
 
-            if (ItemId != null) props["itemId"] = ItemId;
-            if (ItemName != null) props["itemName"] = ItemName;
-            if (Quantity.HasValue) props["quantity"] = Quantity.Value;
-            if (TransactionId != null) props["transactionId"] = TransactionId;
+            if (ItemId != null) props[EventPropertyKeys.ItemId] = ItemId;
+            if (ItemName != null) props[EventPropertyKeys.ItemName] = ItemName;
+            if (Quantity.HasValue) props[EventPropertyKeys.Quantity] = Quantity.Value;
+            if (TransactionId != null) props[EventPropertyKeys.TransactionId] = TransactionId;
 
             return props;
         }
@@ -278,7 +278,7 @@ namespace Immutable.Audience
         public string? Name { get; set; }
 
         /// <inheritdoc/>
-        public string EventName => "milestone_reached";
+        public string EventName => EventNames.MilestoneReached;
 
         /// <inheritdoc/>
         public Dictionary<string, object> ToProperties()
@@ -288,7 +288,7 @@ namespace Immutable.Audience
 
             return new Dictionary<string, object>
             {
-                ["name"] = Name
+                [EventPropertyKeys.Name] = Name
             };
         }
     }

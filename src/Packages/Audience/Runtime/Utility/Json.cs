@@ -60,14 +60,14 @@ namespace Immutable.Audience
                 if (float.IsNaN(f) || float.IsInfinity(f))
                     sb.Append("null");
                 else
-                    sb.Append(f.ToString("R", CultureInfo.InvariantCulture));
+                    sb.Append(f.ToString(Constants.RoundTripNumberFormat, CultureInfo.InvariantCulture));
             }
             else if (value is double d)
             {
                 if (double.IsNaN(d) || double.IsInfinity(d))
                     sb.Append("null");
                 else
-                    sb.Append(d.ToString("R", CultureInfo.InvariantCulture));
+                    sb.Append(d.ToString(Constants.RoundTripNumberFormat, CultureInfo.InvariantCulture));
             }
             else if (value is decimal dec)
             {

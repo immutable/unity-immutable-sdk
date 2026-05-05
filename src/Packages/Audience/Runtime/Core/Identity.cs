@@ -92,7 +92,7 @@ namespace Immutable.Audience
                 // New install: generate a UUID and persist it atomically.
                 // Write to a .tmp file first so a crash mid-write leaves no corrupt file.
                 var newId = Guid.NewGuid().ToString();
-                var tmpPath = filePath + ".tmp";
+                var tmpPath = filePath + AudiencePaths.TempFileSuffix;
                 File.WriteAllText(tmpPath, newId);
 
                 try

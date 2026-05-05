@@ -865,7 +865,7 @@ namespace Immutable.Audience.Samples.SampleApp
         private static string FormatLogEntry(LogEntry entry, bool singleLine)
         {
             var sb = new StringBuilder()
-                .Append(entry.Timestamp.ToString("o", CultureInfo.InvariantCulture))
+                .Append(entry.Timestamp.ToString(Constants.IsoTimestampFormat, CultureInfo.InvariantCulture))
                 .Append(" [").Append(entry.Source == LogSource.Sdk ? "SDK" : "APP").Append("] ")
                 .Append(entry.Label);
             if (!string.IsNullOrEmpty(entry.Body))

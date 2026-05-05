@@ -190,7 +190,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.Shutdown();
 
             var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
-            var blobs = Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText).ToList();
+            var blobs = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob).Select(File.ReadAllText).ToList();
 
             Assert.IsTrue(blobs.Any(b =>
                 b.Contains("\"userAgent\":\"TestOS 1.0\"") &&
@@ -219,7 +219,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.Shutdown();
 
             var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
-            var blobs = Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText).ToList();
+            var blobs = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob).Select(File.ReadAllText).ToList();
 
             Assert.IsTrue(blobs.Any(b =>
                 b.Contains("\"type\":\"identify\"") &&
@@ -238,7 +238,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.Shutdown();
 
             var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
-            var blobs = Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText).ToList();
+            var blobs = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob).Select(File.ReadAllText).ToList();
 
             Assert.IsTrue(blobs.Any(b => b.Contains("\"unit_test_event\"") && b.Contains("\"library\":")),
                 "event should still ship with base context when ContextProvider throws");
@@ -254,7 +254,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.Shutdown();
 
             var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
-            var blobs = Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText).ToList();
+            var blobs = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob).Select(File.ReadAllText).ToList();
 
             Assert.IsTrue(blobs.Any(b => b.Contains("\"unit_test_event\"") && b.Contains("\"library\":")),
                 "event should still ship with base context when ContextProvider returns null");
@@ -329,7 +329,7 @@ namespace Immutable.Audience.Tests
 
             ImmutableAudience.Shutdown();
             var queueDir = AudiencePaths.QueueDir(_testDir);
-            var contents = Directory.GetFiles(queueDir, "*.json")
+            var contents = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText).ToList();
             Assert.IsFalse(contents.Any(c => c.Contains("\"purchase\"")),
                 "purchase event with missing required Value must be dropped, not enqueued");
@@ -363,10 +363,10 @@ namespace Immutable.Audience.Tests
             // key ordering, escape style).
             var queueDir = AudiencePaths.QueueDir(_testDir);
             if (!Directory.Exists(queueDir)) return;
-            foreach (var file in Directory.GetFiles(queueDir, "*.json"))
+            foreach (var file in Directory.GetFiles(queueDir, AudiencePaths.QueueGlob))
             {
                 var msg = JsonReader.DeserializeObject(File.ReadAllText(file));
-                if ((string)msg["type"] != "track") continue;
+                if ((string)msg[MessageFields.Type] != "track") continue;
 
                 if (!msg.TryGetValue("eventName", out var eventNameObj))
                     Assert.Fail($"track message {Path.GetFileName(file)} missing eventName field");
@@ -497,7 +497,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.Shutdown();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
-            var files = Directory.GetFiles(queueDir, "*.json");
+            var files = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob);
             // game_launch + crafting_started
             Assert.GreaterOrEqual(files.Length, 2);
 
@@ -515,7 +515,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.Shutdown();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
-            var contents = Directory.GetFiles(queueDir, "*.json")
+            var contents = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText).ToList();
             Assert.IsTrue(contents.Any(c => c.Contains("\"main_menu_opened\"")));
         }
@@ -535,7 +535,7 @@ namespace Immutable.Audience.Tests
                 return;
             }
 
-            Assert.AreEqual(0, Directory.GetFiles(queueDir, "*.json").Length);
+            Assert.AreEqual(0, Directory.GetFiles(queueDir, AudiencePaths.QueueGlob).Length);
         }
 
         // -----------------------------------------------------------------
@@ -563,13 +563,13 @@ namespace Immutable.Audience.Tests
             // assertion counts only our test event.
             ImmutableAudience.FlushQueueToDiskForTesting();
             var queueDir = AudiencePaths.QueueDir(_testDir);
-            foreach (var f in Directory.GetFiles(queueDir, "*.json")) File.Delete(f);
+            foreach (var f in Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)) File.Delete(f);
 
             Assert.DoesNotThrow(() => ImmutableAudience.Track(new NullNameEvent()));
             Assert.DoesNotThrow(() => ImmutableAudience.Track(new EmptyNameEvent()));
 
             ImmutableAudience.FlushQueueToDiskForTesting();
-            Assert.AreEqual(0, Directory.GetFiles(queueDir, "*.json").Length,
+            Assert.AreEqual(0, Directory.GetFiles(queueDir, AudiencePaths.QueueGlob).Length,
                 "IEvent with null/empty EventName must be dropped, not enqueued");
         }
 
@@ -587,7 +587,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.Shutdown();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
-            var contents = Directory.GetFiles(queueDir, "*.json")
+            var contents = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText).ToList();
             Assert.IsTrue(contents.Any(c =>
                 c.Contains("\"progression\"") && c.Contains("\"complete\"")));
@@ -606,7 +606,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.Shutdown();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
-            var contents = Directory.GetFiles(queueDir, "*.json")
+            var contents = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText).ToList();
             Assert.IsTrue(contents.Any(c => c.Contains("\"purchase\"")));
         }
@@ -624,7 +624,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.Shutdown();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
-            var contents = Directory.GetFiles(queueDir, "*.json")
+            var contents = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText).ToList();
             Assert.IsTrue(contents.Any(c =>
                 c.Contains("\"identify\"") && c.Contains("\"76561198012345\"")));
@@ -639,7 +639,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.Shutdown();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
-            var contents = Directory.GetFiles(queueDir, "*.json")
+            var contents = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText).ToList();
             Assert.IsFalse(contents.Any(c => c.Contains("\"identify\"")),
                 "identify should be discarded at Anonymous consent");
@@ -654,7 +654,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.Shutdown();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
-            var contents = Directory.GetFiles(queueDir, "*.json")
+            var contents = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText).ToList();
             Assert.IsTrue(contents.Any(c =>
                 c.Contains("\"alias\"") && c.Contains("\"steam123\"")));
@@ -689,12 +689,12 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.FlushQueueToDiskForTesting();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
-            Assert.Greater(Directory.GetFiles(queueDir, "*.json").Length, 0,
+            Assert.Greater(Directory.GetFiles(queueDir, AudiencePaths.QueueGlob).Length, 0,
                 "precondition: queued event should be on disk before reset");
 
             ImmutableAudience.Reset();
 
-            Assert.AreEqual(0, Directory.GetFiles(queueDir, "*.json").Length,
+            Assert.AreEqual(0, Directory.GetFiles(queueDir, AudiencePaths.QueueGlob).Length,
                 "Reset must discard queued events on disk to match the Web SDK");
         }
 
@@ -712,12 +712,12 @@ namespace Immutable.Audience.Tests
             var queueDir = AudiencePaths.QueueDir(_testDir);
             // Force memory → disk so we can verify the purge wipes both layers.
             ImmutableAudience.FlushQueueToDiskForTesting();
-            Assert.Greater(Directory.GetFiles(queueDir, "*.json").Length, 0,
+            Assert.Greater(Directory.GetFiles(queueDir, AudiencePaths.QueueGlob).Length, 0,
                 "precondition: events queued before downgrade exist on disk");
 
             ImmutableAudience.SetConsent(ConsentLevel.None);
 
-            Assert.AreEqual(0, Directory.GetFiles(queueDir, "*.json").Length,
+            Assert.AreEqual(0, Directory.GetFiles(queueDir, AudiencePaths.QueueGlob).Length,
                 "downgrade to None must purge queued events from disk so they can't leak after revocation");
         }
 
@@ -735,7 +735,7 @@ namespace Immutable.Audience.Tests
             // about our race event only.
             ImmutableAudience.FlushQueueToDiskForTesting();
             var queueDir = AudiencePaths.QueueDir(_testDir);
-            foreach (var f in Directory.GetFiles(queueDir, "*.json")) File.Delete(f);
+            foreach (var f in Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)) File.Delete(f);
 
             // Gate the Track thread so it's poised to enqueue at the moment SetConsent
             // completes its purge. We approximate the race by kicking Track off a
@@ -757,7 +757,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.FlushQueueToDiskForTesting();
 
             var leaked = Directory.Exists(queueDir)
-                ? Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText)
+                ? Directory.GetFiles(queueDir, AudiencePaths.QueueGlob).Select(File.ReadAllText)
                     .Count(c => c.Contains("\"racing_event\""))
                 : 0;
 
@@ -787,7 +787,7 @@ namespace Immutable.Audience.Tests
                 ImmutableAudience.FlushQueueToDiskForTesting();
                 var queueDir = AudiencePaths.QueueDir(_testDir);
                 if (Directory.Exists(queueDir))
-                    foreach (var f in Directory.GetFiles(queueDir, "*.json")) File.Delete(f);
+                    foreach (var f in Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)) File.Delete(f);
 
                 // All trackers spin up and block on the barrier so they all release
                 // simultaneously. The main thread joins the barrier too and fires
@@ -813,7 +813,7 @@ namespace Immutable.Audience.Tests
                 int leaked = 0;
                 if (Directory.Exists(queueDir))
                 {
-                    leaked = Directory.GetFiles(queueDir, "*.json")
+                    leaked = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                         .Select(File.ReadAllText)
                         .Count(c => c.Contains("\"race_stress\""));
                 }
@@ -935,7 +935,7 @@ namespace Immutable.Audience.Tests
 
                 var queueDir = AudiencePaths.QueueDir(_testDir);
                 var sessionStarts = Directory.Exists(queueDir)
-                    ? Directory.GetFiles(queueDir, "*.json")
+                    ? Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                         .Select(File.ReadAllText)
                         .Count(c => c.Contains("\"session_start\""))
                     : 0;
@@ -979,7 +979,7 @@ namespace Immutable.Audience.Tests
                 ImmutableAudience.FlushQueueToDiskForTesting();
                 var queueDir = AudiencePaths.QueueDir(_testDir);
                 if (Directory.Exists(queueDir))
-                    foreach (var f in Directory.GetFiles(queueDir, "*.json")) File.Delete(f);
+                    foreach (var f in Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)) File.Delete(f);
 
                 var barrier = new Barrier(trackersPerIteration + 1);
                 var trackers = new Task[trackersPerIteration];
@@ -1001,7 +1001,7 @@ namespace Immutable.Audience.Tests
                 int userIdLeaks = 0;
                 if (Directory.Exists(queueDir))
                 {
-                    userIdLeaks = Directory.GetFiles(queueDir, "*.json")
+                    userIdLeaks = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                         .Select(File.ReadAllText)
                         .Count(c => c.Contains($"\"{testUserId}\""));
                 }
@@ -1098,7 +1098,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.Shutdown();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
-            var contents = Directory.GetFiles(queueDir, "*.json")
+            var contents = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText).ToList();
             Assert.IsTrue(contents.Any(c => c.Contains("\"game_launch\"")),
                 "Init should auto-fire game_launch");
@@ -1113,7 +1113,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.Shutdown();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
-            var contents = Directory.GetFiles(queueDir, "*.json")
+            var contents = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText).ToList();
             Assert.IsTrue(contents.Any(c =>
                 c.Contains("\"game_launch\"") && c.Contains("\"steam\"")));
@@ -1173,7 +1173,7 @@ namespace Immutable.Audience.Tests
                 return;
             }
 
-            var contents = Directory.GetFiles(queueDir, "*.json")
+            var contents = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText).ToList();
             Assert.IsFalse(contents.Any(c => c.Contains("\"game_launch\"")));
         }
@@ -1193,7 +1193,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.Shutdown();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
-            var launchFile = Directory.GetFiles(queueDir, "*.json")
+            var launchFile = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText)
                 .FirstOrDefault(c => c.Contains("\"game_launch\""));
             Assert.IsNotNull(launchFile, "game_launch should have been enqueued");
@@ -1217,7 +1217,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.Shutdown();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
-            var launchFile = Directory.GetFiles(queueDir, "*.json")
+            var launchFile = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText)
                 .First(c => c.Contains("\"game_launch\""));
             StringAssert.Contains("\"distributionPlatform\":\"steam\"", launchFile);
@@ -1235,7 +1235,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.Shutdown();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
-            var contents = Directory.GetFiles(queueDir, "*.json")
+            var contents = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(File.ReadAllText).ToList();
             Assert.IsTrue(contents.Any(c => c.Contains("\"game_launch\"")),
                 "game_launch must still ship when the context provider throws");
@@ -1318,16 +1318,16 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.SetConsent(ConsentLevel.Anonymous);
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
-            var files = Directory.GetFiles(queueDir, "*.json");
+            var files = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob);
 
             foreach (var f in files)
             {
                 var msg = JsonReader.DeserializeObject(File.ReadAllText(f));
-                var type = (string)msg["type"];
+                var type = (string)msg[MessageFields.Type];
                 Assert.AreNotEqual("identify", type, "identify must be purged on Full -> Anonymous");
                 Assert.AreNotEqual("alias", type, "alias must be purged on Full -> Anonymous");
                 if (type == "track")
-                    Assert.IsFalse(msg.ContainsKey("userId"), "userId must be stripped from queued track on Full -> Anonymous");
+                    Assert.IsFalse(msg.ContainsKey(MessageFields.UserId), "userId must be stripped from queued track on Full -> Anonymous");
             }
         }
 
@@ -1342,15 +1342,15 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.FlushQueueToDiskForTesting();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
-            var trackFiles = Directory.GetFiles(queueDir, "*.json")
+            var trackFiles = Directory.GetFiles(queueDir, AudiencePaths.QueueGlob)
                 .Select(f => JsonReader.DeserializeObject(File.ReadAllText(f)))
-                .Where(m => (string)m["type"] == "track"
-                            && m.ContainsKey("eventName")
-                            && (string)m["eventName"] == "tracked_after_downgrade")
+                .Where(m => (string)m[MessageFields.Type] == "track"
+                            && m.ContainsKey(MessageFields.EventName)
+                            && (string)m[MessageFields.EventName] == "tracked_after_downgrade")
                 .ToList();
 
             Assert.AreEqual(1, trackFiles.Count);
-            Assert.IsFalse(trackFiles[0].ContainsKey("userId"),
+            Assert.IsFalse(trackFiles[0].ContainsKey(MessageFields.UserId),
                 "Track under Anonymous consent must not carry userId");
         }
 

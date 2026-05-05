@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,6 +27,12 @@ namespace Immutable.Audience
         // teardown (Session.Dispose, timer drain, queue shutdown, transport
         // flush, disposes). This keeps the hold time to nanoseconds so a caller
         // arriving on a different thread is not stranded behind those budgets.
+        // How many times we retry the consent-sync PUT after a 429.
+        internal const int ConsentSyncMaxAttempts = 4;
+
+        // How long we wait before the first consent-sync retry. Doubles each time.
+        internal const int ConsentSyncBaseRetryMs = 1_000;
+
         private static AudienceConfig? _config;
         private static DiskStore? _store;
         private static EventQueue? _queue;
@@ -434,7 +441,7 @@ namespace Immutable.Audience
             string query;
             if (!string.IsNullOrEmpty(userId))
             {
-                query = "userId=" + Uri.EscapeDataString(userId);
+                query = $"{MessageFields.UserId}=" + Uri.EscapeDataString(userId);
             }
             else
             {
@@ -442,7 +449,7 @@ namespace Immutable.Audience
                 var anonymousId = Identity.Get(config.PersistentDataPath!);
                 if (string.IsNullOrEmpty(anonymousId))
                     return Task.CompletedTask;
-                query = "anonymousId=" + Uri.EscapeDataString(anonymousId);
+                query = $"{MessageFields.AnonymousId}=" + Uri.EscapeDataString(anonymousId);
             }
 
             var url = Constants.DataUrl(config.PublishableKey, config.BaseUrl) + "?" + query;
@@ -616,17 +623,17 @@ namespace Immutable.Audience
 
             var body = Json.Serialize(new Dictionary<string, object>
             {
-                ["status"] = level.ToLowercaseString(),
-                ["source"] = Constants.ConsentSource,
+                [ConsentBodyFields.Status] = level.ToLowercaseString(),
+                [ConsentBodyFields.Source] = Constants.ConsentSource,
                 // Explicit null lets the backend distinguish "unknown" from a missing field.
-                ["anonymousId"] = anonymousId!,
+                [MessageFields.AnonymousId] = anonymousId!,
             });
 
             Task.Run(async () =>
             {
-                // 429 retried up to 4 attempts (1s/2s/4s or Retry-After).
-                // Other non-2xx fail fast.
-                const int maxAttempts = 4;
+                // 429 retried up to ConsentSyncMaxAttempts attempts (1s/2s/4s
+                // or Retry-After). Other non-2xx fail fast.
+                const int maxAttempts = ConsentSyncMaxAttempts;
                 var attempt = 0;
                 try
                 {
@@ -635,15 +642,15 @@ namespace Immutable.Audience
                         attempt++;
                         using var request = new HttpRequestMessage(HttpMethod.Put, url);
                         request.Headers.Add(Constants.PublishableKeyHeader, publishableKey);
-                        request.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
+                        request.Content = new StringContent(body, System.Text.Encoding.UTF8, Constants.MediaTypeJson);
                         using var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
                         if (response.IsSuccessStatusCode) return;
 
-                        if ((int)response.StatusCode == 429 && attempt < maxAttempts)
+                        if (response.StatusCode == HttpStatusCode.TooManyRequests && attempt < maxAttempts)
                         {
                             var delay = HttpRetry.ParseRetryAfter(response)
-                                ?? TimeSpan.FromMilliseconds(1_000 * (1 << (attempt - 1)));
+                                ?? TimeSpan.FromMilliseconds(ConsentSyncBaseRetryMs * (1 << (attempt - 1)));
                             await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
                             continue;
                         }
@@ -918,10 +925,10 @@ namespace Immutable.Audience
             }
             if (extra == null) return;
 
-            if (!(msg.TryGetValue("context", out var ctxObj) && ctxObj is Dictionary<string, object> ctx))
+            if (!(msg.TryGetValue(MessageFields.Context, out var ctxObj) && ctxObj is Dictionary<string, object> ctx))
             {
                 ctx = new Dictionary<string, object>();
-                msg["context"] = ctx;
+                msg[MessageFields.Context] = ctx;
             }
 
             foreach (var kv in extra)
@@ -1009,11 +1016,11 @@ namespace Immutable.Audience
 
             // Config-supplied distributionPlatform overrides the provider value.
             if (config.DistributionPlatform != null)
-                properties["distributionPlatform"] = config.DistributionPlatform;
+                properties[GameLaunchPropertyKeys.DistributionPlatform] = config.DistributionPlatform;
 
             // No sessionId on game_launch per Event Reference. Pipeline correlates
             // via eventTimestamp with the session_start that fires just before.
-            Track("game_launch", properties.Count > 0 ? properties : null);
+            Track(EventNames.GameLaunch, properties.Count > 0 ? properties : null);
         }
     }
 }
