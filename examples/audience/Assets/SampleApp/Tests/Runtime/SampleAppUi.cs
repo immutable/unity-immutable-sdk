@@ -48,7 +48,6 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         internal static class Buttons
         {
             internal const string Init = "btn-init";
-            internal const string Page = "btn-page";
             internal const string Flush = "btn-flush";
             internal const string Reset = "btn-reset";
             internal const string Shutdown = "btn-shutdown";
@@ -152,7 +151,6 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         internal static class LogLabels
         {
             internal const string Init = "INIT";
-            internal const string Page = "page()";
             internal const string Flush = "flush()";
             internal const string Reset = "reset()";
             internal const string Shutdown = "shutdown()";

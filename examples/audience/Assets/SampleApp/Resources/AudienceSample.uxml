@@ -125,11 +125,6 @@
                         <ui:VisualElement class="actions last">
                             <ui:Button name="btn-init" text="Init" />
 
-                            <ui:Button name="btn-page" class="with-sig">
-                                <ui:Label class="btn-label" text="Page" />
-                                <ui:Label class="btn-sig" text="page()" />
-                            </ui:Button>
-
                             <ui:Button name="btn-flush" class="with-sig">
                                 <ui:Label class="btn-label" text="Flush" />
                                 <ui:Label class="btn-sig" text="flush()" />

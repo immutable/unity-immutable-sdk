@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
 namespace Immutable.Audience.Samples.SampleApp
@@ -103,17 +102,6 @@ namespace Immutable.Audience.Samples.SampleApp
         }
 
         // ---- SDK action handlers: telemetry ----
-
-        // v1 has no typed Screen API; Plan §10 specifies a custom Track call
-        // as the studio-facing pattern for scene coverage. Demo follows that.
-        private void OnPage() => RunAndLog("page()", () =>
-        {
-            GuardConsentForTrack();
-            var screen = SceneManager.GetActiveScene().name;
-            var props = new Dictionary<string, object> { ["path"] = screen };
-            ImmutableAudience.Track("screen_viewed", props);
-            return Json.Serialize(props, 2);
-        });
 
         // Prefers the typed overload for the four events with public C#
         // classes (Progression, Resource, Purchase, MilestoneReached); the
