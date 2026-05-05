@@ -521,6 +521,116 @@
     width: 100%;
 }
 
+/* Narrow breakpoint (< 1024 px) — .narrow is toggled on the root VisualElement
+   (and on .sample-app-grid) by RegisterResponsiveLayout so selectors here reach
+   the sticky header. Status bar switches to a vertical stack so UUID values
+   never overflow sideways regardless of device width. */
+
+.narrow .status-bar {
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+.narrow .status-top-row {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+}
+
+.narrow .status-group {
+    flex-direction: column;
+    align-items: stretch;
+    margin-right: 0;
+    min-width: 0;
+}
+
+.narrow .status-cell {
+    margin-right: 0;
+    margin-bottom: 6px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* Value clips to available width — user taps to copy the full string. */
+.narrow .status-value {
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
+    min-width: 0;
+}
+
+.narrow .status-vertical-rule {
+    display: none;
+}
+
+/* Phone breakpoint (< 480 px) — .phone is toggled on the root VisualElement
+   by RegisterResponsiveLayout so selectors here reach the full page tree.
+   Goal: LARGER text for legibility, 44 px touch targets throughout.
+   Status bar vertical layout is already handled by .narrow above. */
+
+.phone .sticky-top-main {
+    padding-top: 12px;
+}
+
+/* Slight title reduction frees header height; 24 px is still prominent. */
+.phone .title {
+    font-size: 24px;
+}
+
+
+/* Status bar: bigger font on phone. */
+.phone .status-bar {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    font-size: 14px;
+}
+
+.phone .status-cell {
+    margin-bottom: 6px;
+}
+
+/* Tabs: 13 px text, reduced letter-spacing and padding so all four fit on
+   375 px while staying close to the 44 px touch-target guideline. */
+.phone .tab-bar .tab {
+    padding-top: 13px;
+    padding-bottom: 13px;
+    padding-left: 10px;
+    padding-right: 10px;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+}
+
+/* Buttons: 44 px minimum height and 14 px text throughout panels. */
+.phone Button {
+    min-height: 44px;
+    font-size: 14px;
+}
+
+/* Section and field labels: bump from 11 px to 13 px. */
+.phone .section-label,
+.phone .field-label {
+    font-size: 13px;
+}
+
+/* Accordion headers: larger text, taller tap target. */
+.phone .accordion-title {
+    font-size: 13px;
+}
+
+.phone .accordion-header {
+    padding-top: 14px;
+    padding-bottom: 14px;
+}
+
+/* Input fields: 14 px text and 44 px min-height for comfortable typing. */
+.phone .field .unity-text-field > .unity-text-field__input,
+.phone .field .unity-base-text-field__input {
+    font-size: 14px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    min-height: 44px;
+}
+
 /* ---------- Panels ---------- */
 
 .panel {

@@ -30,7 +30,9 @@ namespace Immutable.Audience.Samples.SampleApp
 
         private const int CollapseThreshold = 240;
         private const int StatusPollIntervalMs = 500;
+        private const int MaxLogRows = 200;
         private const float NarrowBreakpointPx = 1024f;
+        private const float PhoneBreakpointPx  = 480f;
 
         // ---- UI document state ----
         // All fields below are populated by BindElements before any other access.
@@ -73,7 +75,7 @@ namespace Immutable.Audience.Samples.SampleApp
         // ---- UXML element fields (Tabs + status bar + header) ----
 
         private readonly List<Button> _tabButtons = new List<Button>();
-        private Label _prodWarning, _sdkVersionLabel;
+        private Label _prodWarning, _sdkVersionLabel, _titleLabel;
         private Label _statusEndpoint, _statusConsent, _statusAnon, _statusUser, _statusSession, _statusQueue;
 
         // ---- UXML element fields (Log pane) ----
@@ -82,6 +84,9 @@ namespace Immutable.Audience.Samples.SampleApp
         private Label _logCount;
 
 #pragma warning restore 8618
+
+        // Tracks the last applied safe area so Update only re-applies on change.
+        private Rect _lastSafeArea;
 
         // ---- UI lifecycle (single entry point called from main's Awake) ----
 
@@ -110,6 +115,15 @@ namespace Immutable.Audience.Samples.SampleApp
             // Status bar mirrors live SDK state (UserId, SessionId, QueueSize) —
             // poll instead of subscribing because the SDK doesn't expose changes.
             _root.schedule.Execute(RefreshStatusBar).Every(StatusPollIntervalMs);
+        }
+
+        // Re-apply safe-area padding whenever Screen.safeArea changes (startup,
+        // orientation flip, multi-window resize). Runs every frame but exits
+        // immediately when nothing has changed.
+        private void Update()
+        {
+            if (Screen.safeArea != _lastSafeArea)
+                ApplySafeArea();
         }
 
         // ---- UI document load ----
@@ -152,6 +166,7 @@ namespace Immutable.Audience.Samples.SampleApp
         {
             _prodWarning      = Require<Label>("prod-warning");
             _sdkVersionLabel  = Require<Label>("sdk-version");
+            _titleLabel       = _root.Q<Label>(className: "title");
 
             _statusEndpoint = Require<Label>("status-endpoint");
             _statusConsent  = Require<Label>("status-consent");
@@ -222,6 +237,11 @@ namespace Immutable.Audience.Samples.SampleApp
             // 0 the content-container compresses to viewport height and the
             // scroller never engages.
             _logView.contentContainer.style.flexShrink = 0;
+
+            // Tell the renderer the log subtree moves as a unit when scrolled.
+            // Without this hint Unity re-composites every row on each scroll
+            // frame; with it the subtree is translated on the GPU instead.
+            _logView.contentContainer.usageHints = UsageHints.GroupTransform;
 
             _logCount = Require<Label>("log-count");
         }
@@ -403,29 +423,88 @@ namespace Immutable.Audience.Samples.SampleApp
                 if (float.IsNaN(needed) || needed <= 0f) return;
                 pageScroll.contentContainer.style.minHeight = needed;
             }
+            pageScroll.contentContainer.usageHints = UsageHints.GroupTransform;
             controls.RegisterCallback<GeometryChangedEvent>(_ => Update());
             logCol.RegisterCallback<GeometryChangedEvent>(_ => Update());
             pageScroll.contentContainer.schedule.Execute(Update).StartingIn(0);
         }
 
-        // Mirrors the web sample's `@media (min-width: 1024px)`. USS 2021.3
-        // has no @media; toggle a .narrow class on .sample-app-grid via
-        // GeometryChangedEvent. Idempotent — only mutates on the boolean flip.
+        // Mirrors the web sample's `@media` breakpoints. USS 2021.3 has no
+        // @media; toggle class names via GeometryChangedEvent instead.
+        //   .narrow on sample-app-grid AND _root : < 1024 px — stacks grid
+        //                                          columns vertically and
+        //                                          switches status bar to a
+        //                                          vertical stack so UUIDs
+        //                                          never overflow sideways.
+        //   .phone  on _root                     : < 480 px — larger text,
+        //                                          44 px touch targets.
+        // Each breakpoint is evaluated independently so toggling one does not
+        // suppress the other. Both are idempotent — only mutate on a boolean flip.
         private void RegisterResponsiveLayout()
         {
             var grid = Require<VisualElement>("sample-app-grid");
+            // Snapshot title text from UXML so we can restore it on widen.
+            var baseTitle = _titleLabel?.text ?? "";
             void Update()
             {
                 var w = _root.layout.width;
                 if (float.IsNaN(w) || w <= 0f) return;
+
                 var shouldBeNarrow = w < NarrowBreakpointPx;
                 var isNarrow = grid.ClassListContains("narrow");
-                if (shouldBeNarrow == isNarrow) return;
-                if (shouldBeNarrow) grid.AddToClassList("narrow");
-                else grid.RemoveFromClassList("narrow");
+                if (shouldBeNarrow != isNarrow)
+                {
+                    grid.EnableInClassList("narrow", shouldBeNarrow);
+                    // Also on _root so .narrow selectors can reach the sticky
+                    // header (status bar) which sits outside .sample-app-grid.
+                    _root.EnableInClassList("narrow", shouldBeNarrow);
+
+                    // On narrow screens merge the version into the title as
+                    // plain text and hide the badge so the version reads inline.
+                    if (_titleLabel != null)
+                        _titleLabel.text = shouldBeNarrow
+                            ? $"{baseTitle} {_sdkVersionLabel.text}"
+                            : baseTitle;
+                    _sdkVersionLabel.style.display = shouldBeNarrow
+                        ? DisplayStyle.None
+                        : DisplayStyle.Flex;
+                }
+
+                var shouldBePhone = w < PhoneBreakpointPx;
+                var isPhone = _root.ClassListContains("phone");
+                if (shouldBePhone != isPhone)
+                {
+                    _root.EnableInClassList("phone", shouldBePhone);
+                }
             }
             _root.RegisterCallback<GeometryChangedEvent>(_ => Update());
             _root.schedule.Execute(Update).StartingIn(0);
+        }
+
+        // Converts Screen.safeArea insets (screen-space pixels) to root
+        // VisualElement padding (panel layout units). Called by Update() on
+        // every frame where the safe area rect changes — typically once on
+        // startup and once per orientation change.
+        //
+        // _lastSafeArea is updated only on success so that a too-early call
+        // (layout not yet settled) retries automatically next frame.
+        private void ApplySafeArea()
+        {
+            if (_root == null) return;
+            var w = _root.layout.width;
+            var h = _root.layout.height;
+            if (float.IsNaN(w) || w <= 0f || float.IsNaN(h) || h <= 0f) return;
+
+            var safe   = Screen.safeArea;
+            var scaleX = w / Screen.width;
+            var scaleY = h / Screen.height;
+
+            _root.style.paddingTop    = (Screen.height - safe.yMax) * scaleY;
+            _root.style.paddingBottom = safe.y * scaleY;
+            _root.style.paddingLeft   = safe.x * scaleX;
+            _root.style.paddingRight  = (Screen.width - safe.xMax) * scaleX;
+
+            _lastSafeArea = safe;
         }
 
         // ---- Typed-events accordion construction ----
@@ -705,6 +784,12 @@ namespace Immutable.Audience.Samples.SampleApp
 
             var row = BuildLogRow(new LogEntry(DateTime.Now, label, body, level, source));
             _logView.Add(row);
+
+            // Keep the visual tree bounded so scroll performance doesn't degrade
+            // as the log grows. Remove the oldest row when the cap is exceeded.
+            while (_logView.contentContainer.childCount > MaxLogRows)
+                _logView.contentContainer.RemoveAt(0);
+
             _logCount.text = _logView.contentContainer.childCount.ToString(CultureInfo.InvariantCulture);
 
             // contentContainer.flexShrink = 0 (set in BindElements) makes the
