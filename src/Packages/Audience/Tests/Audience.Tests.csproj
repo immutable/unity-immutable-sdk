@@ -22,5 +22,9 @@
   -->
   <ItemGroup>
     <Compile Remove="Editor/**/*.cs" />
+    <!-- DeviceCollectorTests references Immutable.Audience.Unity which wraps
+         UnityEngine APIs unavailable in the headless dotnet build. These tests
+         run inside the Unity Test Framework via the asmdef instead. -->
+    <Compile Remove="Runtime/Unity/**/*.cs" />
   </ItemGroup>
 </Project>
