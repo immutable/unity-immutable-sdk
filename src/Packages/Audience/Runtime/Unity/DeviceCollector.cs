@@ -66,6 +66,9 @@ namespace Immutable.Audience.Unity
             var dpi = (int)Screen.dpi;
             if (dpi > 0) props["screenDpi"] = dpi;
 
+            if (Application.platform == RuntimePlatform.Android)
+                props["androidId"] = Truncate(SystemInfo.deviceUniqueIdentifier, 256);
+
             return props;
         }
 

@@ -3,6 +3,7 @@
     "rootNamespace": "Immutable.Audience.Tests",
     "references": [
         "Immutable.Audience.Runtime",
+        "Immutable.Audience.Unity",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],
