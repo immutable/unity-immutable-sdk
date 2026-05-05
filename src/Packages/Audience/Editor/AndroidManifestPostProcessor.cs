@@ -35,7 +35,7 @@ namespace Immutable.Audience.Editor
             foreach (XmlNode node in root.ChildNodes)
             {
                 if (node.Name == "uses-permission" &&
-                    node.Attributes?["android:name"]?.Value == InternetPermission)
+                    node.Attributes?.GetNamedItem("name", AndroidNs)?.Value == InternetPermission)
                     return;
             }
 
