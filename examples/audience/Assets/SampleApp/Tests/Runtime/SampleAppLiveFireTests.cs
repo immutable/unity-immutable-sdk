@@ -133,8 +133,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         {
             yield return LoadAndInit();
 
-            // Page-view track via btn-page; the test doesn't wait on its row.
-            _root!.Q<Button>(SampleAppUi.Buttons.Page).Click();
+            _root!.Q<Button>(SampleAppUi.Buttons.TypedEvent("progression")).Click();
             yield return null;
 
             yield return FlushAndAssertNoErrors();
@@ -228,7 +227,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
             // Init at default Anonymous; enqueue an event; revoke; flush — no errors.
             yield return LoadAndInit();
 
-            _root!.Q<Button>(SampleAppUi.Buttons.Page).Click();
+            _root!.Q<Button>(SampleAppUi.Buttons.TypedEvent("progression")).Click();
             yield return null;
 
             yield return SetConsentVia(SampleAppUi.Buttons.ConsentNone);
@@ -281,7 +280,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
             // those if their types/methods aren't reachable from a root assembly.
             yield return LoadAndInit();
 
-            _root!.Q<Button>(SampleAppUi.Buttons.Page).Click();
+            _root!.Q<Button>(SampleAppUi.Buttons.TypedEvent("progression")).Click();
             yield return null;
 
             _root.Q<Button>(SampleAppUi.Buttons.Shutdown).Click();
@@ -298,13 +297,13 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
             // round-trip to sandbox without errors.
             yield return LoadAndInit();
 
-            _root!.Q<Button>(SampleAppUi.Buttons.Page).Click();
+            _root!.Q<Button>(SampleAppUi.Buttons.TypedEvent("progression")).Click();
             yield return null;
 
             _root.Q<Button>(SampleAppUi.Buttons.Reset).Click();
             yield return SampleAppTestHelpers.WaitForLogEntry(_root, SampleAppUi.LogLabels.Reset, LogLevels.Ok, 5f);
 
-            _root.Q<Button>(SampleAppUi.Buttons.Page).Click();
+            _root.Q<Button>(SampleAppUi.Buttons.TypedEvent("progression")).Click();
             yield return null;
 
             yield return FlushAndAssertNoErrors();
@@ -347,7 +346,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
             Assert.Greater(SampleAppTestHelpers.CountLogEntriesAtLevel(_root, LogLevels.Ok), 1,
                 "expected a second INIT@Ok row after re-init");
 
-            _root.Q<Button>(SampleAppUi.Buttons.Page).Click();
+            _root.Q<Button>(SampleAppUi.Buttons.TypedEvent("progression")).Click();
             yield return null;
 
             yield return FlushAndAssertNoErrors();
@@ -368,7 +367,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
 
             yield return SetConsentVia(SampleAppUi.Buttons.ConsentAnon);
 
-            _root.Q<Button>(SampleAppUi.Buttons.Page).Click();
+            _root.Q<Button>(SampleAppUi.Buttons.TypedEvent("progression")).Click();
             yield return null;
 
             yield return FlushAndAssertNoErrors();
@@ -467,7 +466,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
                 root.Q<TextField>(SampleAppUi.Setup.BaseUrl).value = SampleAppUi.SandboxBaseUrl;
             });
 
-            _root!.Q<Button>(SampleAppUi.Buttons.Page).Click();
+            _root!.Q<Button>(SampleAppUi.Buttons.TypedEvent("progression")).Click();
             yield return null;
 
             yield return FlushAndAssertNoErrors();
@@ -499,7 +498,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
                 root.Q<TextField>(SampleAppUi.Setup.FlushSize).value = "5";
             });
 
-            _root!.Q<Button>(SampleAppUi.Buttons.Page).Click();
+            _root!.Q<Button>(SampleAppUi.Buttons.TypedEvent("progression")).Click();
             yield return null;
 
             yield return FlushAndAssertNoErrors();
@@ -515,7 +514,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
                 root.Q<Toggle>(SampleAppUi.Setup.Debug).value = false;
             });
 
-            _root!.Q<Button>(SampleAppUi.Buttons.Page).Click();
+            _root!.Q<Button>(SampleAppUi.Buttons.TypedEvent("progression")).Click();
             yield return null;
 
             yield return FlushAndAssertNoErrors();
@@ -524,13 +523,13 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         [UnityTest]
         public IEnumerator MultiEvent_SingleFlush_NoErrors()
         {
-            // Five page Tracks queued up, single Flush. Exercises queue
+            // Five Tracks queued up, single Flush. Exercises queue
             // batching + gzip + multi-event payload serialisation under IL2CPP.
             yield return LoadAndInit();
 
             for (var i = 0; i < 5; i++)
             {
-                _root!.Q<Button>(SampleAppUi.Buttons.Page).Click();
+                _root!.Q<Button>(SampleAppUi.Buttons.TypedEvent("progression")).Click();
                 yield return null;
             }
 
@@ -609,14 +608,14 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         {
             // Init auto-fires session_start + game_launch so the queue is
             // already non-zero by the time the status label paints. Capture
-            // the baseline and assert btn-page bumps it by at least one.
+            // the baseline and assert a progression Track bumps it by at least one.
             yield return LoadAndInit();
             yield return null;
 
             var queueLabel = _root!.Q<Label>(SampleAppUi.StatusBar.Queue);
             int.TryParse(queueLabel.text, out var baseline);
 
-            _root.Q<Button>(SampleAppUi.Buttons.Page).Click();
+            _root.Q<Button>(SampleAppUi.Buttons.TypedEvent("progression")).Click();
             yield return null;
             var deadline = Time.realtimeSinceStartup + 2f;
             while (Time.realtimeSinceStartup < deadline)
@@ -628,7 +627,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
 
             int.TryParse(queueLabel.text, out var finalCount);
             Assert.Greater(finalCount, baseline,
-                $"queue should grow past baseline {baseline} after btn-page Track; got {finalCount}");
+                $"queue should grow past baseline {baseline} after progression Track; got {finalCount}");
         }
 
         [UnityTest]
