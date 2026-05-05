@@ -98,34 +98,17 @@ jobs:
           # actions/checkout@v4 deletes the prior workspace before cloning. If a
           # previous run's Unity Editor / IL2CPP build process is still holding
           # handles inside examples/audience, checkout dies with EBUSY. Kill any
-          # leftover Unity-family and MSVC/IL2CPP build-tool processes — IL2CPP
-          # spawns MSBuild, cl.exe, link.exe, mspdbsrv.exe etc. which outlive the
-          # Unity editor and are not caught by the Unity* glob alone.
-          $patterns = @(
-            'Unity*','il2cpp*','UnityShaderCompiler*','UnityCrashHandler*',
-            'MSBuild','cl','link','mspdbsrv','vctip','VBCSCompiler'
-          )
-          foreach ($pat in $patterns) {
-            Get-Process -Name $pat -ErrorAction SilentlyContinue | ForEach-Object {
-              Write-Host "Killing stale process: $($_.Name) (pid $($_.Id))"
-              Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
-            }
+          # leftover Unity-family process here so checkout's cleanup succeeds.
+          Get-Process | Where-Object {
+            $_.Name -like 'Unity*' -or
+            $_.Name -like 'il2cpp*' -or
+            $_.Name -like 'UnityShaderCompiler*' -or
+            $_.Name -like 'UnityCrashHandler*'
+          } | ForEach-Object {
+            Write-Host "Killing stale process: $($_.Name) (pid $($_.Id))"
+            Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
           }
-          Start-Sleep -Seconds 5
-
-          # Robocopy-mirror an empty directory over the workspace then delete it.
-          # This handles files that Node.js fs.rmdir (used inside actions/checkout)
-          # cannot remove when a process still holds a handle — the root cause of
-          # the EBUSY errors seen on this runner.
-          $ws = $env:GITHUB_WORKSPACE
-          if (Test-Path $ws) {
-            $empty = "$env:RUNNER_TEMP\empty_wipe"
-            New-Item -ItemType Directory -Force -Path $empty | Out-Null
-            Write-Host "Force-wiping workspace: $ws"
-            robocopy $empty $ws /MIR /R:1 /W:1 /NP /NFL /NDL | Out-Null
-            Remove-Item $ws -Recurse -Force -ErrorAction SilentlyContinue
-            Write-Host "Workspace cleared."
-          }
+          Start-Sleep -Seconds 2
 
       - uses: actions/checkout@v4
         with:
