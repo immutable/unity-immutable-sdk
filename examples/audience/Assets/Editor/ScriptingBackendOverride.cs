@@ -18,11 +18,12 @@ namespace Immutable.Audience.Samples.SampleApp.Editor
     //   Mono   → Disabled (Mono studios rarely strip; High under Mono can
     //                      strip Net.Http SSL chain code paths).
     //
-    // Supported targets: Standalone, Android.
+    // Supported targets: Standalone, Android, iOS.
     //
     // Usage:
     //   AUDIENCE_SCRIPTING_BACKEND=Mono2x Unity -batchmode -runTests ...
     //   AUDIENCE_SCRIPTING_BACKEND=IL2CPP Unity -batchmode -buildTarget Android ...
+    //   AUDIENCE_SCRIPTING_BACKEND=IL2CPP Unity -batchmode -buildTarget iOS ...
     //
     // Unset means "respect ProjectSettings.asset as-is".
     internal sealed class ScriptingBackendOverride : IPreprocessBuildWithReport
@@ -45,7 +46,7 @@ namespace Immutable.Audience.Samples.SampleApp.Editor
             };
 
             var group = report.summary.platformGroup;
-            if (group != BuildTargetGroup.Standalone && group != BuildTargetGroup.Android)
+            if (group != BuildTargetGroup.Standalone && group != BuildTargetGroup.Android && group != BuildTargetGroup.iOS)
                 return;
 
             var currentBackend = PlayerSettings.GetScriptingBackend(group);

@@ -2,7 +2,7 @@
     "name": "Immutable.Audience.Runtime",
     "rootNamespace": "Immutable.Audience",
     "references": [],
-    "includePlatforms": ["Android", "Editor", "macOSStandalone", "WindowsStandalone64"],
+    "includePlatforms": ["Android", "Editor", "iOS", "macOSStandalone", "WindowsStandalone64"],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
