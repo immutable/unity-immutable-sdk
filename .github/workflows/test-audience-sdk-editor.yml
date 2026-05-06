@@ -1,0 +1,57 @@
+name: Audience package — Editor Tests
+
+# Runs Immutable.Audience.Editor.Tests (e.g. iOSInfoPlistPostProcessor).
+# Editor-only asmdef + UnityEditor.iOS.Xcode dependency means it can't run
+# in test-audience-sample-app.yml's StandaloneOSX/Win64 PlayMode cells.
+# Runtime.Tests are covered there via the manifest.json testables entry.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/Packages/Audience/**'
+      - 'examples/audience/Packages/manifest.json'
+      - '.github/workflows/test-audience-sdk-editor.yml'
+  pull_request:
+    paths:
+      - 'src/Packages/Audience/**'
+      - 'examples/audience/Packages/manifest.json'
+      - '.github/workflows/test-audience-sdk-editor.yml'
+
+jobs:
+  editmode:
+    if: github.event.pull_request.head.repo.fork == false || github.event_name == 'workflow_dispatch'
+    name: EditMode (Unity 2022.3 / iOS module)
+    runs-on: ubuntu-latest-8-cores
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: actions/cache@v4
+        with:
+          path: examples/audience/Library
+          key: Library-audience-editor-tests-${{ hashFiles('examples/audience/Packages/**', 'examples/audience/ProjectSettings/**', 'src/Packages/Audience/**') }}
+          restore-keys: |
+            Library-audience-editor-tests-
+
+      - uses: game-ci/unity-test-runner@v4
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        with:
+          unityVersion: 2022.3.62f2
+          targetPlatform: iOS
+          projectPath: examples/audience
+          testMode: editmode
+          customParameters: -assemblyNames Immutable.Audience.Editor.Tests
+          checkName: Audience Editor Tests
+          artifactsPath: artifacts
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: audience-editor-test-results
+          path: artifacts
