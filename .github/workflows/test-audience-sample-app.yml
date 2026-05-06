@@ -46,6 +46,16 @@ jobs:
             unity: 2021.3.45f2
             changeset: 88f88f591b2e
             runner: [self-hosted, macOS, ARM64]
+          - target: StandaloneLinux64
+            backend: IL2CPP
+            unity: 2021.3.45f2
+            changeset: 88f88f591b2e
+            runner: [self-hosted, X64, Linux]
+          - target: StandaloneLinux64
+            backend: Mono2x
+            unity: 2021.3.45f2
+            changeset: 88f88f591b2e
+            runner: [self-hosted, X64, Linux]
           - target: StandaloneWindows64
             backend: IL2CPP
             unity: 6000.4.0f1
@@ -184,6 +194,25 @@ jobs:
           Write-Host "Verified VC.Tools at: $($state.VcTools)"
           Write-Host "Verified Win10 SDK at: $($state.Win10Sdk)"
 
+      - name: Verify IL2CPP toolchain (Linux)
+        if: runner.os == 'Linux' && matrix.backend == 'IL2CPP'
+        shell: bash
+        run: |
+          # IL2CPP's C++ to native step links against gcc/g++ + glibc-dev (the
+          # build-essential package on Ubuntu). Without these, Unity fails late
+          # inside the IL2CPP build with a cryptic linker error. Fail fast here
+          # with a clear remediation message instead.
+          MISSING=""
+          for cmd in gcc g++; do
+            command -v "$cmd" >/dev/null 2>&1 || MISSING="${MISSING:+$MISSING+}$cmd"
+          done
+          if [ -n "$MISSING" ]; then
+            echo "::error::IL2CPP toolchain incomplete on runner: $MISSING. Run on the runner host: sudo apt install -y build-essential"
+            exit 1
+          fi
+          echo "gcc: $(gcc --version | head -1)"
+          echo "g++: $(g++ --version | head -1)"
+
       - name: Resolve Unity ${{ matrix.unity }} (macOS)
         if: runner.os == 'macOS'
         shell: bash
@@ -280,6 +309,79 @@ jobs:
           if ('${{ matrix.backend }}' -eq 'IL2CPP') { Write-Host "Found IL2CPP: $il2cpp" }
           "UNITY_PATH=$editor" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
+      - name: Resolve Unity ${{ matrix.unity }} (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        env:
+          UNITY_VER: ${{ matrix.unity }}
+          UNITY_CS: ${{ matrix.changeset }}
+        run: |
+          set -uo pipefail
+          HUB="unityhub"
+
+          echo "::group::install editor"
+          "$HUB" --headless install \
+            --version "$UNITY_VER" --changeset "$UNITY_CS" --architecture x86_64 \
+            || echo "(install non-zero, OK if 'Editor already installed in this location')"
+          echo "::endgroup::"
+
+          if [ "${{ matrix.backend }}" = "IL2CPP" ]; then
+            echo "::group::install linux-il2cpp module"
+            "$HUB" --headless install-modules \
+              --version "$UNITY_VER" --changeset "$UNITY_CS" --architecture x86_64 \
+              --module linux-il2cpp \
+              || echo "(install-modules non-zero, OK if 'No modules found to install')"
+            echo "::endgroup::"
+          fi
+
+          EDITOR_PATH="$HOME/Unity/Hub/Editor/$UNITY_VER/Editor/Unity"
+
+          IL2CPP_DIR=""
+          if [ "${{ matrix.backend }}" = "IL2CPP" ] && [ -x "$EDITOR_PATH" ]; then
+            IL2CPP_DIR="$HOME/Unity/Hub/Editor/$UNITY_VER/Editor/Data/PlaybackEngines/LinuxStandaloneSupport/Variations/linux64_player_nondevelopment_il2cpp"
+            [ -d "$IL2CPP_DIR" ] || IL2CPP_DIR=""
+          fi
+
+          MISSING=""
+          [ -x "$EDITOR_PATH" ] || MISSING="editor"
+          [ "${{ matrix.backend }}" = "IL2CPP" ] && [ -z "$IL2CPP_DIR" ] && MISSING="${MISSING:+$MISSING+}linux-il2cpp"
+          if [ -n "$MISSING" ]; then
+            echo "::error::Unity $UNITY_VER missing: $MISSING"
+            ls -la "$HOME/Unity/Hub/Editor/" 2>&1 || true
+            "$HUB" --headless editors --installed 2>&1 || true
+            exit 1
+          fi
+
+          echo "Found Unity:  $EDITOR_PATH"
+          [ -n "$IL2CPP_DIR" ] && echo "Found IL2CPP: $IL2CPP_DIR"
+          echo "UNITY_PATH=$EDITOR_PATH" >> "$GITHUB_ENV"
+
+      - name: Activate Unity license (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        run: |
+          set -uo pipefail
+          LOG="$(mktemp)"
+          echo "::group::Activate Unity"
+          "$UNITY_PATH" -batchmode -nographics -quit \
+            -username "$UNITY_EMAIL" \
+            -password "$UNITY_PASSWORD" \
+            -serial   "$UNITY_SERIAL" \
+            -logFile - 2>&1 | tee "$LOG" || true
+          echo "::endgroup::"
+
+          if grep -qE "(Successfully activated the entitlement license|Successfully processed license management request)" "$LOG"; then
+            echo "Unity license is active"
+            exit 0
+          fi
+
+          echo "::error::Unity activation failed. Check UNITY_EMAIL/UNITY_PASSWORD/UNITY_SERIAL secrets and seat-pool availability."
+          exit 1
+
       - name: Run PlayMode tests (macOS)
         if: runner.os == 'macOS'
         shell: bash
@@ -329,6 +431,26 @@ jobs:
           Write-Host "Unity exited with code $exit"
           if ($exit -ne 0) { exit $exit }
 
+      - name: Run PlayMode tests (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        env:
+          AUDIENCE_TEST_PUBLISHABLE_KEY: ${{ secrets.AUDIENCE_TEST_PUBLISHABLE_KEY }}
+          AUDIENCE_SCRIPTING_BACKEND: ${{ matrix.backend }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          # Mirrors the macOS variant: tee Unity's stdout to artifacts/unity.log
+          # so the annotation step has a file to scan while progress streams to
+          # the job log. pipefail propagates Unity's exit code through tee.
+          "$UNITY_PATH" \
+            -batchmode -nographics \
+            -projectPath examples/audience \
+            -runTests \
+            -testPlatform ${{ matrix.target }} \
+            -testResults "$(pwd)/artifacts/test-results.xml" \
+            -logFile - 2>&1 | tee "$(pwd)/artifacts/unity.log"
+
       - name: Mark workspace safe for git (Windows)
         if: always() && runner.os == 'Windows'
         shell: pwsh
@@ -368,6 +490,21 @@ jobs:
                 Copy-Item -Path $_.FullName -Destination "artifacts/Player-$name.log" -ErrorAction SilentlyContinue
               }
           }
+
+      - name: Capture player log (Linux)
+        if: always() && runner.os == 'Linux'
+        shell: bash
+        run: |
+          # See macOS counterpart for rationale. Linux player log location:
+          # ~/.config/unity3d/<CompanyName>/<ProductName>/Player.log (Unity's
+          # standard persistent data path on Linux, matching $XDG_CONFIG_HOME).
+          mkdir -p artifacts
+          src="$HOME/.config/unity3d"
+          if [ -d "$src" ]; then
+            find "$src" -name "Player.log" 2>/dev/null | while IFS= read -r f; do
+              cp "$f" "artifacts/Player-$(basename "$(dirname "$f")").log" 2>/dev/null || true
+            done
+          fi
 
       - name: Surface Unity compile errors as annotations (macOS)
         if: always() && runner.os == 'macOS'
@@ -413,6 +550,23 @@ jobs:
               $sanitized = $_ -replace '::', '%3A%3A'
               Write-Host "::error::$sanitized"
             }
+
+      - name: Surface Unity compile errors as annotations (Linux)
+        if: always() && runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -uo pipefail
+          # See macOS counterpart for rationale.
+          LOG_FILE="artifacts/unity.log"
+          if [ ! -f "$LOG_FILE" ]; then
+            echo "::notice::No Unity log file at $LOG_FILE."
+            exit 0
+          fi
+          grep -E '(error CS[0-9]+:|Compilation failed:)' "$LOG_FILE" | sort -u | while IFS= read -r line; do
+            trimmed="${line#"${line%%[![:space:]]*}"}"
+            sanitized="${trimmed//::/%3A%3A}"
+            echo "::error::$sanitized"
+          done || true
 
       - name: Publish test report
         uses: dorny/test-reporter@v3
