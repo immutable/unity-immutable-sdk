@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using Immutable.Audience.Unity.Mobile;
 using UnityEngine;
 
 namespace Immutable.Audience.Unity
@@ -45,11 +46,13 @@ namespace Immutable.Audience.Unity
             return $"{width}x{height}";
         }
 
-        internal static Dictionary<string, object> CollectGameLaunchProperties()
+        internal static Dictionary<string, object> CollectGameLaunchProperties(
+            RuntimePlatform? platformOverride = null)
         {
+            var platform = platformOverride ?? Application.platform;
             var props = new Dictionary<string, object>
             {
-                ["platform"] = Application.platform.ToString(),
+                ["platform"] = PlatformName(platform),
                 ["version"] = Truncate(Application.version, 256),
                 ["buildGuid"] = Truncate(Application.buildGUID, 256),
                 ["unityVersion"] = Truncate(Application.unityVersion, 256),
@@ -66,8 +69,17 @@ namespace Immutable.Audience.Unity
             var dpi = (int)Screen.dpi;
             if (dpi > 0) props["screenDpi"] = dpi;
 
-            if (Application.platform == RuntimePlatform.Android)
+            if (platform == RuntimePlatform.Android)
                 props["androidId"] = Truncate(SystemInfo.deviceUniqueIdentifier, 256);
+
+            if (platform == RuntimePlatform.IPhonePlayer)
+            {
+                var idfv = IDFVBridge.GetIDFV();
+                if (idfv != null) props["idfv"] = Truncate(idfv, 256);
+
+                // iOS baseline is 163 DPI (1×); 326 → 2×, 401-460 → 3×.
+                if (dpi > 0) props["screenScale"] = (int)Math.Round(dpi / 163.0);
+            }
 
             return props;
         }
@@ -91,6 +103,12 @@ namespace Immutable.Audience.Unity
                 return null;
             }
         }
+
+        private static string PlatformName(RuntimePlatform platform) => platform switch
+        {
+            RuntimePlatform.IPhonePlayer => "iOS",
+            _ => platform.ToString(),
+        };
 
         private static string Truncate(string s, int max)
         {
