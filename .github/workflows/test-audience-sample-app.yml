@@ -365,32 +365,22 @@ jobs:
           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         run: |
           set -uo pipefail
-          # Activate-once-and-cache. Unity Pro/Plus seats are scarce; the license
-          # file persists in $HOME on the self-hosted runner so subsequent runs
-          # detect it and skip activation. Win/macOS runners are pre-activated
-          # manually outside the workflow; Linux activates here because the host
-          # was provisioned fresh.
-          LICENSE_FILE="$HOME/.local/share/unity3d/Unity/Unity_lic.ulf"
-          if [ -f "$LICENSE_FILE" ]; then
-            echo "Unity license already cached at $LICENSE_FILE; skipping activation"
-            exit 0
-          fi
-
+          LOG="$(mktemp)"
           echo "::group::Activate Unity"
-          # Unity exits non-zero on -quit even when activation succeeds, so the
-          # license-file existence check below is the real success gate.
           "$UNITY_PATH" -batchmode -nographics -quit \
             -username "$UNITY_EMAIL" \
             -password "$UNITY_PASSWORD" \
             -serial   "$UNITY_SERIAL" \
-            -logFile - 2>&1 || true
+            -logFile - 2>&1 | tee "$LOG" || true
           echo "::endgroup::"
 
-          if [ ! -f "$LICENSE_FILE" ]; then
-            echo "::error::Unity activation failed: no license file at $LICENSE_FILE. Check UNITY_EMAIL/UNITY_PASSWORD/UNITY_SERIAL secrets and seat-pool availability."
-            exit 1
+          if grep -qE "(Successfully activated the entitlement license|Successfully processed license management request)" "$LOG"; then
+            echo "Unity license is active"
+            exit 0
           fi
-          echo "Activated; license file at $LICENSE_FILE"
+
+          echo "::error::Unity activation failed. Check UNITY_EMAIL/UNITY_PASSWORD/UNITY_SERIAL secrets and seat-pool availability."
+          exit 1
 
       - name: Run PlayMode tests (macOS)
         if: runner.os == 'macOS'
