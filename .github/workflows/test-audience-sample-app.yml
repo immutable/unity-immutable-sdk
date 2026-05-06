@@ -86,6 +86,57 @@ jobs:
             unity: 2022.3.62f2
             changeset: 7670c08855a9
             runner: [self-hosted, macOS, ARM64]
+          # Mobile IL2CPP build cells — macOS only, no device required.
+          # Validates the IL2CPP compile pipeline; runtime tests need a real device
+          # and are out of scope until a device farm is available.
+          - target: Android
+            backend: IL2CPP
+            unity: 2021.3.45f2
+            changeset: 88f88f591b2e
+            runner: [self-hosted, macOS, ARM64]
+            mobile: true
+            module: android
+            method: AndroidBuilder.Build
+          - target: Android
+            backend: IL2CPP
+            unity: 2022.3.62f2
+            changeset: 7670c08855a9
+            runner: [self-hosted, macOS, ARM64]
+            mobile: true
+            module: android
+            method: AndroidBuilder.Build
+          - target: Android
+            backend: IL2CPP
+            unity: 6000.4.0f1
+            changeset: 8cf496087c8f
+            runner: [self-hosted, macOS, ARM64]
+            mobile: true
+            module: android
+            method: AndroidBuilder.Build
+          - target: iOS
+            backend: IL2CPP
+            unity: 2021.3.45f2
+            changeset: 88f88f591b2e
+            runner: [self-hosted, macOS, ARM64]
+            mobile: true
+            module: ios
+            method: IosBuilder.Build
+          - target: iOS
+            backend: IL2CPP
+            unity: 2022.3.62f2
+            changeset: 7670c08855a9
+            runner: [self-hosted, macOS, ARM64]
+            mobile: true
+            module: ios
+            method: IosBuilder.Build
+          - target: iOS
+            backend: IL2CPP
+            unity: 6000.4.0f1
+            changeset: 8cf496087c8f
+            runner: [self-hosted, macOS, ARM64]
+            mobile: true
+            module: ios
+            method: IosBuilder.Build
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
 
@@ -200,7 +251,14 @@ jobs:
             || echo "(install non-zero — OK if 'Editor already installed in this location')"
           echo "::endgroup::"
 
-          if [ "${{ matrix.backend }}" = "IL2CPP" ]; then
+          if [ "${{ matrix.mobile }}" = "true" ]; then
+            echo "::group::install ${{ matrix.module }} module"
+            "$HUB" -- --headless install-modules \
+              --version "$UNITY_VER" --changeset "$UNITY_CS" --architecture arm64 \
+              --module "${{ matrix.module }}" \
+              || echo "(install-modules non-zero — OK if 'No modules found to install')"
+            echo "::endgroup::"
+          elif [ "${{ matrix.backend }}" = "IL2CPP" ]; then
             echo "::group::install mac-il2cpp module"
             "$HUB" -- --headless install-modules \
               --version "$UNITY_VER" --changeset "$UNITY_CS" --architecture arm64 \
@@ -227,7 +285,7 @@ jobs:
 
           MISSING=""
           [ -z "$EDITOR_APP" ] && MISSING="editor"
-          [ "${{ matrix.backend }}" = "IL2CPP" ] && [ -z "$IL2CPP_DIR" ] && MISSING="${MISSING:+$MISSING+}mac-il2cpp"
+          [ "${{ matrix.backend }}" = "IL2CPP" ] && [ "${{ matrix.mobile }}" != "true" ] && [ -z "$IL2CPP_DIR" ] && MISSING="${MISSING:+$MISSING+}mac-il2cpp"
           if [ -n "$MISSING" ]; then
             echo "::error::Unity $UNITY_VER missing: $MISSING"
             ls -la /Applications/Unity/Hub/Editor/ 2>&1 || true
@@ -281,7 +339,7 @@ jobs:
           "UNITY_PATH=$editor" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - name: Run PlayMode tests (macOS)
-        if: runner.os == 'macOS'
+        if: runner.os == 'macOS' && matrix.mobile != true
         shell: bash
         env:
           AUDIENCE_TEST_PUBLISHABLE_KEY: ${{ secrets.AUDIENCE_TEST_PUBLISHABLE_KEY }}
@@ -301,6 +359,20 @@ jobs:
             -runTests \
             -testPlatform ${{ matrix.target }} \
             -testResults "$(pwd)/artifacts/test-results.xml" \
+            -logFile - 2>&1 | tee "$(pwd)/artifacts/unity.log"
+
+      - name: Build mobile target (macOS)
+        if: runner.os == 'macOS' && matrix.mobile == true
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          "$UNITY_PATH" \
+            -batchmode -nographics \
+            -projectPath examples/audience \
+            -buildTarget ${{ matrix.target }} \
+            -executeMethod Immutable.Audience.Samples.SampleApp.Editor.${{ matrix.method }} \
+            -quit \
             -logFile - 2>&1 | tee "$(pwd)/artifacts/unity.log"
 
       - name: Run PlayMode tests (Windows)
@@ -336,7 +408,7 @@ jobs:
           git config --global --add safe.directory $env:GITHUB_WORKSPACE.Replace('\','/')
 
       - name: Capture player log (macOS)
-        if: always() && runner.os == 'macOS'
+        if: always() && runner.os == 'macOS' && matrix.mobile != true
         shell: bash
         run: |
           # The test-runner builds + launches a player binary that writes its own
@@ -416,7 +488,7 @@ jobs:
 
       - name: Publish test report
         uses: dorny/test-reporter@v3
-        if: always()
+        if: always() && matrix.mobile != true
         with:
           name: PlayMode (${{ matrix.backend }} / ${{ matrix.target }})
           path: artifacts/test-results.xml
@@ -424,11 +496,21 @@ jobs:
           fail-on-error: true
 
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && matrix.mobile != true
         with:
           name: playmode-${{ matrix.backend }}-${{ matrix.target }}-${{ matrix.unity }}
           path: |
             artifacts/test-results.xml
             artifacts/unity.log
             artifacts/Player-*.log
+            examples/audience/Logs/**
+
+      - uses: actions/upload-artifact@v4
+        if: always() && matrix.mobile == true
+        with:
+          name: mobile-build-${{ matrix.target }}-${{ matrix.unity }}
+          if-no-files-found: ignore
+          path: |
+            artifacts/unity.log
+            examples/audience/Builds/Android/*.apk
             examples/audience/Logs/**
