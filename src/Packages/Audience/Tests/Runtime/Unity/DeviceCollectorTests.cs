@@ -1,8 +1,11 @@
 #nullable enable
 
+using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using Immutable.Audience.Unity;
+using Immutable.Audience.Unity.Mobile;
+using UnityEngine;
 
 namespace Immutable.Audience.Tests
 {
@@ -88,6 +91,53 @@ namespace Immutable.Audience.Tests
             var props = DeviceCollector.CollectGameLaunchProperties();
             if (props.TryGetValue("screenDpi", out var dpi))
                 Assert.Greater((int)dpi, 0, "screenDpi must not be 0 when present");
+        }
+
+        // -----------------------------------------------------------------
+        // iOS-specific (IDFVBridge + screenScale)
+        // -----------------------------------------------------------------
+
+        private Func<string?>? _originalIDFVImpl;
+
+        [SetUp]
+        public void SetUp() => _originalIDFVImpl = IDFVBridge.Impl;
+
+        [TearDown]
+        public void TearDown() => IDFVBridge.Impl = _originalIDFVImpl!;
+
+        [Test]
+        public void CollectGameLaunchProperties_iOS_IdfvPresentWhenBridgeReturnsValue()
+        {
+            IDFVBridge.Impl = () => "12345678-ABCD-ABCD-ABCD-123456789ABC";
+            var props = DeviceCollector.CollectGameLaunchProperties(RuntimePlatform.IPhonePlayer);
+            Assert.IsTrue(props.ContainsKey("idfv"), "idfv must be present when bridge returns a value");
+            Assert.AreEqual("12345678-ABCD-ABCD-ABCD-123456789ABC", props["idfv"]);
+        }
+
+        [Test]
+        public void CollectGameLaunchProperties_iOS_IdfvAbsentWhenBridgeReturnsNull()
+        {
+            IDFVBridge.Impl = () => null;
+            var props = DeviceCollector.CollectGameLaunchProperties(RuntimePlatform.IPhonePlayer);
+            Assert.IsFalse(props.ContainsKey("idfv"), "idfv must be absent when bridge returns null");
+        }
+
+        [Test]
+        public void CollectGameLaunchProperties_NonIOS_DoesNotContainIdfv()
+        {
+            // IDFVBridge must never be called on non-iOS platforms.
+            IDFVBridge.Impl = () => "should-not-appear";
+            var props = DeviceCollector.CollectGameLaunchProperties();
+            Assert.IsFalse(props.ContainsKey("idfv"),
+                "idfv must not be present on non-iOS platforms");
+        }
+
+        [Test]
+        public void CollectGameLaunchProperties_iOS_ContainsPlatformIPhonePlayer()
+        {
+            IDFVBridge.Impl = () => null;
+            var props = DeviceCollector.CollectGameLaunchProperties(RuntimePlatform.IPhonePlayer);
+            Assert.AreEqual("iOS", props["platform"]);
         }
     }
 }
