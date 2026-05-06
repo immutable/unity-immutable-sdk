@@ -475,18 +475,21 @@ namespace Immutable.Audience.Tests
             var warnings = new List<string>();
             var prevWriter = Log.Writer;
             Log.Writer = line => { lock (warnings) warnings.Add(line); };
+            using var beatStarted = new ManualResetEvent(false);
+            using var releaseBeat = new ManualResetEvent(false);
             try
             {
-                using var beatStarted = new ManualResetEvent(false);
                 void Track(string name, Dictionary<string, object> props)
                 {
                     if (name == "session_heartbeat")
                     {
                         beatStarted.Set();
                         // Block past the 1 s drain budget so DrainHeartbeatTimer
-                        // times out. Self-releases after 1.5 s so the callback
-                        // does eventually finish.
-                        Thread.Sleep(1500);
+                        // times out. Generous safety cap (10 s) ensures a
+                        // failed assertion below can't wedge the test
+                        // process; the normal release path is the explicit
+                        // releaseBeat.Set() in the finally block.
+                        releaseBeat.WaitOne(TimeSpan.FromSeconds(10));
                     }
                 }
 
@@ -505,6 +508,7 @@ namespace Immutable.Audience.Tests
             }
             finally
             {
+                releaseBeat.Set();
                 Log.Writer = prevWriter;
             }
         }

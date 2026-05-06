@@ -1,0 +1,73 @@
+name: Audience package — Unity Tests
+
+# Runs the Unity-dependent SDK tests that test-audience-sdk.yml's csproj
+# excludes (Tests/Runtime/Unity/** + Tests/Editor/**). Single GameCI Linux
+# cell on iOS targetPlatform so UnityEditor.iOS.Xcode and the UNITY_IOS
+# define resolve. testables is injected at CI time so the sample app's
+# Packages/manifest.json doesn't permanently advertise the package's tests
+# (avoids polluting the sample app workflow's PlayMode runs).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/Packages/Audience/**'
+      - 'examples/audience/Packages/manifest.json'
+      - '.github/workflows/test-audience-sdk-unity.yml'
+  pull_request:
+    paths:
+      - 'src/Packages/Audience/**'
+      - 'examples/audience/Packages/manifest.json'
+      - '.github/workflows/test-audience-sdk-unity.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  editmode:
+    if: github.event.pull_request.head.repo.fork == false || github.event_name == 'workflow_dispatch'
+    name: SDK EditMode (Unity 2022.3 / iOS module)
+    runs-on: ubuntu-latest-8-cores
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Inject testables into Packages/manifest.json
+        # Adds com.immutable.audience to the project's testables array so
+        # Unity Test Runner discovers the package's test asmdefs. Done in CI
+        # rather than committed to the file so the sample app workflow's
+        # PlayMode cells stay scoped to sample-app-only tests.
+        run: |
+          jq '.testables = (.testables // []) + ["com.immutable.audience"]' examples/audience/Packages/manifest.json > examples/audience/Packages/manifest.tmp.json
+          mv examples/audience/Packages/manifest.tmp.json examples/audience/Packages/manifest.json
+
+      - uses: actions/cache@v4
+        with:
+          path: examples/audience/Library
+          key: Library-audience-sdk-tests-${{ hashFiles('examples/audience/Packages/**', 'examples/audience/ProjectSettings/**', 'src/Packages/Audience/**') }}
+          restore-keys: |
+            Library-audience-sdk-tests-
+
+      - uses: game-ci/unity-test-runner@v4
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        with:
+          unityVersion: 2022.3.62f2
+          targetPlatform: iOS
+          projectPath: examples/audience
+          testMode: editmode
+          customParameters: -assemblyNames Immutable.Audience.Runtime.Tests;Immutable.Audience.Editor.Tests
+          checkName: Audience SDK Tests
+          artifactsPath: artifacts
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: audience-sdk-test-results
+          path: artifacts
