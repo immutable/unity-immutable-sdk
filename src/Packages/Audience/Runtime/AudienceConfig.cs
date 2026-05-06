@@ -50,6 +50,40 @@ namespace Immutable.Audience
         public bool Debug { get; set; } = false;
 
         /// <summary>
+        /// Opts into mobile install-attribution signals (iOS ATT / IDFA /
+        /// SKAdNetwork, Android Advertising ID / Install Referrer). Default
+        /// <c>false</c>.
+        /// </summary>
+        /// <remarks>
+        /// Two gates control attribution; both must be set for any data to
+        /// ship:
+        ///
+        /// 1. Build-time: add <c>AUDIENCE_MOBILE_ATTRIBUTION</c> to Player
+        ///    Settings → Other Settings → Scripting Define Symbols. Controls
+        ///    the AD_ID Android manifest permission, the iOS Privacy Manifest
+        ///    variant (<c>NSPrivacyTracking</c>), and whether native
+        ///    attribution code is compiled into the binary.
+        ///
+        /// 2. Runtime: this flag. Controls whether attribution data is
+        ///    collected at runtime. Without the define, this setter is a
+        ///    no-op.
+        ///
+        /// Studios who set neither ship a clean binary — no AD_ID permission,
+        /// no native attribution code, <c>NSPrivacyTracking = false</c>.
+        /// </remarks>
+        public bool EnableMobileAttribution { get; set; } = false;
+
+        /// <summary>
+        /// SKAdNetwork IDs the iOS post-processor injects into <c>Info.plist</c>
+        /// at build time. Ignored on Android.
+        /// </summary>
+        /// <remarks>
+        /// Read only when <see cref="EnableMobileAttribution"/> and the
+        /// <c>AUDIENCE_MOBILE_ATTRIBUTION</c> scripting define are both set.
+        /// </remarks>
+        public string[]? SKAdNetworkIds { get; set; }
+
+        /// <summary>
         /// Interval between automatic flushes to the backend, in seconds.
         /// </summary>
         public int FlushIntervalSeconds { get; set; } = Constants.DefaultFlushIntervalSeconds;
