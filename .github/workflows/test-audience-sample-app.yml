@@ -432,3 +432,69 @@ jobs:
             artifacts/unity.log
             artifacts/Player-*.log
             examples/audience/Logs/**
+
+  # Mobile IL2CPP build validation — runs on GitHub-hosted Ubuntu via GameCI Docker
+  # containers so self-hosted macOS/Windows machines are not occupied.
+  # Scope: IL2CPP compile pipeline only. Runtime tests require a real device and
+  # are out of scope until a device farm is available.
+  # Note: Unity 6 cells use 6000.4.5f1 (the latest patch with a GameCI image);
+  # 6000.4.0f1 does not have a published GameCI Docker image.
+  mobile-build:
+    if: github.event.pull_request.head.repo.fork == false || github.event_name == 'workflow_dispatch'
+    name: ${{ matrix.target }} / IL2CPP / Unity ${{ matrix.unity }}
+    runs-on: ubuntu-latest-8-cores
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: Android
+            unity: 2021.3.45f2
+            method: AndroidBuilder.Build
+          - target: Android
+            unity: 2022.3.62f2
+            method: AndroidBuilder.Build
+          - target: Android
+            unity: 6000.4.5f1
+            method: AndroidBuilder.Build
+          - target: iOS
+            unity: 2021.3.45f2
+            method: IosBuilder.Build
+          - target: iOS
+            unity: 2022.3.62f2
+            method: IosBuilder.Build
+          - target: iOS
+            unity: 6000.4.5f1
+            method: IosBuilder.Build
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: actions/cache@v4
+        with:
+          path: examples/audience/Library
+          key: Library-mobile-${{ matrix.target }}-${{ matrix.unity }}-${{ hashFiles('examples/audience/Assets/**', 'examples/audience/Packages/**', 'examples/audience/ProjectSettings/**', 'src/Packages/Audience/**') }}
+          restore-keys: |
+            Library-mobile-${{ matrix.target }}-${{ matrix.unity }}-
+            Library-mobile-${{ matrix.target }}-
+
+      - uses: game-ci/unity-builder@v4
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        with:
+          unityVersion: ${{ matrix.unity }}
+          targetPlatform: ${{ matrix.target }}
+          projectPath: examples/audience
+          buildMethod: Immutable.Audience.Samples.SampleApp.Editor.${{ matrix.method }}
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mobile-build-${{ matrix.target }}-${{ matrix.unity }}
+          if-no-files-found: ignore
+          path: |
+            examples/audience/Builds/Android/*.apk
+            examples/audience/Logs/**

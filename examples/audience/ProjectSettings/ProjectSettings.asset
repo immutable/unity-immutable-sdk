@@ -829,6 +829,7 @@ PlayerSettings:
     WebGL: 1
     Windows Store Apps: 1
     XboxOne: 1
+    Android: 3
     iPhone: 3
     tvOS: 1
   incrementalIl2cppBuild: {}
