@@ -562,3 +562,111 @@ jobs:
           path: |
             examples/audience/Builds/Android/*.apk
             examples/audience/Logs/**
+
+  # workflow_dispatch only. Cross-checks the GameCI Docker outcome against
+  # the self-hosted Linux machine when there's reason to suspect divergence.
+  playmode-linux-selfhosted:
+    if: github.event_name == 'workflow_dispatch'
+    name: ${{ matrix.backend }} / Unity ${{ matrix.unity }} (self-hosted Linux)
+    runs-on: [self-hosted, X64, Linux]
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - backend: IL2CPP
+            unity: 2021.3.45f2
+          - backend: Mono2x
+            unity: 2021.3.45f2
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: actions/cache@v4
+        with:
+          path: examples/audience/Library
+          key: Library-selfhosted-${{ matrix.backend }}-StandaloneLinux64-${{ matrix.unity }}-${{ hashFiles('examples/audience/Assets/**', 'examples/audience/Packages/**', 'examples/audience/ProjectSettings/**', 'src/Packages/Audience/**') }}
+          restore-keys: |
+            Library-selfhosted-${{ matrix.backend }}-StandaloneLinux64-${{ matrix.unity }}-
+            Library-selfhosted-${{ matrix.backend }}-StandaloneLinux64-
+
+      - name: Resolve Unity
+        shell: bash
+        run: |
+          set -uo pipefail
+          UNITY="$HOME/Unity/Hub/Editor/${{ matrix.unity }}/Editor/Unity"
+          if [ ! -x "$UNITY" ]; then
+            echo "::error::Unity ${{ matrix.unity }} not found at $UNITY. Install via Unity Hub on the runner host."
+            exit 1
+          fi
+          echo "UNITY_PATH=$UNITY" >> "$GITHUB_ENV"
+
+      - name: Activate Unity license
+        shell: bash
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        run: |
+          set -uo pipefail
+          LOG="$(mktemp)"
+          "$UNITY_PATH" -batchmode -nographics -quit \
+            -username "$UNITY_EMAIL" \
+            -password "$UNITY_PASSWORD" \
+            -serial   "$UNITY_SERIAL" \
+            -logFile - 2>&1 | tee "$LOG" || true
+
+          if grep -qE "(License activation has failed|\[Licensing::Client\] Error: Code [0-9]+)" "$LOG"; then
+            echo "::error::Unity activation failed."
+            exit 1
+          fi
+          if ! grep -qE "Successfully activated the entitlement license" "$LOG"; then
+            echo "::error::Unity activation: no success marker found."
+            exit 1
+          fi
+
+      - name: Run PlayMode tests
+        shell: bash
+        env:
+          AUDIENCE_TEST_PUBLISHABLE_KEY: ${{ secrets.AUDIENCE_TEST_PUBLISHABLE_KEY }}
+          AUDIENCE_SCRIPTING_BACKEND: ${{ matrix.backend }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          "$UNITY_PATH" \
+            -batchmode -nographics \
+            -projectPath examples/audience \
+            -runTests \
+            -testPlatform StandaloneLinux64 \
+            -testResults "$(pwd)/artifacts/test-results.xml" \
+            -logFile - 2>&1 | tee "$(pwd)/artifacts/unity.log"
+
+      - name: Return Unity license
+        if: always()
+        shell: bash
+        run: |
+          set -uo pipefail
+          # Releases the seat after every run so manual reruns do not exhaust
+          # the serial's activation pool.
+          if [ -n "${UNITY_PATH:-}" ] && [ -x "$UNITY_PATH" ]; then
+            "$UNITY_PATH" -returnlicense -batchmode -nographics -quit -logFile - 2>&1 || true
+          fi
+
+      - name: Publish test report
+        uses: dorny/test-reporter@v3
+        if: always()
+        with:
+          name: Self-hosted Linux PlayMode (${{ matrix.backend }})
+          path: artifacts/test-results.xml
+          reporter: dotnet-nunit
+          fail-on-error: true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: selfhosted-linux-${{ matrix.backend }}
+          path: |
+            artifacts/test-results.xml
+            artifacts/unity.log
