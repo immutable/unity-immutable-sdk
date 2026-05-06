@@ -68,7 +68,8 @@ namespace Immutable.Audience.Tests
                 "platform", "version", "buildGuid", "unityVersion",
                 "osFamily", "deviceModel", "gpu", "gpuVendor", "cpu" })
             {
-                if (!props.TryGetValue(key, out var val) || val is not string s) continue;
+                if (!props.TryGetValue(key, out var val)) continue;
+                if (val is not string s) continue;
                 Assert.LessOrEqual(s.Length, 256, $"props[{key}] exceeds 256 chars");
             }
         }
