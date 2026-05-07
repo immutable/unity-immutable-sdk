@@ -26,11 +26,67 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Reduced matrix on pull_request, full matrix on schedule and
-  # workflow_dispatch. The self-hosted Windows runner pool is small, so
-  # trimming PR cells keeps PR feedback fast. `matrix.exclude` below is
-  # the source of truth for which cells are dropped on pull_request.
+  # The playmode, playmode-linux and mobile-build matrices are built here
+  # and consumed by the dependent jobs via fromJSON. PR runs trim Unity
+  # 2022.3.62f2 cells; schedule and workflow_dispatch run the full set.
+  set-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      playmode: ${{ steps.set.outputs.playmode }}
+      playmode_linux: ${{ steps.set.outputs.playmode_linux }}
+      mobile: ${{ steps.set.outputs.mobile }}
+    steps:
+      - id: set
+        shell: bash
+        run: |
+          playmode_full='[
+            {"target":"StandaloneWindows64","backend":"IL2CPP","unity":"2021.3.45f2","changeset":"88f88f591b2e","runner":["self-hosted","Windows","X64"]},
+            {"target":"StandaloneWindows64","backend":"Mono2x","unity":"2021.3.45f2","changeset":"88f88f591b2e","runner":["self-hosted","Windows","X64"]},
+            {"target":"StandaloneOSX","backend":"IL2CPP","unity":"2021.3.45f2","changeset":"88f88f591b2e","runner":["self-hosted","macOS","ARM64"]},
+            {"target":"StandaloneOSX","backend":"Mono2x","unity":"2021.3.45f2","changeset":"88f88f591b2e","runner":["self-hosted","macOS","ARM64"]},
+            {"target":"StandaloneWindows64","backend":"IL2CPP","unity":"6000.4.0f1","changeset":"8cf496087c8f","runner":["self-hosted","Windows","X64"]},
+            {"target":"StandaloneWindows64","backend":"Mono2x","unity":"6000.4.0f1","changeset":"8cf496087c8f","runner":["self-hosted","Windows","X64"]},
+            {"target":"StandaloneOSX","backend":"IL2CPP","unity":"6000.4.0f1","changeset":"8cf496087c8f","runner":["self-hosted","macOS","ARM64"]},
+            {"target":"StandaloneOSX","backend":"Mono2x","unity":"6000.4.0f1","changeset":"8cf496087c8f","runner":["self-hosted","macOS","ARM64"]},
+            {"target":"StandaloneWindows64","backend":"IL2CPP","unity":"2022.3.62f2","changeset":"7670c08855a9","runner":["self-hosted","Windows","X64"]},
+            {"target":"StandaloneWindows64","backend":"Mono2x","unity":"2022.3.62f2","changeset":"7670c08855a9","runner":["self-hosted","Windows","X64"]},
+            {"target":"StandaloneOSX","backend":"IL2CPP","unity":"2022.3.62f2","changeset":"7670c08855a9","runner":["self-hosted","macOS","ARM64"]},
+            {"target":"StandaloneOSX","backend":"Mono2x","unity":"2022.3.62f2","changeset":"7670c08855a9","runner":["self-hosted","macOS","ARM64"]}
+          ]'
+          playmode_linux_full='[
+            {"target":"StandaloneLinux64","backend":"IL2CPP","unity":"2021.3.45f2"},
+            {"target":"StandaloneLinux64","backend":"Mono2x","unity":"2021.3.45f2"},
+            {"target":"StandaloneLinux64","backend":"IL2CPP","unity":"6000.4.0f1"},
+            {"target":"StandaloneLinux64","backend":"Mono2x","unity":"6000.4.0f1"},
+            {"target":"StandaloneLinux64","backend":"IL2CPP","unity":"2022.3.62f2"},
+            {"target":"StandaloneLinux64","backend":"Mono2x","unity":"2022.3.62f2"}
+          ]'
+          mobile_full='[
+            {"target":"Android","unity":"2021.3.45f2","method":"AndroidBuilder.Build"},
+            {"target":"Android","unity":"2022.3.62f2","method":"AndroidBuilder.Build"},
+            {"target":"Android","unity":"6000.4.0f1","method":"AndroidBuilder.Build"},
+            {"target":"iOS","unity":"2021.3.45f2","method":"IosBuilder.Build"},
+            {"target":"iOS","unity":"2022.3.62f2","method":"IosBuilder.Build"},
+            {"target":"iOS","unity":"6000.4.0f1","method":"IosBuilder.Build"}
+          ]'
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            filter='[.[] | select(.unity != "2022.3.62f2")]'
+            playmode=$(jq -c "$filter" <<<"$playmode_full")
+            playmode_linux=$(jq -c "$filter" <<<"$playmode_linux_full")
+            mobile=$(jq -c "$filter" <<<"$mobile_full")
+          else
+            playmode=$(jq -c '.' <<<"$playmode_full")
+            playmode_linux=$(jq -c '.' <<<"$playmode_linux_full")
+            mobile=$(jq -c '.' <<<"$mobile_full")
+          fi
+          {
+            echo "playmode=$playmode"
+            echo "playmode_linux=$playmode_linux"
+            echo "mobile=$mobile"
+          } >> "$GITHUB_OUTPUT"
+
   playmode:
+    needs: set-matrix
     if: |
       (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false)
       || github.event_name == 'schedule'
@@ -39,21 +95,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        unity: ['2021.3.45f2', '6000.4.0f1', '2022.3.62f2']
-        target: [StandaloneWindows64, StandaloneOSX]
-        backend: [IL2CPP, Mono2x]
-        include:
-          - unity: '2021.3.45f2'
-            changeset: 88f88f591b2e
-          - unity: '6000.4.0f1'
-            changeset: 8cf496087c8f
-          - unity: '2022.3.62f2'
-            changeset: 7670c08855a9
-          - target: StandaloneWindows64
-            runner: [self-hosted, Windows, X64]
-          - target: StandaloneOSX
-            runner: [self-hosted, macOS, ARM64]
-        exclude: ${{ fromJSON(github.event_name == 'pull_request' && '[{"unity":"2022.3.62f2"}]' || '[]') }}
+        include: ${{ fromJSON(needs.set-matrix.outputs.playmode) }}
     runs-on: ${{ matrix.runner }}
     # Healthy cells finish in ~10 min. 30 min covers cold caches +
     # IL2CPP + Unity 6 startup; anything past that is a hang. Capping
@@ -62,25 +104,43 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - name: Kill stale Unity processes (Windows pre-checkout)
+      - name: Clean Windows workspace (pre-checkout)
         if: runner.os == 'Windows'
         shell: pwsh
         continue-on-error: true
         run: |
-          # actions/checkout@v4 deletes the prior workspace before cloning. If a
-          # previous run's Unity Editor / IL2CPP build process is still holding
-          # handles inside examples/audience, checkout dies with EBUSY. Kill any
-          # leftover Unity-family process here so checkout's cleanup succeeds.
+          # actions/checkout@v4 removes the prior workspace before cloning. If
+          # a previous run's Unity build / IL2CPP linker / bee_backend / shader
+          # compiler is still holding handles, checkout dies with EBUSY on
+          # examples/audience. Kill known offenders, then force-remove the
+          # workspace contents ourselves so checkout's cleanup succeeds.
           Get-Process | Where-Object {
             $_.Name -like 'Unity*' -or
             $_.Name -like 'il2cpp*' -or
             $_.Name -like 'UnityShaderCompiler*' -or
-            $_.Name -like 'UnityCrashHandler*'
+            $_.Name -like 'UnityCrashHandler*' -or
+            $_.Name -like 'bee_backend*' -or
+            $_.Name -like 'mono*'
           } | ForEach-Object {
             Write-Host "Killing stale process: $($_.Name) (pid $($_.Id))"
             Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
           }
-          Start-Sleep -Seconds 2
+          Start-Sleep -Seconds 3
+
+          $ws = "$env:GITHUB_WORKSPACE"
+          if (-not (Test-Path $ws)) { return }
+          for ($i = 1; $i -le 6; $i++) {
+            try {
+              Get-ChildItem -Path $ws -Force -ErrorAction Stop |
+                Remove-Item -Recurse -Force -ErrorAction Stop
+              Write-Host "Cleaned $ws on attempt ${i}"
+              return
+            } catch {
+              Write-Host "Attempt ${i}: $($_.Exception.Message)"
+              Start-Sleep -Seconds 3
+            }
+          }
+          Write-Host "::warning::Workspace not fully cleaned; checkout may fail"
 
       - uses: actions/checkout@v4
         with:
@@ -406,6 +466,7 @@ jobs:
             examples/audience/Logs/**
 
   playmode-linux:
+    needs: set-matrix
     if: |
       (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false)
       || github.event_name == 'schedule'
@@ -415,10 +476,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        unity: ['2021.3.45f2', '6000.4.0f1', '2022.3.62f2']
-        target: [StandaloneLinux64]
-        backend: [IL2CPP, Mono2x]
-        exclude: ${{ fromJSON(github.event_name == 'pull_request' && '[{"unity":"2022.3.62f2"}]' || '[]') }}
+        include: ${{ fromJSON(needs.set-matrix.outputs.playmode_linux) }}
 
     steps:
       - uses: actions/checkout@v4
@@ -468,6 +526,7 @@ jobs:
   # Scope: IL2CPP compile pipeline only. Runtime tests require a real device and
   # are out of scope until a device farm is available.
   mobile-build:
+    needs: set-matrix
     if: |
       (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false)
       || github.event_name == 'schedule'
@@ -477,13 +536,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [Android, iOS]
-        unity: ['2021.3.45f2', '2022.3.62f2', '6000.4.0f1']
-        include:
-          - target: Android
-            method: AndroidBuilder.Build
-          - target: iOS
-            method: IosBuilder.Build
+        include: ${{ fromJSON(needs.set-matrix.outputs.mobile) }}
 
     steps:
       - uses: actions/checkout@v4
