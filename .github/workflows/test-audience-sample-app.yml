@@ -470,7 +470,10 @@ jobs:
   # Note: Unity 6 cells use 6000.4.5f1 (the latest patch with a GameCI image);
   # 6000.4.0f1 does not have a published GameCI Docker image.
   mobile-build:
-    if: github.event.pull_request.head.repo.fork == false || github.event_name == 'workflow_dispatch'
+    if: |
+      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false)
+      || github.event_name == 'schedule'
+      || github.event_name == 'workflow_dispatch'
     name: ${{ matrix.target }} / IL2CPP / Unity ${{ matrix.unity }}
     runs-on: ubuntu-latest-8-cores
     strategy:
