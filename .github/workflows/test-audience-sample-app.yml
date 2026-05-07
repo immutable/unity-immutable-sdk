@@ -12,6 +12,13 @@ on:
       - 'examples/audience/Packages/**'
       - 'examples/audience/ProjectSettings/**'
       - '.github/workflows/test-audience-sample-app.yml'
+  schedule:
+    # Weekly full-matrix run on the default branch.
+    # Cron is UTC; cron has no DST awareness, so the local time shifts by one
+    # hour twice a year. Saturday 14:00 UTC maps to:
+    #   Sun 00:00 Sydney AEST / Sun 02:00 NZ NZST  (winter, Apr to Oct)
+    #   Sun 01:00 Sydney AEDT / Sun 03:00 NZ NZDT  (summer, Oct to Apr)
+    - cron: '0 14 * * 6'
   workflow_dispatch:
 
 concurrency:
@@ -19,73 +26,34 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Reduced matrix on pull_request, full matrix on schedule and
+  # workflow_dispatch. The self-hosted Windows runner pool is small, so
+  # trimming PR cells keeps PR feedback fast. `matrix.exclude` below is
+  # the source of truth for which cells are dropped on pull_request.
   playmode:
-    if: github.event.pull_request.head.repo.fork == false || github.event_name == 'workflow_dispatch'
+    if: |
+      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false)
+      || github.event_name == 'schedule'
+      || github.event_name == 'workflow_dispatch'
     name: ${{ matrix.target }} / ${{ matrix.backend }} / Unity ${{ matrix.unity }}
     strategy:
       fail-fast: false
       matrix:
+        unity: ['2021.3.45f2', '6000.4.0f1', '2022.3.62f2']
+        target: [StandaloneWindows64, StandaloneOSX]
+        backend: [IL2CPP, Mono2x]
         include:
-          - target: StandaloneWindows64
-            backend: IL2CPP
-            unity: 2021.3.45f2
+          - unity: '2021.3.45f2'
             changeset: 88f88f591b2e
-            runner: [self-hosted, Windows, X64]
-          - target: StandaloneWindows64
-            backend: Mono2x
-            unity: 2021.3.45f2
-            changeset: 88f88f591b2e
-            runner: [self-hosted, Windows, X64]
-          - target: StandaloneOSX
-            backend: IL2CPP
-            unity: 2021.3.45f2
-            changeset: 88f88f591b2e
-            runner: [self-hosted, macOS, ARM64]
-          - target: StandaloneOSX
-            backend: Mono2x
-            unity: 2021.3.45f2
-            changeset: 88f88f591b2e
-            runner: [self-hosted, macOS, ARM64]
-          - target: StandaloneWindows64
-            backend: IL2CPP
-            unity: 6000.4.0f1
+          - unity: '6000.4.0f1'
             changeset: 8cf496087c8f
-            runner: [self-hosted, Windows, X64]
+          - unity: '2022.3.62f2'
+            changeset: 7670c08855a9
           - target: StandaloneWindows64
-            backend: Mono2x
-            unity: 6000.4.0f1
-            changeset: 8cf496087c8f
             runner: [self-hosted, Windows, X64]
           - target: StandaloneOSX
-            backend: IL2CPP
-            unity: 6000.4.0f1
-            changeset: 8cf496087c8f
             runner: [self-hosted, macOS, ARM64]
-          - target: StandaloneOSX
-            backend: Mono2x
-            unity: 6000.4.0f1
-            changeset: 8cf496087c8f
-            runner: [self-hosted, macOS, ARM64]
-          - target: StandaloneWindows64
-            backend: IL2CPP
-            unity: 2022.3.62f2
-            changeset: 7670c08855a9
-            runner: [self-hosted, Windows, X64]
-          - target: StandaloneWindows64
-            backend: Mono2x
-            unity: 2022.3.62f2
-            changeset: 7670c08855a9
-            runner: [self-hosted, Windows, X64]
-          - target: StandaloneOSX
-            backend: IL2CPP
-            unity: 2022.3.62f2
-            changeset: 7670c08855a9
-            runner: [self-hosted, macOS, ARM64]
-          - target: StandaloneOSX
-            backend: Mono2x
-            unity: 2022.3.62f2
-            changeset: 7670c08855a9
-            runner: [self-hosted, macOS, ARM64]
+        exclude: ${{ fromJSON(github.event_name == 'pull_request' && '[{"unity":"2022.3.62f2"}]' || '[]') }}
     runs-on: ${{ matrix.runner }}
     # Healthy cells finish in ~10 min. 30 min covers cold caches +
     # IL2CPP + Unity 6 startup; anything past that is a hang. Capping
@@ -450,24 +418,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        target: [Android, iOS]
+        unity: ['2021.3.45f2', '2022.3.62f2', '6000.4.5f1']
         include:
           - target: Android
-            unity: 2021.3.45f2
-            method: AndroidBuilder.Build
-          - target: Android
-            unity: 2022.3.62f2
-            method: AndroidBuilder.Build
-          - target: Android
-            unity: 6000.4.5f1
             method: AndroidBuilder.Build
           - target: iOS
-            unity: 2021.3.45f2
-            method: IosBuilder.Build
-          - target: iOS
-            unity: 2022.3.62f2
-            method: IosBuilder.Build
-          - target: iOS
-            unity: 6000.4.5f1
             method: IosBuilder.Build
 
     steps:
