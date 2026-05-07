@@ -467,8 +467,6 @@ jobs:
   # containers so self-hosted macOS/Windows machines are not occupied.
   # Scope: IL2CPP compile pipeline only. Runtime tests require a real device and
   # are out of scope until a device farm is available.
-  # Note: Unity 6 cells use 6000.4.5f1 (the latest patch with a GameCI image);
-  # 6000.4.0f1 does not have a published GameCI Docker image.
   mobile-build:
     if: github.event.pull_request.head.repo.fork == false || github.event_name == 'workflow_dispatch'
     name: ${{ matrix.target }} / IL2CPP / Unity ${{ matrix.unity }}
@@ -477,7 +475,7 @@ jobs:
       fail-fast: false
       matrix:
         target: [Android, iOS]
-        unity: ['2021.3.45f2', '2022.3.62f2', '6000.4.5f1']
+        unity: ['2021.3.45f2', '2022.3.62f2', '6000.4.0f1']
         include:
           - target: Android
             method: AndroidBuilder.Build
