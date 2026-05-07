@@ -13,11 +13,6 @@ on:
       - 'examples/audience/ProjectSettings/**'
       - '.github/workflows/test-audience-sample-app.yml'
   workflow_dispatch:
-    inputs:
-      selfhosted_only:
-        description: Run only the self-hosted Linux PlayMode validation (skip Win, macOS, GameCI Linux, mobile)
-        type: boolean
-        default: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -25,7 +20,7 @@ concurrency:
 
 jobs:
   playmode:
-    if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false) || (github.event_name == 'workflow_dispatch' && github.event.inputs.selfhosted_only != 'true')
+    if: github.event.pull_request.head.repo.fork == false || github.event_name == 'workflow_dispatch'
     name: ${{ matrix.target }} / ${{ matrix.backend }} / Unity ${{ matrix.unity }}
     strategy:
       fail-fast: false
@@ -445,7 +440,7 @@ jobs:
   # Linux PlayMode runs on GitHub-hosted Ubuntu via GameCI Docker, not on the
   # self-hosted matrix above, to keep self-hosted machines free for Win/macOS.
   playmode-linux:
-    if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false) || (github.event_name == 'workflow_dispatch' && github.event.inputs.selfhosted_only != 'true')
+    if: github.event.pull_request.head.repo.fork == false || github.event_name == 'workflow_dispatch'
     name: ${{ matrix.target }} / ${{ matrix.backend }} / Unity ${{ matrix.unity }}
     runs-on: ubuntu-latest-8-cores
     strategy:
@@ -509,7 +504,7 @@ jobs:
   # Note: Unity 6 cells use 6000.4.5f1 (the latest patch with a GameCI image);
   # 6000.4.0f1 does not have a published GameCI Docker image.
   mobile-build:
-    if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false) || (github.event_name == 'workflow_dispatch' && github.event.inputs.selfhosted_only != 'true')
+    if: github.event.pull_request.head.repo.fork == false || github.event_name == 'workflow_dispatch'
     name: ${{ matrix.target }} / IL2CPP / Unity ${{ matrix.unity }}
     runs-on: ubuntu-latest-8-cores
     strategy:
@@ -567,76 +562,3 @@ jobs:
           path: |
             examples/audience/Builds/Android/*.apk
             examples/audience/Logs/**
-
-  # workflow_dispatch only. Cross-checks the GameCI Docker outcome against
-  # the self-hosted Linux machine when there's reason to suspect divergence.
-  playmode-linux-selfhosted:
-    if: github.event_name == 'workflow_dispatch'
-    name: ${{ matrix.backend }} / Unity ${{ matrix.unity }} (self-hosted Linux)
-    runs-on: [self-hosted, X64, Linux]
-    timeout-minutes: 60
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - backend: IL2CPP
-            unity: 2021.3.45f2
-          - backend: Mono2x
-            unity: 2021.3.45f2
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          lfs: true
-
-      - uses: actions/cache@v4
-        with:
-          path: examples/audience/Library
-          key: Library-selfhosted-${{ matrix.backend }}-StandaloneLinux64-${{ matrix.unity }}-${{ hashFiles('examples/audience/Assets/**', 'examples/audience/Packages/**', 'examples/audience/ProjectSettings/**', 'src/Packages/Audience/**') }}
-          restore-keys: |
-            Library-selfhosted-${{ matrix.backend }}-StandaloneLinux64-${{ matrix.unity }}-
-            Library-selfhosted-${{ matrix.backend }}-StandaloneLinux64-
-
-      - name: Resolve Unity
-        shell: bash
-        run: |
-          set -uo pipefail
-          UNITY="$HOME/Unity/Hub/Editor/${{ matrix.unity }}/Editor/Unity"
-          if [ ! -x "$UNITY" ]; then
-            echo "::error::Unity ${{ matrix.unity }} not found at $UNITY. Install via Unity Hub on the runner host."
-            exit 1
-          fi
-          echo "UNITY_PATH=$UNITY" >> "$GITHUB_ENV"
-
-      - name: Run PlayMode tests
-        shell: bash
-        env:
-          AUDIENCE_TEST_PUBLISHABLE_KEY: ${{ secrets.AUDIENCE_TEST_PUBLISHABLE_KEY }}
-          AUDIENCE_SCRIPTING_BACKEND: ${{ matrix.backend }}
-        run: |
-          set -euo pipefail
-          mkdir -p artifacts
-          "$UNITY_PATH" \
-            -batchmode -nographics \
-            -projectPath examples/audience \
-            -runTests \
-            -testPlatform StandaloneLinux64 \
-            -testResults "$(pwd)/artifacts/test-results.xml" \
-            -logFile - 2>&1 | tee "$(pwd)/artifacts/unity.log"
-
-      - name: Publish test report
-        uses: dorny/test-reporter@v3
-        if: always()
-        with:
-          name: Self-hosted Linux PlayMode (${{ matrix.backend }})
-          path: artifacts/test-results.xml
-          reporter: dotnet-nunit
-          fail-on-error: true
-
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: selfhosted-linux-${{ matrix.backend }}
-          path: |
-            artifacts/test-results.xml
-            artifacts/unity.log
