@@ -53,7 +53,7 @@ namespace Immutable.Audience.Samples.SampleApp
         private TextField _publishableKey, _baseUrl, _flushInterval, _flushSize;
         private DropdownField _initialConsent;
         private Toggle _debug, _enableMobileAttribution;
-        private Button _btnInit, _btnFlush, _btnReset, _btnShutdown, _btnDeleteData;
+        private Button _btnInit, _btnFlush, _btnReset, _btnShutdown, _btnDeleteData, _btnRequestAtt;
 
         // ---- UXML element fields (Consent tab) ----
 
@@ -197,10 +197,13 @@ namespace Immutable.Audience.Samples.SampleApp
             _flushSize     = Require<TextField>("flush-size");
             _btnInit       = Require<Button>("btn-init");
 
-            _btnFlush      = Require<Button>("btn-flush");
-            _btnReset      = Require<Button>("btn-reset");
-            _btnShutdown   = Require<Button>("btn-shutdown");
-            _btnDeleteData = Require<Button>("btn-delete-data");
+            _btnFlush       = Require<Button>("btn-flush");
+            _btnReset       = Require<Button>("btn-reset");
+            _btnShutdown    = Require<Button>("btn-shutdown");
+            _btnDeleteData  = Require<Button>("btn-delete-data");
+            _btnRequestAtt  = Require<Button>("btn-request-att");
+
+            ApplyMobilePlatformVisibility();
 
             _consentPills = new Dictionary<ConsentLevel, Button>
             {
@@ -245,6 +248,24 @@ namespace Immutable.Audience.Samples.SampleApp
             _logView.contentContainer.usageHints = UsageHints.GroupTransform;
 
             _logCount = Require<Label>("log-count");
+        }
+
+        // EnableMobileAttribution is a no-op on Standalone, so the toggle and
+        // ATT button only appear on iOS/Android. ATT is iOS-only — Android
+        // attribution uses a different signal — so the ATT subsection is
+        // hidden on Android even when the toggle remains visible.
+        // UNITY_IOS / UNITY_ANDROID also evaluate true in the Editor when the
+        // matching build target is active, which is the right behavior for
+        // testing.
+        private void ApplyMobilePlatformVisibility()
+        {
+#if !(UNITY_IOS || UNITY_ANDROID)
+            var mobileField = _root.Q<VisualElement>("mobile-attribution-field");
+            if (mobileField != null) mobileField.style.display = DisplayStyle.None;
+#elif !UNITY_IOS
+            var attSection = _root.Q<VisualElement>("att-section");
+            if (attSection != null) attSection.style.display = DisplayStyle.None;
+#endif
         }
 
         private void PopulateDropdowns()
@@ -300,9 +321,10 @@ namespace Immutable.Audience.Samples.SampleApp
                 _identifyId, _identifyTraits, _traitsUpdate,
             }) RegisterPlaceholder(field);
 
-            _publishableKey.RegisterValueChangedCallback(_ => { _btnInit.SetEnabled(!_initialised && !string.IsNullOrWhiteSpace(_publishableKey.value)); RefreshStatusBar(); });
+            _publishableKey.RegisterValueChangedCallback(_ => { _btnInit.SetEnabled(!_initialised && !string.IsNullOrWhiteSpace(_publishableKey.value)); UpdateAttButtonGate(); RefreshStatusBar(); });
             _initialConsent.RegisterValueChangedCallback(_ => RefreshStatusBar());
             _baseUrl.RegisterValueChangedCallback(_ => RefreshStatusBar());
+            _enableMobileAttribution.RegisterValueChangedCallback(_ => UpdateAttButtonGate());
 
             _btnInit.clicked += OnInit;
 
@@ -310,6 +332,7 @@ namespace Immutable.Audience.Samples.SampleApp
             _btnReset.clicked += OnReset;
             _btnShutdown.clicked += OnShutdown;
             _btnDeleteData.clicked += async () => await OnDeleteDataAsync();
+            _btnRequestAtt.clicked += async () => await OnRequestAttAsync();
             _btnIdentify.clicked += OnIdentify;
             _btnIdentifyTraits.clicked += OnIdentifyTraits;
             _btnAlias.clicked += OnAlias;
@@ -621,6 +644,18 @@ namespace Immutable.Audience.Samples.SampleApp
             foreach (var btn in _typedEventsHost.Query<Button>().ToList()) btn.SetEnabled(_initialised);
             _btnInit.SetEnabled(!_initialised && !string.IsNullOrWhiteSpace(_publishableKey.value));
             _btnAlias.SetEnabled(_initialised && IsAliasReady());
+            UpdateAttButtonGate();
+        }
+
+        // ATT prompt is independent of SDK init, but in the demo flow it's
+        // only useful once a key is set (so events have somewhere to ship)
+        // and the toggle is on (so the chosen status actually appears on
+        // game_launch via MobileAttributionContextProvider).
+        private void UpdateAttButtonGate()
+        {
+            _btnRequestAtt.SetEnabled(
+                !string.IsNullOrWhiteSpace(_publishableKey.value) &&
+                _enableMobileAttribution.value);
         }
 
         private void RefreshIdentityPanel()

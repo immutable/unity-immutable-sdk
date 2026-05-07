@@ -140,5 +140,13 @@ namespace Immutable.Audience
         internal static string MobileAttributionProviderThrew(Exception ex) =>
             $"MobileAttributionProvider threw {ex.GetType().Name}: {ex.Message}. " +
             "game_launch will ship without skanRegistered.";
+
+        internal static string MobileAttributionContextProviderThrew(Exception ex) =>
+            $"MobileAttributionContextProvider threw {ex.GetType().Name}: {ex.Message}. " +
+            "game_launch will ship without iOS attribution context.";
+
+        internal static string TrackingAuthorizationRequestThrew(Exception ex) =>
+            $"RequestTrackingAuthorizationAsync threw {ex.GetType().Name}: {ex.Message}. " +
+            "Returning NotDetermined.";
     }
 }
