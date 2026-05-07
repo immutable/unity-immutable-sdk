@@ -158,8 +158,8 @@ PlayerSettings:
   androidSupportedAspectRatio: 1
   androidMaxAspectRatio: 2.1
   applicationIdentifier:
-    iPhone: com.immutable.audience
     Android: com.immutable.audience
+    iPhone: com.immutable.audience
   buildNumber:
     Standalone: 0
     iPhone: 0
@@ -808,7 +808,8 @@ PlayerSettings:
   webGLThreadsSupport: 0
   webGLDecompressionFallback: 0
   webGLPowerPreference: 2
-  scriptingDefineSymbols: {}
+  scriptingDefineSymbols:
+    iPhone: AUDIENCE_MOBILE_ATTRIBUTION
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:
@@ -817,6 +818,7 @@ PlayerSettings:
     iPhone: 1
   il2cppCompilerConfiguration: {}
   managedStrippingLevel:
+    Android: 3
     EmbeddedLinux: 1
     GameCoreScarlett: 1
     GameCoreXboxOne: 1
@@ -829,7 +831,6 @@ PlayerSettings:
     WebGL: 1
     Windows Store Apps: 1
     XboxOne: 1
-    Android: 3
     iPhone: 3
     tvOS: 1
   incrementalIl2cppBuild: {}

@@ -30,6 +30,8 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.ContextProvider = null;
             ImmutableAudience.DefaultPersistentDataPathProvider = null;
             ImmutableAudience.MobileAttributionProvider = null;
+            ImmutableAudience.MobileAttributionContextProvider = null;
+            ImmutableAudience.TrackingAuthorizationRequestProvider = null;
             Identity.Reset(_testDir);
             if (Directory.Exists(_testDir))
                 Directory.Delete(_testDir, recursive: true);
@@ -1288,6 +1290,159 @@ namespace Immutable.Audience.Tests
                 .Select(File.ReadAllText)
                 .First(c => c.Contains("\"game_launch\""));
             Assert.IsFalse(launchFile.Contains("skanRegistered"));
+        }
+
+        [Test]
+        public void Init_GameLaunch_IncludesAttStatusAndIdfa_WhenContextProviderReturns()
+        {
+            ImmutableAudience.MobileAttributionContextProvider = () =>
+                new Dictionary<string, object>
+                {
+                    ["attStatus"] = "authorized",
+                    ["idfa"] = "11111111-2222-3333-4444-555555555555",
+                };
+            var config = MakeConfig();
+            config.EnableMobileAttribution = true;
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Shutdown();
+
+            var launchFile = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
+                .Select(File.ReadAllText)
+                .First(c => c.Contains("\"game_launch\""));
+            StringAssert.Contains("\"attStatus\":\"authorized\"", launchFile);
+            StringAssert.Contains("\"idfa\":\"11111111-2222-3333-4444-555555555555\"", launchFile);
+        }
+
+        [Test]
+        public void Init_GameLaunch_IncludesAttStatusOnly_WhenIdfaUnauthorized()
+        {
+            ImmutableAudience.MobileAttributionContextProvider = () =>
+                new Dictionary<string, object>
+                {
+                    ["attStatus"] = "denied",
+                };
+            var config = MakeConfig();
+            config.EnableMobileAttribution = true;
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Shutdown();
+
+            var launchFile = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
+                .Select(File.ReadAllText)
+                .First(c => c.Contains("\"game_launch\""));
+            StringAssert.Contains("\"attStatus\":\"denied\"", launchFile);
+            Assert.IsFalse(launchFile.Contains("\"idfa\""),
+                "idfa must not appear when ATT status is denied");
+        }
+
+        [Test]
+        public void Init_GameLaunch_OmitsAttributionContext_WhenMobileAttributionDisabled()
+        {
+            var callCount = 0;
+            ImmutableAudience.MobileAttributionContextProvider = () =>
+            {
+                callCount++;
+                return new Dictionary<string, object> { ["attStatus"] = "authorized" };
+            };
+            var config = MakeConfig();
+            config.EnableMobileAttribution = false;
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Shutdown();
+
+            Assert.AreEqual(0, callCount,
+                "MobileAttributionContextProvider must not be called when EnableMobileAttribution is false");
+            var launchFile = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
+                .Select(File.ReadAllText)
+                .First(c => c.Contains("\"game_launch\""));
+            Assert.IsFalse(launchFile.Contains("attStatus"));
+            Assert.IsFalse(launchFile.Contains("idfa"));
+        }
+
+        [Test]
+        public void Init_AttributionProviders_NotCalled_WhenConsentNone()
+        {
+            // Consent gate must precede attribution side effects: SKAN
+            // registration (network call) and IDFA/ATT reads must not fire
+            // when the user hasn't authorized any tracking.
+            var skanCallCount = 0;
+            var contextCallCount = 0;
+            ImmutableAudience.MobileAttributionProvider = () => { skanCallCount++; return true; };
+            ImmutableAudience.MobileAttributionContextProvider = () =>
+            {
+                contextCallCount++;
+                return new Dictionary<string, object> { ["attStatus"] = "authorized" };
+            };
+
+            var config = MakeConfig(ConsentLevel.None);
+            config.EnableMobileAttribution = true;
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Shutdown();
+
+            Assert.AreEqual(0, skanCallCount,
+                "MobileAttributionProvider must not run when consent is None");
+            Assert.AreEqual(0, contextCallCount,
+                "MobileAttributionContextProvider must not run when consent is None");
+        }
+
+        [Test]
+        public void Init_GameLaunch_AttributionContextProviderThrows_DoesNotPreventEvent()
+        {
+            ImmutableAudience.MobileAttributionContextProvider = () =>
+                throw new InvalidOperationException("provider exploded");
+            var config = MakeConfig();
+            config.EnableMobileAttribution = true;
+
+            Assert.DoesNotThrow(() => ImmutableAudience.Init(config));
+            ImmutableAudience.Shutdown();
+
+            var launchFile = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
+                .Select(File.ReadAllText)
+                .First(c => c.Contains("\"game_launch\""));
+            Assert.IsFalse(launchFile.Contains("attStatus"));
+        }
+
+        // -----------------------------------------------------------------
+        // RequestTrackingAuthorizationAsync
+        // -----------------------------------------------------------------
+
+        [Test]
+        public async Task RequestTrackingAuthorization_NoProvider_ReturnsNotDetermined()
+        {
+            // No provider set — non-iOS environment.
+            var status = await ImmutableAudience.RequestTrackingAuthorizationAsync();
+            Assert.AreEqual(TrackingAuthorizationStatus.NotDetermined, status);
+        }
+
+        [Test]
+        public async Task RequestTrackingAuthorization_ProviderReturnsAuthorized_MapsToEnum()
+        {
+            ImmutableAudience.TrackingAuthorizationRequestProvider = () => Task.FromResult(3);
+            var status = await ImmutableAudience.RequestTrackingAuthorizationAsync();
+            Assert.AreEqual(TrackingAuthorizationStatus.Authorized, status);
+        }
+
+        [Test]
+        public async Task RequestTrackingAuthorization_ProviderReturnsDenied_MapsToEnum()
+        {
+            ImmutableAudience.TrackingAuthorizationRequestProvider = () => Task.FromResult(2);
+            var status = await ImmutableAudience.RequestTrackingAuthorizationAsync();
+            Assert.AreEqual(TrackingAuthorizationStatus.Denied, status);
+        }
+
+        [Test]
+        public async Task RequestTrackingAuthorization_ProviderThrows_ReturnsNotDetermined()
+        {
+            ImmutableAudience.TrackingAuthorizationRequestProvider = () =>
+                throw new InvalidOperationException("provider exploded");
+            var status = await ImmutableAudience.RequestTrackingAuthorizationAsync();
+            Assert.AreEqual(TrackingAuthorizationStatus.NotDetermined, status);
+        }
+
+        [Test]
+        public async Task RequestTrackingAuthorization_OutOfRangeStatus_ReturnsNotDetermined()
+        {
+            ImmutableAudience.TrackingAuthorizationRequestProvider = () => Task.FromResult(99);
+            var status = await ImmutableAudience.RequestTrackingAuthorizationAsync();
+            Assert.AreEqual(TrackingAuthorizationStatus.NotDetermined, status);
         }
 
         // -----------------------------------------------------------------

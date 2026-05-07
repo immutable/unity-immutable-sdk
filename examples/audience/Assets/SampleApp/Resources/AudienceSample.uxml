@@ -99,10 +99,20 @@
                                      text="Mirror SDK internal log output into the in-page event log below." />
                         </ui:VisualElement>
 
-                        <ui:VisualElement class="field">
+                        <ui:VisualElement name="mobile-attribution-field" class="field">
                             <ui:Toggle name="enable-mobile-attribution" label="MOBILE ATTRIBUTION" />
                             <ui:Label class="helper-text below-field"
                                      text="Enable iOS SKAdNetwork registration and mobile attribution signals." />
+                            <ui:VisualElement name="att-section">
+                                <ui:VisualElement class="actions last">
+                                    <ui:Button name="btn-request-att" class="with-sig">
+                                        <ui:Label class="btn-label" text="Request ATT" />
+                                        <ui:Label class="btn-sig" text="requestTrackingAuthorizationAsync()" />
+                                    </ui:Button>
+                                </ui:VisualElement>
+                                <ui:Label class="helper-text below-field"
+                                         text="iOS-only. Triggers the system ATT prompt on first call; subsequent calls return the cached status." />
+                            </ui:VisualElement>
                         </ui:VisualElement>
 
                         <ui:VisualElement class="field placeholder-host">

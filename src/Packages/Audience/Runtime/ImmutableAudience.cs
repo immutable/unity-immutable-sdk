@@ -53,6 +53,16 @@ namespace Immutable.Audience
         // Set by the Unity layer; null in pure-C# environments.
         internal static volatile Func<bool?>? MobileAttributionProvider;
 
+        // Called during Init when config.EnableMobileAttribution is true.
+        // Returns iOS attribution context (attStatus, idfa) to merge into
+        // game_launch properties. Set by the Unity layer.
+        internal static volatile Func<IReadOnlyDictionary<string, object>?>? MobileAttributionContextProvider;
+
+        // Backs RequestTrackingAuthorizationAsync. Set by the Unity layer to
+        // ATTBridge.RequestAsync; null in pure-C# environments and on
+        // non-iOS platforms (the public API resolves to NotDetermined).
+        internal static volatile Func<Task<int>>? TrackingAuthorizationRequestProvider;
+
         // Active session. Created at Init (or on upgrade from None) and disposed
         // on Shutdown or SetConsent(None). Volatile so OnPause/OnResume see
         // assignments from SetConsent without taking _initLock.
@@ -209,14 +219,23 @@ namespace Immutable.Audience
             // shows the new sessionId ahead of the launch event.
             sessionToStart?.Start();
 
+            // Consent gate before invoking attribution providers: SKAN
+            // registration is a network side effect and IDFA / ATT status
+            // reads are privacy-sensitive. CanTrack() == false (consent
+            // None) means we have no licence to do either, regardless of
+            // whether EnableMobileAttribution is set in config.
             bool? skanRegistered = null;
-            if (config.EnableMobileAttribution)
+            IReadOnlyDictionary<string, object>? attributionContext = null;
+            if (config.EnableMobileAttribution && consentAtInit.CanTrack())
             {
                 try { skanRegistered = MobileAttributionProvider?.Invoke(); }
                 catch (Exception ex) { Log.Warn(AudienceLogs.MobileAttributionProviderThrew(ex)); }
+
+                try { attributionContext = MobileAttributionContextProvider?.Invoke(); }
+                catch (Exception ex) { Log.Warn(AudienceLogs.MobileAttributionContextProviderThrew(ex)); }
             }
 
-            FireGameLaunch(config, consentAtInit, skanRegistered);
+            FireGameLaunch(config, consentAtInit, skanRegistered, attributionContext);
         }
 
         // Pause/Resume hooks for the Unity lifecycle bridge.
@@ -678,6 +697,64 @@ namespace Immutable.Audience
         }
 
         // -----------------------------------------------------------------
+        // Mobile attribution
+        // -----------------------------------------------------------------
+
+        /// <summary>
+        /// Requests the iOS App Tracking Transparency authorization. Triggers
+        /// the system prompt on first call; returns the cached status on
+        /// subsequent calls.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Studios decide when to show the prompt — Apple's HIG requires it
+        /// to fire at a moment that makes the value to the player obvious,
+        /// not at SDK Init. The IDFA, when authorized, is collected
+        /// automatically on the next <see cref="ImmutableAudience.Init"/> via
+        /// the <c>game_launch</c> event when
+        /// <see cref="AudienceConfig.EnableMobileAttribution"/> is set.
+        /// </para>
+        /// <para>
+        /// Resolves to <see cref="TrackingAuthorizationStatus.NotDetermined"/>
+        /// in three distinct cases — callers who use this signal to decide
+        /// whether to retry should consult the SDK log to disambiguate:
+        /// </para>
+        /// <list type="bullet">
+        ///   <item>The user has not yet been prompted, or the prompt was dismissed without a choice.</item>
+        ///   <item>The platform is not iOS, or the iOS version is &lt; 14.</item>
+        ///   <item>The native call threw an unexpected exception (logged via <c>Log.Warn</c>).</item>
+        /// </list>
+        /// </remarks>
+        /// <returns>
+        /// A task that completes with the user's authorization decision.
+        /// </returns>
+        public static async Task<TrackingAuthorizationStatus> RequestTrackingAuthorizationAsync()
+        {
+            var provider = TrackingAuthorizationRequestProvider;
+            if (provider == null)
+                return TrackingAuthorizationStatus.NotDetermined;
+
+            int status;
+            try
+            {
+                status = await provider().ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                Log.Warn(AudienceLogs.TrackingAuthorizationRequestThrew(ex));
+                return TrackingAuthorizationStatus.NotDetermined;
+            }
+
+            // Defensively clamp: any value outside Apple's documented range
+            // (0..3) is surfaced as NotDetermined rather than as an invalid
+            // enum cast that callers can't pattern-match safely.
+            if (status < 0 || status > 3)
+                return TrackingAuthorizationStatus.NotDetermined;
+
+            return (TrackingAuthorizationStatus)status;
+        }
+
+        // -----------------------------------------------------------------
         // Flush / Shutdown
         // -----------------------------------------------------------------
 
@@ -994,7 +1071,11 @@ namespace Immutable.Audience
         }
 
         // consentAtInit only gates the launch; Track still checks live _state via CanTrack.
-        private static void FireGameLaunch(AudienceConfig config, ConsentLevel consentAtInit, bool? skanRegistered = null)
+        private static void FireGameLaunch(
+            AudienceConfig config,
+            ConsentLevel consentAtInit,
+            bool? skanRegistered = null,
+            IReadOnlyDictionary<string, object>? attributionContext = null)
         {
             if (!consentAtInit.CanTrack()) return;
 
@@ -1026,6 +1107,14 @@ namespace Immutable.Audience
             // Emitted only on the first launch where SKAN registration fires.
             if (skanRegistered == true)
                 properties["skanRegistered"] = true;
+
+            // iOS ATT/IDFA snapshot — merged after Unity context so attribution
+            // keys are authoritative if both sources happen to set the same key.
+            if (attributionContext != null)
+            {
+                foreach (var kvp in attributionContext)
+                    properties[kvp.Key] = kvp.Value;
+            }
 
             // No sessionId on game_launch per Event Reference. Pipeline correlates
             // via eventTimestamp with the session_start that fires just before.

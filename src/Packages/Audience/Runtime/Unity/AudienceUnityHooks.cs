@@ -30,6 +30,8 @@ namespace Immutable.Audience.Unity
 
 #if UNITY_IOS && !UNITY_EDITOR
             ImmutableAudience.MobileAttributionProvider = () => SkanRegistration.RegisterIfFirstLaunch();
+            ImmutableAudience.MobileAttributionContextProvider = () => AttributionContext.Capture();
+            ImmutableAudience.TrackingAuthorizationRequestProvider = () => ATTBridge.RequestAsync();
 #endif
 
             UnityLifecycleBridge.EnsureExists();

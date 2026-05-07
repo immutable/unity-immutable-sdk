@@ -101,6 +101,21 @@ namespace Immutable.Audience.Samples.SampleApp
             }
         }
 
+        private async Task OnRequestAttAsync()
+        {
+            AppendLog("requestTrackingAuthorizationAsync()", "ATT request dispatched", LogLevel.Info, LogSource.App);
+            try
+            {
+                var status = await ImmutableAudience.RequestTrackingAuthorizationAsync();
+                AppendLog("requestTrackingAuthorizationAsync()",
+                    $"status: {status}", LogLevel.Ok, LogSource.App);
+            }
+            catch (Exception ex)
+            {
+                AppendLog("requestTrackingAuthorizationAsync()", ex.Message, LogLevel.Err, LogSource.App);
+            }
+        }
+
         // ---- SDK action handlers: telemetry ----
 
         // Prefers the typed overload for the four events with public C#
