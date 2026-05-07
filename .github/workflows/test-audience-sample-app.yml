@@ -453,6 +453,18 @@ jobs:
           - target: StandaloneLinux64
             backend: Mono2x
             unity: 2021.3.45f2
+          - target: StandaloneLinux64
+            backend: IL2CPP
+            unity: 6000.4.0f1
+          - target: StandaloneLinux64
+            backend: Mono2x
+            unity: 6000.4.0f1
+          - target: StandaloneLinux64
+            backend: IL2CPP
+            unity: 2022.3.62f2
+          - target: StandaloneLinux64
+            backend: Mono2x
+            unity: 2022.3.62f2
 
     steps:
       - uses: actions/checkout@v4
