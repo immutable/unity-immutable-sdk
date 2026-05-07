@@ -405,6 +405,64 @@ jobs:
             artifacts/Player-*.log
             examples/audience/Logs/**
 
+  playmode-linux:
+    if: |
+      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false)
+      || github.event_name == 'schedule'
+      || github.event_name == 'workflow_dispatch'
+    name: ${{ matrix.target }} / ${{ matrix.backend }} / Unity ${{ matrix.unity }}
+    runs-on: ubuntu-latest-8-cores
+    strategy:
+      fail-fast: false
+      matrix:
+        unity: ['2021.3.45f2', '6000.4.0f1', '2022.3.62f2']
+        target: [StandaloneLinux64]
+        backend: [IL2CPP, Mono2x]
+        exclude: ${{ fromJSON(github.event_name == 'pull_request' && '[{"unity":"2022.3.62f2"}]' || '[]') }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: actions/cache@v4
+        with:
+          path: examples/audience/Library
+          key: Library-${{ matrix.backend }}-${{ matrix.target }}-${{ matrix.unity }}-${{ hashFiles('examples/audience/Assets/**', 'examples/audience/Packages/**', 'examples/audience/ProjectSettings/**', 'src/Packages/Audience/**') }}
+          restore-keys: |
+            Library-${{ matrix.backend }}-${{ matrix.target }}-${{ matrix.unity }}-
+            Library-${{ matrix.backend }}-${{ matrix.target }}-
+
+      - uses: game-ci/unity-test-runner@v4
+        id: playmode
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+          AUDIENCE_TEST_PUBLISHABLE_KEY: ${{ secrets.AUDIENCE_TEST_PUBLISHABLE_KEY }}
+          AUDIENCE_SCRIPTING_BACKEND: ${{ matrix.backend }}
+        with:
+          unityVersion: ${{ matrix.unity }}
+          targetPlatform: ${{ matrix.target }}
+          projectPath: examples/audience
+          testMode: playmode
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish test report
+        uses: dorny/test-reporter@v3
+        if: always()
+        with:
+          name: PlayMode (${{ matrix.backend }} / ${{ matrix.target }})
+          path: ${{ steps.playmode.outputs.artifactsPath }}/playmode-results.xml
+          reporter: dotnet-nunit
+          fail-on-error: true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playmode-${{ matrix.backend }}-${{ matrix.target }}-${{ matrix.unity }}
+          path: ${{ steps.playmode.outputs.artifactsPath }}
+
   # Mobile IL2CPP build validation — runs on GitHub-hosted Ubuntu via GameCI Docker
   # containers so self-hosted macOS/Windows machines are not occupied.
   # Scope: IL2CPP compile pipeline only. Runtime tests require a real device and
