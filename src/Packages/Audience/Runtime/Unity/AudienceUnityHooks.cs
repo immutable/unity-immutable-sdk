@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using Immutable.Audience.Unity.Mobile;
 using UnityEngine;
 
 namespace Immutable.Audience.Unity
@@ -26,6 +27,10 @@ namespace Immutable.Audience.Unity
                 new ReadOnlyDictionary<string, object>(DeviceCollector.CollectContext());
             ImmutableAudience.LaunchContextProvider = () => launchProps;
             ImmutableAudience.ContextProvider = () => contextProps;
+
+#if UNITY_IOS && !UNITY_EDITOR
+            ImmutableAudience.MobileAttributionProvider = () => SkanRegistration.RegisterIfFirstLaunch();
+#endif
 
             UnityLifecycleBridge.EnsureExists();
 

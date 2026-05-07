@@ -52,7 +52,7 @@ namespace Immutable.Audience.Samples.SampleApp
 
         private TextField _publishableKey, _baseUrl, _flushInterval, _flushSize;
         private DropdownField _initialConsent;
-        private Toggle _debug;
+        private Toggle _debug, _enableMobileAttribution;
         private Button _btnInit, _btnFlush, _btnReset, _btnShutdown, _btnDeleteData;
 
         // ---- UXML element fields (Consent tab) ----
@@ -180,7 +180,8 @@ namespace Immutable.Audience.Samples.SampleApp
             _publishableKey = Require<TextField>("publishable-key");
             _baseUrl        = Require<TextField>("base-url");
             _initialConsent = Require<DropdownField>("initial-consent");
-            _debug          = Require<Toggle>("debug");
+            _debug                    = Require<Toggle>("debug");
+            _enableMobileAttribution  = Require<Toggle>("enable-mobile-attribution");
             // Inject a tick Label — Unity 2021.3 runtime panels render the
             // checked state as a plain coloured square otherwise. USS hides
             // the tick when unchecked.
@@ -640,15 +641,17 @@ namespace Immutable.Audience.Samples.SampleApp
             public readonly string BaseUrl;
             public readonly ConsentLevel Consent;
             public readonly bool Debug;
+            public readonly bool EnableMobileAttribution;
             public readonly int? FlushIntervalMs;
             public readonly int? FlushSize;
 
-            public InitForm(string publishableKey, string baseUrl, ConsentLevel consent, bool debug, int? flushIntervalMs, int? flushSize)
+            public InitForm(string publishableKey, string baseUrl, ConsentLevel consent, bool debug, bool enableMobileAttribution, int? flushIntervalMs, int? flushSize)
             {
                 PublishableKey = publishableKey;
                 BaseUrl = baseUrl;
                 Consent = consent;
                 Debug = debug;
+                EnableMobileAttribution = enableMobileAttribution;
                 FlushIntervalMs = flushIntervalMs;
                 FlushSize = flushSize;
             }
@@ -660,12 +663,13 @@ namespace Immutable.Audience.Samples.SampleApp
             int? flushIntervalMs = int.TryParse((_flushInterval.value ?? "").Trim(), out var ms) && ms > 0 ? ms : (int?)null;
             int? flushSize = int.TryParse((_flushSize.value ?? "").Trim(), out var size) && size > 0 ? size : (int?)null;
             return new InitForm(
-                publishableKey:  (_publishableKey.value ?? "").Trim(),
-                baseUrl:         (_baseUrl.value ?? "").Trim(),
-                consent:         ConsentOrder[consentIdx],
-                debug:           _debug.value,
-                flushIntervalMs: flushIntervalMs,
-                flushSize:       flushSize);
+                publishableKey:          (_publishableKey.value ?? "").Trim(),
+                baseUrl:                 (_baseUrl.value ?? "").Trim(),
+                consent:                 ConsentOrder[consentIdx],
+                debug:                   _debug.value,
+                enableMobileAttribution: _enableMobileAttribution.value,
+                flushIntervalMs:         flushIntervalMs,
+                flushSize:               flushSize);
         }
 
         // Snapshot of the identify form on the Identity tab.

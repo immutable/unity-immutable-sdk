@@ -29,6 +29,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.LaunchContextProvider = null;
             ImmutableAudience.ContextProvider = null;
             ImmutableAudience.DefaultPersistentDataPathProvider = null;
+            ImmutableAudience.MobileAttributionProvider = null;
             Identity.Reset(_testDir);
             if (Directory.Exists(_testDir))
                 Directory.Delete(_testDir, recursive: true);
@@ -1239,6 +1240,54 @@ namespace Immutable.Audience.Tests
                 .Select(File.ReadAllText).ToList();
             Assert.IsTrue(contents.Any(c => c.Contains("\"game_launch\"")),
                 "game_launch must still ship when the context provider throws");
+        }
+
+        [Test]
+        public void Init_GameLaunch_IncludesSkanRegistered_WhenProviderReturnsTrue()
+        {
+            ImmutableAudience.MobileAttributionProvider = () => true;
+            var config = MakeConfig();
+            config.EnableMobileAttribution = true;
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Shutdown();
+
+            var launchFile = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
+                .Select(File.ReadAllText)
+                .First(c => c.Contains("\"game_launch\""));
+            StringAssert.Contains("\"skanRegistered\":true", launchFile);
+        }
+
+        [Test]
+        public void Init_GameLaunch_OmitsSkanRegistered_WhenProviderReturnsNull()
+        {
+            ImmutableAudience.MobileAttributionProvider = () => null;
+            var config = MakeConfig();
+            config.EnableMobileAttribution = true;
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Shutdown();
+
+            var launchFile = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
+                .Select(File.ReadAllText)
+                .First(c => c.Contains("\"game_launch\""));
+            Assert.IsFalse(launchFile.Contains("skanRegistered"));
+        }
+
+        [Test]
+        public void Init_GameLaunch_OmitsSkanRegistered_WhenMobileAttributionDisabled()
+        {
+            var callCount = 0;
+            ImmutableAudience.MobileAttributionProvider = () => { callCount++; return true; };
+            var config = MakeConfig();
+            config.EnableMobileAttribution = false;
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Shutdown();
+
+            Assert.AreEqual(0, callCount,
+                "MobileAttributionProvider must not be called when EnableMobileAttribution is false");
+            var launchFile = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
+                .Select(File.ReadAllText)
+                .First(c => c.Contains("\"game_launch\""));
+            Assert.IsFalse(launchFile.Contains("skanRegistered"));
         }
 
         // -----------------------------------------------------------------
