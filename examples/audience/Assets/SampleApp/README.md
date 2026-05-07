@@ -7,6 +7,12 @@ A demo of the `ImmutableAudience` SDK that exercises every public API.
 - Unity 2021.3 LTS or later.
 - An Immutable publishable key (`pk_imapik-test-…` for sandbox, `pk_imapik-…` for production).
 
+## Supported Platforms
+
+- Windows 10
+- macOS Sequoia 15.7.4
+- Linux Ubuntu 22.04 LTS
+
 ## How to use
 
 1. Open `Scenes/SampleApp.unity` and press Play.
