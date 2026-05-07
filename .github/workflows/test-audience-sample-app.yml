@@ -25,7 +25,7 @@ concurrency:
 
 jobs:
   playmode:
-    if: github.event.pull_request.head.repo.fork == false || (github.event_name == 'workflow_dispatch' && inputs.selfhosted_only != true)
+    if: github.event.pull_request.head.repo.fork == false || (github.event_name == 'workflow_dispatch' && github.event.inputs.selfhosted_only != 'true')
     name: ${{ matrix.target }} / ${{ matrix.backend }} / Unity ${{ matrix.unity }}
     strategy:
       fail-fast: false
@@ -445,7 +445,7 @@ jobs:
   # Linux PlayMode runs on GitHub-hosted Ubuntu via GameCI Docker, not on the
   # self-hosted matrix above, to keep self-hosted machines free for Win/macOS.
   playmode-linux:
-    if: github.event.pull_request.head.repo.fork == false || (github.event_name == 'workflow_dispatch' && inputs.selfhosted_only != true)
+    if: github.event.pull_request.head.repo.fork == false || (github.event_name == 'workflow_dispatch' && github.event.inputs.selfhosted_only != 'true')
     name: ${{ matrix.target }} / ${{ matrix.backend }} / Unity ${{ matrix.unity }}
     runs-on: ubuntu-latest-8-cores
     strategy:
@@ -509,7 +509,7 @@ jobs:
   # Note: Unity 6 cells use 6000.4.5f1 (the latest patch with a GameCI image);
   # 6000.4.0f1 does not have a published GameCI Docker image.
   mobile-build:
-    if: github.event.pull_request.head.repo.fork == false || (github.event_name == 'workflow_dispatch' && inputs.selfhosted_only != true)
+    if: github.event.pull_request.head.repo.fork == false || (github.event_name == 'workflow_dispatch' && github.event.inputs.selfhosted_only != 'true')
     name: ${{ matrix.target }} / IL2CPP / Unity ${{ matrix.unity }}
     runs-on: ubuntu-latest-8-cores
     strategy:
