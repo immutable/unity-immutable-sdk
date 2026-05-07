@@ -608,30 +608,6 @@ jobs:
           fi
           echo "UNITY_PATH=$UNITY" >> "$GITHUB_ENV"
 
-      - name: Activate Unity license
-        shell: bash
-        env:
-          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
-        run: |
-          set -uo pipefail
-          LOG="$(mktemp)"
-          "$UNITY_PATH" -batchmode -nographics -quit \
-            -username "$UNITY_EMAIL" \
-            -password "$UNITY_PASSWORD" \
-            -serial   "$UNITY_SERIAL" \
-            -logFile - 2>&1 | tee "$LOG" || true
-
-          if grep -qE "(License activation has failed|\[Licensing::Client\] Error: Code [0-9]+)" "$LOG"; then
-            echo "::error::Unity activation failed."
-            exit 1
-          fi
-          if ! grep -qE "Successfully activated the entitlement license" "$LOG"; then
-            echo "::error::Unity activation: no success marker found."
-            exit 1
-          fi
-
       - name: Run PlayMode tests
         shell: bash
         env:
@@ -647,17 +623,6 @@ jobs:
             -testPlatform StandaloneLinux64 \
             -testResults "$(pwd)/artifacts/test-results.xml" \
             -logFile - 2>&1 | tee "$(pwd)/artifacts/unity.log"
-
-      - name: Return Unity license
-        if: always()
-        shell: bash
-        run: |
-          set -uo pipefail
-          # Releases the seat after every run so manual reruns do not exhaust
-          # the serial's activation pool.
-          if [ -n "${UNITY_PATH:-}" ] && [ -x "$UNITY_PATH" ]; then
-            "$UNITY_PATH" -returnlicense -batchmode -nographics -quit -logFile - 2>&1 || true
-          fi
 
       - name: Publish test report
         uses: dorny/test-reporter@v3
