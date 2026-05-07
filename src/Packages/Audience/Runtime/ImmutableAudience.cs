@@ -63,6 +63,13 @@ namespace Immutable.Audience
         // non-iOS platforms (the public API resolves to NotDetermined).
         internal static volatile Func<Task<int>>? TrackingAuthorizationRequestProvider;
 
+        // Called during Init when config.EnableMobileAttribution is true.
+        // Returns the cached Android Play Install Referrer string, or null if
+        // not yet cached (first launch, async fetch may complete after
+        // game_launch fires) or none exists for this install. Set by the Unity
+        // layer; null in pure-C# environments and on non-Android platforms.
+        internal static volatile Func<string?>? MobileInstallReferrerProvider;
+
         // Active session. Created at Init (or on upgrade from None) and disposed
         // on Shutdown or SetConsent(None). Volatile so OnPause/OnResume see
         // assignments from SetConsent without taking _initLock.
@@ -220,12 +227,14 @@ namespace Immutable.Audience
             sessionToStart?.Start();
 
             // Consent gate before invoking attribution providers: SKAN
-            // registration is a network side effect and IDFA / ATT status
-            // reads are privacy-sensitive. CanTrack() == false (consent
-            // None) means we have no licence to do either, regardless of
-            // whether EnableMobileAttribution is set in config.
+            // registration and Install Referrer fetch are network side
+            // effects, and IDFA / ATT status reads are privacy-sensitive.
+            // CanTrack() == false (consent None) means we have no licence
+            // to run any of them, regardless of whether EnableMobileAttribution
+            // is set in config.
             bool? skanRegistered = null;
             IReadOnlyDictionary<string, object>? attributionContext = null;
+            string? installReferrer = null;
             if (config.EnableMobileAttribution && consentAtInit.CanTrack())
             {
                 try { skanRegistered = MobileAttributionProvider?.Invoke(); }
@@ -233,9 +242,20 @@ namespace Immutable.Audience
 
                 try { attributionContext = MobileAttributionContextProvider?.Invoke(); }
                 catch (Exception ex) { Log.Warn(AudienceLogs.MobileAttributionContextProviderThrew(ex)); }
+
+                try { installReferrer = MobileInstallReferrerProvider?.Invoke(); }
+                catch (Exception ex) { Log.Warn(AudienceLogs.MobileInstallReferrerProviderThrew(ex)); }
             }
 
             FireGameLaunch(config, consentAtInit, skanRegistered, attributionContext);
+
+            // Fires once per install. installReferrer lands asynchronously
+            // from Google Play Services; on the first launch the cache is
+            // usually still empty when game_launch fires, so we ship a
+            // dedicated event after Init when the value first becomes
+            // observable. Idempotent across launches via an on-disk marker.
+            if (!string.IsNullOrEmpty(installReferrer))
+                FireInstallReferrerReceivedOnce(config, installReferrer!);
         }
 
         // Pause/Resume hooks for the Unity lifecycle bridge.
@@ -1119,6 +1139,37 @@ namespace Immutable.Audience
             // No sessionId on game_launch per Event Reference. Pipeline correlates
             // via eventTimestamp with the session_start that fires just before.
             Track("game_launch", properties.Count > 0 ? properties : null);
+        }
+
+        // Fires install_referrer_received exactly once per install. Cache
+        // file presence alone isn't enough — on first launch the bridge may
+        // write the cache after Init has already run, so the event must be
+        // dispatched at the next Init that observes a cache hit. The on-disk
+        // "sent" marker provides idempotency across that boundary.
+        private static void FireInstallReferrerReceivedOnce(AudienceConfig config, string installReferrer)
+        {
+            var sentFile = AudiencePaths.InstallReferrerSentFile(config.PersistentDataPath!);
+            if (File.Exists(sentFile)) return;
+
+            Track("install_referrer_received", new Dictionary<string, object>
+            {
+                ["installReferrer"] = installReferrer,
+            });
+
+            try
+            {
+                var dir = Path.GetDirectoryName(sentFile);
+                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
+                File.WriteAllText(sentFile, string.Empty);
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            {
+                // Marker write failed — the event will re-fire on the next
+                // launch. Pipeline-side dedup or the cost of one duplicate is
+                // less bad than never sending the event at all.
+                Log.Warn(AudienceLogs.InstallReferrerSentMarkerWriteFailed(ex));
+            }
         }
     }
 }

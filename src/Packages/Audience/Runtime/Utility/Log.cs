@@ -148,5 +148,13 @@ namespace Immutable.Audience
         internal static string TrackingAuthorizationRequestThrew(Exception ex) =>
             $"RequestTrackingAuthorizationAsync threw {ex.GetType().Name}: {ex.Message}. " +
             "Returning NotDetermined.";
+
+        internal static string MobileInstallReferrerProviderThrew(Exception ex) =>
+            $"MobileInstallReferrerProvider threw {ex.GetType().Name}: {ex.Message}. " +
+            "install_referrer_received will not fire on this launch.";
+
+        internal static string InstallReferrerSentMarkerWriteFailed(Exception ex) =>
+            $"Failed to write install_referrer_sent marker: {ex.GetType().Name}: {ex.Message}. " +
+            "install_referrer_received may re-fire on the next launch.";
     }
 }
