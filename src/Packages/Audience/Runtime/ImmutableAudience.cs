@@ -48,6 +48,11 @@ namespace Immutable.Audience
         internal static volatile Func<IReadOnlyDictionary<string, object>>? LaunchContextProvider;
         internal static volatile Func<IReadOnlyDictionary<string, object>>? ContextProvider;
 
+        // Called during Init when config.EnableMobileAttribution is true.
+        // Returns true on first SKAN registration, null if already done or not applicable.
+        // Set by the Unity layer; null in pure-C# environments.
+        internal static volatile Func<bool?>? MobileAttributionProvider;
+
         // Active session. Created at Init (or on upgrade from None) and disposed
         // on Shutdown or SetConsent(None). Volatile so OnPause/OnResume see
         // assignments from SetConsent without taking _initLock.
@@ -204,7 +209,14 @@ namespace Immutable.Audience
             // shows the new sessionId ahead of the launch event.
             sessionToStart?.Start();
 
-            FireGameLaunch(config, consentAtInit);
+            bool? skanRegistered = null;
+            if (config.EnableMobileAttribution)
+            {
+                try { skanRegistered = MobileAttributionProvider?.Invoke(); }
+                catch (Exception ex) { Log.Warn(AudienceLogs.MobileAttributionProviderThrew(ex)); }
+            }
+
+            FireGameLaunch(config, consentAtInit, skanRegistered);
         }
 
         // Pause/Resume hooks for the Unity lifecycle bridge.
@@ -982,7 +994,7 @@ namespace Immutable.Audience
         }
 
         // consentAtInit only gates the launch; Track still checks live _state via CanTrack.
-        private static void FireGameLaunch(AudienceConfig config, ConsentLevel consentAtInit)
+        private static void FireGameLaunch(AudienceConfig config, ConsentLevel consentAtInit, bool? skanRegistered = null)
         {
             if (!consentAtInit.CanTrack()) return;
 
@@ -1010,6 +1022,10 @@ namespace Immutable.Audience
             // Config-supplied distributionPlatform overrides the provider value.
             if (config.DistributionPlatform != null)
                 properties["distributionPlatform"] = config.DistributionPlatform;
+
+            // Emitted only on the first launch where SKAN registration fires.
+            if (skanRegistered == true)
+                properties["skanRegistered"] = true;
 
             // No sessionId on game_launch per Event Reference. Pipeline correlates
             // via eventTimestamp with the session_start that fires just before.

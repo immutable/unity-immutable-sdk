@@ -12,4 +12,15 @@ const char* _AudienceGetIDFV(void)
     return idfv ? strdup([idfv UTF8String]) : NULL;
 }
 
+void _AudienceRegisterSKAN(void)
+{
+    // Runtime dispatch avoids a hard link to StoreKit.framework, which would
+    // trigger Xcode's In-App Purchase capability check. StoreKit is always
+    // present on device; NSClassFromString finds it without a compile-time dep.
+    Class cls = NSClassFromString(@"SKAdNetwork");
+    if (cls) {
+        [cls performSelector:@selector(registerAppForAdNetworkAttribution)];
+    }
+}
+
 }

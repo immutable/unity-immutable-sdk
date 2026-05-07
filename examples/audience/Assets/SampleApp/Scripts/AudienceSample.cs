@@ -301,11 +301,12 @@ namespace Immutable.Audience.Samples.SampleApp
         {
             var config = new AudienceConfig
             {
-                PublishableKey = form.PublishableKey,
-                BaseUrl        = string.IsNullOrEmpty(form.BaseUrl) ? null : form.BaseUrl,
-                Consent        = form.Consent,
-                Debug          = form.Debug,
-                OnError        = onError,
+                PublishableKey          = form.PublishableKey,
+                BaseUrl                 = string.IsNullOrEmpty(form.BaseUrl) ? null : form.BaseUrl,
+                Consent                 = form.Consent,
+                Debug                   = form.Debug,
+                EnableMobileAttribution = form.EnableMobileAttribution,
+                OnError                 = onError,
             };
             if (form.FlushIntervalMs is int flushMs && flushMs > 0)
             {
@@ -324,12 +325,13 @@ namespace Immutable.Audience.Samples.SampleApp
         {
             var echo = new Dictionary<string, object>
             {
-                ["consent"]                = config.Consent.ToString(),
-                ["debug"]                  = config.Debug,
-                ["flushIntervalSeconds"]   = config.FlushIntervalSeconds,
-                ["flushSize"]              = config.FlushSize,
-                ["packageVersion"]         = config.PackageVersion,
-                ["shutdownFlushTimeoutMs"] = config.ShutdownFlushTimeoutMs,
+                ["consent"]                  = config.Consent.ToString(),
+                ["debug"]                    = config.Debug,
+                ["enableMobileAttribution"]  = config.EnableMobileAttribution,
+                ["flushIntervalSeconds"]     = config.FlushIntervalSeconds,
+                ["flushSize"]                = config.FlushSize,
+                ["packageVersion"]           = config.PackageVersion,
+                ["shutdownFlushTimeoutMs"]   = config.ShutdownFlushTimeoutMs,
             };
             if (!string.IsNullOrEmpty(config.PublishableKey))
                 echo["publishableKey"] = RedactPublishableKey(config.PublishableKey);

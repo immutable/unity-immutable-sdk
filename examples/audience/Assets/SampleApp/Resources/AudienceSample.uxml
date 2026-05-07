@@ -99,6 +99,12 @@
                                      text="Mirror SDK internal log output into the in-page event log below." />
                         </ui:VisualElement>
 
+                        <ui:VisualElement class="field">
+                            <ui:Toggle name="enable-mobile-attribution" label="MOBILE ATTRIBUTION" />
+                            <ui:Label class="helper-text below-field"
+                                     text="Enable iOS SKAdNetwork registration and mobile attribution signals." />
+                        </ui:VisualElement>
+
                         <ui:VisualElement class="field placeholder-host">
                             <ui:Label class="field-label" text="BASE URL OVERRIDE" />
                             <ui:TextField name="base-url" />

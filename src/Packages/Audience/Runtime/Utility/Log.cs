@@ -136,5 +136,9 @@ namespace Immutable.Audience
         internal static string LaunchContextProviderThrew(Exception ex) =>
             $"LaunchContextProvider threw {ex.GetType().Name}: {ex.Message}. " +
             "game_launch will ship without auto-detected Unity context.";
+
+        internal static string MobileAttributionProviderThrew(Exception ex) =>
+            $"MobileAttributionProvider threw {ex.GetType().Name}: {ex.Message}. " +
+            "game_launch will ship without skanRegistered.";
     }
 }
