@@ -65,9 +65,18 @@ namespace Immutable.Audience
 
             var result = new List<string>();
 
-            // Sort by filename (ticks prefix) → oldest first
-            var files = Directory.GetFiles(_queueDir, "*.json")
-                .OrderBy(f => Path.GetFileName(f), StringComparer.Ordinal);
+            // Sort by filename (ticks prefix) → oldest first.
+            // The queue dir can disappear out from under us when an external
+            // process (test SetUp, manual cleanup, persistentDataPath wipe)
+            // deletes it between SDK Init and the next flush tick. Treat that
+            // as an empty queue rather than letting DirectoryNotFoundException
+            // bubble up through SendBatchAsync to the caller's OnError.
+            // Matches the existing guard in DeleteAll / ApplyAnonymousDowngrade.
+            string[] paths;
+            try { paths = Directory.GetFiles(_queueDir, "*.json"); }
+            catch (DirectoryNotFoundException) { return Array.Empty<string>(); }
+
+            var files = paths.OrderBy(f => Path.GetFileName(f), StringComparer.Ordinal);
 
             foreach (var path in files)
             {
