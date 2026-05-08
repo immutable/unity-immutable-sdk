@@ -10,6 +10,7 @@ namespace Immutable.Audience
         private const string QueueDirName = "queue";
         private const string InstallReferrerFileName = "install_referrer";
         private const string InstallReferrerSentFileName = "install_referrer_sent";
+        private const string GAIDFileName = "gaid";
 
         internal static string AudienceDir(string persistentDataPath) =>
             Path.Combine(persistentDataPath, RootDirName);
@@ -28,5 +29,8 @@ namespace Immutable.Audience
 
         internal static string InstallReferrerSentFile(string persistentDataPath) =>
             Path.Combine(AudienceDir(persistentDataPath), InstallReferrerSentFileName);
+
+        internal static string GAIDFile(string persistentDataPath) =>
+            Path.Combine(AudienceDir(persistentDataPath), GAIDFileName);
     }
 }

@@ -167,5 +167,36 @@ namespace Immutable.Audience.Tests
             Assert.AreEqual("denied", AttributionContext.AttStatusToString(2));
             Assert.AreEqual("authorized", AttributionContext.AttStatusToString(3));
         }
+
+        [Test]
+        public void EmitGaidProps_LimitAdTrackingTrue_OmitsRawGaid()
+        {
+            var props = new Dictionary<string, object>();
+            AttributionContext.EmitGaidProps(new GAIDInfo("aaaa-bbbb", limitAdTracking: true), props);
+
+            Assert.IsFalse(props.ContainsKey("gaid"),
+                "must never ship the raw GAID when the user has opted out via isLimitAdTrackingEnabled");
+            Assert.AreEqual(true, props["gaidLimitAdTracking"]);
+        }
+
+        [Test]
+        public void EmitGaidProps_LimitAdTrackingFalse_ShipsGaid()
+        {
+            var props = new Dictionary<string, object>();
+            AttributionContext.EmitGaidProps(new GAIDInfo("aaaa-bbbb", limitAdTracking: false), props);
+
+            Assert.AreEqual("aaaa-bbbb", props["gaid"]);
+            Assert.AreEqual(false, props["gaidLimitAdTracking"]);
+        }
+
+        [Test]
+        public void EmitGaidProps_EmptyGaidLimitFalse_OmitsGaidKeepsFlag()
+        {
+            var props = new Dictionary<string, object>();
+            AttributionContext.EmitGaidProps(new GAIDInfo(string.Empty, limitAdTracking: false), props);
+
+            Assert.IsFalse(props.ContainsKey("gaid"));
+            Assert.AreEqual(false, props["gaidLimitAdTracking"]);
+        }
     }
 }

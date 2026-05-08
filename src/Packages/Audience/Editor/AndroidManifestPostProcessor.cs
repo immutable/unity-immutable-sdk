@@ -6,12 +6,15 @@ using UnityEditor.Android;
 
 namespace Immutable.Audience.Editor
 {
-    // Injects android.permission.INTERNET into the generated unityLibrary manifest.
+    // Injects android.permission.INTERNET into the generated unityLibrary
+    // manifest. The SDK sends events via System.Net.Http.HttpClient (not
+    // UnityWebRequest), so Unity does not auto-add INTERNET.
     //
-    // The SDK sends events via System.Net.Http.HttpClient, not UnityWebRequest, so
-    // Unity does not auto-add INTERNET. This post-processor ensures the permission
-    // is always present regardless of how the package is installed (file:, git, or
-    // UPM registry), without requiring the studio to set ForceInternetPermission.
+    // AD_ID is intentionally NOT injected here. It comes from the
+    // play-services-ads-identifier AAR's own manifest via AGP merging when
+    // the studio adds the Maven dependency. Injecting it ourselves would
+    // declare the permission for studios who never pull in the AAR (and so
+    // can never collect GAID), creating a Play Store Data Safety mismatch.
     internal sealed class AndroidManifestPostProcessor : IPostGenerateGradleAndroidProject
     {
         private const string InternetPermission = "android.permission.INTERNET";

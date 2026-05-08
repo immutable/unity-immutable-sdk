@@ -156,5 +156,9 @@ namespace Immutable.Audience
         internal static string InstallReferrerSentMarkerWriteFailed(Exception ex) =>
             $"Failed to write install_referrer_sent marker: {ex.GetType().Name}: {ex.Message}. " +
             "install_referrer_received may re-fire on the next launch.";
+
+        internal static string GAIDFetchThrew(Exception ex) =>
+            $"GAID fetch threw {ex.GetType().Name}: {ex.Message}. " +
+            "gaid will not ship on game_launch this session; next launch retries.";
     }
 }
