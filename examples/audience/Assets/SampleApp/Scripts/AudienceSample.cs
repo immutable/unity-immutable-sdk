@@ -38,6 +38,23 @@ namespace Immutable.Audience.Samples.SampleApp
 
         // ---- Lifecycle ----
 
+        // Stamps a single, unique CI provenance line into Player.log on
+        // player startup. buildGuid is per-build and already lands on every
+        // game_launch event the SDK emits, so matching a CI artifact to the
+        // CDP rows is a one-line grep on either side. AUDIENCE_TEST_RUN_ID
+        // and AUDIENCE_TEST_CELL_ID are env vars the CI workflow injects;
+        // local / production runs leave them unset and the printed values
+        // are empty. The line lands before any test runs because the
+        // RuntimeInitialize hook fires before the first scene loads.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void LogCiProvenance()
+        {
+            var runId  = Environment.GetEnvironmentVariable("AUDIENCE_TEST_RUN_ID")  ?? string.Empty;
+            var cellId = Environment.GetEnvironmentVariable("AUDIENCE_TEST_CELL_ID") ?? string.Empty;
+            UnityEngine.Debug.Log(
+                $"[CI] buildGuid={Application.buildGUID} runId={runId} cellId={cellId}");
+        }
+
         private void Awake()
         {
             // InitializeUi must precede the Log.Writer swap — _logView has

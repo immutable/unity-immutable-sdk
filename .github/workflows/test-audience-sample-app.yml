@@ -454,6 +454,12 @@ jobs:
           AUDIENCE_TEST_PUBLISHABLE_KEY: ${{ secrets.AUDIENCE_TEST_PUBLISHABLE_KEY }}
           AUDIENCE_SCRIPTING_BACKEND: ${{ matrix.backend }}
           UNITY_VERSION: ${{ matrix.unity }}
+          # Provenance markers passed through to the player. The SampleApp
+          # logs `[CI] buildGuid=... runId=... cellId=...` at startup, and
+          # the post-step writes the line into the job summary so events
+          # on CDP can be matched 1:1 to this cell via buildGuid.
+          AUDIENCE_TEST_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+          AUDIENCE_TEST_CELL_ID: ${{ matrix.target }}-${{ matrix.backend }}-${{ matrix.unity }}
         run: |
           set -uo pipefail
           mkdir -p artifacts
@@ -468,6 +474,7 @@ jobs:
             --workdir /github/workspace \
             --env UNITY_EMAIL --env UNITY_PASSWORD --env UNITY_SERIAL \
             --env AUDIENCE_TEST_PUBLISHABLE_KEY --env AUDIENCE_SCRIPTING_BACKEND \
+            --env AUDIENCE_TEST_RUN_ID --env AUDIENCE_TEST_CELL_ID \
             --volume "$PWD":/github/workspace:z \
             --cpus=8 --memory=30487m \
             "$image" \
@@ -605,6 +612,40 @@ jobs:
             echo "::error::Zero tests passed and zero failed. The suite did not execute."
             exit 1
           fi
+
+      - name: Surface CI provenance to job summary
+        # The SampleApp prints `[CI] buildGuid=... runId=... cellId=...`
+        # to Player.log on player startup. buildGuid is per-build and
+        # already lands on every game_launch event the SDK emits, so a
+        # one-line grep here gives a 1:1 match between the CI cell and
+        # CDP rows. The job summary makes it copy-pasteable from the
+        # Actions UI without downloading the artifact.
+        if: always()
+        shell: bash
+        run: |
+          set -uo pipefail
+          log=""
+          for candidate in artifacts/Player-*.log; do
+            [ -f "$candidate" ] && { log="$candidate"; break; }
+          done
+          {
+            echo "## CI provenance"
+            if [ -z "$log" ]; then
+              echo "_No Player.log captured for this cell._"
+              exit 0
+            fi
+            line=$(grep -m1 '\[CI\]' "$log" || true)
+            if [ -z "$line" ]; then
+              echo "_No [CI] line found in \`$log\`. The SampleApp's RuntimeInitializeOnLoad hook may not have fired._"
+              exit 0
+            fi
+            echo
+            echo '```'
+            echo "$line"
+            echo '```'
+            echo
+            echo "Filter CDP for events with this \`buildGuid\` to see the rows from this cell."
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Publish test report
         uses: dorny/test-reporter@v3
