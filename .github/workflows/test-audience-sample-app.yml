@@ -540,11 +540,23 @@ jobs:
             echo "::error::No test-results.xml at $xml. Unity did not produce results."
             exit 1
           fi
-          # xmllint is preinstalled on ubuntu-latest via libxml2-utils.
-          passed=$(xmllint --xpath 'string(/test-run/@passed)' "$xml")
-          failed=$(xmllint --xpath 'string(/test-run/@failed)' "$xml")
-          inconclusive=$(xmllint --xpath 'string(/test-run/@inconclusive)' "$xml")
-          echo "passed=$passed failed=$failed inconclusive=$inconclusive"
+          # Unity's NUnit writer puts the root summary attributes on a
+          # single <test-run ...> line, so a grep parse is enough and
+          # avoids depending on libxml2-utils (which is not preinstalled
+          # on ubuntu-latest-8-cores; the previous xmllint guard failed
+          # with "command not found" while tests had actually passed).
+          line=$(grep -m1 '<test-run ' "$xml" || true)
+          if [ -z "$line" ]; then
+            echo "::error::No <test-run> element in $xml. The XML is malformed."
+            exit 1
+          fi
+          extract() {
+            printf %s "$1" | grep -oE " $2=\"[0-9]+\"" | head -1 | grep -oE '[0-9]+'
+          }
+          passed=$(extract "$line" passed)
+          failed=$(extract "$line" failed)
+          inconclusive=$(extract "$line" inconclusive)
+          echo "passed=${passed:-?} failed=${failed:-?} inconclusive=${inconclusive:-?}"
           if [ "${inconclusive:-0}" -gt 0 ]; then
             echo "::error::$inconclusive test(s) came back inconclusive. Unity could not actually execute them. Check that xvfb is running and the player launches."
             exit 1
