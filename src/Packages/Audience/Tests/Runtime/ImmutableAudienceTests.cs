@@ -32,6 +32,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.MobileAttributionProvider = null;
             ImmutableAudience.MobileAttributionContextProvider = null;
             ImmutableAudience.TrackingAuthorizationRequestProvider = null;
+            ImmutableAudience.MobileInstallReferrerProvider = null;
             Identity.Reset(_testDir);
             if (Directory.Exists(_testDir))
                 Directory.Delete(_testDir, recursive: true);
@@ -1361,15 +1362,22 @@ namespace Immutable.Audience.Tests
         public void Init_AttributionProviders_NotCalled_WhenConsentNone()
         {
             // Consent gate must precede attribution side effects: SKAN
-            // registration (network call) and IDFA/ATT reads must not fire
-            // when the user hasn't authorized any tracking.
+            // registration (network call), IDFA/ATT reads, and the install
+            // referrer fetch must not fire when the user hasn't authorized
+            // any tracking.
             var skanCallCount = 0;
             var contextCallCount = 0;
+            var installReferrerCallCount = 0;
             ImmutableAudience.MobileAttributionProvider = () => { skanCallCount++; return true; };
             ImmutableAudience.MobileAttributionContextProvider = () =>
             {
                 contextCallCount++;
                 return new Dictionary<string, object> { ["attStatus"] = "authorized" };
+            };
+            ImmutableAudience.MobileInstallReferrerProvider = () =>
+            {
+                installReferrerCallCount++;
+                return "utm_source=test";
             };
 
             var config = MakeConfig(ConsentLevel.None);
@@ -1381,6 +1389,8 @@ namespace Immutable.Audience.Tests
                 "MobileAttributionProvider must not run when consent is None");
             Assert.AreEqual(0, contextCallCount,
                 "MobileAttributionContextProvider must not run when consent is None");
+            Assert.AreEqual(0, installReferrerCallCount,
+                "MobileInstallReferrerProvider must not run when consent is None");
         }
 
         [Test]
@@ -1398,6 +1408,190 @@ namespace Immutable.Audience.Tests
                 .Select(File.ReadAllText)
                 .First(c => c.Contains("\"game_launch\""));
             Assert.IsFalse(launchFile.Contains("attStatus"));
+        }
+
+        // -----------------------------------------------------------------
+        // install_referrer_received
+        //
+        // Dedicated event (not a game_launch property): install attribution
+        // is install-level state, decoupled from launch / session lifecycles.
+        // Fires once per install — cache landing late on first launch is
+        // recovered by the next Init via the on-disk "sent" marker.
+        // -----------------------------------------------------------------
+
+        [Test]
+        public void Init_FiresInstallReferrerReceived_WhenProviderReturnsReferrer()
+        {
+            ImmutableAudience.MobileInstallReferrerProvider = () =>
+                "utm_source=google-play&utm_medium=organic";
+            var config = MakeConfig();
+            config.EnableMobileAttribution = true;
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Shutdown();
+
+            var blobs = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
+                .Select(File.ReadAllText).ToList();
+            Assert.IsTrue(blobs.Any(c =>
+                c.Contains("\"install_referrer_received\"") &&
+                c.Contains("\"installReferrer\":\"utm_source=google-play&utm_medium=organic\"")),
+                "install_referrer_received must ship with the installReferrer property");
+        }
+
+        [Test]
+        public void Init_GameLaunch_NeverIncludesInstallReferrer()
+        {
+            // installReferrer is exclusively on the dedicated event; ensure
+            // we don't regress and start leaking it onto game_launch.
+            ImmutableAudience.MobileInstallReferrerProvider = () => "utm_source=test";
+            var config = MakeConfig();
+            config.EnableMobileAttribution = true;
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Shutdown();
+
+            var launchFile = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
+                .Select(File.ReadAllText)
+                .First(c => c.Contains("\"game_launch\""));
+            Assert.IsFalse(launchFile.Contains("installReferrer"),
+                "game_launch must never carry installReferrer — it ships on its own event");
+        }
+
+        [Test]
+        public void Init_DoesNotFireInstallReferrerReceived_WhenProviderReturnsNull()
+        {
+            // First-launch cache miss: bridge hasn't resolved yet. No event
+            // ships; sent marker is not written; next launch can fire it.
+            ImmutableAudience.MobileInstallReferrerProvider = () => null;
+            var config = MakeConfig();
+            config.EnableMobileAttribution = true;
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Shutdown();
+
+            var blobs = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
+                .Select(File.ReadAllText).ToList();
+            Assert.IsFalse(blobs.Any(c => c.Contains("\"install_referrer_received\"")));
+            Assert.IsFalse(File.Exists(AudiencePaths.InstallReferrerSentFile(_testDir)),
+                "sent marker must not be written when the event did not fire");
+        }
+
+        [Test]
+        public void Init_DoesNotFireInstallReferrerReceived_WhenProviderReturnsEmpty()
+        {
+            // Empty cache file marks "fetched, no referrer" — bridge maps
+            // that to null on read, but defend the contract here too.
+            ImmutableAudience.MobileInstallReferrerProvider = () => string.Empty;
+            var config = MakeConfig();
+            config.EnableMobileAttribution = true;
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Shutdown();
+
+            var blobs = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
+                .Select(File.ReadAllText).ToList();
+            Assert.IsFalse(blobs.Any(c => c.Contains("\"install_referrer_received\"")));
+        }
+
+        [Test]
+        public void Init_DoesNotFireInstallReferrerReceived_WhenAlreadyFired()
+        {
+            // Simulate the second launch: cache is populated, marker is set
+            // by the previous Init. Event must not refire.
+            ImmutableAudience.MobileInstallReferrerProvider = () => "utm_source=test";
+            var config = MakeConfig();
+            config.EnableMobileAttribution = true;
+
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Shutdown();
+
+            // Drop the queue from the first Init so we count only the second.
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            foreach (var f in Directory.GetFiles(queueDir, "*.json")) File.Delete(f);
+
+            var config2 = MakeConfig();
+            config2.EnableMobileAttribution = true;
+            ImmutableAudience.Init(config2);
+            ImmutableAudience.Shutdown();
+
+            var blobs = Directory.GetFiles(queueDir, "*.json")
+                .Select(File.ReadAllText).ToList();
+            Assert.IsFalse(blobs.Any(c => c.Contains("\"install_referrer_received\"")),
+                "install_referrer_received must fire exactly once per install");
+        }
+
+        [Test]
+        public void Init_DoesNotFireInstallReferrerReceived_WhenMobileAttributionDisabled()
+        {
+            var callCount = 0;
+            ImmutableAudience.MobileInstallReferrerProvider = () =>
+            {
+                callCount++;
+                return "utm_source=should_not_ship";
+            };
+            var config = MakeConfig();
+            config.EnableMobileAttribution = false;
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Shutdown();
+
+            Assert.AreEqual(0, callCount,
+                "MobileInstallReferrerProvider must not be called when EnableMobileAttribution is false");
+            var blobs = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
+                .Select(File.ReadAllText).ToList();
+            Assert.IsFalse(blobs.Any(c => c.Contains("\"install_referrer_received\"")));
+        }
+
+        [Test]
+        public void Init_FiresInstallReferrerReceived_OnSecondLaunch_WhenFirstMissedCache()
+        {
+            // First launch: bridge fetch in flight, provider returns null.
+            // Second launch: cache populated, provider returns the referrer.
+            // Event must fire on the second Init even though it missed the first.
+            string? firstCallReturn = null;
+            string? secondCallReturn = "utm_source=second_launch";
+            var callCount = 0;
+            ImmutableAudience.MobileInstallReferrerProvider = () =>
+                ++callCount == 1 ? firstCallReturn : secondCallReturn;
+
+            var config = MakeConfig();
+            config.EnableMobileAttribution = true;
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Shutdown();
+
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            // Confirm the first launch did not ship it.
+            var firstBlobs = Directory.GetFiles(queueDir, "*.json")
+                .Select(File.ReadAllText).ToList();
+            Assert.IsFalse(firstBlobs.Any(c => c.Contains("\"install_referrer_received\"")),
+                "first Init should not ship the event when the cache is empty");
+
+            foreach (var f in Directory.GetFiles(queueDir, "*.json")) File.Delete(f);
+
+            var config2 = MakeConfig();
+            config2.EnableMobileAttribution = true;
+            ImmutableAudience.Init(config2);
+            ImmutableAudience.Shutdown();
+
+            var secondBlobs = Directory.GetFiles(queueDir, "*.json")
+                .Select(File.ReadAllText).ToList();
+            Assert.IsTrue(secondBlobs.Any(c =>
+                c.Contains("\"install_referrer_received\"") &&
+                c.Contains("\"installReferrer\":\"utm_source=second_launch\"")),
+                "second Init must ship install_referrer_received when the cache landed late");
+        }
+
+        [Test]
+        public void Init_InstallReferrerProviderThrows_DoesNotPreventGameLaunch()
+        {
+            ImmutableAudience.MobileInstallReferrerProvider = () =>
+                throw new InvalidOperationException("bridge exploded");
+            var config = MakeConfig();
+            config.EnableMobileAttribution = true;
+
+            Assert.DoesNotThrow(() => ImmutableAudience.Init(config));
+            ImmutableAudience.Shutdown();
+
+            var blobs = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
+                .Select(File.ReadAllText).ToList();
+            Assert.IsTrue(blobs.Any(c => c.Contains("\"game_launch\"")),
+                "game_launch must still ship when the install referrer provider throws");
+            Assert.IsFalse(blobs.Any(c => c.Contains("\"install_referrer_received\"")));
         }
 
         // -----------------------------------------------------------------

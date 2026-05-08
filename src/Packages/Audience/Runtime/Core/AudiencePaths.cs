@@ -8,6 +8,8 @@ namespace Immutable.Audience
         private const string IdentityFileName = "identity";
         private const string ConsentFileName = "consent";
         private const string QueueDirName = "queue";
+        private const string InstallReferrerFileName = "install_referrer";
+        private const string InstallReferrerSentFileName = "install_referrer_sent";
 
         internal static string AudienceDir(string persistentDataPath) =>
             Path.Combine(persistentDataPath, RootDirName);
@@ -20,5 +22,11 @@ namespace Immutable.Audience
 
         internal static string QueueDir(string persistentDataPath) =>
             Path.Combine(AudienceDir(persistentDataPath), QueueDirName);
+
+        internal static string InstallReferrerFile(string persistentDataPath) =>
+            Path.Combine(AudienceDir(persistentDataPath), InstallReferrerFileName);
+
+        internal static string InstallReferrerSentFile(string persistentDataPath) =>
+            Path.Combine(AudienceDir(persistentDataPath), InstallReferrerSentFileName);
     }
 }
