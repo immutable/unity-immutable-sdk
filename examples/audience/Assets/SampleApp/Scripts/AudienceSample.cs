@@ -246,15 +246,26 @@ namespace Immutable.Audience.Samples.SampleApp
 
         // Fires from background flush threads; AppendLog marshals to main.
         // Body is JSON for parity with handler "Copy" output.
-        private void OnSdkError(AudienceError err) =>
-            AppendLog("onError", Json.Serialize(new Dictionary<string, object>
+        // Also forwards to Debug.LogError so the entry lands in Player.log
+        // / Editor console. Without this, OnError fires would be visible
+        // only in the in-app log pane, which disappears with the player
+        // process and is not captured by NUnit's test-results.xml. That
+        // gap let HTTP / cert / 4xx-5xx failures pass under "39 passed"
+        // for the StandaloneLinux64 cells.
+        private void OnSdkError(AudienceError err)
+        {
+            var body = Json.Serialize(new Dictionary<string, object>
             {
                 ["code"] = err.Code.ToString(),
                 ["message"] = err.Message,
-            }, 2), LogLevel.Err, LogSource.Sdk);
+            }, 2);
+            UnityEngine.Debug.LogError($"[Audience.OnError] {body}");
+            AppendLog("onError", body, LogLevel.Err, LogSource.Sdk);
+        }
 
         // SDK Log.Writer adapter. May fire from any thread; AppendLog handles
-        // the main-thread marshal.
+        // the main-thread marshal. Also mirrors to Unity's Debug.Log so the
+        // SDK's warnings reach Player.log alongside the in-app pane.
         private void RouteSdkLogToPane(string msg)
         {
             const string warnTag = "[ImmutableAudience] WARN:";
@@ -265,10 +276,16 @@ namespace Immutable.Audience.Samples.SampleApp
             {
                 level = LogLevel.Warn;
                 body = msg.Substring(warnTag.Length).TrimStart();
+                UnityEngine.Debug.LogWarning($"[Audience] {body}");
             }
             else if (msg.StartsWith(prefix, StringComparison.Ordinal))
             {
                 body = msg.Substring(prefix.Length).TrimStart();
+                UnityEngine.Debug.Log($"[Audience] {body}");
+            }
+            else
+            {
+                UnityEngine.Debug.Log($"[Audience] {body}");
             }
             AppendLog("sdk", body, level, LogSource.Sdk);
         }
