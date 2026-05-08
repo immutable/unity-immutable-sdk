@@ -1302,7 +1302,7 @@ namespace Immutable.Audience.Tests
                     ["attStatus"] = "authorized",
                     ["idfa"] = "11111111-2222-3333-4444-555555555555",
                 };
-            var config = MakeConfig();
+            var config = MakeConfig(ConsentLevel.Full);
             config.EnableMobileAttribution = true;
             ImmutableAudience.Init(config);
             ImmutableAudience.Shutdown();
@@ -1423,7 +1423,7 @@ namespace Immutable.Audience.Tests
                     ["gaid"] = "abcdef01-2345-6789-abcd-ef0123456789",
                     ["gaidLimitAdTracking"] = false,
                 };
-            var config = MakeConfig();
+            var config = MakeConfig(ConsentLevel.Full);
             config.EnableMobileAttribution = true;
             ImmutableAudience.Init(config);
             ImmutableAudience.Shutdown();
@@ -1460,6 +1460,64 @@ namespace Immutable.Audience.Tests
         }
 
         // -----------------------------------------------------------------
+        // Consent-tier tightening: idfa, gaid => Full-only
+        //
+        // idfa and gaid are cross-app device identifiers, same privacy class
+        // as userId. They ship only when consent is Full. State-class keys
+        // (attStatus, gaidLimitAdTracking) are non-identifying and ship at
+        // Anonymous+Full (CanTrack).
+        // -----------------------------------------------------------------
+
+        [Test]
+        public void Init_GameLaunch_StripsIdfa_WhenConsentAnonymous()
+        {
+            ImmutableAudience.MobileAttributionContextProvider = () =>
+                new Dictionary<string, object>
+                {
+                    ["attStatus"] = "authorized",
+                    ["idfa"] = "11111111-2222-3333-4444-555555555555",
+                };
+            var config = MakeConfig(ConsentLevel.Anonymous);
+            config.EnableMobileAttribution = true;
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Shutdown();
+
+            var launchFile = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
+                .Select(File.ReadAllText)
+                .First(c => c.Contains("\"game_launch\""));
+            StringAssert.Contains("\"attStatus\":\"authorized\"", launchFile,
+                "attStatus must ship at Anonymous: it is non-identifying state");
+            Assert.IsFalse(launchFile.Contains("\"idfa\""),
+                "idfa must not ship at Anonymous: it is a cross-app device identifier");
+        }
+
+        [Test]
+        public void Init_GameLaunch_StripsGaid_WhenConsentAnonymous()
+        {
+            // gaid is stripped at Anonymous; gaidLimitAdTracking is non-identifying
+            // state and must still ship so the pipeline can distinguish
+            // "fetched, opted out" from "not fetched yet".
+            ImmutableAudience.MobileAttributionContextProvider = () =>
+                new Dictionary<string, object>
+                {
+                    ["gaid"] = "abcdef01-2345-6789-abcd-ef0123456789",
+                    ["gaidLimitAdTracking"] = false,
+                };
+            var config = MakeConfig(ConsentLevel.Anonymous);
+            config.EnableMobileAttribution = true;
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Shutdown();
+
+            var launchFile = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
+                .Select(File.ReadAllText)
+                .First(c => c.Contains("\"game_launch\""));
+            StringAssert.Contains("\"gaidLimitAdTracking\":false", launchFile,
+                "gaidLimitAdTracking must ship at Anonymous: it is non-identifying state");
+            Assert.IsFalse(launchFile.Contains("\"gaid\""),
+                "gaid must not ship at Anonymous: it is a cross-app device identifier");
+        }
+
+        // -----------------------------------------------------------------
         // install_referrer_received
         //
         // Dedicated event (not a game_launch property): install attribution
@@ -1473,7 +1531,7 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.MobileInstallReferrerProvider = () =>
                 "utm_source=google-play&utm_medium=organic";
-            var config = MakeConfig();
+            var config = MakeConfig(ConsentLevel.Full);
             config.EnableMobileAttribution = true;
             ImmutableAudience.Init(config);
             ImmutableAudience.Shutdown();
@@ -1492,7 +1550,7 @@ namespace Immutable.Audience.Tests
             // installReferrer is exclusively on the dedicated event; ensure
             // we don't regress and start leaking it onto game_launch.
             ImmutableAudience.MobileInstallReferrerProvider = () => "utm_source=test";
-            var config = MakeConfig();
+            var config = MakeConfig(ConsentLevel.Full);
             config.EnableMobileAttribution = true;
             ImmutableAudience.Init(config);
             ImmutableAudience.Shutdown();
@@ -1544,7 +1602,7 @@ namespace Immutable.Audience.Tests
             // Simulate the second launch: cache is populated, marker is set
             // by the previous Init. Event must not refire.
             ImmutableAudience.MobileInstallReferrerProvider = () => "utm_source=test";
-            var config = MakeConfig();
+            var config = MakeConfig(ConsentLevel.Full);
             config.EnableMobileAttribution = true;
 
             ImmutableAudience.Init(config);
@@ -1554,7 +1612,7 @@ namespace Immutable.Audience.Tests
             var queueDir = AudiencePaths.QueueDir(_testDir);
             foreach (var f in Directory.GetFiles(queueDir, "*.json")) File.Delete(f);
 
-            var config2 = MakeConfig();
+            var config2 = MakeConfig(ConsentLevel.Full);
             config2.EnableMobileAttribution = true;
             ImmutableAudience.Init(config2);
             ImmutableAudience.Shutdown();
@@ -1598,7 +1656,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.MobileInstallReferrerProvider = () =>
                 ++callCount == 1 ? firstCallReturn : secondCallReturn;
 
-            var config = MakeConfig();
+            var config = MakeConfig(ConsentLevel.Full);
             config.EnableMobileAttribution = true;
             ImmutableAudience.Init(config);
             ImmutableAudience.Shutdown();
@@ -1612,7 +1670,7 @@ namespace Immutable.Audience.Tests
 
             foreach (var f in Directory.GetFiles(queueDir, "*.json")) File.Delete(f);
 
-            var config2 = MakeConfig();
+            var config2 = MakeConfig(ConsentLevel.Full);
             config2.EnableMobileAttribution = true;
             ImmutableAudience.Init(config2);
             ImmutableAudience.Shutdown();
@@ -1641,6 +1699,62 @@ namespace Immutable.Audience.Tests
             Assert.IsTrue(blobs.Any(c => c.Contains("\"game_launch\"")),
                 "game_launch must still ship when the install referrer provider throws");
             Assert.IsFalse(blobs.Any(c => c.Contains("\"install_referrer_received\"")));
+        }
+
+        [Test]
+        public void Init_DoesNotFireInstallReferrerReceived_WhenConsentAnonymous()
+        {
+            // installReferrer encodes campaign attribution source; Full-only.
+            // The sent marker must NOT be written so a later upgrade to Full
+            // can fire the event.
+            ImmutableAudience.MobileInstallReferrerProvider = () => "utm_source=google-play";
+            var config = MakeConfig(ConsentLevel.Anonymous);
+            config.EnableMobileAttribution = true;
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Shutdown();
+
+            var blobs = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
+                .Select(File.ReadAllText).ToList();
+            Assert.IsFalse(blobs.Any(c => c.Contains("\"install_referrer_received\"")),
+                "install_referrer_received must not fire when consent is Anonymous");
+            Assert.IsFalse(File.Exists(AudiencePaths.InstallReferrerSentFile(_testDir)),
+                "sent marker must not be written at Anonymous so a Full upgrade can fire the event");
+        }
+
+        [Test]
+        public void Init_FiresInstallReferrerReceived_AfterConsentUpgradedToFull()
+        {
+            // First launch at Anonymous: referrer is available but event is
+            // gated; no event fires and no sent marker is written.
+            // Second launch at Full: event fires and marker is written.
+            ImmutableAudience.MobileInstallReferrerProvider = () => "utm_source=upgrade_test";
+
+            var config = MakeConfig(ConsentLevel.Anonymous);
+            config.EnableMobileAttribution = true;
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Shutdown();
+
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            var firstBlobs = Directory.GetFiles(queueDir, "*.json")
+                .Select(File.ReadAllText).ToList();
+            Assert.IsFalse(firstBlobs.Any(c => c.Contains("\"install_referrer_received\"")),
+                "event must not ship on first launch when consent is Anonymous");
+            Assert.IsFalse(File.Exists(AudiencePaths.InstallReferrerSentFile(_testDir)),
+                "sent marker must not exist after Anonymous launch");
+
+            foreach (var f in Directory.GetFiles(queueDir, "*.json")) File.Delete(f);
+
+            var config2 = MakeConfig(ConsentLevel.Full);
+            config2.EnableMobileAttribution = true;
+            ImmutableAudience.Init(config2);
+            ImmutableAudience.Shutdown();
+
+            var secondBlobs = Directory.GetFiles(queueDir, "*.json")
+                .Select(File.ReadAllText).ToList();
+            Assert.IsTrue(secondBlobs.Any(c =>
+                c.Contains("\"install_referrer_received\"") &&
+                c.Contains("\"installReferrer\":\"utm_source=upgrade_test\"")),
+                "event must fire on the first Full-consent launch after an Anonymous launch");
         }
 
         // -----------------------------------------------------------------

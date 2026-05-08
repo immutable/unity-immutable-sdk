@@ -254,7 +254,10 @@ namespace Immutable.Audience
             // usually still empty when game_launch fires, so we ship a
             // dedicated event after Init when the value first becomes
             // observable. Idempotent across launches via an on-disk marker.
-            if (!string.IsNullOrEmpty(installReferrer))
+            // installReferrer encodes campaign attribution source, same privacy
+            // class as userId. Only ship at Full; don't write the sent marker
+            // at Anonymous so a later consent upgrade can fire the event.
+            if (!string.IsNullOrEmpty(installReferrer) && consentAtInit.CanIdentify())
                 FireInstallReferrerReceivedOnce(config, installReferrer!);
         }
 
@@ -1130,10 +1133,18 @@ namespace Immutable.Audience
 
             // iOS ATT/IDFA snapshot — merged after Unity context so attribution
             // keys are authoritative if both sources happen to set the same key.
+            // idfa and gaid are cross-app device identifiers, same privacy class
+            // as userId; gate them at Full-only. State-class keys (attStatus,
+            // gaidLimitAdTracking) are non-identifying and ship at Anon+Full.
             if (attributionContext != null)
             {
+                var canIdentify = consentAtInit.CanIdentify();
                 foreach (var kvp in attributionContext)
+                {
+                    if ((kvp.Key == "idfa" || kvp.Key == "gaid") && !canIdentify)
+                        continue;
                     properties[kvp.Key] = kvp.Value;
+                }
             }
 
             // No sessionId on game_launch per Event Reference. Pipeline correlates
