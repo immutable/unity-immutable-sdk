@@ -412,11 +412,13 @@ jobs:
       || github.event_name == 'workflow_dispatch'
     name: ${{ matrix.target }} / ${{ matrix.backend }} / Unity ${{ matrix.unity }}
     runs-on: ubuntu-latest-8-cores
-    # Tests now actually execute under xvfb instead of returning instantly
-    # as inconclusive, so cells take ~5-10 min. The 30 min cap leaves
-    # headroom for cold caches and the first image pull without leaving
-    # a stuck job sitting on the runner for the default 6 hours.
-    timeout-minutes: 30
+    # Cells settle to ~5-7 min for Unity 2021.3 (both backends) and
+    # ~22-25 min for Unity 6000.4 (Mono). Unity 6 IL2CPP on Mesa
+    # software OpenGL is the slow path. The 45 min cap covers the inner
+    # 40 min watchdog cap plus post-Unity steps (license return,
+    # Player.log copy, artifact upload, dorny/test-reporter) without
+    # leaving a stuck job sitting on the runner for the default 6 hours.
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
@@ -507,40 +509,81 @@ jobs:
               # the player. GLX + render are required for UIElements; the
               # image already bundles mesa-llvmpipe for software OpenGL, so
               # no GPU is needed. -noreset keeps the X server up across
-              # Unity client reconnects (the editor opens / closes / reopens
-              # connections during scene load).
+              # Unity client reconnects.
               #
-              # `timeout` wraps the whole xvfb-run + unity-editor pipeline so
-              # the editor cannot stall the cell past 22 minutes. Unity 6 on
-              # Linux has a known shutdown hang: tests complete, the runner
-              # writes playmode-results.xml, then the editor begins
-              # `Application is shutting down...` and never fully exits
-              # (likely a leftover thread or a player process xvfb-run is
-              # still tied to). Without the wrapper, the cell sits idle until
-              # the GitHub 30-min cap and the upload step never gets to run.
-              # 22 min covers Unity 6 IL2CPP build (~5 min) + 39-test suite
-              # execution (~10-15 min) with a 2-min buffer. SIGTERM first via
-              # --signal=TERM so Unity can flush; --kill-after=10 forces
-              # SIGKILL 10 s later if it is still alive. The 8 min slack to
-              # the cell timeout lets the post-steps (license return, Player
-              # log capture, artifact upload) all run.
-              set +e
-              timeout --signal=TERM --kill-after=10 1320 \
-                xvfb-run -a --server-args="-screen 0 1280x720x24 -ac +extension GLX +render -noreset" -- \
-                  unity-editor \
-                    -batchmode \
-                    -projectPath /github/workspace/examples/audience \
-                    -runTests \
-                    -testPlatform StandaloneLinux64 \
-                    -testResults /github/workspace/artifacts/playmode-results.xml \
-                    -logFile - 2>&1 | tee /github/workspace/artifacts/playmode.log
-              test_rc=${PIPESTATUS[0]}
-              set -uo pipefail
-              # exit 124 = timeout fired, 137 = SIGKILL via --kill-after.
-              # Either way, log it explicitly so the artifact reader can tell
-              # a real test failure from a shutdown-hang kill.
-              if [ "$test_rc" = "124" ] || [ "$test_rc" = "137" ]; then
-                echo "::warning::Unity exceeded the 22-min budget and was killed (rc=$test_rc). Tests likely completed; the editor failed to shut down."
+              # Why the watchdog instead of a simple `timeout` wrapper:
+              # - Unity 6 on Linux has a known shutdown hang. After
+              #   "Test run completed", the editor begins
+              #   `Application is shutting down...` and never fully exits.
+              #   Without intervention the cell sits idle until the cell
+              #   timeout fires before the post-Unity steps can run.
+              # - Tests on Unity 6 + Mesa software OpenGL take ~22 min for
+              #   Mono and longer for IL2CPP, vs ~2 min on Unity 2021.3.
+              #   A fixed timeout that fits 2021.3 cuts Unity 6 off mid-run;
+              #   a fixed timeout sized for Unity 6 makes 2021.3 cells wait
+              #   up to 30+ min on a shutdown hang they would not have hit.
+              # - The watchdog adapts: it scans the log, sees
+              #   "Test run completed" the moment Unity finishes the suite,
+              #   gives the editor 30 s to flush playmode-results.xml, then
+              #   sends SIGTERM. SIGKILL follows 15 s later if the editor
+              #   refuses to exit. Cells finish as soon as their tests do,
+              #   regardless of how slow the underlying Unity version is or
+              #   what shutdown bug it happens to hit.
+              # - 40 min hard cap as a fallback for the case where
+              #   "Test run completed" never appears (player hang, etc.).
+              log=/github/workspace/artifacts/playmode.log
+
+              xvfb-run -a --server-args="-screen 0 1280x720x24 -ac +extension GLX +render -noreset" -- \
+                unity-editor \
+                  -batchmode \
+                  -projectPath /github/workspace/examples/audience \
+                  -runTests \
+                  -testPlatform StandaloneLinux64 \
+                  -testResults /github/workspace/artifacts/playmode-results.xml \
+                  -logFile "$log" &
+              unity_pid=$!
+
+              # Stream the log to job stdout for live visibility while the
+              # editor is alive. tail --pid exits when unity_pid does.
+              tail --pid=$unity_pid -F "$log" 2>/dev/null &
+
+              deadline=$((SECONDS + 2400))   # 40 min hard cap
+              flush_deadline=0
+              kill_reason=""
+              while kill -0 $unity_pid 2>/dev/null; do
+                if [ "$SECONDS" -ge "$deadline" ]; then
+                  kill_reason="hard-cap-40m"
+                  break
+                fi
+                if [ "$flush_deadline" -eq 0 ] && grep -q "Test run completed" "$log" 2>/dev/null; then
+                  flush_deadline=$((SECONDS + 30))
+                  echo "[watchdog] saw \"Test run completed\" at ${SECONDS}s; SIGTERM after 30s flush window"
+                fi
+                if [ "$flush_deadline" -gt 0 ] && [ "$SECONDS" -ge "$flush_deadline" ]; then
+                  kill_reason="flush-window-elapsed"
+                  break
+                fi
+                sleep 5
+              done
+
+              if [ -n "$kill_reason" ]; then
+                echo "[watchdog] sending SIGTERM to Unity (reason: $kill_reason)"
+                kill -TERM $unity_pid 2>/dev/null || true
+                # 15 s grace, then SIGKILL if still alive.
+                for _ in 1 2 3; do
+                  kill -0 $unity_pid 2>/dev/null || break
+                  sleep 5
+                done
+                if kill -0 $unity_pid 2>/dev/null; then
+                  echo "[watchdog] SIGTERM not honored, sending SIGKILL"
+                  kill -KILL $unity_pid 2>/dev/null || true
+                fi
+              fi
+
+              wait $unity_pid 2>/dev/null
+              test_rc=$?
+              if [ "$kill_reason" = "hard-cap-40m" ]; then
+                echo "::warning::Unity hit the 40 min hard cap without logging \"Test run completed\". The player may have hung mid-suite. Inspect Player.log to see how far it got."
               fi
 
               # Capture the standalone test player log. PlayMode tests on
