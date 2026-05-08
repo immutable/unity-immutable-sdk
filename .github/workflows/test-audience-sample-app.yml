@@ -412,6 +412,11 @@ jobs:
       || github.event_name == 'workflow_dispatch'
     name: ${{ matrix.target }} / ${{ matrix.backend }} / Unity ${{ matrix.unity }}
     runs-on: ubuntu-latest-8-cores
+    # Tests now actually execute under xvfb instead of returning instantly
+    # as inconclusive, so cells take ~5-10 min. The 30 min cap leaves
+    # headroom for cold caches and the first image pull without leaving
+    # a stuck job sitting on the runner for the default 6 hours.
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -433,27 +438,128 @@ jobs:
             Library-${{ matrix.backend }}-${{ matrix.target }}-${{ matrix.unity }}-
             Library-${{ matrix.backend }}-${{ matrix.target }}-
 
-      - uses: game-ci/unity-test-runner@v4
-        id: playmode
+      - name: Run PlayMode tests under xvfb
+        # Manual `docker run` instead of game-ci/unity-test-runner@v4: the
+        # action hardcodes `-batchmode -nographics` and never starts a
+        # virtual display, so every [UnityTest] in SampleAppLiveFireTests
+        # came back "inconclusive" (passed=0, failed=0). NUnit does not
+        # treat inconclusive as failure and the action's USE_EXIT_CODE=false
+        # suppresses Unity's exit code 2, so the cells silently went green
+        # without executing a single test. See SDK-318 for the diagnosis.
+        shell: bash
         env:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
           AUDIENCE_TEST_PUBLISHABLE_KEY: ${{ secrets.AUDIENCE_TEST_PUBLISHABLE_KEY }}
           AUDIENCE_SCRIPTING_BACKEND: ${{ matrix.backend }}
-        with:
-          unityVersion: ${{ matrix.unity }}
-          targetPlatform: ${{ matrix.target }}
-          projectPath: examples/audience
-          testMode: playmode
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          UNITY_VERSION: ${{ matrix.unity }}
+        run: |
+          set -uo pipefail
+          mkdir -p artifacts
+
+          # The unityci/editor:ubuntu-...-linux-il2cpp-3 image ships both
+          # the Mono and IL2CPP playback engines plus xvfb, so the same
+          # tag works for both backends. The previous GameCI runs proved
+          # this: the StandaloneLinux64/Mono2x cell pulled the il2cpp tag.
+          image="unityci/editor:ubuntu-${UNITY_VERSION}-linux-il2cpp-3"
+
+          docker run --rm \
+            --workdir /github/workspace \
+            --env UNITY_EMAIL --env UNITY_PASSWORD --env UNITY_SERIAL \
+            --env AUDIENCE_TEST_PUBLISHABLE_KEY --env AUDIENCE_SCRIPTING_BACKEND \
+            --volume "$PWD":/github/workspace:z \
+            --cpus=8 --memory=30487m \
+            "$image" \
+            /bin/bash -c '
+              set -uo pipefail
+
+              # Per-run license activation. Unity occasionally exits non-zero
+              # on a successful activation (warnings about prior cached state
+              # in /root), so swallow the rc and assert on the success marker
+              # in the log instead. Same approach as the dropped self-hosted
+              # Linux job from SDK-255.
+              unity-editor -batchmode -nographics -quit \
+                -username "$UNITY_EMAIL" \
+                -password "$UNITY_PASSWORD" \
+                -serial   "$UNITY_SERIAL" \
+                -logFile - 2>&1 | tee /github/workspace/artifacts/activation.log || true
+              if grep -qE "License activation has failed|\[Licensing::Client\] Error: Code [0-9]+" \
+                 /github/workspace/artifacts/activation.log; then
+                echo "::error::Unity license activation failed."
+                exit 1
+              fi
+              if ! grep -qE "Successfully activated the entitlement license" \
+                 /github/workspace/artifacts/activation.log; then
+                echo "::error::Unity license activation: no success marker in log."
+                exit 1
+              fi
+
+              # xvfb-run gives Unity a virtual X display so PlayMode tests
+              # that load scenes and exercise UI Toolkit can actually launch
+              # the player. GLX + render are required for UIElements; the
+              # image already bundles mesa-llvmpipe for software OpenGL, so
+              # no GPU is needed. -noreset keeps the X server up across
+              # Unity client reconnects (the editor opens / closes / reopens
+              # connections during scene load).
+              xvfb-run -a --server-args="-screen 0 1280x720x24 -ac +extension GLX +render -noreset" -- \
+                unity-editor \
+                  -batchmode \
+                  -projectPath /github/workspace/examples/audience \
+                  -runTests \
+                  -testPlatform StandaloneLinux64 \
+                  -testResults /github/workspace/artifacts/playmode-results.xml \
+                  -logFile - 2>&1 | tee /github/workspace/artifacts/playmode.log
+              test_rc=${PIPESTATUS[0]}
+
+              # Always return the seat so reruns and parallel cells do not
+              # exhaust the activation pool. Tolerate non-zero in case the
+              # editor process is still mid-shutdown.
+              unity-editor -batchmode -nographics -quit -returnlicense -logFile - 2>&1 || true
+
+              # Unity exits 2 when any test fails or comes back inconclusive.
+              # Propagating the rc here means the step fails on real failures
+              # without needing the USE_EXIT_CODE=false hack the GameCI
+              # action applies.
+              exit $test_rc
+            '
+
+      - name: Fail when no tests actually executed
+        # Defense in depth: catches the silent-pass case if a future change
+        # accidentally re-disables the display, breaks the player launch,
+        # or restores USE_EXIT_CODE=false on the docker invocation. NUnit
+        # marks tests "inconclusive" rather than "failed" when the player
+        # never starts, and dorny/test-reporter does not flag inconclusive
+        # as failure, so the suite has to be inspected directly.
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          xml="artifacts/playmode-results.xml"
+          if [ ! -f "$xml" ]; then
+            echo "::error::No test-results.xml at $xml. Unity did not produce results."
+            exit 1
+          fi
+          # xmllint is preinstalled on ubuntu-latest via libxml2-utils.
+          passed=$(xmllint --xpath 'string(/test-run/@passed)' "$xml")
+          failed=$(xmllint --xpath 'string(/test-run/@failed)' "$xml")
+          inconclusive=$(xmllint --xpath 'string(/test-run/@inconclusive)' "$xml")
+          echo "passed=$passed failed=$failed inconclusive=$inconclusive"
+          if [ "${inconclusive:-0}" -gt 0 ]; then
+            echo "::error::$inconclusive test(s) came back inconclusive. Unity could not actually execute them. Check that xvfb is running and the player launches."
+            exit 1
+          fi
+          if [ "${passed:-0}" -eq 0 ] && [ "${failed:-0}" -eq 0 ]; then
+            echo "::error::Zero tests passed and zero failed. The suite did not execute."
+            exit 1
+          fi
 
       - name: Publish test report
         uses: dorny/test-reporter@v3
         if: always()
         with:
           name: PlayMode (${{ matrix.backend }} / ${{ matrix.target }})
-          path: ${{ steps.playmode.outputs.artifactsPath }}/playmode-results.xml
+          path: artifacts/playmode-results.xml
           reporter: dotnet-nunit
           fail-on-error: true
 
@@ -461,7 +567,11 @@ jobs:
         if: always()
         with:
           name: playmode-${{ matrix.backend }}-${{ matrix.target }}-${{ matrix.unity }}
-          path: ${{ steps.playmode.outputs.artifactsPath }}
+          path: |
+            artifacts/playmode-results.xml
+            artifacts/playmode.log
+            artifacts/activation.log
+            examples/audience/Logs/**
 
   # Mobile IL2CPP build validation — runs on GitHub-hosted Ubuntu via GameCI Docker
   # containers so self-hosted macOS/Windows machines are not occupied.
