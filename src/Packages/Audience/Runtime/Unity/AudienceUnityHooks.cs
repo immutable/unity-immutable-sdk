@@ -43,6 +43,12 @@ namespace Immutable.Audience.Unity
 
 #if UNITY_ANDROID && !UNITY_EDITOR
             ImmutableAudience.MobileInstallReferrerProvider = ProvideInstallReferrer;
+#if AUDIENCE_MOBILE_ATTRIBUTION
+            // Gated on the define so a build that disables GAID at compile
+            // time can't read a stale cache file left over from a prior
+            // install where the define was on.
+            ImmutableAudience.MobileAttributionContextProvider = ProvideAndroidAttributionContext;
+#endif
 #endif
 
             UnityLifecycleBridge.EnsureExists();
@@ -63,5 +69,22 @@ namespace Immutable.Audience.Unity
             InstallReferrerBridge.EnsureFetchStarted(path!);
             return InstallReferrerBridge.GetCachedInstallReferrer(path!);
         }
+
+#if UNITY_ANDROID && !UNITY_EDITOR && AUDIENCE_MOBILE_ATTRIBUTION
+        // Kicks off a background GAID fetch for the next launch (Google
+        // requires getAdvertisingIdInfo run off the main thread) and returns
+        // whatever was cached by the previous launch. First launch returns
+        // an empty dict; launch #2+ ships gaid + gaidLimitAdTracking.
+        // Exceptions propagate to ImmutableAudience.Init's
+        // MobileAttributionContextProviderThrew handler.
+        private static IReadOnlyDictionary<string, object>? ProvideAndroidAttributionContext()
+        {
+            var path = _persistentDataPath;
+            if (string.IsNullOrEmpty(path)) return AttributionContext.Capture();
+
+            GAIDBridge.EnsureFetchStarted(path!);
+            return AttributionContext.Capture(path);
+        }
+#endif
     }
 }

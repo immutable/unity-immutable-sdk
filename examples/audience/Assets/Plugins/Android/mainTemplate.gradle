@@ -1,0 +1,79 @@
+// Custom gradle template for the Audience sample.
+//
+// Studios who enable AUDIENCE_MOBILE_ATTRIBUTION on Android need
+// play-services-ads-identifier so the SDK's GAIDBridge can call
+// AdvertisingIdClient.getAdvertisingIdInfo via JNI. Without this
+// dependency the class is missing at runtime and `gaid` never lands
+// on game_launch (the bridge logs ClassNotFoundException and exits).
+//
+// To replicate this in your own project:
+//   1. Player Settings → Publishing Settings → enable "Custom Main
+//      Gradle Template". Unity will create this file at
+//      Assets/Plugins/Android/mainTemplate.gradle.
+//   2. Add the play-services-ads-identifier line in the dependencies
+//      block below.
+//
+// Studios who do NOT enable AUDIENCE_MOBILE_ATTRIBUTION can omit the
+// dependency entirely; the SDK's JNI code is stripped at compile time.
+
+apply plugin: 'com.android.library'
+**APPLY_PLUGINS**
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+**DEPS**
+    // Uncomment to enable GAID collection (requires AUDIENCE_MOBILE_ATTRIBUTION
+    // scripting define + AudienceConfig.EnableMobileAttribution). Without this
+    // line the SDK still builds and runs, but `gaid` / `gaidLimitAdTracking`
+    // never ship and a one-line ClassNotFoundException is logged on Init.
+    // Skip this line if your studio doesn't need install attribution.
+    // implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'
+}
+
+android {
+	namespace "com.unity3d.player"
+    ndkPath "**NDKPATH**"
+
+    compileSdkVersion **APIVERSION**
+    buildToolsVersion '**BUILDTOOLS**'
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    defaultConfig {
+        minSdkVersion **MINSDKVERSION**
+        targetSdkVersion **TARGETSDKVERSION**
+        ndk {
+            abiFilters **ABIFILTERS**
+        }
+        versionCode **VERSIONCODE**
+        versionName '**VERSIONNAME**'
+        consumerProguardFiles 'proguard-unity.txt'**USER_PROGUARD**
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+    aaptOptions {
+        noCompress = **NON_COMPRESSED_ASSETS** + unityStreamingAssets.tokenize(', ')
+        ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+    }**SIGN**
+
+    **PACKAGING_OPTIONS**
+
+    buildTypes {
+        debug {
+            minifyEnabled **MINIFY_DEBUG**
+            proguardFiles getDefaultProguardFile('proguard-android.txt')**SIGN_CONFIG**
+            jniDebuggable true
+        }
+        release {
+            minifyEnabled **MINIFY_RELEASE**
+            proguardFiles getDefaultProguardFile('proguard-android.txt')**SIGN_CONFIG**
+        }
+    }**PACKAGING**
+}**REPOSITORIES****SOURCE_BUILD_SETUP**
+**IL_CPP_BUILD_SETUP**

@@ -1410,6 +1410,55 @@ namespace Immutable.Audience.Tests
             Assert.IsFalse(launchFile.Contains("attStatus"));
         }
 
+        [Test]
+        public void Init_GameLaunch_IncludesGaidAndLimitFlag_WhenContextProviderReturns()
+        {
+            // Android attribution shape: gaid + gaidLimitAdTracking. Ships
+            // from launch #2 onwards (Google's getAdvertisingIdInfo is async
+            // off-main-thread; first launch's cache is empty when game_launch
+            // fires). Test asserts the wire shape, not the async timing.
+            ImmutableAudience.MobileAttributionContextProvider = () =>
+                new Dictionary<string, object>
+                {
+                    ["gaid"] = "abcdef01-2345-6789-abcd-ef0123456789",
+                    ["gaidLimitAdTracking"] = false,
+                };
+            var config = MakeConfig();
+            config.EnableMobileAttribution = true;
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Shutdown();
+
+            var launchFile = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
+                .Select(File.ReadAllText)
+                .First(c => c.Contains("\"game_launch\""));
+            StringAssert.Contains("\"gaid\":\"abcdef01-2345-6789-abcd-ef0123456789\"", launchFile);
+            StringAssert.Contains("\"gaidLimitAdTracking\":false", launchFile);
+        }
+
+        [Test]
+        public void Init_GameLaunch_OmitsGaid_WhenUserOptedOut()
+        {
+            // User opted out: gaid omitted, but gaidLimitAdTracking=true ships
+            // so the pipeline can distinguish "fetched, opted out" from
+            // "not fetched yet" (both absent).
+            ImmutableAudience.MobileAttributionContextProvider = () =>
+                new Dictionary<string, object>
+                {
+                    ["gaidLimitAdTracking"] = true,
+                };
+            var config = MakeConfig();
+            config.EnableMobileAttribution = true;
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Shutdown();
+
+            var launchFile = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
+                .Select(File.ReadAllText)
+                .First(c => c.Contains("\"game_launch\""));
+            StringAssert.Contains("\"gaidLimitAdTracking\":true", launchFile);
+            Assert.IsFalse(launchFile.Contains("\"gaid\""),
+                "gaid must not appear when the user has opted out");
+        }
+
         // -----------------------------------------------------------------
         // install_referrer_received
         //
