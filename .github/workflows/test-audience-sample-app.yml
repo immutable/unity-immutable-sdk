@@ -512,6 +512,22 @@ jobs:
                   -logFile - 2>&1 | tee /github/workspace/artifacts/playmode.log
               test_rc=${PIPESTATUS[0]}
 
+              # Capture the standalone test player log. PlayMode tests on
+              # StandaloneLinux64 build a player binary that runs the suite
+              # in its own process; the editor stdout we tee above never
+              # sees the player'\''s HTTP traces, OnError callbacks, or cert
+              # failures. Without this, "39 passed" tells us FlushAsync
+              # returned without throwing but says nothing about whether
+              # events actually reached CDP.
+              # Linux convention: ~/.config/unity3d/<Company>/<Product>/Player.log.
+              # Glob across companies / products so the capture survives any
+              # rename of the sample app.
+              find /root/.config/unity3d -name "Player.log" 2>/dev/null | while IFS= read -r f; do
+                co=$(basename "$(dirname "$(dirname "$f")")")
+                pr=$(basename "$(dirname "$f")")
+                cp "$f" "/github/workspace/artifacts/Player-${co}-${pr}.log" 2>/dev/null || true
+              done
+
               # Always return the seat so reruns and parallel cells do not
               # exhaust the activation pool. Tolerate non-zero in case the
               # editor process is still mid-shutdown.
@@ -583,6 +599,7 @@ jobs:
             artifacts/playmode-results.xml
             artifacts/playmode.log
             artifacts/activation.log
+            artifacts/Player-*.log
             examples/audience/Logs/**
 
   # Mobile IL2CPP build validation — runs on GitHub-hosted Ubuntu via GameCI Docker
