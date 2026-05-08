@@ -502,15 +502,39 @@ jobs:
               # no GPU is needed. -noreset keeps the X server up across
               # Unity client reconnects (the editor opens / closes / reopens
               # connections during scene load).
-              xvfb-run -a --server-args="-screen 0 1280x720x24 -ac +extension GLX +render -noreset" -- \
-                unity-editor \
-                  -batchmode \
-                  -projectPath /github/workspace/examples/audience \
-                  -runTests \
-                  -testPlatform StandaloneLinux64 \
-                  -testResults /github/workspace/artifacts/playmode-results.xml \
-                  -logFile - 2>&1 | tee /github/workspace/artifacts/playmode.log
+              #
+              # `timeout` wraps the whole xvfb-run + unity-editor pipeline so
+              # the editor cannot stall the cell past 22 minutes. Unity 6 on
+              # Linux has a known shutdown hang: tests complete, the runner
+              # writes playmode-results.xml, then the editor begins
+              # `Application is shutting down...` and never fully exits
+              # (likely a leftover thread or a player process xvfb-run is
+              # still tied to). Without the wrapper, the cell sits idle until
+              # the GitHub 30-min cap and the upload step never gets to run.
+              # 22 min covers Unity 6 IL2CPP build (~5 min) + 39-test suite
+              # execution (~10-15 min) with a 2-min buffer. SIGTERM first via
+              # --signal=TERM so Unity can flush; --kill-after=10 forces
+              # SIGKILL 10 s later if it is still alive. The 8 min slack to
+              # the cell timeout lets the post-steps (license return, Player
+              # log capture, artifact upload) all run.
+              set +e
+              timeout --signal=TERM --kill-after=10 1320 \
+                xvfb-run -a --server-args="-screen 0 1280x720x24 -ac +extension GLX +render -noreset" -- \
+                  unity-editor \
+                    -batchmode \
+                    -projectPath /github/workspace/examples/audience \
+                    -runTests \
+                    -testPlatform StandaloneLinux64 \
+                    -testResults /github/workspace/artifacts/playmode-results.xml \
+                    -logFile - 2>&1 | tee /github/workspace/artifacts/playmode.log
               test_rc=${PIPESTATUS[0]}
+              set -uo pipefail
+              # exit 124 = timeout fired, 137 = SIGKILL via --kill-after.
+              # Either way, log it explicitly so the artifact reader can tell
+              # a real test failure from a shutdown-hang kill.
+              if [ "$test_rc" = "124" ] || [ "$test_rc" = "137" ]; then
+                echo "::warning::Unity exceeded the 22-min budget and was killed (rc=$test_rc). Tests likely completed; the editor failed to shut down."
+              fi
 
               # Capture the standalone test player log. PlayMode tests on
               # StandaloneLinux64 build a player binary that runs the suite
