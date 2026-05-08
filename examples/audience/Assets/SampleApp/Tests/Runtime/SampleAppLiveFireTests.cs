@@ -128,6 +128,30 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
 
         // ---- Tests ----
 
+        // Marks this as coming from CI.
+        [UnityTest]
+        public IEnumerator AudienceCiTestMarker_EmitsRunMetadata()
+        {
+            var runId  = Environment.GetEnvironmentVariable("AUDIENCE_TEST_RUN_ID");
+            var cellId = Environment.GetEnvironmentVariable("AUDIENCE_TEST_CELL_ID");
+            if (string.IsNullOrEmpty(runId) && string.IsNullOrEmpty(cellId))
+            {
+                Assert.Ignore("Not running in CI.");
+                yield break;
+            }
+
+            yield return LoadAndInit();
+
+            ImmutableAudience.Track("audience_ci_test_marker", new System.Collections.Generic.Dictionary<string, object>
+            {
+                ["source"]   = "ci",
+                ["ciRunId"]  = runId  ?? string.Empty,
+                ["ciCellId"] = cellId ?? string.Empty,
+            });
+
+            yield return null;
+        }
+
         [UnityTest]
         public IEnumerator InitTrackFlush_AgainstSandbox_FlushReportsOk()
         {
