@@ -521,6 +521,114 @@ jobs:
           name: playmode-${{ matrix.backend }}-${{ matrix.target }}-${{ matrix.unity }}
           path: ${{ steps.playmode.outputs.artifactsPath }}
 
+  linux-build-smoke:
+    needs: set-matrix
+    if: |
+      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false)
+      || github.event_name == 'schedule'
+      || github.event_name == 'workflow_dispatch'
+    name: smoke ${{ matrix.target }} / ${{ matrix.backend }} / Unity ${{ matrix.unity }}
+    runs-on: ubuntu-latest-8-cores
+    timeout-minutes: 30
+    env:
+      AUDIENCE_TEST_CELL_ID: ${{ matrix.target }}-${{ matrix.backend }}-${{ matrix.unity }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.set-matrix.outputs.playmode_linux) }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Inject testables passthrough (no-op)
+        # The smoke build does not need test asmdefs; this step exists so
+        # the Library cache key shape stays identical to the playmode-linux
+        # job and we share warm caches.
+        run: |
+          jq '.' examples/audience/Packages/manifest.json > /dev/null
+
+      - uses: actions/cache@v4
+        with:
+          path: examples/audience/Library
+          key: Library-smoke-${{ matrix.backend }}-${{ matrix.target }}-${{ matrix.unity }}-${{ hashFiles('examples/audience/Assets/**', 'examples/audience/Packages/**', 'examples/audience/ProjectSettings/**', 'src/Packages/Audience/**') }}
+          restore-keys: |
+            Library-smoke-${{ matrix.backend }}-${{ matrix.target }}-${{ matrix.unity }}-
+            Library-smoke-${{ matrix.backend }}-${{ matrix.target }}-
+
+      - uses: game-ci/unity-builder@v4
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+          AUDIENCE_SCRIPTING_BACKEND: ${{ matrix.backend }}
+        with:
+          unityVersion: ${{ matrix.unity }}
+          targetPlatform: ${{ matrix.target }}
+          projectPath: examples/audience
+          buildMethod: Immutable.Audience.Samples.SampleApp.Editor.LinuxSmokeBuilder.Build
+          buildName: LinuxSmokePlayer
+          customParameters: --buildPath Builds/LinuxSmoke/LinuxSmokePlayer.x86_64
+
+      - name: Run smoke
+        env:
+          AUDIENCE_TEST_PUBLISHABLE_KEY: ${{ secrets.AUDIENCE_TEST_PUBLISHABLE_KEY }}
+          AUDIENCE_TEST_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+        shell: bash
+        run: |
+          set -uo pipefail
+          player="examples/audience/Builds/LinuxSmoke/LinuxSmokePlayer.x86_64"
+          if [ ! -x "$player" ]; then
+            echo "::error::Built player not found at $player"
+            ls -la "examples/audience/Builds/LinuxSmoke/" 2>/dev/null || true
+            exit 1
+          fi
+
+          mkdir -p artifacts
+
+          # xvfb-run guards against Linux player init failing without a
+          # display, even with -batchmode. Cheap insurance.
+          sudo apt-get update >/dev/null 2>&1 || true
+          sudo apt-get install -y xvfb >/dev/null 2>&1 || true
+
+          xvfb-run -a --server-args="-screen 0 320x240x24 -ac" -- \
+            "$player" -batchmode -nographics -logFile - \
+            > artifacts/smoke.log 2>&1 &
+          smoke_pid=$!
+
+          # Hard cap 60s. The runner itself enforces a 20s flush + 30s deadline;
+          # this is just to release the cell if Application.Quit hangs.
+          deadline=$((SECONDS + 60))
+          while kill -0 $smoke_pid 2>/dev/null; do
+            if [ "$SECONDS" -ge "$deadline" ]; then
+              echo "::error::Smoke runner did not exit within 60s; killing."
+              kill -KILL $smoke_pid 2>/dev/null || true
+              wait $smoke_pid 2>/dev/null || true
+              echo "----- smoke.log -----"
+              cat artifacts/smoke.log || true
+              exit 1
+            fi
+            sleep 1
+          done
+
+          wait $smoke_pid
+          rc=$?
+          echo "Smoke exit code: $rc"
+          echo "----- smoke.log (tail 80) -----"
+          tail -n 80 artifacts/smoke.log || true
+          exit $rc
+
+      - name: Upload smoke artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-build-smoke-${{ matrix.backend }}-${{ matrix.target }}-${{ matrix.unity }}
+          if-no-files-found: ignore
+          path: |
+            artifacts/smoke.log
+            examples/audience/Builds/LinuxSmoke/**
+
   # Mobile IL2CPP build validation — runs on GitHub-hosted Ubuntu via GameCI Docker
   # containers so self-hosted macOS/Windows machines are not occupied.
   # Scope: IL2CPP compile pipeline only. Runtime tests require a real device and
