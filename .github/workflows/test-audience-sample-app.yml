@@ -33,7 +33,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       playmode: ${{ steps.set.outputs.playmode }}
-      playmode_linux: ${{ steps.set.outputs.playmode_linux }}
       mobile: ${{ steps.set.outputs.mobile }}
     steps:
       - id: set
@@ -51,15 +50,13 @@ jobs:
             {"target":"StandaloneWindows64","backend":"IL2CPP","unity":"2022.3.62f2","changeset":"7670c08855a9","runner":["self-hosted","Windows","X64"]},
             {"target":"StandaloneWindows64","backend":"Mono2x","unity":"2022.3.62f2","changeset":"7670c08855a9","runner":["self-hosted","Windows","X64"]},
             {"target":"StandaloneOSX","backend":"IL2CPP","unity":"2022.3.62f2","changeset":"7670c08855a9","runner":["self-hosted","macOS","ARM64"]},
-            {"target":"StandaloneOSX","backend":"Mono2x","unity":"2022.3.62f2","changeset":"7670c08855a9","runner":["self-hosted","macOS","ARM64"]}
-          ]'
-          playmode_linux_full='[
-            {"target":"StandaloneLinux64","backend":"IL2CPP","unity":"2021.3.45f2"},
-            {"target":"StandaloneLinux64","backend":"Mono2x","unity":"2021.3.45f2"},
-            {"target":"StandaloneLinux64","backend":"IL2CPP","unity":"6000.4.0f1"},
-            {"target":"StandaloneLinux64","backend":"Mono2x","unity":"6000.4.0f1"},
-            {"target":"StandaloneLinux64","backend":"IL2CPP","unity":"2022.3.62f2"},
-            {"target":"StandaloneLinux64","backend":"Mono2x","unity":"2022.3.62f2"}
+            {"target":"StandaloneOSX","backend":"Mono2x","unity":"2022.3.62f2","changeset":"7670c08855a9","runner":["self-hosted","macOS","ARM64"]},
+            {"target":"StandaloneLinux64","backend":"IL2CPP","unity":"2021.3.45f2","changeset":"88f88f591b2e","runner":["self-hosted","Linux","X64"]},
+            {"target":"StandaloneLinux64","backend":"Mono2x","unity":"2021.3.45f2","changeset":"88f88f591b2e","runner":["self-hosted","Linux","X64"]},
+            {"target":"StandaloneLinux64","backend":"IL2CPP","unity":"6000.4.0f1","changeset":"8cf496087c8f","runner":["self-hosted","Linux","X64"]},
+            {"target":"StandaloneLinux64","backend":"Mono2x","unity":"6000.4.0f1","changeset":"8cf496087c8f","runner":["self-hosted","Linux","X64"]},
+            {"target":"StandaloneLinux64","backend":"IL2CPP","unity":"2022.3.62f2","changeset":"7670c08855a9","runner":["self-hosted","Linux","X64"]},
+            {"target":"StandaloneLinux64","backend":"Mono2x","unity":"2022.3.62f2","changeset":"7670c08855a9","runner":["self-hosted","Linux","X64"]}
           ]'
           mobile_full='[
             {"target":"Android","unity":"2021.3.45f2","method":"AndroidBuilder.Build"},
@@ -72,16 +69,13 @@ jobs:
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
             filter='[.[] | select(.unity != "2022.3.62f2")]'
             playmode=$(jq -c "$filter" <<<"$playmode_full")
-            playmode_linux=$(jq -c "$filter" <<<"$playmode_linux_full")
             mobile=$(jq -c "$filter" <<<"$mobile_full")
           else
             playmode=$(jq -c '.' <<<"$playmode_full")
-            playmode_linux=$(jq -c '.' <<<"$playmode_linux_full")
             mobile=$(jq -c '.' <<<"$mobile_full")
           fi
           {
             echo "playmode=$playmode"
-            echo "playmode_linux=$playmode_linux"
             echo "mobile=$mobile"
           } >> "$GITHUB_OUTPUT"
 
@@ -312,6 +306,66 @@ jobs:
           if ('${{ matrix.backend }}' -eq 'IL2CPP') { Write-Host "Found IL2CPP: $il2cpp" }
           "UNITY_PATH=$editor" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
+      - name: Install Unity Hub (Linux, idempotent)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          # Install per https://docs.unity.com/en-us/hub/install-hub-linux.
+          # Idempotent: skip if already present so subsequent runs cost
+          # nothing. Requires passwordless sudo for the runner user.
+          set -uo pipefail
+          if [ -x /opt/unityhub/unityhub ]; then
+            echo "Unity Hub already installed."
+            exit 0
+          fi
+          sudo install -d -m 0755 /etc/apt/keyrings
+          wget -qO- https://hub.unity3d.com/linux/keys/public \
+            | sudo gpg --dearmor --yes -o /etc/apt/keyrings/Unity_Technologies_ApS.gpg
+          echo "deb [signed-by=/etc/apt/keyrings/Unity_Technologies_ApS.gpg] https://hub.unity3d.com/linux/repos/deb stable main" \
+            | sudo tee /etc/apt/sources.list.d/unityhub.list >/dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends unityhub
+
+      - name: Resolve Unity ${{ matrix.unity }} (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        env:
+          UNITY_VER: ${{ matrix.unity }}
+          UNITY_CS: ${{ matrix.changeset }}
+        run: |
+          set -uo pipefail
+          HUB=/opt/unityhub/unityhub
+
+          echo "::group::install editor"
+          "$HUB" --headless install \
+            --version "$UNITY_VER" --changeset "$UNITY_CS" --architecture x86_64 \
+            || echo "(install non-zero — OK if 'Editor already installed in this location')"
+          echo "::endgroup::"
+
+          if [ "${{ matrix.backend }}" = "IL2CPP" ]; then
+            echo "::group::install linux-il2cpp module"
+            "$HUB" --headless install-modules \
+              --version "$UNITY_VER" --changeset "$UNITY_CS" --architecture x86_64 \
+              --module linux-il2cpp \
+              || echo "(install-modules non-zero — OK if 'No modules found to install')"
+            echo "::endgroup::"
+          fi
+
+          EDITOR=""
+          for cand in \
+            "$HOME/Unity/Hub/Editor/$UNITY_VER/Editor/Unity" \
+            "/opt/unity/editors/$UNITY_VER/Editor/Unity"; do
+            if [ -x "$cand" ]; then EDITOR="$cand"; break; fi
+          done
+
+          if [ -z "$EDITOR" ]; then
+            echo "::error::Unity $UNITY_VER not found after install"
+            "$HUB" --headless editors --installed 2>&1 || true
+            exit 1
+          fi
+          echo "Found Unity: $EDITOR"
+          echo "UNITY_PATH=$EDITOR" >> "$GITHUB_ENV"
+
       - name: Run PlayMode tests (macOS)
         if: runner.os == 'macOS'
         shell: bash
@@ -327,6 +381,27 @@ jobs:
           # file in-job; the actions/upload-artifact step below also uploads it so
           # compile failures retain a full post-mortem (annotations are matched-line
           # only and drop IL2CPP linker output, build config dumps, etc).
+          "$UNITY_PATH" \
+            -batchmode -nographics \
+            -projectPath examples/audience \
+            -runTests \
+            -testPlatform ${{ matrix.target }} \
+            -testResults "$(pwd)/artifacts/test-results.xml" \
+            -logFile - 2>&1 | tee "$(pwd)/artifacts/unity.log"
+
+      - name: Run PlayMode tests (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        env:
+          AUDIENCE_TEST_PUBLISHABLE_KEY: ${{ secrets.AUDIENCE_TEST_PUBLISHABLE_KEY }}
+          AUDIENCE_SCRIPTING_BACKEND: ${{ matrix.backend }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          # Same shape as the macOS step. -nographics is safe because the
+          # runner has a real GPU + active session; Unity opens a hardware
+          # GL context via that session if needed (it does not for this
+          # suite).
           "$UNITY_PATH" \
             -batchmode -nographics \
             -projectPath examples/audience \
@@ -385,6 +460,20 @@ jobs:
             done
           fi
 
+      - name: Capture player log (Linux)
+        if: always() && runner.os == 'Linux'
+        shell: bash
+        run: |
+          # Linux convention: ~/.config/unity3d/<Company>/<Product>/Player.log.
+          # Mirror macOS step.
+          mkdir -p artifacts
+          src="$HOME/.config/unity3d"
+          if [ -d "$src" ]; then
+            find "$src" -name "Player.log" 2>/dev/null | while IFS= read -r f; do
+              cp "$f" "artifacts/Player-$(basename "$(dirname "$f")").log" 2>/dev/null || true
+            done
+          fi
+
       - name: Capture player log (Windows)
         if: always() && runner.os == 'Windows'
         shell: pwsh
@@ -422,6 +511,22 @@ jobs:
             trimmed="${line#"${line%%[![:space:]]*}"}"
             # Sanitize '::' so log lines containing workflow commands (e.g. ::endgroup::)
             # cannot terminate the annotation early or inject other commands.
+            sanitized="${trimmed//::/%3A%3A}"
+            echo "::error::$sanitized"
+          done || true
+
+      - name: Surface Unity compile errors as annotations (Linux)
+        if: always() && runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -uo pipefail
+          LOG_FILE="artifacts/unity.log"
+          if [ ! -f "$LOG_FILE" ]; then
+            echo "::notice::No Unity log file at $LOG_FILE."
+            exit 0
+          fi
+          grep -E '(error CS[0-9]+:|Compilation failed:)' "$LOG_FILE" | sort -u | while IFS= read -r line; do
+            trimmed="${line#"${line%%[![:space:]]*}"}"
             sanitized="${trimmed//::/%3A%3A}"
             echo "::error::$sanitized"
           done || true
@@ -464,62 +569,6 @@ jobs:
             artifacts/unity.log
             artifacts/Player-*.log
             examples/audience/Logs/**
-
-  playmode-linux:
-    needs: set-matrix
-    if: |
-      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false)
-      || github.event_name == 'schedule'
-      || github.event_name == 'workflow_dispatch'
-    name: ${{ matrix.target }} / ${{ matrix.backend }} / Unity ${{ matrix.unity }}
-    runs-on: ubuntu-latest-8-cores
-    strategy:
-      fail-fast: false
-      matrix:
-        include: ${{ fromJSON(needs.set-matrix.outputs.playmode_linux) }}
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          lfs: true
-
-      - uses: actions/cache@v4
-        with:
-          path: examples/audience/Library
-          key: Library-${{ matrix.backend }}-${{ matrix.target }}-${{ matrix.unity }}-${{ hashFiles('examples/audience/Assets/**', 'examples/audience/Packages/**', 'examples/audience/ProjectSettings/**', 'src/Packages/Audience/**') }}
-          restore-keys: |
-            Library-${{ matrix.backend }}-${{ matrix.target }}-${{ matrix.unity }}-
-            Library-${{ matrix.backend }}-${{ matrix.target }}-
-
-      - uses: game-ci/unity-test-runner@v4
-        id: playmode
-        env:
-          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
-          AUDIENCE_TEST_PUBLISHABLE_KEY: ${{ secrets.AUDIENCE_TEST_PUBLISHABLE_KEY }}
-          AUDIENCE_SCRIPTING_BACKEND: ${{ matrix.backend }}
-        with:
-          unityVersion: ${{ matrix.unity }}
-          targetPlatform: ${{ matrix.target }}
-          projectPath: examples/audience
-          testMode: playmode
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publish test report
-        uses: dorny/test-reporter@v3
-        if: always()
-        with:
-          name: PlayMode (${{ matrix.backend }} / ${{ matrix.target }})
-          path: ${{ steps.playmode.outputs.artifactsPath }}/playmode-results.xml
-          reporter: dotnet-nunit
-          fail-on-error: true
-
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playmode-${{ matrix.backend }}-${{ matrix.target }}-${{ matrix.unity }}
-          path: ${{ steps.playmode.outputs.artifactsPath }}
 
   # Mobile IL2CPP build validation — runs on GitHub-hosted Ubuntu via GameCI Docker
   # containers so self-hosted macOS/Windows machines are not occupied.
