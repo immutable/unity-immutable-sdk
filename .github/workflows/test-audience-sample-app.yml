@@ -509,6 +509,41 @@ jobs:
                 exit 1
               fi
 
+              # Build SwiftShader (Google's CPU Vulkan ICD) from source.
+              # Apt does not package SwiftShader on Ubuntu. Build is roughly
+              # 5 to 10 minutes, single-threaded steps near the end. The ICD
+              # JSON is registered via VK_ICD_FILENAMES.
+              echo "::group::install build deps"
+              apt-get update
+              DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+                git cmake ninja-build build-essential vulkan-tools libvulkan1
+              echo "::endgroup::"
+
+              echo "::group::clone + build SwiftShader"
+              ss_dir=/tmp/swiftshader
+              git clone --depth=1 https://swiftshader.googlesource.com/SwiftShader "$ss_dir"
+              cmake -S "$ss_dir" -B "$ss_dir/build" -G Ninja \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DSWIFTSHADER_BUILD_VULKAN=ON \
+                -DSWIFTSHADER_BUILD_TESTS=OFF \
+                -DSWIFTSHADER_BUILD_BENCHMARKS=OFF
+              cmake --build "$ss_dir/build" --target vk_swiftshader
+              echo "::endgroup::"
+
+              # The build produces vk_swiftshader_icd.json next to libvk_swiftshader.so.
+              icd=$(find "$ss_dir/build" -name vk_swiftshader_icd.json | head -1)
+              if [ -z "$icd" ]; then
+                echo "::error::SwiftShader build did not produce vk_swiftshader_icd.json"
+                find "$ss_dir/build" -name "*swiftshader*" 2>/dev/null | head -10
+                exit 1
+              fi
+              echo "SwiftShader ICD at $icd"
+              export VK_ICD_FILENAMES="$icd"
+
+              # Capture device list for post-run confirmation. If SwiftShader is
+              # discovered, this prints "deviceName: SwiftShader Device".
+              vulkaninfo --summary > /github/workspace/artifacts/vulkaninfo.txt 2>&1 || true
+
               # xvfb-run gives Unity a virtual X display so PlayMode tests
               # that load scenes and exercise UI Toolkit can actually launch
               # the player. GLX + render are required for UIElements; the
@@ -547,15 +582,13 @@ jobs:
               # only on UI Toolkit log-row presence (queried via the
               # VisualElement tree, not via screen capture).
               #
-              # Why -force-glcore: Unity 6 prefers Vulkan on Linux and
-              # falls back to OpenGL when Vulkan init fails. Each frame
-              # carries the negotiation overhead. -force-glcore tells the
-              # player to skip Vulkan entirely and open a GLX context
-              # directly, the same path Unity 2021.3 takes by default.
+              # This PR tests SwiftShader Vulkan (registered via
+              # VK_ICD_FILENAMES above) instead of forcing OpenGL. Unity 6
+              # is allowed to pick its preferred backend; if Vulkan init
+              # fails it falls back to OpenGL via mesa-llvmpipe.
               xvfb-run -a --server-args="-screen 0 320x240x24 -ac +extension GLX +render -noreset" -- \
                 unity-editor \
                   -batchmode \
-                  -force-glcore \
                   -screen-fullscreen 0 \
                   -screen-width 320 \
                   -screen-height 240 \
@@ -730,6 +763,7 @@ jobs:
             artifacts/playmode-results.xml
             artifacts/playmode.log
             artifacts/activation.log
+            artifacts/vulkaninfo.txt
             artifacts/Player-*.log
             examples/audience/Logs/**
 
