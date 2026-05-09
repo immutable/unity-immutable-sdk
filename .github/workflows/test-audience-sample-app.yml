@@ -136,6 +136,26 @@ jobs:
           }
           Write-Host "::warning::Workspace not fully cleaned; checkout may fail"
 
+      - name: Ensure git and git-lfs (Linux, idempotent)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          # actions/checkout@v4 below uses lfs: true, which needs both git
+          # and git-lfs on PATH. Self-hosted Linux runners may not have
+          # git-lfs preinstalled, so install on demand. Idempotent: skip
+          # whichever is already present. Requires passwordless sudo for
+          # the runner user, same assumption as the Unity Hub install.
+          set -uo pipefail
+          needs=()
+          command -v git     >/dev/null 2>&1 || needs+=(git)
+          command -v git-lfs >/dev/null 2>&1 || needs+=(git-lfs)
+          if [ ${#needs[@]} -gt 0 ]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends "${needs[@]}"
+          fi
+          git --version
+          git-lfs --version
+
       - uses: actions/checkout@v4
         with:
           lfs: true
