@@ -136,26 +136,6 @@ jobs:
           }
           Write-Host "::warning::Workspace not fully cleaned; checkout may fail"
 
-      - name: Ensure git and git-lfs (Linux, idempotent)
-        if: runner.os == 'Linux'
-        shell: bash
-        run: |
-          # actions/checkout@v4 below uses lfs: true, which needs both git
-          # and git-lfs on PATH. Self-hosted Linux runners may not have
-          # git-lfs preinstalled, so install on demand. Idempotent: skip
-          # whichever is already present. Requires passwordless sudo for
-          # the runner user, same assumption as the Unity Hub install.
-          set -uo pipefail
-          needs=()
-          command -v git     >/dev/null 2>&1 || needs+=(git)
-          command -v git-lfs >/dev/null 2>&1 || needs+=(git-lfs)
-          if [ ${#needs[@]} -gt 0 ]; then
-            sudo apt-get update -qq
-            sudo apt-get install -y --no-install-recommends "${needs[@]}"
-          fi
-          git --version
-          git-lfs --version
-
       - uses: actions/checkout@v4
         with:
           lfs: true
@@ -325,26 +305,6 @@ jobs:
           Write-Host "Found Unity:  $editor"
           if ('${{ matrix.backend }}' -eq 'IL2CPP') { Write-Host "Found IL2CPP: $il2cpp" }
           "UNITY_PATH=$editor" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-
-      - name: Install Unity Hub (Linux, idempotent)
-        if: runner.os == 'Linux'
-        shell: bash
-        run: |
-          # Install per https://docs.unity.com/en-us/hub/install-hub-linux.
-          # Idempotent: skip if already present so subsequent runs cost
-          # nothing. Requires passwordless sudo for the runner user.
-          set -uo pipefail
-          if [ -x /opt/unityhub/unityhub ]; then
-            echo "Unity Hub already installed."
-            exit 0
-          fi
-          sudo install -d -m 0755 /etc/apt/keyrings
-          wget -qO- https://hub.unity3d.com/linux/keys/public \
-            | sudo gpg --dearmor --yes -o /etc/apt/keyrings/Unity_Technologies_ApS.gpg
-          echo "deb [signed-by=/etc/apt/keyrings/Unity_Technologies_ApS.gpg] https://hub.unity3d.com/linux/repos/deb stable main" \
-            | sudo tee /etc/apt/sources.list.d/unityhub.list >/dev/null
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends unityhub
 
       - name: Resolve Unity ${{ matrix.unity }} (Linux)
         if: runner.os == 'Linux'
