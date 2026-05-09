@@ -743,6 +743,7 @@ jobs:
           path: |
             artifacts/playmode-results.xml
             artifacts/playmode.log
+            artifacts/vulkaninfo.txt
             artifacts/activation.log
             artifacts/Player-*.log
             examples/audience/Logs/**
