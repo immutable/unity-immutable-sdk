@@ -509,6 +509,22 @@ jobs:
                 exit 1
               fi
 
+              # Install Mesa software Vulkan (lavapipe) and vulkan-tools.
+              # The unityci/editor image is Debian-based; apt-get works as
+              # root inside the container.
+              echo "::group::install lavapipe"
+              apt-get update
+              DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+                mesa-vulkan-drivers vulkan-tools
+              echo "::endgroup::"
+
+              # Force lavapipe selection if multiple Vulkan ICDs are present.
+              # MESA_VK_DEVICE_SELECT=lvp picks the LLVM-pipe Vulkan device.
+              export MESA_VK_DEVICE_SELECT=lvp
+
+              # Capture the Vulkan device list for post-run inspection.
+              vulkaninfo --summary > /github/workspace/artifacts/vulkaninfo.txt 2>&1 || true
+
               # xvfb-run gives Unity a virtual X display so PlayMode tests
               # that load scenes and exercise UI Toolkit can actually launch
               # the player. GLX + render are required for UIElements; the
