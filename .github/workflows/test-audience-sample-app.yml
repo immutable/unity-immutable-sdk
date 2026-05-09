@@ -482,6 +482,7 @@ jobs:
             --env UNITY_EMAIL --env UNITY_PASSWORD --env UNITY_SERIAL \
             --env AUDIENCE_TEST_PUBLISHABLE_KEY --env AUDIENCE_SCRIPTING_BACKEND \
             --env AUDIENCE_TEST_RUN_ID --env AUDIENCE_TEST_CELL_ID \
+            --env UNITY_VERSION \
             --volume "$PWD":/github/workspace:z \
             --cpus=8 --memory=30487m \
             "$image" \
@@ -552,8 +553,19 @@ jobs:
               # carries the negotiation overhead. -force-glcore tells the
               # player to skip Vulkan entirely and open a GLX context
               # directly, the same path Unity 2021.3 takes by default.
+              # Profiler capture is gated on Unity 6 cells only. Profiler
+              # output and deep profiling perturb wall time noticeably; keep
+              # 2021.3 cells unmodified so they remain a clean baseline for
+              # comparison.
+              profiler_flags=""
+              if [ "$UNITY_VERSION" = "6000.4.0f1" ]; then
+                profiler_flags="-profiler-enable -deepprofiling -profiler-log-file /github/workspace/artifacts/profile.raw"
+                echo "::notice::Unity 6 cell - profiler capture enabled"
+              fi
+
               xvfb-run -a --server-args="-screen 0 320x240x24 -ac +extension GLX +render -noreset" -- \
                 unity-editor \
+                  $profiler_flags \
                   -batchmode \
                   -force-glcore \
                   -screen-fullscreen 0 \
@@ -731,6 +743,7 @@ jobs:
             artifacts/playmode.log
             artifacts/activation.log
             artifacts/Player-*.log
+            artifacts/profile.raw
             examples/audience/Logs/**
 
   # Mobile IL2CPP build validation — runs on GitHub-hosted Ubuntu via GameCI Docker
