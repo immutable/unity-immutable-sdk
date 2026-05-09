@@ -25,6 +25,13 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# CI run identifier injected into the player so events on CDP can be
+# filtered as test traffic. Run id is workflow-wide; matrix-aware cell
+# id is set on the test jobs below. The marker test reads these env
+# vars and Assert.Ignores when both are unset.
+env:
+  AUDIENCE_TEST_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+
 jobs:
   # Reduced matrix on pull_request, full matrix on schedule and
   # workflow_dispatch. The self-hosted Windows runner pool is small, so
@@ -60,6 +67,8 @@ jobs:
     # short releases the self-hosted runner sooner so queued cells can
     # progress instead of waiting 60 min on a stuck job.
     timeout-minutes: 30
+    env:
+      AUDIENCE_TEST_CELL_ID: ${{ matrix.target }}-${{ matrix.backend }}-${{ matrix.unity }}
 
     steps:
       - name: Kill stale Unity processes (Windows pre-checkout)
@@ -419,6 +428,8 @@ jobs:
     # Player.log copy, artifact upload, dorny/test-reporter) without
     # leaving a stuck job sitting on the runner for the default 6 hours.
     timeout-minutes: 45
+    env:
+      AUDIENCE_TEST_CELL_ID: ${{ matrix.target }}-${{ matrix.backend }}-${{ matrix.unity }}
     strategy:
       fail-fast: false
       matrix:
@@ -456,12 +467,6 @@ jobs:
           AUDIENCE_TEST_PUBLISHABLE_KEY: ${{ secrets.AUDIENCE_TEST_PUBLISHABLE_KEY }}
           AUDIENCE_SCRIPTING_BACKEND: ${{ matrix.backend }}
           UNITY_VERSION: ${{ matrix.unity }}
-          # Provenance markers passed through to the player. The SampleApp
-          # logs `[CI] buildGuid=... runId=... cellId=...` at startup, and
-          # the post-step writes the line into the job summary so events
-          # on CDP can be matched 1:1 to this cell via buildGuid.
-          AUDIENCE_TEST_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
-          AUDIENCE_TEST_CELL_ID: ${{ matrix.target }}-${{ matrix.backend }}-${{ matrix.unity }}
         run: |
           set -uo pipefail
           mkdir -p artifacts
