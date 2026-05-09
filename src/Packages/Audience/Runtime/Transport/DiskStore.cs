@@ -26,6 +26,8 @@ namespace Immutable.Audience
             _queueDir = Path.Combine(persistentDataPath, "imtbl_audience", "queue");
             Directory.CreateDirectory(_queueDir);
             _cachedCount = Directory.GetFiles(_queueDir, "*.json").Length;
+            // DEBUG SDK-341: trace counter init.
+            Console.WriteLine($"[DiskStore] ctor initial count={_cachedCount} dir={_queueDir} hash={GetHashCode()}");
         }
 
         // Atomically writes json as a new event file.
@@ -113,7 +115,13 @@ namespace Immutable.Audience
         // count seeded at construction; mutating ops maintain it.
         internal int Count() => Volatile.Read(ref _cachedCount);
 
-        private void BumpCount(int delta) => Interlocked.Add(ref _cachedCount, delta);
+        // DEBUG SDK-341: log every counter mutation with stack so we can see
+        // who decrements without a matching increment. Revert before merge.
+        private void BumpCount(int delta)
+        {
+            var newValue = Interlocked.Add(ref _cachedCount, delta);
+            Console.WriteLine($"[DiskStore] BumpCount({delta:+#;-#;0}) -> {newValue} hash={GetHashCode()}\n{System.Environment.StackTrace}");
+        }
 
         private static bool TryDelete(string path)
         {
