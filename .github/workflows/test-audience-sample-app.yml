@@ -467,6 +467,7 @@ jobs:
           AUDIENCE_TEST_PUBLISHABLE_KEY: ${{ secrets.AUDIENCE_TEST_PUBLISHABLE_KEY }}
           AUDIENCE_SCRIPTING_BACKEND: ${{ matrix.backend }}
           UNITY_VERSION: ${{ matrix.unity }}
+          AUDIENCE_LINUX_GLCORE_ONLY: "1"
         run: |
           set -uo pipefail
           mkdir -p artifacts
@@ -482,6 +483,7 @@ jobs:
             --env UNITY_EMAIL --env UNITY_PASSWORD --env UNITY_SERIAL \
             --env AUDIENCE_TEST_PUBLISHABLE_KEY --env AUDIENCE_SCRIPTING_BACKEND \
             --env AUDIENCE_TEST_RUN_ID --env AUDIENCE_TEST_CELL_ID \
+            --env AUDIENCE_LINUX_GLCORE_ONLY \
             --volume "$PWD":/github/workspace:z \
             --cpus=8 --memory=30487m \
             "$image" \
