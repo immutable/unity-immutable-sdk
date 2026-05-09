@@ -15,35 +15,46 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
     // the log pane via the userData stash on each log row.
     internal static class SampleAppTestHelpers
     {
-        // Polls predicate once per frame until it returns true or the deadline
-        // elapses. Calls Assert.Fail with description when the deadline is hit.
-        // Use this instead of WaitForSecondsRealtime when a test is waiting
-        // "at most N seconds for X to become true" — the polling exits as soon
-        // as the condition is satisfied rather than burning the full N seconds.
+        // Wall-clock interval between predicate checks for WaitForCondition
+        // and WaitForLogEntry. Decoupled from frame pacing so tests poll at a
+        // fixed cadence regardless of how fast the player renders. On Linux
+        // PlayMode under llvmpipe Unity 6 runs at 1 to 2 fps; per-frame
+        // polling there made the polling interval one full second, so a
+        // suite that should finish in seconds dragged into tens of minutes.
+        private const float PollIntervalSeconds = 0.05f;
+
+        // Polls predicate at PollIntervalSeconds wall-clock cadence until it
+        // returns true or the deadline elapses. Calls Assert.Fail with
+        // description when the deadline is hit. Use this instead of
+        // WaitForSecondsRealtime when a test is waiting "at most N seconds
+        // for X to become true": the polling exits as soon as the condition
+        // is satisfied rather than burning the full N seconds.
         internal static IEnumerator WaitForCondition(
             Func<bool> predicate, float timeoutSeconds, string description)
         {
             var deadline = Time.realtimeSinceStartup + timeoutSeconds;
+            var poll = new WaitForSecondsRealtime(PollIntervalSeconds);
             while (Time.realtimeSinceStartup < deadline)
             {
                 if (predicate()) yield break;
-                yield return null;
+                yield return poll;
             }
             Assert.Fail($"Timed out after {timeoutSeconds:F1}s waiting for: {description}");
         }
 
         // Wait until the log pane contains an entry whose label matches `label`
-        // and whose level matches `level`. Yields one frame per check.
+        // and whose level matches `level`. Polls at PollIntervalSeconds.
         // Throws TimeoutException on deadline.
         internal static IEnumerator WaitForLogEntry(
             VisualElement root, string label, int level, float timeoutSec)
         {
             var deadline = Time.realtimeSinceStartup + timeoutSec;
+            var poll = new WaitForSecondsRealtime(PollIntervalSeconds);
             while (Time.realtimeSinceStartup < deadline)
             {
                 if (HasLogEntry(root, label, level))
                     yield break;
-                yield return null;
+                yield return poll;
             }
             throw new TimeoutException(
                 $"Log entry not found within {timeoutSec}s. " +
