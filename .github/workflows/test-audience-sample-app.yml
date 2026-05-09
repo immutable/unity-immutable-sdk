@@ -540,21 +540,24 @@ jobs:
               #   "Test run completed" never appears (player hang, etc.).
               log=/github/workspace/artifacts/playmode.log
 
-              # Why a tiny screen: the per-frame fragment-shader cost on
-              # mesa-llvmpipe scales with pixel count. 1280x720 = 0.92M
-              # px per frame; 320x240 = 0.08M px - a 12x reduction in
-              # software-rendered fill work, which is the dominant cost
-              # on Unity 6 Linux. UI Toolkit lays out fine on this size
-              # because the test never asserts on rendered pixel content,
-              # only on UI Toolkit log-row presence (queried via the
-              # VisualElement tree, not via screen capture).
+              # The player renders at 320x240 (Unity -screen-width and
+              # -screen-height below). xvfb's own screen size does not
+              # affect fragment fill because Unity creates its own GL
+              # context at the requested window size. xvfb-run with -a
+              # picks an unused display number and uses its default
+              # screen geometry; the X11 extension flags below are the
+              # only --server-args we actually need. Earlier comments
+              # in this file claimed the xvfb -screen flag was the
+              # source of the per-frame fill reduction; it was not.
+              # UI Toolkit lays out fine because tests assert on the
+              # VisualElement tree, not on rendered pixels.
               #
               # Why -force-glcore: Unity 6 prefers Vulkan on Linux and
               # falls back to OpenGL when Vulkan init fails. Each frame
               # carries the negotiation overhead. -force-glcore tells the
               # player to skip Vulkan entirely and open a GLX context
               # directly, the same path Unity 2021.3 takes by default.
-              xvfb-run -a --server-args="-screen 0 320x240x24 -ac +extension GLX +render -noreset" -- \
+              xvfb-run -a --server-args="-ac +extension GLX +render -noreset" -- \
                 unity-editor \
                   -batchmode \
                   -force-glcore \
