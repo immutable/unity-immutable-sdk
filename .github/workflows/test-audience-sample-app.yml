@@ -468,6 +468,7 @@ jobs:
           AUDIENCE_SCRIPTING_BACKEND: ${{ matrix.backend }}
           UNITY_VERSION: ${{ matrix.unity }}
           AUDIENCE_LINUX_GLCORE_ONLY: "1"
+          AUDIENCE_PLAYER_PROFILE_PATH: "/github/workspace/artifacts/player-profile.raw"
         run: |
           set -uo pipefail
           mkdir -p artifacts
@@ -484,6 +485,7 @@ jobs:
             --env AUDIENCE_TEST_PUBLISHABLE_KEY --env AUDIENCE_SCRIPTING_BACKEND \
             --env AUDIENCE_TEST_RUN_ID --env AUDIENCE_TEST_CELL_ID \
             --env AUDIENCE_LINUX_GLCORE_ONLY \
+            --env AUDIENCE_PLAYER_PROFILE_PATH \
             --volume "$PWD":/github/workspace:z \
             --cpus=8 --memory=30487m \
             "$image" \
@@ -737,6 +739,7 @@ jobs:
             artifacts/playmode.log
             artifacts/activation.log
             artifacts/Player-*.log
+            artifacts/player-profile.raw
             examples/audience/Logs/**
 
   # Mobile IL2CPP build validation — runs on GitHub-hosted Ubuntu via GameCI Docker
