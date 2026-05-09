@@ -541,14 +541,15 @@ jobs:
               log=/github/workspace/artifacts/playmode.log
 
               # The player renders at 320x240 (Unity -screen-width and
-              # -screen-height below). xvfb's own screen size does not
-              # affect fragment fill because Unity creates its own GL
-              # context at the requested window size. xvfb-run with -a
-              # picks an unused display number and uses its default
-              # screen geometry; the X11 extension flags below are the
-              # only --server-args we actually need. Earlier comments
-              # in this file claimed the xvfb -screen flag was the
-              # source of the per-frame fill reduction; it was not.
+              # -screen-height below). The xvfb desktop size does not
+              # affect fragment fill because Unity creates a GL context
+              # at the requested window size, regardless of how big the
+              # underlying X desktop is. xvfb-run with -a picks an
+              # unused display number and uses a default screen
+              # geometry; the X11 extension flags below are the only
+              # --server-args we actually need. Earlier comments in
+              # this file claimed the xvfb -screen flag was the source
+              # of the per-frame fill reduction; it was not.
               # UI Toolkit lays out fine because tests assert on the
               # VisualElement tree, not on rendered pixels.
               #
