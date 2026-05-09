@@ -540,7 +540,7 @@ jobs:
 
               # Why a tiny screen: the per-frame fragment-shader cost on
               # mesa-llvmpipe scales with pixel count. 1280x720 = 0.92M
-              # px per frame; 320x240 = 0.08M px - a 12x reduction in
+              # px per frame; 160x120 = 0.02M px - a 48x reduction in
               # software-rendered fill work, which is the dominant cost
               # on Unity 6 Linux. UI Toolkit lays out fine on this size
               # because the test never asserts on rendered pixel content,
@@ -552,13 +552,13 @@ jobs:
               # carries the negotiation overhead. -force-glcore tells the
               # player to skip Vulkan entirely and open a GLX context
               # directly, the same path Unity 2021.3 takes by default.
-              xvfb-run -a --server-args="-screen 0 320x240x24 -ac +extension GLX +render -noreset" -- \
+              xvfb-run -a --server-args="-screen 0 160x120x24 -ac +extension GLX +render -noreset" -- \
                 unity-editor \
                   -batchmode \
                   -force-glcore \
                   -screen-fullscreen 0 \
-                  -screen-width 320 \
-                  -screen-height 240 \
+                  -screen-width 160 \
+                  -screen-height 120 \
                   -projectPath /github/workspace/examples/audience \
                   -runTests \
                   -testPlatform StandaloneLinux64 \
