@@ -6,7 +6,7 @@
 set -uo pipefail
 
 LOG=/github/workspace/artifacts/unity.log
-ACTIVATION_LOG=/github/workspace/artifacts/activation.log
+ACTIVATION_LOG=/tmp/audience-unity-activation.log
 RESULTS=/github/workspace/artifacts/test-results.xml
 PROJECT=/github/workspace/examples/audience
 
