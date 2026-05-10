@@ -46,20 +46,26 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        unity: ['2021.3.45f2', '6000.4.0f1', '2022.3.62f2']
-        target: [StandaloneWindows64, StandaloneOSX]
-        backend: [IL2CPP, Mono2x]
+        # Explicit per-cell entries instead of cartesian + partial-key
+        # include. The cartesian + partial-include shape used here
+        # previously had the include entries fail to merge runner and
+        # changeset onto the generated combos, so every cell had no
+        # runner and the playmode job spawned zero jobs (verified on
+        # runs 25604434621 and 25613048568). 12 explicit entries below
+        # is the bulletproof shape.
         include:
-          - unity: '2021.3.45f2'
-            changeset: 88f88f591b2e
-          - unity: '6000.4.0f1'
-            changeset: 8cf496087c8f
-          - unity: '2022.3.62f2'
-            changeset: 7670c08855a9
-          - target: StandaloneWindows64
-            runner: [self-hosted, Windows, X64]
-          - target: StandaloneOSX
-            runner: [self-hosted, macOS, ARM64]
+          - { target: StandaloneWindows64, backend: IL2CPP, unity: '2021.3.45f2', changeset: 88f88f591b2e, runner: [self-hosted, Windows, X64] }
+          - { target: StandaloneWindows64, backend: Mono2x, unity: '2021.3.45f2', changeset: 88f88f591b2e, runner: [self-hosted, Windows, X64] }
+          - { target: StandaloneOSX,        backend: IL2CPP, unity: '2021.3.45f2', changeset: 88f88f591b2e, runner: [self-hosted, macOS, ARM64] }
+          - { target: StandaloneOSX,        backend: Mono2x, unity: '2021.3.45f2', changeset: 88f88f591b2e, runner: [self-hosted, macOS, ARM64] }
+          - { target: StandaloneWindows64, backend: IL2CPP, unity: '6000.4.0f1', changeset: 8cf496087c8f, runner: [self-hosted, Windows, X64] }
+          - { target: StandaloneWindows64, backend: Mono2x, unity: '6000.4.0f1', changeset: 8cf496087c8f, runner: [self-hosted, Windows, X64] }
+          - { target: StandaloneOSX,        backend: IL2CPP, unity: '6000.4.0f1', changeset: 8cf496087c8f, runner: [self-hosted, macOS, ARM64] }
+          - { target: StandaloneOSX,        backend: Mono2x, unity: '6000.4.0f1', changeset: 8cf496087c8f, runner: [self-hosted, macOS, ARM64] }
+          - { target: StandaloneWindows64, backend: IL2CPP, unity: '2022.3.62f2', changeset: 7670c08855a9, runner: [self-hosted, Windows, X64] }
+          - { target: StandaloneWindows64, backend: Mono2x, unity: '2022.3.62f2', changeset: 7670c08855a9, runner: [self-hosted, Windows, X64] }
+          - { target: StandaloneOSX,        backend: IL2CPP, unity: '2022.3.62f2', changeset: 7670c08855a9, runner: [self-hosted, macOS, ARM64] }
+          - { target: StandaloneOSX,        backend: Mono2x, unity: '2022.3.62f2', changeset: 7670c08855a9, runner: [self-hosted, macOS, ARM64] }
         exclude: ${{ fromJSON(github.event_name == 'pull_request' && '[{"unity":"2022.3.62f2"}]' || '[]') }}
     runs-on: ${{ matrix.runner }}
     # Healthy cells finish in ~10 min. 30 min covers cold caches +
