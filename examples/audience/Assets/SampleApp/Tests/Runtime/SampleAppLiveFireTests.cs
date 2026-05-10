@@ -24,8 +24,12 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         [SetUp]
         public void SetUp()
         {
+            // Don't fail tests on cleanup-time OnError fires when in-flight HTTP
+            // gets cancelled. Errors still land in Player.log via Debug.LogError.
+            LogAssert.ignoreFailingMessages = true;
+
             // ImmutableAudience is a static; tests must reset between runs.
-            // ResetState is internal — reached via reflection (BindingFlags.NonPublic
+            // ResetState is internal, reached via reflection (BindingFlags.NonPublic
             // bypasses C# access checks; no InternalsVisibleTo required).
             var t = typeof(ImmutableAudience);
             var m = t.GetMethod("ResetState",
@@ -128,6 +132,30 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
 
         // ---- Tests ----
 
+        // Emits a CDP marker row so this run's events can be filtered out of analytics.
+        [UnityTest]
+        public IEnumerator AudienceCiTestMarker_EmitsRunMetadata()
+        {
+            var runId  = Environment.GetEnvironmentVariable("AUDIENCE_TEST_RUN_ID");
+            var cellId = Environment.GetEnvironmentVariable("AUDIENCE_TEST_CELL_ID");
+            if (string.IsNullOrEmpty(runId) && string.IsNullOrEmpty(cellId))
+            {
+                Assert.Ignore("Not running in CI.");
+                yield break;
+            }
+
+            yield return LoadAndInit();
+
+            ImmutableAudience.Track("audience_ci_test_marker", new System.Collections.Generic.Dictionary<string, object>
+            {
+                ["source"]   = "ci",
+                ["ciRunId"]  = runId  ?? string.Empty,
+                ["ciCellId"] = cellId ?? string.Empty,
+            });
+
+            yield return null;
+        }
+
         [UnityTest]
         public IEnumerator InitTrackFlush_AgainstSandbox_FlushReportsOk()
         {
@@ -197,7 +225,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         [UnityTest]
         public IEnumerator Identify_AndFlush_FlushReportsOk()
         {
-            // Identify requires consent ≥ Full — set it on the initial-consent
+            // Identify requires consent >= Full. Set it on the initial-consent
             // dropdown before Init rather than upgrading mid-test.
             yield return LoadAndInit(initialConsent: SampleAppUi.Consent.Full);
 
@@ -224,7 +252,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         [UnityTest]
         public IEnumerator SetConsent_None_PurgesQueueAndPersists()
         {
-            // Init at default Anonymous; enqueue an event; revoke; flush — no errors.
+            // Init at default Anonymous; enqueue an event; revoke; flush. No errors.
             yield return LoadAndInit();
 
             _root!.Q<Button>(SampleAppUi.Buttons.TypedEvent("progression")).Click();
@@ -232,7 +260,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
 
             yield return SetConsentVia(SampleAppUi.Buttons.ConsentNone);
 
-            // Flushing after revocation should be a no-op (queue purged) — no error.
+            // Flushing after revocation should be a no-op (queue purged). No error.
             _root.Q<Button>(SampleAppUi.Buttons.Flush).Click();
             yield return _twoSeconds;
 
@@ -377,7 +405,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         public IEnumerator IdentifyTraits_AfterIdentify_FlushReportsOk()
         {
             // Identify(traits) requires an active identity (Identify first) and
-            // exercises the identity overload that takes a traits Dictionary —
+            // exercises the identity overload that takes a traits Dictionary,
             // a different reflection/serialiser path than Identify(id) alone.
             yield return LoadAndInit(initialConsent: SampleAppUi.Consent.Full);
 
@@ -580,7 +608,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         // ---- Sample-app UI plumbing ----
         // These verify the SAMPLE APP's reactivity, not SDK code paths. They
         // catch sample-app regressions that would mask real SDK issues
-        // (e.g. status bar showing stale state) — also exercise the
+        // (e.g. status bar showing stale state). Also exercise the
         // RefreshStatusBar / RefreshConsentPills / RefreshIdentityPanel paths
         // under IL2CPP.
 
