@@ -60,6 +60,13 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
             _root = null;
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            LogAssert.ignoreFailingMessages = false;
+            System.Net.ServicePointManager.ServerCertificateValidationCallback = null;
+        }
+
         // ---- Helpers shared by every test ----
 
         // Loads the SampleApp scene, types the env-var key into publishable-key,
