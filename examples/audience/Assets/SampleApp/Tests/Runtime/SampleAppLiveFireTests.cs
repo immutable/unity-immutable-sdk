@@ -639,7 +639,12 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
             // Init auto-fires session_start + game_launch so the queue is
             // already non-zero by the time the status label paints. Capture
             // the baseline and assert a progression Track bumps it by at least one.
-            yield return LoadAndInit();
+            //
+            // Push the auto-flush interval out past the 2 s assertion window so
+            // a flush cannot drain the queue between baseline capture and final
+            // read; otherwise the count we observe is racing the flush thread.
+            yield return LoadAndInit(configure: root =>
+                root.Q<TextField>(SampleAppUi.Setup.FlushInterval).value = "60000");
             yield return null;
 
             var queueLabel = _root!.Q<Label>(SampleAppUi.StatusBar.Queue);
