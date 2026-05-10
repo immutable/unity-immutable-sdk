@@ -8,7 +8,7 @@ using UnityEngine.UIElements;
 
 namespace Immutable.Audience.Samples.SampleApp
 {
-    // Audience SDK sample — UI Toolkit port of the web sample-app. Exercises
+    // Audience SDK sample, UI Toolkit port of the web sample-app. Exercises
     // every public ImmutableAudience API plus an event log that mirrors SDK
     // debug output.
     //
@@ -16,13 +16,13 @@ namespace Immutable.Audience.Samples.SampleApp
     //
     //   AudienceSample.cs        SDK calls, On* handlers, mirror state, SDK
     //                            callbacks, config builders. Reads UXML
-    //                            state ONLY via UI's Capture*Form accessors
-    //                            — never touches a UXML field directly.
+    //                            state ONLY via UI's Capture*Form accessors.
+    //                            Never touches a UXML field directly.
     //   AudienceSample.UI.cs     UXML fields, binding, rendering, log pane,
     //                            Refresh* methods, Capture*Form accessors.
     //                            No SDK calls, no mirror-state knowledge.
     //   AudienceSample.Events.cs Catalogue, typed-event factory, props
-    //                            builder. Pure factory — no UXML, no SDK.
+    //                            builder. Pure factory: no UXML, no SDK.
     public sealed partial class AudienceSample : MonoBehaviour
     {
         // ---- State ----
@@ -38,9 +38,21 @@ namespace Immutable.Audience.Samples.SampleApp
 
         // ---- Lifecycle ----
 
+        // Logs CI build info (buildGuid, runId, cellId, jobId) to Player.log on player startup. CI-only.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void LogCiBuildInfo()
+        {
+            var runId  = Environment.GetEnvironmentVariable("AUDIENCE_TEST_RUN_ID")  ?? string.Empty;
+            var cellId = Environment.GetEnvironmentVariable("AUDIENCE_TEST_CELL_ID") ?? string.Empty;
+            var jobId  = Environment.GetEnvironmentVariable("AUDIENCE_TEST_JOB_ID")  ?? string.Empty;
+            if (string.IsNullOrEmpty(runId) && string.IsNullOrEmpty(cellId)) return;
+            UnityEngine.Debug.Log(
+                $"[CI] buildGuid={Application.buildGUID} runId={runId} cellId={cellId} jobId={jobId}");
+        }
+
         private void Awake()
         {
-            // InitializeUi must precede the Log.Writer swap — _logView has
+            // InitializeUi must precede the Log.Writer swap. _logView has
             // to be bound before any Log.Warn can land in RouteSdkLogToPane.
             InitializeUi();
             _priorSdkLogWriter = Immutable.Audience.Log.Writer;
@@ -121,7 +133,7 @@ namespace Immutable.Audience.Samples.SampleApp
         // Prefers the typed overload for the four events with public C#
         // classes (Progression, Resource, Purchase, MilestoneReached); the
         // rest stay on the string overload. Typed validation errors are
-        // expected for user input — let them propagate through RunAndLog.
+        // expected for user input. Let them propagate through RunAndLog.
         private void OnSendCatalogueEvent(EventSpec spec, Dictionary<string, VisualElement> inputs) =>
             RunAndLog("track()", () =>
             {
@@ -194,7 +206,7 @@ namespace Immutable.Audience.Samples.SampleApp
             var traits = ParseTraits(f.RawTraits);
             ImmutableAudience.Identify(f.Id, ParseIdentityType(f.Type), traits);
             // SDK drops via Log.Warn when id is empty or consent < Full. Mirror
-            // only when accepted — otherwise the panel would show stale state.
+            // only when accepted; otherwise the panel would show stale state.
             var accepted = !string.IsNullOrEmpty(f.Id)
                            && string.Equals(ImmutableAudience.UserId, f.Id, StringComparison.Ordinal);
             if (accepted) { _mirrorIdentityType = f.Type; _mirrorTraits = traits; }
@@ -212,7 +224,7 @@ namespace Immutable.Audience.Samples.SampleApp
         private void OnIdentifyTraits() => RunAndLog("identify(traits)", () =>
         {
             var userId = ImmutableAudience.UserId;
-            if (string.IsNullOrEmpty(userId)) throw new InvalidOperationException("no active identity — call Identify first");
+            if (string.IsNullOrEmpty(userId)) throw new InvalidOperationException("no active identity; call Identify first");
             var traits = ParseTraits(CaptureTraitsUpdate());
             if (traits == null || traits.Count == 0) throw new InvalidOperationException("traits required");
             ImmutableAudience.Identify(userId, ParseIdentityType(_mirrorIdentityType), traits);
@@ -246,15 +258,19 @@ namespace Immutable.Audience.Samples.SampleApp
 
         // Fires from background flush threads; AppendLog marshals to main.
         // Body is JSON for parity with handler "Copy" output.
-        private void OnSdkError(AudienceError err) =>
-            AppendLog("onError", Json.Serialize(new Dictionary<string, object>
+        // Mirrors to Debug.LogError so failures land in Player.log, not just the in-app pane.
+        private void OnSdkError(AudienceError err)
+        {
+            var body = Json.Serialize(new Dictionary<string, object>
             {
                 ["code"] = err.Code.ToString(),
                 ["message"] = err.Message,
-            }, 2), LogLevel.Err, LogSource.Sdk);
+            }, 2);
+            UnityEngine.Debug.LogError($"[Audience.OnError] {body}");
+            AppendLog("onError", body, LogLevel.Err, LogSource.Sdk);
+        }
 
-        // SDK Log.Writer adapter. May fire from any thread; AppendLog handles
-        // the main-thread marshal.
+        // SDK Log.Writer adapter. Mirrors to Debug.Log so SDK output reaches Player.log.
         private void RouteSdkLogToPane(string msg)
         {
             const string warnTag = "[ImmutableAudience] WARN:";
@@ -265,10 +281,16 @@ namespace Immutable.Audience.Samples.SampleApp
             {
                 level = LogLevel.Warn;
                 body = msg.Substring(warnTag.Length).TrimStart();
+                UnityEngine.Debug.LogWarning($"[Audience] {body}");
             }
             else if (msg.StartsWith(prefix, StringComparison.Ordinal))
             {
                 body = msg.Substring(prefix.Length).TrimStart();
+                UnityEngine.Debug.Log($"[Audience] {body}");
+            }
+            else
+            {
+                UnityEngine.Debug.Log($"[Audience] {body}");
             }
             AppendLog("sdk", body, level, LogSource.Sdk);
         }
@@ -293,7 +315,7 @@ namespace Immutable.Audience.Samples.SampleApp
             var consent = ImmutableAudience.CurrentConsent;
             if (!consent.CanTrack())
                 throw new InvalidOperationException(
-                    $"track dropped — consent is {consent.ToLowercaseString()}; raise to anonymous or full to queue events");
+                    $"track dropped: consent is {consent.ToLowercaseString()}; raise to anonymous or full to queue events");
         }
 
         // Refresh* are idempotent reads, so calling all four every time is
@@ -326,7 +348,7 @@ namespace Immutable.Audience.Samples.SampleApp
             if (form.FlushIntervalMs is int flushMs && flushMs > 0)
             {
                 if (flushMs < 1000)
-                    AppendLog("INIT", $"flushInterval {flushMs}ms below 1s — clamped", LogLevel.Warn, LogSource.App);
+                    AppendLog("INIT", $"flushInterval {flushMs}ms below 1s, clamped", LogLevel.Warn, LogSource.App);
                 config.FlushIntervalSeconds = Math.Max(1, flushMs / 1000);
             }
             if (form.FlushSize is int flushSize && flushSize > 0)

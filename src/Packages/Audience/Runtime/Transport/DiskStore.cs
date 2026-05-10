@@ -65,9 +65,13 @@ namespace Immutable.Audience
 
             var result = new List<string>();
 
-            // Sort by filename (ticks prefix) → oldest first
-            var files = Directory.GetFiles(_queueDir, "*.json")
-                .OrderBy(f => Path.GetFileName(f), StringComparer.Ordinal);
+            // Sort by filename (ticks prefix), oldest first.
+            // Missing queue dir is empty queue. Matches DeleteAll / ApplyAnonymousDowngrade.
+            string[] paths;
+            try { paths = Directory.GetFiles(_queueDir, "*.json"); }
+            catch (DirectoryNotFoundException) { return Array.Empty<string>(); }
+
+            var files = paths.OrderBy(f => Path.GetFileName(f), StringComparer.Ordinal);
 
             foreach (var path in files)
             {
