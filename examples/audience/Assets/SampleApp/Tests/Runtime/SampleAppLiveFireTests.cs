@@ -162,7 +162,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
                 ["ciJobId"]  = jobId  ?? string.Empty,
             });
 
-            yield return null;
+            yield return FlushAndAssertNoErrors("ci marker");
         }
 
         [UnityTest]
