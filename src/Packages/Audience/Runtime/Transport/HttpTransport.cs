@@ -95,7 +95,22 @@ namespace Immutable.Audience
                 request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
 #endif
 
+                // Temporary diagnostic markers to measure where SendBatchAsync
+                // spends time on Unity 6 Linux PlayMode cells (where each test
+                // sits at the 30 sec WaitForLogEntry budget on Mono Linux but
+                // finishes in 1-2 sec on Unity 2021.3 Linux). T1 is request
+                // start, T2 is response received (continuation alive), T3 is
+                // batch deletion + state reset done. Comparing T1->T2 vs
+                // T2->T3 gaps across Unity versions disambiguates whether the
+                // stall is in HttpClient.SendAsync (network/socket) or in the
+                // continuation back onto Unity's main thread (SyncContext).
+                var __t1 = System.Diagnostics.Stopwatch.StartNew();
+                Log.Debug($"[HttpTransport][T1] SendAsync start url={_url} count={batch.Count}");
+
                 using var response = await _client.SendAsync(request, ct).ConfigureAwait(false);
+
+                var __t2Ms = __t1.Elapsed.TotalMilliseconds;
+                Log.Debug($"[HttpTransport][T2] SendAsync done t1->t2={__t2Ms:F1}ms status={(int)response.StatusCode}");
 
                 var statusCode = (int)response.StatusCode;
 
@@ -113,6 +128,7 @@ namespace Immutable.Audience
                         NotifyError(AudienceErrorCode.ValidationRejected,
                             $"Batch partially rejected: {rejected} of {batch.Count} events dropped");
                     }
+                    Log.Debug($"[HttpTransport][T3] batch handled t1->t3={__t1.Elapsed.TotalMilliseconds:F1}ms (t2->t3={(__t1.Elapsed.TotalMilliseconds - __t2Ms):F1}ms)");
                 }
                 else if (statusCode == 429)
                 {
