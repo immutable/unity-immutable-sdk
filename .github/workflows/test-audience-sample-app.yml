@@ -1,4 +1,4 @@
-name: Audience SDK — PlayMode (IL2CPP + Mono)
+name: Audience SDK PlayMode (IL2CPP + Mono)
 
 on:
   pull_request:
@@ -13,11 +13,7 @@ on:
       - 'examples/audience/ProjectSettings/**'
       - '.github/workflows/test-audience-sample-app.yml'
   schedule:
-    # Weekly full-matrix run on the default branch.
-    # Cron is UTC; cron has no DST awareness, so the local time shifts by one
-    # hour twice a year. Saturday 14:00 UTC maps to:
-    #   Sun 00:00 Sydney AEST / Sun 02:00 NZ NZST  (winter, Apr to Oct)
-    #   Sun 01:00 Sydney AEDT / Sun 03:00 NZ NZDT  (summer, Oct to Apr)
+    # Weekly full-matrix run on the default branch. Saturday 14:00 UTC.
     - cron: '0 14 * * 6'
   workflow_dispatch:
 
@@ -25,122 +21,85 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-jobs:
-  # The playmode, playmode-linux and mobile-build matrices are built here
-  # and consumed by the dependent jobs via fromJSON. PR runs trim Unity
-  # 2022.3.62f2 cells; schedule and workflow_dispatch run the full set.
-  set-matrix:
-    runs-on: ubuntu-latest
-    outputs:
-      playmode: ${{ steps.set.outputs.playmode }}
-      playmode_linux: ${{ steps.set.outputs.playmode_linux }}
-      mobile: ${{ steps.set.outputs.mobile }}
-    steps:
-      - id: set
-        shell: bash
-        run: |
-          playmode_full='[
-            {"target":"StandaloneWindows64","backend":"IL2CPP","unity":"2021.3.45f2","changeset":"88f88f591b2e","runner":["self-hosted","Windows","X64"]},
-            {"target":"StandaloneWindows64","backend":"Mono2x","unity":"2021.3.45f2","changeset":"88f88f591b2e","runner":["self-hosted","Windows","X64"]},
-            {"target":"StandaloneOSX","backend":"IL2CPP","unity":"2021.3.45f2","changeset":"88f88f591b2e","runner":["self-hosted","macOS","ARM64"]},
-            {"target":"StandaloneOSX","backend":"Mono2x","unity":"2021.3.45f2","changeset":"88f88f591b2e","runner":["self-hosted","macOS","ARM64"]},
-            {"target":"StandaloneWindows64","backend":"IL2CPP","unity":"6000.4.0f1","changeset":"8cf496087c8f","runner":["self-hosted","Windows","X64"]},
-            {"target":"StandaloneWindows64","backend":"Mono2x","unity":"6000.4.0f1","changeset":"8cf496087c8f","runner":["self-hosted","Windows","X64"]},
-            {"target":"StandaloneOSX","backend":"IL2CPP","unity":"6000.4.0f1","changeset":"8cf496087c8f","runner":["self-hosted","macOS","ARM64"]},
-            {"target":"StandaloneOSX","backend":"Mono2x","unity":"6000.4.0f1","changeset":"8cf496087c8f","runner":["self-hosted","macOS","ARM64"]},
-            {"target":"StandaloneWindows64","backend":"IL2CPP","unity":"2022.3.62f2","changeset":"7670c08855a9","runner":["self-hosted","Windows","X64"]},
-            {"target":"StandaloneWindows64","backend":"Mono2x","unity":"2022.3.62f2","changeset":"7670c08855a9","runner":["self-hosted","Windows","X64"]},
-            {"target":"StandaloneOSX","backend":"IL2CPP","unity":"2022.3.62f2","changeset":"7670c08855a9","runner":["self-hosted","macOS","ARM64"]},
-            {"target":"StandaloneOSX","backend":"Mono2x","unity":"2022.3.62f2","changeset":"7670c08855a9","runner":["self-hosted","macOS","ARM64"]}
-          ]'
-          playmode_linux_full='[
-            {"target":"StandaloneLinux64","backend":"IL2CPP","unity":"2021.3.45f2"},
-            {"target":"StandaloneLinux64","backend":"Mono2x","unity":"2021.3.45f2"},
-            {"target":"StandaloneLinux64","backend":"IL2CPP","unity":"6000.4.0f1"},
-            {"target":"StandaloneLinux64","backend":"Mono2x","unity":"6000.4.0f1"},
-            {"target":"StandaloneLinux64","backend":"IL2CPP","unity":"2022.3.62f2"},
-            {"target":"StandaloneLinux64","backend":"Mono2x","unity":"2022.3.62f2"}
-          ]'
-          mobile_full='[
-            {"target":"Android","unity":"2021.3.45f2","method":"AndroidBuilder.Build"},
-            {"target":"Android","unity":"2022.3.62f2","method":"AndroidBuilder.Build"},
-            {"target":"Android","unity":"6000.4.0f1","method":"AndroidBuilder.Build"},
-            {"target":"iOS","unity":"2021.3.45f2","method":"IosBuilder.Build"},
-            {"target":"iOS","unity":"2022.3.62f2","method":"IosBuilder.Build"},
-            {"target":"iOS","unity":"6000.4.0f1","method":"IosBuilder.Build"}
-          ]'
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            filter='[.[] | select(.unity != "2022.3.62f2")]'
-            playmode=$(jq -c "$filter" <<<"$playmode_full")
-            playmode_linux=$(jq -c "$filter" <<<"$playmode_linux_full")
-            mobile=$(jq -c "$filter" <<<"$mobile_full")
-          else
-            playmode=$(jq -c '.' <<<"$playmode_full")
-            playmode_linux=$(jq -c '.' <<<"$playmode_linux_full")
-            mobile=$(jq -c '.' <<<"$mobile_full")
-          fi
-          {
-            echo "playmode=$playmode"
-            echo "playmode_linux=$playmode_linux"
-            echo "mobile=$mobile"
-          } >> "$GITHUB_OUTPUT"
+# CI run id stamped into the player for CDP filtering. Per-cell id set on jobs below.
+env:
+  AUDIENCE_TEST_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
 
-  playmode:
-    needs: set-matrix
+jobs:
+  # SSOT for the unity matrix and the PR-only Unity 2022 exclude. Both
+  # playmode and mobile-build consume these outputs via fromJSON. Source
+  # data lives in .github/scripts/audience/matrix-shared.json.
+  setup:
     if: |
       (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false)
       || github.event_name == 'schedule'
       || github.event_name == 'workflow_dispatch'
-    name: ${{ matrix.target }} / ${{ matrix.backend }} / Unity ${{ matrix.unity }}
+    runs-on: ubuntu-latest
+    outputs:
+      unity_versions: ${{ steps.set.outputs.unity_versions }}
+      scripting_backends: ${{ steps.set.outputs.scripting_backends }}
+      desktop_targets: ${{ steps.set.outputs.desktop_targets }}
+      mobile_targets: ${{ steps.set.outputs.mobile_targets }}
+      pr_exclude: ${{ steps.set.outputs.pr_exclude }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: set
+        shell: bash
+        run: |
+          f=.github/scripts/audience/matrix-shared.json
+          for key in unity_versions scripting_backends desktop_targets mobile_targets; do
+            echo "$key=$(jq -c ".$key" "$f")" >> "$GITHUB_OUTPUT"
+          done
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            # Drop Unity 2022.3.62f2 for PRs. The full set runs on schedule and workflow_dispatch.
+            echo "pr_exclude=$(jq -c .pr_exclude "$f")" >> "$GITHUB_OUTPUT"
+          else
+            echo 'pr_exclude=[]' >> "$GITHUB_OUTPUT"
+          fi
+
+  playmode:
+    needs: setup
+    name: ${{ matrix.platform.target }} / ${{ matrix.backend }} / Unity ${{ matrix.unity.version }}
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(needs.set-matrix.outputs.playmode) }}
-    runs-on: ${{ matrix.runner }}
-    # Healthy cells finish in ~10 min. 30 min covers cold caches +
-    # IL2CPP + Unity 6 startup; anything past that is a hang. Capping
-    # short releases the self-hosted runner sooner so queued cells can
-    # progress instead of waiting 60 min on a stuck job.
-    timeout-minutes: 30
+        unity: ${{ fromJSON(needs.setup.outputs.unity_versions) }}
+        platform: ${{ fromJSON(needs.setup.outputs.desktop_targets) }}
+        backend: ${{ fromJSON(needs.setup.outputs.scripting_backends) }}
+        exclude: ${{ fromJSON(needs.setup.outputs.pr_exclude) }}
+    runs-on: ${{ matrix.platform.runner }}
+    timeout-minutes: 45
+    env:
+      AUDIENCE_TEST_CELL_ID: ${{ matrix.platform.target }}-${{ matrix.backend }}-${{ matrix.unity.version }}
 
     steps:
-      - name: Clean Windows workspace (pre-checkout)
-        if: runner.os == 'Windows'
-        shell: pwsh
+      - name: Resolve job ID
+        # Resolves the GitHub-assigned numeric job ID for the current cell so
+        # the player can stamp it into Player.log and CDP rows. Lets a CDP
+        # event link straight to the cell's GHA log via the canonical URL
+        # https://github.com/{repo}/actions/runs/{run_id}/job/{job_id}.
+        # Non-blocking: if the API call fails, AUDIENCE_TEST_JOB_ID stays unset.
         continue-on-error: true
-        run: |
-          # actions/checkout@v4 removes the prior workspace before cloning. If
-          # a previous run's Unity build / IL2CPP linker / bee_backend / shader
-          # compiler is still holding handles, checkout dies with EBUSY on
-          # examples/audience. Kill known offenders, then force-remove the
-          # workspace contents ourselves so checkout's cleanup succeeds.
-          Get-Process | Where-Object {
-            $_.Name -like 'Unity*' -or
-            $_.Name -like 'il2cpp*' -or
-            $_.Name -like 'UnityShaderCompiler*' -or
-            $_.Name -like 'UnityCrashHandler*' -or
-            $_.Name -like 'bee_backend*' -or
-            $_.Name -like 'mono*'
-          } | ForEach-Object {
-            Write-Host "Killing stale process: $($_.Name) (pid $($_.Id))"
-            Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
-          }
-          Start-Sleep -Seconds 3
-
-          $ws = "$env:GITHUB_WORKSPACE"
-          if (-not (Test-Path $ws)) { return }
-          for ($i = 1; $i -le 6; $i++) {
-            try {
-              Get-ChildItem -Path $ws -Force -ErrorAction Stop |
-                Remove-Item -Recurse -Force -ErrorAction Stop
-              Write-Host "Cleaned $ws on attempt ${i}"
-              return
-            } catch {
-              Write-Host "Attempt ${i}: $($_.Exception.Message)"
-              Start-Sleep -Seconds 3
+        uses: actions/github-script@v7
+        env:
+          JOB_NAME: ${{ matrix.platform.target }} / ${{ matrix.backend }} / Unity ${{ matrix.unity.version }}
+        with:
+          script: |
+            const jobs = await github.paginate(
+              github.rest.actions.listJobsForWorkflowRunAttempt,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: context.runId,
+                attempt_number: context.runAttempt,
+              }
+            );
+            const job = jobs.find(j => j.name === process.env.JOB_NAME);
+            if (!job) {
+              core.warning(`No job matching name="${process.env.JOB_NAME}"`);
+              return;
             }
-          }
-          Write-Host "::warning::Workspace not fully cleaned; checkout may fail"
+            core.exportVariable('AUDIENCE_TEST_JOB_ID', String(job.id));
 
       - uses: actions/checkout@v4
         with:
@@ -150,307 +109,40 @@ jobs:
         uses: actions/cache@v4
         with:
           path: examples/audience/Library
-          key: Library-${{ matrix.backend }}-${{ matrix.target }}-${{ matrix.unity }}-${{ hashFiles('examples/audience/Assets/**', 'examples/audience/Packages/**', 'examples/audience/ProjectSettings/**', 'src/Packages/Audience/**') }}
+          key: Library-${{ matrix.backend }}-${{ matrix.platform.target }}-${{ matrix.unity.version }}-${{ hashFiles('examples/audience/Assets/**', 'examples/audience/Packages/**', 'examples/audience/ProjectSettings/**', 'src/Packages/Audience/**') }}
           restore-keys: |
-            Library-${{ matrix.backend }}-${{ matrix.target }}-${{ matrix.unity }}-
-            Library-${{ matrix.backend }}-${{ matrix.target }}-
+            Library-${{ matrix.backend }}-${{ matrix.platform.target }}-${{ matrix.unity.version }}-
+            Library-${{ matrix.backend }}-${{ matrix.platform.target }}-
 
-      - name: Ensure MSVC + Windows 10 SDK (Windows IL2CPP)
-        if: runner.os == 'Windows' && matrix.backend == 'IL2CPP'
+      - name: Detect or Install Unity (Windows + macOS only)
+        if: matrix.platform.install_unity_script != ''
+        env:
+          UNITY_VERSION: ${{ matrix.unity.version }}
+          UNITY_CHANGESET: ${{ matrix.unity.changeset }}
+          BACKEND: ${{ matrix.backend }}
+        run: ${{ matrix.platform.install_unity_script }}
+
+      - name: Detect or Install VS Build Tools (StandaloneWindows64 IL2CPP only)
+        if: matrix.platform.target == 'StandaloneWindows64' && matrix.backend == 'IL2CPP'
         shell: pwsh
-        run: |
-          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+        run: .github/scripts/audience/ensure-msvc-windows.ps1
 
-          # Match Unity's detection logic exactly: vswhere requires VC.Tools
-          # (any version), registry probe for any Win10 SDK at v10.0/InstallationFolder.
-          # Pinning a specific SDK version in -requires is too strict — VCTools
-          # ships with whatever Win10 SDK is current, and Unity accepts any.
-          function Test-Toolchain {
-            $vc = if (Test-Path $vswhere) {
-              & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath 2>$null
-            } else { '' }
-            $sdk = (Get-ItemProperty 'HKLM:\SOFTWARE\Wow6432Node\Microsoft\Microsoft SDKs\Windows\v10.0' -ErrorAction SilentlyContinue).InstallationFolder
-            return @{ VcTools = $vc; Win10Sdk = $sdk }
-          }
-
-          $state = Test-Toolchain
-          if ($state.VcTools -and $state.Win10Sdk) {
-            Write-Host "VC.Tools at: $($state.VcTools)"
-            Write-Host "Win10 SDK at: $($state.Win10Sdk)"
-            exit 0
-          }
-          Write-Host "Toolchain incomplete. VC.Tools='$($state.VcTools)' Win10Sdk='$($state.Win10Sdk)'"
-
-          Write-Host "::group::Install VS 2022 Build Tools (VCTools + Win10 SDK)"
-          $installer = "$env:RUNNER_TEMP\vs_BuildTools.exe"
-          Invoke-WebRequest -Uri 'https://aka.ms/vs/17/release/vs_BuildTools.exe' -OutFile $installer
-
-          $installArgs = @(
-            '--quiet','--wait','--norestart','--nocache',
-            '--add','Microsoft.VisualStudio.Workload.VCTools',
-            '--add','Microsoft.VisualStudio.Component.VC.Tools.x86.x64',
-            '--add','Microsoft.VisualStudio.Component.Windows10SDK.20348',
-            '--includeRecommended'
-          )
-          $p = Start-Process -FilePath $installer -ArgumentList $installArgs -Wait -PassThru -NoNewWindow
-          # 3010 = success, reboot pending (tools are usable without reboot).
-          if ($p.ExitCode -ne 0 -and $p.ExitCode -ne 3010) {
-            Write-Host "::error::VS Build Tools installer exited $($p.ExitCode)"
-            exit $p.ExitCode
-          }
-          Write-Host "::endgroup::"
-
-          $state = Test-Toolchain
-          if (-not ($state.VcTools -and $state.Win10Sdk)) {
-            Write-Host "::group::diagnostic"
-            Write-Host "VC.Tools path (vswhere): '$($state.VcTools)'"
-            Write-Host "Win10 SDK (registry v10.0/InstallationFolder): '$($state.Win10Sdk)'"
-            Write-Host "--- all VS installations ---"
-            if (Test-Path $vswhere) { & $vswhere -all -products * -format json }
-            Write-Host "--- HKLM Win10 SDK roots ---"
-            Get-ChildItem 'HKLM:\SOFTWARE\Wow6432Node\Microsoft\Microsoft SDKs\Windows' -ErrorAction SilentlyContinue | Format-List
-            Write-Host "::endgroup::"
-            Write-Host "::error::Install reported success but VC.Tools or Win10 SDK still not detected — runner service account likely lacks admin to install system-wide. Install VS Build Tools manually on IMX_SDKBUILD: vs_BuildTools.exe --quiet --wait --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
-            exit 1
-          }
-          Write-Host "Verified VC.Tools at: $($state.VcTools)"
-          Write-Host "Verified Win10 SDK at: $($state.Win10Sdk)"
-
-      - name: Resolve Unity ${{ matrix.unity }} (macOS)
-        if: runner.os == 'macOS'
-        shell: bash
+      - name: Run PlayMode tests
         env:
-          UNITY_VER: ${{ matrix.unity }}
-          UNITY_CS: ${{ matrix.changeset }}
-        run: |
-          set -uo pipefail
-          HUB="/Applications/Unity Hub.app/Contents/MacOS/Unity Hub"
-
-          echo "::group::install editor"
-          "$HUB" -- --headless install \
-            --version "$UNITY_VER" --changeset "$UNITY_CS" --architecture arm64 \
-            || echo "(install non-zero — OK if 'Editor already installed in this location')"
-          echo "::endgroup::"
-
-          if [ "${{ matrix.backend }}" = "IL2CPP" ]; then
-            echo "::group::install mac-il2cpp module"
-            "$HUB" -- --headless install-modules \
-              --version "$UNITY_VER" --changeset "$UNITY_CS" --architecture arm64 \
-              --module mac-il2cpp \
-              || echo "(install-modules non-zero — OK if 'No modules found to install')"
-            echo "::endgroup::"
-          fi
-
-          EDITOR_APP=""
-          for cand in \
-            "/Applications/Unity/Hub/Editor/$UNITY_VER-arm64/Unity.app" \
-            "/Applications/Unity/Hub/Editor/$UNITY_VER/Unity.app"; do
-            if [ -x "$cand/Contents/MacOS/Unity" ]; then EDITOR_APP="$cand"; break; fi
-          done
-
-          IL2CPP_DIR=""
-          if [ "${{ matrix.backend }}" = "IL2CPP" ] && [ -n "$EDITOR_APP" ]; then
-            for d in \
-              "$EDITOR_APP/Contents/PlaybackEngines/MacStandaloneSupport/Variations/macos_arm64_player_nondevelopment_il2cpp" \
-              "$EDITOR_APP/Contents/PlaybackEngines/MacStandaloneSupport/Variations/macos_x64_player_nondevelopment_il2cpp"; do
-              if [ -d "$d" ]; then IL2CPP_DIR="$d"; break; fi
-            done
-          fi
-
-          MISSING=""
-          [ -z "$EDITOR_APP" ] && MISSING="editor"
-          [ "${{ matrix.backend }}" = "IL2CPP" ] && [ -z "$IL2CPP_DIR" ] && MISSING="${MISSING:+$MISSING+}mac-il2cpp"
-          if [ -n "$MISSING" ]; then
-            echo "::error::Unity $UNITY_VER missing: $MISSING"
-            ls -la /Applications/Unity/Hub/Editor/ 2>&1 || true
-            "$HUB" -- --headless editors --installed 2>&1 || true
-            exit 1
-          fi
-
-          echo "Found Unity:  $EDITOR_APP/Contents/MacOS/Unity"
-          [ -n "$IL2CPP_DIR" ] && echo "Found IL2CPP: $IL2CPP_DIR"
-          echo "UNITY_PATH=$EDITOR_APP/Contents/MacOS/Unity" >> "$GITHUB_ENV"
-
-      - name: Resolve Unity ${{ matrix.unity }} (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        env:
-          UNITY_VER: ${{ matrix.unity }}
-          UNITY_CS: ${{ matrix.changeset }}
-        run: |
-          $hub = "C:\Program Files\Unity Hub\Unity Hub.exe"
-
-          Write-Host "::group::install editor"
-          $installArgs = @('--','--headless','install','--version',$env:UNITY_VER,'--changeset',$env:UNITY_CS,'--architecture','x86_64')
-          & $hub @installArgs 2>&1 | Write-Host
-          if ($LASTEXITCODE -ne 0) { Write-Host "(install non-zero — OK if 'Editor already installed in this location')" }
-          $global:LASTEXITCODE = 0
-          Write-Host "::endgroup::"
-
-          if ('${{ matrix.backend }}' -eq 'IL2CPP') {
-            Write-Host "::group::install windows-il2cpp module"
-            $modArgs = @('--','--headless','install-modules','--version',$env:UNITY_VER,'--changeset',$env:UNITY_CS,'--architecture','x86_64','--module','windows-il2cpp')
-            & $hub @modArgs 2>&1 | Write-Host
-            if ($LASTEXITCODE -ne 0) { Write-Host "(install-modules non-zero — OK if 'No modules found to install')" }
-            $global:LASTEXITCODE = 0
-            Write-Host "::endgroup::"
-          }
-
-          $editor = "C:\Program Files\Unity\Hub\Editor\$env:UNITY_VER\Editor\Unity.exe"
-          $il2cpp = "C:\Program Files\Unity\Hub\Editor\$env:UNITY_VER\Editor\Data\PlaybackEngines\windowsstandalonesupport\Variations\win64_player_nondevelopment_il2cpp"
-          $missing = @()
-          if (-not (Test-Path $editor)) { $missing += 'editor' }
-          if ('${{ matrix.backend }}' -eq 'IL2CPP' -and -not (Test-Path $il2cpp)) { $missing += 'windows-il2cpp' }
-          if ($missing.Count -gt 0) {
-            Write-Host "::error::Unity $env:UNITY_VER missing: $($missing -join '+')"
-            Get-ChildItem "C:\Program Files\Unity\Hub\Editor\" -ErrorAction SilentlyContinue | Format-Table
-            & $hub -- --headless editors --installed
-            exit 1
-          }
-
-          Write-Host "Found Unity:  $editor"
-          if ('${{ matrix.backend }}' -eq 'IL2CPP') { Write-Host "Found IL2CPP: $il2cpp" }
-          "UNITY_PATH=$editor" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-
-      - name: Run PlayMode tests (macOS)
-        if: runner.os == 'macOS'
-        shell: bash
-        env:
+          UNITY_VERSION: ${{ matrix.unity.version }}
+          TARGET: ${{ matrix.platform.target }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
           AUDIENCE_TEST_PUBLISHABLE_KEY: ${{ secrets.AUDIENCE_TEST_PUBLISHABLE_KEY }}
           AUDIENCE_SCRIPTING_BACKEND: ${{ matrix.backend }}
-        run: |
-          set -euo pipefail
-          mkdir -p artifacts
-          # Tee Unity's stdout to artifacts/unity.log so the annotation step has a
-          # file to scan, while still streaming progress to the job log. pipefail
-          # propagates Unity's exit code through tee. The annotation step reads this
-          # file in-job; the actions/upload-artifact step below also uploads it so
-          # compile failures retain a full post-mortem (annotations are matched-line
-          # only and drop IL2CPP linker output, build config dumps, etc).
-          "$UNITY_PATH" \
-            -batchmode -nographics \
-            -projectPath examples/audience \
-            -runTests \
-            -testPlatform ${{ matrix.target }} \
-            -testResults "$(pwd)/artifacts/test-results.xml" \
-            -logFile - 2>&1 | tee "$(pwd)/artifacts/unity.log"
-
-      - name: Run PlayMode tests (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        env:
-          AUDIENCE_TEST_PUBLISHABLE_KEY: ${{ secrets.AUDIENCE_TEST_PUBLISHABLE_KEY }}
-          AUDIENCE_SCRIPTING_BACKEND: ${{ matrix.backend }}
-        run: |
-          New-Item -ItemType Directory -Force -Path artifacts | Out-Null
-          $logFile = "$pwd\artifacts\unity.log"
-          $unityArgs = @(
-            '-batchmode','-nographics',
-            '-projectPath','examples/audience',
-            '-runTests',
-            '-testPlatform','${{ matrix.target }}',
-            '-testResults',"$pwd\artifacts\test-results.xml",
-            '-logFile',$logFile
-          )
-          Write-Host "Launching Unity: $env:UNITY_PATH $($unityArgs -join ' ')"
-          $p = Start-Process -FilePath $env:UNITY_PATH -ArgumentList $unityArgs -Wait -PassThru -NoNewWindow
-          $exit = $p.ExitCode
-          Write-Host "::group::Unity log"
-          Get-Content $logFile -ErrorAction SilentlyContinue | Write-Host
-          Write-Host "::endgroup::"
-          Write-Host "Unity exited with code $exit"
-          if ($exit -ne 0) { exit $exit }
-
-      - name: Mark workspace safe for git (Windows)
-        if: always() && runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          git config --global --add safe.directory $env:GITHUB_WORKSPACE.Replace('\','/')
-
-      - name: Capture player log (macOS)
-        if: always() && runner.os == 'macOS'
-        shell: bash
-        run: |
-          # The test-runner builds + launches a player binary that writes its own
-          # log separately from Unity's editor log. When the editor reports
-          # "Test execution timed out. No activity received from the player ..."
-          # the editor unity.log alone cannot tell us whether the player crashed,
-          # hung, or never started. Copy whatever Player.log files Unity wrote
-          # into artifacts/ so the upload-artifact step preserves them.
-          mkdir -p artifacts
-          src="$HOME/Library/Logs"
-          if [ -d "$src" ]; then
-            find "$src" -name "Player.log" 2>/dev/null | while IFS= read -r f; do
-              cp "$f" "artifacts/Player-$(basename "$(dirname "$f")").log" 2>/dev/null || true
-            done
-          fi
-
-      - name: Capture player log (Windows)
-        if: always() && runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          # See macOS counterpart for rationale. Windows player log location:
-          # %USERPROFILE%\AppData\LocalLow\<CompanyName>\<ProductName>\Player.log
-          New-Item -ItemType Directory -Force -Path artifacts | Out-Null
-          $src = "$env:USERPROFILE\AppData\LocalLow"
-          if (Test-Path $src) {
-            Get-ChildItem -Path $src -Recurse -Filter "Player.log" -ErrorAction SilentlyContinue |
-              ForEach-Object {
-                $name = $_.Directory.Name
-                Copy-Item -Path $_.FullName -Destination "artifacts/Player-$name.log" -ErrorAction SilentlyContinue
-              }
-          }
-
-      - name: Surface Unity compile errors as annotations (macOS)
-        if: always() && runner.os == 'macOS'
-        shell: bash
-        run: |
-          set -uo pipefail
-          # Unity writes compile errors as 'error CS####:' or 'Compilation failed: <n>'.
-          # When a cell fails compile (vs fails a test), the test-results.xml is empty
-          # and the only signal otherwise is the artifact zip. Promote those lines to
-          # ::error:: annotations so the PR UI shows the cause inline.
-          LOG_FILE="artifacts/unity.log"
-          if [ ! -f "$LOG_FILE" ]; then
-            echo "::notice::No Unity log file at $LOG_FILE."
-            exit 0
-          fi
-          # `|| true` guards the success path: with `pipefail`, grep exits 1 when no
-          # matches (the clean-build case), which would otherwise propagate as the
-          # step's exit code and falsely mark every green cell red.
-          grep -E '(error CS[0-9]+:|Compilation failed:)' "$LOG_FILE" | sort -u | while IFS= read -r line; do
-            trimmed="${line#"${line%%[![:space:]]*}"}"
-            # Sanitize '::' so log lines containing workflow commands (e.g. ::endgroup::)
-            # cannot terminate the annotation early or inject other commands.
-            sanitized="${trimmed//::/%3A%3A}"
-            echo "::error::$sanitized"
-          done || true
-
-      - name: Surface Unity compile errors as annotations (Windows)
-        if: always() && runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $logFile = "artifacts\unity.log"
-          if (-not (Test-Path $logFile)) {
-            Write-Host "::notice::No Unity log file at $logFile."
-            exit 0
-          }
-          Get-Content $logFile |
-            Select-String -Pattern '(error CS\d+:|Compilation failed:)' |
-            ForEach-Object { $_.Line.Trim() } |
-            Sort-Object -Unique |
-            ForEach-Object {
-              # Sanitize '::' so log lines containing workflow commands cannot
-              # terminate the annotation early or inject other commands.
-              $sanitized = $_ -replace '::', '%3A%3A'
-              Write-Host "::error::$sanitized"
-            }
+        run: ${{ matrix.platform.run_playmode_script }}
 
       - name: Publish test report
         uses: dorny/test-reporter@v3
         if: always()
         with:
-          name: PlayMode (${{ matrix.backend }} / ${{ matrix.target }})
+          name: PlayMode (${{ matrix.backend }} / ${{ matrix.platform.target }})
           path: artifacts/test-results.xml
           reporter: dotnet-nunit
           fail-on-error: true
@@ -458,85 +150,22 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: playmode-${{ matrix.backend }}-${{ matrix.target }}-${{ matrix.unity }}
+          name: playmode-${{ matrix.backend }}-${{ matrix.platform.target }}-${{ matrix.unity.version }}
           path: |
-            artifacts/test-results.xml
-            artifacts/unity.log
-            artifacts/Player-*.log
+            artifacts/**
             examples/audience/Logs/**
 
-  playmode-linux:
-    needs: set-matrix
-    if: |
-      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false)
-      || github.event_name == 'schedule'
-      || github.event_name == 'workflow_dispatch'
-    name: ${{ matrix.target }} / ${{ matrix.backend }} / Unity ${{ matrix.unity }}
-    runs-on: ubuntu-latest-8-cores
-    strategy:
-      fail-fast: false
-      matrix:
-        include: ${{ fromJSON(needs.set-matrix.outputs.playmode_linux) }}
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          lfs: true
-
-      - uses: actions/cache@v4
-        with:
-          path: examples/audience/Library
-          key: Library-${{ matrix.backend }}-${{ matrix.target }}-${{ matrix.unity }}-${{ hashFiles('examples/audience/Assets/**', 'examples/audience/Packages/**', 'examples/audience/ProjectSettings/**', 'src/Packages/Audience/**') }}
-          restore-keys: |
-            Library-${{ matrix.backend }}-${{ matrix.target }}-${{ matrix.unity }}-
-            Library-${{ matrix.backend }}-${{ matrix.target }}-
-
-      - uses: game-ci/unity-test-runner@v4
-        id: playmode
-        env:
-          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
-          AUDIENCE_TEST_PUBLISHABLE_KEY: ${{ secrets.AUDIENCE_TEST_PUBLISHABLE_KEY }}
-          AUDIENCE_SCRIPTING_BACKEND: ${{ matrix.backend }}
-        with:
-          unityVersion: ${{ matrix.unity }}
-          targetPlatform: ${{ matrix.target }}
-          projectPath: examples/audience
-          testMode: playmode
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publish test report
-        uses: dorny/test-reporter@v3
-        if: always()
-        with:
-          name: PlayMode (${{ matrix.backend }} / ${{ matrix.target }})
-          path: ${{ steps.playmode.outputs.artifactsPath }}/playmode-results.xml
-          reporter: dotnet-nunit
-          fail-on-error: true
-
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playmode-${{ matrix.backend }}-${{ matrix.target }}-${{ matrix.unity }}
-          path: ${{ steps.playmode.outputs.artifactsPath }}
-
-  # Mobile IL2CPP build validation — runs on GitHub-hosted Ubuntu via GameCI Docker
-  # containers so self-hosted macOS/Windows machines are not occupied.
-  # Scope: IL2CPP compile pipeline only. Runtime tests require a real device and
-  # are out of scope until a device farm is available.
+  # Mobile IL2CPP build validation. Compile-only; runtime tests need real devices.
   mobile-build:
-    needs: set-matrix
-    if: |
-      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false)
-      || github.event_name == 'schedule'
-      || github.event_name == 'workflow_dispatch'
-    name: ${{ matrix.target }} / IL2CPP / Unity ${{ matrix.unity }}
+    needs: setup
+    name: ${{ matrix.platform.target }} / IL2CPP / Unity ${{ matrix.unity.version }}
     runs-on: ubuntu-latest-8-cores
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(needs.set-matrix.outputs.mobile) }}
+        unity: ${{ fromJSON(needs.setup.outputs.unity_versions) }}
+        platform: ${{ fromJSON(needs.setup.outputs.mobile_targets) }}
+        exclude: ${{ fromJSON(needs.setup.outputs.pr_exclude) }}
 
     steps:
       - uses: actions/checkout@v4
@@ -546,10 +175,10 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: examples/audience/Library
-          key: Library-mobile-${{ matrix.target }}-${{ matrix.unity }}-${{ hashFiles('examples/audience/Assets/**', 'examples/audience/Packages/**', 'examples/audience/ProjectSettings/**', 'src/Packages/Audience/**') }}
+          key: Library-mobile-${{ matrix.platform.target }}-${{ matrix.unity.version }}-${{ hashFiles('examples/audience/Assets/**', 'examples/audience/Packages/**', 'examples/audience/ProjectSettings/**', 'src/Packages/Audience/**') }}
           restore-keys: |
-            Library-mobile-${{ matrix.target }}-${{ matrix.unity }}-
-            Library-mobile-${{ matrix.target }}-
+            Library-mobile-${{ matrix.platform.target }}-${{ matrix.unity.version }}-
+            Library-mobile-${{ matrix.platform.target }}-
 
       - uses: game-ci/unity-builder@v4
         env:
@@ -557,15 +186,15 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         with:
-          unityVersion: ${{ matrix.unity }}
-          targetPlatform: ${{ matrix.target }}
+          unityVersion: ${{ matrix.unity.version }}
+          targetPlatform: ${{ matrix.platform.target }}
           projectPath: examples/audience
-          buildMethod: Immutable.Audience.Samples.SampleApp.Editor.${{ matrix.method }}
+          buildMethod: Immutable.Audience.Samples.SampleApp.Editor.${{ matrix.platform.build_player_method }}
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: mobile-build-${{ matrix.target }}-${{ matrix.unity }}
+          name: mobile-build-${{ matrix.platform.target }}-${{ matrix.unity.version }}
           if-no-files-found: ignore
           path: |
             examples/audience/Builds/Android/*.apk
