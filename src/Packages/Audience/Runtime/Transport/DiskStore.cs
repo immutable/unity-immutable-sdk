@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Threading;
 
 namespace Immutable.Audience
 {
@@ -15,17 +14,10 @@ namespace Immutable.Audience
     {
         private readonly string _queueDir;
 
-        // Cached queue file count: on-disk count at construction, plus
-        // tracked deltas from Write/Delete. Tests that plant files
-        // outside the DiskStore API will drift this and should assert
-        // on filesystem state, not Count().
-        private int _cachedCount;
-
         internal DiskStore(string persistentDataPath)
         {
             _queueDir = Path.Combine(persistentDataPath, "imtbl_audience", "queue");
             Directory.CreateDirectory(_queueDir);
-            _cachedCount = Directory.GetFiles(_queueDir, "*.json").Length;
         }
 
         // Atomically writes json as a new event file.
@@ -37,7 +29,6 @@ namespace Immutable.Audience
 
             File.WriteAllText(tmpPath, json);
 
-            var replaced = false;
             try
             {
                 File.Move(tmpPath, finalPath);
@@ -46,10 +37,7 @@ namespace Immutable.Audience
             {
                 File.Delete(finalPath);
                 File.Move(tmpPath, finalPath);
-                replaced = true;
             }
-
-            if (!replaced) BumpCount(+1);
         }
 
         // Returns up to maxSize file paths, oldest first. Stale files
@@ -86,7 +74,7 @@ namespace Immutable.Audience
                     var fileTime = new DateTime(ticks, DateTimeKind.Utc);
                     if (fileTime < cutoff)
                     {
-                        if (TryDelete(path)) BumpCount(-1);
+                        TryDelete(path);
                         continue;
                     }
                 }
@@ -101,22 +89,26 @@ namespace Immutable.Audience
         internal void Delete(IEnumerable<string> paths)
         {
             foreach (var path in paths)
-                if (TryDelete(path)) BumpCount(-1);
+                TryDelete(path);
         }
 
-        // Total number of event files currently on disk. Reads the cached
-        // count seeded at construction; mutating ops maintain it.
-        internal int Count() => Volatile.Read(ref _cachedCount);
-
-        private void BumpCount(int delta) => Interlocked.Add(ref _cachedCount, delta);
-
-        private static bool TryDelete(string path)
+        // Total number of event files currently on disk. Reads the filesystem
+        // each call so concurrent Write / Delete from any thread is reflected
+        // without a separately maintained counter that could drift.
+        internal int Count()
         {
-            try { File.Delete(path); return true; }
-            catch (DirectoryNotFoundException) { return true; }
-            catch (IOException) { return false; }
-            catch (UnauthorizedAccessException) { return false; }
+            try { return Directory.GetFiles(_queueDir, "*.json").Length; }
+            catch (DirectoryNotFoundException) { return 0; }
         }
+
+        private static void TryDelete(string path)
+        {
+            try { File.Delete(path); }
+            catch (DirectoryNotFoundException) { }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+
         internal void DeleteAll()
         {
             string[] paths;
@@ -124,7 +116,7 @@ namespace Immutable.Audience
             catch (DirectoryNotFoundException) { return; }
 
             foreach (var path in paths)
-                if (TryDelete(path)) BumpCount(-1);
+                TryDelete(path);
         }
 
         // Drops queued identify/alias files, strips userId from track files.
@@ -145,13 +137,13 @@ namespace Immutable.Audience
                 !msg.TryGetValue(MessageFields.Type, out var typeObj) ||
                 !(typeObj is string type))
             {
-                if (TryDelete(path)) BumpCount(-1);
+                TryDelete(path);
                 return;
             }
 
             if (IsIdentityMessage(type))
             {
-                if (TryDelete(path)) BumpCount(-1);
+                TryDelete(path);
                 return;
             }
 
@@ -195,11 +187,11 @@ namespace Immutable.Audience
             catch (IOException)
             {
                 // Delete rather than leave the old userId-bearing payload.
-                if (TryDelete(path)) BumpCount(-1);
+                TryDelete(path);
             }
             catch (UnauthorizedAccessException)
             {
-                if (TryDelete(path)) BumpCount(-1);
+                TryDelete(path);
             }
         }
 
