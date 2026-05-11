@@ -39,6 +39,8 @@ namespace Immutable.Audience.Unity
             ImmutableAudience.MobileAttributionProvider = () => SkanRegistration.RegisterIfFirstLaunch();
             ImmutableAudience.MobileAttributionContextProvider = () => AttributionContext.Capture();
             ImmutableAudience.TrackingAuthorizationRequestProvider = () => ATTBridge.RequestAsync();
+            ImmutableAudience.MobileATTStatusProvider = () => ATTBridge.GetStatus();
+            ImmutableAudience.MobileIDFAProvider = () => ATTBridge.GetIDFA();
 #endif
 
 #if UNITY_ANDROID && !UNITY_EDITOR

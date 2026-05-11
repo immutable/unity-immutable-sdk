@@ -157,6 +157,14 @@ namespace Immutable.Audience
             $"Failed to write install_referrer_sent marker: {ex.GetType().Name}: {ex.Message}. " +
             "install_referrer_received may re-fire on the next launch.";
 
+        internal static string ATTStatusProviderThrew(Exception ex) =>
+            $"MobileATTStatusProvider threw {ex.GetType().Name}: {ex.Message}. " +
+            "tracking_authorization_changed check skipped.";
+
+        internal static string ATTIDFAProviderThrew(Exception ex) =>
+            $"MobileIDFAProvider threw {ex.GetType().Name}: {ex.Message}. " +
+            "tracking_authorization_changed will ship without idfa.";
+
         internal static string GAIDFetchThrew(Exception ex) =>
             $"GAID fetch threw {ex.GetType().Name}: {ex.Message}. " +
             "gaid will not ship on game_launch this session; next launch retries.";

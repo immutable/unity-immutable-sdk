@@ -33,6 +33,8 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.MobileAttributionContextProvider = null;
             ImmutableAudience.TrackingAuthorizationRequestProvider = null;
             ImmutableAudience.MobileInstallReferrerProvider = null;
+            ImmutableAudience.MobileATTStatusProvider = null;
+            ImmutableAudience.MobileIDFAProvider = null;
             Identity.Reset(_testDir);
             if (Directory.Exists(_testDir))
                 Directory.Delete(_testDir, recursive: true);
@@ -2054,6 +2056,178 @@ namespace Immutable.Audience.Tests
                 await Task.Run(() => Release.Wait(ct), ct).ConfigureAwait(false);
                 return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
             }
+        }
+
+        // -----------------------------------------------------------------
+        // tracking_authorization_changed
+        //
+        // Fires when iOS ATT status transitions to a different value than the
+        // last-persisted observation. Requires EnableMobileAttribution and
+        // CanTrack(). idfa is included only when transitioning to authorized
+        // AND consent is Full.
+        // -----------------------------------------------------------------
+
+        [Test]
+        public void Init_FiresAttStatusChanged_WhenStatusTransitionsFromCached()
+        {
+            // Seed: previous launch observed denied (2); this launch is authorized (3).
+            AttStatusStore.Save(_testDir, 2);
+            ImmutableAudience.MobileATTStatusProvider = () => 3;
+            ImmutableAudience.MobileIDFAProvider = () => "11111111-2222-3333-4444-555555555555";
+            var config = MakeConfig(ConsentLevel.Full);
+            config.EnableMobileAttribution = true;
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Shutdown();
+
+            var blobs = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
+                .Select(File.ReadAllText).ToList();
+            Assert.IsTrue(blobs.Any(b =>
+                b.Contains("\"tracking_authorization_changed\"") &&
+                b.Contains("\"previousStatus\":\"denied\"") &&
+                b.Contains("\"newStatus\":\"authorized\"") &&
+                b.Contains("\"idfa\":\"11111111-2222-3333-4444-555555555555\"")),
+                "Init must fire tracking_authorization_changed when ATT status transitions");
+        }
+
+        [Test]
+        public void Init_DoesNotFireAttStatusChanged_WhenStatusUnchanged()
+        {
+            AttStatusStore.Save(_testDir, 3);
+            ImmutableAudience.MobileATTStatusProvider = () => 3;
+            var config = MakeConfig(ConsentLevel.Full);
+            config.EnableMobileAttribution = true;
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Shutdown();
+
+            var blobs = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
+                .Select(File.ReadAllText).ToList();
+            Assert.IsFalse(blobs.Any(b => b.Contains("\"tracking_authorization_changed\"")),
+                "no event when ATT status has not changed");
+        }
+
+        [Test]
+        public void Init_StoresAttStatusBaseline_WithoutFiringEvent_OnFirstObservation()
+        {
+            // No prior file: first observation establishes the baseline; no event fires
+            // because there is no previous state to transition from.
+            ImmutableAudience.MobileATTStatusProvider = () => 2; // denied
+            var config = MakeConfig(ConsentLevel.Anonymous);
+            config.EnableMobileAttribution = true;
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Shutdown();
+
+            var blobs = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
+                .Select(File.ReadAllText).ToList();
+            Assert.IsFalse(blobs.Any(b => b.Contains("\"tracking_authorization_changed\"")),
+                "first observation must not fire tracking_authorization_changed");
+            Assert.AreEqual(2, AttStatusStore.Load(_testDir),
+                "first observation must persist the baseline status");
+        }
+
+        [Test]
+        public async Task RequestTrackingAuthorizationAsync_FiresAttStatusChanged_WhenStatusTransitions()
+        {
+            AttStatusStore.Save(_testDir, 0); // notDetermined
+            ImmutableAudience.TrackingAuthorizationRequestProvider = () => Task.FromResult(3); // authorized
+            ImmutableAudience.MobileIDFAProvider = () => "11111111-2222-3333-4444-555555555555";
+            var config = MakeConfig(ConsentLevel.Full);
+            config.EnableMobileAttribution = true;
+            ImmutableAudience.Init(config);
+
+            ImmutableAudience.FlushQueueToDiskForTesting();
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            foreach (var f in Directory.GetFiles(queueDir, "*.json")) File.Delete(f);
+
+            await ImmutableAudience.RequestTrackingAuthorizationAsync();
+            ImmutableAudience.Shutdown();
+
+            var blobs = Directory.GetFiles(queueDir, "*.json")
+                .Select(File.ReadAllText).ToList();
+            Assert.IsTrue(blobs.Any(b =>
+                b.Contains("\"tracking_authorization_changed\"") &&
+                b.Contains("\"previousStatus\":\"notDetermined\"") &&
+                b.Contains("\"newStatus\":\"authorized\"") &&
+                b.Contains("\"idfa\":\"11111111-2222-3333-4444-555555555555\"")),
+                "RequestTrackingAuthorizationAsync must fire tracking_authorization_changed when status transitions");
+        }
+
+        [Test]
+        public async Task RequestTrackingAuthorizationAsync_DoesNotFireAttStatusChanged_WhenStatusUnchanged()
+        {
+            AttStatusStore.Save(_testDir, 3); // already authorized
+            ImmutableAudience.TrackingAuthorizationRequestProvider = () => Task.FromResult(3);
+            var config = MakeConfig(ConsentLevel.Full);
+            config.EnableMobileAttribution = true;
+            ImmutableAudience.Init(config);
+
+            ImmutableAudience.FlushQueueToDiskForTesting();
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            foreach (var f in Directory.GetFiles(queueDir, "*.json")) File.Delete(f);
+
+            await ImmutableAudience.RequestTrackingAuthorizationAsync();
+            ImmutableAudience.Shutdown();
+
+            var blobs = Directory.GetFiles(queueDir, "*.json")
+                .Select(File.ReadAllText).ToList();
+            Assert.IsFalse(blobs.Any(b => b.Contains("\"tracking_authorization_changed\"")),
+                "no event when ATT status has not changed");
+        }
+
+        [Test]
+        public void AttStatusChanged_StripsIdfa_WhenConsentAnonymous()
+        {
+            // Transition to authorized at Anonymous: event fires (non-identifying state),
+            // but idfa is Full-only and must not appear.
+            AttStatusStore.Save(_testDir, 2); // denied -> authorized
+            ImmutableAudience.MobileATTStatusProvider = () => 3;
+            ImmutableAudience.MobileIDFAProvider = () => "11111111-2222-3333-4444-555555555555";
+            var config = MakeConfig(ConsentLevel.Anonymous);
+            config.EnableMobileAttribution = true;
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Shutdown();
+
+            var blobs = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
+                .Select(File.ReadAllText).ToList();
+            var changeEvent = blobs.FirstOrDefault(b => b.Contains("\"tracking_authorization_changed\""));
+            Assert.IsNotNull(changeEvent, "event must fire at Anonymous consent");
+            Assert.IsFalse(changeEvent!.Contains("\"idfa\""),
+                "idfa must not ship at Anonymous: it is a cross-app device identifier");
+        }
+
+        [Test]
+        public void AttStatusChanged_NotFired_WhenConsentNone()
+        {
+            AttStatusStore.Save(_testDir, 0);
+            ImmutableAudience.MobileATTStatusProvider = () => 3;
+            var config = MakeConfig(ConsentLevel.None);
+            config.EnableMobileAttribution = true;
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Shutdown();
+
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            if (!Directory.Exists(queueDir)) return;
+            var blobs = Directory.GetFiles(queueDir, "*.json")
+                .Select(File.ReadAllText).ToList();
+            Assert.IsFalse(blobs.Any(b => b.Contains("\"tracking_authorization_changed\"")),
+                "tracking_authorization_changed must not fire when consent is None");
+        }
+
+        [Test]
+        public void AttStatusChanged_NotFired_WhenEnableMobileAttributionFalse()
+        {
+            AttStatusStore.Save(_testDir, 0);
+            var providerCallCount = 0;
+            ImmutableAudience.MobileATTStatusProvider = () => { providerCallCount++; return 3; };
+            var config = MakeConfig(ConsentLevel.Full);
+            config.EnableMobileAttribution = false;
+            ImmutableAudience.Init(config);
+            ImmutableAudience.Shutdown();
+
+            Assert.AreEqual(0, providerCallCount,
+                "MobileATTStatusProvider must not be called when EnableMobileAttribution is false");
+            var blobs = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
+                .Select(File.ReadAllText).ToList();
+            Assert.IsFalse(blobs.Any(b => b.Contains("\"tracking_authorization_changed\"")));
         }
     }
 }
