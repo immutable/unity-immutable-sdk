@@ -52,7 +52,7 @@ namespace Immutable.Audience.Tests
         {
             var props = DeviceCollector.CollectGameLaunchProperties();
             foreach (var key in new[] {
-                "platform", "version", "buildGuid", "unityVersion",
+                "platform", "isEditor", "version", "buildGuid", "unityVersion",
                 "osFamily", "deviceModel", "gpu", "gpuVendor",
                 "cpu", "cpuCores", "ramMb" })
             {
@@ -134,11 +134,51 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
-        public void CollectGameLaunchProperties_iOS_ContainsPlatformIPhonePlayer()
+        public void CollectGameLaunchProperties_iOS_PlatformIsIOS()
         {
             IDFVBridge.Impl = () => null;
             var props = DeviceCollector.CollectGameLaunchProperties(RuntimePlatform.IPhonePlayer);
             Assert.AreEqual("iOS", props["platform"]);
+        }
+
+        // -----------------------------------------------------------------
+        // PlatformName mapping: collapse Player/Editor variants to OS name
+        // -----------------------------------------------------------------
+
+        [TestCase(RuntimePlatform.WindowsPlayer, "Windows")]
+        [TestCase(RuntimePlatform.WindowsEditor, "Windows")]
+        [TestCase(RuntimePlatform.OSXPlayer, "macOS")]
+        [TestCase(RuntimePlatform.OSXEditor, "macOS")]
+        [TestCase(RuntimePlatform.LinuxPlayer, "Linux")]
+        [TestCase(RuntimePlatform.LinuxEditor, "Linux")]
+        [TestCase(RuntimePlatform.IPhonePlayer, "iOS")]
+        [TestCase(RuntimePlatform.Android, "Android")]
+        public void CollectGameLaunchProperties_Platform_MapsToLaymanName(
+            RuntimePlatform input, string expected)
+        {
+            var props = DeviceCollector.CollectGameLaunchProperties(input);
+            Assert.AreEqual(expected, props["platform"]);
+        }
+
+        [Test]
+        public void CollectGameLaunchProperties_Platform_UnmappedFallsBackToEnumName()
+        {
+            // Console / unsupported targets must not be silently dropped.
+            var props = DeviceCollector.CollectGameLaunchProperties(RuntimePlatform.WebGLPlayer);
+            Assert.AreEqual("WebGLPlayer", props["platform"]);
+        }
+
+        // -----------------------------------------------------------------
+        // isEditor: distinguishes dev runs from production player traffic
+        // -----------------------------------------------------------------
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void CollectGameLaunchProperties_IsEditor_ReflectsOverride(bool isEditor)
+        {
+            var props = DeviceCollector.CollectGameLaunchProperties(
+                isEditorOverride: isEditor);
+            Assert.AreEqual(isEditor, props["isEditor"]);
         }
     }
 }

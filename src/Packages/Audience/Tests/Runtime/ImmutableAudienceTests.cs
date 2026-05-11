@@ -1189,7 +1189,7 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.LaunchContextProvider = () => new Dictionary<string, object>
             {
-                ["platform"] = "WindowsPlayer",
+                ["platform"] = "Windows",
                 ["version"] = "1.2.3",
                 ["buildGuid"] = "a1b2c3d4e5f6",
                 ["unityVersion"] = "2022.3.20f1",
@@ -1203,7 +1203,7 @@ namespace Immutable.Audience.Tests
                 .Select(File.ReadAllText)
                 .FirstOrDefault(c => c.Contains("\"game_launch\""));
             Assert.IsNotNull(launchFile, "game_launch should have been enqueued");
-            StringAssert.Contains("\"platform\":\"WindowsPlayer\"", launchFile);
+            StringAssert.Contains("\"platform\":\"Windows\"", launchFile);
             StringAssert.Contains("\"version\":\"1.2.3\"", launchFile);
             StringAssert.Contains("\"buildGuid\":\"a1b2c3d4e5f6\"", launchFile);
             StringAssert.Contains("\"unityVersion\":\"2022.3.20f1\"", launchFile);
