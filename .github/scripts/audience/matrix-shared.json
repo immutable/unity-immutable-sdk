@@ -15,6 +15,7 @@
     { "target": "iOS",     "build_player_method": "IosBuilder.Build" }
   ],
   "pr_exclude": [
-    { "unity": { "version": "2022.3.62f2", "changeset": "7670c08855a9" } }
+    { "unity": "2022.3.62f2" },
+    { "unity": "6000.4.0f1", "platform": "StandaloneLinux64" }
   ]
 }

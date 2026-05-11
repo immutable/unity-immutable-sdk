@@ -26,9 +26,15 @@ env:
   AUDIENCE_TEST_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
 
 jobs:
-  # SSOT for the unity matrix and the PR-only Unity 2022 exclude. Both
-  # playmode and mobile-build consume these outputs via fromJSON. Source
-  # data lives in .github/scripts/audience/matrix-shared.json.
+  # SSOT for the unity matrix and PR-only excludes. Both playmode and
+  # mobile-build consume these outputs via fromJSON. Source data lives
+  # in .github/scripts/audience/matrix-shared.json.
+  #
+  # pr_exclude in the JSON is a list of partial-cell rules using stable
+  # identifiers (unity / platform / backend). The setup step below
+  # validates the rule shape, expands each rule against live matrix
+  # data into the literal exclude objects GitHub Actions matrix.exclude
+  # expects, and asserts each rule matched exactly one cell descriptor.
   setup:
     if: |
       (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false)
@@ -46,16 +52,61 @@ jobs:
       - id: set
         shell: bash
         run: |
+          set -euo pipefail
           f=.github/scripts/audience/matrix-shared.json
           for key in unity_versions scripting_backends desktop_targets mobile_targets; do
             echo "$key=$(jq -c ".$key" "$f")" >> "$GITHUB_OUTPUT"
           done
+
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            # Drop Unity 2022.3.62f2 for PRs. The full set runs on schedule and workflow_dispatch.
-            echo "pr_exclude=$(jq -c .pr_exclude "$f")" >> "$GITHUB_OUTPUT"
+            # Reject empty rules and unknown keys before expansion.
+            # An empty exclude object would make GitHub Actions skip every cell.
+            bad=$(jq -c '
+              ["unity","platform","backend"] as $allowed
+              | [ .pr_exclude
+                  | to_entries[]
+                  | .key as $i
+                  | .value as $rule
+                  | if ($rule | length) == 0 then
+                      { rule: $i, error: "empty rule" }
+                    else
+                      ($rule | keys[] | select(. as $k | $allowed | index($k) | not))
+                      | { rule: $i, unknown_key: . }
+                    end
+                ]
+            ' "$f")
+            if [[ "$bad" != "[]" ]]; then
+              echo "pr_exclude rule shape errors: $bad" >&2
+              echo "allowed keys: unity, platform, backend; each rule needs at least one" >&2
+              exit 1
+            fi
+
+            # Expand rules into full GitHub-Actions exclude objects by joining
+            # each identifier to its full matrix entry from this same file.
+            pr_exclude=$(jq -c '
+              . as $root
+              | [ .pr_exclude[] as $r
+                  | {}
+                  | (if $r.unity    then .unity    = ($root.unity_versions[]     | select(.version == $r.unity))    else . end)
+                  | (if $r.platform then .platform = ($root.desktop_targets[]    | select(.target  == $r.platform)) else . end)
+                  | (if $r.backend  then .backend  = ($root.scripting_backends[] | select(. == $r.backend))         else . end)
+                ]
+            ' "$f")
+
+            # Each rule must produce exactly one expanded object. A mismatch
+            # means a rule references an identifier that no longer exists.
+            rule_count=$(jq '.pr_exclude | length' "$f")
+            built_count=$(jq 'length' <<<"$pr_exclude")
+            if [[ "$rule_count" != "$built_count" ]]; then
+              echo "pr_exclude rule(s) matched no cells. rules=$rule_count built=$built_count" >&2
+              echo "rules:" >&2 && jq '.pr_exclude' "$f" >&2
+              echo "built:" >&2 && jq '.' <<<"$pr_exclude" >&2
+              exit 1
+            fi
           else
-            echo 'pr_exclude=[]' >> "$GITHUB_OUTPUT"
+            pr_exclude='[]'
           fi
+          echo "pr_exclude=$pr_exclude" >> "$GITHUB_OUTPUT"
 
   playmode:
     needs: setup
