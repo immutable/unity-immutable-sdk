@@ -70,6 +70,16 @@ namespace Immutable.Audience
         // layer; null in pure-C# environments and on non-Android platforms.
         internal static volatile Func<string?>? MobileInstallReferrerProvider;
 
+        // Returns the current iOS ATT status int (0=notDetermined, 1=restricted,
+        // 2=denied, 3=authorized). Used by tracking_authorization_changed detection
+        // on Init and OnResume. Set by the Unity layer on iOS; null elsewhere.
+        internal static volatile Func<int?>? MobileATTStatusProvider;
+
+        // Returns the IDFA string when ATT is authorized. Included in
+        // tracking_authorization_changed only when transitioning to authorized
+        // with Full consent. Set by the Unity layer on iOS; null elsewhere.
+        internal static volatile Func<string?>? MobileIDFAProvider;
+
         // Active session. Created at Init (or on upgrade from None) and disposed
         // on Shutdown or SetConsent(None). Volatile so OnPause/OnResume see
         // assignments from SetConsent without taking _initLock.
@@ -248,6 +258,8 @@ namespace Immutable.Audience
             }
 
             FireGameLaunch(config, consentAtInit, skanRegistered, attributionContext);
+
+            CheckAndFireAttStatusChanged(config, consentAtInit);
 
             // Fires once per install. installReferrer lands asynchronously
             // from Google Play Services; on the first launch the cache is
@@ -774,6 +786,11 @@ namespace Immutable.Audience
             if (status < 0 || status > 3)
                 return TrackingAuthorizationStatus.NotDetermined;
 
+            // Pass the resolved status directly to avoid a redundant native call.
+            var config = _config;
+            if (_initialized && config != null)
+                CheckAndFireAttStatusChanged(config, _state.Level, status);
+
             return (TrackingAuthorizationStatus)status;
         }
 
@@ -1181,6 +1198,80 @@ namespace Immutable.Audience
                 // less bad than never sending the event at all.
                 Log.Warn(AudienceLogs.InstallReferrerSentMarkerWriteFailed(ex));
             }
+        }
+
+        // Mirrors AttributionContext.AttStatusToString in the Unity layer; defined
+        // here so the Core assembly has no dependency on the Unity assembly.
+        private static string AttStatusToString(int status)
+        {
+            switch (status)
+            {
+                case 0: return "notDetermined";
+                case 1: return "restricted";
+                case 2: return "denied";
+                case 3: return "authorized";
+                default: return "unknown";
+            }
+        }
+
+        // Fires tracking_authorization_changed when the ATT status differs from
+        // the last-persisted observation. knownStatus skips the native re-read
+        // when the caller already has the resolved value (e.g. after
+        // RequestTrackingAuthorizationAsync resolves).
+        //
+        // First observation (no file): persists the baseline and returns without
+        // firing — game_launch already captures the initial state on that Init.
+        private static void CheckAndFireAttStatusChanged(
+            AudienceConfig config,
+            ConsentLevel consent,
+            int? knownStatus = null)
+        {
+            if (!config.EnableMobileAttribution) return;
+            if (!consent.CanTrack()) return;
+
+            int currentStatus;
+            if (knownStatus.HasValue)
+            {
+                currentStatus = knownStatus.Value;
+            }
+            else
+            {
+                var provider = MobileATTStatusProvider;
+                if (provider == null) return;
+                int? raw;
+                try { raw = provider(); }
+                catch (Exception ex) { Log.Warn(AudienceLogs.ATTStatusProviderThrew(ex)); return; }
+                if (!raw.HasValue) return;
+                currentStatus = raw.Value;
+            }
+
+            var previous = AttStatusStore.Load(config.PersistentDataPath!);
+
+            if (previous == currentStatus) return;
+
+            AttStatusStore.Save(config.PersistentDataPath!, currentStatus);
+
+            if (!previous.HasValue)
+                return; // first observation: no transition to report
+
+            var props = new Dictionary<string, object>
+            {
+                ["previousStatus"] = AttStatusToString(previous.Value),
+                ["newStatus"] = AttStatusToString(currentStatus),
+            };
+
+            if (currentStatus == 3 && consent.CanIdentify())
+            {
+                try
+                {
+                    var idfa = MobileIDFAProvider?.Invoke();
+                    if (!string.IsNullOrEmpty(idfa))
+                        props["idfa"] = idfa!;
+                }
+                catch (Exception ex) { Log.Warn(AudienceLogs.ATTIDFAProviderThrew(ex)); }
+            }
+
+            Track("tracking_authorization_changed", props);
         }
     }
 }
