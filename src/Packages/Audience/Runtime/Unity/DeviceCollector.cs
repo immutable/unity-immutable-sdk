@@ -47,12 +47,15 @@ namespace Immutable.Audience.Unity
         }
 
         internal static Dictionary<string, object> CollectGameLaunchProperties(
-            RuntimePlatform? platformOverride = null)
+            RuntimePlatform? platformOverride = null,
+            bool? isEditorOverride = null)
         {
             var platform = platformOverride ?? Application.platform;
+            var isEditor = isEditorOverride ?? Application.isEditor;
             var props = new Dictionary<string, object>
             {
                 ["platform"] = PlatformName(platform),
+                ["isEditor"] = isEditor,
                 ["version"] = Truncate(Application.version, 256),
                 ["buildGuid"] = Truncate(Application.buildGUID, 256),
                 ["unityVersion"] = Truncate(Application.unityVersion, 256),
@@ -106,7 +109,11 @@ namespace Immutable.Audience.Unity
 
         private static string PlatformName(RuntimePlatform platform) => platform switch
         {
+            RuntimePlatform.WindowsPlayer or RuntimePlatform.WindowsEditor => "Windows",
+            RuntimePlatform.OSXPlayer or RuntimePlatform.OSXEditor => "macOS",
+            RuntimePlatform.LinuxPlayer or RuntimePlatform.LinuxEditor => "Linux",
             RuntimePlatform.IPhonePlayer => "iOS",
+            RuntimePlatform.Android => "Android",
             _ => platform.ToString(),
         };
 
