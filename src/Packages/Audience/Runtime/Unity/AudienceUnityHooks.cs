@@ -35,7 +35,7 @@ namespace Immutable.Audience.Unity
             ImmutableAudience.LaunchContextProvider = () => launchProps;
             ImmutableAudience.ContextProvider = () => contextProps;
 
-#if UNITY_IOS && !UNITY_EDITOR
+#if UNITY_IOS && !UNITY_EDITOR && AUDIENCE_MOBILE_ATTRIBUTION
             ImmutableAudience.MobileAttributionProvider = () => SkanRegistration.RegisterIfFirstLaunch();
             ImmutableAudience.MobileAttributionContextProvider = () => AttributionContext.Capture();
             ImmutableAudience.TrackingAuthorizationRequestProvider = () => ATTBridge.RequestAsync();
