@@ -3,22 +3,30 @@ name: "Update SDK version"
 on:
   workflow_dispatch:
     inputs:
+      package:
+        type: choice
+        description: Package to release
+        options:
+          - passport
+          - audience
+        required: true
+        default: passport
       upgrade_type:
         type: choice
         description: Upgrade Type
         options:
           - patch
           - minor
-          # - major
         required: true
         default: patch
       mark_as_alpha:
         type: boolean
-        description: Mark as alpha release
+        description: Mark as alpha release (Passport only)
         required: false
         default: false
 
 env:
+  PACKAGE: ${{ github.event.inputs.package || 'passport' }}
   UPGRADE_TYPE: ${{ github.event.inputs.upgrade_type || 'patch' }}
   MARK_AS_ALPHA: ${{ github.event.inputs.mark_as_alpha || false }}
 
@@ -53,25 +61,42 @@ jobs:
     - name: Update Version in package.json
       id: replace_version
       run: |
-        PASSPORT_FILE=./src/Packages/Passport/package.json
-        MARKETPLACE_FILE=./src/Packages/Marketplace/package.json
-        
-        CURRENT_VERSION=$(jq -r '.version' $PASSPORT_FILE)
+        if [[ "$PACKAGE" == "audience" ]]; then
+          FILE=./src/Packages/Audience/package.json
+        else
+          FILE=./src/Packages/Passport/package.json
+        fi
+
+        CURRENT_VERSION=$(jq -r '.version' $FILE)
         echo "CURRENT_VERSION: $CURRENT_VERSION"
         IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
 
-        HAS_ALPHA=$(echo "$CURRENT_VERSION" | grep -q "\.alpha" && echo "true" || echo "false")
-        echo "HAS_ALPHA: $HAS_ALPHA"
         NEW_VERSION=""
 
-        if [[ "$HAS_ALPHA" == "true" ]]; then
-          # If version is alpha and upgrade type is patch, don't increment patch
-          if [ "$UPGRADE_TYPE" == "patch" ]; then
+        if [[ "$PACKAGE" == "passport" ]]; then
+          HAS_ALPHA=$(echo "$CURRENT_VERSION" | grep -q "\.alpha" && echo "true" || echo "false")
+          echo "HAS_ALPHA: $HAS_ALPHA"
+
+          if [[ "$HAS_ALPHA" == "true" ]]; then
+            if [ "$UPGRADE_TYPE" == "patch" ]; then
+              NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+            elif [ "$UPGRADE_TYPE" == "minor" ]; then
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+            fi
+          else
+            if [ "$UPGRADE_TYPE" == "patch" ]; then
+              PATCH=$((PATCH + 1))
+            elif [ "$UPGRADE_TYPE" == "minor" ]; then
+              MINOR=$((MINOR + 1))
+              PATCH=0
+            fi
             NEW_VERSION="$MAJOR.$MINOR.$PATCH"
-          elif [ "$UPGRADE_TYPE" == "minor" ]; then
-            MINOR=$((MINOR + 1))
-            PATCH=0
-            NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          fi
+
+          if [[ "$MARK_AS_ALPHA" == "true" && "$HAS_ALPHA" == "false" ]]; then
+            NEW_VERSION="$NEW_VERSION.alpha"
           fi
         else
           if [ "$UPGRADE_TYPE" == "patch" ]; then
@@ -83,20 +108,12 @@ jobs:
           NEW_VERSION="$MAJOR.$MINOR.$PATCH"
         fi
 
-        if [[ "$MARK_AS_ALPHA" == "true" && "$HAS_ALPHA" == "false" ]]; then
-          NEW_VERSION="$NEW_VERSION.alpha"
-        fi
-
-        # Update Passport package.json
-        jq --arg version "$NEW_VERSION" '.version = $version' $PASSPORT_FILE > tmp.$$.json && mv tmp.$$.json $PASSPORT_FILE
-        echo "Updated version in Passport package.json from $CURRENT_VERSION to $NEW_VERSION"
-
-        # Update Marketplace package.json
-        jq --arg version "$NEW_VERSION" '.version = $version' $MARKETPLACE_FILE > tmp.$$.json && mv tmp.$$.json $MARKETPLACE_FILE
-        echo "Updated version in Marketplace package.json from $CURRENT_VERSION to $NEW_VERSION"
+        jq --arg version "$NEW_VERSION" '.version = $version' $FILE > tmp.$$.json && mv tmp.$$.json $FILE
+        echo "Updated version in $FILE from $CURRENT_VERSION to $NEW_VERSION"
         echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
 
     - name: Update SDK Version in SdkVersionInfoHelpers.cs
+      if: env.PACKAGE == 'passport'
       id: replace_engine_sdk_version
       run: |
         FILE=./src/Packages/Passport/Runtime/Scripts/Private/Helpers/SdkVersionInfoHelpers.cs
@@ -105,31 +122,37 @@ jobs:
         echo "Updated SDK version in SdkVersionInfoHelpers.cs to $NEW_VERSION"
 
     - name: Ensure Samples~/SamplesScenesScripts directory exists and clear contents
+      if: env.PACKAGE == 'passport'
       run: |
         mkdir -p ./src/Packages/Passport/Samples~/SamplesScenesScripts
         rm -rf ./src/Packages/Passport/Samples~/SamplesScenesScripts/*
 
-        mkdir -p ./src/Packages/Marketplace/Samples~/SamplesScenesScripts
-        rm -rf ./src/Packages/Marketplace/Samples~/SamplesScenesScripts/*
-
     - name: Install rsync
+      if: env.PACKAGE == 'passport'
       run: sudo apt-get install -y rsync
 
     - name: Copy sample scenes and scripts to Passport package Samples~
+      if: env.PACKAGE == 'passport'
       id: copy_sample_scenes_and_scripts
       run: |
         rsync -av --exclude='*.meta' ./examples/passport/Assets/Scenes/Passport ./src/Packages/Passport/Samples~/SamplesScenesScripts/Scenes/
         rsync -av --exclude='*.meta' --exclude='features.json' --exclude='_prompts~/' --exclude='_tutorials~/' ./examples/passport/Assets/Scripts/Passport ./src/Packages/Passport/Samples~/SamplesScenesScripts/Scripts/
 
-        rsync -av --exclude='*.meta' ./examples/passport/Assets/Scenes/Marketplace ./src/Packages/Marketplace/Samples~/SamplesScenesScripts/Scenes/
-        rsync -av --exclude='*.meta' ./examples/passport/Assets/Scripts/Marketplace ./src/Packages/Marketplace/Samples~/SamplesScenesScripts/Scripts/
+    - name: Set release label
+      id: set_label
+      run: |
+        if [[ "$PACKAGE" == "audience" ]]; then
+          echo "label=audience-release" >> "$GITHUB_OUTPUT"
+        else
+          echo "label=passport-release" >> "$GITHUB_OUTPUT"
+        fi
 
     - uses: gr2m/create-or-update-pull-request-action@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        title: "chore: update version"
-        body: "Update version in package.json"
-        branch: "chore/update-version-${{ steps.replace_version.outputs.version }}"
-        commit-message: "chore: update version"
-        labels: release
+        title: "chore: bump ${{ github.event.inputs.package }} to ${{ steps.replace_version.outputs.version }}"
+        body: "Bump ${{ github.event.inputs.package }} package version to ${{ steps.replace_version.outputs.version }}."
+        branch: "chore/bump-${{ github.event.inputs.package }}-${{ steps.replace_version.outputs.version }}"
+        commit-message: "chore: bump ${{ github.event.inputs.package }} to ${{ steps.replace_version.outputs.version }}"
+        labels: ${{ steps.set_label.outputs.label }}

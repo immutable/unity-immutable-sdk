@@ -2,16 +2,6 @@ name: Audience SDK PlayMode (IL2CPP + Mono)
 
 on:
   pull_request:
-    paths:
-      - 'src/Packages/Audience/Runtime/**'
-      - 'src/Packages/Audience/Tests/**'
-      - 'src/Packages/Audience/package.json'
-      - 'src/Packages/Audience/Directory.Build.props'
-      - 'src/Packages/Audience/link.xml'
-      - 'examples/audience/Assets/**'
-      - 'examples/audience/Packages/**'
-      - 'examples/audience/ProjectSettings/**'
-      - '.github/workflows/test-audience-sample-app.yml'
   schedule:
     # Weekly full-matrix run on the default branch. Saturday 14:00 UTC.
     - cron: '0 14 * * 6'
@@ -26,6 +16,30 @@ env:
   AUDIENCE_TEST_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
 
 jobs:
+  # Detects whether any Audience-relevant paths changed in this PR.
+  # schedule/workflow_dispatch always returns true to run the full matrix.
+  paths-changed:
+    runs-on: ubuntu-latest
+    outputs:
+      audience: ${{ steps.check.outputs.audience }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: check
+        run: |
+          if [[ "${{ github.event_name }}" != "pull_request" ]]; then
+            echo "audience=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git fetch origin ${{ github.base_ref }} --depth=1
+          if git diff --name-only origin/${{ github.base_ref }}...HEAD \
+              | grep -qE '^(src/Packages/Audience/|examples/audience/|\.github/workflows/test-audience-sample-app\.yml)'; then
+            echo "audience=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "audience=false" >> "$GITHUB_OUTPUT"
+          fi
+
   # SSOT for the unity matrix and PR-only excludes. Both playmode and
   # mobile-build consume these outputs via fromJSON. Source data lives
   # in .github/scripts/audience/matrix-shared.json.
@@ -36,8 +50,11 @@ jobs:
   # data into the literal exclude objects GitHub Actions matrix.exclude
   # expects, and asserts each rule matched exactly one cell descriptor.
   setup:
+    needs: paths-changed
     if: |
-      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false)
+      (github.event_name == 'pull_request'
+        && github.event.pull_request.head.repo.fork == false
+        && needs.paths-changed.outputs.audience == 'true')
       || github.event_name == 'schedule'
       || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
@@ -250,3 +267,22 @@ jobs:
           path: |
             examples/audience/Builds/Android/*.apk
             examples/audience/Logs/**
+
+  # Required check. Passes immediately when no Audience paths changed;
+  # fails if playmode or mobile-build tests failed or were cancelled.
+  ci-gate:
+    needs: [playmode, mobile-build]
+    if: always() && github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        run: |
+          PLAYMODE="${{ needs.playmode.result }}"
+          MOBILE="${{ needs.mobile-build.result }}"
+          if [[ "$PLAYMODE" == "failure" || "$PLAYMODE" == "cancelled" ]]; then
+            echo "::error::playmode tests $PLAYMODE" && exit 1
+          fi
+          if [[ "$MOBILE" == "failure" || "$MOBILE" == "cancelled" ]]; then
+            echo "::error::mobile-build $MOBILE" && exit 1
+          fi
+          echo "Gate passed (playmode=$PLAYMODE, mobile-build=$MOBILE)"
