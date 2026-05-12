@@ -19,7 +19,7 @@ namespace Immutable.Audience.Editor
     /// <c>AdSupport.framework</c> hosts <c>ASIdentifierManager</c> (the IDFA
     /// accessor). Without it linked, the runtime <c>NSClassFromString</c>
     /// lookup returns nil and the IDFA is silently dropped from
-    /// <c>game_launch</c> — the Info.plist key alone does not load this
+    /// <c>game_launch</c>. The Info.plist key alone does not load this
     /// framework. Linked as a required dep; the framework has shipped on
     /// every iOS release since 6.0.
     /// </para>
@@ -27,7 +27,7 @@ namespace Immutable.Audience.Editor
     /// <c>AppTrackingTransparency.framework</c> hosts <c>ATTrackingManager</c>.
     /// Unity often auto-links this when <c>NSUserTrackingUsageDescription</c>
     /// is present, but the auto-link heuristic is undocumented and
-    /// version-sensitive — an explicit weak link is immune to that drift and
+    /// version-sensitive. An explicit weak link is immune to that drift and
     /// keeps the binary loadable on iOS &lt; 14 (the runtime code already
     /// guards via <c>NSClassFromString</c>).
     /// </para>
@@ -40,7 +40,7 @@ namespace Immutable.Audience.Editor
     internal static class iOSFrameworkPostProcessor
     {
         // Runs just after the Info.plist post-processor (9050). Order is
-        // independent in practice — both edit different files — but keeping
+        // independent in practice (both edit different files), but keeping
         // them adjacent makes the build log obvious.
         internal const int CallbackOrder = 9051;
 
@@ -76,7 +76,7 @@ namespace Immutable.Audience.Editor
 #endif
         }
 
-        // Reads the iOS-target define list specifically — the post-processor
+        // Reads the iOS-target define list specifically. The post-processor
         // mutates iOS build output regardless of which target the editor is
         // currently focused on.
         private static bool AttributionDefineEnabled()

@@ -68,7 +68,7 @@ namespace Immutable.Audience
         ///    collected at runtime. Without the define, this setter is a
         ///    no-op.
         ///
-        /// Studios who set neither ship a clean binary — no AD_ID permission,
+        /// Studios who set neither ship a clean binary: no AD_ID permission,
         /// no native attribution code, <c>NSPrivacyTracking = false</c>.
         /// </remarks>
         public bool EnableMobileAttribution { get; set; } = false;

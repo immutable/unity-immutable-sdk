@@ -9,7 +9,7 @@ namespace Immutable.Audience.Unity.Mobile
 {
     internal static class IDFVBridge
     {
-        // Replaceable in tests — captures NativeImpl by default.
+        // Replaceable in tests; captures NativeImpl by default.
         internal static Func<string?> Impl = NativeImpl;
 
         internal static string? GetIDFV() => Impl();

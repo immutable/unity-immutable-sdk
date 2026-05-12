@@ -62,7 +62,7 @@ namespace Immutable.Audience.Editor
         /// <summary>
         /// Adds the attribution-specific privacy declarations to an existing
         /// (already Unity-merged) <c>PrivacyInfo.xcprivacy</c> plist root.
-        /// Idempotent — safe to call on a manifest that already has these entries.
+        /// Idempotent. Safe to call on a manifest that already has these entries.
         /// </summary>
         internal static void ApplyAttributionPrivacyEntries(PlistElementDict root)
         {

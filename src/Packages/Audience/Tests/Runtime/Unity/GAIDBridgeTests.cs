@@ -124,7 +124,7 @@ namespace Immutable.Audience.Tests
         public void EnsureFetchStarted_TerminalCacheExists_StillFetches()
         {
             // Unlike the install referrer (terminal once written), GAID can
-            // change (user reset) — we always refresh the cache for the next
+            // change (user reset), so we always refresh the cache for the next
             // launch even when a value already exists.
             GAIDBridge.WriteCacheEntry(_testDir, "stale-gaid", limitAdTracking: false);
 

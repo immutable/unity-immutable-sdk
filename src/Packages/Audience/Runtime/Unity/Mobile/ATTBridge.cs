@@ -47,7 +47,7 @@ namespace Immutable.Audience.Unity.Mobile
         // Hold a single delegate instance for the lifetime of the process. If
         // we passed a fresh delegate to each P/Invoke call, IL2CPP could GC
         // the wrapper before Apple's completion handler fires (which can be
-        // seconds or minutes later — the user may swipe the prompt away or
+        // seconds or minutes later. The user may swipe the prompt away or
         // background the app).
         private static readonly NativeStatusCallback _staticCallback = OnATTStatus;
 
@@ -60,7 +60,7 @@ namespace Immutable.Audience.Unity.Mobile
         // - MonoPInvokeCallback so IL2CPP emits the trampoline that lets
         //   native code call back into managed code.
         // - Preserve so managed-code stripping at High doesn't drop this
-        //   method (it has no managed callers — only the function pointer).
+        //   method (no managed callers; only the function pointer).
         // Without both, the await in RequestAsync never completes on a
         // shipping build with stripping enabled.
         [MonoPInvokeCallback(typeof(NativeStatusCallback))]

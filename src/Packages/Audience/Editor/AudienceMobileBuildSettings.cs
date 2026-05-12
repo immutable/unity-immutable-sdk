@@ -27,7 +27,7 @@ namespace Immutable.Audience.Editor
 
         [SerializeField]
         [Tooltip("Copy shown in the iOS App Tracking Transparency prompt. " +
-                 "Apple rejects empty or generic strings — describe what is " +
+                 "Apple rejects empty or generic strings. Describe what is " +
                  "collected and why.")]
         private string trackingUsageDescription = DefaultTrackingUsageDescription;
 
@@ -64,7 +64,7 @@ namespace Immutable.Audience.Editor
             if (guids.Length > 1)
             {
                 Debug.LogWarning(
-                    $"[ImmutableAudience] Multiple AudienceMobileBuildSettings assets found — " +
+                    $"[ImmutableAudience] Multiple AudienceMobileBuildSettings assets found - " +
                     $"using '{path}'. Remove the duplicates to avoid unexpected build behaviour.");
             }
             return AssetDatabase.LoadAssetAtPath<AudienceMobileBuildSettings>(path);

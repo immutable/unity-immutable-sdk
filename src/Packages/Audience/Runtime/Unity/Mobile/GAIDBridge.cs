@@ -14,7 +14,7 @@ namespace Immutable.Audience.Unity.Mobile
     /// Reads gaid + limitAdTracking via AdvertisingIdClient. Google requires
     /// the call run off the main thread, so we dispatch on a dedicated worker
     /// and cache the result to disk for the next launch. GAID can change
-    /// (user reset), so we refresh every launch — first launch ships nothing,
+    /// (user reset), so we refresh every launch. First launch ships nothing;
     /// launch #2+ ships the previously-cached value.
     /// </summary>
     internal static class GAIDBridge
@@ -101,7 +101,7 @@ namespace Immutable.Audience.Unity.Mobile
         private static void StartFetchNative(string persistentDataPath)
         {
             // Dedicated Thread (not ThreadPool) so Attach/Detach pair on the
-            // same one-shot worker — ThreadPool reuse strands JVM state.
+            // same one-shot worker. ThreadPool reuse strands JVM state.
             var thread = new Thread(() => FetchOnWorkerThread(persistentDataPath))
             {
                 IsBackground = true,

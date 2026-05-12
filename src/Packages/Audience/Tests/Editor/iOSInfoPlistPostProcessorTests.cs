@@ -45,7 +45,7 @@ namespace Immutable.Audience.Editor.Tests
         [Test]
         public void ApplyTrackingUsageDescription_WithEmptyCopy_FallsBackToDefault()
         {
-            // Whitespace falls through to the default — Apple rejects empty.
+            // Whitespace falls through to the default. Apple rejects empty.
             var settings = ScriptableObject.CreateInstance<AudienceMobileBuildSettings>();
             SetPrivate(settings, "trackingUsageDescription", "   ");
 
@@ -61,7 +61,7 @@ namespace Immutable.Audience.Editor.Tests
         [Test]
         public void ApplyTrackingUsageDescription_OverwritesExistingValue()
         {
-            // Settings asset is the source of truth — beat any placeholder
+            // Settings asset is the source of truth. Beat any placeholder
             // a lower-order post-processor wrote.
             var root = new PlistDocument().root;
             root.SetString("NSUserTrackingUsageDescription", "stale placeholder");
