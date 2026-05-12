@@ -13,7 +13,7 @@
 # Keep Google Play Services AdvertisingIdClient symbols (GAID).
 #
 # AdvertisingIdClient and its inner Info class are reflected via JNI from
-# GAIDBridge — they have no managed-side reference for R8 to follow, so
+# GAIDBridge - they have no managed-side reference for R8 to follow, so
 # fullMode in studio projects can drop them. Defensive rules ensure the
 # getAdvertisingIdInfo / getId / isLimitAdTrackingEnabled surface survives.
 -keep class com.google.android.gms.ads.identifier.** { *; }

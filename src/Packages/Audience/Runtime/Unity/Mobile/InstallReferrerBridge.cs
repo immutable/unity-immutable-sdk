@@ -135,7 +135,7 @@ namespace Immutable.Audience.Unity.Mobile
             //
             // Each AndroidJavaClass / AndroidJavaObject holds a JNI global
             // reference; leaking them stranded a JNI handle every Init.
-            // `client` is the exception — ownership transfers to the
+            // `client` is the exception: ownership transfers to the
             // listener which disposes it in its endConnection finally.
             using (var unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
             using (var activity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity"))

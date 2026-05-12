@@ -58,7 +58,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void GetCachedInstallReferrer_EmptyFile_ReturnsNull()
         {
-            // Empty file marks "fetched, no referrer" — caller treats it as
+            // Empty file marks "fetched, no referrer". Caller treats it as
             // "nothing to emit" but EnsureFetchStarted treats it as terminal.
             InstallReferrerBridge.WriteCacheEntry(_testDir, string.Empty);
 
@@ -104,7 +104,7 @@ namespace Immutable.Audience.Tests
         public void EnsureFetchStarted_TerminalCacheExists_SkipsFetch()
         {
             // Simulate a previous launch that wrote a cache entry. The fetch
-            // must NOT run again — Google's referrer is stable per install.
+            // must NOT run again. Google's referrer is stable per install.
             InstallReferrerBridge.WriteCacheEntry(_testDir, "utm_source=test");
 
             var fetchCalls = 0;
@@ -118,7 +118,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void EnsureFetchStarted_EmptyCacheExists_SkipsFetch()
         {
-            // Empty cache = "fetched, no referrer" — terminal state, no retry.
+            // Empty cache = "fetched, no referrer": terminal state, no retry.
             InstallReferrerBridge.WriteCacheEntry(_testDir, string.Empty);
 
             var fetchCalls = 0;

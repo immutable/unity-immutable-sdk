@@ -14,7 +14,7 @@ namespace Immutable.Audience.Unity.Mobile
     // Android: gaid + gaidLimitAdTracking are read from the GAIDBridge disk
     // cache populated by the previous launch's background fetch (Google's
     // AdvertisingIdClient is sync + must run off main thread, so first launch
-    // ships nothing — gaidLimitAdTracking shows up on launch #2 onwards).
+    // ships nothing; gaidLimitAdTracking shows up on launch #2 onwards).
     internal static class AttributionContext
     {
         // Maps Apple's ATTrackingManagerAuthorizationStatus to the wire
@@ -33,7 +33,7 @@ namespace Immutable.Audience.Unity.Mobile
         }
 
         // persistentDataPath is required for Android (GAID disk cache); iOS
-        // ignores it. Returns a possibly-empty dict — never null — so callers
+        // ignores it. Returns a possibly-empty dict (never null) so callers
         // can merge unconditionally.
         internal static IReadOnlyDictionary<string, object> Capture(string? persistentDataPath = null)
         {

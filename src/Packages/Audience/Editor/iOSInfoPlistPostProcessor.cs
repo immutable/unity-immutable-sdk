@@ -18,7 +18,7 @@ namespace Immutable.Audience.Editor
     /// <remarks>
     /// Both keys are gated by the <c>AUDIENCE_MOBILE_ATTRIBUTION</c>
     /// scripting define so a studio that hasn't opted into attribution
-    /// ships a clean <c>Info.plist</c> — Apple flags apps that include
+    /// ships a clean <c>Info.plist</c>. Apple flags apps that include
     /// either key without the corresponding code paths.
     ///
     /// Values come from the <see cref="AudienceMobileBuildSettings"/>
@@ -88,11 +88,11 @@ namespace Immutable.Audience.Editor
                 $"  NSUserTrackingUsageDescription: {description}\n" +
                 $"  SKAdNetworkItems: {ids.Length} id(s)\n" +
                 (ids.Length == 0
-                    ? "  (no SKAdNetwork ids configured — set them on the AudienceMobileBuildSettings asset)\n"
+                    ? "  (no SKAdNetwork ids configured - set them on the AudienceMobileBuildSettings asset)\n"
                     : string.Concat(System.Array.ConvertAll(ids, id => $"    - {id}\n"))));
         }
 
-        // Reads the iOS-target define list specifically — the post-processor
+        // Reads the iOS-target define list specifically. The post-processor
         // mutates iOS build output regardless of which target the editor is
         // currently focused on.
         private static bool AttributionDefineEnabled()
@@ -114,7 +114,7 @@ namespace Immutable.Audience.Editor
                 ? settings.TrackingUsageDescription
                 : AudienceMobileBuildSettings.DefaultTrackingUsageDescription;
 
-            // Always overwrite — the settings asset is the source of truth,
+            // Always overwrite. The settings asset is the source of truth,
             // beating any placeholder a lower-order post-processor wrote.
             root.SetString("NSUserTrackingUsageDescription", description);
         }

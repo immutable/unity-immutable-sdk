@@ -1524,7 +1524,7 @@ namespace Immutable.Audience.Tests
         //
         // Dedicated event (not a game_launch property): install attribution
         // is install-level state, decoupled from launch / session lifecycles.
-        // Fires once per install — cache landing late on first launch is
+        // Fires once per install. Cache landing late on first launch is
         // recovered by the next Init via the on-disk "sent" marker.
         // -----------------------------------------------------------------
 
@@ -1561,7 +1561,7 @@ namespace Immutable.Audience.Tests
                 .Select(File.ReadAllText)
                 .First(c => c.Contains("\"game_launch\""));
             Assert.IsFalse(launchFile.Contains("installReferrer"),
-                "game_launch must never carry installReferrer — it ships on its own event");
+                "game_launch must never carry installReferrer; it ships on its own event");
         }
 
         [Test]
@@ -1585,7 +1585,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Init_DoesNotFireInstallReferrerReceived_WhenProviderReturnsEmpty()
         {
-            // Empty cache file marks "fetched, no referrer" — bridge maps
+            // Empty cache file marks "fetched, no referrer". Bridge maps
             // that to null on read, but defend the contract here too.
             ImmutableAudience.MobileInstallReferrerProvider = () => string.Empty;
             var config = MakeConfig();
@@ -1766,7 +1766,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public async Task RequestTrackingAuthorization_NoProvider_ReturnsNotDetermined()
         {
-            // No provider set — non-iOS environment.
+            // No provider set (non-iOS environment).
             var status = await ImmutableAudience.RequestTrackingAuthorizationAsync();
             Assert.AreEqual(TrackingAuthorizationStatus.NotDetermined, status);
         }

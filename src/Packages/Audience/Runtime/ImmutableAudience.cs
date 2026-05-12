@@ -742,7 +742,7 @@ namespace Immutable.Audience
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Studios decide when to show the prompt — Apple's HIG requires it
+        /// Studios decide when to show the prompt. Apple's HIG requires it
         /// to fire at a moment that makes the value to the player obvious,
         /// not at SDK Init. The IDFA, when authorized, is collected
         /// automatically on the next <see cref="ImmutableAudience.Init"/> via
@@ -751,7 +751,7 @@ namespace Immutable.Audience
         /// </para>
         /// <para>
         /// Resolves to <see cref="TrackingAuthorizationStatus.NotDetermined"/>
-        /// in three distinct cases — callers who use this signal to decide
+        /// in three distinct cases. Callers who use this signal to decide
         /// whether to retry should consult the SDK log to disambiguate:
         /// </para>
         /// <list type="bullet">
@@ -1148,7 +1148,7 @@ namespace Immutable.Audience
             if (skanRegistered == true)
                 properties["skanRegistered"] = true;
 
-            // iOS ATT/IDFA snapshot — merged after Unity context so attribution
+            // iOS ATT/IDFA snapshot, merged after Unity context so attribution
             // keys are authoritative if both sources happen to set the same key.
             // idfa and gaid are cross-app device identifiers, same privacy class
             // as userId; gate them at Full-only. State-class keys (attStatus,
@@ -1170,7 +1170,7 @@ namespace Immutable.Audience
         }
 
         // Fires install_referrer_received exactly once per install. Cache
-        // file presence alone isn't enough — on first launch the bridge may
+        // file presence alone isn't enough. On first launch the bridge may
         // write the cache after Init has already run, so the event must be
         // dispatched at the next Init that observes a cache hit. The on-disk
         // "sent" marker provides idempotency across that boundary.
@@ -1193,7 +1193,7 @@ namespace Immutable.Audience
             }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
             {
-                // Marker write failed — the event will re-fire on the next
+                // Marker write failed. The event will re-fire on the next
                 // launch. Pipeline-side dedup or the cost of one duplicate is
                 // less bad than never sending the event at all.
                 Log.Warn(AudienceLogs.InstallReferrerSentMarkerWriteFailed(ex));
@@ -1220,7 +1220,7 @@ namespace Immutable.Audience
         // RequestTrackingAuthorizationAsync resolves).
         //
         // First observation (no file): persists the baseline and returns without
-        // firing — game_launch already captures the initial state on that Init.
+        // firing. game_launch already captures the initial state on that Init.
         private static void CheckAndFireAttStatusChanged(
             AudienceConfig config,
             ConsentLevel consent,
