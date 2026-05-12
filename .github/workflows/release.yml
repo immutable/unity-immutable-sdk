@@ -22,8 +22,13 @@ jobs:
       - name: Get the latest tag
         run: |
           git fetch --tags
-          LATEST_TAG="$(git describe --tags "$(git rev-list --tags --max-count=1)")"
+          LATEST_TAG="$(git tag --sort=-creatordate | head -n 1)"
           echo "LATEST_TAG=${LATEST_TAG}" >> "$GITHUB_ENV"
+          if [[ "$LATEST_TAG" == audience/* ]]; then
+            echo "IS_AUDIENCE=true" >> "$GITHUB_ENV"
+          else
+            echo "IS_AUDIENCE=false" >> "$GITHUB_ENV"
+          fi
 
       - name: Pull LFS
         run: git lfs pull
@@ -62,6 +67,7 @@ jobs:
             }
 
       - name: Extract TS SDK version from index.html
+        if: env.IS_AUDIENCE != 'true'
         id: extract_ts_sdk_version
         run: |
           version=$(grep -oP '"x-sdk-version":"ts-immutable-sdk-\K[0-9]+\.[0-9]+\.[0-9]+' ./src/Packages/Passport/Runtime/Resources/index.html | head -n 1)
@@ -73,7 +79,15 @@ jobs:
 
           version=$(echo "$version" | tr -d '\r\n')
 
-          echo "VERSION=${version}" >> "$GITHUB_ENV"
+          echo "TS_SDK_VERSION=${version}" >> "$GITHUB_ENV"
+
+      - name: Build release body suffix
+        run: |
+          if [[ "$IS_AUDIENCE" != "true" && -n "$TS_SDK_VERSION" ]]; then
+            echo "RELEASE_BODY_SUFFIX=Game bridge built from Immutable Typescript SDK version $TS_SDK_VERSION" >> "$GITHUB_ENV"
+          else
+            echo "RELEASE_BODY_SUFFIX=" >> "$GITHUB_ENV"
+          fi
 
       - name: Create Release
         id: create_release
@@ -86,6 +100,6 @@ jobs:
           body: |
             ${{steps.github_release.outputs.changelog}}
 
-            Game bridge built from Immutable Typescript SDK version ${{ env.VERSION }}
+            ${{ env.RELEASE_BODY_SUFFIX }}
           draft: false
           prerelease: false

@@ -4,18 +4,27 @@ set -x
 
 USER=$1
 
-response=$(gh api \
-  -H "Accept: application/vnd.github+json" \
-  -H "X-GitHub-Api-Version: 2022-11-28" \
-  "/orgs/immutable/teams/passport/memberships/${USER}")
+TEAMS=(
+  "ped-stream-sdk-integrations-list"
+  "ped-stream-blockchain-services-list"
+)
 
-echo "$response"
+IS_MEMBER=false
 
-if echo "$response" | grep -q '"state":"active"'; then
-  IS_MEMBER=true
-else
-  IS_MEMBER=false
-fi
+for TEAM in "${TEAMS[@]}"; do
+  response=$(gh api \
+    -H "Accept: application/vnd.github+json" \
+    -H "X-GitHub-Api-Version: 2022-11-28" \
+    "/orgs/immutable/teams/${TEAM}/memberships/${USER}")
+
+  echo "$response"
+
+  if echo "$response" | grep -q '"state":"active"'; then
+    IS_MEMBER=true
+    break
+  fi
+done
+
 echo "$IS_MEMBER"
 
 # Set the environment variable for the GitHub workflow
