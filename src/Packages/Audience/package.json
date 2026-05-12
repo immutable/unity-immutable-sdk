@@ -1,10 +1,18 @@
 {
   "name": "com.immutable.audience",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Immutable Audience SDK for Unity.",
   "displayName": "Immutable Audience",
-  "author": {"name": "Immutable", "url": "https://immutable.com"},
-  "keywords": ["unity", "immutable", "audience", "analytics"],
+  "author": {
+    "name": "Immutable",
+    "url": "https://immutable.com"
+  },
+  "keywords": [
+    "unity",
+    "immutable",
+    "audience",
+    "analytics"
+  ],
   "unity": "2021.3",
   "documentationUrl": "https://docs.immutable.com/docs/products/audience/unity-sdk",
   "licensesUrl": "https://github.com/immutable/unity-immutable-sdk/blob/main/LICENSE.md"
