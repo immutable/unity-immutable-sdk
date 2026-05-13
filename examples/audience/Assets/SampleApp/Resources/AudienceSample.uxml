@@ -3,9 +3,6 @@
 
     <ui:VisualElement name="root" class="root">
 
-        <ui:Label name="prod-warning" class="prod-warning hidden"
-                  text="⚠ USING PROD ENDPOINT — ACTIONS HERE AFFECT PROD DATA ⚠" />
-
         <ui:VisualElement name="sticky-outer" class="sticky-outer">
             <ui:VisualElement class="sticky-top-main">
 
@@ -78,7 +75,7 @@
                         <ui:VisualElement class="field placeholder-host">
                             <ui:Label class="field-label" text="PUBLISHABLE KEY" />
                             <ui:TextField name="publishable-key" />
-                            <ui:Label class="field-placeholder" text="pk_imapik-test-yourkey" />
+                            <ui:Label class="field-placeholder" text="pk_imapik-yourkey" />
                         </ui:VisualElement>
 
                         <ui:VisualElement class="field">
@@ -97,6 +94,12 @@
                             <ui:Toggle name="debug" label="DEBUG" value="true" />
                             <ui:Label class="helper-text below-field"
                                      text="Mirror SDK internal log output into the in-page event log below." />
+                        </ui:VisualElement>
+
+                        <ui:VisualElement class="field">
+                            <ui:Toggle name="test-mode" label="TEST MODE" value="true" />
+                            <ui:Label class="helper-text below-field"
+                                     text="Tags all outbound events with test: true so the backend can filter them from production analytics." />
                         </ui:VisualElement>
 
                         <ui:VisualElement name="mobile-attribution-field" class="field">
@@ -120,7 +123,7 @@
                             <ui:TextField name="base-url" />
                             <ui:Label class="field-placeholder" text="(derived from key)" />
                             <ui:Label class="helper-text below-field"
-                                     text="Bypass the SDK's prefix-based routing and target a specific backend. Leave empty to derive from the publishable key." />
+                                     text="Target a specific backend. Leave empty to use the production endpoint." />
                         </ui:VisualElement>
 
                         <ui:VisualElement class="advanced-grid">

@@ -19,9 +19,9 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         // Scene asset name registered in EditorBuildSettings.
         internal const string SceneName = "SampleApp";
 
-        // The env var that carries the sandbox publishable key into the
-        // built player at test time. Test runs inject it on the Unity CLI;
-        // CI wires it from the AUDIENCE_TEST_PUBLISHABLE_KEY repo secret.
+        // The env var that carries the publishable key into the built player at
+        // test time. Test runs inject it on the Unity CLI; CI wires it from
+        // the AUDIENCE_TEST_PUBLISHABLE_KEY repo secret.
         internal const string EnvKey = "AUDIENCE_TEST_PUBLISHABLE_KEY";
 
         // Mirrors AudiencePaths.RootDirName — the SDK persists consent /
@@ -29,8 +29,8 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         // wipes this between tests so on-disk state can't leak.
         internal const string SdkPersistedDirName = "imtbl_audience";
 
-        // Mirrors Constants.SandboxBaseUrl — used by the BaseUrl-override test.
-        internal const string SandboxBaseUrl = "https://api.sandbox.immutable.com";
+        // Used by the BaseUrl-override test to exercise the explicit-target code path.
+        internal const string ExplicitBaseUrl = "https://api.immutable.com";
 
         // ---- UXML element names ----
         // All names verified against examples/audience/Assets/SampleApp/Resources/AudienceSample.uxml.
@@ -41,6 +41,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
             internal const string InitialConsent = "initial-consent";
             internal const string BaseUrl = "base-url";
             internal const string Debug = "debug";
+            internal const string TestMode = "test-mode";
             internal const string FlushInterval = "flush-interval";
             internal const string FlushSize = "flush-size";
         }
@@ -126,10 +127,6 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         // it as `root.Q<ScrollView>(SampleAppUi.LogScrollView)`.
         internal const string LogScrollView = "log";
 
-        // The banner that warns when the publishable key looks like a prod
-        // key. Toggled via the "hidden" CSS class.
-        internal const string ProdWarning = "prod-warning";
-
         // Mirrors AudienceSample.UI.cs PopulateTypedEventAccordions naming:
         //   input.name = $"typed-{spec.Name.Replace('_', '-')}-{field.Key.ToLowerInvariant().Replace('_', '-')}";
         internal static string TypedEventField(string specName, string fieldKey) =>
@@ -140,9 +137,6 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         // Toggled by ActivateTab on tab buttons + panels, by RefreshConsentPills
         // on consent buttons, etc.
         internal const string ActiveClass = "active";
-
-        // Toggled by RefreshStatusBar on the prod-warning banner.
-        internal const string HiddenClass = "hidden";
 
         // ---- Log labels ----
         // Mirrors AudienceSample.cs: every RunAndLog(label, ...) and

@@ -21,11 +21,18 @@ namespace Immutable.Audience
         /// Override the default API base URL.
         /// </summary>
         /// <remarks>
-        /// When null, publishable keys starting with <c>pk_imapik-test-</c>
-        /// resolve to Sandbox. All other keys resolve to Production. Set
-        /// explicitly to target a different backend.
+        /// When null, all events are sent to the production backend. Set
+        /// explicitly to target a different backend (e.g. an internal dev
+        /// environment).
         /// </remarks>
         public string? BaseUrl { get; set; }
+
+        /// <summary>
+        /// Enables test mode. When <c>true</c>, all events are tagged with
+        /// <c>test: true</c> so the backend can filter them from production
+        /// analytics. Default <c>false</c>.
+        /// </summary>
+        public bool TestMode { get; set; } = false;
 
         /// <summary>
         /// Initial consent level.

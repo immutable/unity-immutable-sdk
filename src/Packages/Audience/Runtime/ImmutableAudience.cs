@@ -195,8 +195,6 @@ namespace Immutable.Audience
                     return;
                 }
 
-                WarnIfKeyEnvironmentMismatch(config.PublishableKey, config.BaseUrl);
-
                 _config = config;
                 Log.Enabled = config.Debug;
                 // Persisted consent overrides the config default (prior downgrade survives restart).
@@ -332,7 +330,7 @@ namespace Immutable.Audience
             var anonymousId = Identity.GetOrCreate(config.PersistentDataPath!, state.Level);
             // ToProperties returns a fresh dict per call, so no snapshot needed.
             var userId = state.Level == ConsentLevel.Full ? state.UserId : null;
-            var msg = MessageBuilder.Track(eventName, anonymousId, userId, config.PackageVersion, properties);
+            var msg = MessageBuilder.Track(eventName, anonymousId, userId, config.PackageVersion, properties, config.TestMode);
             EnqueueTrack(msg);
         }
 
@@ -359,7 +357,7 @@ namespace Immutable.Audience
             var anonymousId = Identity.GetOrCreate(config.PersistentDataPath!, state.Level);
             var userId = state.Level == ConsentLevel.Full ? state.UserId : null;
             var msg = MessageBuilder.Track(eventName, anonymousId, userId, config.PackageVersion,
-                SnapshotCallerDict(properties));
+                SnapshotCallerDict(properties), config.TestMode);
             EnqueueTrack(msg);
         }
 
@@ -405,7 +403,7 @@ namespace Immutable.Audience
 
             var anonymousId = Identity.GetOrCreate(config.PersistentDataPath!, level);
             var msg = MessageBuilder.Identify(anonymousId, userId, identityType.ToLowercaseString(),
-                config.PackageVersion, SnapshotCallerDict(traits));
+                config.PackageVersion, SnapshotCallerDict(traits), config.TestMode);
             EnqueueIdentity(msg);
         }
 
@@ -436,7 +434,7 @@ namespace Immutable.Audience
             if (config == null) return;
 
             var msg = MessageBuilder.Alias(fromId, fromType.ToLowercaseString(), toId, toType.ToLowercaseString(),
-                config.PackageVersion);
+                config.PackageVersion, config.TestMode);
             EnqueueIdentity(msg);
         }
 
@@ -511,7 +509,7 @@ namespace Immutable.Audience
                 query = "anonymousId=" + Uri.EscapeDataString(anonymousId);
             }
 
-            var url = Constants.DataUrl(config.PublishableKey, config.BaseUrl) + "?" + query;
+            var url = Constants.DataUrl(config.BaseUrl) + "?" + query;
             var onError = config.OnError;
             var publishableKey = config.PublishableKey;
             var cancellationToken = _shutdownCancellationSource?.Token ?? CancellationToken.None;
@@ -675,7 +673,7 @@ namespace Immutable.Audience
             var client = _controlClient;
             if (client == null) return;
 
-            var url = Constants.ConsentUrl(config.PublishableKey, config.BaseUrl);
+            var url = Constants.ConsentUrl(config.BaseUrl);
             var publishableKey = config.PublishableKey;
             var onError = config.OnError;
             var cancellationToken = _shutdownCancellationSource?.Token ?? CancellationToken.None;
@@ -984,25 +982,6 @@ namespace Immutable.Audience
         // Shallow-copy the caller's dict so a post-call mutation cannot race the drain-thread serialiser.
         private static Dictionary<string, object>? SnapshotCallerDict(Dictionary<string, object>? src) =>
             src != null ? new Dictionary<string, object>(src) : null;
-
-        // Only the exact production/sandbox swap is flagged; custom dev/staging
-        // URLs are intentional and left alone.
-        private static void WarnIfKeyEnvironmentMismatch(string publishableKey, string? baseUrlOverride)
-        {
-            if (string.IsNullOrEmpty(baseUrlOverride)) return;
-
-            var trimmed = baseUrlOverride!.TrimEnd('/');
-            var isTestKey = publishableKey.StartsWith(Constants.TestKeyPrefix);
-
-            if (isTestKey && trimmed == Constants.ProductionBaseUrl)
-            {
-                Log.Warn(AudienceLogs.TestKeyAgainstProduction);
-            }
-            else if (!isTestKey && trimmed == Constants.SandboxBaseUrl)
-            {
-                Log.Warn(AudienceLogs.NonTestKeyAgainstSandbox);
-            }
-        }
 
         // Checks the current consent inside the drain lock. If consent has
         // since dropped to None the message is discarded. If it dropped to

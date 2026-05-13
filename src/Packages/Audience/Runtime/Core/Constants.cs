@@ -4,8 +4,6 @@ namespace Immutable.Audience
 {
     internal static class Constants
     {
-        internal const string TestKeyPrefix = "pk_imapik-test-";
-        internal const string SandboxBaseUrl = "https://api.sandbox.immutable.com";
         internal const string ProductionBaseUrl = "https://api.immutable.com";
 
         internal const string MessagesPath = "/v1/audience/messages";
@@ -26,21 +24,17 @@ namespace Immutable.Audience
 
         internal const string PublishableKeyHeader = "x-immutable-publishable-key";
 
-        internal static string MessagesUrl(string? publishableKey, string? baseUrlOverride = null) =>
-            BaseUrl(publishableKey, baseUrlOverride) + MessagesPath;
-        internal static string ConsentUrl(string? publishableKey, string? baseUrlOverride = null) =>
-            BaseUrl(publishableKey, baseUrlOverride) + ConsentPath;
-        internal static string DataUrl(string? publishableKey, string? baseUrlOverride = null) =>
-            BaseUrl(publishableKey, baseUrlOverride) + DataPath;
+        internal static string MessagesUrl(string? baseUrlOverride = null) =>
+            BaseUrl(baseUrlOverride) + MessagesPath;
+        internal static string ConsentUrl(string? baseUrlOverride = null) =>
+            BaseUrl(baseUrlOverride) + ConsentPath;
+        internal static string DataUrl(string? baseUrlOverride = null) =>
+            BaseUrl(baseUrlOverride) + DataPath;
 
-        // Override wins when non-empty; otherwise test keys map to Sandbox
-        // and every other key maps to Production. Matches @imtbl/audience.
-        internal static string BaseUrl(string? publishableKey, string? baseUrlOverride = null)
+        internal static string BaseUrl(string? baseUrlOverride = null)
         {
             if (!string.IsNullOrEmpty(baseUrlOverride)) return baseUrlOverride!;
-            return publishableKey != null && publishableKey.StartsWith(TestKeyPrefix)
-                ? SandboxBaseUrl
-                : ProductionBaseUrl;
+            return ProductionBaseUrl;
         }
     }
 
