@@ -51,6 +51,7 @@ namespace Immutable.Audience.Samples.SampleApp
         // ---- UXML element fields (Setup tab) ----
 
         private TextField _publishableKey, _baseUrl, _flushInterval, _flushSize;
+        private Toggle _testMode;
         private DropdownField _initialConsent;
         private Toggle _debug, _enableMobileAttribution;
         private Button _btnInit, _btnFlush, _btnReset, _btnShutdown, _btnDeleteData, _btnRequestAtt;
@@ -75,7 +76,7 @@ namespace Immutable.Audience.Samples.SampleApp
         // ---- UXML element fields (Tabs + status bar + header) ----
 
         private readonly List<Button> _tabButtons = new List<Button>();
-        private Label _prodWarning, _sdkVersionLabel, _titleLabel;
+        private Label _sdkVersionLabel, _titleLabel;
         private Label _statusEndpoint, _statusConsent, _statusAnon, _statusUser, _statusSession, _statusQueue;
 
         // ---- UXML element fields (Log pane) ----
@@ -164,7 +165,7 @@ namespace Immutable.Audience.Samples.SampleApp
 
         private void BindElements()
         {
-            _prodWarning      = Require<Label>("prod-warning");
+
             _sdkVersionLabel  = Require<Label>("sdk-version");
             _titleLabel       = _root.Q<Label>(className: "title");
 
@@ -181,17 +182,19 @@ namespace Immutable.Audience.Samples.SampleApp
             _baseUrl        = Require<TextField>("base-url");
             _initialConsent = Require<DropdownField>("initial-consent");
             _debug                    = Require<Toggle>("debug");
+            _testMode                 = Require<Toggle>("test-mode");
             _enableMobileAttribution  = Require<Toggle>("enable-mobile-attribution");
             // Inject a tick Label — Unity 2021.3 runtime panels render the
             // checked state as a plain coloured square otherwise. USS hides
             // the tick when unchecked.
-            var debugCheckmark = _debug.Q<VisualElement>(className: "unity-toggle__checkmark");
-            if (debugCheckmark != null)
+            foreach (var toggle in new[] { _debug, _testMode, _enableMobileAttribution })
             {
+                var checkmark = toggle.Q<VisualElement>(className: "unity-toggle__checkmark");
+                if (checkmark == null) continue;
                 var tick = new Label("✓");
                 tick.AddToClassList("debug-tick");
                 tick.pickingMode = PickingMode.Ignore;
-                debugCheckmark.Add(tick);
+                checkmark.Add(tick);
             }
             _flushInterval = Require<TextField>("flush-interval");
             _flushSize     = Require<TextField>("flush-size");
@@ -610,15 +613,9 @@ namespace Immutable.Audience.Samples.SampleApp
             var key = (_publishableKey.value ?? "").Trim();
             var overrideUrl = (_baseUrl?.value ?? "").Trim();
             bool keyEmpty = string.IsNullOrEmpty(key);
-            bool isTest = !keyEmpty && IsTestKey(key);
             bool hasOverride = !string.IsNullOrEmpty(overrideUrl);
-            // BaseUrl override skips prefix-based routing, so the prod-warning
-            // rule no longer applies (studio is in explicit-target mode).
-            string? derivedFromKey = keyEmpty ? null : (isTest ? Constants.SandboxBaseUrl : Constants.ProductionBaseUrl);
-            string? endpoint = hasOverride ? overrideUrl : derivedFromKey;
-            bool warnState = hasOverride || (!keyEmpty && !isTest);
-            SetStatusCell(_statusEndpoint, endpoint, warnState ? "state-warn" : "state-ok");
-            _prodWarning.EnableInClassList("hidden", hasOverride || keyEmpty || isTest);
+            string? endpoint = hasOverride ? overrideUrl : (keyEmpty ? null : Constants.ProductionBaseUrl);
+            SetStatusCell(_statusEndpoint, endpoint, hasOverride ? "state-warn" : "state-ok");
 
             var consent = _initialised ? ImmutableAudience.CurrentConsent : ConsentOrder[Mathf.Clamp(_initialConsent?.index ?? 0, 0, ConsentOrder.Length - 1)];
             int cIdx = Array.IndexOf(ConsentOrder, consent);
@@ -676,16 +673,18 @@ namespace Immutable.Audience.Samples.SampleApp
             public readonly string BaseUrl;
             public readonly ConsentLevel Consent;
             public readonly bool Debug;
+            public readonly bool TestMode;
             public readonly bool EnableMobileAttribution;
             public readonly int? FlushIntervalMs;
             public readonly int? FlushSize;
 
-            public InitForm(string publishableKey, string baseUrl, ConsentLevel consent, bool debug, bool enableMobileAttribution, int? flushIntervalMs, int? flushSize)
+            public InitForm(string publishableKey, string baseUrl, ConsentLevel consent, bool debug, bool testMode, bool enableMobileAttribution, int? flushIntervalMs, int? flushSize)
             {
                 PublishableKey = publishableKey;
                 BaseUrl = baseUrl;
                 Consent = consent;
                 Debug = debug;
+                TestMode = testMode;
                 EnableMobileAttribution = enableMobileAttribution;
                 FlushIntervalMs = flushIntervalMs;
                 FlushSize = flushSize;
@@ -702,6 +701,7 @@ namespace Immutable.Audience.Samples.SampleApp
                 baseUrl:                 (_baseUrl.value ?? "").Trim(),
                 consent:                 ConsentOrder[consentIdx],
                 debug:                   _debug.value,
+                testMode:                _testMode.value,
                 enableMobileAttribution: _enableMobileAttribution.value,
                 flushIntervalMs:         flushIntervalMs,
                 flushSize:               flushSize);
@@ -779,9 +779,6 @@ namespace Immutable.Audience.Samples.SampleApp
             return !string.IsNullOrEmpty(fromId) && !string.IsNullOrEmpty(toId)
                 && (fromId != toId || (_aliasFromType.value ?? "") != (_aliasToType.value ?? ""));
         }
-
-        private static bool IsTestKey(string? key) =>
-            !string.IsNullOrEmpty(key) && key!.StartsWith(Constants.TestKeyPrefix, StringComparison.Ordinal);
 
         private static void FlashCopied(VisualElement ve)
         {

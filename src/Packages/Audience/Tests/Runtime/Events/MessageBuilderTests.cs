@@ -156,6 +156,35 @@ namespace Immutable.Audience.Tests
             }
         }
 
+        [Test]
+        public void Track_TestModeTrue_IncludesTestFlag()
+        {
+            var result = MessageBuilder.Track("evt", null, null, PackageVersion, testMode: true);
+            Assert.IsTrue(result.ContainsKey("test"), "test field must be present when testMode is true");
+            Assert.AreEqual(true, result["test"]);
+        }
+
+        [Test]
+        public void Track_TestModeFalse_ExcludesTestFlag()
+        {
+            var result = MessageBuilder.Track("evt", null, null, PackageVersion, testMode: false);
+            Assert.IsFalse(result.ContainsKey("test"), "test field must not be present when testMode is false");
+        }
+
+        [Test]
+        public void AllMessages_TestModeTrue_AllIncludeTestFlag()
+        {
+            var track = MessageBuilder.Track("evt", null, null, PackageVersion, testMode: true);
+            var identify = MessageBuilder.Identify(null, "u1", "steam", PackageVersion, testMode: true);
+            var alias = MessageBuilder.Alias("f", "t1", "t", "t2", PackageVersion, testMode: true);
+
+            foreach (var msg in new[] { track, identify, alias })
+            {
+                Assert.IsTrue(msg.ContainsKey("test"), $"{msg["type"]} must include test field in test mode");
+                Assert.AreEqual(true, msg["test"]);
+            }
+        }
+
         private static IEnumerable<Dictionary<string, object>> EveryMessageType()
         {
             yield return MessageBuilder.Track("evt", null, null, PackageVersion);

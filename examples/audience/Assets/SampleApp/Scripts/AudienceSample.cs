@@ -331,9 +331,8 @@ namespace Immutable.Audience.Samples.SampleApp
         // ---- Config builders ----
 
         // Maps the captured Setup form to AudienceConfig. BaseUrl null → SDK
-        // derives the endpoint from the publishable key prefix (test → sandbox,
-        // else production). The flushInterval clamp emits a warn row when
-        // the user requests <1s.
+        // targets the production endpoint. The flushInterval clamp emits a warn
+        // row when the user requests <1s.
         private AudienceConfig BuildAudienceConfig(InitForm form, Action<AudienceError> onError)
         {
             var config = new AudienceConfig
@@ -342,6 +341,7 @@ namespace Immutable.Audience.Samples.SampleApp
                 BaseUrl                 = string.IsNullOrEmpty(form.BaseUrl) ? null : form.BaseUrl,
                 Consent                 = form.Consent,
                 Debug                   = form.Debug,
+                TestMode                = form.TestMode,
                 EnableMobileAttribution = form.EnableMobileAttribution,
                 OnError                 = onError,
             };
@@ -364,6 +364,7 @@ namespace Immutable.Audience.Samples.SampleApp
             {
                 ["consent"]                  = config.Consent.ToString(),
                 ["debug"]                    = config.Debug,
+                ["testMode"]                 = config.TestMode,
                 ["enableMobileAttribution"]  = config.EnableMobileAttribution,
                 ["flushIntervalSeconds"]     = config.FlushIntervalSeconds,
                 ["flushSize"]                = config.FlushSize,
@@ -377,7 +378,7 @@ namespace Immutable.Audience.Samples.SampleApp
             return echo;
         }
 
-        // Keeps the pk_imapik-test- / pk_imapik- prefix visible; masks the rest.
+        // Keeps the pk_imapik- prefix visible; masks the rest.
         // Caller must guard against null/empty; signature non-nullable so the
         // dictionary insertion in BuildInitConfigEcho doesn't trip CS8601.
         private static string RedactPublishableKey(string key)

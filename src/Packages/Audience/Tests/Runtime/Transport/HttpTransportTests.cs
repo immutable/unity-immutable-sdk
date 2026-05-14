@@ -125,21 +125,6 @@ namespace Immutable.Audience.Tests
 #endif
 
         [Test]
-        public async Task SendBatchAsync_200_UsesCorrectUrlForTestKey()
-        {
-            _store.Write("{\"type\":\"track\"}");
-
-            HttpRequestMessage? captured = null;
-            var handler = new MockHandler(HttpStatusCode.OK, "{\"accepted\":1,\"rejected\":0}",
-                onRequest: req => captured = req);
-            using var transport = new HttpTransport(_store, "pk_imapik-test-key1", handler: handler);
-
-            await transport.SendBatchAsync();
-
-            StringAssert.StartsWith(Constants.SandboxBaseUrl, captured!.RequestUri!.ToString());
-        }
-
-        [Test]
         public async Task SendBatchAsync_200_UsesCorrectUrlForProdKey()
         {
             _store.Write("{\"type\":\"track\"}");

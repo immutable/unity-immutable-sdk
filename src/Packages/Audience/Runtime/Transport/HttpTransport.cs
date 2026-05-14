@@ -41,7 +41,7 @@ namespace Immutable.Audience
         {
             _store = store ?? throw new ArgumentNullException(nameof(store));
             _publishableKey = publishableKey ?? throw new ArgumentNullException(nameof(publishableKey));
-            _url = Constants.MessagesUrl(publishableKey, baseUrlOverride);
+            _url = Constants.MessagesUrl(baseUrlOverride);
             _onError = onError;
             // disposeHandler: false so the consumer can reuse their handler
             // across Init/Shutdown cycles (matches _controlClient's policy).

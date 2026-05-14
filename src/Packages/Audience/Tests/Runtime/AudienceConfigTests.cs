@@ -37,5 +37,19 @@ namespace Immutable.Audience.Tests
             var config = new AudienceConfig { SKAdNetworkIds = ids };
             Assert.AreSame(ids, config.SKAdNetworkIds);
         }
+
+        [Test]
+        public void TestMode_DefaultsToFalse()
+        {
+            var config = new AudienceConfig();
+            Assert.IsFalse(config.TestMode);
+        }
+
+        [Test]
+        public void TestMode_RoundTrips()
+        {
+            var config = new AudienceConfig { TestMode = true };
+            Assert.IsTrue(config.TestMode);
+        }
     }
 }

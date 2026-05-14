@@ -45,15 +45,13 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
                 System.IO.Directory.Delete(sdkDir, recursive: true);
 
             // Unity's bundled Mono runtime ships a curated root-CA set that
-            // does not include the chain api.sandbox.immutable.com presents,
-            // so HttpClient under Mono2x raises "SSL connection could not be
-            // established" on every Flush. The cert is valid; only Mono's
-            // verification fails. IL2CPP uses the OS CA store and is fine.
+            // may not include the full chain the backend presents, so
+            // HttpClient under Mono2x can raise "SSL connection could not be
+            // established". The cert is valid; only Mono's verification fails.
+            // IL2CPP uses the OS CA store and is fine.
             //
-            // Bypass cert validation IN THE TEST PROCESS ONLY so the same
-            // suite exercises both backends. Production SDK code is
-            // untouched. Acceptable risk: this test process talks only to
-            // sandbox; live-fire payloads carry no real user data.
+            // Bypass cert validation IN THE TEST PROCESS ONLY. Production SDK
+            // code is untouched.
             System.Net.ServicePointManager.ServerCertificateValidationCallback =
                 (_, _, _, _) => true;
 
@@ -89,8 +87,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         }
 
         // Scene load + AudienceSample lookup + root capture, without clicking
-        // btn-init. Useful for tests that need to inspect pre-init UI state
-        // (e.g. prod-warning visibility for non-test keys).
+        // btn-init. Useful for tests that need to inspect pre-init UI state.
         private IEnumerator LoadSceneOnly()
         {
             _key = Environment.GetEnvironmentVariable(SampleAppUi.EnvKey) ?? "";
@@ -331,7 +328,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         {
             // Reset clears identity + queue and rolls a new anonymousId. A
             // following Track must serialise with the new anonymousId and
-            // round-trip to sandbox without errors.
+            // round-trip to the backend without errors.
             yield return LoadAndInit();
 
             _root!.Q<Button>(SampleAppUi.Buttons.TypedEvent("progression")).Click();
@@ -495,12 +492,11 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         [UnityTest]
         public IEnumerator Init_WithBaseUrlOverride_FlushReportsOk()
         {
-            // Explicit BaseUrl skips the publishable-key prefix routing in
-            // Constants. Same target endpoint here, but the override branch is
-            // a different config setup path that IL2CPP could strip independently.
+            // Explicit BaseUrl exercises the override code path independently
+            // of the default-production path — IL2CPP could strip either branch.
             yield return LoadAndInit(configure: root =>
             {
-                root.Q<TextField>(SampleAppUi.Setup.BaseUrl).value = SampleAppUi.SandboxBaseUrl;
+                root.Q<TextField>(SampleAppUi.Setup.BaseUrl).value = SampleAppUi.ExplicitBaseUrl;
             });
 
             _root!.Q<Button>(SampleAppUi.Buttons.TypedEvent("progression")).Click();
@@ -738,30 +734,5 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
                 "identity-user-id label should reflect ImmutableAudience.UserId after Identify");
         }
 
-        [UnityTest]
-        public IEnumerator ProdWarning_HiddenForTestKey()
-        {
-            // The default env-var key is a test key (pk_imapik-test-…). The
-            // prod-warning banner should stay hidden after RefreshStatusBar.
-            yield return LoadSceneOnly();
-            _root!.Q<TextField>(SampleAppUi.Setup.PublishableKey).value = _key;
-            yield return null;
-
-            Assert.IsTrue(_root.Q<Label>(SampleAppUi.ProdWarning).ClassListContains(SampleAppUi.HiddenClass),
-                "prod-warning should be hidden when the publishable-key is a test key");
-        }
-
-        [UnityTest]
-        public IEnumerator ProdWarning_VisibleForNonTestKey()
-        {
-            // A key without the "test-" segment looks production. Don't actually
-            // Init so we don't live-fire to prod; just verify the warning UI.
-            yield return LoadSceneOnly();
-            _root!.Q<TextField>(SampleAppUi.Setup.PublishableKey).value = "pk_imapik-fakeprod-zzzz";
-            yield return null;
-
-            Assert.IsFalse(_root.Q<Label>(SampleAppUi.ProdWarning).ClassListContains(SampleAppUi.HiddenClass),
-                "prod-warning should be visible when the publishable-key looks like a prod key");
-        }
     }
 }

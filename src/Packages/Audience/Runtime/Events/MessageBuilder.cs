@@ -12,9 +12,10 @@ namespace Immutable.Audience
             string? anonymousId,
             string? userId,
             string packageVersion,
-            Dictionary<string, object>? properties = null)
+            Dictionary<string, object>? properties = null,
+            bool testMode = false)
         {
-            var msg = BuildBase(MessageTypes.Track, packageVersion);
+            var msg = BuildBase(MessageTypes.Track, packageVersion, testMode);
             msg["eventName"] = Truncate(eventName, Constants.MaxFieldLength);
 
             if (!string.IsNullOrEmpty(anonymousId))
@@ -37,9 +38,10 @@ namespace Immutable.Audience
             string? userId,
             string identityType,
             string packageVersion,
-            Dictionary<string, object>? traits = null)
+            Dictionary<string, object>? traits = null,
+            bool testMode = false)
         {
-            var msg = BuildBase(MessageTypes.Identify, packageVersion);
+            var msg = BuildBase(MessageTypes.Identify, packageVersion, testMode);
 
             if (!string.IsNullOrEmpty(anonymousId))
                 msg["anonymousId"] = Truncate(anonymousId, Constants.MaxFieldLength);
@@ -63,9 +65,10 @@ namespace Immutable.Audience
             string fromType,
             string toId,
             string toType,
-            string packageVersion)
+            string packageVersion,
+            bool testMode = false)
         {
-            var msg = BuildBase(MessageTypes.Alias, packageVersion);
+            var msg = BuildBase(MessageTypes.Alias, packageVersion, testMode);
             msg["fromId"] = Truncate(fromId, Constants.MaxFieldLength);
             msg["fromType"] = Truncate(fromType, Constants.MaxFieldLength);
             msg["toId"] = Truncate(toId, Constants.MaxFieldLength);
@@ -73,9 +76,9 @@ namespace Immutable.Audience
             return msg;
         }
 
-        private static Dictionary<string, object> BuildBase(string type, string packageVersion)
+        private static Dictionary<string, object> BuildBase(string type, string packageVersion, bool testMode)
         {
-            return new Dictionary<string, object>
+            var msg = new Dictionary<string, object>
             {
                 [MessageFields.Type] = type,
                 ["messageId"] = Guid.NewGuid().ToString(),
@@ -87,6 +90,9 @@ namespace Immutable.Audience
                 },
                 ["surface"] = Constants.Surface
             };
+            if (testMode)
+                msg["test"] = true;
+            return msg;
         }
 
         private static string Truncate(string s, int maxLen)

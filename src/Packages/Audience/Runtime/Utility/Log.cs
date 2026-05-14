@@ -51,16 +51,6 @@ namespace Immutable.Audience
             "Init called more than once. Ignoring; original config retained. " +
             "Call Shutdown() first if reconfiguring is intended.";
 
-        internal static readonly string TestKeyAgainstProduction =
-            $"Publishable key has the test prefix ({Constants.TestKeyPrefix}) but BaseUrl points to production. " +
-            "The backend will reject events with 401. Either remove the BaseUrl override (test keys " +
-            "default to sandbox) or use a non-test publishable key.";
-
-        internal static readonly string NonTestKeyAgainstSandbox =
-            "Publishable key is not a test key but BaseUrl points to sandbox. " +
-            "The backend will reject events with 401. Either remove the BaseUrl override (non-test " +
-            $"keys default to production) or use a test publishable key ({Constants.TestKeyPrefix}).";
-
         // ---- Track ----
 
         internal const string TrackIEventNull =
