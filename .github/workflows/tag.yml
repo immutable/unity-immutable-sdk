@@ -46,8 +46,11 @@ jobs:
           fi
 
       - name: Create Tag
-        uses: negz/create-tag@v1
-        with:
-          version: "${{ env.TAG }}"
-          message: "Version ${{ env.TAG }}"
-          token: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          SHA=$(git rev-parse HEAD)
+          gh api /repos/${{ github.repository }}/git/refs \
+            --method POST \
+            -f ref="refs/tags/${{ env.TAG }}" \
+            -f sha="$SHA"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
