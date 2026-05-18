@@ -121,6 +121,14 @@ jobs:
         sed -i -E "s/[0-9]+\.[0-9]+\.[0-9]+/$NEW_VERSION/g" $FILE
         echo "Updated SDK version in SdkVersionInfoHelpers.cs to $NEW_VERSION"
 
+    - name: Update LibraryVersion in Constants.cs
+      if: env.PACKAGE == 'audience'
+      run: |
+        FILE=./src/Packages/Audience/Runtime/Core/Constants.cs
+        NEW_VERSION="${{ steps.replace_version.outputs.version }}"
+        sed -i -E "s/LibraryVersion = \"[0-9]+\.[0-9]+\.[0-9]+\"/LibraryVersion = \"$NEW_VERSION\"/" $FILE
+        echo "Updated LibraryVersion in Constants.cs to $NEW_VERSION"
+
     - name: Ensure Samples~/SamplesScenesScripts directory exists and clear contents
       if: env.PACKAGE == 'passport'
       run: |
