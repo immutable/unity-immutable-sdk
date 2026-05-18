@@ -50,7 +50,8 @@ jobs:
           SHA=$(git rev-parse HEAD)
           gh api /repos/${{ github.repository }}/git/refs \
             --method POST \
-            -f ref="refs/tags/${{ env.TAG }}" \
+            -f ref="refs/tags/${TAG}" \
             -f sha="$SHA"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ env.TAG }}
