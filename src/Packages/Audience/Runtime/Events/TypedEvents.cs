@@ -95,7 +95,7 @@ namespace Immutable.Audience
             if (Level != null) props["level"] = Level;
             if (Stage != null) props["stage"] = Stage;
             if (Score.HasValue) props["score"] = Score.Value;
-            if (DurationSec.HasValue) props["durationSec"] = DurationSec.Value;
+            if (DurationSec.HasValue) props["duration_sec"] = DurationSec.Value;
 
             return props;
         }
@@ -182,8 +182,8 @@ namespace Immutable.Audience
                 ["amount"] = Amount.Value
             };
 
-            if (ItemType != null) props["itemType"] = ItemType;
-            if (ItemId != null) props["itemId"] = ItemId;
+            if (ItemType != null) props["item_type"] = ItemType;
+            if (ItemId != null) props["item_id"] = ItemId;
 
             return props;
         }
@@ -256,10 +256,10 @@ namespace Immutable.Audience
                 ["value"] = Value.Value
             };
 
-            if (ItemId != null) props["itemId"] = ItemId;
-            if (ItemName != null) props["itemName"] = ItemName;
+            if (ItemId != null) props["item_id"] = ItemId;
+            if (ItemName != null) props["item_name"] = ItemName;
             if (Quantity.HasValue) props["quantity"] = Quantity.Value;
-            if (TransactionId != null) props["transactionId"] = TransactionId;
+            if (TransactionId != null) props["transaction_id"] = TransactionId;
 
             return props;
         }

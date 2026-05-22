@@ -55,25 +55,25 @@ namespace Immutable.Audience.Unity
             var props = new Dictionary<string, object>
             {
                 ["platform"] = PlatformName(platform),
-                ["isEditor"] = isEditor,
+                ["is_editor"] = isEditor,
                 ["version"] = Truncate(Application.version, 256),
-                ["buildGuid"] = Truncate(Application.buildGUID, 256),
-                ["unityVersion"] = Truncate(Application.unityVersion, 256),
-                ["osFamily"] = SystemInfo.operatingSystemFamily.ToString(),
-                ["deviceModel"] = Truncate(SystemInfo.deviceModel, 256),
+                ["build_guid"] = Truncate(Application.buildGUID, 256),
+                ["unity_version"] = Truncate(Application.unityVersion, 256),
+                ["os_family"] = SystemInfo.operatingSystemFamily.ToString(),
+                ["device_model"] = Truncate(SystemInfo.deviceModel, 256),
                 ["gpu"] = Truncate(SystemInfo.graphicsDeviceName, 256),
-                ["gpuVendor"] = Truncate(SystemInfo.graphicsDeviceVendor, 256),
+                ["gpu_vendor"] = Truncate(SystemInfo.graphicsDeviceVendor, 256),
                 ["cpu"] = Truncate(SystemInfo.processorType, 256),
-                ["cpuCores"] = SystemInfo.processorCount,
-                ["ramMb"] = SystemInfo.systemMemorySize,
+                ["cpu_cores"] = SystemInfo.processorCount,
+                ["ram_mb"] = SystemInfo.systemMemorySize,
             };
 
             // Screen.dpi can be 0 on some Linux WMs.
             var dpi = (int)Screen.dpi;
-            if (dpi > 0) props["screenDpi"] = dpi;
+            if (dpi > 0) props["screen_dpi"] = dpi;
 
             if (platform == RuntimePlatform.Android)
-                props["androidId"] = Truncate(SystemInfo.deviceUniqueIdentifier, 256);
+                props["android_id"] = Truncate(SystemInfo.deviceUniqueIdentifier, 256);
 
             if (platform == RuntimePlatform.IPhonePlayer)
             {
@@ -81,7 +81,7 @@ namespace Immutable.Audience.Unity
                 if (idfv != null) props["idfv"] = Truncate(idfv, 256);
 
                 // iOS baseline is 163 DPI (1×); 326 → 2×, 401-460 → 3×.
-                if (dpi > 0) props["screenScale"] = (int)Math.Round(dpi / 163.0);
+                if (dpi > 0) props["screen_scale"] = (int)Math.Round(dpi / 163.0);
             }
 
             return props;

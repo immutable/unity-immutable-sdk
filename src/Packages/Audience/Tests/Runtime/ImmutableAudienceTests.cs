@@ -1191,8 +1191,8 @@ namespace Immutable.Audience.Tests
             {
                 ["platform"] = "Windows",
                 ["version"] = "1.2.3",
-                ["buildGuid"] = "a1b2c3d4e5f6",
-                ["unityVersion"] = "2022.3.20f1",
+                ["build_guid"] = "a1b2c3d4e5f6",
+                ["unity_version"] = "2022.3.20f1",
             };
 
             ImmutableAudience.Init(MakeConfig());
@@ -1205,8 +1205,8 @@ namespace Immutable.Audience.Tests
             Assert.IsNotNull(launchFile, "game_launch should have been enqueued");
             StringAssert.Contains("\"platform\":\"Windows\"", launchFile);
             StringAssert.Contains("\"version\":\"1.2.3\"", launchFile);
-            StringAssert.Contains("\"buildGuid\":\"a1b2c3d4e5f6\"", launchFile);
-            StringAssert.Contains("\"unityVersion\":\"2022.3.20f1\"", launchFile);
+            StringAssert.Contains("\"build_guid\":\"a1b2c3d4e5f6\"", launchFile);
+            StringAssert.Contains("\"unity_version\":\"2022.3.20f1\"", launchFile);
         }
 
         [Test]
@@ -1214,7 +1214,7 @@ namespace Immutable.Audience.Tests
         {
             ImmutableAudience.LaunchContextProvider = () => new Dictionary<string, object>
             {
-                ["distributionPlatform"] = "provider_value",
+                ["distribution_platform"] = "provider_value",
             };
 
             var config = MakeConfig();
@@ -1226,7 +1226,7 @@ namespace Immutable.Audience.Tests
             var launchFile = Directory.GetFiles(queueDir, "*.json")
                 .Select(File.ReadAllText)
                 .First(c => c.Contains("\"game_launch\""));
-            StringAssert.Contains("\"distributionPlatform\":\"steam\"", launchFile);
+            StringAssert.Contains("\"distribution_platform\":\"steam\"", launchFile);
             Assert.IsFalse(launchFile.Contains("provider_value"),
                 "config.DistributionPlatform should win over the provider's value");
         }
@@ -1259,7 +1259,7 @@ namespace Immutable.Audience.Tests
             var launchFile = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
                 .Select(File.ReadAllText)
                 .First(c => c.Contains("\"game_launch\""));
-            StringAssert.Contains("\"skanRegistered\":true", launchFile);
+            StringAssert.Contains("\"skan_registered\":true", launchFile);
         }
 
         [Test]
@@ -1274,7 +1274,7 @@ namespace Immutable.Audience.Tests
             var launchFile = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
                 .Select(File.ReadAllText)
                 .First(c => c.Contains("\"game_launch\""));
-            Assert.IsFalse(launchFile.Contains("skanRegistered"));
+            Assert.IsFalse(launchFile.Contains("skan_registered"));
         }
 
         [Test]
@@ -1292,7 +1292,7 @@ namespace Immutable.Audience.Tests
             var launchFile = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
                 .Select(File.ReadAllText)
                 .First(c => c.Contains("\"game_launch\""));
-            Assert.IsFalse(launchFile.Contains("skanRegistered"));
+            Assert.IsFalse(launchFile.Contains("skan_registered"));
         }
 
         [Test]
@@ -1301,7 +1301,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.MobileAttributionContextProvider = () =>
                 new Dictionary<string, object>
                 {
-                    ["attStatus"] = "authorized",
+                    ["att_status"] = "authorized",
                     ["idfa"] = "11111111-2222-3333-4444-555555555555",
                 };
             var config = MakeConfig(ConsentLevel.Full);
@@ -1312,7 +1312,7 @@ namespace Immutable.Audience.Tests
             var launchFile = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
                 .Select(File.ReadAllText)
                 .First(c => c.Contains("\"game_launch\""));
-            StringAssert.Contains("\"attStatus\":\"authorized\"", launchFile);
+            StringAssert.Contains("\"att_status\":\"authorized\"", launchFile);
             StringAssert.Contains("\"idfa\":\"11111111-2222-3333-4444-555555555555\"", launchFile);
         }
 
@@ -1322,7 +1322,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.MobileAttributionContextProvider = () =>
                 new Dictionary<string, object>
                 {
-                    ["attStatus"] = "denied",
+                    ["att_status"] = "denied",
                 };
             var config = MakeConfig();
             config.EnableMobileAttribution = true;
@@ -1332,7 +1332,7 @@ namespace Immutable.Audience.Tests
             var launchFile = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
                 .Select(File.ReadAllText)
                 .First(c => c.Contains("\"game_launch\""));
-            StringAssert.Contains("\"attStatus\":\"denied\"", launchFile);
+            StringAssert.Contains("\"att_status\":\"denied\"", launchFile);
             Assert.IsFalse(launchFile.Contains("\"idfa\""),
                 "idfa must not appear when ATT status is denied");
         }
@@ -1344,7 +1344,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.MobileAttributionContextProvider = () =>
             {
                 callCount++;
-                return new Dictionary<string, object> { ["attStatus"] = "authorized" };
+                return new Dictionary<string, object> { ["att_status"] = "authorized" };
             };
             var config = MakeConfig();
             config.EnableMobileAttribution = false;
@@ -1356,7 +1356,7 @@ namespace Immutable.Audience.Tests
             var launchFile = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
                 .Select(File.ReadAllText)
                 .First(c => c.Contains("\"game_launch\""));
-            Assert.IsFalse(launchFile.Contains("attStatus"));
+            Assert.IsFalse(launchFile.Contains("att_status"));
             Assert.IsFalse(launchFile.Contains("idfa"));
         }
 
@@ -1374,7 +1374,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.MobileAttributionContextProvider = () =>
             {
                 contextCallCount++;
-                return new Dictionary<string, object> { ["attStatus"] = "authorized" };
+                return new Dictionary<string, object> { ["att_status"] = "authorized" };
             };
             ImmutableAudience.MobileInstallReferrerProvider = () =>
             {
@@ -1409,7 +1409,7 @@ namespace Immutable.Audience.Tests
             var launchFile = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
                 .Select(File.ReadAllText)
                 .First(c => c.Contains("\"game_launch\""));
-            Assert.IsFalse(launchFile.Contains("attStatus"));
+            Assert.IsFalse(launchFile.Contains("att_status"));
         }
 
         [Test]
@@ -1423,7 +1423,7 @@ namespace Immutable.Audience.Tests
                 new Dictionary<string, object>
                 {
                     ["gaid"] = "abcdef01-2345-6789-abcd-ef0123456789",
-                    ["gaidLimitAdTracking"] = false,
+                    ["gaid_limit_ad_tracking"] = false,
                 };
             var config = MakeConfig(ConsentLevel.Full);
             config.EnableMobileAttribution = true;
@@ -1434,7 +1434,7 @@ namespace Immutable.Audience.Tests
                 .Select(File.ReadAllText)
                 .First(c => c.Contains("\"game_launch\""));
             StringAssert.Contains("\"gaid\":\"abcdef01-2345-6789-abcd-ef0123456789\"", launchFile);
-            StringAssert.Contains("\"gaidLimitAdTracking\":false", launchFile);
+            StringAssert.Contains("\"gaid_limit_ad_tracking\":false", launchFile);
         }
 
         [Test]
@@ -1446,7 +1446,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.MobileAttributionContextProvider = () =>
                 new Dictionary<string, object>
                 {
-                    ["gaidLimitAdTracking"] = true,
+                    ["gaid_limit_ad_tracking"] = true,
                 };
             var config = MakeConfig();
             config.EnableMobileAttribution = true;
@@ -1456,7 +1456,7 @@ namespace Immutable.Audience.Tests
             var launchFile = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
                 .Select(File.ReadAllText)
                 .First(c => c.Contains("\"game_launch\""));
-            StringAssert.Contains("\"gaidLimitAdTracking\":true", launchFile);
+            StringAssert.Contains("\"gaid_limit_ad_tracking\":true", launchFile);
             Assert.IsFalse(launchFile.Contains("\"gaid\""),
                 "gaid must not appear when the user has opted out");
         }
@@ -1466,7 +1466,7 @@ namespace Immutable.Audience.Tests
         //
         // idfa and gaid are cross-app device identifiers, same privacy class
         // as userId. They ship only when consent is Full. State-class keys
-        // (attStatus, gaidLimitAdTracking) are non-identifying and ship at
+        // (att_status, gaid_limit_ad_tracking) are non-identifying and ship at
         // Anonymous+Full (CanTrack).
         // -----------------------------------------------------------------
 
@@ -1476,7 +1476,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.MobileAttributionContextProvider = () =>
                 new Dictionary<string, object>
                 {
-                    ["attStatus"] = "authorized",
+                    ["att_status"] = "authorized",
                     ["idfa"] = "11111111-2222-3333-4444-555555555555",
                 };
             var config = MakeConfig(ConsentLevel.Anonymous);
@@ -1487,8 +1487,8 @@ namespace Immutable.Audience.Tests
             var launchFile = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
                 .Select(File.ReadAllText)
                 .First(c => c.Contains("\"game_launch\""));
-            StringAssert.Contains("\"attStatus\":\"authorized\"", launchFile,
-                "attStatus must ship at Anonymous: it is non-identifying state");
+            StringAssert.Contains("\"att_status\":\"authorized\"", launchFile,
+                "att_status must ship at Anonymous: it is non-identifying state");
             Assert.IsFalse(launchFile.Contains("\"idfa\""),
                 "idfa must not ship at Anonymous: it is a cross-app device identifier");
         }
@@ -1496,14 +1496,14 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Init_GameLaunch_StripsGaid_WhenConsentAnonymous()
         {
-            // gaid is stripped at Anonymous; gaidLimitAdTracking is non-identifying
+            // gaid is stripped at Anonymous; gaid_limit_ad_tracking is non-identifying
             // state and must still ship so the pipeline can distinguish
             // "fetched, opted out" from "not fetched yet".
             ImmutableAudience.MobileAttributionContextProvider = () =>
                 new Dictionary<string, object>
                 {
                     ["gaid"] = "abcdef01-2345-6789-abcd-ef0123456789",
-                    ["gaidLimitAdTracking"] = false,
+                    ["gaid_limit_ad_tracking"] = false,
                 };
             var config = MakeConfig(ConsentLevel.Anonymous);
             config.EnableMobileAttribution = true;
@@ -1513,8 +1513,8 @@ namespace Immutable.Audience.Tests
             var launchFile = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
                 .Select(File.ReadAllText)
                 .First(c => c.Contains("\"game_launch\""));
-            StringAssert.Contains("\"gaidLimitAdTracking\":false", launchFile,
-                "gaidLimitAdTracking must ship at Anonymous: it is non-identifying state");
+            StringAssert.Contains("\"gaid_limit_ad_tracking\":false", launchFile,
+                "gaid_limit_ad_tracking must ship at Anonymous: it is non-identifying state");
             Assert.IsFalse(launchFile.Contains("\"gaid\""),
                 "gaid must not ship at Anonymous: it is a cross-app device identifier");
         }
@@ -1542,14 +1542,14 @@ namespace Immutable.Audience.Tests
                 .Select(File.ReadAllText).ToList();
             Assert.IsTrue(blobs.Any(c =>
                 c.Contains("\"install_referrer_received\"") &&
-                c.Contains("\"installReferrer\":\"utm_source=google-play&utm_medium=organic\"")),
-                "install_referrer_received must ship with the installReferrer property");
+                c.Contains("\"install_referrer\":\"utm_source=google-play&utm_medium=organic\"")),
+                "install_referrer_received must ship with the install_referrer property");
         }
 
         [Test]
         public void Init_GameLaunch_NeverIncludesInstallReferrer()
         {
-            // installReferrer is exclusively on the dedicated event; ensure
+            // install_referrer is exclusively on the dedicated event; ensure
             // we don't regress and start leaking it onto game_launch.
             ImmutableAudience.MobileInstallReferrerProvider = () => "utm_source=test";
             var config = MakeConfig(ConsentLevel.Full);
@@ -1560,8 +1560,8 @@ namespace Immutable.Audience.Tests
             var launchFile = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
                 .Select(File.ReadAllText)
                 .First(c => c.Contains("\"game_launch\""));
-            Assert.IsFalse(launchFile.Contains("installReferrer"),
-                "game_launch must never carry installReferrer; it ships on its own event");
+            Assert.IsFalse(launchFile.Contains("install_referrer"),
+                "game_launch must never carry install_referrer; it ships on its own event");
         }
 
         [Test]
@@ -1681,7 +1681,7 @@ namespace Immutable.Audience.Tests
                 .Select(File.ReadAllText).ToList();
             Assert.IsTrue(secondBlobs.Any(c =>
                 c.Contains("\"install_referrer_received\"") &&
-                c.Contains("\"installReferrer\":\"utm_source=second_launch\"")),
+                c.Contains("\"install_referrer\":\"utm_source=second_launch\"")),
                 "second Init must ship install_referrer_received when the cache landed late");
         }
 
@@ -1706,7 +1706,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Init_DoesNotFireInstallReferrerReceived_WhenConsentAnonymous()
         {
-            // installReferrer encodes campaign attribution source; Full-only.
+            // install_referrer encodes campaign attribution source; Full-only.
             // The sent marker must NOT be written so a later upgrade to Full
             // can fire the event.
             ImmutableAudience.MobileInstallReferrerProvider = () => "utm_source=google-play";
@@ -1755,7 +1755,7 @@ namespace Immutable.Audience.Tests
                 .Select(File.ReadAllText).ToList();
             Assert.IsTrue(secondBlobs.Any(c =>
                 c.Contains("\"install_referrer_received\"") &&
-                c.Contains("\"installReferrer\":\"utm_source=upgrade_test\"")),
+                c.Contains("\"install_referrer\":\"utm_source=upgrade_test\"")),
                 "event must fire on the first Full-consent launch after an Anonymous launch");
         }
 
@@ -2083,8 +2083,8 @@ namespace Immutable.Audience.Tests
                 .Select(File.ReadAllText).ToList();
             Assert.IsTrue(blobs.Any(b =>
                 b.Contains("\"tracking_authorization_changed\"") &&
-                b.Contains("\"previousStatus\":\"denied\"") &&
-                b.Contains("\"newStatus\":\"authorized\"") &&
+                b.Contains("\"previous_status\":\"denied\"") &&
+                b.Contains("\"new_status\":\"authorized\"") &&
                 b.Contains("\"idfa\":\"11111111-2222-3333-4444-555555555555\"")),
                 "Init must fire tracking_authorization_changed when ATT status transitions");
         }
@@ -2145,8 +2145,8 @@ namespace Immutable.Audience.Tests
                 .Select(File.ReadAllText).ToList();
             Assert.IsTrue(blobs.Any(b =>
                 b.Contains("\"tracking_authorization_changed\"") &&
-                b.Contains("\"previousStatus\":\"notDetermined\"") &&
-                b.Contains("\"newStatus\":\"authorized\"") &&
+                b.Contains("\"previous_status\":\"notDetermined\"") &&
+                b.Contains("\"new_status\":\"authorized\"") &&
                 b.Contains("\"idfa\":\"11111111-2222-3333-4444-555555555555\"")),
                 "RequestTrackingAuthorizationAsync must fire tracking_authorization_changed when status transitions");
         }

@@ -92,7 +92,7 @@ namespace Immutable.Audience.Tests
 
             var ctx = AttributionContext.Capture();
 
-            Assert.AreEqual("authorized", ctx["attStatus"]);
+            Assert.AreEqual("authorized", ctx["att_status"]);
             Assert.AreEqual("11111111-2222-3333-4444-555555555555", ctx["idfa"]);
         }
 
@@ -107,7 +107,7 @@ namespace Immutable.Audience.Tests
 
             var ctx = AttributionContext.Capture();
 
-            Assert.AreEqual("denied", ctx["attStatus"]);
+            Assert.AreEqual("denied", ctx["att_status"]);
             Assert.IsFalse(ctx.ContainsKey("idfa"),
                 "idfa must be omitted when ATT is not authorized");
         }
@@ -121,7 +121,7 @@ namespace Immutable.Audience.Tests
 
             var ctx = AttributionContext.Capture();
 
-            Assert.AreEqual("notDetermined", ctx["attStatus"]);
+            Assert.AreEqual("notDetermined", ctx["att_status"]);
             Assert.IsFalse(ctx.ContainsKey("idfa"));
         }
 
@@ -134,7 +134,7 @@ namespace Immutable.Audience.Tests
 
             var ctx = AttributionContext.Capture();
 
-            Assert.AreEqual("restricted", ctx["attStatus"]);
+            Assert.AreEqual("restricted", ctx["att_status"]);
             Assert.IsFalse(ctx.ContainsKey("idfa"));
         }
 
@@ -148,7 +148,7 @@ namespace Immutable.Audience.Tests
 
             var ctx = AttributionContext.Capture();
 
-            Assert.AreEqual("authorized", ctx["attStatus"]);
+            Assert.AreEqual("authorized", ctx["att_status"]);
             Assert.IsFalse(ctx.ContainsKey("idfa"));
         }
 
@@ -176,7 +176,7 @@ namespace Immutable.Audience.Tests
 
             Assert.IsFalse(props.ContainsKey("gaid"),
                 "must never ship the raw GAID when the user has opted out via isLimitAdTrackingEnabled");
-            Assert.AreEqual(true, props["gaidLimitAdTracking"]);
+            Assert.AreEqual(true, props["gaid_limit_ad_tracking"]);
         }
 
         [Test]
@@ -186,7 +186,7 @@ namespace Immutable.Audience.Tests
             AttributionContext.EmitGaidProps(new GAIDInfo("aaaa-bbbb", limitAdTracking: false), props);
 
             Assert.AreEqual("aaaa-bbbb", props["gaid"]);
-            Assert.AreEqual(false, props["gaidLimitAdTracking"]);
+            Assert.AreEqual(false, props["gaid_limit_ad_tracking"]);
         }
 
         [Test]
@@ -196,7 +196,7 @@ namespace Immutable.Audience.Tests
             AttributionContext.EmitGaidProps(new GAIDInfo(string.Empty, limitAdTracking: false), props);
 
             Assert.IsFalse(props.ContainsKey("gaid"));
-            Assert.AreEqual(false, props["gaidLimitAdTracking"]);
+            Assert.AreEqual(false, props["gaid_limit_ad_tracking"]);
         }
     }
 }

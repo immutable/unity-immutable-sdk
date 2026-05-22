@@ -52,9 +52,9 @@ namespace Immutable.Audience.Tests
         {
             var props = DeviceCollector.CollectGameLaunchProperties();
             foreach (var key in new[] {
-                "platform", "isEditor", "version", "buildGuid", "unityVersion",
-                "osFamily", "deviceModel", "gpu", "gpuVendor",
-                "cpu", "cpuCores", "ramMb" })
+                "platform", "is_editor", "version", "build_guid", "unity_version",
+                "os_family", "device_model", "gpu", "gpu_vendor",
+                "cpu", "cpu_cores", "ram_mb" })
             {
                 Assert.IsTrue(props.ContainsKey(key), $"expected key '{key}' to be present");
             }
@@ -65,8 +65,8 @@ namespace Immutable.Audience.Tests
         {
             var props = DeviceCollector.CollectGameLaunchProperties();
             foreach (var key in new[] {
-                "platform", "version", "buildGuid", "unityVersion",
-                "osFamily", "deviceModel", "gpu", "gpuVendor", "cpu" })
+                "platform", "version", "build_guid", "unity_version",
+                "os_family", "device_model", "gpu", "gpu_vendor", "cpu" })
             {
                 if (!props.TryGetValue(key, out var val)) continue;
                 if (val is not string s) continue;
@@ -80,8 +80,8 @@ namespace Immutable.Audience.Tests
             // Regression guard: androidId must only appear on Android. Running
             // tests on Editor/Standalone should never populate this field.
             var props = DeviceCollector.CollectGameLaunchProperties();
-            Assert.IsFalse(props.ContainsKey("androidId"),
-                "androidId must not be present on non-Android platforms");
+            Assert.IsFalse(props.ContainsKey("android_id"),
+                "android_id must not be present on non-Android platforms");
         }
 
         [Test]
@@ -90,8 +90,8 @@ namespace Immutable.Audience.Tests
             // Screen.dpi returns 0 on some Linux WMs; the implementation
             // must omit the key rather than forwarding a zero value.
             var props = DeviceCollector.CollectGameLaunchProperties();
-            if (props.TryGetValue("screenDpi", out var dpi))
-                Assert.Greater((int)dpi, 0, "screenDpi must not be 0 when present");
+            if (props.TryGetValue("screen_dpi", out var dpi))
+                Assert.Greater((int)dpi, 0, "screen_dpi must not be 0 when present");
         }
 
         // -----------------------------------------------------------------
@@ -178,7 +178,7 @@ namespace Immutable.Audience.Tests
         {
             var props = DeviceCollector.CollectGameLaunchProperties(
                 isEditorOverride: isEditor);
-            Assert.AreEqual(isEditor, props["isEditor"]);
+            Assert.AreEqual(isEditor, props["is_editor"]);
         }
     }
 }

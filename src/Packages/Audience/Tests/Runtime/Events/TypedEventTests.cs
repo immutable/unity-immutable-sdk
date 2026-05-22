@@ -39,7 +39,7 @@ namespace Immutable.Audience.Tests
             Assert.AreEqual("tutorial", props["world"]);
             Assert.AreEqual("1", props["level"]);
             Assert.AreEqual(1500, props["score"]);
-            Assert.AreEqual(120.5f, props["durationSec"]);
+            Assert.AreEqual(120.5f, props["duration_sec"]);
         }
 
         [Test]
@@ -52,7 +52,7 @@ namespace Immutable.Audience.Tests
             Assert.IsFalse(props.ContainsKey("level"));
             Assert.IsFalse(props.ContainsKey("stage"));
             Assert.IsFalse(props.ContainsKey("score"));
-            Assert.IsFalse(props.ContainsKey("durationSec"));
+            Assert.IsFalse(props.ContainsKey("duration_sec"));
         }
 
         [Test]
@@ -72,8 +72,8 @@ namespace Immutable.Audience.Tests
             Assert.AreEqual("source", props["flow"]);
             Assert.AreEqual("gold", props["currency"]);
             Assert.AreEqual(100m, props["amount"]);
-            Assert.AreEqual("quest_reward", props["itemType"]);
-            Assert.AreEqual("main_quest_01", props["itemId"]);
+            Assert.AreEqual("quest_reward", props["item_type"]);
+            Assert.AreEqual("main_quest_01", props["item_id"]);
         }
 
         [Test]
@@ -126,10 +126,10 @@ namespace Immutable.Audience.Tests
 
             Assert.AreEqual("USD", props["currency"]);
             Assert.AreEqual(9.99m, props["value"]);
-            Assert.AreEqual("gem_pack_01", props["itemId"]);
-            Assert.AreEqual("Starter Gem Pack", props["itemName"]);
+            Assert.AreEqual("gem_pack_01", props["item_id"]);
+            Assert.AreEqual("Starter Gem Pack", props["item_name"]);
             Assert.AreEqual(1, props["quantity"]);
-            Assert.AreEqual("txn_abc123", props["transactionId"]);
+            Assert.AreEqual("txn_abc123", props["transaction_id"]);
         }
 
         [Test]
@@ -139,10 +139,10 @@ namespace Immutable.Audience.Tests
 
             Assert.IsTrue(props.ContainsKey("currency"));
             Assert.IsTrue(props.ContainsKey("value"));
-            Assert.IsFalse(props.ContainsKey("itemId"));
-            Assert.IsFalse(props.ContainsKey("itemName"));
+            Assert.IsFalse(props.ContainsKey("item_id"));
+            Assert.IsFalse(props.ContainsKey("item_name"));
             Assert.IsFalse(props.ContainsKey("quantity"));
-            Assert.IsFalse(props.ContainsKey("transactionId"));
+            Assert.IsFalse(props.ContainsKey("transaction_id"));
         }
 
         [Test]

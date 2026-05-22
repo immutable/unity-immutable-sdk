@@ -1121,17 +1121,17 @@ namespace Immutable.Audience
 
             // Config-supplied distributionPlatform overrides the provider value.
             if (config.DistributionPlatform != null)
-                properties["distributionPlatform"] = config.DistributionPlatform;
+                properties["distribution_platform"] = config.DistributionPlatform;
 
             // Emitted only on the first launch where SKAN registration fires.
             if (skanRegistered == true)
-                properties["skanRegistered"] = true;
+                properties["skan_registered"] = true;
 
             // iOS ATT/IDFA snapshot, merged after Unity context so attribution
             // keys are authoritative if both sources happen to set the same key.
             // idfa and gaid are cross-app device identifiers, same privacy class
-            // as userId; gate them at Full-only. State-class keys (attStatus,
-            // gaidLimitAdTracking) are non-identifying and ship at Anon+Full.
+            // as userId; gate them at Full-only. State-class keys (att_status,
+            // gaid_limit_ad_tracking) are non-identifying and ship at Anon+Full.
             if (attributionContext != null)
             {
                 var canIdentify = consentAtInit.CanIdentify();
@@ -1160,7 +1160,7 @@ namespace Immutable.Audience
 
             Track("install_referrer_received", new Dictionary<string, object>
             {
-                ["installReferrer"] = installReferrer,
+                ["install_referrer"] = installReferrer,
             });
 
             try
@@ -1235,8 +1235,8 @@ namespace Immutable.Audience
 
             var props = new Dictionary<string, object>
             {
-                ["previousStatus"] = AttStatusToString(previous.Value),
-                ["newStatus"] = AttStatusToString(currentStatus),
+                ["previous_status"] = AttStatusToString(previous.Value),
+                ["new_status"] = AttStatusToString(currentStatus),
             };
 
             if (currentStatus == 3 && consent.CanIdentify())
