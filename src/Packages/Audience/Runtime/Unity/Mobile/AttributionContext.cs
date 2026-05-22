@@ -46,7 +46,7 @@ namespace Immutable.Audience.Unity.Mobile
             // never ships there. Native ATTBridge calls are themselves gated
             // by #if UNITY_IOS, so non-iOS editor targets get the safe stubs.
             var status = ATTBridge.GetStatus();
-            props["attStatus"] = AttStatusToString(status);
+            props["att_status"] = AttStatusToString(status);
 
             // Only ship IDFA when the user has authorized tracking. The native
             // bridge already returns null for the zero-UUID case, but gating
@@ -84,7 +84,7 @@ namespace Immutable.Audience.Unity.Mobile
         {
             if (!info.LimitAdTracking && !string.IsNullOrEmpty(info.Gaid))
                 props["gaid"] = info.Gaid;
-            props["gaidLimitAdTracking"] = info.LimitAdTracking;
+            props["gaid_limit_ad_tracking"] = info.LimitAdTracking;
         }
     }
 }

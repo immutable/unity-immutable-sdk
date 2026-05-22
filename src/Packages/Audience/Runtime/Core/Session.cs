@@ -97,7 +97,7 @@ namespace Immutable.Audience
 
             SafeTrack("session_start", new Dictionary<string, object>
             {
-                ["sessionId"] = sessionId
+                ["session_id"] = sessionId
             });
         }
 
@@ -173,8 +173,8 @@ namespace Immutable.Audience
             // wall-clock; dashboards should not assume parity.
             SafeTrack("session_end", new Dictionary<string, object>
             {
-                ["sessionId"] = sessionId,
-                ["durationSec"] = duration
+                ["session_id"] = sessionId,
+                ["duration_sec"] = duration
             });
         }
 
@@ -198,8 +198,8 @@ namespace Immutable.Audience
 
             SafeTrack("session_end", new Dictionary<string, object>
             {
-                ["sessionId"] = sessionId,
-                ["durationSec"] = duration
+                ["session_id"] = sessionId,
+                ["duration_sec"] = duration
             });
         }
 
@@ -240,8 +240,8 @@ namespace Immutable.Audience
             // Build outside _lock so track doesn't re-enter.
             var properties = new Dictionary<string, object>
             {
-                ["sessionId"] = sessionId,
-                ["durationSec"] = duration
+                ["session_id"] = sessionId,
+                ["duration_sec"] = duration
             };
 
             SafeTrack("session_heartbeat", properties);
