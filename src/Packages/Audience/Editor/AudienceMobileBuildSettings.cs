@@ -18,17 +18,23 @@ namespace Immutable.Audience.Editor
     /// </remarks>
     public sealed class AudienceMobileBuildSettings : ScriptableObject
     {
-        // Fallback so a build never ships with the key missing (which would
-        // block App Store submission). Studios should override on the asset
-        // with copy describing what is collected and why.
+        // Fallback used when no asset exists or the field is left blank.
+        // Apple reviewers reject generic strings — studios MUST replace this
+        // with copy that names their app and explains the specific use case
+        // (e.g. "Game Name uses your advertising identifier to attribute app
+        // installs and measure ad campaign performance."). Submitting this
+        // default will likely result in an App Store rejection.
         internal const string DefaultTrackingUsageDescription =
-            "Your data may be used to deliver personalised ads to you. " +
-            "You can change this preference at any time in Settings.";
+            "This app uses your device's advertising identifier to attribute " +
+            "app installs and measure ad campaign performance. You can change " +
+            "this preference at any time in Settings > Privacy & Security > Tracking.";
 
         [SerializeField]
-        [Tooltip("Copy shown in the iOS App Tracking Transparency prompt. " +
-                 "Apple rejects empty or generic strings. Describe what is " +
-                 "collected and why.")]
+        [Tooltip("REQUIRED: Customise this before submitting to the App Store. " +
+                 "Apple rejects generic strings — describe what YOUR app collects " +
+                 "and why (e.g. 'Game Name uses your advertising identifier to " +
+                 "attribute installs and measure ad performance.'). " +
+                 "Left blank, the SDK default is used but will likely be rejected.")]
         private string trackingUsageDescription = DefaultTrackingUsageDescription;
 
         [SerializeField]
