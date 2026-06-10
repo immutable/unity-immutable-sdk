@@ -4,9 +4,13 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Immutable.Audience.Unity.Mobile;
 using UnityEngine;
+using UnityEngine.Scripting;
+
+[assembly: AlwaysLinkAssembly]
 
 namespace Immutable.Audience.Unity
 {
+    [Preserve]
     internal static class AudienceUnityHooks
     {
         // Captured at SubsystemRegistration so the Install Referrer provider
