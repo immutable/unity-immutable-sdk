@@ -69,6 +69,26 @@ namespace Immutable.Audience.Editor
             // IDFA collection constitutes tracking under Apple's definition.
             root.SetBoolean("NSPrivacyTracking", true);
 
+            // Apple requires every domain contacted for tracking to be listed.
+            const string trackingDomain = "api.immutable.com";
+            PlistElementArray trackingDomains;
+            if (root.values.TryGetValue("NSPrivacyTrackingDomains", out var existingDomains) &&
+                existingDomains is PlistElementArray existingDomainsArray)
+            {
+                trackingDomains = existingDomainsArray;
+            }
+            else
+            {
+                trackingDomains = root.CreateArray("NSPrivacyTrackingDomains");
+            }
+
+            var hasDomain = false;
+            foreach (var item in trackingDomains.values)
+            {
+                if (item is PlistElementString ds && ds.value == trackingDomain) { hasDomain = true; break; }
+            }
+            if (!hasDomain) trackingDomains.AddString(trackingDomain);
+
             PlistElementArray dataTypes;
             if (root.values.TryGetValue("NSPrivacyCollectedDataTypes", out var existing) &&
                 existing is PlistElementArray existingArray)
