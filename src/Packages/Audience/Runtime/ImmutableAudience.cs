@@ -330,7 +330,7 @@ namespace Immutable.Audience
             var anonymousId = Identity.GetOrCreate(config.PersistentDataPath!, state.Level);
             // ToProperties returns a fresh dict per call, so no snapshot needed.
             var userId = state.Level == ConsentLevel.Full ? state.UserId : null;
-            var msg = MessageBuilder.Track(eventName, anonymousId, userId, config.PackageVersion, properties, config.TestMode);
+            var msg = MessageBuilder.Track(eventName, anonymousId, userId, Constants.LibraryVersion, properties, config.TestMode);
             EnqueueTrack(msg);
         }
 
@@ -356,7 +356,7 @@ namespace Immutable.Audience
 
             var anonymousId = Identity.GetOrCreate(config.PersistentDataPath!, state.Level);
             var userId = state.Level == ConsentLevel.Full ? state.UserId : null;
-            var msg = MessageBuilder.Track(eventName, anonymousId, userId, config.PackageVersion,
+            var msg = MessageBuilder.Track(eventName, anonymousId, userId, Constants.LibraryVersion,
                 SnapshotCallerDict(properties), config.TestMode);
             EnqueueTrack(msg);
         }
@@ -403,7 +403,7 @@ namespace Immutable.Audience
 
             var anonymousId = Identity.GetOrCreate(config.PersistentDataPath!, level);
             var msg = MessageBuilder.Identify(anonymousId, userId, identityType.ToLowercaseString(),
-                config.PackageVersion, SnapshotCallerDict(traits), config.TestMode);
+                Constants.LibraryVersion, SnapshotCallerDict(traits), config.TestMode);
             EnqueueIdentity(msg);
         }
 
@@ -434,7 +434,7 @@ namespace Immutable.Audience
             if (config == null) return;
 
             var msg = MessageBuilder.Alias(fromId, fromType.ToLowercaseString(), toId, toType.ToLowercaseString(),
-                config.PackageVersion, config.TestMode);
+                Constants.LibraryVersion, config.TestMode);
             EnqueueIdentity(msg);
         }
 
