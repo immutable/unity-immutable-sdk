@@ -368,7 +368,6 @@ namespace Immutable.Audience.Samples.SampleApp
                 ["enableMobileAttribution"]  = config.EnableMobileAttribution,
                 ["flushIntervalSeconds"]     = config.FlushIntervalSeconds,
                 ["flushSize"]                = config.FlushSize,
-                ["packageVersion"]           = config.PackageVersion,
                 ["shutdownFlushTimeoutMs"]   = config.ShutdownFlushTimeoutMs,
             };
             if (!string.IsNullOrEmpty(config.PublishableKey))
