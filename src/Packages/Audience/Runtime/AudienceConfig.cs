@@ -117,11 +117,6 @@ namespace Immutable.Audience
         public string? PersistentDataPath { get; set; }
 
         /// <summary>
-        /// Library version sent on every message.
-        /// </summary>
-        public string PackageVersion { get; set; } = Constants.LibraryVersion;
-
-        /// <summary>
         /// Maximum time <see cref="ImmutableAudience.Shutdown"/> waits for
         /// the final flush, in milliseconds.
         /// </summary>
