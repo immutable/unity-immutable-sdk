@@ -26,9 +26,12 @@ jobs:
           echo "LATEST_TAG=${LATEST_TAG}" >> "$GITHUB_ENV"
           if [[ "$LATEST_TAG" == audience/* ]]; then
             echo "IS_AUDIENCE=true" >> "$GITHUB_ENV"
+            PREV_TAG="$(git tag --sort=-creatordate | grep "^audience/" | sed -n '2p')"
           else
             echo "IS_AUDIENCE=false" >> "$GITHUB_ENV"
+            PREV_TAG="$(git tag --sort=-creatordate | grep -v "^audience/" | sed -n '2p')"
           fi
+          echo "PREV_TAG=${PREV_TAG}" >> "$GITHUB_ENV"
           if [[ "$LATEST_TAG" == *alpha* ]]; then
             echo "IS_PRERELEASE=true" >> "$GITHUB_ENV"
           else
@@ -44,6 +47,8 @@ jobs:
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          fromTag: ${{ env.PREV_TAG }}
+          toTag: ${{ env.LATEST_TAG }}
           configurationJson: |
             {
               "pr_template": "- #{{TITLE}} (##{{NUMBER}})",
