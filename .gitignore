@@ -19,7 +19,6 @@
 *.DotSettings.user.meta
 Directory.Build.props.meta
 Directory.Build.targets.meta
-src/Packages/Audience/README.md.meta
 
 # MemoryCaptures can get excessive in size.
 # They also could contain extremely sensitive data
@@ -54,6 +53,11 @@ ExportedObj/
 *.unityproj
 *.sln
 *.sln.meta
+
+# Hand-maintained headless dotnet build projects for the Audience package.
+# These live outside the Unity package so they never ship to consumers; keep
+# them tracked despite the blanket *.csproj rule above.
+!src/Audience.Build/**/*.csproj
 *.suo
 *.tmp
 *.user
