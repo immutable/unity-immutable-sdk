@@ -41,8 +41,45 @@ jobs:
       - name: Pull LFS
         run: git lfs pull
 
-      - name: Build Changelog
-        id: github_release
+      - name: Build Changelog (Audience)
+        id: github_release_audience
+        if: env.IS_AUDIENCE == 'true'
+        uses: mikepenz/release-changelog-builder-action@v3
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          fromTag: ${{ env.PREV_TAG }}
+          toTag: ${{ env.LATEST_TAG }}
+          configurationJson: |
+            {
+              "pr_template": "- #{{TITLE}} (##{{NUMBER}})",
+              "categories": [
+                {
+                    "title": "## Features",
+                    "labels": ["audience-feature"]
+                },
+                {
+                    "title": "## Fixes",
+                    "labels": ["audience-fix"]
+                },
+                {
+                    "title": "## Performance",
+                    "labels": ["audience-performance"]
+                },
+                {
+                    "title": "## Documentation",
+                    "labels": ["audience-docs"]
+                },
+                {
+                    "title": "## Chores",
+                    "labels": ["audience-chore"]
+                }
+              ]
+            }
+
+      - name: Build Changelog (Passport)
+        id: github_release_passport
+        if: env.IS_AUDIENCE != 'true'
         uses: mikepenz/release-changelog-builder-action@v3
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -108,7 +145,7 @@ jobs:
           tag_name: ${{ env.LATEST_TAG }}
           release_name: ${{ env.LATEST_TAG }}
           body: |
-            ${{steps.github_release.outputs.changelog}}
+            ${{steps.github_release_audience.outputs.changelog}}${{steps.github_release_passport.outputs.changelog}}
 
             ${{ env.RELEASE_BODY_SUFFIX }}
           draft: false

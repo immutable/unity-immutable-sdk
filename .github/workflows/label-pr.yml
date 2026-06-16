@@ -19,3 +19,31 @@ jobs:
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           configuration-path: .github/pr-labeler/config.yml
+
+      - uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const files = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+            })
+            const isAudience = files.data.some(f =>
+              f.filename.startsWith('src/Packages/Audience/')
+            )
+            if (!isAudience) return
+
+            const branch = context.payload.pull_request.head.ref
+            let label = 'audience-chore'
+            if (branch.startsWith('feat/'))      label = 'audience-feature'
+            else if (branch.startsWith('fix/'))  label = 'audience-fix'
+            else if (branch.startsWith('perf/')) label = 'audience-performance'
+            else if (branch.startsWith('docs/')) label = 'audience-docs'
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              labels: [label],
+            })
