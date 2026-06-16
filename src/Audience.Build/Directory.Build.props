@@ -1,0 +1,17 @@
+<Project>
+  <!--
+    Redirect dotnet build outputs to a repo-root artifacts/ folder.
+
+    These projects build the Audience package sources headlessly for unit tests.
+    They live outside src/Packages/Audience so they are never copied into a
+    consumer's PackageCache (git-URL installs ship the package folder verbatim,
+    and non-Unity files there break device builds when they lack .meta files).
+
+    $(MSBuildThisFileDirectory) = src/Audience.Build/
+    ../../artifacts/ = <repo-root>/artifacts/
+  -->
+  <PropertyGroup>
+    <BaseOutputPath>$(MSBuildThisFileDirectory)../../artifacts/$(MSBuildProjectName)/bin/</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)../../artifacts/$(MSBuildProjectName)/obj/</BaseIntermediateOutputPath>
+  </PropertyGroup>
+</Project>

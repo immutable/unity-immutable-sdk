@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <!-- Match the Unity asmdef assembly name so InternalsVisibleTo works in both contexts -->
+    <AssemblyName>Immutable.Audience.Runtime</AssemblyName>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- Sources live in the package folder, not next to this project -->
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <PackageRoot>$(MSBuildThisFileDirectory)../../Packages/Audience</PackageRoot>
+  </PropertyGroup>
+  <!--
+    The Unity/ subtree belongs to the sibling Immutable.Audience.Unity asmdef.
+    It references UnityEngine, so it cannot build under the headless .NET SDK.
+    Excluding it here mirrors the noEngineReferences:true portability guard on
+    com.immutable.audience.asmdef, catching stray UnityEngine usage in Core/,
+    Events/, Transport/ and Utility/.
+  -->
+  <ItemGroup>
+    <Compile Include="$(PackageRoot)/Runtime/**/*.cs"
+             Exclude="$(PackageRoot)/Runtime/Unity/**/*.cs"
+             LinkBase="Runtime" />
+  </ItemGroup>
+</Project>
