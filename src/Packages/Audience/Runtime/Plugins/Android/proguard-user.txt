@@ -1,6 +1,7 @@
 # Keep Google Play Install Referrer Library symbols.
 #
-# The AAR (installreferrer-2.2.aar) ships consumer rules in
+# The installreferrer AAR (resolved from Maven via EDM4U or a manual gradle
+# dependency - see README) ships consumer rules in
 # META-INF/com.android.tools/proguard/proguard.txt and Unity's gradle build
 # auto-merges them, but R8 fullMode in Unity 2022.3+ has been observed to
 # discard merged consumer rules in some studio configurations. These

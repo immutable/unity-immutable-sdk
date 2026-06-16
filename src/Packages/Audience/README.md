@@ -47,17 +47,29 @@ Press Play; `ImmutableAudience.Initialized` returns `true` and `AnonymousId` bec
 - Integration guide and API reference: <https://docs.immutable.com/docs/products/audience/unity-sdk>
 - Sample Unity project: [`examples/audience`](https://github.com/immutable/unity-immutable-sdk/tree/main/examples/audience)
 
-## Vendored dependencies
+## Android dependencies
 
-The package vendors prebuilt third-party AARs for mobile attribution. They are only included in your build when the corresponding scripting define is set; without the define they're stripped via `defineConstraints` on the plugin meta files.
+Mobile install attribution (the `AUDIENCE_MOBILE_ATTRIBUTION` define) needs the Google Play Install Referrer Library. The package does **not** bundle it as a prebuilt `.aar` — bundled AARs can't be de-duplicated by Gradle, so shipping `installreferrer-2.2.aar` directly caused class/version conflicts when a game already pulled in the same library via another SDK. Instead it's resolved from Maven:
 
-| File | Version | Source | Required define |
-| --- | --- | --- | --- |
-| `Runtime/Plugins/Android/installreferrer-2.2.aar` | 2.2 | [maven.google.com](https://maven.google.com/web/index.html#com.android.installreferrer:installreferrer:2.2) | `AUDIENCE_MOBILE_ATTRIBUTION` |
+| Dependency | Version | Source |
+| --- | --- | --- |
+| `com.android.installreferrer:installreferrer` | 2.2 | [maven.google.com](https://maven.google.com/web/index.html#com.android.installreferrer:installreferrer:2.2) |
 
-`Runtime/Plugins/Android/proguard-user.txt` ships explicit R8 keep rules for the Install Referrer Library. Unity's gradle build merges it automatically when the AAR is included.
+**With [EDM4U](https://github.com/googlesamples/unity-jar-resolver) (recommended):** no action needed. `Editor/ImmutableAudienceDependencies.xml` declares the dependency and EDM4U's Android Resolver fetches it, resolving any version conflict with other SDKs to a single highest version. Install EDM4U as a project prerequisite — do not embed a second copy.
 
-Before tagging a release, check `maven.google.com` for newer versions of any vendored dependency and bump the pinned filename if needed.
+**Without EDM4U:** add the dependency to your `Assets/Plugins/Android/mainTemplate.gradle`:
+
+```gradle
+dependencies {
+    implementation 'com.android.installreferrer:installreferrer:2.2'
+}
+```
+
+`Runtime/Plugins/Android/proguard-user.txt` ships explicit R8 keep rules for the Install Referrer Library; Unity's gradle build merges them regardless of how the dependency is resolved.
+
+`play-services-ads-identifier` (GAID) is intentionally left for the studio to add, so games that don't collect the advertising ID never declare the `AD_ID` permission.
+
+Before tagging a release, check `maven.google.com` for a newer version and bump the pinned version above and in `ImmutableAudienceDependencies.xml` if needed.
 
 ## License
 

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  EDM4U dependency declaration. The Google Play Install Referrer Library is
+  resolved from Maven rather than bundled as an .aar: bundled .aars can't be
+  de-duplicated by Gradle, so shipping installreferrer-2.2.aar directly caused
+  class/version conflicts with other SDKs. Declaring it here lets Gradle pick a
+  single highest version.
+
+  Requires EDM4U. Without it, add the dependency manually to
+  Assets/Plugins/Android/mainTemplate.gradle:
+      implementation 'com.android.installreferrer:installreferrer:2.2'
+
+  play-services-ads-identifier (GAID) is intentionally NOT declared here - left
+  to the studio, so games that don't collect the advertising ID never declare
+  the AD_ID permission (see AndroidManifestPostProcessor).
+-->
+<dependencies>
+  <androidPackages>
+    <androidPackage spec="com.android.installreferrer:installreferrer:2.2">
+      <repositories>
+        <repository>https://maven.google.com</repository>
+      </repositories>
+    </androidPackage>
+  </androidPackages>
+</dependencies>

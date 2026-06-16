@@ -22,6 +22,12 @@ apply plugin: 'com.android.library'
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 **DEPS**
+    // Google Play Install Referrer Library, resolved from Maven (the Audience
+    // package no longer bundles it as an .aar - it conflicted with other SDKs).
+    // EDM4U projects get it automatically from ImmutableAudienceDependencies.xml;
+    // this sample has no EDM4U, so it declares the dependency manually.
+    implementation 'com.android.installreferrer:installreferrer:2.2'
+
     // Uncomment to enable GAID collection (requires AUDIENCE_MOBILE_ATTRIBUTION
     // scripting define + AudienceConfig.EnableMobileAttribution). Without this
     // line the SDK still builds and runs, but `gaid` / `gaidLimitAdTracking`
