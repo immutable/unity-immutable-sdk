@@ -55,12 +55,12 @@ jobs:
               "pr_template": "- #{{TITLE}} (##{{NUMBER}})",
               "categories": [
                 {
-                    "title": "## Features",
-                    "labels": ["audience-feature"]
-                },
-                {
                     "title": "## Fixes",
                     "labels": ["audience-fix"]
+                },
+                {
+                    "title": "## Features",
+                    "labels": ["audience-feature"]
                 },
                 {
                     "title": "## Performance",
