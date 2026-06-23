@@ -29,4 +29,16 @@ framework dependency.
     <type fullname="System.IO.Compression.GZipStream" preserve="all" />
     <type fullname="System.IO.Compression.CompressionLevel" preserve="all" />
   </assembly>
+
+  <!--
+    Steam platform auto-detection. The SDK resolves these types via reflection
+    at runtime so the linker cannot see the dependency and strips them under
+    IL2CPP High stripping. Entries for missing assemblies are silently ignored,
+    so games without Steamworks are unaffected.
+  -->
+  <assembly fullname="com.rlabrecque.steamworks.net" preserve="all" />
+  <assembly fullname="Steamworks.NET" preserve="all" />
+  <assembly fullname="Facepunch.Steamworks.Posix" preserve="all" />
+  <assembly fullname="Facepunch.Steamworks.Win64" preserve="all" />
+  <assembly fullname="Facepunch.Steamworks.Win32" preserve="all" />
 </linker>
