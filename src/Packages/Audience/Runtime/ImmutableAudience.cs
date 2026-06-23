@@ -256,6 +256,7 @@ namespace Immutable.Audience
             }
 
             FireGameLaunch(config, consentAtInit, skanRegistered, attributionContext);
+            TryIdentifySteamUser();
 
             CheckAndFireAttStatusChanged(config, consentAtInit);
 
@@ -1089,6 +1090,130 @@ namespace Immutable.Audience
             timer.Change(nextMs, sendIntervalMs);
         }
 
+        // Resolves Steamworks.SteamAPI (Steamworks.NET) across all common install methods:
+        //   UPM / OpenUPM package  → com.rlabrecque.steamworks.net
+        //   .dll plugin in Assets  → Steamworks.NET
+        //   source files in Assets → Assembly-CSharp
+        // Returns null when Steamworks.NET is not present.
+        private static System.Type? ResolveSteamApiType() =>
+            System.Type.GetType("Steamworks.SteamAPI, com.rlabrecque.steamworks.net")
+            ?? System.Type.GetType("Steamworks.SteamAPI, Steamworks.NET")
+            ?? System.Type.GetType("Steamworks.SteamAPI, Assembly-CSharp");
+
+        // Resolves Steamworks.SteamClient (Facepunch.Steamworks) across common install methods.
+        // Facepunch ships platform-specific DLLs; the assembly name encodes the platform:
+        //   macOS/Linux → Facepunch.Steamworks.Posix
+        //   Windows 64  → Facepunch.Steamworks.Win64
+        //   Windows 32  → Facepunch.Steamworks.Win32
+        //   Source in Assets → Assembly-CSharp
+        // Returns null when Facepunch.Steamworks is not present.
+        private static System.Type? ResolveFacepunchSteamClientType() =>
+            System.Type.GetType("Steamworks.SteamClient, Facepunch.Steamworks.Posix")
+            ?? System.Type.GetType("Steamworks.SteamClient, Facepunch.Steamworks.Win64")
+            ?? System.Type.GetType("Steamworks.SteamClient, Facepunch.Steamworks.Win32")
+            ?? System.Type.GetType("Steamworks.SteamClient, Assembly-CSharp");
+
+        // Sets distribution_platform = "steam" when any supported Steam wrapper is
+        // detected as active. Config override wins afterward (line ~1195).
+        private static void TryDetectSteamPlatform(Dictionary<string, object> properties)
+        {
+            try
+            {
+                if (IsSteamworksNetRunning() || IsFacepunchSteamValid())
+                    properties["distribution_platform"] = DistributionPlatforms.Steam;
+            }
+            catch (Exception ex)
+            {
+                Log.Warn(AudienceLogs.SteamPlatformDetectionFailed(ex));
+            }
+        }
+
+        // Calls Identify with the logged-in SteamID64. Tries Steamworks.NET first,
+        // then Facepunch.Steamworks. No-ops if neither is present, Steam is not
+        // running, the ID is invalid, or consent is below Full.
+        private static void TryIdentifySteamUser()
+        {
+            try
+            {
+                if (!TryGetSteamworksNetId(out var id) && !TryGetFacepunchId(out id))
+                    return;
+                Log.Debug(AudienceLogs.SteamAutoIdentified(id!));
+                Identify(id!, IdentityType.Steam);
+            }
+            catch (Exception ex)
+            {
+                Log.Warn(AudienceLogs.SteamIdentityCollectionFailed(ex));
+            }
+        }
+
+        // Returns true if Steamworks.NET's SteamAPI.IsSteamRunning() is true.
+        private static bool IsSteamworksNetRunning()
+        {
+            var steamApi = ResolveSteamApiType();
+            if (steamApi == null) return false;
+            return steamApi.GetMethod("IsSteamRunning")?.Invoke(null, null) as bool? == true;
+        }
+
+        // Returns true if Facepunch.Steamworks's SteamClient.IsValid is true.
+        private static bool IsFacepunchSteamValid()
+        {
+            var steamClient = ResolveFacepunchSteamClientType();
+            if (steamClient == null) return false;
+            return steamClient.GetProperty("IsValid")?.GetValue(null) as bool? == true;
+        }
+
+        // Reads the SteamID64 via Steamworks.NET (SteamUser.GetSteamID → m_SteamID ulong).
+        // Attempts SteamAPI.Init() first so the sample app works without manual Steam init;
+        // in shipping games Init() is already called before our SDK runs.
+        private static bool TryGetSteamworksNetId(out string? id)
+        {
+            id = null;
+            var steamApi = ResolveSteamApiType();
+            if (steamApi == null) return false;
+            if (steamApi.GetMethod("IsSteamRunning")?.Invoke(null, null) as bool? != true) return false;
+
+            // Safe to call even if already initialised; returns false but is otherwise a no-op.
+            steamApi.GetMethod("Init")?.Invoke(null, null);
+
+            var steamUserType =
+                System.Type.GetType("Steamworks.SteamUser, com.rlabrecque.steamworks.net")
+                ?? System.Type.GetType("Steamworks.SteamUser, Steamworks.NET")
+                ?? System.Type.GetType("Steamworks.SteamUser, Assembly-CSharp");
+            if (steamUserType == null) return false;
+
+            var steamId = steamUserType.GetMethod("GetSteamID")?.Invoke(null, null);
+            if (steamId == null) return false;
+
+            // CSteamID.m_SteamID == 0 means not logged in / not initialised.
+            var raw = steamId.GetType().GetField("m_SteamID")?.GetValue(steamId);
+            if (raw == null || (ulong)raw == 0) return false;
+
+            id = ((ulong)raw).ToString();
+            return true;
+        }
+
+        // Reads the SteamID64 via Facepunch.Steamworks (SteamClient.SteamId.Value ulong).
+        // Requires SteamClient.Init(appId) to have been called by the game already;
+        // the SDK cannot call it as the appId is unknown.
+        private static bool TryGetFacepunchId(out string? id)
+        {
+            id = null;
+            var steamClient = ResolveFacepunchSteamClientType();
+            if (steamClient == null) return false;
+            if (steamClient.GetProperty("IsValid")?.GetValue(null) as bool? != true) return false;
+
+            var steamIdProp = steamClient.GetProperty("SteamId");
+            var steamId = steamIdProp?.GetValue(null);
+            if (steamId == null) return false;
+
+            // Facepunch SteamId exposes Value as a public ulong field (not a property).
+            var raw = steamId.GetType().GetField("Value")?.GetValue(steamId);
+            if (raw == null || (ulong)raw == 0) return false;
+
+            id = ((ulong)raw).ToString();
+            return true;
+        }
+
         // consentAtInit only gates the launch; Track still checks live _state via CanTrack.
         private static void FireGameLaunch(
             AudienceConfig config,
@@ -1119,7 +1244,10 @@ namespace Immutable.Audience
                 }
             }
 
-            // Config-supplied distributionPlatform overrides the provider value.
+            // Auto-detect distribution platform via reflection. Config override wins below.
+            TryDetectSteamPlatform(properties);
+
+            // Config-supplied distributionPlatform overrides the auto-detected value.
             if (config.DistributionPlatform != null)
                 properties["distribution_platform"] = config.DistributionPlatform;
 

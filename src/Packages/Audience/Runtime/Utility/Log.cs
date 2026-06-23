@@ -158,5 +158,18 @@ namespace Immutable.Audience
         internal static string GAIDFetchThrew(Exception ex) =>
             $"GAID fetch threw {ex.GetType().Name}: {ex.Message}. " +
             "gaid will not ship on game_launch this session; next launch retries.";
+
+        // ---- Steam auto-detection ----
+
+        internal static string SteamPlatformDetectionFailed(Exception ex) =>
+            $"Steam platform detection threw {ex.GetType().Name}: {ex.Message}. " +
+            "distribution_platform will not be auto-set.";
+
+        internal static string SteamAutoIdentified(string steamId) =>
+            $"auto-identified steam user: {steamId}";
+
+        internal static string SteamIdentityCollectionFailed(Exception ex) =>
+            $"Steam identity collection threw {ex.GetType().Name}: {ex.Message}. " +
+            "Steam user ID will not be auto-collected.";
     }
 }
