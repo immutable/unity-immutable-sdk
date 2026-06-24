@@ -159,6 +159,15 @@ namespace Immutable.Audience
             $"GAID fetch threw {ex.GetType().Name}: {ex.Message}. " +
             "gaid will not ship on game_launch this session; next launch retries.";
 
+        // ---- Identity ----
+
+        internal static string IdentityRotateFailed(Exception ex) =>
+            $"RotateAnonymousId: failed to rewrite identity file. {ex.GetType().Name}: {ex.Message}";
+
+        internal static string IdentityLoadOrGenerateFailed(Exception ex) =>
+            $"Identity file read/write failed. {ex.GetType().Name}: {ex.Message}. " +
+            "Events will ship without identity fields this session.";
+
         // ---- Steam auto-detection ----
 
         internal static string SteamPlatformDetectionFailed(Exception ex) =>
