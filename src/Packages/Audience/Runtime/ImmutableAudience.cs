@@ -130,6 +130,27 @@ namespace Immutable.Audience
         }
 
         /// <summary>
+        /// A stable per-device ID that survives <see cref="Reset"/> (logout).
+        /// </summary>
+        /// <remarks>
+        /// Generated once on first init at Anonymous+ consent and persisted across launches.
+        /// Survives <see cref="Reset"/> so the CDP can resolve a returning player without a
+        /// re-identify. Wiped on <see cref="ConsentLevel.None"/> (opt-out). App-generated UUID,
+        /// not a hardware fingerprint. Null while consent is None.
+        /// </remarks>
+        public static string? DeviceId
+        {
+            get
+            {
+                if (!_initialized) return null;
+                var config = _config;
+                var level = _state.Level;
+                if (config == null || !level.CanTrack()) return null;
+                return Identity.GetOrCreateDeviceId(config.PersistentDataPath!, level);
+            }
+        }
+
+        /// <summary>
         /// The current session's ID.
         /// </summary>
         /// <remarks>
@@ -330,9 +351,10 @@ namespace Immutable.Audience
             }
 
             var anonymousId = Identity.GetOrCreate(config.PersistentDataPath!, state.Level);
+            var deviceId = Identity.GetOrCreateDeviceId(config.PersistentDataPath!, state.Level);
             // ToProperties returns a fresh dict per call, so no snapshot needed.
             var userId = state.Level == ConsentLevel.Full ? state.UserId : null;
-            var msg = MessageBuilder.Track(eventName, anonymousId, userId, Constants.LibraryVersion, properties, config.TestMode);
+            var msg = MessageBuilder.Track(eventName, anonymousId, userId, deviceId, Constants.LibraryVersion, properties, config.TestMode);
             EnqueueTrack(msg);
         }
 
@@ -357,8 +379,9 @@ namespace Immutable.Audience
             if (config == null) return;
 
             var anonymousId = Identity.GetOrCreate(config.PersistentDataPath!, state.Level);
+            var deviceId = Identity.GetOrCreateDeviceId(config.PersistentDataPath!, state.Level);
             var userId = state.Level == ConsentLevel.Full ? state.UserId : null;
-            var msg = MessageBuilder.Track(eventName, anonymousId, userId, Constants.LibraryVersion,
+            var msg = MessageBuilder.Track(eventName, anonymousId, userId, deviceId, Constants.LibraryVersion,
                 SnapshotCallerDict(properties), config.TestMode);
             EnqueueTrack(msg);
         }
@@ -404,7 +427,8 @@ namespace Immutable.Audience
             }
 
             var anonymousId = Identity.GetOrCreate(config.PersistentDataPath!, level);
-            var msg = MessageBuilder.Identify(anonymousId, userId, identityType.ToLowercaseString(),
+            var deviceId = Identity.GetOrCreateDeviceId(config.PersistentDataPath!, level);
+            var msg = MessageBuilder.Identify(anonymousId, userId, deviceId, identityType.ToLowercaseString(),
                 Constants.LibraryVersion, SnapshotCallerDict(traits), config.TestMode);
             EnqueueIdentity(msg);
         }
@@ -435,8 +459,9 @@ namespace Immutable.Audience
             var config = _config;
             if (config == null) return;
 
+            var deviceId = Identity.GetOrCreateDeviceId(config.PersistentDataPath!, state.Level);
             var msg = MessageBuilder.Alias(fromId, fromType.ToLowercaseString(), toId, toType.ToLowercaseString(),
-                Constants.LibraryVersion, config.TestMode);
+                deviceId, Constants.LibraryVersion, config.TestMode);
             EnqueueIdentity(msg);
         }
 
@@ -471,13 +496,11 @@ namespace Immutable.Audience
                 newSession = _session;
             }
 
-            // Phase 2 outside _initLock. Order: Dispose enqueues session_end →
-            // PurgeAll wipes it → Identity.Reset clears the anonymousId file →
-            // Start emits the new session_start against the fresh id. Matches
-            // the in-lock sequence this replaces.
+            // Phase 2 outside _initLock: Dispose enqueues session_end, PurgeAll wipes it,
+            // RotateAnonymousId rotates anon_id (device_id kept), Start emits the new session_start.
             oldSession?.Dispose();
             queueForPurge?.PurgeAll();
-            Identity.Reset(config.PersistentDataPath!);
+            Identity.RotateAnonymousId(config.PersistentDataPath!);
             newSession?.Start();
         }
 
@@ -1290,7 +1313,7 @@ namespace Immutable.Audience
         }
 
         // Reads the EOS EpicAccountId via AuthInterface.GetLoggedInAccountByIndex(0).
-        // EpicAccountId is the player's Epic Games Account — consistent across all products.
+        // EpicAccountId is the player's Epic Games Account, consistent across all products.
         // Requires the game to have already initialised EOS via EOSManager.
         private static bool TryGetEpicAccountId(out string? id)
         {

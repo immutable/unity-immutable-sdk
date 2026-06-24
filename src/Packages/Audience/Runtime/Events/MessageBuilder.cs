@@ -11,6 +11,7 @@ namespace Immutable.Audience
             string eventName,
             string? anonymousId,
             string? userId,
+            string? deviceId,
             string packageVersion,
             Dictionary<string, object>? properties = null,
             bool testMode = false)
@@ -24,6 +25,9 @@ namespace Immutable.Audience
             if (!string.IsNullOrEmpty(userId))
                 msg[MessageFields.UserId] = Truncate(userId, Constants.MaxFieldLength);
 
+            if (!string.IsNullOrEmpty(deviceId))
+                msg[MessageFields.DeviceId] = Truncate(deviceId, Constants.MaxFieldLength);
+
             if (properties != null && properties.Count > 0)
             {
                 TruncateStringValues(properties);
@@ -36,6 +40,7 @@ namespace Immutable.Audience
         internal static Dictionary<string, object> Identify(
             string? anonymousId,
             string? userId,
+            string? deviceId,
             string identityType,
             string packageVersion,
             Dictionary<string, object>? traits = null,
@@ -48,6 +53,9 @@ namespace Immutable.Audience
 
             if (!string.IsNullOrEmpty(userId))
                 msg[MessageFields.UserId] = Truncate(userId, Constants.MaxFieldLength);
+
+            if (!string.IsNullOrEmpty(deviceId))
+                msg[MessageFields.DeviceId] = Truncate(deviceId, Constants.MaxFieldLength);
 
             msg["identityType"] = Truncate(identityType, Constants.MaxFieldLength);
 
@@ -65,6 +73,7 @@ namespace Immutable.Audience
             string fromType,
             string toId,
             string toType,
+            string? deviceId,
             string packageVersion,
             bool testMode = false)
         {
@@ -73,6 +82,10 @@ namespace Immutable.Audience
             msg["fromType"] = Truncate(fromType, Constants.MaxFieldLength);
             msg["toId"] = Truncate(toId, Constants.MaxFieldLength);
             msg["toType"] = Truncate(toType, Constants.MaxFieldLength);
+
+            if (!string.IsNullOrEmpty(deviceId))
+                msg[MessageFields.DeviceId] = Truncate(deviceId, Constants.MaxFieldLength);
+
             return msg;
         }
 

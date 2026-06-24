@@ -142,6 +142,92 @@ namespace Immutable.Audience.Tests
                 "AnonymousId should return the persisted id once tracking has created one");
         }
 
+        // -----------------------------------------------------------------
+        // DeviceId
+        // -----------------------------------------------------------------
+
+        [Test]
+        public void DeviceId_ConsentNone_ReturnsNull()
+        {
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.None));
+            Assert.IsNull(ImmutableAudience.DeviceId);
+        }
+
+        [Test]
+        public void DeviceId_ConsentAnonymous_ReturnsNonEmptyId()
+        {
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));
+            ImmutableAudience.Track("warmup");
+
+            Assert.IsFalse(string.IsNullOrEmpty(ImmutableAudience.DeviceId));
+        }
+
+        [Test]
+        public void DeviceId_DifferentFromAnonymousId()
+        {
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));
+            ImmutableAudience.Track("warmup");
+
+            Assert.AreNotEqual(ImmutableAudience.AnonymousId, ImmutableAudience.DeviceId);
+        }
+
+        [Test]
+        public void DeviceId_SurvivesReset()
+        {
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));
+            ImmutableAudience.Track("warmup");
+
+            var deviceIdBefore = ImmutableAudience.DeviceId;
+            ImmutableAudience.Reset();
+
+            Assert.AreEqual(deviceIdBefore, ImmutableAudience.DeviceId,
+                "device_id must survive logout (Reset)");
+        }
+
+        [Test]
+        public void DeviceId_WipedBySetConsentNone()
+        {
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));
+            ImmutableAudience.Track("warmup");
+
+            var deviceIdBefore = ImmutableAudience.DeviceId;
+            ImmutableAudience.SetConsent(ConsentLevel.None);
+            ImmutableAudience.SetConsent(ConsentLevel.Anonymous);
+            ImmutableAudience.Track("post-optin");
+
+            Assert.AreNotEqual(deviceIdBefore, ImmutableAudience.DeviceId,
+                "device_id must be regenerated after opt-out then opt-back-in");
+        }
+
+        [Test]
+        public void DeviceId_PresentOnTrackEvents()
+        {
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));
+            ImmutableAudience.Track("test_event");
+            ImmutableAudience.FlushQueueToDiskForTesting();
+
+            var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
+            var blobs = Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText).ToList();
+
+            Assert.IsTrue(blobs.Any(b => b.Contains("\"deviceId\":")),
+                "track events must include deviceId at Anonymous+ consent");
+        }
+
+        [Test]
+        public void DeviceId_StableAcrossAnonIdRotation()
+        {
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));
+            ImmutableAudience.Track("warmup");
+
+            var deviceIdBefore = ImmutableAudience.DeviceId;
+            var anonIdBefore = ImmutableAudience.AnonymousId;
+
+            ImmutableAudience.Reset();
+
+            Assert.AreNotEqual(anonIdBefore, ImmutableAudience.AnonymousId, "anon_id must rotate on Reset");
+            Assert.AreEqual(deviceIdBefore, ImmutableAudience.DeviceId, "device_id must be stable across Reset");
+        }
+
         [Test]
         public void SessionId_MirrorsSessionLifecycle()
         {
