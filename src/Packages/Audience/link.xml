@@ -41,4 +41,32 @@ framework dependency.
   <assembly fullname="Facepunch.Steamworks.Posix" preserve="all" />
   <assembly fullname="Facepunch.Steamworks.Win64" preserve="all" />
   <assembly fullname="Facepunch.Steamworks.Win32" preserve="all" />
+
+  <!--
+    Epic platform auto-detection. The SDK resolves these types via reflection
+    at runtime; entries for missing assemblies are silently ignored.
+    Assembly names vary by how the PlayEveryWare EOS Unity plugin is installed:
+      com.Epic.OnlineServices       — EOS C# bindings (UPM package install)
+      com.playeveryware.eos.core    — EOSManager (UPM package install)
+      PlayEveryWare.EpicOnlineServices — custom/manual assembly name
+      EOSSDK                        — legacy / direct DLL install
+
+    NOTE: assembly-level preserve="all" only keeps type declarations; method
+    metadata requires type-level preserve="all".
+  -->
+  <assembly fullname="com.Epic.OnlineServices">
+    <type fullname="Epic.OnlineServices.Auth.AuthInterface" preserve="all" />
+    <type fullname="Epic.OnlineServices.EpicAccountId" preserve="all" />
+  </assembly>
+  <assembly fullname="EOSSDK">
+    <type fullname="Epic.OnlineServices.Auth.AuthInterface" preserve="all" />
+    <type fullname="Epic.OnlineServices.EpicAccountId" preserve="all" />
+  </assembly>
+  <assembly fullname="PlayEveryWare.EpicOnlineServices">
+    <type fullname="Epic.OnlineServices.Auth.AuthInterface" preserve="all" />
+    <type fullname="Epic.OnlineServices.EpicAccountId" preserve="all" />
+  </assembly>
+  <assembly fullname="com.playeveryware.eos.core">
+    <type fullname="PlayEveryWare.EpicOnlineServices.EOSManager" preserve="all" />
+  </assembly>
 </linker>

@@ -34,4 +34,30 @@ hooks fire under IL2CPP with stripping High.
   <assembly fullname="Facepunch.Steamworks.Posix" preserve="all" />
   <assembly fullname="Facepunch.Steamworks.Win64" preserve="all" />
   <assembly fullname="Facepunch.Steamworks.Win32" preserve="all" />
+
+  <!--
+    Epic auto-detection; mirrors SDK link.xml. Ignored if EOS plugin is not present.
+    Assembly names vary by PlayEveryWare EOS Unity plugin install method:
+      com.Epic.OnlineServices    — EOS C# bindings (UPM)
+      com.playeveryware.eos.core — EOSManager (UPM)
+      PlayEveryWare.EpicOnlineServices / EOSSDK — legacy / manual install
+
+    Assembly-level preserve="all" only keeps type declarations; method
+    metadata requires type-level preserve="all".
+  -->
+  <assembly fullname="com.Epic.OnlineServices">
+    <type fullname="Epic.OnlineServices.Auth.AuthInterface" preserve="all" />
+    <type fullname="Epic.OnlineServices.EpicAccountId" preserve="all" />
+  </assembly>
+  <assembly fullname="com.playeveryware.eos.core">
+    <type fullname="PlayEveryWare.EpicOnlineServices.EOSManager" preserve="all" />
+  </assembly>
+  <assembly fullname="EOSSDK">
+    <type fullname="Epic.OnlineServices.Auth.AuthInterface" preserve="all" />
+    <type fullname="Epic.OnlineServices.EpicAccountId" preserve="all" />
+  </assembly>
+  <assembly fullname="PlayEveryWare.EpicOnlineServices">
+    <type fullname="Epic.OnlineServices.Auth.AuthInterface" preserve="all" />
+    <type fullname="Epic.OnlineServices.EpicAccountId" preserve="all" />
+  </assembly>
 </linker>

@@ -257,6 +257,7 @@ namespace Immutable.Audience
 
             FireGameLaunch(config, consentAtInit, skanRegistered, attributionContext);
             TryIdentifySteamUser();
+            TryIdentifyEpicUser();
 
             CheckAndFireAttStatusChanged(config, consentAtInit);
 
@@ -1214,6 +1215,116 @@ namespace Immutable.Audience
             return true;
         }
 
+        // Resolves PlayEveryWare.EpicOnlineServices.EOSManager across install methods.
+        // Returns null when the EOS Unity plugin is not present.
+        private static System.Type? ResolveEosManagerType() =>
+            System.Type.GetType("PlayEveryWare.EpicOnlineServices.EOSManager, PlayEveryWare.EpicOnlineServices")
+            ?? System.Type.GetType("PlayEveryWare.EpicOnlineServices.EOSManager, com.playeveryware.eos.core")
+            ?? System.Type.GetType("PlayEveryWare.EpicOnlineServices.EOSManager, Assembly-CSharp");
+
+        // Gets the initialised PlatformInterface handle from EOSManager.Instance.
+        // Returns null when the EOS plugin is absent or EOS has not been initialised.
+        private static object? GetEosPlatformInterface()
+        {
+            var managerType = ResolveEosManagerType();
+            if (managerType == null) return null;
+            // Use the compiled getter name (get_Instance) for IL2CPP compatibility;
+            // property metadata can be stripped even when the method body survives.
+            var instance = managerType.GetMethod("get_Instance")?.Invoke(null, null)
+                ?? managerType.GetProperty("Instance")?.GetValue(null);
+            if (instance == null) return null;
+            return instance.GetType().GetMethod("GetEOSPlatformInterface")?.Invoke(instance, null);
+        }
+
+        // Sets distribution_platform = "epic" when the game was launched from the Epic
+        // Games Store launcher. Uses command-line args injected by the EGS launcher
+        // (-epicenv=, -epicapp=) rather than EOS-being-initialised, which would
+        // misattribute Steam games that use EOS purely for cross-play.
+        // Config override wins afterward.
+        private static void TryDetectEpicPlatform(Dictionary<string, object> properties)
+        {
+            try
+            {
+                if (IsLaunchedFromEpicGamesStore())
+                    properties["distribution_platform"] = DistributionPlatforms.Epic;
+            }
+            catch (Exception ex)
+            {
+                Log.Warn(AudienceLogs.EpicPlatformDetectionFailed(ex));
+            }
+        }
+
+        // EGS launcher injects these args into every game it launches, regardless of
+        // whether the game integrates EOS. Absent when EOS is used for cross-play only.
+        // -EpicPortal is the strongest signal (bare flag, no value); -epicapp= and
+        // -epicenv= are the environment/artifact identifiers also always present.
+        private static bool IsLaunchedFromEpicGamesStore()
+        {
+            var args = Environment.GetCommandLineArgs();
+            foreach (var arg in args)
+            {
+                if (arg.Equals("-EpicPortal", StringComparison.OrdinalIgnoreCase) ||
+                    arg.StartsWith("-epicenv=", StringComparison.OrdinalIgnoreCase) ||
+                    arg.StartsWith("-epicapp=", StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+            return false;
+        }
+
+        // Calls Identify with the logged-in EOS ProductUserId.
+        // No-op if EOS is not present, not initialised, no user is logged in,
+        // or consent is below Full.
+        private static void TryIdentifyEpicUser()
+        {
+            try
+            {
+                if (!TryGetEpicAccountId(out var id))
+                    return;
+                Log.Debug(AudienceLogs.EpicAutoIdentified(id!));
+                Identify(id!, IdentityType.Epic);
+            }
+            catch (Exception ex)
+            {
+                Log.Warn(AudienceLogs.EpicIdentityCollectionFailed(ex));
+            }
+        }
+
+        // Reads the EOS EpicAccountId via AuthInterface.GetLoggedInAccountByIndex(0).
+        // EpicAccountId is the player's Epic Games Account — consistent across all products.
+        // Requires the game to have already initialised EOS via EOSManager.
+        private static bool TryGetEpicAccountId(out string? id)
+        {
+            id = null;
+
+            // Guard: EOS C# bindings must be present (assembly name varies by install method).
+            if (System.Type.GetType("Epic.OnlineServices.Auth.AuthInterface, com.Epic.OnlineServices") == null
+                && System.Type.GetType("Epic.OnlineServices.Auth.AuthInterface, EOSSDK") == null)
+                return false;
+
+            var platformInterface = GetEosPlatformInterface();
+            if (platformInterface == null) return false;
+
+            var authInterface = platformInterface.GetType()
+                .GetMethod("GetAuthInterface")?.Invoke(platformInterface, null);
+            if (authInterface == null) return false;
+
+            // Skip if no accounts are logged in.
+            var countResult = authInterface.GetType()
+                .GetMethod("GetLoggedInAccountsCount")?.Invoke(authInterface, null);
+            if (!(countResult is int count && count > 0)) return false;
+
+            // C# binding takes a plain int index, not an options struct.
+            var epicAccountId = authInterface.GetType()
+                .GetMethod("GetLoggedInAccountByIndex")?.Invoke(authInterface, new object[] { 0 });
+            if (epicAccountId == null) return false;
+
+            if (epicAccountId.GetType().GetMethod("IsValid")?.Invoke(epicAccountId, null) as bool? != true)
+                return false;
+
+            id = epicAccountId.ToString();
+            return !string.IsNullOrEmpty(id);
+        }
+
         // consentAtInit only gates the launch; Track still checks live _state via CanTrack.
         private static void FireGameLaunch(
             AudienceConfig config,
@@ -1246,6 +1357,7 @@ namespace Immutable.Audience
 
             // Auto-detect distribution platform via reflection. Config override wins below.
             TryDetectSteamPlatform(properties);
+            TryDetectEpicPlatform(properties);
 
             // Config-supplied distributionPlatform overrides the auto-detected value.
             if (config.DistributionPlatform != null)

@@ -171,5 +171,18 @@ namespace Immutable.Audience
         internal static string SteamIdentityCollectionFailed(Exception ex) =>
             $"Steam identity collection threw {ex.GetType().Name}: {ex.Message}. " +
             "Steam user ID will not be auto-collected.";
+
+        // ---- Epic auto-detection ----
+
+        internal static string EpicPlatformDetectionFailed(Exception ex) =>
+            $"Epic platform detection threw {ex.GetType().Name}: {ex.Message}. " +
+            "distribution_platform will not be auto-set.";
+
+        internal static string EpicAutoIdentified(string epicId) =>
+            $"auto-identified epic user: {epicId}";
+
+        internal static string EpicIdentityCollectionFailed(Exception ex) =>
+            $"Epic identity collection threw {ex.GetType().Name}: {ex.Message}. " +
+            "Epic user ID will not be auto-collected.";
     }
 }
