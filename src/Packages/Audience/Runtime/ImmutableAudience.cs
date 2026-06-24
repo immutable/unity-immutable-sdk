@@ -665,6 +665,11 @@ namespace Immutable.Audience
 
             newSession?.Start();
 
+            if (level == ConsentLevel.Full && previous != ConsentLevel.Full)
+            {
+                TryIdentifySteamUser();
+                TryIdentifyEpicUser();
+            }
 
             SyncConsentToBackend(config, level, anonymousIdForPut);
         }
