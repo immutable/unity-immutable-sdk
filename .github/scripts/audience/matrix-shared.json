@@ -11,8 +11,9 @@
     { "target": "StandaloneLinux64",   "runner": "ubuntu-latest-8-cores",            "install_unity_script": "",                                                  "run_playmode_script": ".github/scripts/audience/playmode-linux.sh" }
   ],
   "mobile_targets": [
-    { "target": "Android", "build_player_method": "AndroidBuilder.Build" },
-    { "target": "iOS",     "build_player_method": "IosBuilder.Build" }
+    { "target": "Android",             "build_player_method": "AndroidBuilder.Build" },
+    { "target": "iOS",                 "build_player_method": "IosBuilder.Build" },
+    { "target": "StandaloneWindows64", "build_player_method": "WindowsBuilder.Build" }
   ],
   "pr_exclude": [
     { "unity": "2022.3.62f2" },
