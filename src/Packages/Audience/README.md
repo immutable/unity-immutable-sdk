@@ -14,7 +14,7 @@ https://github.com/immutable/unity-immutable-sdk.git?path=src/Packages/Audience#
 
 For reproducible builds, replace `#main` with a release tag or a specific commit SHA.
 
-Requires Unity 2021.3 or later. Works under Mono and IL2CPP.
+Requires Unity 2021.3 or later. Works under Mono and IL2CPP. Supported platforms: Android, iOS, Windows 10+ (64-bit), macOS, Linux (64-bit).
 
 ## First event
 
