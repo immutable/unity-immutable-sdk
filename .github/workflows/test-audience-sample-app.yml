@@ -266,12 +266,263 @@ jobs:
           if-no-files-found: ignore
           path: |
             examples/audience/Builds/Android/*.apk
-            examples/audience/Logs/**
+            examples/audience/Builds/Windows/**
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mobile-build-logs-${{ matrix.platform.target }}-${{ matrix.unity.version }}
+          if-no-files-found: ignore
+          path: examples/audience/Logs/**
+
+  # iOS build size: Unity batch mode produces the Xcode project, xcodebuild compiles
+  # to a real .app without signing. No Apple certs needed for size measurement.
+  build-size-ios:
+    needs: paths-changed
+    if: |
+      (github.event_name == 'pull_request'
+        && github.event.pull_request.head.repo.fork == false
+        && needs.paths-changed.outputs.audience == 'true')
+      || github.event_name == 'workflow_dispatch'
+    name: Build size / iOS
+    runs-on: ["self-hosted", "macOS", "ARM64"]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Unity Library (iOS size)
+        uses: actions/cache@v4
+        with:
+          path: examples/audience/Library
+          key: Library-size-iOS-2021.3.45f2-${{ hashFiles('examples/audience/Assets/**', 'examples/audience/Packages/**', 'examples/audience/ProjectSettings/**', 'src/Packages/Audience/**') }}
+          restore-keys: Library-size-iOS-2021.3.45f2-
+
+      - name: Install Unity
+        env:
+          UNITY_VERSION: 2021.3.45f2
+          UNITY_CHANGESET: 88f88f591b2e
+          BACKEND: Mono2x
+        run: .github/scripts/audience/install-unity-macos.sh
+
+      - name: Install iOS build support module
+        env:
+          UNITY_VERSION: 2021.3.45f2
+          UNITY_CHANGESET: 88f88f591b2e
+        run: |
+          "/Applications/Unity Hub.app/Contents/MacOS/Unity Hub" -- --headless install-modules \
+            --version "$UNITY_VERSION" --changeset "$UNITY_CHANGESET" --architecture arm64 \
+            --module ios \
+            || echo "(install-modules non-zero, OK if 'No modules found to install')"
+
+      - name: Build Xcode project
+        run: |
+          "$UNITY_PATH" \
+            -projectPath "${{ github.workspace }}/examples/audience" \
+            -executeMethod Immutable.Audience.Samples.SampleApp.Editor.IosBuilder.Build \
+            -buildTarget iOS \
+            -logFile "${{ github.workspace }}/ios-unity-build.log" \
+            -quit -batchmode
+
+      - name: Compile with Xcode (no signing)
+        env:
+          DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+        run: |
+          xcodebuild \
+            -project "${{ github.workspace }}/examples/audience/Builds/iOS/Unity-iPhone.xcodeproj" \
+            -scheme Unity-iPhone \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath "${{ github.workspace }}/ios-derived" \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-size-iOS
+          path: ios-derived/Build/Products/Release-iphoneos/*.app
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build-size-ios-log
+          path: ios-unity-build.log
+
+  # macOS build size: Unity batch mode produces the .app directly.
+  build-size-macos:
+    needs: paths-changed
+    if: |
+      (github.event_name == 'pull_request'
+        && github.event.pull_request.head.repo.fork == false
+        && needs.paths-changed.outputs.audience == 'true')
+      || github.event_name == 'workflow_dispatch'
+    name: Build size / macOS
+    runs-on: ["self-hosted", "macOS", "ARM64"]
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Unity Library (macOS size)
+        uses: actions/cache@v4
+        with:
+          path: examples/audience/Library
+          key: Library-size-macOS-2021.3.45f2-${{ hashFiles('examples/audience/Assets/**', 'examples/audience/Packages/**', 'examples/audience/ProjectSettings/**', 'src/Packages/Audience/**') }}
+          restore-keys: Library-size-macOS-2021.3.45f2-
+
+      - name: Install Unity
+        env:
+          UNITY_VERSION: 2021.3.45f2
+          UNITY_CHANGESET: 88f88f591b2e
+          BACKEND: Mono2x
+        run: .github/scripts/audience/install-unity-macos.sh
+
+      - name: Build macOS app
+        run: |
+          "$UNITY_PATH" \
+            -projectPath "${{ github.workspace }}/examples/audience" \
+            -executeMethod Immutable.Audience.Samples.SampleApp.Editor.MacBuilder.Build \
+            -buildTarget StandaloneOSX \
+            -logFile "${{ github.workspace }}/macos-build.log" \
+            -quit -batchmode
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-size-macOS
+          path: examples/audience/Builds/macOS/AudienceSample.app
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build-size-macos-log
+          path: macos-build.log
+
+  # Collects Android + Windows (from mobile-build) and iOS + macOS (from dedicated jobs),
+  # measures sizes, posts a table comment on the PR, and fails if any platform exceeds budget.
+  build-size-check:
+    needs: [mobile-build, build-size-ios, build-size-macos]
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    name: Build size / check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 2021.3.45f2 is pinned here because it is the only version guaranteed to
+      # run on PRs — 2022.3.62f2 is excluded via pr_exclude in matrix-shared.json.
+      - uses: actions/download-artifact@v4
+        with:
+          name: mobile-build-Android-2021.3.45f2
+          path: artifacts/Android
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: mobile-build-StandaloneWindows64-2021.3.45f2
+          path: artifacts/Windows
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-size-iOS
+          path: artifacts/iOS
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-size-macOS
+          path: artifacts/macOS
+
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            const budget = JSON.parse(fs.readFileSync('.github/audience-build-budget.json', 'utf8'));
+
+            function dirSize(dir) {
+              let total = 0;
+              const walk = d => {
+                for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
+                  const full = path.join(d, entry.name);
+                  if (entry.isDirectory()) walk(full);
+                  else total += fs.statSync(full).size;
+                }
+              };
+              walk(dir);
+              return total;
+            }
+
+            function apkSize(dir) {
+              const apk = fs.readdirSync(dir).find(f => f.endsWith('.apk'));
+              return apk ? fs.statSync(path.join(dir, apk)).size : 0;
+            }
+
+            const measured = {
+              Android: apkSize('artifacts/Android'),
+              Windows: dirSize('artifacts/Windows'),
+              iOS:     dirSize('artifacts/iOS'),
+              macOS:   dirSize('artifacts/macOS'),
+            };
+
+            let anyFail = false;
+            const mb = n => (n / 1048576).toFixed(2);
+            const rows = Object.entries(measured).map(([plat, bytes]) => {
+              const { baselineBytes, maxBytes } = budget.platforms[plat];
+              const delta = bytes - baselineBytes;
+              const sign = delta >= 0 ? '+' : '';
+              const limited = maxBytes > 0;
+              const pass = !limited || bytes <= maxBytes;
+              if (!pass) anyFail = true;
+              const status = !limited ? '—' : pass ? '✅' : '❌';
+              return `| ${plat} | ${mb(bytes)} MB | ${sign}${mb(delta)} MB | ${status} |`;
+            });
+
+            const limitsSet = Object.values(budget.platforms).some(p => p.maxBytes > 0);
+            const footer = limitsSet
+              ? 'Fails if any platform exceeds its absolute size limit.'
+              : '_No size limits set yet. Set baselineBytes and maxBytes in `.github/audience-build-budget.json`._';
+
+            const body = [
+              '## Audience SDK — Build Size',
+              '',
+              '| Platform | Build Size | vs Baseline | |',
+              '|---|---|---|---|',
+              ...rows,
+              '',
+              footer,
+            ].join('\n');
+
+            if (context.eventName === 'pull_request') {
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: context.issue.number,
+              });
+              const existing = comments.find(c =>
+                c.user.type === 'Bot' && c.body.includes('Audience SDK — Build Size')
+              );
+              if (existing) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner, repo: context.repo.repo,
+                  comment_id: existing.id, body,
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner, repo: context.repo.repo,
+                  issue_number: context.issue.number, body,
+                });
+              }
+            } else {
+              await core.summary.addRaw(body).write();
+            }
+
+            if (anyFail) core.setFailed('One or more platforms exceeded the build size budget.');
 
   # Required check. Passes immediately when no Audience paths changed;
-  # fails if playmode or mobile-build tests failed or were cancelled.
+  # fails if playmode, mobile-build, or build-size-check failed or were cancelled.
   ci-gate:
-    needs: [playmode, mobile-build]
+    needs: [playmode, mobile-build, build-size-ios, build-size-macos, build-size-check]
     if: always() && github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
@@ -279,10 +530,23 @@ jobs:
         run: |
           PLAYMODE="${{ needs.playmode.result }}"
           MOBILE="${{ needs.mobile-build.result }}"
-          if [[ "$PLAYMODE" == "failure" || "$PLAYMODE" == "cancelled" ]]; then
+          IOS="${{ needs.build-size-ios.result }}"
+          MACOS="${{ needs.build-size-macos.result }}"
+          # build-size-check runs only when all 3 needs succeed; if any is skipped or fails, build-size-check is skipped too.
+          BSIZE="${{ needs.build-size-check.result }}"
+          if [[ "$PLAYMODE" != "success" && "$PLAYMODE" != "skipped" ]]; then
             echo "::error::playmode tests $PLAYMODE" && exit 1
           fi
-          if [[ "$MOBILE" == "failure" || "$MOBILE" == "cancelled" ]]; then
+          if [[ "$MOBILE" != "success" && "$MOBILE" != "skipped" ]]; then
             echo "::error::mobile-build $MOBILE" && exit 1
           fi
-          echo "Gate passed (playmode=$PLAYMODE, mobile-build=$MOBILE)"
+          if [[ "$IOS" != "success" && "$IOS" != "skipped" ]]; then
+            echo "::error::build-size-ios $IOS" && exit 1
+          fi
+          if [[ "$MACOS" != "success" && "$MACOS" != "skipped" ]]; then
+            echo "::error::build-size-macos $MACOS" && exit 1
+          fi
+          if [[ "$BSIZE" != "success" && "$BSIZE" != "skipped" ]]; then
+            echo "::error::build-size-check $BSIZE" && exit 1
+          fi
+          echo "Gate passed (playmode=$PLAYMODE, mobile=$MOBILE, ios=$IOS, macos=$MACOS, build-size=$BSIZE)"
