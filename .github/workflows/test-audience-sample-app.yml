@@ -1,4 +1,4 @@
-name: Audience SDK PlayMode (IL2CPP + Mono)
+name: Audience SDK PlayMode (IL2CPP)
 
 on:
   pull_request:

@@ -21,6 +21,12 @@ namespace Immutable.Audience.Samples.SampleApp.Editor
         {
             string buildPath = GetArgValue("--buildPath") ?? DefaultBuildPath;
 
+            // Force a direct APK output. exportAsGoogleAndroidProject outputs a Gradle project
+            // directory and buildAppBundle outputs a .aab — either causes the *.apk glob in CI
+            // to find nothing and report 0 bytes.
+            EditorUserBuildSettings.exportAsGoogleAndroidProject = false;
+            EditorUserBuildSettings.buildAppBundle = false;
+
             var options = new BuildPlayerOptions
             {
                 scenes = new[] { "Assets/SampleApp/Scenes/SampleApp.unity" },
