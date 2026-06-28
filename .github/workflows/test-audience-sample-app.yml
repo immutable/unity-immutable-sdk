@@ -34,7 +34,8 @@ jobs:
           fi
           git fetch origin ${{ github.base_ref }} --depth=1
           if git diff --name-only origin/${{ github.base_ref }}...HEAD \
-              | grep -qE '^(src/Packages/Audience/|examples/audience/|\.github/workflows/test-audience-sample-app\.yml)'; then
+              | grep -E '^(src/Packages/Audience/|examples/audience/|\.github/workflows/test-audience-sample-app\.yml)' \
+              | grep -qvE '\.(md|txt)$'; then
             echo "audience=true" >> "$GITHUB_OUTPUT"
           else
             echo "audience=false" >> "$GITHUB_OUTPUT"
