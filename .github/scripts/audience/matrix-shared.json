@@ -4,7 +4,7 @@
     { "version": "6000.4.0f1",  "changeset": "8cf496087c8f" },
     { "version": "2022.3.62f2", "changeset": "7670c08855a9" }
   ],
-  "scripting_backends": ["IL2CPP", "Mono2x"],
+  "scripting_backends": ["IL2CPP"],
   "desktop_targets": [
     { "target": "StandaloneWindows64", "runner": ["self-hosted", "Windows", "X64"], "install_unity_script": ".github/scripts/audience/install-unity-windows.ps1", "run_playmode_script": ".github/scripts/audience/playmode-windows.ps1" },
     { "target": "StandaloneOSX",       "runner": ["self-hosted", "macOS",  "ARM64"], "install_unity_script": ".github/scripts/audience/install-unity-macos.sh",   "run_playmode_script": ".github/scripts/audience/playmode-macos.sh" },
