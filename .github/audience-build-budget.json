@@ -1,9 +1,8 @@
 {
-  "note": "Baselines and limits must be set after the first run on main (workflow_dispatch). Set baselineBytes to the measured size, maxBytes to a comfortable ceiling (e.g. measured + 10 MB). A maxBytes of 0 means no limit is enforced for that platform.",
   "platforms": {
-    "Android": { "baselineBytes": 0, "maxBytes": 0 },
-    "iOS":     { "baselineBytes": 0, "maxBytes": 0 },
-    "Windows": { "baselineBytes": 0, "maxBytes": 0 },
-    "macOS":   { "baselineBytes": 0, "maxBytes": 0 }
+    "Android": { "emptyAppBytes": 22283581, "baselineBytes": 22662981, "maxBytes": 43255101 },
+    "iOS":     { "emptyAppBytes": 40651984, "baselineBytes": 49583841, "maxBytes": 61623504 },
+    "Windows": { "emptyAppBytes": 53708485, "baselineBytes": 53877292, "maxBytes": 74680005 },
+    "macOS":   { "emptyAppBytes": 95371892, "baselineBytes": 96318267, "maxBytes": 116343412 }
   }
 }
