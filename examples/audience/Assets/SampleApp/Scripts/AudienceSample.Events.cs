@@ -77,6 +77,13 @@ namespace Immutable.Audience.Samples.SampleApp
                 EventField.Text("itemType", optional: true),
                 EventField.Text("itemId",   optional: true),
             }),
+            new EventSpec("achievement_unlocked", new[] {
+                EventField.Text("achievementId"),
+                EventField.Text("achievementName"),
+                EventField.Enum("achievementType",
+                    new[] { "onboarding", "progression", "mastery", "social", "collection" },
+                    optional: true),
+            }),
             new EventSpec("milestone_reached", new[] { EventField.Text("name") }),
             new EventSpec("game_page_viewed",  new[] {
                 EventField.Text("gameId"),
@@ -128,6 +135,13 @@ namespace Immutable.Audience.Samples.SampleApp
                         Quantity = OptionalInt(props, "quantity"),
                         TransactionId = OptionalString(props, "transactionId"),
                     };
+                case "achievement_unlocked":
+                    return new AchievementUnlocked
+                    {
+                        AchievementId   = OptionalString(props, "achievementId") ?? "",
+                        AchievementName = OptionalString(props, "achievementName") ?? "",
+                        AchievementType = ParseAchievementType(props),
+                    };
                 case "milestone_reached":
                     return new MilestoneReached { Name = OptionalString(props, "name") ?? "" };
                 default:
@@ -145,6 +159,21 @@ namespace Immutable.Audience.Samples.SampleApp
                 "complete" => ProgressionStatus.Complete,
                 "fail"     => ProgressionStatus.Fail,
                 _          => (ProgressionStatus?)null,
+            };
+        }
+
+        private static AchievementType? ParseAchievementType(Dictionary<string, object> props)
+        {
+            var s = OptionalString(props, "achievementType");
+            if (string.IsNullOrEmpty(s)) return null;
+            return s switch
+            {
+                "onboarding"  => AchievementType.Onboarding,
+                "progression" => AchievementType.Progression,
+                "mastery"     => AchievementType.Mastery,
+                "social"      => AchievementType.Social,
+                "collection"  => AchievementType.Collection,
+                _             => (AchievementType?)null,
             };
         }
 

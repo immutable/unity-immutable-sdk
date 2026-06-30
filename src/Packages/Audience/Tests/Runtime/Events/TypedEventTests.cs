@@ -170,6 +170,61 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
+        public void AchievementUnlocked_EventName_IsAchievementUnlocked()
+        {
+            Assert.AreEqual("achievement_unlocked", new AchievementUnlocked().EventName);
+        }
+
+        [Test]
+        public void AchievementUnlocked_WithoutAchievementId_ThrowsOnToProperties()
+        {
+            var evt = new AchievementUnlocked { AchievementName = "100 Enemies Defeated" };
+
+            var ex = Assert.Throws<ArgumentException>(() => evt.ToProperties());
+            Assert.That(ex!.Message, Does.Contain("AchievementId"));
+        }
+
+        [Test]
+        public void AchievementUnlocked_WithoutAchievementName_ThrowsOnToProperties()
+        {
+            var evt = new AchievementUnlocked { AchievementId = "ach_enemies_100" };
+
+            var ex = Assert.Throws<ArgumentException>(() => evt.ToProperties());
+            Assert.That(ex!.Message, Does.Contain("AchievementName"));
+        }
+
+        [Test]
+        public void AchievementUnlocked_ProducesCorrectProperties()
+        {
+            var evt = new AchievementUnlocked
+            {
+                AchievementId = "ach_enemies_100",
+                AchievementName = "100 Enemies Defeated",
+                AchievementType = Immutable.Audience.AchievementType.Mastery,
+            };
+
+            var props = evt.ToProperties();
+
+            Assert.AreEqual("ach_enemies_100", props["achievement_id"]);
+            Assert.AreEqual("100 Enemies Defeated", props["achievement_name"]);
+            Assert.AreEqual("mastery", props["achievement_type"]);
+        }
+
+        [Test]
+        public void AchievementUnlocked_OptionalFieldsOmitted_WhenNull()
+        {
+            var props = new AchievementUnlocked
+            {
+                AchievementId = "ach_enemies_100",
+                AchievementName = "100 Enemies Defeated",
+            }.ToProperties();
+
+            Assert.IsTrue(props.ContainsKey("achievement_id"));
+            Assert.IsTrue(props.ContainsKey("achievement_name"));
+            Assert.IsFalse(props.ContainsKey("achievement_type"));
+        }
+
+        [Test]
         public void MilestoneReached_ProducesCorrectProperties()
         {
             var props = new MilestoneReached { Name = "first_boss_defeated" }.ToProperties();
