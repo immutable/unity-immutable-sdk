@@ -266,6 +266,99 @@ namespace Immutable.Audience
     }
 
     /// <summary>
+    /// Category of an achievement.
+    /// </summary>
+    public enum AchievementType
+    {
+        /// <summary>
+        /// Introductory achievements tied to first-time player actions.
+        /// </summary>
+        Onboarding,
+
+        /// <summary>
+        /// Achievements tied to advancing through story or level content.
+        /// </summary>
+        Progression,
+
+        /// <summary>
+        /// Skill- or challenge-based achievements.
+        /// </summary>
+        Mastery,
+
+        /// <summary>
+        /// Multiplayer or community achievements.
+        /// </summary>
+        Social,
+
+        /// <summary>
+        /// Completionist achievements for gathering or finding items.
+        /// </summary>
+        Collection
+    }
+
+    internal static class AchievementTypeExtensions
+    {
+        // Throws on unknown casts. AchievementUnlocked.ToProperties propagates, and
+        // Track(IEvent) catches and drops with a warning.
+        internal static string ToLowercaseString(this AchievementType type) => type switch
+        {
+            AchievementType.Onboarding => "onboarding",
+            AchievementType.Progression => "progression",
+            AchievementType.Mastery => "mastery",
+            AchievementType.Social => "social",
+            AchievementType.Collection => "collection",
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(type), type, "Unhandled AchievementType"),
+        };
+    }
+
+    /// <summary>
+    /// Player unlocked an achievement. Track via
+    /// <see cref="ImmutableAudience.Track(IEvent)"/>.
+    /// </summary>
+    public class AchievementUnlocked : IEvent
+    {
+        /// <summary>
+        /// Required. Stable identifier for the achievement (for example,
+        /// <c>ach_enemies_100</c>).
+        /// </summary>
+        public string? AchievementId { get; set; }
+
+        /// <summary>
+        /// Required. Display name of the achievement (for example,
+        /// <c>100 Enemies Defeated</c>).
+        /// </summary>
+        public string? AchievementName { get; set; }
+
+        /// <summary>
+        /// Optional. Category of the achievement.
+        /// </summary>
+        public AchievementType? AchievementType { get; set; }
+
+        /// <inheritdoc/>
+        public string EventName => "achievement_unlocked";
+
+        /// <inheritdoc/>
+        public Dictionary<string, object> ToProperties()
+        {
+            if (string.IsNullOrEmpty(AchievementId))
+                throw new ArgumentException("AchievementUnlocked.AchievementId is required. Set a non-empty string before calling Track(IEvent).");
+            if (string.IsNullOrEmpty(AchievementName))
+                throw new ArgumentException("AchievementUnlocked.AchievementName is required. Set a non-empty string before calling Track(IEvent).");
+
+            var props = new Dictionary<string, object>
+            {
+                ["achievement_id"] = AchievementId,
+                ["achievement_name"] = AchievementName
+            };
+
+            if (AchievementType.HasValue) props["achievement_type"] = AchievementType.Value.ToLowercaseString();
+
+            return props;
+        }
+    }
+
+    /// <summary>
     /// Named milestone or achievement reached by the player. Track via
     /// <see cref="ImmutableAudience.Track(IEvent)"/>.
     /// </summary>

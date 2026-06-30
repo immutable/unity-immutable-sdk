@@ -1,6 +1,6 @@
 # Immutable Audience
 
-Typed C# tracking SDK for Unity games. Captures `game_launch`, `session_start` / `session_heartbeat` / `session_end` automatically; predefined events (`Progression`, `Resource`, `Purchase`, `MilestoneReached`) and custom events on demand.
+Typed C# tracking SDK for Unity games. Captures `game_launch`, `session_start` / `session_heartbeat` / `session_end` automatically; predefined events (`Progression`, `Resource`, `Purchase`, `AchievementUnlocked`, `MilestoneReached`) and custom events on demand.
 
 > **Status:** alpha. APIs and behavior may change between releases.
 

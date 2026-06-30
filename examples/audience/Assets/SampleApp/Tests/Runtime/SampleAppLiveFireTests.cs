@@ -209,6 +209,16 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
             });
         }
 
+        [UnityTest]
+        public IEnumerator TypedEvent_AchievementUnlocked_FlushReportsOk()
+        {
+            yield return DriveTypedEventAndFlush(SampleAppUi.Buttons.TypedEvent("achievement_unlocked"), root =>
+            {
+                root.Q<TextField>(SampleAppUi.TypedEventField("achievement_unlocked", "achievementId")).value = "ach_enemies_100";
+                root.Q<TextField>(SampleAppUi.TypedEventField("achievement_unlocked", "achievementName")).value = "100 Enemies Defeated";
+            });
+        }
+
         // Shared driver: Init → fill required fields → click typed-event Send → Flush →
         // assert no error rows. fillFields is null when the event has no required fields
         // beyond defaults.
