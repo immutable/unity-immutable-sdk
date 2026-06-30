@@ -464,30 +464,30 @@ jobs:
 
             let anyFail = false;
             const mb = n => (n / 1048576).toFixed(2);
+            const sign = n => { const r = parseFloat(mb(n)); return (r < 0 ? '-' : '+') + mb(Math.abs(n)) + ' MB'; };
             const rows = Object.entries(measured).map(([plat, bytes]) => {
-              const { baselineBytes, maxBytes } = budget.platforms[plat];
-              const delta = bytes - baselineBytes;
-              const sign = delta >= 0 ? '+' : '';
+              const { baselineBytes, maxBytes, emptyAppBytes } = budget.platforms[plat];
+              const sdkBytes = emptyAppBytes > 0 ? bytes - emptyAppBytes : null;
+              const change = bytes - baselineBytes;
               const limited = maxBytes > 0;
               const pass = !limited || bytes <= maxBytes;
               if (!pass) anyFail = true;
               const status = !limited ? '—' : pass ? '✅' : '❌';
-              return `| ${plat} | ${mb(bytes)} MB | ${sign}${mb(delta)} MB | ${status} |`;
+              const maxSdkBytes = limited && emptyAppBytes > 0 ? maxBytes - emptyAppBytes : null;
+              const sdkCol = sdkBytes !== null
+                ? (maxSdkBytes !== null ? `${mb(sdkBytes)} / ${mb(maxSdkBytes)} MB` : `${mb(sdkBytes)} MB`)
+                : '—';
+              return `| ${plat} | ${sdkCol} | ${sign(change)} | ${status} |`;
             });
-
-            const limitsSet = Object.values(budget.platforms).some(p => p.maxBytes > 0);
-            const footer = limitsSet
-              ? 'Fails if any platform exceeds its absolute size limit.'
-              : '_No size limits set yet. Set baselineBytes and maxBytes in `.github/audience-build-budget.json`._';
 
             const body = [
               '## Audience SDK — Build Size',
               '',
-              '| Platform | Build Size | vs Baseline | |',
+              '| Platform | SDK Size | Change | |',
               '|---|---|---|---|',
               ...rows,
               '',
-              footer,
+              'SDK Size = build minus empty app. Change = vs baseline. Fails if any platform exceeds its absolute size limit.',
             ].join('\n');
 
             if (context.eventName === 'pull_request') {
