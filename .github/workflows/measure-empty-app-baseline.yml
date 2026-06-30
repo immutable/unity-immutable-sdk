@@ -1,0 +1,283 @@
+name: Empty App Baseline (one-off measurement)
+
+# Builds the audience sample app with the Audience SDK removed to measure
+# the base app size per platform. Run once via workflow_dispatch to capture
+# the empty-app bytes for each platform; copy the results into
+# .github/audience-build-budget.json as emptyAppBytes.
+#
+# This workflow can be deleted once the baseline numbers are captured.
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  baseline-android:
+    name: Baseline / Android
+    runs-on: ubuntu-latest-8-cores
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Strip Audience SDK
+        run: |
+          python3 -c "
+          import json
+          with open('examples/audience/Packages/manifest.json') as f:
+              m = json.load(f)
+          m['dependencies'].pop('com.immutable.audience', None)
+          with open('examples/audience/Packages/manifest.json', 'w') as f:
+              json.dump(m, f, indent=2)
+          "
+          rm -rf examples/audience/Assets/SampleApp/Scripts
+          rm -rf examples/audience/Assets/SampleApp/Tests
+
+      - uses: game-ci/unity-builder@v4
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        with:
+          unityVersion: 2021.3.45f2
+          targetPlatform: Android
+          projectPath: examples/audience
+          buildMethod: Immutable.Audience.Samples.SampleApp.Editor.AndroidBuilder.Build
+          versioning: None
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: baseline-Android
+          path: examples/audience/Builds/Android/*.apk
+          if-no-files-found: error
+
+  baseline-windows:
+    name: Baseline / Windows
+    runs-on: ubuntu-latest-8-cores
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Strip Audience SDK
+        run: |
+          python3 -c "
+          import json
+          with open('examples/audience/Packages/manifest.json') as f:
+              m = json.load(f)
+          m['dependencies'].pop('com.immutable.audience', None)
+          with open('examples/audience/Packages/manifest.json', 'w') as f:
+              json.dump(m, f, indent=2)
+          "
+          rm -rf examples/audience/Assets/SampleApp/Scripts
+          rm -rf examples/audience/Assets/SampleApp/Tests
+
+      - uses: game-ci/unity-builder@v4
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        with:
+          unityVersion: 2021.3.45f2
+          targetPlatform: StandaloneWindows64
+          projectPath: examples/audience
+          buildMethod: Immutable.Audience.Samples.SampleApp.Editor.WindowsBuilder.Build
+          versioning: None
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: baseline-Windows
+          path: examples/audience/Builds/Windows/**
+          if-no-files-found: error
+
+  baseline-ios:
+    name: Baseline / iOS
+    runs-on: ["self-hosted", "macOS", "ARM64"]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Strip Audience SDK
+        run: |
+          python3 -c "
+          import json
+          with open('examples/audience/Packages/manifest.json') as f:
+              m = json.load(f)
+          m['dependencies'].pop('com.immutable.audience', None)
+          with open('examples/audience/Packages/manifest.json', 'w') as f:
+              json.dump(m, f, indent=2)
+          "
+          rm -rf examples/audience/Assets/SampleApp/Scripts
+          rm -rf examples/audience/Assets/SampleApp/Tests
+
+      - name: Install Unity
+        env:
+          UNITY_VERSION: 2021.3.45f2
+          UNITY_CHANGESET: 88f88f591b2e
+          BACKEND: Mono2x
+        run: .github/scripts/audience/install-unity-macos.sh
+
+      - name: Install iOS build support module
+        env:
+          UNITY_VERSION: 2021.3.45f2
+          UNITY_CHANGESET: 88f88f591b2e
+        run: |
+          "/Applications/Unity Hub.app/Contents/MacOS/Unity Hub" -- --headless install-modules \
+            --version "$UNITY_VERSION" --changeset "$UNITY_CHANGESET" --architecture arm64 \
+            --module ios \
+            || echo "(install-modules non-zero, OK if 'No modules found to install')"
+
+      - name: Build Xcode project
+        run: |
+          "$UNITY_PATH" \
+            -projectPath "${{ github.workspace }}/examples/audience" \
+            -executeMethod Immutable.Audience.Samples.SampleApp.Editor.IosBuilder.Build \
+            -buildTarget iOS \
+            -logFile "${{ github.workspace }}/ios-unity-build.log" \
+            -quit -batchmode
+
+      - name: Compile with Xcode (no signing)
+        env:
+          DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+        run: |
+          xcodebuild \
+            -project "${{ github.workspace }}/examples/audience/Builds/iOS/Unity-iPhone.xcodeproj" \
+            -scheme Unity-iPhone \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath "${{ github.workspace }}/ios-derived" \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: baseline-iOS
+          path: ios-derived/Build/Products/Release-iphoneos/*.app
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: baseline-ios-log
+          path: ios-unity-build.log
+
+  baseline-macos:
+    name: Baseline / macOS
+    runs-on: ["self-hosted", "macOS", "ARM64"]
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Strip Audience SDK
+        run: |
+          python3 -c "
+          import json
+          with open('examples/audience/Packages/manifest.json') as f:
+              m = json.load(f)
+          m['dependencies'].pop('com.immutable.audience', None)
+          with open('examples/audience/Packages/manifest.json', 'w') as f:
+              json.dump(m, f, indent=2)
+          "
+          rm -rf examples/audience/Assets/SampleApp/Scripts
+          rm -rf examples/audience/Assets/SampleApp/Tests
+
+      - name: Install Unity
+        env:
+          UNITY_VERSION: 2021.3.45f2
+          UNITY_CHANGESET: 88f88f591b2e
+          BACKEND: Mono2x
+        run: .github/scripts/audience/install-unity-macos.sh
+
+      - name: Build macOS app
+        run: |
+          "$UNITY_PATH" \
+            -projectPath "${{ github.workspace }}/examples/audience" \
+            -executeMethod Immutable.Audience.Samples.SampleApp.Editor.MacBuilder.Build \
+            -buildTarget StandaloneOSX \
+            -logFile "${{ github.workspace }}/macos-build.log" \
+            -quit -batchmode
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: baseline-macOS
+          path: examples/audience/Builds/macOS/AudienceSample.app
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: baseline-macos-log
+          path: macos-build.log
+
+  report:
+    needs: [baseline-android, baseline-windows, baseline-ios, baseline-macos]
+    name: Report / baseline sizes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: baseline-Android
+          path: artifacts/Android
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: baseline-Windows
+          path: artifacts/Windows
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: baseline-iOS
+          path: artifacts/iOS
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: baseline-macOS
+          path: artifacts/macOS
+
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            function dirSize(dir) {
+              let total = 0;
+              const walk = d => {
+                for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
+                  const full = path.join(d, entry.name);
+                  if (entry.isDirectory()) walk(full);
+                  else total += fs.statSync(full).size;
+                }
+              };
+              walk(dir);
+              return total;
+            }
+
+            const mb = n => (n / 1048576).toFixed(2);
+            const measured = {
+              Android: dirSize('artifacts/Android'),
+              Windows: dirSize('artifacts/Windows'),
+              iOS:     dirSize('artifacts/iOS'),
+              macOS:   dirSize('artifacts/macOS'),
+            };
+
+            const rows = Object.entries(measured).map(([plat, bytes]) =>
+              `| ${plat} | ${bytes} | ${mb(bytes)} MB |`
+            ).join('\n');
+
+            const summary = [
+              '## Empty App Baseline Sizes (SDK removed)',
+              '',
+              'App built with `com.immutable.audience` removed from manifest.',
+              'Copy the **Bytes** column into `.github/audience-build-budget.json` as `emptyAppBytes`.',
+              '',
+              '| Platform | Bytes | MB |',
+              '|---|---|---|',
+              rows,
+            ].join('\n');
+
+            await core.summary.addRaw(summary).write();
