@@ -1019,9 +1019,6 @@ namespace Immutable.Audience
             {
                 var state = _state;
                 if (!state.Level.CanTrack()) return null;
-                // Re-stamp under the drain lock so consentLevel reflects the level
-                // at enqueue time, not the (possibly higher) level when the message
-                // was built — the userId strip below relies on the same check.
                 m[MessageFields.ConsentLevel] = state.Level.ToLowercaseString();
                 if (state.Level != ConsentLevel.Full)
                     m.Remove(MessageFields.UserId);

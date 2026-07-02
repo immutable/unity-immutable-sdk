@@ -106,12 +106,6 @@ namespace Immutable.Audience
                     ["libraryVersion"] = Truncate(packageVersion, Constants.MaxFieldLength)
                 },
                 ["surface"] = Constants.Surface,
-                // Consent level under which this event was collected. Stamped so
-                // the backend records the explicit level rather than inferring it
-                // from userId presence (which can't tell full-but-unidentified
-                // traffic from anonymous). Callers only build messages under a
-                // decided level (anonymous/full); none-consent events are never
-                // emitted.
                 [MessageFields.ConsentLevel] = consentLevel
             };
             if (testMode)

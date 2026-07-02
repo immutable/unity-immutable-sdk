@@ -147,7 +147,7 @@ namespace Immutable.Audience
                 return;
             }
 
-            if (type == MessageTypes.Track && TrackNeedsDowngrade(msg))
+            if (type == MessageTypes.Track && TrackNeedsDowngradeToAnonymous(msg))
                 RewriteTrackForAnonymous(path, msg);
         }
 
@@ -155,7 +155,7 @@ namespace Immutable.Audience
         // still carries a userId or a consentLevel other than "anonymous". The
         // check keeps already-anonymous messages untouched so a fail-closed
         // rewrite error can only ever discard events that actually had to change.
-        private static bool TrackNeedsDowngrade(Dictionary<string, object> msg)
+        private static bool TrackNeedsDowngradeToAnonymous(Dictionary<string, object> msg)
         {
             if (msg.ContainsKey(MessageFields.UserId)) return true;
             return !(msg.TryGetValue(MessageFields.ConsentLevel, out var cl)
@@ -183,9 +183,6 @@ namespace Immutable.Audience
         private void RewriteTrackForAnonymous(string path, Dictionary<string, object> msg)
         {
             msg.Remove(MessageFields.UserId);
-            // Normalise the stamped consent so a downgraded event never still
-            // reports "full"; also covers events persisted before consentLevel
-            // existed (they gain "anonymous" rather than staying unset).
             msg[MessageFields.ConsentLevel] = ConsentLevel.Anonymous.ToLowercaseString();
 
             try
