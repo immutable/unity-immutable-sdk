@@ -1976,7 +1976,11 @@ namespace Immutable.Audience.Tests
                 Assert.AreNotEqual("identify", type, "identify must be purged on Full -> Anonymous");
                 Assert.AreNotEqual("alias", type, "alias must be purged on Full -> Anonymous");
                 if (type == "track")
+                {
                     Assert.IsFalse(msg.ContainsKey("userId"), "userId must be stripped from queued track on Full -> Anonymous");
+                    Assert.AreEqual("anonymous", msg["consentLevel"],
+                        "consentLevel must be downgraded to anonymous on queued track");
+                }
             }
         }
 
@@ -2001,6 +2005,26 @@ namespace Immutable.Audience.Tests
             Assert.AreEqual(1, trackFiles.Count);
             Assert.IsFalse(trackFiles[0].ContainsKey("userId"),
                 "Track under Anonymous consent must not carry userId");
+            Assert.AreEqual("anonymous", trackFiles[0]["consentLevel"],
+                "Track under Anonymous consent must stamp consentLevel anonymous");
+        }
+
+        [Test]
+        public void FullConsent_TrackStampsConsentLevelFull()
+        {
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
+            ImmutableAudience.Track("tracked_under_full");
+            ImmutableAudience.FlushQueueToDiskForTesting();
+
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            var track = Directory.GetFiles(queueDir, "*.json")
+                .Select(f => JsonReader.DeserializeObject(File.ReadAllText(f)))
+                .First(m => (string)m["type"] == "track"
+                            && m.ContainsKey("eventName")
+                            && (string)m["eventName"] == "tracked_under_full");
+
+            Assert.AreEqual("full", track["consentLevel"],
+                "Track under Full consent must stamp consentLevel full");
         }
 
         // -----------------------------------------------------------------

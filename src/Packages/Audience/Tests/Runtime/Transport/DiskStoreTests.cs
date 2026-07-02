@@ -166,8 +166,8 @@ namespace Immutable.Audience.Tests
         {
             _store.Write("{\"type\":\"identify\",\"anonymousId\":\"a\",\"userId\":\"u\"}");
             _store.Write("{\"type\":\"alias\",\"fromId\":\"a\",\"toId\":\"u\"}");
-            _store.Write("{\"type\":\"track\",\"eventName\":\"x\",\"anonymousId\":\"a\",\"userId\":\"u\"}");
-            _store.Write("{\"type\":\"track\",\"eventName\":\"y\",\"anonymousId\":\"a\"}");
+            _store.Write("{\"type\":\"track\",\"eventName\":\"x\",\"anonymousId\":\"a\",\"userId\":\"u\",\"consentLevel\":\"full\"}");
+            _store.Write("{\"type\":\"track\",\"eventName\":\"y\",\"anonymousId\":\"a\",\"consentLevel\":\"full\"}");
 
             _store.ApplyAnonymousDowngrade();
 
@@ -180,7 +180,26 @@ namespace Immutable.Audience.Tests
                 var msg = JsonReader.DeserializeObject(json);
                 Assert.AreEqual("track", msg["type"]);
                 Assert.IsFalse(msg.ContainsKey("userId"), "userId must be stripped from queued track messages");
+                // consentLevel must be normalised to anonymous, even for the track
+                // that never carried a userId (full-but-unidentified).
+                Assert.AreEqual("anonymous", msg["consentLevel"],
+                    "consentLevel must be downgraded to anonymous on queued track messages");
             }
+        }
+
+        [Test]
+        public void ApplyAnonymousDowngrade_TrackWithoutConsentLevel_GainsAnonymous()
+        {
+            // A track persisted by a pre-consentLevel build (no consentLevel field)
+            // is normalised to anonymous on downgrade rather than left unset.
+            _store.Write("{\"type\":\"track\",\"eventName\":\"legacy\",\"anonymousId\":\"a\"}");
+
+            _store.ApplyAnonymousDowngrade();
+
+            var remaining = _store.ReadBatch(10);
+            Assert.AreEqual(1, remaining.Count);
+            var msg = JsonReader.DeserializeObject(File.ReadAllText(remaining[0]));
+            Assert.AreEqual("anonymous", msg["consentLevel"]);
         }
 
         [Test]
