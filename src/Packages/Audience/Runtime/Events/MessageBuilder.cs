@@ -13,10 +13,11 @@ namespace Immutable.Audience
             string? userId,
             string? deviceId,
             string packageVersion,
+            string consentLevel,
             Dictionary<string, object>? properties = null,
             bool testMode = false)
         {
-            var msg = BuildBase(MessageTypes.Track, packageVersion, testMode);
+            var msg = BuildBase(MessageTypes.Track, packageVersion, consentLevel, testMode);
             msg["eventName"] = Truncate(eventName, Constants.MaxFieldLength);
 
             if (!string.IsNullOrEmpty(anonymousId))
@@ -43,10 +44,11 @@ namespace Immutable.Audience
             string? deviceId,
             string identityType,
             string packageVersion,
+            string consentLevel,
             Dictionary<string, object>? traits = null,
             bool testMode = false)
         {
-            var msg = BuildBase(MessageTypes.Identify, packageVersion, testMode);
+            var msg = BuildBase(MessageTypes.Identify, packageVersion, consentLevel, testMode);
 
             if (!string.IsNullOrEmpty(anonymousId))
                 msg["anonymousId"] = Truncate(anonymousId, Constants.MaxFieldLength);
@@ -75,9 +77,10 @@ namespace Immutable.Audience
             string toType,
             string? deviceId,
             string packageVersion,
+            string consentLevel,
             bool testMode = false)
         {
-            var msg = BuildBase(MessageTypes.Alias, packageVersion, testMode);
+            var msg = BuildBase(MessageTypes.Alias, packageVersion, consentLevel, testMode);
             msg["fromId"] = Truncate(fromId, Constants.MaxFieldLength);
             msg["fromType"] = Truncate(fromType, Constants.MaxFieldLength);
             msg["toId"] = Truncate(toId, Constants.MaxFieldLength);
@@ -89,7 +92,8 @@ namespace Immutable.Audience
             return msg;
         }
 
-        private static Dictionary<string, object> BuildBase(string type, string packageVersion, bool testMode)
+        private static Dictionary<string, object> BuildBase(
+            string type, string packageVersion, string consentLevel, bool testMode)
         {
             var msg = new Dictionary<string, object>
             {
@@ -101,7 +105,14 @@ namespace Immutable.Audience
                     ["library"] = Constants.LibraryName,
                     ["libraryVersion"] = Truncate(packageVersion, Constants.MaxFieldLength)
                 },
-                ["surface"] = Constants.Surface
+                ["surface"] = Constants.Surface,
+                // Consent level under which this event was collected. Stamped so
+                // the backend records the explicit level rather than inferring it
+                // from userId presence (which can't tell full-but-unidentified
+                // traffic from anonymous). Callers only build messages under a
+                // decided level (anonymous/full); none-consent events are never
+                // emitted.
+                [MessageFields.ConsentLevel] = consentLevel
             };
             if (testMode)
                 msg["test"] = true;
