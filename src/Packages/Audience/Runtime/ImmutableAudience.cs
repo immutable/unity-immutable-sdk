@@ -354,7 +354,8 @@ namespace Immutable.Audience
             var deviceId = Identity.GetOrCreateDeviceId(config.PersistentDataPath!, state.Level);
             // ToProperties returns a fresh dict per call, so no snapshot needed.
             var userId = state.Level == ConsentLevel.Full ? state.UserId : null;
-            var msg = MessageBuilder.Track(eventName, anonymousId, userId, deviceId, Constants.LibraryVersion, properties, config.TestMode);
+            var msg = MessageBuilder.Track(eventName, anonymousId, userId, deviceId, Constants.LibraryVersion,
+                state.Level.ToLowercaseString(), properties, config.TestMode);
             EnqueueTrack(msg);
         }
 
@@ -382,7 +383,7 @@ namespace Immutable.Audience
             var deviceId = Identity.GetOrCreateDeviceId(config.PersistentDataPath!, state.Level);
             var userId = state.Level == ConsentLevel.Full ? state.UserId : null;
             var msg = MessageBuilder.Track(eventName, anonymousId, userId, deviceId, Constants.LibraryVersion,
-                SnapshotCallerDict(properties), config.TestMode);
+                state.Level.ToLowercaseString(), SnapshotCallerDict(properties), config.TestMode);
             EnqueueTrack(msg);
         }
 
@@ -429,7 +430,7 @@ namespace Immutable.Audience
             var anonymousId = Identity.GetOrCreate(config.PersistentDataPath!, level);
             var deviceId = Identity.GetOrCreateDeviceId(config.PersistentDataPath!, level);
             var msg = MessageBuilder.Identify(anonymousId, userId, deviceId, identityType.ToLowercaseString(),
-                Constants.LibraryVersion, SnapshotCallerDict(traits), config.TestMode);
+                Constants.LibraryVersion, level.ToLowercaseString(), SnapshotCallerDict(traits), config.TestMode);
             EnqueueIdentity(msg);
         }
 
@@ -461,7 +462,7 @@ namespace Immutable.Audience
 
             var deviceId = Identity.GetOrCreateDeviceId(config.PersistentDataPath!, state.Level);
             var msg = MessageBuilder.Alias(fromId, fromType.ToLowercaseString(), toId, toType.ToLowercaseString(),
-                deviceId, Constants.LibraryVersion, config.TestMode);
+                deviceId, Constants.LibraryVersion, state.Level.ToLowercaseString(), config.TestMode);
             EnqueueIdentity(msg);
         }
 
@@ -1018,6 +1019,7 @@ namespace Immutable.Audience
             {
                 var state = _state;
                 if (!state.Level.CanTrack()) return null;
+                m[MessageFields.ConsentLevel] = state.Level.ToLowercaseString();
                 if (state.Level != ConsentLevel.Full)
                     m.Remove(MessageFields.UserId);
                 return m;

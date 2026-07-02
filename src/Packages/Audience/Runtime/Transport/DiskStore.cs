@@ -147,8 +147,20 @@ namespace Immutable.Audience
                 return;
             }
 
-            if (type == MessageTypes.Track && msg.ContainsKey(MessageFields.UserId))
-                RewriteTrackWithoutUserId(path, msg);
+            if (type == MessageTypes.Track && TrackNeedsDowngradeToAnonymous(msg))
+                RewriteTrackForAnonymous(path, msg);
+        }
+
+        // A queued track needs rewriting on a Full -> Anonymous downgrade if it
+        // still carries a userId or a consentLevel other than "anonymous". The
+        // check keeps already-anonymous messages untouched so a fail-closed
+        // rewrite error can only ever discard events that actually had to change.
+        private static bool TrackNeedsDowngradeToAnonymous(Dictionary<string, object> msg)
+        {
+            if (msg.ContainsKey(MessageFields.UserId)) return true;
+            return !(msg.TryGetValue(MessageFields.ConsentLevel, out var cl)
+                     && cl is string s
+                     && s == ConsentLevel.Anonymous.ToLowercaseString());
         }
 
         private static bool IsIdentityMessage(string type) =>
@@ -168,9 +180,10 @@ namespace Immutable.Audience
             return true;
         }
 
-        private void RewriteTrackWithoutUserId(string path, Dictionary<string, object> msg)
+        private void RewriteTrackForAnonymous(string path, Dictionary<string, object> msg)
         {
             msg.Remove(MessageFields.UserId);
+            msg[MessageFields.ConsentLevel] = ConsentLevel.Anonymous.ToLowercaseString();
 
             try
             {

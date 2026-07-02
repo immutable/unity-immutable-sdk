@@ -11,11 +11,12 @@ namespace Immutable.Audience.Tests
         private const string PackageVersion = "1.2.3";
         private const string AnonId = "anon-1";
         private const string DeviceId = "device-1";
+        private const string Consent = "anonymous";
 
         [Test]
         public void Track_RequiredFieldsPresent()
         {
-            var result = MessageBuilder.Track("level_complete", AnonId, null, null, PackageVersion);
+            var result = MessageBuilder.Track("level_complete", AnonId, null, null, PackageVersion, Consent);
 
             Assert.AreEqual("track", result["type"]);
             Assert.IsTrue(result.ContainsKey("messageId"));
@@ -30,7 +31,7 @@ namespace Immutable.Audience.Tests
         {
             var longName = new string('x', 300);
 
-            var result = MessageBuilder.Track(longName, null, null, null, PackageVersion);
+            var result = MessageBuilder.Track(longName, null, null, null, PackageVersion, Consent);
 
             Assert.AreEqual(256, ((string)result["eventName"]).Length);
         }
@@ -38,7 +39,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Track_NullUserId_NotPresentInDict()
         {
-            var result = MessageBuilder.Track("evt", AnonId, null, null, PackageVersion);
+            var result = MessageBuilder.Track("evt", AnonId, null, null, PackageVersion, Consent);
 
             Assert.IsFalse(result.ContainsKey("userId"));
         }
@@ -46,7 +47,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Track_NonNullUserId_PresentInDict()
         {
-            var result = MessageBuilder.Track("evt", AnonId, "user-99", null, PackageVersion);
+            var result = MessageBuilder.Track("evt", AnonId, "user-99", null, PackageVersion, Consent);
 
             Assert.IsTrue(result.ContainsKey("userId"));
             Assert.AreEqual("user-99", result["userId"]);
@@ -55,7 +56,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Track_DeviceId_PresentWhenProvided()
         {
-            var result = MessageBuilder.Track("evt", AnonId, null, DeviceId, PackageVersion);
+            var result = MessageBuilder.Track("evt", AnonId, null, DeviceId, PackageVersion, Consent);
 
             Assert.IsTrue(result.ContainsKey("deviceId"));
             Assert.AreEqual(DeviceId, result["deviceId"]);
@@ -64,7 +65,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Track_DeviceId_AbsentWhenNull()
         {
-            var result = MessageBuilder.Track("evt", AnonId, null, null, PackageVersion);
+            var result = MessageBuilder.Track("evt", AnonId, null, null, PackageVersion, Consent);
 
             Assert.IsFalse(result.ContainsKey("deviceId"));
         }
@@ -72,7 +73,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Identify_TypeAndIdentityFieldsPresent()
         {
-            var result = MessageBuilder.Identify("anon-42", "user-42", null, "steam", PackageVersion);
+            var result = MessageBuilder.Identify("anon-42", "user-42", null, "steam", PackageVersion, "full");
 
             Assert.AreEqual("identify", result["type"]);
             Assert.AreEqual("anon-42", result["anonymousId"]);
@@ -83,7 +84,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Identify_DeviceId_PresentWhenProvided()
         {
-            var result = MessageBuilder.Identify("anon-42", "user-42", DeviceId, "steam", PackageVersion);
+            var result = MessageBuilder.Identify("anon-42", "user-42", DeviceId, "steam", PackageVersion, "full");
 
             Assert.IsTrue(result.ContainsKey("deviceId"));
             Assert.AreEqual(DeviceId, result["deviceId"]);
@@ -92,7 +93,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Alias_AllFourFieldsPresent()
         {
-            var result = MessageBuilder.Alias("from-id", "email", "to-id", "steam", null, PackageVersion);
+            var result = MessageBuilder.Alias("from-id", "email", "to-id", "steam", null, PackageVersion, "full");
 
             Assert.AreEqual("alias", result["type"]);
             Assert.AreEqual("from-id", result["fromId"]);
@@ -104,7 +105,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Alias_DeviceId_PresentWhenProvided()
         {
-            var result = MessageBuilder.Alias("from-id", "email", "to-id", "steam", DeviceId, PackageVersion);
+            var result = MessageBuilder.Alias("from-id", "email", "to-id", "steam", DeviceId, PackageVersion, "full");
 
             Assert.IsTrue(result.ContainsKey("deviceId"));
             Assert.AreEqual(DeviceId, result["deviceId"]);
@@ -113,9 +114,9 @@ namespace Immutable.Audience.Tests
         [Test]
         public void AllMessages_ContextContainsLibraryAndLibraryVersion()
         {
-            var track = MessageBuilder.Track("evt", null, null, null, PackageVersion);
-            var identify = MessageBuilder.Identify(null, "u1", null, "steam", PackageVersion);
-            var alias = MessageBuilder.Alias("f", "t1", "t", "t2", null, PackageVersion);
+            var track = MessageBuilder.Track("evt", null, null, null, PackageVersion, Consent);
+            var identify = MessageBuilder.Identify(null, "u1", null, "steam", PackageVersion, "full");
+            var alias = MessageBuilder.Alias("f", "t1", "t", "t2", null, PackageVersion, "full");
 
             foreach (var msg in new[] { track, identify, alias })
             {
@@ -128,13 +129,39 @@ namespace Immutable.Audience.Tests
         [Test]
         public void AllMessages_SurfaceIsUnity()
         {
-            var track = MessageBuilder.Track("evt", null, null, null, PackageVersion);
-            var identify = MessageBuilder.Identify(null, "u1", null, "steam", PackageVersion);
-            var alias = MessageBuilder.Alias("f", "t1", "t", "t2", null, PackageVersion);
+            var track = MessageBuilder.Track("evt", null, null, null, PackageVersion, Consent);
+            var identify = MessageBuilder.Identify(null, "u1", null, "steam", PackageVersion, "full");
+            var alias = MessageBuilder.Alias("f", "t1", "t", "t2", null, PackageVersion, "full");
 
             Assert.AreEqual("unity", track["surface"]);
             Assert.AreEqual("unity", identify["surface"]);
             Assert.AreEqual("unity", alias["surface"]);
+        }
+
+        [Test]
+        public void AllMessages_ConsentLevelStamped()
+        {
+            // Every message carries the consent level it was built under, so the
+            // backend records the explicit level instead of inferring it.
+            var track = MessageBuilder.Track("evt", null, null, null, PackageVersion, "anonymous");
+            var identify = MessageBuilder.Identify(null, "u1", null, "steam", PackageVersion, "full");
+            var alias = MessageBuilder.Alias("f", "t1", "t", "t2", null, PackageVersion, "full");
+
+            Assert.AreEqual("anonymous", track["consentLevel"]);
+            Assert.AreEqual("full", identify["consentLevel"]);
+            Assert.AreEqual("full", alias["consentLevel"]);
+        }
+
+        [Test]
+        public void Track_ConsentLevelFull_NoUserId_IsFullButUnidentified()
+        {
+            // Full consent does not require a userId (e.g. before Identify()); the
+            // explicit consentLevel is exactly what distinguishes this from
+            // anonymous traffic.
+            var result = MessageBuilder.Track("evt", AnonId, null, null, PackageVersion, "full");
+
+            Assert.AreEqual("full", result["consentLevel"]);
+            Assert.IsFalse(result.ContainsKey("userId"));
         }
 
         [Test]
@@ -154,7 +181,7 @@ namespace Immutable.Audience.Tests
             // Backend deduplicates on messageId; collisions silently drop events.
             var ids = new HashSet<string>();
             for (var i = 0; i < 1000; i++)
-                ids.Add((string)MessageBuilder.Track("evt", null, null, null, PackageVersion)["messageId"]);
+                ids.Add((string)MessageBuilder.Track("evt", null, null, null, PackageVersion, Consent)["messageId"]);
             Assert.AreEqual(1000, ids.Count);
         }
 
@@ -196,7 +223,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Track_TestModeTrue_IncludesTestFlag()
         {
-            var result = MessageBuilder.Track("evt", null, null, null, PackageVersion, testMode: true);
+            var result = MessageBuilder.Track("evt", null, null, null, PackageVersion, Consent, testMode: true);
             Assert.IsTrue(result.ContainsKey("test"), "test field must be present when testMode is true");
             Assert.AreEqual(true, result["test"]);
         }
@@ -204,16 +231,16 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Track_TestModeFalse_ExcludesTestFlag()
         {
-            var result = MessageBuilder.Track("evt", null, null, null, PackageVersion, testMode: false);
+            var result = MessageBuilder.Track("evt", null, null, null, PackageVersion, Consent, testMode: false);
             Assert.IsFalse(result.ContainsKey("test"), "test field must not be present when testMode is false");
         }
 
         [Test]
         public void AllMessages_TestModeTrue_AllIncludeTestFlag()
         {
-            var track = MessageBuilder.Track("evt", null, null, null, PackageVersion, testMode: true);
-            var identify = MessageBuilder.Identify(null, "u1", null, "steam", PackageVersion, testMode: true);
-            var alias = MessageBuilder.Alias("f", "t1", "t", "t2", null, PackageVersion, testMode: true);
+            var track = MessageBuilder.Track("evt", null, null, null, PackageVersion, Consent, testMode: true);
+            var identify = MessageBuilder.Identify(null, "u1", null, "steam", PackageVersion, "full", testMode: true);
+            var alias = MessageBuilder.Alias("f", "t1", "t", "t2", null, PackageVersion, "full", testMode: true);
 
             foreach (var msg in new[] { track, identify, alias })
             {
@@ -224,9 +251,9 @@ namespace Immutable.Audience.Tests
 
         private static IEnumerable<Dictionary<string, object>> EveryMessageType()
         {
-            yield return MessageBuilder.Track("evt", null, null, null, PackageVersion);
-            yield return MessageBuilder.Identify(null, "u1", null, "steam", PackageVersion);
-            yield return MessageBuilder.Alias("f", "t1", "t", "t2", null, PackageVersion);
+            yield return MessageBuilder.Track("evt", null, null, null, PackageVersion, Consent);
+            yield return MessageBuilder.Identify(null, "u1", null, "steam", PackageVersion, "full");
+            yield return MessageBuilder.Alias("f", "t1", "t", "t2", null, PackageVersion, "full");
         }
     }
 }
