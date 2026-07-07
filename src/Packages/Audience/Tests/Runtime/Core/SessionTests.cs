@@ -18,7 +18,7 @@ namespace Immutable.Audience.Tests
             _events = new List<(string, Dictionary<string, object>)>();
         }
 
-        private void MockTrack(string name, Dictionary<string, object> props)
+        private void MockTrack(string name, Dictionary<string, object> props, string sessionId)
         {
             _events.Add((name, props));
         }
@@ -91,6 +91,72 @@ namespace Immutable.Audience.Tests
         }
 
         // -----------------------------------------------------------------
+        // TrackDelegate sessionId pass-through
+        // -----------------------------------------------------------------
+
+        [Test]
+        public void Start_PassesSessionIdToTrackDelegate()
+        {
+            string capturedSessionId = null;
+            void Track(string name, Dictionary<string, object> props, string sessionId)
+            {
+                if (name == "session_start") capturedSessionId = sessionId;
+            }
+
+            using var session = new Session(Track);
+            session.Start();
+
+            Assert.AreEqual(session.SessionId, capturedSessionId,
+                "session_start should pass the new session's id through the delegate");
+        }
+
+        [Test]
+        public void End_PassesEndingSessionIdToTrackDelegate_NotNull()
+        {
+            // End() resets the live SessionId to null (via ResetSessionStateLocked)
+            // before firing session_end. The delegate must still receive the
+            // ending session's id: it comes from the local variable captured
+            // before the reset, not a live re-read of (by-then-null) SessionId.
+            string capturedSessionId = null;
+            void Track(string name, Dictionary<string, object> props, string sessionId)
+            {
+                if (name == "session_end") capturedSessionId = sessionId;
+            }
+
+            using var session = new Session(Track);
+            session.Start();
+            var endingId = session.SessionId;
+
+            session.End();
+
+            Assert.IsNotNull(capturedSessionId,
+                "session_end must pass the ending session's id through the delegate, not null");
+            Assert.AreEqual(endingId, capturedSessionId);
+        }
+
+        [Test]
+        public void EmitEndAndSeal_PassesEndingSessionIdToTrackDelegate_NotNull()
+        {
+            // Same race as End(): EmitEndAndSeal also resets state before
+            // firing session_end.
+            string capturedSessionId = null;
+            void Track(string name, Dictionary<string, object> props, string sessionId)
+            {
+                if (name == "session_end") capturedSessionId = sessionId;
+            }
+
+            using var session = new Session(Track);
+            session.Start();
+            var endingId = session.SessionId;
+
+            session.EmitEndAndSeal();
+
+            Assert.IsNotNull(capturedSessionId,
+                "EmitEndAndSeal must pass the ending session's id through the delegate, not null");
+            Assert.AreEqual(endingId, capturedSessionId);
+        }
+
+        // -----------------------------------------------------------------
         // Heartbeat
         // -----------------------------------------------------------------
 
@@ -105,7 +171,7 @@ namespace Immutable.Audience.Tests
             var events = new List<(string name, Dictionary<string, object> props)>();
             var gate = new object();
 
-            void Track(string name, Dictionary<string, object> props)
+            void Track(string name, Dictionary<string, object> props, string sessionId)
             {
                 lock (gate) events.Add((name, props));
                 if (name == "session_heartbeat") heartbeatFired.Set();
@@ -479,7 +545,7 @@ namespace Immutable.Audience.Tests
             using var releaseBeat = new ManualResetEvent(false);
             try
             {
-                void Track(string name, Dictionary<string, object> props)
+                void Track(string name, Dictionary<string, object> props, string sessionId)
                 {
                     if (name == "session_heartbeat")
                     {
@@ -547,7 +613,7 @@ namespace Immutable.Audience.Tests
             Log.Writer = line => { lock (warnings) warnings.Add(line); };
             try
             {
-                void ThrowingTrack(string name, Dictionary<string, object> props)
+                void ThrowingTrack(string name, Dictionary<string, object> props, string sessionId)
                 {
                     if (name == "session_heartbeat")
                         throw new InvalidOperationException("track explode");
@@ -582,7 +648,7 @@ namespace Immutable.Audience.Tests
             Log.Writer = line => { lock (warnings) warnings.Add(line); };
             try
             {
-                void ThrowingTrack(string name, Dictionary<string, object> props)
+                void ThrowingTrack(string name, Dictionary<string, object> props, string sessionId)
                 {
                     if (name == "session_start")
                         throw new InvalidOperationException("track explode");
@@ -617,7 +683,7 @@ namespace Immutable.Audience.Tests
             Log.Writer = line => { lock (warnings) warnings.Add(line); };
             try
             {
-                void ThrowingTrack(string name, Dictionary<string, object> props)
+                void ThrowingTrack(string name, Dictionary<string, object> props, string sessionId)
                 {
                     if (name == "session_end")
                         throw new InvalidOperationException("track explode");
@@ -653,7 +719,7 @@ namespace Immutable.Audience.Tests
             Log.Writer = _ => throw new InvalidOperationException("log explode");
             try
             {
-                void ThrowingTrack(string name, Dictionary<string, object> props)
+                void ThrowingTrack(string name, Dictionary<string, object> props, string sessionId)
                 {
                     if (name == "session_heartbeat")
                         throw new InvalidOperationException("track explode");

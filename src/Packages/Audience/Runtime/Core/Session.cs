@@ -7,9 +7,9 @@ using System.Threading;
 namespace Immutable.Audience
 {
     // Fires a session event (session_start / session_heartbeat / session_end)
-    // through ImmutableAudience.Track. Declared as a named delegate so Session
-    // can be driven by tests with a mock without touching the static SDK surface.
-    internal delegate void TrackDelegate(string eventName, Dictionary<string, object> properties);
+    // through ImmutableAudience.TrackFromSession. Declared as a named delegate so
+    // Session can be driven by tests with a mock without touching the static SDK surface.
+    internal delegate void TrackDelegate(string eventName, Dictionary<string, object> properties, string sessionId);
 
     // Unity session lifecycle. Emits session_start / session_heartbeat / session_end.
     // duration is engagement time (excludes pause). The heartbeat runs on a
@@ -98,7 +98,7 @@ namespace Immutable.Audience
             SafeTrack("session_start", new Dictionary<string, object>
             {
                 ["session_id"] = sessionId
-            });
+            }, sessionId);
         }
 
         // Pause on focus-loss. Quiesces heartbeat; 30s threshold evaluated on next Resume.
@@ -175,7 +175,7 @@ namespace Immutable.Audience
             {
                 ["session_id"] = sessionId,
                 ["duration_sec"] = duration
-            });
+            }, sessionId);
         }
 
         // Emits session_end and seals the session without draining the heartbeat
@@ -196,11 +196,14 @@ namespace Immutable.Audience
                 ResetSessionStateLocked();
             }
 
+            // sessionId is the captured local, not the live SessionId property
+            // (already null here via ResetSessionStateLocked): the envelope must
+            // carry the ending session's id, not the post-reset null.
             SafeTrack("session_end", new Dictionary<string, object>
             {
                 ["session_id"] = sessionId,
                 ["duration_sec"] = duration
-            });
+            }, sessionId);
         }
 
         public void Dispose()
@@ -244,18 +247,18 @@ namespace Immutable.Audience
                 ["duration_sec"] = duration
             };
 
-            SafeTrack("session_heartbeat", properties);
+            SafeTrack("session_heartbeat", properties, sessionId);
         }
 
         // Stops exceptions from the track callback from reaching upstream.
         // Heartbeat runs on a background timer, where an uncaught exception
         // crashes the game on modern .NET. Start / End run on the caller's
         // thread, where it would bubble into Init / Shutdown.
-        private void SafeTrack(string eventName, Dictionary<string, object> properties)
+        private void SafeTrack(string eventName, Dictionary<string, object> properties, string sessionId)
         {
             try
             {
-                _track(eventName, properties);
+                _track(eventName, properties, sessionId);
             }
             catch (Exception ex)
             {

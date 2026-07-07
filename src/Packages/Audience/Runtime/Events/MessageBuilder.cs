@@ -15,6 +15,7 @@ namespace Immutable.Audience
             string packageVersion,
             string consentLevel,
             Dictionary<string, object>? properties = null,
+            string? sessionId = null,
             bool testMode = false)
         {
             var msg = BuildBase(MessageTypes.Track, packageVersion, consentLevel, testMode);
@@ -35,6 +36,9 @@ namespace Immutable.Audience
                 msg["properties"] = properties;
             }
 
+            if (!string.IsNullOrEmpty(sessionId))
+                msg[MessageFields.SessionId] = Truncate(sessionId, Constants.MaxFieldLength);
+
             return msg;
         }
 
@@ -46,6 +50,7 @@ namespace Immutable.Audience
             string packageVersion,
             string consentLevel,
             Dictionary<string, object>? traits = null,
+            string? sessionId = null,
             bool testMode = false)
         {
             var msg = BuildBase(MessageTypes.Identify, packageVersion, consentLevel, testMode);
@@ -67,6 +72,9 @@ namespace Immutable.Audience
                 msg["traits"] = traits;
             }
 
+            if (!string.IsNullOrEmpty(sessionId))
+                msg[MessageFields.SessionId] = Truncate(sessionId, Constants.MaxFieldLength);
+
             return msg;
         }
 
@@ -78,6 +86,7 @@ namespace Immutable.Audience
             string? deviceId,
             string packageVersion,
             string consentLevel,
+            string? sessionId = null,
             bool testMode = false)
         {
             var msg = BuildBase(MessageTypes.Alias, packageVersion, consentLevel, testMode);
@@ -88,6 +97,9 @@ namespace Immutable.Audience
 
             if (!string.IsNullOrEmpty(deviceId))
                 msg[MessageFields.DeviceId] = Truncate(deviceId, Constants.MaxFieldLength);
+
+            if (!string.IsNullOrEmpty(sessionId))
+                msg[MessageFields.SessionId] = Truncate(sessionId, Constants.MaxFieldLength);
 
             return msg;
         }
