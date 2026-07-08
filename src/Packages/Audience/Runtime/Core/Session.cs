@@ -9,7 +9,8 @@ namespace Immutable.Audience
     // Fires a session event (session_start / session_heartbeat / session_end)
     // through ImmutableAudience.TrackFromSession. Declared as a named delegate so
     // Session can be driven by tests with a mock without touching the static SDK surface.
-    internal delegate void TrackDelegate(string eventName, Dictionary<string, object> properties, string sessionId);
+    // timestampOverride backdates the wire eventTimestamp; null means "now".
+    internal delegate void TrackDelegate(string eventName, Dictionary<string, object> properties, string sessionId, DateTime? timestampOverride = null);
 
     // Unity session lifecycle. Emits session_start / session_heartbeat / session_end.
     // duration is engagement time (excludes pause). The heartbeat runs on a
@@ -123,11 +124,13 @@ namespace Immutable.Audience
         internal void Resume()
         {
             bool extended;
+            DateTime pausedAt;
             lock (_lock)
             {
                 if (_disposed || _sessionId == null || _pausedAt == null) return;
 
-                var pauseDuration = _getUtcNow() - _pausedAt.Value;
+                pausedAt = _pausedAt.Value;
+                var pauseDuration = _getUtcNow() - pausedAt;
                 _pausedAt = null;
 
                 // Clamp: wall-clock rewind (NTP) would otherwise over-credit engagement.
@@ -144,14 +147,21 @@ namespace Immutable.Audience
             {
                 // Extended pause: roll the session. End/Start fire _track outside _lock.
                 // Between End and Start other public methods early-return on _sessionId=null.
-                End();
+                // pausedAt: Resume can run long after backgrounding actually began.
+                // This corrects the pause that triggers rollover; it does not
+                // adjust for earlier short (<=30s) pauses this session, so
+                // duration_sec remains the only field with zero pause skew.
+                End(pausedAt);
                 Start();
             }
         }
 
         // Ends the session. Drains heartbeat before emitting session_end so wire
         // order holds (drain timeout is best-effort; logs a warning on timeout).
-        internal void End()
+        // endedAt backdates the event timestamp; pass null to fall back to
+        // _pausedAt (if the session is currently paused, e.g. Dispose while
+        // backgrounded) or current time.
+        internal void End(DateTime? endedAt = null)
         {
             // Phase 1: drain outside _lock (OnHeartbeat re-enters _lock).
             DrainHeartbeatTimer();
@@ -159,6 +169,7 @@ namespace Immutable.Audience
             // Phase 2: capture fields and reset so subsequent Start/Dispose sees clean state.
             string sessionId;
             long duration;
+            DateTime? effectiveEndedAt;
             lock (_lock)
             {
                 if (_sessionId == null) return;
@@ -166,6 +177,8 @@ namespace Immutable.Audience
 
                 // ComputeEngagedSecondsLocked folds in the live pause.
                 duration = ComputeEngagedSecondsLocked();
+                // Read _pausedAt before ResetSessionStateLocked clears it.
+                effectiveEndedAt = endedAt ?? _pausedAt;
                 ResetSessionStateLocked();
             }
 
@@ -175,7 +188,7 @@ namespace Immutable.Audience
             {
                 ["session_id"] = sessionId,
                 ["duration_sec"] = duration
-            }, sessionId);
+            }, sessionId, effectiveEndedAt);
         }
 
         // Emits session_end and seals the session without draining the heartbeat
@@ -188,11 +201,15 @@ namespace Immutable.Audience
         {
             string sessionId;
             long duration;
+            DateTime? endedAt;
             lock (_lock)
             {
                 if (_disposed || _sessionId == null) return;
                 sessionId = _sessionId!;
                 duration = ComputeEngagedSecondsLocked();
+                // Backdate to _pausedAt if Shutdown fires while backgrounded,
+                // same as End()'s extended-pause path.
+                endedAt = _pausedAt;
                 ResetSessionStateLocked();
             }
 
@@ -203,7 +220,7 @@ namespace Immutable.Audience
             {
                 ["session_id"] = sessionId,
                 ["duration_sec"] = duration
-            }, sessionId);
+            }, sessionId, endedAt);
         }
 
         public void Dispose()
@@ -254,11 +271,11 @@ namespace Immutable.Audience
         // Heartbeat runs on a background timer, where an uncaught exception
         // crashes the game on modern .NET. Start / End run on the caller's
         // thread, where it would bubble into Init / Shutdown.
-        private void SafeTrack(string eventName, Dictionary<string, object> properties, string sessionId)
+        private void SafeTrack(string eventName, Dictionary<string, object> properties, string sessionId, DateTime? timestampOverride = null)
         {
             try
             {
-                _track(eventName, properties, sessionId);
+                _track(eventName, properties, sessionId, timestampOverride);
             }
             catch (Exception ex)
             {

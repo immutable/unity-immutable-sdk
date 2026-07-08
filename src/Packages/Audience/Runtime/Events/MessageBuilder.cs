@@ -16,9 +16,10 @@ namespace Immutable.Audience
             string consentLevel,
             Dictionary<string, object>? properties = null,
             string? sessionId = null,
-            bool testMode = false)
+            bool testMode = false,
+            DateTime? eventTimestamp = null)
         {
-            var msg = BuildBase(MessageTypes.Track, packageVersion, consentLevel, testMode);
+            var msg = BuildBase(MessageTypes.Track, packageVersion, consentLevel, testMode, eventTimestamp);
             msg["eventName"] = Truncate(eventName, Constants.MaxFieldLength);
 
             if (!string.IsNullOrEmpty(anonymousId))
@@ -105,13 +106,15 @@ namespace Immutable.Audience
         }
 
         private static Dictionary<string, object> BuildBase(
-            string type, string packageVersion, string consentLevel, bool testMode)
+            string type, string packageVersion, string consentLevel, bool testMode, DateTime? eventTimestamp = null)
         {
             var msg = new Dictionary<string, object>
             {
                 [MessageFields.Type] = type,
                 ["messageId"] = Guid.NewGuid().ToString(),
-                ["eventTimestamp"] = DateTime.UtcNow.ToString("o"),
+                // ToUniversalTime guards against a caller passing Local/Unspecified;
+                // "o" only round-trips as UTC when Kind is actually Utc.
+                ["eventTimestamp"] = (eventTimestamp ?? DateTime.UtcNow).ToUniversalTime().ToString("o"),
                 ["context"] = new Dictionary<string, object>
                 {
                     ["library"] = Constants.LibraryName,
