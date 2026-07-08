@@ -774,10 +774,9 @@ namespace Immutable.Audience.Tests
         }
 
         // Reads every queued event file. Returns an empty array when the
-        // queue directory has not been created yet (SetConsent(None) purges
-        // it, Init with ConsentLevel.None never writes one) so tests can
-        // assert "no such event" without a DirectoryNotFoundException crash
-        // masking the real signal.
+        // queue directory has not been created yet (Init with ConsentLevel.None
+        // never writes one) so tests can assert "no such event" without a
+        // DirectoryNotFoundException crash masking the real signal.
         private string[] ReadQueueFiles()
         {
             var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
@@ -920,20 +919,20 @@ namespace Immutable.Audience.Tests
         [Test]
         public void SetConsent_AnonymousToNone_DoesNotEmitSessionEnd()
         {
-            // Consent revocation purges the queue and disposes the session.
-            // Session.Dispose fires End → Track("session_end"), but by the
-            // time End runs the consent level has already been flipped to
-            // None, so CanTrack gates the track call. No session_end event
-            // should appear on disk. Regression guard: a future reorder of
-            // "flip consent" vs "dispose session" would silently leak a
-            // session_end that the consent-revocation promise forbids.
+            // Consent revocation disposes the session. Session.Dispose fires
+            // End → Track("session_end"), but by the time End runs the consent
+            // level has already been flipped to None, so CanTrack gates the
+            // track call. No session_end event should be recorded. Regression
+            // guard: a future reorder of "flip consent" vs "dispose session"
+            // would silently record a session_end that the consent-revocation
+            // promise forbids.
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));
             ImmutableAudience.SetConsent(ConsentLevel.None);
             ImmutableAudience.Shutdown();
 
             Assert.IsFalse(
                 ReadQueueFiles().Any(c => c.Contains("\"session_end\"")),
-                "SetConsent(None) must not leak a session_end event past the queue purge");
+                "SetConsent(None) must not record a session_end event after revocation");
         }
 
         private class KeepOnDiskHandler : System.Net.Http.HttpMessageHandler

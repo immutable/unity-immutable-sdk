@@ -266,7 +266,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         }
 
         [UnityTest]
-        public IEnumerator SetConsent_None_PurgesQueueAndPersists()
+        public IEnumerator SetConsent_None_KeepsQueueAndPersists()
         {
             // Init at default Anonymous; enqueue an event; revoke; flush. No errors.
             yield return LoadAndInit();
@@ -276,7 +276,8 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
 
             yield return SetConsentVia(SampleAppUi.Buttons.ConsentNone);
 
-            // Flushing after revocation should be a no-op (queue purged). No error.
+            // Events recorded before revocation are kept (consent is determined at
+            // capture time), so flushing sends them without error.
             _root.Q<Button>(SampleAppUi.Buttons.Flush).Click();
             yield return _twoSeconds;
 

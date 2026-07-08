@@ -891,36 +891,40 @@ namespace Immutable.Audience.Tests
         }
 
         // -----------------------------------------------------------------
-        // SetConsent: purge + persistence
+        // SetConsent: queue retention + persistence
         // -----------------------------------------------------------------
 
         [Test]
-        public void SetConsent_DowngradeToNone_PurgesQueueOnDiskAndInMemory()
+        public void SetConsent_DowngradeToNone_KeepsQueuedEvents()
         {
             ImmutableAudience.Init(MakeConfig());
 
             ImmutableAudience.Track("event_under_old_consent");
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
-            // Force memory → disk so we can verify the purge wipes both layers.
             ImmutableAudience.FlushQueueToDiskForTesting();
-            Assert.Greater(Directory.GetFiles(queueDir, "*.json").Length, 0,
+            var before = Directory.GetFiles(queueDir, "*.json").Length;
+            Assert.Greater(before, 0,
                 "precondition: events queued before downgrade exist on disk");
 
             ImmutableAudience.SetConsent(ConsentLevel.None);
 
-            Assert.AreEqual(0, Directory.GetFiles(queueDir, "*.json").Length,
-                "downgrade to None must purge queued events from disk so they can't leak after revocation");
+            // A consent change gates only future collection; events already
+            // recorded keep the consent they were captured under and are not
+            // purged (GDPR: consent is determined at capture time).
+            Assert.AreEqual(before, Directory.GetFiles(queueDir, "*.json").Length,
+                "downgrade to None must not purge already-queued events");
         }
 
         [Test]
-        public void SetConsent_DowngradeToNone_DropsInFlightTrack_ThatRacesThePurge()
+        public void SetConsent_DowngradeToNone_DropsInFlightTrack_RecordedAfterRevocation()
         {
             // Reproduces the window where a Track call observed consent=Anonymous,
             // built its message, and is about to enqueue, while a concurrent
-            // SetConsent(None) sets consent and purges. Without the re-check inside
-            // the drain lock, the enqueue lands after the purge and the event leaks
-            // to disk past revocation.
+            // SetConsent(None) revokes consent. The event is recorded (enqueued)
+            // after revocation, so the record-time consent gate inside the drain
+            // lock must drop it. Without the re-check, the enqueue lands post-
+            // revocation and the event is recorded despite consent being None.
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));
 
             // Drain the game_launch that Init auto-fires so the assertion below is
@@ -930,7 +934,7 @@ namespace Immutable.Audience.Tests
             foreach (var f in Directory.GetFiles(queueDir, "*.json")) File.Delete(f);
 
             // Gate the Track thread so it's poised to enqueue at the moment SetConsent
-            // completes its purge. We approximate the race by kicking Track off a
+            // flips consent to None. We approximate the race by kicking Track off a
             // threadpool thread and racing SetConsent after a tiny stagger; if the
             // re-check is missing, this leaks deterministically under contention over
             // repeated runs.
@@ -954,7 +958,7 @@ namespace Immutable.Audience.Tests
                 : 0;
 
             Assert.AreEqual(0, leaked,
-                "Track that raced SetConsent(None) must not leak past the purge");
+                "Track that raced SetConsent(None) must not be recorded after revocation");
         }
 
         [Test]
@@ -963,10 +967,10 @@ namespace Immutable.Audience.Tests
             // The single-shot race test above can pass trivially if Track finishes
             // before SetConsent starts on a fast machine. This stress variant runs
             // the race many times with many concurrent Track threads so at least
-            // some iterations are guaranteed to land the enqueue inside the
-            // _state=None/PurgeAll window.
+            // some iterations are guaranteed to land the enqueue after _state has
+            // flipped to None.
             //
-            // Without the EnqueueChecked re-check, this test leaks events
+            // Without the EnqueueChecked re-check, this test records events
             // reproducibly. With the fix, zero leaks across all iterations.
             const int iterations = 200;
             const int trackersPerIteration = 4;
@@ -1148,13 +1152,17 @@ namespace Immutable.Audience.Tests
         public void SetConsent_DowngradeToAnonymous_StressTest_NoUserIdLeak()
         {
             // Full → Anonymous race: Track reads _state with userId still set,
-            // then SetConsent flips _state to Anonymous and calls
-            // ApplyAnonymousDowngrade (one-shot rewrite). If Track's enqueue
-            // lands after the rewrite, the msg with userId is not stripped.
+            // then SetConsent flips _state to Anonymous. If Track's enqueue lands
+            // after the flip, the record-time consent gate must strip the userId
+            // so the event is recorded under the consent in force at enqueue.
             //
             // With the ConsentState + EnqueueChecked transform in place, Track's
             // transform runs under _drainLock and strips userId when current state
             // is not Full. Zero leaks across all iterations.
+            //
+            // Note: this covers the in-flight enqueue race only. Events already
+            // recorded before the downgrade keep the userId/consent they were
+            // captured with and are intentionally not rewritten.
             //
             // Sabotage: remove the `m.Remove(MessageFields.UserId)` in
             // EnqueueTrack and this test leaks reproducibly.
@@ -2054,7 +2062,7 @@ namespace Immutable.Audience.Tests
         // -----------------------------------------------------------------
 
         [Test]
-        public void FullToAnonymous_StripsUserIdFromQueuedTrackAndDropsIdentifyAlias()
+        public void FullToAnonymous_KeepsQueuedIdentifyAliasAndUserId()
         {
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
 
@@ -2067,21 +2075,25 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.SetConsent(ConsentLevel.Anonymous);
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
-            var files = Directory.GetFiles(queueDir, "*.json");
+            var msgs = Directory.GetFiles(queueDir, "*.json")
+                .Select(f => JsonReader.DeserializeObject(File.ReadAllText(f)))
+                .ToList();
 
-            foreach (var f in files)
-            {
-                var msg = JsonReader.DeserializeObject(File.ReadAllText(f));
-                var type = (string)msg["type"];
-                Assert.AreNotEqual("identify", type, "identify must be purged on Full -> Anonymous");
-                Assert.AreNotEqual("alias", type, "alias must be purged on Full -> Anonymous");
-                if (type == "track")
-                {
-                    Assert.IsFalse(msg.ContainsKey("userId"), "userId must be stripped from queued track on Full -> Anonymous");
-                    Assert.AreEqual("anonymous", msg["consentLevel"],
-                        "consentLevel must be downgraded to anonymous on queued track");
-                }
-            }
+            // Events recorded under Full keep the identity and consent they were
+            // captured with; a downgrade only gates future collection and must
+            // not rewrite or drop already-queued events.
+            Assert.IsTrue(msgs.Any(m => (string)m["type"] == "identify"),
+                "queued identify must be retained on Full -> Anonymous");
+            Assert.IsTrue(msgs.Any(m => (string)m["type"] == "alias"),
+                "queued alias must be retained on Full -> Anonymous");
+
+            var track = msgs.First(m => (string)m["type"] == "track"
+                && m.ContainsKey("eventName")
+                && (string)m["eventName"] == "tracked_before_downgrade");
+            Assert.AreEqual("player_steam", track["userId"],
+                "queued track must keep the userId it was captured with under Full");
+            Assert.AreEqual("full", track["consentLevel"],
+                "queued track must keep the consentLevel it was captured with under Full");
         }
 
         [Test]
