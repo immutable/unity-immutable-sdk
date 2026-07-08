@@ -383,26 +383,27 @@ namespace Immutable.Audience
             Dictionary<string, object>? properties,
             string? sessionId,
             ConsentState state,
-            AudienceConfig config)
+            AudienceConfig config,
+            DateTime? timestampOverride = null)
         {
             var anonymousId = Identity.GetOrCreate(config.PersistentDataPath!, state.Level);
             var deviceId = Identity.GetOrCreateDeviceId(config.PersistentDataPath!, state.Level);
             var userId = state.Level == ConsentLevel.Full ? state.UserId : null;
             var msg = MessageBuilder.Track(eventName, anonymousId, userId, deviceId, Constants.LibraryVersion,
-                state.Level.ToLowercaseString(), properties, sessionId, config.TestMode);
+                state.Level.ToLowercaseString(), properties, sessionId, config.TestMode, timestampOverride);
             EnqueueTrack(msg);
         }
 
         // Bound to Session's TrackDelegate. sessionId is the value Session already
         // captured locally before any state reset, not read live from _session
         // (End() nulls the live session id before this fires for session_end).
-        private static void TrackFromSession(string eventName, Dictionary<string, object> properties, string sessionId)
+        private static void TrackFromSession(string eventName, Dictionary<string, object> properties, string sessionId, DateTime? timestampOverride = null)
         {
             var state = _state;
             if (!_initialized || !state.Level.CanTrack()) return;
             var config = _config;
             if (config == null) return;
-            EnqueueTrackedEvent(eventName, properties, sessionId, state, config);
+            EnqueueTrackedEvent(eventName, properties, sessionId, state, config, timestampOverride);
         }
 
         // -----------------------------------------------------------------

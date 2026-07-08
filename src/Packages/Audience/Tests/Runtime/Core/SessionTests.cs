@@ -10,17 +10,17 @@ namespace Immutable.Audience.Tests
     [TestFixture]
     internal class SessionTests
     {
-        private List<(string name, Dictionary<string, object> props)> _events;
+        private List<(string name, Dictionary<string, object> props, DateTime? timestampOverride)> _events;
 
         [SetUp]
         public void SetUp()
         {
-            _events = new List<(string, Dictionary<string, object>)>();
+            _events = new List<(string, Dictionary<string, object>, DateTime?)>();
         }
 
-        private void MockTrack(string name, Dictionary<string, object> props, string sessionId)
+        private void MockTrack(string name, Dictionary<string, object> props, string sessionId, DateTime? timestampOverride = null)
         {
-            _events.Add((name, props));
+            _events.Add((name, props, timestampOverride));
         }
 
         // -----------------------------------------------------------------
@@ -80,6 +80,30 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
+        public void Dispose_WhilePaused_BackdatesTimestampToPauseStart()
+        {
+            // Symmetry with the extended-pause rollover: quitting while
+            // backgrounded should timestamp session_end to when backgrounding
+            // began, not shutdown time.
+            var now = new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc);
+            DateTime Clock() => now;
+
+            var session = new Session(MockTrack, getUtcNow: Clock);
+            session.Start();
+
+            now = now.AddSeconds(10);
+            session.Pause();
+            var pausedAt = now;
+
+            now = now.AddSeconds(5); // quit mid-background, well under 30s
+            session.Dispose();
+
+            var sessionEnd = _events.First(e => e.name == "session_end");
+            Assert.AreEqual(pausedAt, sessionEnd.timestampOverride,
+                "Dispose while paused should backdate session_end to when backgrounding began");
+        }
+
+        [Test]
         public void Dispose_CalledTwice_DoesNotFireTwice()
         {
             var session = new Session(MockTrack);
@@ -98,7 +122,7 @@ namespace Immutable.Audience.Tests
         public void Start_PassesSessionIdToTrackDelegate()
         {
             string capturedSessionId = null;
-            void Track(string name, Dictionary<string, object> props, string sessionId)
+            void Track(string name, Dictionary<string, object> props, string sessionId, DateTime? timestampOverride = null)
             {
                 if (name == "session_start") capturedSessionId = sessionId;
             }
@@ -118,7 +142,7 @@ namespace Immutable.Audience.Tests
             // ending session's id: it comes from the local variable captured
             // before the reset, not a live re-read of (by-then-null) SessionId.
             string capturedSessionId = null;
-            void Track(string name, Dictionary<string, object> props, string sessionId)
+            void Track(string name, Dictionary<string, object> props, string sessionId, DateTime? timestampOverride = null)
             {
                 if (name == "session_end") capturedSessionId = sessionId;
             }
@@ -140,7 +164,7 @@ namespace Immutable.Audience.Tests
             // Same race as End(): EmitEndAndSeal also resets state before
             // firing session_end.
             string capturedSessionId = null;
-            void Track(string name, Dictionary<string, object> props, string sessionId)
+            void Track(string name, Dictionary<string, object> props, string sessionId, DateTime? timestampOverride = null)
             {
                 if (name == "session_end") capturedSessionId = sessionId;
             }
@@ -154,6 +178,42 @@ namespace Immutable.Audience.Tests
             Assert.IsNotNull(capturedSessionId,
                 "EmitEndAndSeal must pass the ending session's id through the delegate, not null");
             Assert.AreEqual(endingId, capturedSessionId);
+        }
+
+        [Test]
+        public void EmitEndAndSeal_WhilePaused_BackdatesTimestampToPauseStart()
+        {
+            // Shutdown() calls EmitEndAndSeal, not End/Dispose. Same fix:
+            // quitting while backgrounded should timestamp session_end to
+            // when backgrounding began, not shutdown time.
+            var now = new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc);
+            DateTime Clock() => now;
+
+            using var session = new Session(MockTrack, getUtcNow: Clock);
+            session.Start();
+
+            now = now.AddSeconds(10);
+            session.Pause();
+            var pausedAt = now;
+
+            now = now.AddSeconds(5);
+            session.EmitEndAndSeal();
+
+            var sessionEnd = _events.First(e => e.name == "session_end");
+            Assert.AreEqual(pausedAt, sessionEnd.timestampOverride,
+                "EmitEndAndSeal while paused should backdate session_end to when backgrounding began");
+        }
+
+        [Test]
+        public void EmitEndAndSeal_WithoutPause_DoesNotBackdateTimestamp()
+        {
+            using var session = new Session(MockTrack);
+            session.Start();
+            session.EmitEndAndSeal();
+
+            var sessionEnd = _events.First(e => e.name == "session_end");
+            Assert.IsNull(sessionEnd.timestampOverride,
+                "EmitEndAndSeal without a pause should not backdate the event timestamp");
         }
 
         // -----------------------------------------------------------------
@@ -171,7 +231,7 @@ namespace Immutable.Audience.Tests
             var events = new List<(string name, Dictionary<string, object> props)>();
             var gate = new object();
 
-            void Track(string name, Dictionary<string, object> props, string sessionId)
+            void Track(string name, Dictionary<string, object> props, string sessionId, DateTime? timestampOverride = null)
             {
                 lock (gate) events.Add((name, props));
                 if (name == "session_heartbeat") heartbeatFired.Set();
@@ -453,6 +513,87 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
+        public void End_AfterExtendedPauseRollover_BackdatesTimestampToPauseStart()
+        {
+            // session_end can only be detected on Resume, which may run long
+            // after the session actually stopped being active (e.g. an
+            // hour-long background). The event's wire timestamp should
+            // reflect when backgrounding began (_pausedAt), not wake-up time,
+            // so warehouse queries don't need duration_sec to reconstruct
+            // when the session really ended.
+            var now = new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc);
+            DateTime Clock() => now;
+
+            using var session = new Session(MockTrack, getUtcNow: Clock);
+            session.Start();
+
+            now = now.AddSeconds(10);
+            session.Pause();
+            var pausedAt = now;
+
+            now = now.AddSeconds(40); // extended pause: rolls the session on Resume
+            session.Resume();
+
+            var sessionEnd = _events.First(e => e.name == "session_end");
+            Assert.AreEqual(pausedAt, sessionEnd.timestampOverride,
+                "session_end from an extended-pause rollover should backdate to when backgrounding began");
+        }
+
+        [Test]
+        public void End_AfterExtendedPauseRollover_WithEarlierShortPause_TimestampStillIncludesShortPauseGap()
+        {
+            // Backdating corrects for the pause that triggers rollover, but the
+            // wire timestamp is a single real instant (pausedAt) — it is not
+            // adjusted for any short (<=30s) pause earlier in the same session.
+            // session_end.timestamp - session_start.timestamp therefore still
+            // includes those earlier short gaps; duration_sec (which folds in
+            // every pause, short and long) remains the only field with zero
+            // pause skew. Analysts should use duration_sec for engaged time,
+            // not naive timestamp subtraction.
+            var now = new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc);
+            DateTime Clock() => now;
+
+            using var session = new Session(MockTrack, getUtcNow: Clock);
+            session.Start();
+            var sessionStart = now;
+
+            now = now.AddSeconds(5);
+            session.Pause(); // short pause: 3s, well under the 30s threshold
+            now = now.AddSeconds(3);
+            session.Resume();
+
+            now = now.AddSeconds(10); // 10s more engaged
+            session.Pause();
+            var pausedAt = now;
+
+            now = now.AddSeconds(40); // extended pause: rolls the session
+            session.Resume();
+
+            var sessionEnd = _events.First(e => e.name == "session_end");
+            var duration = (long)sessionEnd.props["duration_sec"];
+            var timestampDeltaSec = (sessionEnd.timestampOverride!.Value - sessionStart).TotalSeconds;
+
+            Assert.AreEqual(15L, duration, "duration_sec excludes both the short and the extended pause");
+            Assert.AreEqual(18d, timestampDeltaSec,
+                "timestamp delta still includes the earlier 3s short pause (5 + 3 + 10 = 18), unlike duration_sec");
+        }
+
+        [Test]
+        public void End_WithoutPause_DoesNotBackdateTimestamp()
+        {
+            // A normal End (Shutdown/Dispose, no pause involved) has no
+            // backgrounding gap to correct for, so it should use current
+            // time rather than a backdated value.
+            using var session = new Session(MockTrack);
+            session.Start();
+            session.End();
+
+            var sessionEnd = _events.First(e => e.name == "session_end");
+            Assert.IsNull(sessionEnd.timestampOverride,
+                "a normal End should not backdate the event timestamp");
+        }
+
+        [Test]
         public void Heartbeat_AfterShortPause_ReportsPauseAdjustedDuration()
         {
             // Engaged 6s, paused 2s, resumed, then heartbeat → 6 s engaged.
@@ -545,7 +686,7 @@ namespace Immutable.Audience.Tests
             using var releaseBeat = new ManualResetEvent(false);
             try
             {
-                void Track(string name, Dictionary<string, object> props, string sessionId)
+                void Track(string name, Dictionary<string, object> props, string sessionId, DateTime? timestampOverride = null)
                 {
                     if (name == "session_heartbeat")
                     {
@@ -613,7 +754,7 @@ namespace Immutable.Audience.Tests
             Log.Writer = line => { lock (warnings) warnings.Add(line); };
             try
             {
-                void ThrowingTrack(string name, Dictionary<string, object> props, string sessionId)
+                void ThrowingTrack(string name, Dictionary<string, object> props, string sessionId, DateTime? timestampOverride = null)
                 {
                     if (name == "session_heartbeat")
                         throw new InvalidOperationException("track explode");
@@ -648,7 +789,7 @@ namespace Immutable.Audience.Tests
             Log.Writer = line => { lock (warnings) warnings.Add(line); };
             try
             {
-                void ThrowingTrack(string name, Dictionary<string, object> props, string sessionId)
+                void ThrowingTrack(string name, Dictionary<string, object> props, string sessionId, DateTime? timestampOverride = null)
                 {
                     if (name == "session_start")
                         throw new InvalidOperationException("track explode");
@@ -683,7 +824,7 @@ namespace Immutable.Audience.Tests
             Log.Writer = line => { lock (warnings) warnings.Add(line); };
             try
             {
-                void ThrowingTrack(string name, Dictionary<string, object> props, string sessionId)
+                void ThrowingTrack(string name, Dictionary<string, object> props, string sessionId, DateTime? timestampOverride = null)
                 {
                     if (name == "session_end")
                         throw new InvalidOperationException("track explode");
@@ -719,7 +860,7 @@ namespace Immutable.Audience.Tests
             Log.Writer = _ => throw new InvalidOperationException("log explode");
             try
             {
-                void ThrowingTrack(string name, Dictionary<string, object> props, string sessionId)
+                void ThrowingTrack(string name, Dictionary<string, object> props, string sessionId, DateTime? timestampOverride = null)
                 {
                     if (name == "session_heartbeat")
                         throw new InvalidOperationException("track explode");

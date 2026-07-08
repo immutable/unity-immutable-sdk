@@ -208,6 +208,32 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
+        public void Track_EventTimestampOverride_UsedInsteadOfNow()
+        {
+            var backdated = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+            var result = MessageBuilder.Track("session_end", AnonId, null, null, PackageVersion, Consent,
+                eventTimestamp: backdated);
+
+            Assert.AreEqual(backdated.ToString("o"), result["eventTimestamp"]);
+        }
+
+        [Test]
+        public void Track_EventTimestampOverride_NonUtcKind_NormalizedToUtc()
+        {
+            // All current callers pass a UTC value, but the override is a public
+            // seam: a future caller passing Local/Unspecified must not silently
+            // ship a non-UTC "o" string past the backend's schema check.
+            var unspecified = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
+
+            var result = MessageBuilder.Track("session_end", AnonId, null, null, PackageVersion, Consent,
+                eventTimestamp: unspecified);
+
+            var ts = (string)result["eventTimestamp"];
+            Assert.IsTrue(ts.EndsWith("Z"), $"eventTimestamp must normalize to UTC ('Z' suffix); got: '{ts}'");
+        }
+
+        [Test]
         public void AllMessages_Context_LibraryAndLibraryVersionAreNonEmptyStrings()
         {
             foreach (var msg in EveryMessageType())
