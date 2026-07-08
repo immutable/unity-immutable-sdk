@@ -255,5 +255,74 @@ namespace Immutable.Audience.Tests
             yield return MessageBuilder.Identify(null, "u1", null, "steam", PackageVersion, "full");
             yield return MessageBuilder.Alias("f", "t1", "t", "t2", null, PackageVersion, "full");
         }
+
+        // -----------------------------------------------------------------
+        // sessionId envelope field
+        // -----------------------------------------------------------------
+
+        [Test]
+        public void Track_SessionIdProvided_PresentInDict()
+        {
+            var result = MessageBuilder.Track("evt", AnonId, null, null, PackageVersion, Consent,
+                sessionId: "session-1");
+
+            Assert.IsTrue(result.ContainsKey("sessionId"));
+            Assert.AreEqual("session-1", result["sessionId"]);
+        }
+
+        [Test]
+        public void Track_SessionIdNull_AbsentFromDict()
+        {
+            var result = MessageBuilder.Track("evt", AnonId, null, null, PackageVersion, Consent);
+
+            Assert.IsFalse(result.ContainsKey("sessionId"));
+        }
+
+        [Test]
+        public void Identify_SessionIdProvided_PresentInDict()
+        {
+            var result = MessageBuilder.Identify("anon-42", "user-42", null, "steam", PackageVersion, "full",
+                sessionId: "session-1");
+
+            Assert.IsTrue(result.ContainsKey("sessionId"));
+            Assert.AreEqual("session-1", result["sessionId"]);
+        }
+
+        [Test]
+        public void Identify_SessionIdNull_AbsentFromDict()
+        {
+            var result = MessageBuilder.Identify("anon-42", "user-42", null, "steam", PackageVersion, "full");
+
+            Assert.IsFalse(result.ContainsKey("sessionId"));
+        }
+
+        [Test]
+        public void Alias_SessionIdProvided_PresentInDict()
+        {
+            var result = MessageBuilder.Alias("from-id", "email", "to-id", "steam", null, PackageVersion, "full",
+                sessionId: "session-1");
+
+            Assert.IsTrue(result.ContainsKey("sessionId"));
+            Assert.AreEqual("session-1", result["sessionId"]);
+        }
+
+        [Test]
+        public void Alias_SessionIdNull_AbsentFromDict()
+        {
+            var result = MessageBuilder.Alias("from-id", "email", "to-id", "steam", null, PackageVersion, "full");
+
+            Assert.IsFalse(result.ContainsKey("sessionId"));
+        }
+
+        [Test]
+        public void Track_SessionIdLongerThan256Chars_TruncatedTo256()
+        {
+            var longSessionId = new string('s', 300);
+
+            var result = MessageBuilder.Track("evt", null, null, null, PackageVersion, Consent,
+                sessionId: longSessionId);
+
+            Assert.AreEqual(256, ((string)result["sessionId"]).Length);
+        }
     }
 }

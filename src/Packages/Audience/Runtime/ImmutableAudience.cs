@@ -243,7 +243,7 @@ namespace Immutable.Audience
                 // Session created under the lock; Start() deferred until after
                 // release because session_start → Track takes its own locks.
                 if (initialLevel.CanTrack())
-                    _session = new Session(Track);
+                    _session = new Session(TrackFromSession);
 
                 // Captured reference: a later SetConsent(None) may dispose this
                 // Session (Start then no-ops on _disposed). Either way no duplicate
@@ -350,13 +350,8 @@ namespace Immutable.Audience
                 return;
             }
 
-            var anonymousId = Identity.GetOrCreate(config.PersistentDataPath!, state.Level);
-            var deviceId = Identity.GetOrCreateDeviceId(config.PersistentDataPath!, state.Level);
             // ToProperties returns a fresh dict per call, so no snapshot needed.
-            var userId = state.Level == ConsentLevel.Full ? state.UserId : null;
-            var msg = MessageBuilder.Track(eventName, anonymousId, userId, deviceId, Constants.LibraryVersion,
-                state.Level.ToLowercaseString(), properties, config.TestMode);
-            EnqueueTrack(msg);
+            EnqueueTrackedEvent(eventName, properties, _session?.SessionId, state, config);
         }
 
         /// <summary>
@@ -379,12 +374,35 @@ namespace Immutable.Audience
             var config = _config;
             if (config == null) return;
 
+            EnqueueTrackedEvent(eventName, SnapshotCallerDict(properties), _session?.SessionId, state, config);
+        }
+
+        // Shared tail for both Track overloads and TrackFromSession.
+        private static void EnqueueTrackedEvent(
+            string eventName,
+            Dictionary<string, object>? properties,
+            string? sessionId,
+            ConsentState state,
+            AudienceConfig config)
+        {
             var anonymousId = Identity.GetOrCreate(config.PersistentDataPath!, state.Level);
             var deviceId = Identity.GetOrCreateDeviceId(config.PersistentDataPath!, state.Level);
             var userId = state.Level == ConsentLevel.Full ? state.UserId : null;
             var msg = MessageBuilder.Track(eventName, anonymousId, userId, deviceId, Constants.LibraryVersion,
-                state.Level.ToLowercaseString(), SnapshotCallerDict(properties), config.TestMode);
+                state.Level.ToLowercaseString(), properties, sessionId, config.TestMode);
             EnqueueTrack(msg);
+        }
+
+        // Bound to Session's TrackDelegate. sessionId is the value Session already
+        // captured locally before any state reset, not read live from _session
+        // (End() nulls the live session id before this fires for session_end).
+        private static void TrackFromSession(string eventName, Dictionary<string, object> properties, string sessionId)
+        {
+            var state = _state;
+            if (!_initialized || !state.Level.CanTrack()) return;
+            var config = _config;
+            if (config == null) return;
+            EnqueueTrackedEvent(eventName, properties, sessionId, state, config);
         }
 
         // -----------------------------------------------------------------
@@ -430,7 +448,7 @@ namespace Immutable.Audience
             var anonymousId = Identity.GetOrCreate(config.PersistentDataPath!, level);
             var deviceId = Identity.GetOrCreateDeviceId(config.PersistentDataPath!, level);
             var msg = MessageBuilder.Identify(anonymousId, userId, deviceId, identityType.ToLowercaseString(),
-                Constants.LibraryVersion, level.ToLowercaseString(), SnapshotCallerDict(traits), config.TestMode);
+                Constants.LibraryVersion, level.ToLowercaseString(), SnapshotCallerDict(traits), _session?.SessionId, config.TestMode);
             EnqueueIdentity(msg);
         }
 
@@ -462,7 +480,7 @@ namespace Immutable.Audience
 
             var deviceId = Identity.GetOrCreateDeviceId(config.PersistentDataPath!, state.Level);
             var msg = MessageBuilder.Alias(fromId, fromType.ToLowercaseString(), toId, toType.ToLowercaseString(),
-                deviceId, Constants.LibraryVersion, state.Level.ToLowercaseString(), config.TestMode);
+                deviceId, Constants.LibraryVersion, state.Level.ToLowercaseString(), _session?.SessionId, config.TestMode);
             EnqueueIdentity(msg);
         }
 
@@ -493,7 +511,7 @@ namespace Immutable.Audience
 
                 // Swap under the lock so racing SetConsent/OnPause/OnResume see
                 // either the old, the new, or null; never a torn reference.
-                _session = _state.Level.CanTrack() ? new Session(Track) : null;
+                _session = _state.Level.CanTrack() ? new Session(TrackFromSession) : null;
                 newSession = _session;
             }
 
@@ -655,7 +673,7 @@ namespace Immutable.Audience
                     // Upgrade from None: allocate + publish the new Session under
                     // the lock so a concurrent SetConsent / Init sees the new
                     // reference and the double-allocation guard above fires.
-                    newSession = new Session(Track);
+                    newSession = new Session(TrackFromSession);
                     _session = newSession;
                 }
             }
@@ -1408,8 +1426,6 @@ namespace Immutable.Audience
                 }
             }
 
-            // No sessionId on game_launch per Event Reference. Pipeline correlates
-            // via eventTimestamp with the session_start that fires just before.
             Track("game_launch", properties.Count > 0 ? properties : null);
         }
 

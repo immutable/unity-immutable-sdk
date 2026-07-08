@@ -753,6 +753,106 @@ namespace Immutable.Audience.Tests
         }
 
         // -----------------------------------------------------------------
+        // sessionId envelope field
+        // -----------------------------------------------------------------
+
+        [Test]
+        public void Track_ActiveSession_EnvelopeIncludesSessionId()
+        {
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));
+            var sessionId = ImmutableAudience.SessionId;
+            Assert.IsFalse(string.IsNullOrEmpty(sessionId), "sanity: a session should be active after Init");
+
+            ImmutableAudience.Track("crafting_started");
+            ImmutableAudience.FlushQueueToDiskForTesting();
+
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            var contents = Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText).ToList();
+            Assert.IsTrue(
+                contents.Any(c => c.Contains("\"crafting_started\"") && c.Contains($"\"sessionId\":\"{sessionId}\"")),
+                "a Track() envelope should carry the active session's id even though the call site never set it");
+
+            ImmutableAudience.Shutdown();
+        }
+
+        [Test]
+        public void Track_IEvent_ActiveSession_EnvelopeIncludesSessionId()
+        {
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));
+            var sessionId = ImmutableAudience.SessionId;
+            Assert.IsFalse(string.IsNullOrEmpty(sessionId), "sanity: a session should be active after Init");
+
+            ImmutableAudience.Track(new Purchase { Currency = "USD", Value = 9.99m });
+            ImmutableAudience.FlushQueueToDiskForTesting();
+
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            var contents = Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText).ToList();
+            Assert.IsTrue(
+                contents.Any(c => c.Contains("\"purchase\"") && c.Contains($"\"sessionId\":\"{sessionId}\"")),
+                "the typed Track(IEvent) overload should carry the active session's id, same as the string overload");
+
+            ImmutableAudience.Shutdown();
+        }
+
+        [Test]
+        public void Identify_ActiveSession_EnvelopeIncludesSessionId()
+        {
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
+            var sessionId = ImmutableAudience.SessionId;
+            Assert.IsFalse(string.IsNullOrEmpty(sessionId), "sanity: a session should be active after Init");
+
+            ImmutableAudience.Identify("player-42", IdentityType.Custom);
+            ImmutableAudience.FlushQueueToDiskForTesting();
+
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            var contents = Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText).ToList();
+            Assert.IsTrue(
+                contents.Any(c => c.Contains("\"identify\"") && c.Contains($"\"sessionId\":\"{sessionId}\"")),
+                "an Identify() envelope should carry the active session's id");
+
+            ImmutableAudience.Shutdown();
+        }
+
+        [Test]
+        public void Alias_ActiveSession_EnvelopeIncludesSessionId()
+        {
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
+            var sessionId = ImmutableAudience.SessionId;
+            Assert.IsFalse(string.IsNullOrEmpty(sessionId), "sanity: a session should be active after Init");
+
+            ImmutableAudience.Alias("steam123", IdentityType.Steam, "user_456", IdentityType.Passport);
+            ImmutableAudience.FlushQueueToDiskForTesting();
+
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            var contents = Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText).ToList();
+            Assert.IsTrue(
+                contents.Any(c => c.Contains("\"alias\"") && c.Contains($"\"sessionId\":\"{sessionId}\"")),
+                "an Alias() envelope should carry the active session's id");
+
+            ImmutableAudience.Shutdown();
+        }
+
+        [Test]
+        public void Shutdown_SessionEndEnvelope_CarriesEndingSessionId_NotNull()
+        {
+            // Regression guard: the envelope sessionId must be the value already
+            // handed to TrackDelegate before Session.End() nulls its live SessionId,
+            // not a live re-read of the (by-then-null) session.
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));
+            var endingSessionId = ImmutableAudience.SessionId;
+            Assert.IsFalse(string.IsNullOrEmpty(endingSessionId), "sanity: a session should be active after Init");
+
+            ImmutableAudience.Shutdown();
+
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            var contents = Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText).ToList();
+            var sessionEnd = contents.FirstOrDefault(c => c.Contains("\"session_end\""));
+            Assert.IsNotNull(sessionEnd, "Shutdown should emit session_end");
+            Assert.IsTrue(sessionEnd.Contains($"\"sessionId\":\"{endingSessionId}\""),
+                "session_end's envelope sessionId must equal the id of the session that just ended, not be null");
+        }
+
+        // -----------------------------------------------------------------
         // Reset
         // -----------------------------------------------------------------
 
