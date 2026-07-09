@@ -630,20 +630,17 @@ namespace Immutable.Audience
 
             // Phase 1 under _initLock: atomic _state swap and _session swap.
             // Phase 2 outside the lock runs the blocking side effects (persist,
-            // dispose, purge, downgrade, backend sync, new session_start) so a
-            // concurrent Shutdown / Init / Reset isn't held waiting on them.
+            // dispose, backend sync, new session_start) so a concurrent
+            // Shutdown / Init / Reset isn't held waiting on them.
             ConsentLevel previous;
-            EventQueue? queue;
             Session? oldSession = null;
             Session? newSession = null;
-            bool downgradeFullToAnonymous = false;
 
             lock (_initLock)
             {
                 if (!_initialized) return;
 
                 config = _config;
-                queue = _queue;
                 if (config == null) return;
 
                 var previousState = _state;
@@ -664,10 +661,6 @@ namespace Immutable.Audience
                     // revocation semantics.
                     oldSession = _session;
                     _session = null;
-                }
-                else if (previous == ConsentLevel.Full && level == ConsentLevel.Anonymous)
-                {
-                    downgradeFullToAnonymous = true;
                 }
                 else if (previous == ConsentLevel.None && _session == null)
                 {
@@ -694,20 +687,16 @@ namespace Immutable.Audience
 
             if (level == ConsentLevel.None)
             {
+                // Events already queued keep the consent level (and userId) they
+                // were recorded with; a consent change only gates future
+                // collection (GDPR: consent is determined at capture time). The
+                // session is disposed and identity wiped so nothing new is
+                // captured, but previously-recorded events are not purged.
                 oldSession?.Dispose();
-                queue?.PurgeAll();
                 Identity.Reset(config.PersistentDataPath!);
-            }
-            else if (downgradeFullToAnonymous)
-            {
-                // Synchronous: EventQueue.ApplyAnonymousDowngrade holds _drainLock
-                // while it rewrites on-disk files, blocking the in-queue drain
-                // and shutting the race with HttpTransport. See the method's comment.
-                queue?.ApplyAnonymousDowngrade();
             }
 
             newSession?.Start();
-
 
             SyncConsentToBackend(config, level, anonymousIdForPut);
         }
@@ -1028,9 +1017,11 @@ namespace Immutable.Audience
         private static Dictionary<string, object>? SnapshotCallerDict(Dictionary<string, object>? src) =>
             src != null ? new Dictionary<string, object>(src) : null;
 
-        // Checks the current consent inside the drain lock. If consent has
-        // since dropped to None the message is discarded. If it dropped to
-        // Anonymous the userId is stripped.
+        // Finalises consent at the moment the event is recorded (enqueued),
+        // inside the drain lock. If consent has since dropped to None the
+        // message is discarded; if it dropped to Anonymous the userId is
+        // stripped. This gates the in-flight event only -- events already in
+        // the queue are never rewritten by a later consent change.
         private static void EnqueueTrack(Dictionary<string, object>? msg)
         {
             MergeUnityContext(msg);

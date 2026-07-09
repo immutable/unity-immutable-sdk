@@ -891,36 +891,68 @@ namespace Immutable.Audience.Tests
         }
 
         // -----------------------------------------------------------------
-        // SetConsent: purge + persistence
+        // SetConsent: queue retention + persistence
         // -----------------------------------------------------------------
 
         [Test]
-        public void SetConsent_DowngradeToNone_PurgesQueueOnDiskAndInMemory()
+        public void SetConsent_DowngradeToNone_KeepsQueuedEvents()
         {
             ImmutableAudience.Init(MakeConfig());
 
             ImmutableAudience.Track("event_under_old_consent");
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
-            // Force memory → disk so we can verify the purge wipes both layers.
             ImmutableAudience.FlushQueueToDiskForTesting();
-            Assert.Greater(Directory.GetFiles(queueDir, "*.json").Length, 0,
+            var before = Directory.GetFiles(queueDir, "*.json").Length;
+            Assert.Greater(before, 0,
                 "precondition: events queued before downgrade exist on disk");
 
             ImmutableAudience.SetConsent(ConsentLevel.None);
 
-            Assert.AreEqual(0, Directory.GetFiles(queueDir, "*.json").Length,
-                "downgrade to None must purge queued events from disk so they can't leak after revocation");
+            // A consent change gates only future collection; events already
+            // recorded keep the consent they were captured under and are not
+            // purged (GDPR: consent is determined at capture time).
+            Assert.AreEqual(before, Directory.GetFiles(queueDir, "*.json").Length,
+                "downgrade to None must not purge already-queued events");
+        }
+
+        // Blocks inside ToProperties -- called by Track after it has already
+        // snapshotted _state but before the message is built and enqueued --
+        // until the test signals Proceed. This pins the race window deterministically
+        // instead of hoping a real thread loses a scheduling race against SetConsent.
+        private class GatedEvent : IEvent
+        {
+            private readonly ManualResetEventSlim _ready = new ManualResetEventSlim(false);
+            private readonly ManualResetEventSlim _proceed = new ManualResetEventSlim(false);
+
+            public string EventName { get; }
+
+            public GatedEvent(string eventName) => EventName = eventName;
+
+            public Dictionary<string, object> ToProperties()
+            {
+                _ready.Set();
+                _proceed.Wait(TimeSpan.FromSeconds(5));
+                return new Dictionary<string, object>();
+            }
+
+            // Blocks until Track has captured the pre-flip state and is
+            // parked in ToProperties, poised to build and enqueue.
+            public void WaitUntilReady() =>
+                Assert.IsTrue(_ready.Wait(TimeSpan.FromSeconds(5)), "Track did not reach the gate in time");
+
+            public void Proceed() => _proceed.Set();
         }
 
         [Test]
-        public void SetConsent_DowngradeToNone_DropsInFlightTrack_ThatRacesThePurge()
+        public void SetConsent_DowngradeToNone_DropsInFlightTrack_RecordedAfterRevocation()
         {
             // Reproduces the window where a Track call observed consent=Anonymous,
             // built its message, and is about to enqueue, while a concurrent
-            // SetConsent(None) sets consent and purges. Without the re-check inside
-            // the drain lock, the enqueue lands after the purge and the event leaks
-            // to disk past revocation.
+            // SetConsent(None) revokes consent. The event is recorded (enqueued)
+            // after revocation, so the record-time consent gate inside the drain
+            // lock must drop it. Without the re-check, the enqueue lands post-
+            // revocation and the event is recorded despite consent being None.
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));
 
             // Drain the game_launch that Init auto-fires so the assertion below is
@@ -929,20 +961,15 @@ namespace Immutable.Audience.Tests
             var queueDir = AudiencePaths.QueueDir(_testDir);
             foreach (var f in Directory.GetFiles(queueDir, "*.json")) File.Delete(f);
 
-            // Gate the Track thread so it's poised to enqueue at the moment SetConsent
-            // completes its purge. We approximate the race by kicking Track off a
-            // threadpool thread and racing SetConsent after a tiny stagger; if the
-            // re-check is missing, this leaks deterministically under contention over
-            // repeated runs.
-            var trackStarted = new ManualResetEventSlim(false);
-            var trackTask = Task.Run(() =>
-            {
-                trackStarted.Set();
-                ImmutableAudience.Track("racing_event");
-            });
+            // Track snapshots _state (Anonymous) then parks in ToProperties.
+            // SetConsent(None) runs to completion while it's parked, so the
+            // enqueue that follows Proceed() is guaranteed to land after the flip.
+            var evt = new GatedEvent("racing_event");
+            var trackTask = Task.Run(() => ImmutableAudience.Track(evt));
 
-            trackStarted.Wait();
+            evt.WaitUntilReady();
             ImmutableAudience.SetConsent(ConsentLevel.None);
+            evt.Proceed();
             trackTask.Wait(TimeSpan.FromSeconds(5));
 
             // Flush any residue that a faulty Enqueue may have pushed to memory.
@@ -954,73 +981,57 @@ namespace Immutable.Audience.Tests
                 : 0;
 
             Assert.AreEqual(0, leaked,
-                "Track that raced SetConsent(None) must not leak past the purge");
+                "Track that raced SetConsent(None) must not be recorded after revocation");
         }
 
         [Test]
         public void SetConsent_DowngradeToNone_StressTest_NoLeak()
         {
-            // The single-shot race test above can pass trivially if Track finishes
-            // before SetConsent starts on a fast machine. This stress variant runs
-            // the race many times with many concurrent Track threads so at least
-            // some iterations are guaranteed to land the enqueue inside the
-            // _state=None/PurgeAll window.
+            // Multi-tracker variant of the single-shot test above: several
+            // Track calls all park mid-flight (post state-snapshot, pre-enqueue)
+            // simultaneously, then SetConsent(None) runs to completion before
+            // any of them is released, so every enqueue lands after the flip
+            // and must be dropped -- also exercising concurrent contention on
+            // EventQueue's drain lock.
             //
-            // Without the EnqueueChecked re-check, this test leaks events
-            // reproducibly. With the fix, zero leaks across all iterations.
-            const int iterations = 200;
+            // Without the EnqueueChecked re-check, this test records events
+            // reproducibly. With the fix, zero leaks.
             const int trackersPerIteration = 4;
 
-            for (int iter = 0; iter < iterations; iter++)
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));
+
+            // Clear game_launch so only race events can leak.
+            ImmutableAudience.FlushQueueToDiskForTesting();
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            if (Directory.Exists(queueDir))
+                foreach (var f in Directory.GetFiles(queueDir, "*.json")) File.Delete(f);
+
+            var events = new GatedEvent[trackersPerIteration];
+            var trackers = new Task[trackersPerIteration];
+            for (int t = 0; t < trackersPerIteration; t++)
             {
-                ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));
-
-                // Clear game_launch so only race events can leak.
-                ImmutableAudience.FlushQueueToDiskForTesting();
-                var queueDir = AudiencePaths.QueueDir(_testDir);
-                if (Directory.Exists(queueDir))
-                    foreach (var f in Directory.GetFiles(queueDir, "*.json")) File.Delete(f);
-
-                // All trackers spin up and block on the barrier so they all release
-                // simultaneously. The main thread joins the barrier too and fires
-                // SetConsent immediately after release, maximising contention.
-                var barrier = new Barrier(trackersPerIteration + 1);
-                var trackers = new Task[trackersPerIteration];
-                for (int t = 0; t < trackersPerIteration; t++)
-                {
-                    trackers[t] = Task.Run(() =>
-                    {
-                        barrier.SignalAndWait();
-                        ImmutableAudience.Track("race_stress");
-                    });
-                }
-
-                barrier.SignalAndWait();
-                ImmutableAudience.SetConsent(ConsentLevel.None);
-                Task.WaitAll(trackers, TimeSpan.FromSeconds(5));
-
-                // Anything the drain loop hasn't picked up yet → force it.
-                ImmutableAudience.FlushQueueToDiskForTesting();
-
-                int leaked = 0;
-                if (Directory.Exists(queueDir))
-                {
-                    leaked = Directory.GetFiles(queueDir, "*.json")
-                        .Select(File.ReadAllText)
-                        .Count(c => c.Contains("\"race_stress\""));
-                }
-
-                if (leaked > 0)
-                {
-                    Assert.Fail(
-                        $"iteration {iter}: {leaked} race_stress events leaked past SetConsent(None)");
-                }
-
-                ImmutableAudience.ResetState();
-                // Clean state for next iteration so consent isn't carried via disk.
-                if (Directory.Exists(AudiencePaths.AudienceDir(_testDir)))
-                    Directory.Delete(AudiencePaths.AudienceDir(_testDir), recursive: true);
+                var evt = new GatedEvent("race_stress");
+                events[t] = evt;
+                trackers[t] = Task.Run(() => ImmutableAudience.Track(evt));
             }
+
+            foreach (var evt in events) evt.WaitUntilReady();
+            ImmutableAudience.SetConsent(ConsentLevel.None);
+            foreach (var evt in events) evt.Proceed();
+            Task.WaitAll(trackers, TimeSpan.FromSeconds(5));
+
+            // Anything the drain loop hasn't picked up yet → force it.
+            ImmutableAudience.FlushQueueToDiskForTesting();
+
+            int leaked = 0;
+            if (Directory.Exists(queueDir))
+            {
+                leaked = Directory.GetFiles(queueDir, "*.json")
+                    .Select(File.ReadAllText)
+                    .Count(c => c.Contains("\"race_stress\""));
+            }
+
+            Assert.AreEqual(0, leaked, "race_stress events must not be recorded after SetConsent(None)");
         }
 
         [Test]
@@ -1147,67 +1158,62 @@ namespace Immutable.Audience.Tests
         [Test]
         public void SetConsent_DowngradeToAnonymous_StressTest_NoUserIdLeak()
         {
-            // Full → Anonymous race: Track reads _state with userId still set,
-            // then SetConsent flips _state to Anonymous and calls
-            // ApplyAnonymousDowngrade (one-shot rewrite). If Track's enqueue
-            // lands after the rewrite, the msg with userId is not stripped.
+            // Full → Anonymous race: several Track calls snapshot _state with
+            // userId still set, then park mid-flight (post-snapshot, pre-enqueue)
+            // via GatedEvent. SetConsent(Anonymous) flips _state to completion
+            // while they're parked, so every enqueue that follows is guaranteed
+            // to land after the flip and the record-time consent gate must strip
+            // the userId so the event is recorded under the consent in force at
+            // enqueue.
             //
             // With the ConsentState + EnqueueChecked transform in place, Track's
             // transform runs under _drainLock and strips userId when current state
-            // is not Full. Zero leaks across all iterations.
+            // is not Full. Also exercises concurrent contention on the drain lock
+            // across multiple simultaneously-released trackers.
+            //
+            // Note: this covers the in-flight enqueue race only. Events already
+            // recorded before the downgrade keep the userId/consent they were
+            // captured with and are intentionally not rewritten.
             //
             // Sabotage: remove the `m.Remove(MessageFields.UserId)` in
             // EnqueueTrack and this test leaks reproducibly.
-            const int iterations = 200;
             const int trackersPerIteration = 4;
             const string testUserId = "user_race_stress";
 
-            for (int iter = 0; iter < iterations; iter++)
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
+            ImmutableAudience.Identify(testUserId, IdentityType.Steam);
+
+            // Clear Init events so only race events can leak.
+            ImmutableAudience.FlushQueueToDiskForTesting();
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            if (Directory.Exists(queueDir))
+                foreach (var f in Directory.GetFiles(queueDir, "*.json")) File.Delete(f);
+
+            var events = new GatedEvent[trackersPerIteration];
+            var trackers = new Task[trackersPerIteration];
+            for (int t = 0; t < trackersPerIteration; t++)
             {
-                ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
-                ImmutableAudience.Identify(testUserId, IdentityType.Steam);
-
-                // Clear Init events so only race events can leak.
-                ImmutableAudience.FlushQueueToDiskForTesting();
-                var queueDir = AudiencePaths.QueueDir(_testDir);
-                if (Directory.Exists(queueDir))
-                    foreach (var f in Directory.GetFiles(queueDir, "*.json")) File.Delete(f);
-
-                var barrier = new Barrier(trackersPerIteration + 1);
-                var trackers = new Task[trackersPerIteration];
-                for (int t = 0; t < trackersPerIteration; t++)
-                {
-                    trackers[t] = Task.Run(() =>
-                    {
-                        barrier.SignalAndWait();
-                        ImmutableAudience.Track("race_stress");
-                    });
-                }
-
-                barrier.SignalAndWait();
-                ImmutableAudience.SetConsent(ConsentLevel.Anonymous);
-                Task.WaitAll(trackers, TimeSpan.FromSeconds(5));
-
-                ImmutableAudience.FlushQueueToDiskForTesting();
-
-                int userIdLeaks = 0;
-                if (Directory.Exists(queueDir))
-                {
-                    userIdLeaks = Directory.GetFiles(queueDir, "*.json")
-                        .Select(File.ReadAllText)
-                        .Count(c => c.Contains($"\"{testUserId}\""));
-                }
-
-                if (userIdLeaks > 0)
-                {
-                    Assert.Fail(
-                        $"iteration {iter}: {userIdLeaks} track events retained userId past SetConsent(Anonymous)");
-                }
-
-                ImmutableAudience.ResetState();
-                if (Directory.Exists(AudiencePaths.AudienceDir(_testDir)))
-                    Directory.Delete(AudiencePaths.AudienceDir(_testDir), recursive: true);
+                var evt = new GatedEvent("race_stress");
+                events[t] = evt;
+                trackers[t] = Task.Run(() => ImmutableAudience.Track(evt));
             }
+
+            foreach (var evt in events) evt.WaitUntilReady();
+            ImmutableAudience.SetConsent(ConsentLevel.Anonymous);
+            foreach (var evt in events) evt.Proceed();
+            Task.WaitAll(trackers, TimeSpan.FromSeconds(5));
+
+            ImmutableAudience.FlushQueueToDiskForTesting();
+
+            int userIdLeaks = 0;
+            if (Directory.Exists(queueDir))
+            {
+                userIdLeaks = Directory.GetFiles(queueDir, "*.json")
+                    .Select(File.ReadAllText)
+                    .Count(c => c.Contains($"\"{testUserId}\""));
+            }
+
+            Assert.AreEqual(0, userIdLeaks, "track events must not retain userId past SetConsent(Anonymous)");
         }
 
         [Test]
@@ -2054,7 +2060,7 @@ namespace Immutable.Audience.Tests
         // -----------------------------------------------------------------
 
         [Test]
-        public void FullToAnonymous_StripsUserIdFromQueuedTrackAndDropsIdentifyAlias()
+        public void FullToAnonymous_KeepsQueuedIdentifyAliasAndUserId()
         {
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
 
@@ -2067,21 +2073,25 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.SetConsent(ConsentLevel.Anonymous);
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
-            var files = Directory.GetFiles(queueDir, "*.json");
+            var msgs = Directory.GetFiles(queueDir, "*.json")
+                .Select(f => JsonReader.DeserializeObject(File.ReadAllText(f)))
+                .ToList();
 
-            foreach (var f in files)
-            {
-                var msg = JsonReader.DeserializeObject(File.ReadAllText(f));
-                var type = (string)msg["type"];
-                Assert.AreNotEqual("identify", type, "identify must be purged on Full -> Anonymous");
-                Assert.AreNotEqual("alias", type, "alias must be purged on Full -> Anonymous");
-                if (type == "track")
-                {
-                    Assert.IsFalse(msg.ContainsKey("userId"), "userId must be stripped from queued track on Full -> Anonymous");
-                    Assert.AreEqual("anonymous", msg["consentLevel"],
-                        "consentLevel must be downgraded to anonymous on queued track");
-                }
-            }
+            // Events recorded under Full keep the identity and consent they were
+            // captured with; a downgrade only gates future collection and must
+            // not rewrite or drop already-queued events.
+            Assert.IsTrue(msgs.Any(m => (string)m["type"] == "identify"),
+                "queued identify must be retained on Full -> Anonymous");
+            Assert.IsTrue(msgs.Any(m => (string)m["type"] == "alias"),
+                "queued alias must be retained on Full -> Anonymous");
+
+            var track = msgs.First(m => (string)m["type"] == "track"
+                && m.ContainsKey("eventName")
+                && (string)m["eventName"] == "tracked_before_downgrade");
+            Assert.AreEqual("player_steam", track["userId"],
+                "queued track must keep the userId it was captured with under Full");
+            Assert.AreEqual("full", track["consentLevel"],
+                "queued track must keep the consentLevel it was captured with under Full");
         }
 
         [Test]

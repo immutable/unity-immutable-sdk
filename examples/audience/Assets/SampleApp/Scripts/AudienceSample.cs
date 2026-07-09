@@ -176,9 +176,9 @@ namespace Immutable.Audience.Samples.SampleApp
 
         // ---- SDK action handlers: consent ----
 
-        // None purges the queue + clears the anonymous ID; dropping below Full
-        // clears UserId. Mirror is reset whenever the new level can no longer
-        // identify.
+        // None clears the anonymous ID and stops future collection; already-queued
+        // events are kept. Dropping below Full clears UserId. Mirror is reset
+        // whenever the new level can no longer identify.
         private void OnSetConsent(ConsentLevel level) => RunAndLog("setConsent()", () =>
         {
             var previous = ImmutableAudience.CurrentConsent;
@@ -191,7 +191,7 @@ namespace Immutable.Audience.Samples.SampleApp
             };
             var effects = new List<string>();
             if (previous == ConsentLevel.None && level != ConsentLevel.None) effects.Add("queue started, session created");
-            if (level == ConsentLevel.None) effects.Add("queue purged, anonymous ID cleared");
+            if (level == ConsentLevel.None) effects.Add("tracking stopped, anonymous ID cleared (queued events kept)");
             if (!level.CanIdentify() && previous.CanIdentify()) effects.Add("userId cleared");
             if (effects.Count > 0) payload["effects"] = effects;
             OnSdkStateChanged();

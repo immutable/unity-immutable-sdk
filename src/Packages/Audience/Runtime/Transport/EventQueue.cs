@@ -26,8 +26,8 @@ namespace Immutable.Audience
         private readonly Thread _drainThread;
         private readonly ManualResetEventSlim _flushGate = new ManualResetEventSlim(false);
 
-        // Serialises drain vs PurgeAll / ApplyAnonymousDowngrade. Without it, a
-        // TryDequeue'd event could hit disk after DeleteAll already cleared it.
+        // Serialises drain vs PurgeAll. Without it, a TryDequeue'd event could
+        // hit disk after DeleteAll already cleared it.
         private readonly object _drainLock = new object();
 
         private volatile bool _disposed;
@@ -71,11 +71,13 @@ namespace Immutable.Audience
         }
 
         // Queues the message under the drain lock. The caller supplies a
-        // transform that runs while the lock is held; it can edit the
-        // message or return null to drop it. Running under the lock means
-        // PurgeAll and ApplyAnonymousDowngrade can't slip in mid-decision, so
-        // a Track that races a consent downgrade gets its userId stripped or
-        // the message dropped before it reaches the queue.
+        // transform that runs while the lock is held; it can edit the message
+        // or return null to drop it. The transform stamps consent at the moment
+        // of recording: a Track that races a consent downgrade gets its userId
+        // stripped or the message dropped before it enters the queue. Running
+        // under the lock also keeps PurgeAll (consent reset via Reset) from
+        // slipping in mid-decision. Events already in the queue are never
+        // rewritten by a later consent change.
         internal void EnqueueChecked(
             Dictionary<string, object>? msg,
             Func<Dictionary<string, object>, Dictionary<string, object>?>? transform)
@@ -105,7 +107,7 @@ namespace Immutable.Audience
         }
 
         // Discards every pending event, in-memory and on disk. Used on
-        // consent revocation.
+        // Reset (logout) to drop the previous user's unsent events.
         internal void PurgeAll()
         {
             // Hold _drainLock so the background drain can't sneak a TryDequeue'd
@@ -115,26 +117,6 @@ namespace Immutable.Audience
             {
                 while (_memory.TryDequeue(out _)) { }
                 _store.DeleteAll();
-            }
-        }
-
-        // Synchronous: a Task.Run offload would race HttpTransport, which
-        // does not take _drainLock, opening a window where userId-bearing
-        // track files could ship during the rewrite.
-        internal void ApplyAnonymousDowngrade()
-        {
-            lock (_drainLock)
-            {
-                // Drain any pending in-memory events first so they hit disk and
-                // get the same filtering as everything already persisted.
-                while (_memory.TryDequeue(out var msg))
-                {
-                    try { _store.Write(Json.Serialize(msg)); }
-                    catch (IOException) { /* best-effort */ }
-                    catch (UnauthorizedAccessException) { /* best-effort */ }
-                }
-
-                _store.ApplyAnonymousDowngrade();
             }
         }
 

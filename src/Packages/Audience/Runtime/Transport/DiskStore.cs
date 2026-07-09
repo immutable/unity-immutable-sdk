@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 
@@ -54,7 +53,7 @@ namespace Immutable.Audience
             var result = new List<string>();
 
             // Sort by filename (ticks prefix), oldest first.
-            // Missing queue dir is empty queue. Matches DeleteAll / ApplyAnonymousDowngrade.
+            // Missing queue dir is empty queue. Matches DeleteAll.
             string[] paths;
             try { paths = Directory.GetFiles(_queueDir, "*.json"); }
             catch (DirectoryNotFoundException) { return Array.Empty<string>(); }
@@ -117,95 +116,6 @@ namespace Immutable.Audience
 
             foreach (var path in paths)
                 TryDelete(path);
-        }
-
-        // Drops queued identify/alias files, strips userId from track files.
-        // Unparseable files are deleted to fail closed.
-        internal void ApplyAnonymousDowngrade()
-        {
-            string[] paths;
-            try { paths = Directory.GetFiles(_queueDir, "*.json"); }
-            catch (DirectoryNotFoundException) { return; }
-
-            foreach (var path in paths)
-                ApplyAnonymousDowngradeToFile(path);
-        }
-
-        private void ApplyAnonymousDowngradeToFile(string path)
-        {
-            if (!TryReadMessage(path, out var msg) ||
-                !msg.TryGetValue(MessageFields.Type, out var typeObj) ||
-                !(typeObj is string type))
-            {
-                TryDelete(path);
-                return;
-            }
-
-            if (IsIdentityMessage(type))
-            {
-                TryDelete(path);
-                return;
-            }
-
-            if (type == MessageTypes.Track && TrackNeedsDowngradeToAnonymous(msg))
-                RewriteTrackForAnonymous(path, msg);
-        }
-
-        // A queued track needs rewriting on a Full -> Anonymous downgrade if it
-        // still carries a userId or a consentLevel other than "anonymous". The
-        // check keeps already-anonymous messages untouched so a fail-closed
-        // rewrite error can only ever discard events that actually had to change.
-        private static bool TrackNeedsDowngradeToAnonymous(Dictionary<string, object> msg)
-        {
-            if (msg.ContainsKey(MessageFields.UserId)) return true;
-            return !(msg.TryGetValue(MessageFields.ConsentLevel, out var cl)
-                     && cl is string s
-                     && s == ConsentLevel.Anonymous.ToLowercaseString());
-        }
-
-        private static bool IsIdentityMessage(string type) =>
-            type == MessageTypes.Identify || type == MessageTypes.Alias;
-
-        private static bool TryReadMessage(string path, [NotNullWhen(true)] out Dictionary<string, object>? msg)
-        {
-            msg = null;
-            string json;
-            try { json = File.ReadAllText(path); }
-            catch (IOException) { return false; }
-            catch (UnauthorizedAccessException) { return false; }
-
-            try { msg = JsonReader.DeserializeObject(json); }
-            catch (FormatException) { return false; }
-
-            return true;
-        }
-
-        private void RewriteTrackForAnonymous(string path, Dictionary<string, object> msg)
-        {
-            msg.Remove(MessageFields.UserId);
-            msg[MessageFields.ConsentLevel] = ConsentLevel.Anonymous.ToLowercaseString();
-
-            try
-            {
-                var rewritten = Json.Serialize(msg);
-                var tmp = path + ".tmp";
-                File.WriteAllText(tmp, rewritten);
-                try { File.Move(tmp, path); }
-                catch (IOException)
-                {
-                    File.Delete(path);
-                    File.Move(tmp, path);
-                }
-            }
-            catch (IOException)
-            {
-                // Delete rather than leave the old userId-bearing payload.
-                TryDelete(path);
-            }
-            catch (UnauthorizedAccessException)
-            {
-                TryDelete(path);
-            }
         }
 
     }
