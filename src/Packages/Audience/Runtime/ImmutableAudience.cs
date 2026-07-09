@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -39,6 +40,15 @@ namespace Immutable.Audience
 
         // Gate against overlapping timer ticks (Timer callbacks run on independent ThreadPool threads).
         private static int _sendInFlight;
+
+        // Passport IDs are "<connection>|<id>" (e.g. "email|abc123", "google-oauth2|123")
+        // or, for some accounts, a bare UUID with no connection prefix.
+        // Not RegexOptions.Compiled: that needs Reflection.Emit, unavailable under IL2CPP/AOT.
+        private static readonly Regex PassportIdPattern = new(@"^[^|]+\|[^|]+$");
+
+        private static readonly Regex PassportUuidPattern = new(
+            @"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            RegexOptions.IgnoreCase);
 
         // volatile: assigned on the Unity main thread at SubsystemRegistration,
         // read from the drain thread in Track / Identify paths.
@@ -411,7 +421,10 @@ namespace Immutable.Audience
         // -----------------------------------------------------------------
 
         /// <summary>
-        /// Attaches a known user ID to subsequent events.
+        /// Attaches a known user ID to subsequent events. When <paramref name="identityType"/> is
+        /// <see cref="IdentityType.Passport"/>, <paramref name="userId"/> must look like a real
+        /// Passport ID (<c>connection|id</c> or a UUID) — otherwise the call is dropped and a
+        /// warning is logged.
         /// </summary>
         /// <param name="userId">The player's identifier within the chosen provider.</param>
         /// <param name="identityType">The identity provider that issued <paramref name="userId"/>.</param>
@@ -424,6 +437,15 @@ namespace Immutable.Audience
             if (string.IsNullOrEmpty(userId))
             {
                 Log.Warn(AudienceLogs.IdentifyEmptyUserId);
+                return;
+            }
+
+            // Trim once: the validated id and the stored/sent id must match.
+            userId = userId.Trim();
+
+            if (identityType == IdentityType.Passport && !IsValidPassportId(userId))
+            {
+                Log.Warn(AudienceLogs.IdentifyPassportIdInvalidFormat(userId));
                 return;
             }
 
@@ -453,8 +475,17 @@ namespace Immutable.Audience
             EnqueueIdentity(msg);
         }
 
+        private static bool IsValidPassportId(string id)
+        {
+            var trimmed = id.Trim();
+            return PassportIdPattern.IsMatch(trimmed) || PassportUuidPattern.IsMatch(trimmed);
+        }
+
         /// <summary>
-        /// Links two user IDs for the same player.
+        /// Links two user IDs for the same player. When either side's identity
+        /// type is <see cref="IdentityType.Passport"/>, that side's id must look
+        /// like a real Passport ID (<c>connection|id</c> or a UUID) — otherwise
+        /// the call is dropped and a warning is logged.
         /// </summary>
         /// <param name="fromId">The previously-known identifier.</param>
         /// <param name="fromType">Identity provider for <paramref name="fromId"/>.</param>
@@ -469,6 +500,22 @@ namespace Immutable.Audience
                 Log.Warn(AudienceLogs.AliasEmptyIds);
                 return;
             }
+
+            // Trim once: the validated ids and the sent ids must match.
+            fromId = fromId.Trim();
+            toId = toId.Trim();
+
+            if (fromType == IdentityType.Passport && !IsValidPassportId(fromId))
+            {
+                Log.Warn(AudienceLogs.AliasPassportIdInvalidFormat("from", fromId));
+                return;
+            }
+            if (toType == IdentityType.Passport && !IsValidPassportId(toId))
+            {
+                Log.Warn(AudienceLogs.AliasPassportIdInvalidFormat("to", toId));
+                return;
+            }
+
             var state = _state;
             if (!state.Level.CanIdentify())
             {

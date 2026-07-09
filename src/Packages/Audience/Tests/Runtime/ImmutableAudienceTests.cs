@@ -738,11 +738,138 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
+        public void Identify_PassportWithInvalidIdFormat_WarnsAndDropsCall()
+        {
+            var lines = new List<string>();
+            Log.Writer = lines.Add;
+            try
+            {
+                ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
+
+                ImmutableAudience.Identify("12345", IdentityType.Passport);
+                ImmutableAudience.Shutdown();
+
+                Assert.That(lines, Has.Some.Contains("doesn't look like a"),
+                    "a malformed passport id should surface a warning so a developer notices the mismatch");
+                Assert.IsNull(ImmutableAudience.UserId,
+                    "the call must be a full no-op so later Track/Page calls don't inherit the bad id");
+
+                var queueDir = AudiencePaths.QueueDir(_testDir);
+                var contents = Directory.GetFiles(queueDir, "*.json")
+                    .Select(File.ReadAllText).ToList();
+                Assert.IsFalse(contents.Any(c => c.Contains("\"identify\"")),
+                    "the event should be dropped, not just flagged; a warning alone isn't enough to " +
+                    "stop the bad id from reaching downstream analytics");
+            }
+            finally
+            {
+                Log.Writer = null;
+            }
+        }
+
+        [TestCase("email|abc123")]
+        [TestCase("google-oauth2|11261203362550278288455")]
+        [TestCase("550e8400-e29b-41d4-a716-446655440000")]
+        [TestCase(" 550e8400-e29b-41d4-a716-446655440000\n")]
+        public void Identify_PassportWithValidIdFormat_DoesNotWarn(string userId)
+        {
+            var lines = new List<string>();
+            Log.Writer = lines.Add;
+            try
+            {
+                ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
+
+                ImmutableAudience.Identify(userId, IdentityType.Passport);
+
+                Assert.IsEmpty(lines);
+            }
+            finally
+            {
+                Log.Writer = null;
+            }
+        }
+
+        [Test]
+        public void Identify_PassportWithWhitespaceOnlyPadding_StillWarns()
+        {
+            var lines = new List<string>();
+            Log.Writer = lines.Add;
+            try
+            {
+                ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
+
+                ImmutableAudience.Identify("  12345  ", IdentityType.Passport);
+
+                Assert.That(lines, Has.Some.Contains("doesn't look like a"),
+                    "surrounding whitespace alone must not turn an invalid id into a valid one");
+            }
+            finally
+            {
+                Log.Writer = null;
+            }
+        }
+
+        [Test]
+        public void Identify_PassportWithPaddedValidId_StoresAndSendsTrimmedId()
+        {
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
+
+            ImmutableAudience.Identify(" email|abc123\n", IdentityType.Passport);
+
+            Assert.AreEqual("email|abc123", ImmutableAudience.UserId,
+                "the id validated and the id stored must be the same trimmed value");
+
+            ImmutableAudience.Shutdown();
+
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            var contents = Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText).ToList();
+            Assert.IsTrue(contents.Any(c => c.Contains("\"email|abc123\"")),
+                "the enqueued event must carry the trimmed id, not the padded one");
+            Assert.IsFalse(contents.Any(c => c.Contains("email|abc123\\n")),
+                "the enqueued event must not carry the untrimmed padding");
+        }
+
+        [Test]
+        public void Alias_PassportWithPaddedValidId_SendsTrimmedId()
+        {
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
+
+            ImmutableAudience.Alias("steam123", IdentityType.Steam, " email|user_456\n", IdentityType.Passport);
+            ImmutableAudience.Shutdown();
+
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            var contents = Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText).ToList();
+            Assert.IsTrue(contents.Any(c => c.Contains("\"email|user_456\"")),
+                "the enqueued event must carry the trimmed id, not the padded one");
+            Assert.IsFalse(contents.Any(c => c.Contains("email|user_456\\n")),
+                "the enqueued event must not carry the untrimmed padding");
+        }
+
+        [Test]
+        public void Identify_NonPassportWithNumericId_DoesNotWarn()
+        {
+            var lines = new List<string>();
+            Log.Writer = lines.Add;
+            try
+            {
+                ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
+
+                ImmutableAudience.Identify("12345", IdentityType.Steam);
+
+                Assert.IsEmpty(lines);
+            }
+            finally
+            {
+                Log.Writer = null;
+            }
+        }
+
+        [Test]
         public void Alias_FullConsent_WritesAliasEvent()
         {
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
 
-            ImmutableAudience.Alias("steam123", IdentityType.Steam, "user_456", IdentityType.Passport);
+            ImmutableAudience.Alias("steam123", IdentityType.Steam, "email|user_456", IdentityType.Passport);
             ImmutableAudience.Shutdown();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
@@ -750,6 +877,79 @@ namespace Immutable.Audience.Tests
                 .Select(File.ReadAllText).ToList();
             Assert.IsTrue(contents.Any(c =>
                 c.Contains("\"alias\"") && c.Contains("\"steam123\"")));
+        }
+
+        [Test]
+        public void Alias_PassportToWithInvalidIdFormat_WarnsAndDropsCall()
+        {
+            var lines = new List<string>();
+            Log.Writer = lines.Add;
+            try
+            {
+                ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
+
+                ImmutableAudience.Alias("steam123", IdentityType.Steam, "12345", IdentityType.Passport);
+                ImmutableAudience.Shutdown();
+
+                Assert.That(lines, Has.Some.Contains("doesn't look like a"),
+                    "a malformed passport id on the to side should surface a warning");
+
+                var queueDir = AudiencePaths.QueueDir(_testDir);
+                var contents = Directory.GetFiles(queueDir, "*.json")
+                    .Select(File.ReadAllText).ToList();
+                Assert.IsFalse(contents.Any(c => c.Contains("\"alias\"")),
+                    "the event should be dropped, not just flagged");
+            }
+            finally
+            {
+                Log.Writer = null;
+            }
+        }
+
+        [Test]
+        public void Alias_PassportFromWithInvalidIdFormat_WarnsAndDropsCall()
+        {
+            var lines = new List<string>();
+            Log.Writer = lines.Add;
+            try
+            {
+                ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
+
+                ImmutableAudience.Alias("12345", IdentityType.Passport, "steam123", IdentityType.Steam);
+                ImmutableAudience.Shutdown();
+
+                Assert.That(lines, Has.Some.Contains("doesn't look like a"),
+                    "a malformed passport id on the from side should surface a warning");
+
+                var queueDir = AudiencePaths.QueueDir(_testDir);
+                var contents = Directory.GetFiles(queueDir, "*.json")
+                    .Select(File.ReadAllText).ToList();
+                Assert.IsFalse(contents.Any(c => c.Contains("\"alias\"")),
+                    "the event should be dropped, not just flagged");
+            }
+            finally
+            {
+                Log.Writer = null;
+            }
+        }
+
+        [Test]
+        public void Alias_NonPassportIdentityTypes_DoesNotWarn()
+        {
+            var lines = new List<string>();
+            Log.Writer = lines.Add;
+            try
+            {
+                ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
+
+                ImmutableAudience.Alias("12345", IdentityType.Steam, "67890", IdentityType.Epic);
+
+                Assert.IsEmpty(lines);
+            }
+            finally
+            {
+                Log.Writer = null;
+            }
         }
 
         // -----------------------------------------------------------------
@@ -820,7 +1020,7 @@ namespace Immutable.Audience.Tests
             var sessionId = ImmutableAudience.SessionId;
             Assert.IsFalse(string.IsNullOrEmpty(sessionId), "sanity: a session should be active after Init");
 
-            ImmutableAudience.Alias("steam123", IdentityType.Steam, "user_456", IdentityType.Passport);
+            ImmutableAudience.Alias("steam123", IdentityType.Steam, "email|user_456", IdentityType.Passport);
             ImmutableAudience.FlushQueueToDiskForTesting();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);
@@ -2065,7 +2265,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
 
             ImmutableAudience.Identify("player_steam", IdentityType.Steam);
-            ImmutableAudience.Alias("player_steam", IdentityType.Steam, "player_passport", IdentityType.Passport);
+            ImmutableAudience.Alias("player_steam", IdentityType.Steam, "email|player_passport", IdentityType.Passport);
             ImmutableAudience.Track("tracked_before_downgrade");
 
             ImmutableAudience.FlushQueueToDiskForTesting();
