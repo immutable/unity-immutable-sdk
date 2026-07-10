@@ -18,7 +18,7 @@ namespace Immutable.Audience
         internal const int ControlPlaneRequestTimeoutSeconds = 30;
 
         internal const string LibraryName = "com.immutable.audience";
-        internal const string LibraryVersion = "0.6.0";
+        internal const string LibraryVersion = "0.6.1";
         internal const string Surface = "unity";
         internal const string ConsentSource = "UnitySDK";
 
