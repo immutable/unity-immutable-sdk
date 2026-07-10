@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Immutable.Audience.Unity.Mobile;
@@ -31,12 +32,33 @@ namespace Immutable.Audience.Unity
             _persistentDataPath = Application.persistentDataPath;
             ImmutableAudience.DefaultPersistentDataPathProvider = () => Application.persistentDataPath;
 
+            // Set before the collectors below run so a collector failure logs via Debug.Log, not Console.WriteLine.
+            if (Log.Writer == null) Log.Writer = Debug.Log;
+
             // Captured once on main thread; ReadOnlyDictionary blocks downstream mutation.
-            IReadOnlyDictionary<string, object> launchProps =
-                new ReadOnlyDictionary<string, object>(DeviceCollector.CollectGameLaunchProperties());
-            IReadOnlyDictionary<string, object> contextProps =
-                new ReadOnlyDictionary<string, object>(DeviceCollector.CollectContext());
+            // Each collector is isolated so one throwing can't block the other's provider or abort Install().
+            IReadOnlyDictionary<string, object> launchProps;
+            try
+            {
+                launchProps = new ReadOnlyDictionary<string, object>(DeviceCollector.CollectGameLaunchProperties());
+            }
+            catch (Exception ex)
+            {
+                Log.Warn(AudienceLogs.LaunchPropertiesCollectionFailed(ex));
+                launchProps = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>());
+            }
             ImmutableAudience.LaunchContextProvider = () => launchProps;
+
+            IReadOnlyDictionary<string, object> contextProps;
+            try
+            {
+                contextProps = new ReadOnlyDictionary<string, object>(DeviceCollector.CollectContext());
+            }
+            catch (Exception ex)
+            {
+                Log.Warn(AudienceLogs.ContextCollectionFailed(ex));
+                contextProps = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>());
+            }
             ImmutableAudience.ContextProvider = () => contextProps;
 
 #if UNITY_IOS && !UNITY_EDITOR && AUDIENCE_MOBILE_ATTRIBUTION
@@ -58,8 +80,6 @@ namespace Immutable.Audience.Unity
 #endif
 
             UnityLifecycleBridge.EnsureExists();
-
-            if (Log.Writer == null) Log.Writer = Debug.Log;
         }
 
         // Warms the install referrer cache for the next launch and returns

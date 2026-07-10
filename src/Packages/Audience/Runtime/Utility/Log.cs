@@ -178,6 +178,20 @@ namespace Immutable.Audience
             $"Identity file read/write failed. {ex.GetType().Name}: {ex.Message}. " +
             "Events will ship without identity fields this session.";
 
+        // ---- Install-time device/context collection ----
+
+        internal static string LaunchPropertiesCollectionFailed(Exception ex) =>
+            $"CollectGameLaunchProperties threw {ex.GetType().Name}: {ex.Message} during Install(). " +
+            "game_launch will ship without auto-detected Unity context this session.";
+
+        internal static string ContextCollectionFailed(Exception ex) =>
+            $"CollectContext threw {ex.GetType().Name}: {ex.Message} during Install(). " +
+            "All events will ship without locale/screen/timezone/userAgent this session.";
+
+        internal static string ScreenResolutionReadFailed(Exception ex) =>
+            $"Screen resolution read threw {ex.GetType().Name}: {ex.Message}. " +
+            "Continuing without a screen field.";
+
         // ---- Steam auto-detection ----
 
         internal static string SteamPlatformDetectionFailed(Exception ex) =>
