@@ -245,7 +245,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
             // dropdown before Init rather than upgrading mid-test.
             yield return LoadAndInit(initialConsent: SampleAppUi.Consent.Full);
 
-            _root!.Q<TextField>(SampleAppUi.IdentityFields.Id).value = "il2cpp-test-user-" + DateTime.UtcNow.Ticks;
+            _root!.Q<TextField>(SampleAppUi.IdentityFields.Id).value = "email|il2cpp-test-user-" + DateTime.UtcNow.Ticks;
             _root.Q<Button>(SampleAppUi.Buttons.Identify).Click();
             yield return null;
 
@@ -253,12 +253,27 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         }
 
         [UnityTest]
+        public IEnumerator Identify_PassportWithInvalidIdFormat_WarnsAndDropsCall()
+        {
+            // Identity type dropdown defaults to Passport; "12345" isn't Passport-shaped.
+            yield return LoadAndInit(initialConsent: SampleAppUi.Consent.Full);
+
+            _root!.Q<TextField>(SampleAppUi.IdentityFields.Id).value = "12345";
+            _root.Q<Button>(SampleAppUi.Buttons.Identify).Click();
+            yield return SampleAppTestHelpers.WaitForLogEntry(_root, SampleAppUi.LogLabels.Sdk, LogLevels.Warn, 5f);
+
+            Assert.IsNull(ImmutableAudience.UserId,
+                "an invalid Passport ID must be a full no-op, not just logged");
+        }
+
+        [UnityTest]
         public IEnumerator Alias_AndFlush_FlushReportsOk()
         {
             yield return LoadAndInit(initialConsent: SampleAppUi.Consent.Full);
 
-            _root!.Q<TextField>(SampleAppUi.IdentityFields.AliasFromId).value = "anon-" + DateTime.UtcNow.Ticks;
-            _root.Q<TextField>(SampleAppUi.IdentityFields.AliasToId).value = "user-" + DateTime.UtcNow.Ticks;
+            // Identity dropdowns default to Passport for both sides.
+            _root!.Q<TextField>(SampleAppUi.IdentityFields.AliasFromId).value = "email|anon-" + DateTime.UtcNow.Ticks;
+            _root.Q<TextField>(SampleAppUi.IdentityFields.AliasToId).value = "email|user-" + DateTime.UtcNow.Ticks;
             _root.Q<Button>(SampleAppUi.Buttons.Alias).Click();
             yield return null;
 
@@ -292,7 +307,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
 
             yield return SetConsentVia(SampleAppUi.Buttons.ConsentFull);
 
-            _root!.Q<TextField>(SampleAppUi.IdentityFields.Id).value = "consent-test-" + DateTime.UtcNow.Ticks;
+            _root!.Q<TextField>(SampleAppUi.IdentityFields.Id).value = "email|consent-test-" + DateTime.UtcNow.Ticks;
             _root.Q<Button>(SampleAppUi.Buttons.Identify).Click();
             yield return null;
 
@@ -406,7 +421,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
             // appear, which means the strip path is intact under IL2CPP.
             yield return LoadAndInit(initialConsent: SampleAppUi.Consent.Full);
 
-            _root!.Q<TextField>(SampleAppUi.IdentityFields.Id).value = "downgrade-user-" + DateTime.UtcNow.Ticks;
+            _root!.Q<TextField>(SampleAppUi.IdentityFields.Id).value = "email|downgrade-user-" + DateTime.UtcNow.Ticks;
             _root.Q<Button>(SampleAppUi.Buttons.Identify).Click();
             yield return SampleAppTestHelpers.WaitForLogEntry(_root, SampleAppUi.LogLabels.Identify, LogLevels.Ok, 5f);
 
@@ -426,7 +441,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
             // a different reflection/serialiser path than Identify(id) alone.
             yield return LoadAndInit(initialConsent: SampleAppUi.Consent.Full);
 
-            _root!.Q<TextField>(SampleAppUi.IdentityFields.Id).value = "traits-user-" + DateTime.UtcNow.Ticks;
+            _root!.Q<TextField>(SampleAppUi.IdentityFields.Id).value = "email|traits-user-" + DateTime.UtcNow.Ticks;
             _root.Q<Button>(SampleAppUi.Buttons.Identify).Click();
             yield return SampleAppTestHelpers.WaitForLogEntry(_root, SampleAppUi.LogLabels.Identify, LogLevels.Ok, 5f);
 
@@ -735,7 +750,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         {
             yield return LoadAndInit(initialConsent: SampleAppUi.Consent.Full);
 
-            var userId = "panel-user-" + DateTime.UtcNow.Ticks;
+            var userId = "email|panel-user-" + DateTime.UtcNow.Ticks;
             _root!.Q<TextField>(SampleAppUi.IdentityFields.Id).value = userId;
             _root.Q<Button>(SampleAppUi.Buttons.Identify).Click();
             yield return SampleAppTestHelpers.WaitForLogEntry(_root, SampleAppUi.LogLabels.Identify, LogLevels.Ok, 5f);

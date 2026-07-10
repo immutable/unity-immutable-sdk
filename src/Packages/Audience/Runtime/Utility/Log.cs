@@ -76,8 +76,18 @@ namespace Immutable.Audience
         internal static string IdentifyDiscarded(ConsentLevel current) =>
             $"Identify discarded. Requires Full consent, current is {current}.";
 
+        internal static string IdentifyPassportIdInvalidFormat(string userId) =>
+            $"Identify called with identityType Passport but userId \"{userId}\" doesn't look like a " +
+            "Passport ID (expected a format like \"email|123\" or a UUID). Check you're passing the " +
+            "Passport user ID, not your own internal user ID. Call ignored.";
+
         internal static string AliasDiscarded(ConsentLevel current) =>
             $"Alias discarded. Requires Full consent, current is {current}.";
+
+        internal static string AliasPassportIdInvalidFormat(string side, string id) =>
+            $"Alias called with {side}Type Passport but {side}Id \"{id}\" doesn't look like a " +
+            "Passport ID (expected a format like \"email|123\" or a UUID). Check you're passing the " +
+            "Passport user ID, not your own internal user ID. Call ignored.";
 
         // ---- Consent / Shutdown ----
 

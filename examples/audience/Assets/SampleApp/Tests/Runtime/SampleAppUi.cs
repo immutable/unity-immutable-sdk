@@ -154,6 +154,9 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
             internal const string Identify = "identify()";
             internal const string IdentifyTraits = "identify(traits)";
             internal const string Alias = "alias()";
+
+            // Label AudienceSample.cs.RouteSdkLogToPane gives every mirrored SDK log line.
+            internal const string Sdk = "sdk";
         }
 
         // ---- Consent dropdown / status values ----
