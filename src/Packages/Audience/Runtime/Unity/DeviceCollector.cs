@@ -32,18 +32,28 @@ namespace Immutable.Audience.Unity
 
         private static string? TryResolveScreenString()
         {
-            var resolution = Screen.currentResolution;
-            int width = resolution.width;
-            int height = resolution.height;
-
-            if (width <= 0 || height <= 0)
+            // Can throw before a window/graphics device exists this early in boot;
+            // isolated so a failure here doesn't cost CollectContext()'s other fields.
+            try
             {
-                width = Screen.width;
-                height = Screen.height;
-            }
+                var resolution = Screen.currentResolution;
+                int width = resolution.width;
+                int height = resolution.height;
 
-            if (width <= 0 || height <= 0) return null;
-            return $"{width}x{height}";
+                if (width <= 0 || height <= 0)
+                {
+                    width = Screen.width;
+                    height = Screen.height;
+                }
+
+                if (width <= 0 || height <= 0) return null;
+                return $"{width}x{height}";
+            }
+            catch (Exception ex)
+            {
+                Log.Warn(AudienceLogs.ScreenResolutionReadFailed(ex));
+                return null;
+            }
         }
 
         internal static Dictionary<string, object> CollectGameLaunchProperties(
