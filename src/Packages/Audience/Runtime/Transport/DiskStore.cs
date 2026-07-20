@@ -39,8 +39,11 @@ namespace Immutable.Audience
             }
         }
 
-        // Returns up to maxSize file paths, oldest first. Stale files
-        // (older than Constants.StaleEventDays) are deleted and excluded.
+        // Returns up to maxSize file paths, oldest first. Files outside the
+        // backend's accepted eventTimestamp window (more than StaleEventDays
+        // in the past, or more than MaxClockSkewFutureHours in the future --
+        // e.g. from a device with a badly-skewed system clock) are deleted
+        // and excluded: the backend would reject them anyway.
         internal IReadOnlyList<string> ReadBatch(int maxSize)
         {
             if (maxSize <= 0)
@@ -48,7 +51,9 @@ namespace Immutable.Audience
 
             maxSize = Math.Min(maxSize, Constants.MaxBatchSize);
 
-            var cutoff = DateTime.UtcNow.AddDays(-Constants.StaleEventDays);
+            var now = DateTime.UtcNow;
+            var pastCutoff = now.AddDays(-Constants.StaleEventDays);
+            var futureCutoff = now.AddHours(Constants.MaxClockSkewFutureHours);
 
             var result = new List<string>();
 
@@ -65,13 +70,13 @@ namespace Immutable.Audience
                 if (result.Count >= maxSize)
                     break;
 
-                // Stale check: parse ticks from filename prefix
+                // Window check: parse ticks from filename prefix
                 var name = Path.GetFileNameWithoutExtension(path);
                 var underscoreIdx = name.IndexOf('_');
                 if (underscoreIdx > 0 && long.TryParse(name.Substring(0, underscoreIdx), out var ticks))
                 {
                     var fileTime = new DateTime(ticks, DateTimeKind.Utc);
-                    if (fileTime < cutoff)
+                    if (fileTime < pastCutoff || fileTime > futureCutoff)
                     {
                         TryDelete(path);
                         continue;

@@ -14,6 +14,7 @@ namespace Immutable.Audience
         internal const int DefaultFlushSize = 20;
         internal const int MaxBatchSize = 100;
         internal const int StaleEventDays = 30;
+        internal const int MaxClockSkewFutureHours = 24; // Backend rejects eventTimestamp further ahead than this.
         internal const int MaxFieldLength = 256; // Backend schema limit.
         internal const int ControlPlaneRequestTimeoutSeconds = 30;
 

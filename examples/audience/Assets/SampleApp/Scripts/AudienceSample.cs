@@ -160,9 +160,6 @@ namespace Immutable.Audience.Samples.SampleApp
                 }, 2);
             });
 
-        // SDK drops via Log.Warn when name is empty or consent is None; that
-        // warning surfaces in the pane via Log.Writer, so no sample-side
-        // check is needed beyond GuardConsentForTrack.
         private void OnSendCustomEvent() => RunAndLog("track()", () =>
         {
             GuardConsentForTrack();
@@ -205,10 +202,10 @@ namespace Immutable.Audience.Samples.SampleApp
             var f = CaptureIdentifyForm();
             var traits = ParseTraits(f.RawTraits);
             ImmutableAudience.Identify(f.Id, ParseIdentityType(f.Type), traits);
-            // SDK drops via Log.Warn when id is empty or consent < Full. Mirror
-            // only when accepted; otherwise the panel would show stale state.
-            var accepted = !string.IsNullOrEmpty(f.Id)
-                           && string.Equals(ImmutableAudience.UserId, f.Id, StringComparison.Ordinal);
+            // Empty ids and malformed passport ids throw, caught by RunAndLog
+            // before this line runs. The one silent no-op left is consent
+            // below Full, which the UserId check below still catches.
+            var accepted = string.Equals(ImmutableAudience.UserId, f.Id, StringComparison.Ordinal);
             if (accepted) { _mirrorIdentityType = f.Type; _mirrorTraits = traits; }
             OnSdkStateChanged();
             var payload = new Dictionary<string, object>
@@ -237,20 +234,16 @@ namespace Immutable.Audience.Samples.SampleApp
         {
             var f = CaptureAliasForm();
             ImmutableAudience.Alias(f.FromId, ParseIdentityType(f.FromType), f.ToId, ParseIdentityType(f.ToType));
-            // SDK drops via Log.Warn when fromId/toId is empty or consent < Full.
-            // The IsAliasReady gate keeps empty endpoints unreachable from the
-            // UI; this post-call check is defense-in-depth.
-            var accepted = !string.IsNullOrEmpty(f.FromId) && !string.IsNullOrEmpty(f.ToId);
-            if (accepted)
-            {
-                _mirrorAliases.Add($"{f.FromType}:{f.FromId} → {f.ToType}:{f.ToId}");
-                OnSdkStateChanged();
-            }
+            // Empty/identical/malformed ids throw, caught by RunAndLog before this
+            // line runs. Consent below Full still drops silently inside the SDK,
+            // with no readable property here to detect it (unlike Identify's UserId).
+            _mirrorAliases.Add($"{f.FromType}:{f.FromId} → {f.ToType}:{f.ToId}");
+            OnSdkStateChanged();
             return Json.Serialize(new Dictionary<string, object>
             {
                 ["from"]     = new Dictionary<string, object> { ["id"] = f.FromId, ["identityType"] = f.FromType },
                 ["to"]       = new Dictionary<string, object> { ["id"] = f.ToId,   ["identityType"] = f.ToType },
-                ["accepted"] = accepted,
+                ["accepted"] = true,
             }, 2);
         });
 
@@ -292,6 +285,18 @@ namespace Immutable.Audience.Samples.SampleApp
             {
                 UnityEngine.Debug.Log($"[Audience] {body}");
             }
+
+            if (body.StartsWith("flush ok", StringComparison.Ordinal))
+            {
+                AppendLog(body, null, LogLevel.Ok, LogSource.Sdk);
+                return;
+            }
+            if (body.StartsWith("flush failed", StringComparison.Ordinal))
+            {
+                AppendLog(body, null, LogLevel.Err, LogSource.Sdk);
+                return;
+            }
+
             AppendLog("sdk", body, level, LogSource.Sdk);
         }
 

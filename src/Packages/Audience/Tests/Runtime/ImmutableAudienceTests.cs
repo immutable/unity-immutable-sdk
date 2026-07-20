@@ -386,18 +386,22 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
-        public void Track_NullEvent_DoesNotThrow_AndLogsWarning()
+        public void Track_NullEvent_Throws()
         {
             ImmutableAudience.Init(MakeConfig());
 
-            var lines = new List<string>();
-            Log.Writer = lines.Add;
-            try
-            {
-                Assert.DoesNotThrow(() => ImmutableAudience.Track((IEvent)null));
-                Assert.That(lines, Has.Some.Contains(AudienceLogs.TrackIEventNull));
-            }
-            finally { Log.Writer = null; }
+            Assert.Throws<ArgumentNullException>(() => ImmutableAudience.Track((IEvent)null),
+                "a null event is a caller bug and must throw, not just log a warning that's easy to miss");
+        }
+
+        [Test]
+        public void Track_NullEvent_ThrowsEvenAtNoneConsent()
+        {
+            // A caller bug must throw regardless of consent; the None no-op
+            // must never mask a null event the way it masks a valid one.
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.None));
+
+            Assert.Throws<ArgumentNullException>(() => ImmutableAudience.Track((IEvent)null));
         }
 
         [Test]
@@ -428,55 +432,31 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
-        public void Track_NullOrEmptyEventName_DoesNotEnqueue()
+        public void Track_NullOrEmptyEventName_Throws()
         {
             ImmutableAudience.Init(MakeConfig());
 
-            Assert.DoesNotThrow(() => ImmutableAudience.Track((string)null));
-            Assert.DoesNotThrow(() => ImmutableAudience.Track(""));
-
-            ImmutableAudience.Shutdown();
-
-            // Assert the invariant directly: no enqueued message carries a
-            // null or empty eventName. Earlier versions counted files
-            // before/after the Track calls, which raced with the async
-            // disk drain: Init enqueues session_start + game_launch, and
-            // Shutdown adds session_end, so the file count after Shutdown
-            // is deterministic but the before-count is not. Counting is
-            // the wrong axis: what the test actually wants to pin is
-            // "no empty-name event ever hit the queue", regardless of
-            // what else was enqueued alongside it.
-            //
-            // Deserialize each message and inspect the eventName field
-            // directly. A raw substring scan would false-positive on an
-            // event whose property value happened to be the literal
-            // string "eventName":"" (unlikely but possible) and would
-            // silently break on any future JSON encoding change (whitespace,
-            // key ordering, escape style).
-            var queueDir = AudiencePaths.QueueDir(_testDir);
-            if (!Directory.Exists(queueDir)) return;
-            foreach (var file in Directory.GetFiles(queueDir, "*.json"))
-            {
-                var msg = JsonReader.DeserializeObject(File.ReadAllText(file));
-                if ((string)msg["type"] != "track") continue;
-
-                if (!msg.TryGetValue("eventName", out var eventNameObj))
-                    Assert.Fail($"track message {Path.GetFileName(file)} missing eventName field");
-
-                Assert.IsNotNull(eventNameObj,
-                    $"queue file {Path.GetFileName(file)} has a null eventName");
-                Assert.IsNotEmpty((string)eventNameObj,
-                    $"queue file {Path.GetFileName(file)} has an empty eventName");
-            }
+            Assert.Throws<ArgumentException>(() => ImmutableAudience.Track((string)null),
+                "an empty event name is a caller bug and must throw, not just log a warning that's easy to miss");
+            Assert.Throws<ArgumentException>(() => ImmutableAudience.Track(""));
         }
 
         [Test]
-        public void Identify_NullUserId_DoesNotEnqueue()
+        public void Track_NullOrEmptyEventName_ThrowsEvenAtNoneConsent()
+        {
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.None));
+
+            Assert.Throws<ArgumentException>(() => ImmutableAudience.Track((string)null));
+            Assert.Throws<ArgumentException>(() => ImmutableAudience.Track(""));
+        }
+
+        [Test]
+        public void Identify_NullOrEmptyUserId_Throws()
         {
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
 
-            Assert.DoesNotThrow(() => ImmutableAudience.Identify(null, IdentityType.Passport));
-            Assert.DoesNotThrow(() => ImmutableAudience.Identify("", IdentityType.Passport));
+            Assert.Throws<ArgumentException>(() => ImmutableAudience.Identify(null, IdentityType.Passport));
+            Assert.Throws<ArgumentException>(() => ImmutableAudience.Identify("", IdentityType.Passport));
         }
 
         [Test]
@@ -506,12 +486,12 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
-        public void Alias_NullIds_DoesNotEnqueue()
+        public void Alias_NullOrEmptyIds_Throws()
         {
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
 
-            Assert.DoesNotThrow(() => ImmutableAudience.Alias(null, IdentityType.Passport, "to", IdentityType.Steam));
-            Assert.DoesNotThrow(() => ImmutableAudience.Alias("from", IdentityType.Passport, "", IdentityType.Steam));
+            Assert.Throws<ArgumentException>(() => ImmutableAudience.Alias(null, IdentityType.Passport, "to", IdentityType.Steam));
+            Assert.Throws<ArgumentException>(() => ImmutableAudience.Alias("from", IdentityType.Passport, "", IdentityType.Steam));
         }
 
         [Test]
@@ -647,7 +627,7 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
-        public void Track_TypedEvent_NullEventName_IsDropped()
+        public void Track_TypedEvent_NullEventName_Throws()
         {
             ImmutableAudience.Init(MakeConfig());
 
@@ -657,12 +637,13 @@ namespace Immutable.Audience.Tests
             var queueDir = AudiencePaths.QueueDir(_testDir);
             foreach (var f in Directory.GetFiles(queueDir, "*.json")) File.Delete(f);
 
-            Assert.DoesNotThrow(() => ImmutableAudience.Track(new NullNameEvent()));
-            Assert.DoesNotThrow(() => ImmutableAudience.Track(new EmptyNameEvent()));
+            Assert.Throws<ArgumentException>(() => ImmutableAudience.Track(new NullNameEvent()),
+                "an IEvent with a null/empty EventName is a caller bug and must throw");
+            Assert.Throws<ArgumentException>(() => ImmutableAudience.Track(new EmptyNameEvent()));
 
             ImmutableAudience.FlushQueueToDiskForTesting();
             Assert.AreEqual(0, Directory.GetFiles(queueDir, "*.json").Length,
-                "IEvent with null/empty EventName must be dropped, not enqueued");
+                "IEvent with null/empty EventName must never reach the queue");
         }
 
         [Test]
@@ -738,33 +719,22 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
-        public void Identify_PassportWithInvalidIdFormat_WarnsAndDropsCall()
+        public void Identify_PassportWithInvalidIdFormat_Throws()
         {
-            var lines = new List<string>();
-            Log.Writer = lines.Add;
-            try
-            {
-                ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
 
-                ImmutableAudience.Identify("12345", IdentityType.Passport);
-                ImmutableAudience.Shutdown();
+            Assert.Throws<ArgumentException>(() => ImmutableAudience.Identify("12345", IdentityType.Passport),
+                "a malformed passport id is a caller bug and must throw, not just log a warning that's easy to miss");
+            Assert.IsNull(ImmutableAudience.UserId,
+                "the call must be a full no-op so later Track/Page calls don't inherit the bad id");
 
-                Assert.That(lines, Has.Some.Contains("doesn't look like a"),
-                    "a malformed passport id should surface a warning so a developer notices the mismatch");
-                Assert.IsNull(ImmutableAudience.UserId,
-                    "the call must be a full no-op so later Track/Page calls don't inherit the bad id");
+            ImmutableAudience.Shutdown();
 
-                var queueDir = AudiencePaths.QueueDir(_testDir);
-                var contents = Directory.GetFiles(queueDir, "*.json")
-                    .Select(File.ReadAllText).ToList();
-                Assert.IsFalse(contents.Any(c => c.Contains("\"identify\"")),
-                    "the event should be dropped, not just flagged; a warning alone isn't enough to " +
-                    "stop the bad id from reaching downstream analytics");
-            }
-            finally
-            {
-                Log.Writer = null;
-            }
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            var contents = Directory.GetFiles(queueDir, "*.json")
+                .Select(File.ReadAllText).ToList();
+            Assert.IsFalse(contents.Any(c => c.Contains("\"identify\"")),
+                "the event should never reach the queue");
         }
 
         [TestCase("email|abc123")]
@@ -790,23 +760,12 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
-        public void Identify_PassportWithWhitespaceOnlyPadding_StillWarns()
+        public void Identify_PassportWithWhitespaceOnlyPadding_StillThrows()
         {
-            var lines = new List<string>();
-            Log.Writer = lines.Add;
-            try
-            {
-                ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
 
-                ImmutableAudience.Identify("  12345  ", IdentityType.Passport);
-
-                Assert.That(lines, Has.Some.Contains("doesn't look like a"),
-                    "surrounding whitespace alone must not turn an invalid id into a valid one");
-            }
-            finally
-            {
-                Log.Writer = null;
-            }
+            Assert.Throws<ArgumentException>(() => ImmutableAudience.Identify("  12345  ", IdentityType.Passport),
+                "surrounding whitespace alone must not turn an invalid id into a valid one");
         }
 
         [Test]
@@ -880,57 +839,74 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
-        public void Alias_PassportToWithInvalidIdFormat_WarnsAndDropsCall()
+        public void Alias_PassportToWithInvalidIdFormat_Throws()
         {
-            var lines = new List<string>();
-            Log.Writer = lines.Add;
-            try
-            {
-                ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
 
-                ImmutableAudience.Alias("steam123", IdentityType.Steam, "12345", IdentityType.Passport);
-                ImmutableAudience.Shutdown();
+            Assert.Throws<ArgumentException>(
+                () => ImmutableAudience.Alias("steam123", IdentityType.Steam, "12345", IdentityType.Passport),
+                "a malformed passport id on the to side is a caller bug and must throw");
 
-                Assert.That(lines, Has.Some.Contains("doesn't look like a"),
-                    "a malformed passport id on the to side should surface a warning");
-
-                var queueDir = AudiencePaths.QueueDir(_testDir);
-                var contents = Directory.GetFiles(queueDir, "*.json")
-                    .Select(File.ReadAllText).ToList();
-                Assert.IsFalse(contents.Any(c => c.Contains("\"alias\"")),
-                    "the event should be dropped, not just flagged");
-            }
-            finally
-            {
-                Log.Writer = null;
-            }
+            ImmutableAudience.Shutdown();
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            var contents = Directory.GetFiles(queueDir, "*.json")
+                .Select(File.ReadAllText).ToList();
+            Assert.IsFalse(contents.Any(c => c.Contains("\"alias\"")),
+                "the event should never reach the queue");
         }
 
         [Test]
-        public void Alias_PassportFromWithInvalidIdFormat_WarnsAndDropsCall()
+        public void Alias_PassportFromWithInvalidIdFormat_Throws()
         {
-            var lines = new List<string>();
-            Log.Writer = lines.Add;
-            try
-            {
-                ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
 
-                ImmutableAudience.Alias("12345", IdentityType.Passport, "steam123", IdentityType.Steam);
-                ImmutableAudience.Shutdown();
+            Assert.Throws<ArgumentException>(
+                () => ImmutableAudience.Alias("12345", IdentityType.Passport, "steam123", IdentityType.Steam),
+                "a malformed passport id on the from side is a caller bug and must throw");
 
-                Assert.That(lines, Has.Some.Contains("doesn't look like a"),
-                    "a malformed passport id on the from side should surface a warning");
+            ImmutableAudience.Shutdown();
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            var contents = Directory.GetFiles(queueDir, "*.json")
+                .Select(File.ReadAllText).ToList();
+            Assert.IsFalse(contents.Any(c => c.Contains("\"alias\"")),
+                "the event should never reach the queue");
+        }
 
-                var queueDir = AudiencePaths.QueueDir(_testDir);
-                var contents = Directory.GetFiles(queueDir, "*.json")
-                    .Select(File.ReadAllText).ToList();
-                Assert.IsFalse(contents.Any(c => c.Contains("\"alias\"")),
-                    "the event should be dropped, not just flagged");
-            }
-            finally
-            {
-                Log.Writer = null;
-            }
+        [Test]
+        public void Alias_IdenticalIds_Throws()
+        {
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
+
+            Assert.Throws<ArgumentException>(
+                () => ImmutableAudience.Alias("same_id", IdentityType.Steam, "same_id", IdentityType.Steam),
+                "identical ids are a caller bug and must throw");
+
+            ImmutableAudience.Shutdown();
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            var contents = Directory.GetFiles(queueDir, "*.json")
+                .Select(File.ReadAllText).ToList();
+            Assert.IsFalse(contents.Any(c => c.Contains("\"alias\"")),
+                "the event should never reach the queue");
+        }
+
+        [Test]
+        public void Alias_IdenticalIdsDifferentTypes_StillThrows()
+        {
+            // Matches the backend: it rejects on id equality alone, ignoring
+            // identityType, so the client must reject this case too instead
+            // of sending something the backend will bounce.
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
+
+            Assert.Throws<ArgumentException>(
+                () => ImmutableAudience.Alias("same_id", IdentityType.Steam, "same_id", IdentityType.Email),
+                "identical ids must throw even with different identityTypes");
+
+            ImmutableAudience.Shutdown();
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            var contents = Directory.GetFiles(queueDir, "*.json")
+                .Select(File.ReadAllText).ToList();
+            Assert.IsFalse(contents.Any(c => c.Contains("\"alias\"")),
+                "the event should never reach the queue");
         }
 
         [Test]

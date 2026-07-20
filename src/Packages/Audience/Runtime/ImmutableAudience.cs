@@ -326,16 +326,15 @@ namespace Immutable.Audience
         /// Sends a typed event. Prefer over the string overload for
         /// compile-time required-field validation.
         /// </summary>
-        /// <param name="evt">The event to send.</param>
+        /// <param name="evt">The event to send. Must not be null, and <see cref="IEvent.EventName"/>
+        /// must not be empty (both throw).</param>
         public static void Track(IEvent evt)
         {
+            if (!_initialized) return;
+            if (evt == null) throw new ArgumentNullException(nameof(evt), AudienceLogs.TrackIEventNull);
+
             var state = _state;
-            if (!_initialized || !state.Level.CanTrack()) return;
-            if (evt == null)
-            {
-                Log.Warn(AudienceLogs.TrackIEventNull);
-                return;
-            }
+            if (!state.Level.CanTrack()) return;
 
             var config = _config;
             if (config == null) return;
@@ -355,10 +354,7 @@ namespace Immutable.Audience
             }
 
             if (string.IsNullOrEmpty(eventName))
-            {
-                Log.Warn(AudienceLogs.TrackIEventEmptyName(evt.GetType().Name));
-                return;
-            }
+                throw new ArgumentException(AudienceLogs.TrackIEventEmptyName(evt.GetType().Name), nameof(evt));
 
             // ToProperties returns a fresh dict per call, so no snapshot needed.
             EnqueueTrackedEvent(eventName, properties, _session?.SessionId, state, config);
@@ -369,17 +365,16 @@ namespace Immutable.Audience
         /// <c>resource</c>, and <c>milestone_reached</c>, prefer the typed
         /// overload.
         /// </summary>
-        /// <param name="eventName">The wire-format event name.</param>
+        /// <param name="eventName">The wire-format event name. Must not be empty (throws otherwise).</param>
         /// <param name="properties">Optional event properties.</param>
         public static void Track(string eventName, Dictionary<string, object>? properties = null)
         {
-            var state = _state;
-            if (!_initialized || !state.Level.CanTrack()) return;
+            if (!_initialized) return;
             if (string.IsNullOrEmpty(eventName))
-            {
-                Log.Warn(AudienceLogs.TrackStringEmptyName);
-                return;
-            }
+                throw new ArgumentException(AudienceLogs.TrackStringEmptyName, nameof(eventName));
+
+            var state = _state;
+            if (!state.Level.CanTrack()) return;
 
             var config = _config;
             if (config == null) return;
@@ -423,8 +418,7 @@ namespace Immutable.Audience
         /// <summary>
         /// Attaches a known user ID to subsequent events. When <paramref name="identityType"/> is
         /// <see cref="IdentityType.Passport"/>, <paramref name="userId"/> must look like a real
-        /// Passport ID (<c>connection|id</c> or a UUID) — otherwise the call is dropped and a
-        /// warning is logged.
+        /// Passport ID (<c>connection|id</c> or a UUID); otherwise this throws.
         /// </summary>
         /// <param name="userId">The player's identifier within the chosen provider.</param>
         /// <param name="identityType">The identity provider that issued <paramref name="userId"/>.</param>
@@ -433,21 +427,16 @@ namespace Immutable.Audience
         {
             if (!_initialized) return;
 
-            // Validate inputs before consent so null-arg callers get the right warning.
+            // Validate inputs before consent so a caller bug throws even when
+            // consent is below Full (a no-op should never mask a bad argument).
             if (string.IsNullOrEmpty(userId))
-            {
-                Log.Warn(AudienceLogs.IdentifyEmptyUserId);
-                return;
-            }
+                throw new ArgumentException(AudienceLogs.IdentifyEmptyUserId, nameof(userId));
 
             // Trim once: the validated id and the stored/sent id must match.
             userId = userId.Trim();
 
             if (identityType == IdentityType.Passport && !IsValidPassportId(userId))
-            {
-                Log.Warn(AudienceLogs.IdentifyPassportIdInvalidFormat(userId));
-                return;
-            }
+                throw new ArgumentException(AudienceLogs.IdentifyPassportIdInvalidFormat(userId), nameof(userId));
 
             AudienceConfig? config;
             ConsentLevel level;
@@ -482,10 +471,11 @@ namespace Immutable.Audience
         }
 
         /// <summary>
-        /// Links two user IDs for the same player. When either side's identity
+        /// Links two user IDs for the same player. <paramref name="fromId"/> and
+        /// <paramref name="toId"/> must differ. When either side's identity
         /// type is <see cref="IdentityType.Passport"/>, that side's id must look
-        /// like a real Passport ID (<c>connection|id</c> or a UUID) — otherwise
-        /// the call is dropped and a warning is logged.
+        /// like a real Passport ID (<c>connection|id</c> or a UUID); otherwise
+        /// this throws.
         /// </summary>
         /// <param name="fromId">The previously-known identifier.</param>
         /// <param name="fromType">Identity provider for <paramref name="fromId"/>.</param>
@@ -496,25 +486,19 @@ namespace Immutable.Audience
             if (!_initialized) return;
 
             if (string.IsNullOrEmpty(fromId) || string.IsNullOrEmpty(toId))
-            {
-                Log.Warn(AudienceLogs.AliasEmptyIds);
-                return;
-            }
+                throw new ArgumentException(AudienceLogs.AliasEmptyIds);
 
             // Trim once: the validated ids and the sent ids must match.
             fromId = fromId.Trim();
             toId = toId.Trim();
 
+            if (fromId == toId)
+                throw new ArgumentException(AudienceLogs.AliasIdenticalIds);
+
             if (fromType == IdentityType.Passport && !IsValidPassportId(fromId))
-            {
-                Log.Warn(AudienceLogs.AliasPassportIdInvalidFormat("from", fromId));
-                return;
-            }
+                throw new ArgumentException(AudienceLogs.AliasPassportIdInvalidFormat("from", fromId), nameof(fromId));
             if (toType == IdentityType.Passport && !IsValidPassportId(toId))
-            {
-                Log.Warn(AudienceLogs.AliasPassportIdInvalidFormat("to", toId));
-                return;
-            }
+                throw new ArgumentException(AudienceLogs.AliasPassportIdInvalidFormat("to", toId), nameof(toId));
 
             var state = _state;
             if (!state.Level.CanIdentify())

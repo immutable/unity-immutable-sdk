@@ -113,6 +113,7 @@ namespace Immutable.Audience
                         NotifyError(AudienceErrorCode.ValidationRejected,
                             $"Batch partially rejected: {rejected} of {batch.Count} events dropped");
                     }
+                    LogFlushOutcome(rejected == 0, batch.Count);
                 }
                 else if (statusCode == 429)
                 {
@@ -125,6 +126,7 @@ namespace Immutable.Audience
                         SetBackoffUntil(_getUtcNow() + retryAfter.Value);
                     else
                         RecordFailure();
+                    LogFlushOutcome(false, batch.Count);
                 }
                 else if (statusCode >= 400 && statusCode < 500)
                 {
@@ -139,6 +141,7 @@ namespace Immutable.Audience
                     ResetBackoff();
                     NotifyError(AudienceErrorCode.ValidationRejected,
                         FormatHttpError("Batch rejected", statusCode, rejectionBody));
+                    LogFlushOutcome(false, batch.Count);
                 }
                 else
                 {
@@ -148,6 +151,7 @@ namespace Immutable.Audience
                     RecordFailure();
                     NotifyError(AudienceErrorCode.FlushFailed,
                         FormatHttpError("Server error, will retry", statusCode, serverBody));
+                    LogFlushOutcome(false, batch.Count);
                 }
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
@@ -166,6 +170,7 @@ namespace Immutable.Audience
             {
                 RecordFailure();
                 NotifyError(AudienceErrorCode.NetworkError, ex.Message);
+                LogFlushOutcome(false, batch.Count);
             }
 
             return true;
@@ -342,5 +347,10 @@ namespace Immutable.Audience
                 Log.Warn(AudienceLogs.OnErrorThrew(ex));
             }
         }
+
+        // Reports the real per-attempt result (2xx with zero rejections vs
+        // anything else), distinct from onError which only fires on failure.
+        private static void LogFlushOutcome(bool ok, int count) =>
+            Log.Debug(AudienceLogs.FlushOutcome(ok, count));
     }
 }
