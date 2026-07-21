@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 #if IMMUTABLE_AUDIENCE_GZIP
 using System.IO.Compression;
@@ -336,6 +337,55 @@ namespace Immutable.Audience.Tests
             await transport.SendBatchAsync();
 
             Assert.IsNull(reportedError, "zero rejected must not fire onError");
+        }
+
+        [Test]
+        public async Task SendBatchAsync_200_ZeroRejected_LogsFlushOk()
+        {
+            // onError only fires on failure; this is the only per-attempt signal a send succeeded.
+            _store.Write("{\"type\":\"track\",\"eventName\":\"a\"}");
+
+            var handler = new MockHandler(HttpStatusCode.OK, "{\"accepted\":1,\"rejected\":0}");
+            using var transport = new HttpTransport(_store, "pk_imapik-test-key1", handler: handler);
+
+            var lines = new List<string>();
+            Log.Enabled = true;
+            Log.Writer = lines.Add;
+            try
+            {
+                await transport.SendBatchAsync();
+            }
+            finally
+            {
+                Log.Writer = null;
+                Log.Enabled = false;
+            }
+
+            Assert.That(lines, Has.Some.Contains("flush ok (1 messages)"));
+        }
+
+        [Test]
+        public async Task SendBatchAsync_500_LogsFlushFailed()
+        {
+            _store.Write("{\"type\":\"track\",\"eventName\":\"a\"}");
+
+            var handler = new MockHandler(HttpStatusCode.InternalServerError, "");
+            using var transport = new HttpTransport(_store, "pk_imapik-test-key1", handler: handler);
+
+            var lines = new List<string>();
+            Log.Enabled = true;
+            Log.Writer = lines.Add;
+            try
+            {
+                await transport.SendBatchAsync();
+            }
+            finally
+            {
+                Log.Writer = null;
+                Log.Enabled = false;
+            }
+
+            Assert.That(lines, Has.Some.Contains("flush failed (1 messages)"));
         }
 
         [Test]

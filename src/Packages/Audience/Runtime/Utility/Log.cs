@@ -52,26 +52,35 @@ namespace Immutable.Audience
             "Call Shutdown() first if reconfiguring is intended.";
 
         // ---- Track ----
+        // Null event / empty event name are caller bugs: thrown as
+        // ArgumentException/ArgumentNullException, not logged (see ImmutableAudience.Track).
 
         internal const string TrackIEventNull =
-            "Track(IEvent) called with null event. Dropping.";
+            "Track(IEvent) called with null event.";
 
         internal const string TrackStringEmptyName =
-            "Track(string) called with null or empty event name. Dropping.";
+            "Track(string) called with null or empty event name.";
 
         internal static string TrackIEventThrew(string evtTypeName, Exception ex) =>
             $"Track(IEvent): {evtTypeName}.ToProperties()/EventName threw {ex.GetType().Name}: {ex.Message}. Dropping.";
 
         internal static string TrackIEventEmptyName(string evtTypeName) =>
-            $"Track(IEvent): {evtTypeName}.EventName returned null or empty. Dropping.";
+            $"Track(IEvent): {evtTypeName}.EventName returned null or empty.";
 
         // ---- Identify / Alias ----
+        // Empty/malformed ids are caller bugs: thrown as ArgumentException, not
+        // logged (see ImmutableAudience.Identify/Alias). IdentifyDiscarded/
+        // AliasDiscarded below are different: consent gating is a routine no-op,
+        // not a bug, so those stay as warnings.
 
         internal const string IdentifyEmptyUserId =
-            "Identify called with null or empty userId. Dropping.";
+            "Identify called with null or empty userId.";
 
         internal const string AliasEmptyIds =
-            "Alias called with null or empty fromId/toId. Dropping.";
+            "Alias called with null or empty fromId/toId.";
+
+        internal const string AliasIdenticalIds =
+            "Alias called with identical fromId and toId.";
 
         internal static string IdentifyDiscarded(ConsentLevel current) =>
             $"Identify discarded. Requires Full consent, current is {current}.";
@@ -79,7 +88,7 @@ namespace Immutable.Audience
         internal static string IdentifyPassportIdInvalidFormat(string userId) =>
             $"Identify called with identityType Passport but userId \"{userId}\" doesn't look like a " +
             "Passport ID (expected a format like \"email|123\" or a UUID). Check you're passing the " +
-            "Passport user ID, not your own internal user ID. Call ignored.";
+            "Passport user ID, not your own internal user ID.";
 
         internal static string AliasDiscarded(ConsentLevel current) =>
             $"Alias discarded. Requires Full consent, current is {current}.";
@@ -87,7 +96,7 @@ namespace Immutable.Audience
         internal static string AliasPassportIdInvalidFormat(string side, string id) =>
             $"Alias called with {side}Type Passport but {side}Id \"{id}\" doesn't look like a " +
             "Passport ID (expected a format like \"email|123\" or a UUID). Check you're passing the " +
-            "Passport user ID, not your own internal user ID. Call ignored.";
+            "Passport user ID, not your own internal user ID.";
 
         // ---- Consent / Shutdown ----
 
@@ -111,6 +120,9 @@ namespace Immutable.Audience
 
         internal static string SendBatchUnexpected(Exception ex) =>
             $"SendBatch unexpected exception: {ex.GetType().Name}: {ex.Message}";
+
+        internal static string FlushOutcome(bool ok, int count) =>
+            $"flush {(ok ? "ok" : "failed")} ({count} messages)";
 
         internal static string ParseRejectedCountThrew(Exception ex) =>
             $"ParseRejectedCount threw {ex.GetType().Name}: {ex.Message}";

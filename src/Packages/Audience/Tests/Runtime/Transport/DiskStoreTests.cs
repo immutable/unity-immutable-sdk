@@ -107,6 +107,22 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
+        public void ReadBatch_ExcludesAndDeletesFutureSkewedFiles()
+        {
+            _store.Write("{\"fresh\":true}");
+
+            var skewedTime = DateTime.UtcNow.AddHours(Constants.MaxClockSkewFutureHours + 1);
+            var skewedName = $"{skewedTime.Ticks}_{Guid.NewGuid():N}.json";
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            File.WriteAllText(Path.Combine(queueDir, skewedName), "{\"skewed\":true}");
+
+            var batch = _store.ReadBatch(10);
+
+            Assert.AreEqual(1, batch.Count, "future-skewed file should be excluded from batch");
+            Assert.IsFalse(File.Exists(Path.Combine(queueDir, skewedName)), "future-skewed file should be deleted");
+        }
+
+        [Test]
         public void Delete_RemovesSpecifiedFiles()
         {
             _store.Write("{\"a\":1}");

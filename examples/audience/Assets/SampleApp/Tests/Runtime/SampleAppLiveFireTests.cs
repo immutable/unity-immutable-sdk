@@ -253,14 +253,16 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         }
 
         [UnityTest]
-        public IEnumerator Identify_PassportWithInvalidIdFormat_WarnsAndDropsCall()
+        public IEnumerator Identify_PassportWithInvalidIdFormat_Throws()
         {
             // Identity type dropdown defaults to Passport; "12345" isn't Passport-shaped.
+            // ImmutableAudience.Identify throws on this; RunAndLog catches it and
+            // renders an identify()@Err row.
             yield return LoadAndInit(initialConsent: SampleAppUi.Consent.Full);
 
             _root!.Q<TextField>(SampleAppUi.IdentityFields.Id).value = "12345";
             _root.Q<Button>(SampleAppUi.Buttons.Identify).Click();
-            yield return SampleAppTestHelpers.WaitForLogEntry(_root, SampleAppUi.LogLabels.Sdk, LogLevels.Warn, 5f);
+            yield return SampleAppTestHelpers.WaitForLogEntry(_root, SampleAppUi.LogLabels.Identify, LogLevels.Err, 5f);
 
             Assert.IsNull(ImmutableAudience.UserId,
                 "an invalid Passport ID must be a full no-op, not just logged");
@@ -278,6 +280,23 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
             yield return null;
 
             yield return FlushAndAssertNoErrors();
+        }
+
+        [UnityTest]
+        public IEnumerator Alias_SameId_Throws()
+        {
+            // Type-independence (same id, different identityType is still
+            // rejected) is covered by the fast unit test
+            // Alias_IdenticalIdsDifferentTypes_StillThrows; this only needs to
+            // prove the UI path wires up to that same check. ImmutableAudience.Alias
+            // throws on this; RunAndLog catches it and renders an alias()@Err row.
+            yield return LoadAndInit(initialConsent: SampleAppUi.Consent.Full);
+
+            var sameId = "email|same-" + DateTime.UtcNow.Ticks;
+            _root!.Q<TextField>(SampleAppUi.IdentityFields.AliasFromId).value = sameId;
+            _root.Q<TextField>(SampleAppUi.IdentityFields.AliasToId).value = sameId;
+            _root.Q<Button>(SampleAppUi.Buttons.Alias).Click();
+            yield return SampleAppTestHelpers.WaitForLogEntry(_root, SampleAppUi.LogLabels.Alias, LogLevels.Err, 5f);
         }
 
         [UnityTest]
