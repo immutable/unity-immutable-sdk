@@ -127,6 +127,9 @@ namespace Immutable.Audience
         internal static string ParseRejectedCountThrew(Exception ex) =>
             $"ParseRejectedCount threw {ex.GetType().Name}: {ex.Message}";
 
+        internal static string MessageRejectedByServer(string messageId, string reasons) =>
+            $"messageId {messageId} rejected by the server: {reasons}";
+
         // ---- Session ----
 
         internal const string SessionPauseAlreadyPaused =

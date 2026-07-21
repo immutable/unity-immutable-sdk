@@ -102,16 +102,17 @@ namespace Immutable.Audience
                 if (statusCode >= 200 && statusCode < 300)
                 {
                     // Server accepted the batch. Count how many messages it
-                    // rejected; if any, tell the studio via onError. Rejected
-                    // messages are validation failures, so retrying won't help.
-                    // The batch is deleted either way.
-                    var rejected = await ParseRejectedCount(response, ct).ConfigureAwait(false);
+                    // rejected; if any, warn per message and tell the studio
+                    // via onError. Rejected messages are validation failures,
+                    // so retrying won't help. The batch is deleted either way.
+                    var (rejected, rejections) = await ParseRejectedResult(response, ct).ConfigureAwait(false);
                     _store.Delete(batch);
                     ResetBackoff();
                     if (rejected > 0)
                     {
+                        WarnRejections(rejections);
                         NotifyError(AudienceErrorCode.ValidationRejected,
-                            $"Batch partially rejected: {rejected} of {batch.Count} events dropped");
+                            $"Batch partially rejected: {rejected} of {batch.Count} events dropped", rejections);
                     }
                     LogFlushOutcome(rejected == 0, batch.Count);
                 }
@@ -137,10 +138,12 @@ namespace Immutable.Audience
                     // publishable key", "missing field X", etc.) rather than a
                     // bare status code.
                     var rejectionBody = await ReadBodyForErrorAsync(response).ConfigureAwait(false);
+                    var rejections = ExtractRejectionsFromBody(rejectionBody);
                     _store.Delete(batch);
                     ResetBackoff();
+                    WarnRejections(rejections);
                     NotifyError(AudienceErrorCode.ValidationRejected,
-                        FormatHttpError("Batch rejected", statusCode, rejectionBody));
+                        FormatHttpError("Batch rejected", statusCode, rejectionBody), rejections);
                     LogFlushOutcome(false, batch.Count);
                 }
                 else
@@ -277,10 +280,12 @@ namespace Immutable.Audience
             return sb.ToString();
         }
 
-        // Reads the response body and pulls out the "rejected" count. Returns
-        // 0 if the body is missing or unreadable. The body is only for
-        // reporting, so failing to read it must not break the success path.
-        private static async Task<int> ParseRejectedCount(HttpResponseMessage response, CancellationToken ct = default)
+        // Reads the response body and pulls out the rejected count and
+        // per-message rejection detail. Returns (0, null) if the body is
+        // missing or unreadable. The body is only for reporting, so failing
+        // to read it must not break the success path.
+        private static async Task<(int Rejected, IReadOnlyList<MessageRejection>? Rejections)> ParseRejectedResult(
+            HttpResponseMessage response, CancellationToken ct = default)
         {
             string body;
             try
@@ -294,24 +299,81 @@ namespace Immutable.Audience
             catch (Exception ex)
             {
                 Log.Warn(AudienceLogs.ParseRejectedCountThrew(ex));
-                return 0;
+                return (0, null);
             }
-            if (string.IsNullOrEmpty(body)) return 0;
+            if (string.IsNullOrEmpty(body)) return (0, null);
 
             try
             {
                 var parsed = JsonReader.DeserializeObject(body);
-                if (!parsed.TryGetValue("rejected", out var raw)) return 0;
-                return raw switch
-                {
-                    int i => i,
-                    long l => (int)l,
-                    _ => 0,
-                };
+                var rejected = parsed.TryGetValue("rejected", out var raw)
+                    ? raw switch { int i => i, long l => (int)l, _ => 0 }
+                    : 0;
+                return (rejected, ExtractRejections(parsed));
             }
             catch (FormatException)
             {
-                return 0;
+                return (0, null);
+            }
+        }
+
+        private static IReadOnlyList<MessageRejection>? ExtractRejectionsFromBody(string? body)
+        {
+            if (string.IsNullOrEmpty(body)) return null;
+            try
+            {
+                return ExtractRejections(JsonReader.DeserializeObject(body));
+            }
+            catch (FormatException)
+            {
+                return null;
+            }
+        }
+
+        // Best-effort: malformed entries are skipped rather than failing the whole parse.
+        private static List<MessageRejection>? ExtractRejections(Dictionary<string, object> parsed)
+        {
+            if (!parsed.TryGetValue("rejections", out var raw) || raw is not List<object> list || list.Count == 0)
+                return null;
+
+            var result = new List<MessageRejection>(list.Count);
+            foreach (var item in list)
+            {
+                if (item is not Dictionary<string, object> obj) continue;
+                if (!(obj.TryGetValue("messageId", out var midObj) && midObj is string messageId)) continue;
+
+                var errors = new List<RejectionError>();
+                if (obj.TryGetValue("errors", out var errorsRaw) && errorsRaw is List<object> errorList)
+                {
+                    foreach (var errItem in errorList)
+                    {
+                        if (errItem is not Dictionary<string, object> errObj) continue;
+                        errors.Add(new RejectionError(
+                            errObj.TryGetValue("field", out var f) ? f as string ?? "" : "",
+                            errObj.TryGetValue("code", out var c) ? c as string ?? "" : "",
+                            errObj.TryGetValue("message", out var m) ? m as string ?? "" : ""));
+                    }
+                }
+                result.Add(new MessageRejection(messageId, errors));
+            }
+            return result.Count > 0 ? result : null;
+        }
+
+        // Fires unconditionally, independent of onError, so a rule the backend
+        // enforces but the SDK doesn't catch client-side doesn't fail silently.
+        private static void WarnRejections(IReadOnlyList<MessageRejection>? rejections)
+        {
+            if (rejections == null) return;
+            foreach (var rejection in rejections)
+            {
+                var reasons = new StringBuilder();
+                for (var i = 0; i < rejection.Errors.Count; i++)
+                {
+                    if (i > 0) reasons.Append("; ");
+                    var e = rejection.Errors[i];
+                    reasons.Append(e.Field).Append(' ').Append(e.Code).Append(": ").Append(e.Message);
+                }
+                Log.Warn(AudienceLogs.MessageRejectedByServer(rejection.MessageId, reasons.ToString()));
             }
         }
 
@@ -335,12 +397,12 @@ namespace Immutable.Audience
                 ? $"{prefix} with {statusCode}"
                 : $"{prefix} with {statusCode}: {body}";
 
-        private void NotifyError(AudienceErrorCode code, string message)
+        private void NotifyError(AudienceErrorCode code, string message, IReadOnlyList<MessageRejection>? rejections = null)
         {
             if (_onError == null) return;
             try
             {
-                _onError(new AudienceError(code, message));
+                _onError(new AudienceError(code, message, rejections));
             }
             catch (Exception ex)
             {
