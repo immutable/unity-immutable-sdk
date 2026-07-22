@@ -13,26 +13,36 @@ namespace Immutable.Audience
         // Tests set this to capture output; AudienceUnityHooks sets it to Debug.Log.
         internal static Action<string>? Writer { get; set; }
 
+        // Separate from Writer so production wiring can route this to a real
+        // Debug.LogError (red Editor console entry, picked up by crash/error
+        // reporting integrations) while Writer stays on plain Debug.Log.
+        // Tests set this to capture output; AudienceUnityHooks sets it to Debug.LogError.
+        internal static Action<string>? ErrorWriter { get; set; }
+
         internal static void Debug(string message)
         {
             if (!Enabled) return;
-            Emit($"{Prefix} {message}");
+            Emit(Writer, $"{Prefix} {message}");
         }
 
         internal static void Warn(string message) =>
-            Emit($"{Prefix} WARN: {message}");
+            Emit(Writer, $"{Prefix} WARN: {message}");
 
-        private static void Emit(string line)
+        // Fires unconditionally, independent of Enabled, like Warn.
+        internal static void Error(string message) =>
+            Emit(ErrorWriter, $"{Prefix} ERROR: {message}");
+
+        private static void Emit(Action<string>? writer, string line)
         {
-            // Swallow anything the Writer or Console throws so Log.Warn and
-            // Log.Debug never throw themselves. If they did, an exception from
-            // logging inside a catch block would reach the background timer
-            // and crash the game on modern .NET.
+            // Swallow anything the writer or Console throws so the Log methods
+            // never throw themselves. If they did, an exception from logging
+            // inside a catch block would reach the background timer and
+            // crash the game on modern .NET.
             try
             {
-                if (Writer != null)
+                if (writer != null)
                 {
-                    Writer(line);
+                    writer(line);
                     return;
                 }
                 Console.WriteLine(line);
@@ -124,8 +134,11 @@ namespace Immutable.Audience
         internal static string FlushOutcome(bool ok, int count) =>
             $"flush {(ok ? "ok" : "failed")} ({count} messages)";
 
-        internal static string ParseRejectedCountThrew(Exception ex) =>
-            $"ParseRejectedCount threw {ex.GetType().Name}: {ex.Message}";
+        internal static string ParseRejectedResultThrew(Exception ex) =>
+            $"ParseRejectedResult threw {ex.GetType().Name}: {ex.Message}";
+
+        internal static string MessageRejectedByServer(int count, string detail) =>
+            $"{count} message(s) rejected by the server:\n{detail}";
 
         // ---- Session ----
 

@@ -325,6 +325,111 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
+        public async Task SendBatchAsync_200_WithRejections_PopulatesAudienceErrorRejections()
+        {
+            _store.Write("{\"type\":\"track\",\"eventName\":\"a\"}");
+
+            var body = "{\"accepted\":0,\"rejected\":1,\"rejections\":[{\"messageId\":\"msg-1\","
+                + "\"errors\":[{\"field\":\"surface\",\"code\":\"INVALID_ENUM\",\"message\":\"invalid surface\"}]}]}";
+            var handler = new MockHandler(HttpStatusCode.OK, body);
+            AudienceError? reportedError = null;
+            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+                onError: e => reportedError = e, handler: handler);
+
+            await transport.SendBatchAsync();
+
+            Assert.IsNotNull(reportedError!.Rejections);
+            Assert.AreEqual(1, reportedError.Rejections!.Count);
+            Assert.AreEqual("msg-1", reportedError.Rejections[0].MessageId);
+            Assert.AreEqual("surface", reportedError.Rejections[0].Errors[0].Field);
+            Assert.AreEqual("INVALID_ENUM", reportedError.Rejections[0].Errors[0].Code);
+        }
+
+        [Test]
+        public async Task SendBatchAsync_200_WithRejections_LogsOneAggregatedErrorIndependentOfOnError()
+        {
+            _store.Write("{\"type\":\"track\",\"eventName\":\"a\"}");
+            _store.Write("{\"type\":\"track\",\"eventName\":\"b\"}");
+
+            var body = "{\"accepted\":0,\"rejected\":2,\"rejections\":["
+                + "{\"messageId\":\"msg-1\",\"errors\":[{\"field\":\"surface\",\"code\":\"INVALID_ENUM\",\"message\":\"bad\"}]},"
+                + "{\"messageId\":\"msg-2\",\"errors\":[{\"field\":\"eventName\",\"code\":\"MISSING_REQUIRED_FIELD\",\"message\":\"req\"}]}]}";
+            var handler = new MockHandler(HttpStatusCode.OK, body);
+            // No onError passed: the log must not depend on one being wired.
+            using var transport = new HttpTransport(_store, "pk_imapik-test-key1", handler: handler);
+
+            var lines = new List<string>();
+            Log.ErrorWriter = lines.Add;
+            try
+            {
+                await transport.SendBatchAsync();
+            }
+            finally
+            {
+                Log.ErrorWriter = null;
+            }
+
+            Assert.AreEqual(1, lines.Count, "expected exactly one aggregated log call, not one per rejected message");
+            Assert.That(lines[0], Does.Contain("2 message(s) rejected by the server"));
+            Assert.That(lines[0], Does.Contain("msg-1: surface INVALID_ENUM: bad"));
+            Assert.That(lines[0], Does.Contain("msg-2: eventName MISSING_REQUIRED_FIELD: req"));
+        }
+
+        [Test]
+        public async Task SendBatchAsync_4xx_WithRejections_PopulatesAudienceErrorRejections()
+        {
+            _store.Write("{\"type\":\"track\"}");
+
+            var body = "{\"success\":false,\"accepted\":0,\"rejected\":1,\"rejections\":[{\"messageId\":\"msg-1\","
+                + "\"errors\":[{\"field\":\"eventName\",\"code\":\"MISSING_REQUIRED_FIELD\",\"message\":\"required\"}]}]}";
+            var handler = new MockHandler(HttpStatusCode.BadRequest, body);
+            AudienceError? reportedError = null;
+            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+                onError: e => reportedError = e, handler: handler);
+
+            await transport.SendBatchAsync();
+
+            Assert.IsNotNull(reportedError!.Rejections);
+            Assert.AreEqual("msg-1", reportedError.Rejections![0].MessageId);
+        }
+
+        [Test]
+        public async Task SendBatchAsync_200_MalformedRejections_LeavesRejectionsNull()
+        {
+            _store.Write("{\"type\":\"track\",\"eventName\":\"a\"}");
+
+            var handler = new MockHandler(HttpStatusCode.OK, "{\"accepted\":0,\"rejected\":1,\"rejections\":\"not-an-array\"}");
+            AudienceError? reportedError = null;
+            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+                onError: e => reportedError = e, handler: handler);
+
+            await transport.SendBatchAsync();
+
+            Assert.IsNull(reportedError!.Rejections);
+        }
+
+        [Test]
+        public async Task SendBatchAsync_200_RejectionsPresentButRejectedCountZero_StillFiresOnError()
+        {
+            // Defends against rejected/rejections drifting apart in the response body:
+            // rejections must not be silently dropped just because the numeric count is 0.
+            _store.Write("{\"type\":\"track\",\"eventName\":\"a\"}");
+
+            var body = "{\"accepted\":1,\"rejected\":0,\"rejections\":[{\"messageId\":\"msg-1\","
+                + "\"errors\":[{\"field\":\"surface\",\"code\":\"INVALID_ENUM\",\"message\":\"bad\"}]}]}";
+            var handler = new MockHandler(HttpStatusCode.OK, body);
+            AudienceError? reportedError = null;
+            using var transport = new HttpTransport(_store, "pk_imapik-test-key1",
+                onError: e => reportedError = e, handler: handler);
+
+            await transport.SendBatchAsync();
+
+            Assert.IsNotNull(reportedError, "a non-empty rejections array must fire onError even if rejected is 0");
+            Assert.AreEqual(1, reportedError!.Rejections!.Count);
+            Assert.AreEqual("msg-1", reportedError.Rejections[0].MessageId);
+        }
+
+        [Test]
         public async Task SendBatchAsync_200_ZeroRejected_DoesNotFireOnError()
         {
             _store.Write("{\"type\":\"track\",\"eventName\":\"a\"}");

@@ -34,6 +34,7 @@ namespace Immutable.Audience.Unity
 
             // Set before the collectors below run so a collector failure logs via Debug.Log, not Console.WriteLine.
             if (Log.Writer == null) Log.Writer = Debug.Log;
+            if (Log.ErrorWriter == null) Log.ErrorWriter = Debug.LogError;
 
             // Captured once on main thread; ReadOnlyDictionary blocks downstream mutation.
             // Each collector is isolated so one throwing can't block the other's provider or abort Install().
