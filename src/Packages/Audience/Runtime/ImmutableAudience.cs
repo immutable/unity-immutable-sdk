@@ -328,6 +328,10 @@ namespace Immutable.Audience
         /// </summary>
         /// <param name="evt">The event to send. Must not be null, and <see cref="IEvent.EventName"/>
         /// must not be empty (both throw).</param>
+        /// <exception cref="ArgumentException">
+        /// One of Immutable's own built-in events (<see cref="Purchase"/>,
+        /// <see cref="Progression"/>, etc.) is missing a required field.
+        /// </exception>
         public static void Track(IEvent evt)
         {
             if (!_initialized) return;
@@ -339,7 +343,6 @@ namespace Immutable.Audience
             var config = _config;
             if (config == null) return;
 
-            // Consumer-supplied impl; catch so a buggy IEvent cannot crash the game.
             string eventName;
             Dictionary<string, object> properties;
             try
@@ -349,6 +352,8 @@ namespace Immutable.Audience
             }
             catch (Exception ex)
             {
+                // See IBuiltInEvent: built-in events throw straight through.
+                if (evt is IBuiltInEvent) throw;
                 Log.Warn(AudienceLogs.TrackIEventThrew(evt.GetType().Name, ex));
                 return;
             }
@@ -367,11 +372,17 @@ namespace Immutable.Audience
         /// </summary>
         /// <param name="eventName">The wire-format event name. Must not be empty (throws otherwise).</param>
         /// <param name="properties">Optional event properties.</param>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="eventName"/> is empty, or is a reserved event
+        /// (<c>purchase</c>, <c>progression</c>, <c>resource</c>,
+        /// <c>achievement_unlocked</c>) missing one of its required properties.
+        /// </exception>
         public static void Track(string eventName, Dictionary<string, object>? properties = null)
         {
             if (!_initialized) return;
             if (string.IsNullOrEmpty(eventName))
                 throw new ArgumentException(AudienceLogs.TrackStringEmptyName, nameof(eventName));
+            ValidateReservedEventProperties(eventName, properties);
 
             var state = _state;
             if (!state.Level.CanTrack()) return;
@@ -380,6 +391,20 @@ namespace Immutable.Audience
             if (config == null) return;
 
             EnqueueTrackedEvent(eventName, SnapshotCallerDict(properties), _session?.SessionId, state, config);
+        }
+
+        // See ReservedEvents. Unrecognised event names are never checked here.
+        private static void ValidateReservedEventProperties(string eventName, Dictionary<string, object>? properties)
+        {
+            if (!ReservedEvents.RequiredProperties.TryGetValue(eventName, out var required)) return;
+
+            var missing = new List<string>();
+            foreach (var key in required)
+            {
+                if (properties == null || !properties.ContainsKey(key)) missing.Add(key);
+            }
+            if (missing.Count > 0)
+                throw new ArgumentException(AudienceLogs.TrackStringMissingRequiredProps(eventName, missing), nameof(properties));
         }
 
         // Shared tail for both Track overloads and TrackFromSession.

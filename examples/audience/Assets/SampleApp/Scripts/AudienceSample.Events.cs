@@ -53,7 +53,7 @@ namespace Immutable.Audience.Samples.SampleApp
             new EventSpec("wishlist_remove", new[] { EventField.Text("gameId") }),
             new EventSpec("purchase",        new[] {
                 EventField.Text("currency"),
-                EventField.Number("value"),
+                EventField.Text("value"),
                 EventField.Text("itemId",        optional: true),
                 EventField.Text("itemName",      optional: true),
                 EventField.Number("quantity",    optional: true),
@@ -129,7 +129,7 @@ namespace Immutable.Audience.Samples.SampleApp
                     return new Purchase
                     {
                         Currency = OptionalString(props, "currency") ?? "",
-                        Value = OptionalDecimal(props, "value") ?? 0m,
+                        Value = OptionalString(props, "value") ?? "0",
                         ItemId = OptionalString(props, "itemId"),
                         ItemName = OptionalString(props, "itemName"),
                         Quantity = OptionalInt(props, "quantity"),

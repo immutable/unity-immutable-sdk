@@ -35,7 +35,7 @@ public static class Analytics
             Debug = true,
         });
 
-        ImmutableAudience.Track(new Purchase { Currency = "USD", Value = 9.99m });
+        ImmutableAudience.Track(new Purchase { Currency = "USD", Value = "9.99" });
     }
 }
 ```

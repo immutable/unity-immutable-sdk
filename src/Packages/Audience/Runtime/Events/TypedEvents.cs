@@ -44,7 +44,7 @@ namespace Immutable.Audience
     /// Player progressing through a world / level / stage. Track via
     /// <see cref="ImmutableAudience.Track(IEvent)"/>.
     /// </summary>
-    public class Progression : IEvent
+    public class Progression : IBuiltInEvent
     {
         /// <summary>
         /// Required. Where the player is in the progression flow.
@@ -134,7 +134,7 @@ namespace Immutable.Audience
     /// In-game currency earned or spent. Track via
     /// <see cref="ImmutableAudience.Track(IEvent)"/>.
     /// </summary>
-    public class Resource : IEvent
+    public class Resource : IBuiltInEvent
     {
         /// <summary>
         /// Required. Whether this is a gain or a spend.
@@ -193,7 +193,7 @@ namespace Immutable.Audience
     /// Real-money transaction. Track via
     /// <see cref="ImmutableAudience.Track(IEvent)"/>.
     /// </summary>
-    public class Purchase : IEvent
+    public class Purchase : IBuiltInEvent
     {
         /// <summary>
         /// Required. ISO 4217 three-letter uppercase currency code (for
@@ -202,9 +202,11 @@ namespace Immutable.Audience
         public string? Currency { get; set; }
 
         /// <summary>
-        /// Required. The transaction amount in <see cref="Currency"/>.
+        /// Required. The transaction amount in <see cref="Currency"/>, as a
+        /// numeric-looking string (e.g. <c>"9.99"</c>), not a number, to
+        /// avoid floating-point precision loss.
         /// </summary>
-        public decimal? Value { get; set; }
+        public string? Value { get; set; }
 
         /// <summary>
         /// Optional. Stable identifier of the item purchased.
@@ -247,13 +249,13 @@ namespace Immutable.Audience
             if (Currency == null || !IsIso4217(Currency))
                 throw new ArgumentException(
                     $"Purchase.Currency '{Currency}' must be a three-letter uppercase ISO 4217 code");
-            if (Value is null)
+            if (string.IsNullOrEmpty(Value))
                 throw new ArgumentException("Purchase.Value is required. Set it before calling Track(IEvent).");
 
             var props = new Dictionary<string, object>
             {
                 ["currency"] = Currency,
-                ["value"] = Value.Value
+                ["value"] = Value
             };
 
             if (ItemId != null) props["item_id"] = ItemId;
@@ -316,7 +318,7 @@ namespace Immutable.Audience
     /// Player unlocked an achievement. Track via
     /// <see cref="ImmutableAudience.Track(IEvent)"/>.
     /// </summary>
-    public class AchievementUnlocked : IEvent
+    public class AchievementUnlocked : IBuiltInEvent
     {
         /// <summary>
         /// Required. Stable identifier for the achievement (for example,
@@ -362,7 +364,7 @@ namespace Immutable.Audience
     /// Named milestone or achievement reached by the player. Track via
     /// <see cref="ImmutableAudience.Track(IEvent)"/>.
     /// </summary>
-    public class MilestoneReached : IEvent
+    public class MilestoneReached : IBuiltInEvent
     {
         /// <summary>
         /// Required. The milestone identifier (for example,
