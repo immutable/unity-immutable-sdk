@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using NUnit.Framework;
 
 namespace Immutable.Audience.Tests
@@ -6,6 +7,24 @@ namespace Immutable.Audience.Tests
     [TestFixture]
     internal class TypedEventTests
     {
+        // Guards against a new built-in typed event being added without a
+        // matching ReservedEvents entry, which would leave it silently
+        // unvalidated on the Track(string, Dictionary) path.
+        [Test]
+        public void EveryBuiltInEventHasAReservedEventsEntry()
+        {
+            var builtInTypes = typeof(IBuiltInEvent).Assembly.GetTypes()
+                .Where(t => typeof(IBuiltInEvent).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract);
+
+            foreach (var type in builtInTypes)
+            {
+                var evt = (IEvent)Activator.CreateInstance(type)!;
+                Assert.That(ReservedEvents.RequiredProperties.ContainsKey(evt.EventName), Is.True,
+                    $"{type.Name} implements IBuiltInEvent but ReservedEvents.RequiredProperties has no entry " +
+                    $"for \"{evt.EventName}\" (add one, even []).");
+            }
+        }
+
         [Test]
         public void Progression_EventName_IsProgression()
         {
@@ -115,7 +134,7 @@ namespace Immutable.Audience.Tests
             var evt = new Purchase
             {
                 Currency = "USD",
-                Value = 9.99m,
+                Value = "9.99",
                 ItemId = "gem_pack_01",
                 ItemName = "Starter Gem Pack",
                 Quantity = 1,
@@ -125,7 +144,7 @@ namespace Immutable.Audience.Tests
             var props = evt.ToProperties();
 
             Assert.AreEqual("USD", props["currency"]);
-            Assert.AreEqual(9.99m, props["value"]);
+            Assert.AreEqual("9.99", props["value"]);
             Assert.AreEqual("gem_pack_01", props["item_id"]);
             Assert.AreEqual("Starter Gem Pack", props["item_name"]);
             Assert.AreEqual(1, props["quantity"]);
@@ -135,7 +154,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Purchase_OptionalFieldsOmitted_WhenNull()
         {
-            var props = new Purchase { Currency = "EUR", Value = 5.00m }.ToProperties();
+            var props = new Purchase { Currency = "EUR", Value = "5.00" }.ToProperties();
 
             Assert.IsTrue(props.ContainsKey("currency"));
             Assert.IsTrue(props.ContainsKey("value"));
@@ -154,7 +173,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Purchase_WithoutCurrency_ThrowsOnToProperties()
         {
-            var evt = new Purchase { Value = 9.99m };
+            var evt = new Purchase { Value = "9.99" };
 
             var ex = Assert.Throws<ArgumentException>(() => evt.ToProperties());
             Assert.That(ex!.Message, Does.Contain("Currency"));

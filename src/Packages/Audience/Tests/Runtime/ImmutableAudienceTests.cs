@@ -405,7 +405,32 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
-        public void Track_IEventMissingRequiredField_DropsWithWarn()
+        public void Track_BuiltInEventMissingRequiredField_Throws()
+        {
+            ImmutableAudience.Init(MakeConfig());
+
+            // Purchase with no Value set: ToProperties throws. Purchase is one of
+            // Immutable's own built-in events, so that's a caller bug and must
+            // throw straight through, the same as Identify()/Alias() do for an
+            // equivalent mistake, rather than ship an incomplete event silently.
+            Assert.Throws<ArgumentException>(() => ImmutableAudience.Track(new Purchase { Currency = "USD" }));
+
+            ImmutableAudience.Shutdown();
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            var contents = Directory.GetFiles(queueDir, "*.json")
+                .Select(File.ReadAllText).ToList();
+            Assert.IsFalse(contents.Any(c => c.Contains("\"purchase\"")),
+                "purchase event with missing required Value must never reach the queue");
+        }
+
+        private class ThrowingCustomEvent : IEvent
+        {
+            public string EventName => "custom_event";
+            public Dictionary<string, object> ToProperties() => throw new InvalidOperationException("boom");
+        }
+
+        [Test]
+        public void Track_CustomEventThrows_DropsWithWarn()
         {
             ImmutableAudience.Init(MakeConfig());
 
@@ -413,12 +438,12 @@ namespace Immutable.Audience.Tests
             Log.Writer = lines.Add;
             try
             {
-                // Purchase with no Value set: ToProperties throws; Track must
-                // catch, warn, and drop rather than ship an incomplete event.
-                Assert.DoesNotThrow(() => ImmutableAudience.Track(new Purchase { Currency = "USD" }));
-                // Assert the stable parts (event-type name and trailing "Dropping")
-                // so the test survives any change to the exception type or message.
-                Assert.That(lines, Has.Some.Contains(nameof(Purchase)));
+                // A consumer's own custom IEvent (not one of Immutable's built-in
+                // types) is not held to the same "throw straight through" standard:
+                // we can't predict what a third-party implementation might throw,
+                // so it's caught, warned, and dropped instead of crashing the game.
+                Assert.DoesNotThrow(() => ImmutableAudience.Track(new ThrowingCustomEvent()));
+                Assert.That(lines, Has.Some.Contains(nameof(ThrowingCustomEvent)));
                 Assert.That(lines, Has.Some.Contains("Dropping"));
             }
             finally { Log.Writer = null; }
@@ -427,8 +452,8 @@ namespace Immutable.Audience.Tests
             var queueDir = AudiencePaths.QueueDir(_testDir);
             var contents = Directory.GetFiles(queueDir, "*.json")
                 .Select(File.ReadAllText).ToList();
-            Assert.IsFalse(contents.Any(c => c.Contains("\"purchase\"")),
-                "purchase event with missing required Value must be dropped, not enqueued");
+            Assert.IsFalse(contents.Any(c => c.Contains("custom_event")),
+                "custom event whose ToProperties() throws must be dropped, not enqueued");
         }
 
         [Test]
@@ -448,6 +473,51 @@ namespace Immutable.Audience.Tests
 
             Assert.Throws<ArgumentException>(() => ImmutableAudience.Track((string)null));
             Assert.Throws<ArgumentException>(() => ImmutableAudience.Track(""));
+        }
+
+        [Test]
+        public void Track_StringOverload_ReservedEventMissingRequiredProps_Throws()
+        {
+            // The typed IEvent classes can't stop a caller from bypassing them
+            // entirely and calling the string overload directly for a reserved
+            // event name; this closes that gap.
+            ImmutableAudience.Init(MakeConfig());
+
+            Assert.Throws<ArgumentException>(
+                () => ImmutableAudience.Track("purchase", new Dictionary<string, object> { ["currency"] = "USD" }),
+                "purchase is missing required 'value'");
+            Assert.Throws<ArgumentException>(
+                () => ImmutableAudience.Track("progression"),
+                "progression is missing required 'status'");
+            Assert.Throws<ArgumentException>(
+                () => ImmutableAudience.Track("resource", new Dictionary<string, object> { ["flow"] = "source" }),
+                "resource is missing required 'currency' and 'amount'");
+            Assert.Throws<ArgumentException>(
+                () => ImmutableAudience.Track("achievement_unlocked", new Dictionary<string, object> { ["achievement_id"] = "a1" }),
+                "achievement_unlocked is missing required 'achievement_name'");
+        }
+
+        [Test]
+        public void Track_StringOverload_ReservedEventWithAllRequiredProps_DoesNotThrow()
+        {
+            ImmutableAudience.Init(MakeConfig());
+
+            Assert.DoesNotThrow(() => ImmutableAudience.Track("purchase",
+                new Dictionary<string, object> { ["currency"] = "USD", ["value"] = 9.99m }));
+            Assert.DoesNotThrow(() => ImmutableAudience.Track("progression",
+                new Dictionary<string, object> { ["status"] = "start" }));
+            Assert.DoesNotThrow(() => ImmutableAudience.Track("resource",
+                new Dictionary<string, object> { ["flow"] = "source", ["currency"] = "gold", ["amount"] = 10f }));
+            Assert.DoesNotThrow(() => ImmutableAudience.Track("achievement_unlocked",
+                new Dictionary<string, object> { ["achievement_id"] = "a1", ["achievement_name"] = "First Steps" }));
+        }
+
+        [Test]
+        public void Track_StringOverload_UnrecognisedEventName_DoesNotValidate()
+        {
+            ImmutableAudience.Init(MakeConfig());
+
+            Assert.DoesNotThrow(() => ImmutableAudience.Track("some_custom_event"));
         }
 
         [Test]
@@ -674,7 +744,7 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.Track(new Purchase
             {
                 Currency = "USD",
-                Value = 9.99m
+                Value = "9.99"
             });
             ImmutableAudience.Shutdown();
 
@@ -958,7 +1028,7 @@ namespace Immutable.Audience.Tests
             var sessionId = ImmutableAudience.SessionId;
             Assert.IsFalse(string.IsNullOrEmpty(sessionId), "sanity: a session should be active after Init");
 
-            ImmutableAudience.Track(new Purchase { Currency = "USD", Value = 9.99m });
+            ImmutableAudience.Track(new Purchase { Currency = "USD", Value = "9.99" });
             ImmutableAudience.FlushQueueToDiskForTesting();
 
             var queueDir = AudiencePaths.QueueDir(_testDir);

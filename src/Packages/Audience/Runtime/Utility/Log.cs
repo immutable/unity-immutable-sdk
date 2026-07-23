@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 
 namespace Immutable.Audience
 {
@@ -76,6 +77,10 @@ namespace Immutable.Audience
 
         internal static string TrackIEventEmptyName(string evtTypeName) =>
             $"Track(IEvent): {evtTypeName}.EventName returned null or empty.";
+
+        internal static string TrackStringMissingRequiredProps(string eventName, IReadOnlyList<string> missing) =>
+            $"Track(\"{eventName}\", ...) is missing required propert{(missing.Count > 1 ? "ies" : "y")}: "
+            + $"{string.Join(", ", missing)}.";
 
         // ---- Identify / Alias ----
         // Empty/malformed ids are caller bugs: thrown as ArgumentException, not
