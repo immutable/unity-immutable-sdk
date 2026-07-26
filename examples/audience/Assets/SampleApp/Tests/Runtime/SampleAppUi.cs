@@ -52,7 +52,6 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
             internal const string Flush = "btn-flush";
             internal const string Reset = "btn-reset";
             internal const string Shutdown = "btn-shutdown";
-            internal const string DeleteData = "btn-delete-data";
             internal const string ConsentNone = "btn-consent-none";
             internal const string ConsentAnon = "btn-consent-anon";
             internal const string ConsentFull = "btn-consent-full";
@@ -148,7 +147,6 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
             internal const string Flush = "flush()";
             internal const string Reset = "reset()";
             internal const string Shutdown = "shutdown()";
-            internal const string DeleteData = "deleteData()";
             internal const string Track = "track()";
             internal const string SetConsent = "setConsent()";
             internal const string Identify = "identify()";

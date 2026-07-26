@@ -580,67 +580,6 @@ namespace Immutable.Audience
             newSession?.Start();
         }
 
-        /// <summary>
-        /// Asks the backend to erase this player's data.
-        /// </summary>
-        /// <param name="userId">
-        /// Optional. The known user ID to delete. When null, the SDK uses
-        /// the device's persisted anonymous ID.
-        /// </param>
-        /// <returns>A task that completes when the backend has responded.</returns>
-        public static Task DeleteData(string? userId = null)
-        {
-            if (!_initialized) return Task.CompletedTask;
-
-            var config = _config;
-            var client = _controlClient;
-            if (config == null || client == null) return Task.CompletedTask;
-
-            string query;
-            if (!string.IsNullOrEmpty(userId))
-            {
-                query = "userId=" + Uri.EscapeDataString(userId);
-            }
-            else
-            {
-                // Get (not GetOrCreate): a fresh install must not register an id just to delete it.
-                var anonymousId = Identity.Get(config.PersistentDataPath!);
-                if (string.IsNullOrEmpty(anonymousId))
-                    return Task.CompletedTask;
-                query = "anonymousId=" + Uri.EscapeDataString(anonymousId);
-            }
-
-            var url = Constants.DataUrl(config.BaseUrl) + "?" + query;
-            var onError = config.OnError;
-            var publishableKey = config.PublishableKey;
-            var cancellationToken = _shutdownCancellationSource?.Token ?? CancellationToken.None;
-
-            return Task.Run(async () =>
-            {
-                try
-                {
-                    using var request = new HttpRequestMessage(HttpMethod.Delete, url);
-                    request.Headers.Add(Constants.PublishableKeyHeader, publishableKey);
-                    using var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-                    if (!response.IsSuccessStatusCode)
-                    {
-                        NotifyErrorCallback(onError, AudienceErrorCode.NetworkError,
-                            $"Data delete failed with status {(int)response.StatusCode}");
-                    }
-                }
-                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-                {
-                    // Shutdown cancelled; caller is tearing down, no error fired.
-                }
-                catch (Exception ex)
-                {
-                    NotifyErrorCallback(onError, AudienceErrorCode.NetworkError,
-                        $"Data delete threw: {ex.Message}");
-                }
-            });
-        }
-
         private static void NotifyErrorCallback(Action<AudienceError>? onError, AudienceErrorCode code, string message)
         {
             if (onError == null) return;

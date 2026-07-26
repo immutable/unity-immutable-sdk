@@ -17,7 +17,7 @@ namespace Immutable.Audience
         private static volatile string? _cachedDeviceId;
         private static readonly object _sync = new object();
 
-        // Returns the existing anonymous ID without creating one. Used by DeleteData.
+        // Returns the existing anonymous ID without creating one.
         internal static string? Get(string persistentDataPath)
         {
             if (_cachedAnonId != null) return _cachedAnonId;

@@ -158,11 +158,6 @@
                                 <ui:Label class="btn-label" text="Shutdown" />
                                 <ui:Label class="btn-sig" text="shutdown()" />
                             </ui:Button>
-
-                            <ui:Button name="btn-delete-data" class="with-sig">
-                                <ui:Label class="btn-label" text="Delete data" />
-                                <ui:Label class="btn-sig" text="deleteData()" />
-                            </ui:Button>
                         </ui:VisualElement>
 
                     </ui:VisualElement>
