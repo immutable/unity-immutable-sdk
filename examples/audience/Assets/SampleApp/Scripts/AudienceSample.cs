@@ -99,20 +99,6 @@ namespace Immutable.Audience.Samples.SampleApp
             catch (Exception ex) { AppendLog("flush()", ex.Message, LogLevel.Err, LogSource.App); }
         }
 
-        private async Task OnDeleteDataAsync()
-        {
-            AppendLog("deleteData()", "erasure request dispatched", LogLevel.Info, LogSource.App);
-            try
-            {
-                await ImmutableAudience.DeleteData();
-                AppendLog("deleteData()", "backend acknowledged", LogLevel.Ok, LogSource.App);
-            }
-            catch (Exception ex)
-            {
-                AppendLog("deleteData()", ex.Message, LogLevel.Err, LogSource.App);
-            }
-        }
-
         private async Task OnRequestAttAsync()
         {
             AppendLog("requestTrackingAuthorizationAsync()", "ATT request dispatched", LogLevel.Info, LogSource.App);

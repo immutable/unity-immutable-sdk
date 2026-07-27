@@ -222,7 +222,7 @@ namespace Immutable.Audience.Tests
         }
 
         // -----------------------------------------------------------------
-        // Get (non-creating read for DeleteData)
+        // Get (non-creating read)
         // -----------------------------------------------------------------
 
         [Test]

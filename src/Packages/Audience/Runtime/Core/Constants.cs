@@ -8,7 +8,6 @@ namespace Immutable.Audience
 
         internal const string MessagesPath = "/v1/audience/messages";
         internal const string ConsentPath = "/v1/audience/tracking-consent";
-        internal const string DataPath = "/v1/audience/data";
 
         internal const int DefaultFlushIntervalSeconds = 5;
         internal const int DefaultFlushSize = 20;
@@ -29,8 +28,6 @@ namespace Immutable.Audience
             BaseUrl(baseUrlOverride) + MessagesPath;
         internal static string ConsentUrl(string? baseUrlOverride = null) =>
             BaseUrl(baseUrlOverride) + ConsentPath;
-        internal static string DataUrl(string? baseUrlOverride = null) =>
-            BaseUrl(baseUrlOverride) + DataPath;
 
         internal static string BaseUrl(string? baseUrlOverride = null)
         {

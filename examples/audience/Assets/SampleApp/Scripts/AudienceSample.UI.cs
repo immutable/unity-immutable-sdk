@@ -54,7 +54,7 @@ namespace Immutable.Audience.Samples.SampleApp
         private Toggle _testMode;
         private DropdownField _initialConsent;
         private Toggle _debug, _enableMobileAttribution;
-        private Button _btnInit, _btnFlush, _btnReset, _btnShutdown, _btnDeleteData, _btnRequestAtt;
+        private Button _btnInit, _btnFlush, _btnReset, _btnShutdown, _btnRequestAtt;
 
         // ---- UXML element fields (Consent tab) ----
 
@@ -203,7 +203,6 @@ namespace Immutable.Audience.Samples.SampleApp
             _btnFlush       = Require<Button>("btn-flush");
             _btnReset       = Require<Button>("btn-reset");
             _btnShutdown    = Require<Button>("btn-shutdown");
-            _btnDeleteData  = Require<Button>("btn-delete-data");
             _btnRequestAtt  = Require<Button>("btn-request-att");
 
             ApplyMobilePlatformVisibility();
@@ -334,7 +333,6 @@ namespace Immutable.Audience.Samples.SampleApp
             _btnFlush.clicked += async () => await OnFlushAsync();
             _btnReset.clicked += OnReset;
             _btnShutdown.clicked += OnShutdown;
-            _btnDeleteData.clicked += async () => await OnDeleteDataAsync();
             _btnRequestAtt.clicked += async () => await OnRequestAttAsync();
             _btnIdentify.clicked += OnIdentify;
             _btnIdentifyTraits.clicked += OnIdentifyTraits;
@@ -635,7 +633,7 @@ namespace Immutable.Audience.Samples.SampleApp
 
         private void RefreshInitState()
         {
-            foreach (var b in new[] { _btnFlush, _btnReset, _btnShutdown, _btnDeleteData, _btnCustomEvent, _btnIdentify, _btnIdentifyTraits })
+            foreach (var b in new[] { _btnFlush, _btnReset, _btnShutdown, _btnCustomEvent, _btnIdentify, _btnIdentifyTraits })
                 b.SetEnabled(_initialised);
             foreach (var p in _consentPills.Values) p.SetEnabled(_initialised);
             foreach (var btn in _typedEventsHost.Query<Button>().ToList()) btn.SetEnabled(_initialised);

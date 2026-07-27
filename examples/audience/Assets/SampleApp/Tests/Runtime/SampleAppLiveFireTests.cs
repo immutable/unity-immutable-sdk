@@ -389,20 +389,6 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
         }
 
         [UnityTest]
-        public IEnumerator DeleteData_AcknowledgesFromBackend()
-        {
-            // DeleteData hits the control-plane HTTP endpoint, distinct from
-            // the event-batch POST. Catches IL2CPP strips on the control HttpClient
-            // path that the regular Flush tests don't exercise.
-            yield return LoadAndInit();
-
-            _root!.Q<Button>(SampleAppUi.Buttons.DeleteData).Click();
-            yield return SampleAppTestHelpers.WaitForLogEntry(_root, SampleAppUi.LogLabels.DeleteData, LogLevels.Ok, 30f);
-
-            AssertNoErrors();
-        }
-
-        [UnityTest]
         public IEnumerator ReInit_AfterShutdown_AcceptsTrack()
         {
             // Shutdown clears _initialised; the same player must accept a
