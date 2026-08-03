@@ -11,6 +11,7 @@ namespace Immutable.Audience
             string eventName,
             string? anonymousId,
             string? userId,
+            string? identityType,
             string? deviceId,
             string packageVersion,
             string consentLevel,
@@ -27,6 +28,9 @@ namespace Immutable.Audience
 
             if (!string.IsNullOrEmpty(userId))
                 msg[MessageFields.UserId] = Truncate(userId, Constants.MaxFieldLength);
+
+            if (!string.IsNullOrEmpty(identityType))
+                msg[MessageFields.IdentityType] = Truncate(identityType, Constants.MaxFieldLength);
 
             if (!string.IsNullOrEmpty(deviceId))
                 msg[MessageFields.DeviceId] = Truncate(deviceId, Constants.MaxFieldLength);
@@ -65,7 +69,7 @@ namespace Immutable.Audience
             if (!string.IsNullOrEmpty(deviceId))
                 msg[MessageFields.DeviceId] = Truncate(deviceId, Constants.MaxFieldLength);
 
-            msg["identityType"] = Truncate(identityType, Constants.MaxFieldLength);
+            msg[MessageFields.IdentityType] = Truncate(identityType, Constants.MaxFieldLength);
 
             if (traits != null && traits.Count > 0)
             {

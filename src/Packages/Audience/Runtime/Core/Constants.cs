@@ -50,6 +50,7 @@ namespace Immutable.Audience
     {
         internal const string Type = "type";
         internal const string UserId = "userId";
+        internal const string IdentityType = "identityType";
         internal const string DeviceId = "deviceId";
         internal const string ConsentLevel = "consentLevel";
         internal const string SessionId = "sessionId";

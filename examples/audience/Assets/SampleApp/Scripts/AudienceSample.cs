@@ -30,9 +30,8 @@ namespace Immutable.Audience.Samples.SampleApp
         private bool _initialised;
         private Action<string>? _priorSdkLogWriter;
 
-        // Sample-side identity mirror. SDK owns UserId; type, traits, and
-        // aliases are tracked here for the Identity panel.
-        private string? _mirrorIdentityType;
+        // Sample-side identity mirror. SDK owns UserId and CurrentIdentityType;
+        // traits and aliases are tracked here for the Identity panel.
         private Dictionary<string, object>? _mirrorTraits;
         private readonly List<string> _mirrorAliases = new List<string>();
 
@@ -192,7 +191,7 @@ namespace Immutable.Audience.Samples.SampleApp
             // before this line runs. The one silent no-op left is consent
             // below Full, which the UserId check below still catches.
             var accepted = string.Equals(ImmutableAudience.UserId, f.Id, StringComparison.Ordinal);
-            if (accepted) { _mirrorIdentityType = f.Type; _mirrorTraits = traits; }
+            if (accepted) _mirrorTraits = traits;
             OnSdkStateChanged();
             var payload = new Dictionary<string, object>
             {
@@ -210,7 +209,7 @@ namespace Immutable.Audience.Samples.SampleApp
             if (string.IsNullOrEmpty(userId)) throw new InvalidOperationException("no active identity; call Identify first");
             var traits = ParseTraits(CaptureTraitsUpdate());
             if (traits == null || traits.Count == 0) throw new InvalidOperationException("traits required");
-            ImmutableAudience.Identify(userId, ParseIdentityType(_mirrorIdentityType), traits);
+            ImmutableAudience.Identify(userId, ImmutableAudience.CurrentIdentityType ?? IdentityType.Custom, traits);
             _mirrorTraits = traits;
             OnSdkStateChanged();
             return Json.Serialize(traits, 2);
@@ -382,7 +381,6 @@ namespace Immutable.Audience.Samples.SampleApp
 
         private void ResetIdentityMirror()
         {
-            _mirrorIdentityType = null;
             _mirrorTraits = null;
             _mirrorAliases.Clear();
         }

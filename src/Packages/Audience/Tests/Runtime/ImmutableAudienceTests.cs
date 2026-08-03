@@ -121,6 +121,22 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
+        public void CurrentIdentityType_AfterIdentifyAndReset_TracksState()
+        {
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
+            Assert.IsNull(ImmutableAudience.CurrentIdentityType,
+                "CurrentIdentityType should be null until Identify is called");
+
+            ImmutableAudience.Identify("player-42", IdentityType.Steam);
+            Assert.AreEqual(IdentityType.Steam, ImmutableAudience.CurrentIdentityType,
+                "CurrentIdentityType must reflect the most recent Identify call");
+
+            ImmutableAudience.Reset();
+            Assert.IsNull(ImmutableAudience.CurrentIdentityType,
+                "Reset must clear CurrentIdentityType so the next player is not attributed to the previous one");
+        }
+
+        [Test]
         public void AnonymousId_ConsentNone_ReturnsNull()
         {
             // Anonymous identifier is consent-gated: below tracking consent,
@@ -211,6 +227,39 @@ namespace Immutable.Audience.Tests
 
             Assert.IsTrue(blobs.Any(b => b.Contains("\"deviceId\":")),
                 "track events must include deviceId at Anonymous+ consent");
+        }
+
+        [Test]
+        public void IdentityType_PersistsFromIdentifyOntoSubsequentTrackEvents()
+        {
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
+            ImmutableAudience.Identify("player-42", IdentityType.Steam);
+            ImmutableAudience.Track("post_identify_event");
+            ImmutableAudience.FlushQueueToDiskForTesting();
+
+            var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
+            var blobs = Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText).ToList();
+
+            Assert.IsTrue(
+                blobs.Any(b => b.Contains("\"eventName\":\"post_identify_event\"") && b.Contains("\"identityType\":\"steam\"")),
+                "track events after Identify must carry the identityType from that Identify call");
+        }
+
+        [Test]
+        public void IdentityType_ClearedByReset_AbsentFromSubsequentTrackEvents()
+        {
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
+            ImmutableAudience.Identify("player-42", IdentityType.Steam);
+            ImmutableAudience.Reset();
+            ImmutableAudience.Track("post_reset_event");
+            ImmutableAudience.FlushQueueToDiskForTesting();
+
+            var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
+            var blobs = Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText).ToList();
+            var postResetBlob = blobs.First(b => b.Contains("\"eventName\":\"post_reset_event\""));
+
+            Assert.IsFalse(postResetBlob.Contains("\"identityType\":"),
+                "track events after Reset must not carry a stale identityType");
         }
 
         [Test]
@@ -1421,8 +1470,9 @@ namespace Immutable.Audience.Tests
             // recorded before the downgrade keep the userId/consent they were
             // captured with and are intentionally not rewritten.
             //
-            // Sabotage: remove the `m.Remove(MessageFields.UserId)` in
-            // EnqueueTrack and this test leaks reproducibly.
+            // Sabotage: remove either `m.Remove(MessageFields.UserId)` or
+            // `m.Remove(MessageFields.IdentityType)` in EnqueueTrack and this
+            // test leaks reproducibly.
             const int trackersPerIteration = 4;
             const string testUserId = "user_race_stress";
 
@@ -1452,14 +1502,50 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.FlushQueueToDiskForTesting();
 
             int userIdLeaks = 0;
+            int identityTypeLeaks = 0;
             if (Directory.Exists(queueDir))
             {
-                userIdLeaks = Directory.GetFiles(queueDir, "*.json")
-                    .Select(File.ReadAllText)
-                    .Count(c => c.Contains($"\"{testUserId}\""));
+                var blobs = Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText).ToList();
+                userIdLeaks = blobs.Count(c => c.Contains($"\"{testUserId}\""));
+                identityTypeLeaks = blobs.Count(c => c.Contains("\"identityType\":\"steam\""));
             }
 
             Assert.AreEqual(0, userIdLeaks, "track events must not retain userId past SetConsent(Anonymous)");
+            Assert.AreEqual(0, identityTypeLeaks, "track events must not retain identityType past SetConsent(Anonymous)");
+        }
+
+        [Test]
+        public void SetConsent_DowngradeToAnonymous_ClearsIdentityTypeAndCurrentIdentityType()
+        {
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
+            ImmutableAudience.Identify("player-42", IdentityType.Steam);
+
+            ImmutableAudience.SetConsent(ConsentLevel.Anonymous);
+            Assert.IsNull(ImmutableAudience.CurrentIdentityType,
+                "CurrentIdentityType must be cleared by a downgrade out of Full consent");
+
+            ImmutableAudience.Track("post_downgrade_event");
+            ImmutableAudience.FlushQueueToDiskForTesting();
+
+            var queueDir = Path.Combine(_testDir, "imtbl_audience", "queue");
+            var blobs = Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText).ToList();
+            var postDowngradeBlob = blobs.First(b => b.Contains("\"eventName\":\"post_downgrade_event\""));
+
+            Assert.IsFalse(postDowngradeBlob.Contains("\"identityType\":"),
+                "track events after a consent downgrade must not carry a stale identityType");
+        }
+
+        [Test]
+        public void Shutdown_ClearsCurrentIdentityType()
+        {
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
+            ImmutableAudience.Identify("player-42", IdentityType.Steam);
+            Assert.AreEqual(IdentityType.Steam, ImmutableAudience.CurrentIdentityType);
+
+            ImmutableAudience.Shutdown();
+
+            Assert.IsNull(ImmutableAudience.CurrentIdentityType,
+                "Shutdown must clear CurrentIdentityType so a later Init doesn't inherit a stale identity");
         }
 
         [Test]

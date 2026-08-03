@@ -656,7 +656,7 @@ namespace Immutable.Audience.Samples.SampleApp
         private void RefreshIdentityPanel()
         {
             _identityUserId.text       = ImmutableAudience.UserId ?? "—";
-            _identityIdentityType.text = _mirrorIdentityType ?? "—";
+            _identityIdentityType.text = ImmutableAudience.CurrentIdentityType?.ToLowercaseString() ?? "—";
             _identityTraits.text       = _mirrorTraits != null ? Json.Serialize(_mirrorTraits, 2) : "—";
             _identityAliases.text      = _mirrorAliases.Count == 0 ? "—" : string.Join("\n", _mirrorAliases);
         }
