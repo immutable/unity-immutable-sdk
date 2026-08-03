@@ -17,6 +17,15 @@ namespace Immutable.Audience.Tests
     [TestFixture]
     internal class HttpTransportTests
     {
+        // Response body fixtures.
+        private const string MalformedResponseBody = "not-json";
+        private const string EmptyJsonObjectBody = "{}";
+
+        // Exception messages thrown by MockHandler factories.
+        private const string ConnectionRefusedMessage = "connection refused";
+        private const string RequestTimedOutMessage = "Request timed out";
+        private const string SimulatedCancellationMessage = "simulated";
+
         private string _testDir = null!;
         private DiskStore _store = null!;
 
@@ -49,8 +58,8 @@ namespace Immutable.Audience.Tests
         [Test]
         public async Task SendBatchAsync_200_DeletesFilesFromDisk()
         {
-            _store.Write(WireFixture.Track((MessageFields.EventName, "a")));
-            _store.Write(WireFixture.Track((MessageFields.EventName, "b")));
+            _store.Write(WireFixture.Track((MessageFields.EventName, TestEventNames.PlaceholderA)));
+            _store.Write(WireFixture.Track((MessageFields.EventName, TestEventNames.PlaceholderB)));
 
             var handler = new MockHandler(HttpStatusCode.OK, $"{{\"accepted\":2,\"{ResponseFields.Rejected}\":0}}");
             using var transport = new HttpTransport(_store, TestDefaults.PublishableKey, handler: handler);
@@ -65,7 +74,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public async Task SendBatchAsync_200_SendsGzippedPayloadWithCorrectHeaders()
         {
-            _store.Write(WireFixture.Track((MessageFields.EventName, "test")));
+            _store.Write(WireFixture.Track((MessageFields.EventName, TestEventNames.PlaceholderTest)));
 
             byte[]? capturedBody = null;
             string? capturedKey = null;
@@ -97,7 +106,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public async Task SendBatchAsync_200_SendsPlainJsonPayloadWithoutContentEncoding()
         {
-            _store.Write(WireFixture.Track((MessageFields.EventName, "test")));
+            _store.Write(WireFixture.Track((MessageFields.EventName, TestEventNames.PlaceholderTest)));
 
             string? capturedKey = null;
             string? capturedContentType = null;
@@ -176,7 +185,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public async Task SendBatchAsync_EmptyQueue_ReturnsFalse()
         {
-            var handler = new MockHandler(HttpStatusCode.OK, "{}");
+            var handler = new MockHandler(HttpStatusCode.OK, EmptyJsonObjectBody);
             using var transport = new HttpTransport(_store, TestDefaults.PublishableKey, handler: handler);
 
             var sent = await transport.SendBatchAsync();
@@ -322,8 +331,8 @@ namespace Immutable.Audience.Tests
             // per-message validation errors. The batch is deleted (retries
             // would not help) and the count is surfaced via onError so
             // studios can observe silently dropped events.
-            _store.Write(WireFixture.Track((MessageFields.EventName, "a")));
-            _store.Write(WireFixture.Track((MessageFields.EventName, "b")));
+            _store.Write(WireFixture.Track((MessageFields.EventName, TestEventNames.PlaceholderA)));
+            _store.Write(WireFixture.Track((MessageFields.EventName, TestEventNames.PlaceholderB)));
 
             var handler = new MockHandler(HttpStatusCode.OK, $"{{\"accepted\":1,\"{ResponseFields.Rejected}\":1}}");
             AudienceError? reportedError = null;
@@ -341,7 +350,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public async Task SendBatchAsync_200_ZeroRejected_DoesNotFireOnError()
         {
-            _store.Write(WireFixture.Track((MessageFields.EventName, "a")));
+            _store.Write(WireFixture.Track((MessageFields.EventName, TestEventNames.PlaceholderA)));
 
             var handler = new MockHandler(HttpStatusCode.OK, $"{{\"accepted\":1,\"{ResponseFields.Rejected}\":0}}");
             AudienceError? reportedError = null;
@@ -357,9 +366,9 @@ namespace Immutable.Audience.Tests
         public async Task SendBatchAsync_200_MalformedBody_TreatsAsZeroRejected()
         {
             // Malformed diagnostic body must not block the success path.
-            _store.Write(WireFixture.Track((MessageFields.EventName, "a")));
+            _store.Write(WireFixture.Track((MessageFields.EventName, TestEventNames.PlaceholderA)));
 
-            var handler = new MockHandler(HttpStatusCode.OK, "not-json");
+            var handler = new MockHandler(HttpStatusCode.OK, MalformedResponseBody);
             AudienceError? reportedError = null;
             using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 onError: e => reportedError = e, handler: handler);
@@ -491,7 +500,7 @@ namespace Immutable.Audience.Tests
         {
             _store.Write(WireFixture.Track());
 
-            var handler = new MockHandler(() => throw new HttpRequestException("connection refused"));
+            var handler = new MockHandler(() => throw new HttpRequestException(ConnectionRefusedMessage));
             AudienceError? reportedError = null;
             using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 onError: e => reportedError = e, handler: handler);
@@ -514,7 +523,7 @@ namespace Immutable.Audience.Tests
             // NetworkError path.
             _store.Write(WireFixture.Track());
 
-            var handler = new MockHandler(() => throw new TaskCanceledException("Request timed out"));
+            var handler = new MockHandler(() => throw new TaskCanceledException(RequestTimedOutMessage));
             AudienceError? reportedError = null;
             using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 onError: e => reportedError = e, handler: handler);
@@ -540,7 +549,7 @@ namespace Immutable.Audience.Tests
             // forever: nothing ever drains, nothing ever throws.
             _store.Write(WireFixture.Track());
 
-            var handler = new MockHandler(() => throw new OperationCanceledException("simulated"));
+            var handler = new MockHandler(() => throw new OperationCanceledException(SimulatedCancellationMessage));
             AudienceError? reportedError = null;
             using var transport = new HttpTransport(_store, TestDefaults.PublishableKey,
                 onError: e => reportedError = e, handler: handler);

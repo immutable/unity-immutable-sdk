@@ -42,7 +42,7 @@ namespace Immutable.Audience.Tests
 
         [TestCase(null)]
         [TestCase("")]
-        [TestCase("unknown_provider")]
+        [TestCase(TestFixtures.UnknownProvider)]
         [TestCase("steamX")]
         public void ParseLowercaseString_FallsBackToCustomForUnknownOrEmpty(string? wire)
         {

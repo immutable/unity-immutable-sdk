@@ -15,7 +15,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Progression_WithoutStatus_ThrowsOnToProperties()
         {
-            var evt = new Progression { World = "tutorial" };
+            var evt = new Progression { World = TestFixtures.ProgressionWorldTutorial };
 
             var ex = Assert.Throws<ArgumentException>(() => evt.ToProperties());
             Assert.That(ex!.Message, Does.Contain("Status"));
@@ -27,7 +27,7 @@ namespace Immutable.Audience.Tests
             var evt = new Progression
             {
                 Status = ProgressionStatus.Complete,
-                World = "tutorial",
+                World = TestFixtures.ProgressionWorldTutorial,
                 Level = "1",
                 Score = 1500,
                 DurationSec = 120.5f
@@ -36,7 +36,7 @@ namespace Immutable.Audience.Tests
             var props = evt.ToProperties();
 
             Assert.AreEqual(ProgressionStatus.Complete.ToLowercaseString(), props[EventPropertyKeys.Status]);
-            Assert.AreEqual("tutorial", props[EventPropertyKeys.World]);
+            Assert.AreEqual(TestFixtures.ProgressionWorldTutorial, props[EventPropertyKeys.World]);
             Assert.AreEqual("1", props[EventPropertyKeys.Level]);
             Assert.AreEqual(1500, props[EventPropertyKeys.Score]);
             Assert.AreEqual(120.5f, props[EventPropertyKeys.DurationSec]);
@@ -61,19 +61,19 @@ namespace Immutable.Audience.Tests
             var evt = new Resource
             {
                 Flow = ResourceFlow.Source,
-                Currency = "gold",
+                Currency = TestFixtures.ResourceCurrency,
                 Amount = 100,
-                ItemType = "quest_reward",
-                ItemId = "main_quest_01"
+                ItemType = TestFixtures.ResourceItemType,
+                ItemId = TestFixtures.ResourceItemId
             };
 
             var props = evt.ToProperties();
 
             Assert.AreEqual(ResourceFlow.Source.ToLowercaseString(), props[EventPropertyKeys.Flow]);
-            Assert.AreEqual("gold", props[EventPropertyKeys.Currency]);
+            Assert.AreEqual(TestFixtures.ResourceCurrency, props[EventPropertyKeys.Currency]);
             Assert.AreEqual(100m, props[EventPropertyKeys.Amount]);
-            Assert.AreEqual("quest_reward", props[EventPropertyKeys.ItemType]);
-            Assert.AreEqual("main_quest_01", props[EventPropertyKeys.ItemId]);
+            Assert.AreEqual(TestFixtures.ResourceItemType, props[EventPropertyKeys.ItemType]);
+            Assert.AreEqual(TestFixtures.ResourceItemId, props[EventPropertyKeys.ItemId]);
         }
 
         [Test]
@@ -85,7 +85,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Resource_WithoutFlow_ThrowsOnToProperties()
         {
-            var evt = new Resource { Currency = "gold", Amount = 100 };
+            var evt = new Resource { Currency = TestFixtures.ResourceCurrency, Amount = 100 };
 
             var ex = Assert.Throws<ArgumentException>(() => evt.ToProperties());
             Assert.That(ex!.Message, Does.Contain("Flow"));
@@ -103,7 +103,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Resource_WithoutAmount_ThrowsOnToProperties()
         {
-            var evt = new Resource { Flow = ResourceFlow.Source, Currency = "gold" };
+            var evt = new Resource { Flow = ResourceFlow.Source, Currency = TestFixtures.ResourceCurrency };
 
             var ex = Assert.Throws<ArgumentException>(() => evt.ToProperties());
             Assert.That(ex!.Message, Does.Contain("Amount"));
@@ -114,28 +114,28 @@ namespace Immutable.Audience.Tests
         {
             var evt = new Purchase
             {
-                Currency = "USD",
+                Currency = TestFixtures.UsdCurrency,
                 Value = 9.99m,
-                ItemId = "gem_pack_01",
-                ItemName = "Starter Gem Pack",
+                ItemId = TestFixtures.PurchaseItemId,
+                ItemName = TestFixtures.PurchaseItemName,
                 Quantity = 1,
-                TransactionId = "txn_abc123"
+                TransactionId = TestFixtures.PurchaseTransactionId
             };
 
             var props = evt.ToProperties();
 
-            Assert.AreEqual("USD", props[EventPropertyKeys.Currency]);
+            Assert.AreEqual(TestFixtures.UsdCurrency, props[EventPropertyKeys.Currency]);
             Assert.AreEqual(9.99m, props[EventPropertyKeys.Value]);
-            Assert.AreEqual("gem_pack_01", props[EventPropertyKeys.ItemId]);
-            Assert.AreEqual("Starter Gem Pack", props[EventPropertyKeys.ItemName]);
+            Assert.AreEqual(TestFixtures.PurchaseItemId, props[EventPropertyKeys.ItemId]);
+            Assert.AreEqual(TestFixtures.PurchaseItemName, props[EventPropertyKeys.ItemName]);
             Assert.AreEqual(1, props[EventPropertyKeys.Quantity]);
-            Assert.AreEqual("txn_abc123", props[EventPropertyKeys.TransactionId]);
+            Assert.AreEqual(TestFixtures.PurchaseTransactionId, props[EventPropertyKeys.TransactionId]);
         }
 
         [Test]
         public void Purchase_OptionalFieldsOmitted_WhenNull()
         {
-            var props = new Purchase { Currency = "EUR", Value = 5.00m }.ToProperties();
+            var props = new Purchase { Currency = TestFixtures.EurCurrency, Value = 5.00m }.ToProperties();
 
             Assert.IsTrue(props.ContainsKey(EventPropertyKeys.Currency));
             Assert.IsTrue(props.ContainsKey(EventPropertyKeys.Value));
@@ -163,7 +163,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Purchase_WithoutValue_ThrowsOnToProperties()
         {
-            var evt = new Purchase { Currency = "USD" };
+            var evt = new Purchase { Currency = TestFixtures.UsdCurrency };
 
             var ex = Assert.Throws<ArgumentException>(() => evt.ToProperties());
             Assert.That(ex!.Message, Does.Contain("Value"));
@@ -172,9 +172,9 @@ namespace Immutable.Audience.Tests
         [Test]
         public void MilestoneReached_ProducesCorrectProperties()
         {
-            var props = new MilestoneReached { Name = "first_boss_defeated" }.ToProperties();
+            var props = new MilestoneReached { Name = TestFixtures.MilestoneName }.ToProperties();
 
-            Assert.AreEqual("first_boss_defeated", props[EventPropertyKeys.Name]);
+            Assert.AreEqual(TestFixtures.MilestoneName, props[EventPropertyKeys.Name]);
             Assert.AreEqual(1, props.Count);
         }
 

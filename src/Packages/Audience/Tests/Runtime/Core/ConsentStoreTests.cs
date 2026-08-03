@@ -50,7 +50,7 @@ namespace Immutable.Audience.Tests
             // A garbage value that isn't a valid enum int.
             var dir = AudiencePaths.AudienceDir(_testDir);
             Directory.CreateDirectory(dir);
-            File.WriteAllText(AudiencePaths.ConsentFile(_testDir), "not-an-int");
+            File.WriteAllText(AudiencePaths.ConsentFile(_testDir), TestFixtures.NotAnInt);
 
             Assert.IsNull(ConsentStore.Load(_testDir));
         }
