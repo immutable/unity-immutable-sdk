@@ -118,6 +118,17 @@ namespace Immutable.Audience
         public static string? UserId => _state.UserId;
 
         /// <summary>
+        /// The identity provider from the most recent
+        /// <see cref="Identify(string, IdentityType, Dictionary{string, object})"/>
+        /// call.
+        /// </summary>
+        /// <remarks>
+        /// Null after <see cref="Reset"/> or when consent is below
+        /// <see cref="ConsentLevel.Full"/>.
+        /// </remarks>
+        public static IdentityType? CurrentIdentityType => _state.IdentityType;
+
+        /// <summary>
         /// An anonymous, persistent ID for this device.
         /// </summary>
         /// <remarks>
@@ -230,7 +241,7 @@ namespace Immutable.Audience
                 Log.Enabled = config.Debug;
                 // Persisted consent overrides the config default (prior downgrade survives restart).
                 var initialLevel = ConsentStore.Load(config.PersistentDataPath) ?? config.Consent;
-                _state = new ConsentState(initialLevel, null);
+                _state = new ConsentState(initialLevel, null, null);
 
                 _store = new DiskStore(config.PersistentDataPath);
                 _queue = new EventQueue(_store, config.FlushIntervalSeconds, config.FlushSize);
@@ -419,7 +430,8 @@ namespace Immutable.Audience
             var anonymousId = Identity.GetOrCreate(config.PersistentDataPath!, state.Level);
             var deviceId = Identity.GetOrCreateDeviceId(config.PersistentDataPath!, state.Level);
             var userId = state.Level == ConsentLevel.Full ? state.UserId : null;
-            var msg = MessageBuilder.Track(eventName, anonymousId, userId, deviceId, Constants.LibraryVersion,
+            var identityType = state.Level == ConsentLevel.Full ? state.IdentityType?.ToLowercaseString() : null;
+            var msg = MessageBuilder.Track(eventName, anonymousId, userId, identityType, deviceId, Constants.LibraryVersion,
                 state.Level.ToLowercaseString(), properties, sessionId, config.TestMode, timestampOverride);
             EnqueueTrack(msg);
         }
@@ -479,7 +491,7 @@ namespace Immutable.Audience
                 }
                 config = _config;
                 if (config == null) return;
-                _state = current with { UserId = userId };
+                _state = current with { UserId = userId, IdentityType = identityType };
             }
 
             var anonymousId = Identity.GetOrCreate(config.PersistentDataPath!, level);
@@ -564,7 +576,7 @@ namespace Immutable.Audience
 
                 oldSession = _session;
                 queueForPurge = _queue;
-                _state = _state with { UserId = null };
+                _state = _state with { UserId = null, IdentityType = null };
 
                 // Swap under the lock so racing SetConsent/OnPause/OnResume see
                 // either the old, the new, or null; never a torn reference.
@@ -642,12 +654,13 @@ namespace Immutable.Audience
                 previous = previousState.Level;
                 if (level == previous) return;
 
-                // Atomic swap: Level + UserId publish together. Drop UserId on
-                // any downgrade out of Full so a racing Track/Identify cannot
-                // observe (Anonymous, oldUserId).
+                // Atomic swap: Level + UserId + IdentityType publish together.
+                // Drop both on any downgrade out of Full so a racing
+                // Track/Identify cannot observe (Anonymous, oldUserId).
                 _state = new ConsentState(
                     level,
-                    level == ConsentLevel.Full ? previousState.UserId : null);
+                    level == ConsentLevel.Full ? previousState.UserId : null,
+                    level == ConsentLevel.Full ? previousState.IdentityType : null);
 
                 if (level == ConsentLevel.None)
                 {
@@ -931,7 +944,7 @@ namespace Immutable.Audience
 
                 _config = null;
                 _store = null;
-                _state = _state with { UserId = null };
+                _state = _state with { UserId = null, IdentityType = null };
             }
 
             // Phase 2 outside _initLock: end session, drain timers, flush, dispose.
@@ -1026,7 +1039,10 @@ namespace Immutable.Audience
                 if (!state.Level.CanTrack()) return null;
                 m[MessageFields.ConsentLevel] = state.Level.ToLowercaseString();
                 if (state.Level != ConsentLevel.Full)
+                {
                     m.Remove(MessageFields.UserId);
+                    m.Remove(MessageFields.IdentityType);
+                }
                 return m;
             });
         }
