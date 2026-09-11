@@ -110,7 +110,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Alias_AllFourFieldsPresent()
         {
-            var result = MessageBuilder.Alias("from-id", "email", "to-id", "steam", null, PackageVersion, "full");
+            var result = MessageBuilder.Alias("from-id", "email", "to-id", "steam", null, null, PackageVersion, "full");
 
             Assert.AreEqual("alias", result["type"]);
             Assert.AreEqual("from-id", result["fromId"]);
@@ -122,10 +122,39 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Alias_DeviceId_PresentWhenProvided()
         {
-            var result = MessageBuilder.Alias("from-id", "email", "to-id", "steam", DeviceId, PackageVersion, "full");
+            var result = MessageBuilder.Alias("from-id", "email", "to-id", "steam", null, DeviceId, PackageVersion, "full");
 
             Assert.IsTrue(result.ContainsKey("deviceId"));
             Assert.AreEqual(DeviceId, result["deviceId"]);
+        }
+
+        [Test]
+        public void Alias_AnonymousId_PresentWhenProvided()
+        {
+            // anonymousId isn't used for the merge (fromId/toId are), but is still
+            // required so alias messages have the same shape as every other event.
+            var result = MessageBuilder.Alias("from-id", "email", "to-id", "steam", AnonId, null, PackageVersion, "full");
+
+            Assert.IsTrue(result.ContainsKey("anonymousId"));
+            Assert.AreEqual(AnonId, result["anonymousId"]);
+        }
+
+        [Test]
+        public void Alias_AnonymousId_AbsentWhenNull()
+        {
+            var result = MessageBuilder.Alias("from-id", "email", "to-id", "steam", null, null, PackageVersion, "full");
+
+            Assert.IsFalse(result.ContainsKey("anonymousId"));
+        }
+
+        [Test]
+        public void Alias_AnonymousIdLongerThan256Chars_TruncatedTo256()
+        {
+            var longAnonId = new string('a', 300);
+
+            var result = MessageBuilder.Alias("from-id", "email", "to-id", "steam", longAnonId, null, PackageVersion, "full");
+
+            Assert.AreEqual(256, ((string)result["anonymousId"]).Length);
         }
 
         [Test]
@@ -133,7 +162,7 @@ namespace Immutable.Audience.Tests
         {
             var track = MessageBuilder.Track("evt", null, null, null, null, PackageVersion, Consent);
             var identify = MessageBuilder.Identify(null, "u1", null, "steam", PackageVersion, "full");
-            var alias = MessageBuilder.Alias("f", "t1", "t", "t2", null, PackageVersion, "full");
+            var alias = MessageBuilder.Alias("f", "t1", "t", "t2", null, null, PackageVersion, "full");
 
             foreach (var msg in new[] { track, identify, alias })
             {
@@ -148,7 +177,7 @@ namespace Immutable.Audience.Tests
         {
             var track = MessageBuilder.Track("evt", null, null, null, null, PackageVersion, Consent);
             var identify = MessageBuilder.Identify(null, "u1", null, "steam", PackageVersion, "full");
-            var alias = MessageBuilder.Alias("f", "t1", "t", "t2", null, PackageVersion, "full");
+            var alias = MessageBuilder.Alias("f", "t1", "t", "t2", null, null, PackageVersion, "full");
 
             Assert.AreEqual("unity", track["surface"]);
             Assert.AreEqual("unity", identify["surface"]);
@@ -162,7 +191,7 @@ namespace Immutable.Audience.Tests
             // backend records the explicit level instead of inferring it.
             var track = MessageBuilder.Track("evt", null, null, null, null, PackageVersion, "anonymous");
             var identify = MessageBuilder.Identify(null, "u1", null, "steam", PackageVersion, "full");
-            var alias = MessageBuilder.Alias("f", "t1", "t", "t2", null, PackageVersion, "full");
+            var alias = MessageBuilder.Alias("f", "t1", "t", "t2", null, null, PackageVersion, "full");
 
             Assert.AreEqual("anonymous", track["consentLevel"]);
             Assert.AreEqual("full", identify["consentLevel"]);
@@ -283,7 +312,7 @@ namespace Immutable.Audience.Tests
         {
             var track = MessageBuilder.Track("evt", null, null, null, null, PackageVersion, Consent, testMode: true);
             var identify = MessageBuilder.Identify(null, "u1", null, "steam", PackageVersion, "full", testMode: true);
-            var alias = MessageBuilder.Alias("f", "t1", "t", "t2", null, PackageVersion, "full", testMode: true);
+            var alias = MessageBuilder.Alias("f", "t1", "t", "t2", null, null, PackageVersion, "full", testMode: true);
 
             foreach (var msg in new[] { track, identify, alias })
             {
@@ -296,7 +325,7 @@ namespace Immutable.Audience.Tests
         {
             yield return MessageBuilder.Track("evt", null, null, null, null, PackageVersion, Consent);
             yield return MessageBuilder.Identify(null, "u1", null, "steam", PackageVersion, "full");
-            yield return MessageBuilder.Alias("f", "t1", "t", "t2", null, PackageVersion, "full");
+            yield return MessageBuilder.Alias("f", "t1", "t", "t2", null, null, PackageVersion, "full");
         }
 
         // -----------------------------------------------------------------
@@ -342,7 +371,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Alias_SessionIdProvided_PresentInDict()
         {
-            var result = MessageBuilder.Alias("from-id", "email", "to-id", "steam", null, PackageVersion, "full",
+            var result = MessageBuilder.Alias("from-id", "email", "to-id", "steam", null, null, PackageVersion, "full",
                 sessionId: "session-1");
 
             Assert.IsTrue(result.ContainsKey("sessionId"));
@@ -352,7 +381,7 @@ namespace Immutable.Audience.Tests
         [Test]
         public void Alias_SessionIdNull_AbsentFromDict()
         {
-            var result = MessageBuilder.Alias("from-id", "email", "to-id", "steam", null, PackageVersion, "full");
+            var result = MessageBuilder.Alias("from-id", "email", "to-id", "steam", null, null, PackageVersion, "full");
 
             Assert.IsFalse(result.ContainsKey("sessionId"));
         }
