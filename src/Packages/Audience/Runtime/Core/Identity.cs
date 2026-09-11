@@ -8,6 +8,8 @@ namespace Immutable.Audience
     // Manages the anonymous ID and device ID for this device.
     // Both are UUIDs persisted to {"anonymousId":"<uuid>","deviceId":"<uuid>"}.
     // deviceId survives RotateAnonymousId (logout); both are wiped by Reset (opt-out).
+    // If disk read/write fails, both fall back to in-memory-only ids for the rest
+    // of this session rather than leaving anonymousId unset (see LoadOrGenerate).
     //
     // Static caches persist across play sessions in the Unity Editor with domain reload
     // disabled. ImmutableAudience.Init() calls ClearCache() via ResetState() to handle that.
@@ -146,13 +148,12 @@ namespace Immutable.Audience
         // Slow path: read from disk or generate fresh IDs. Must be called under _sync.
         private static void LoadOrGenerate(string persistentDataPath)
         {
+            var filePath = AudiencePaths.IdentityFile(persistentDataPath);
+            string anonId;
+            string deviceId;
+
             try
             {
-                var dir = AudiencePaths.AudienceDir(persistentDataPath);
-                Directory.CreateDirectory(dir);
-
-                var filePath = AudiencePaths.IdentityFile(persistentDataPath);
-
                 if (File.Exists(filePath))
                 {
                     var content = File.ReadAllText(filePath).Trim();
@@ -166,21 +167,35 @@ namespace Immutable.Audience
                     }
 
                     // Partial or old plain-string format: keep anon_id, generate device_id, migrate file.
-                    var anonId = string.IsNullOrEmpty(existingAnonId) ? Guid.NewGuid().ToString() : existingAnonId;
-                    var deviceId = Guid.NewGuid().ToString();
-                    WriteFile(filePath, anonId, deviceId);
-                    _cachedAnonId = anonId;
-                    _cachedDeviceId = deviceId;
-                    return;
+                    anonId = string.IsNullOrEmpty(existingAnonId) ? Guid.NewGuid().ToString() : existingAnonId;
+                    deviceId = Guid.NewGuid().ToString();
                 }
-
+                else
                 {
-                    var anonId = Guid.NewGuid().ToString();
-                    var deviceId = Guid.NewGuid().ToString();
-                    WriteFile(filePath, anonId, deviceId);
-                    _cachedAnonId = anonId;
-                    _cachedDeviceId = deviceId;
+                    anonId = Guid.NewGuid().ToString();
+                    deviceId = Guid.NewGuid().ToString();
                 }
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            {
+                // Reading failed, so there's nothing pre-existing to reuse.
+                Log.Warn(AudienceLogs.IdentityLoadOrGenerateFailed(ex));
+                _cachedAnonId ??= Guid.NewGuid().ToString();
+                _cachedDeviceId ??= Guid.NewGuid().ToString();
+                return;
+            }
+
+            // Cache in memory before attempting to persist: a write failure below must
+            // not lose an anonId that was already legitimately read from disk (e.g. a
+            // legacy-format file being migrated), and must still guarantee some id for
+            // the rest of this session even when nothing existed to begin with.
+            _cachedAnonId = anonId;
+            _cachedDeviceId = deviceId;
+
+            try
+            {
+                Directory.CreateDirectory(AudiencePaths.AudienceDir(persistentDataPath));
+                WriteFile(filePath, anonId, deviceId);
             }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
             {
