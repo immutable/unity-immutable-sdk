@@ -80,6 +80,29 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
+        public void ExistingFile_LegacyPlainString_MigrationWriteFails_PreservesReadAnonId()
+        {
+            // The anon_id here was already legitimately persisted and successfully
+            // read; only the migration write (adding device_id) fails. That must not
+            // discard the real anon_id for a fresh random one.
+            var legacyAnonId = "already-persisted-legacy-id";
+            var dir = AudiencePaths.AudienceDir(_testDir);
+            Directory.CreateDirectory(dir);
+            var identityFile = AudiencePaths.IdentityFile(_testDir);
+            File.WriteAllText(identityFile, legacyAnonId);
+
+            // Force WriteFile's tmp-then-replace to fail by blocking its .tmp path
+            // with a directory: File.WriteAllText(tmpPath, ...) throws
+            // UnauthorizedAccessException when tmpPath is an existing directory.
+            Directory.CreateDirectory(identityFile + ".tmp");
+
+            var result = Identity.GetOrCreate(_testDir, ConsentLevel.Anonymous);
+
+            Assert.AreEqual(legacyAnonId, result,
+                "a failed migration write must not discard an anon_id that was already legitimately persisted");
+        }
+
+        [Test]
         public void SecondCall_ReturnsSameAnonId()
         {
             var id1 = Identity.GetOrCreate(_testDir, ConsentLevel.Anonymous);
@@ -97,6 +120,50 @@ namespace Immutable.Audience.Tests
 
             var filePath = AudiencePaths.IdentityFile(_testDir);
             Assert.IsFalse(File.Exists(filePath), "identity file must not be written when consent is None");
+        }
+
+        [Test]
+        public void PersistenceFails_FallsBackToInMemoryId()
+        {
+            // Force Directory.CreateDirectory(AudienceDir) to throw IOException by
+            // pre-creating a *file* at the exact path the identity directory needs.
+            File.WriteAllText(AudiencePaths.AudienceDir(_testDir), "blocking file");
+
+            var id = Identity.GetOrCreate(_testDir, ConsentLevel.Anonymous);
+
+            Assert.IsNotNull(id, "anonymousId must still be populated even when persistence fails");
+            Assert.IsNotEmpty(id);
+        }
+
+        [Test]
+        public void PersistenceFails_InMemoryIdStableForRestOfSession()
+        {
+            File.WriteAllText(AudiencePaths.AudienceDir(_testDir), "blocking file");
+
+            var id1 = Identity.GetOrCreate(_testDir, ConsentLevel.Anonymous);
+            var id2 = Identity.GetOrCreate(_testDir, ConsentLevel.Anonymous);
+
+            Assert.AreEqual(id1, id2, "the in-memory fallback id must not change between calls in the same session");
+        }
+
+        [Test]
+        public void ReadFails_FallsBackToInMemoryIds()
+        {
+            // Distinct from the persistence-failure tests above: here the *read*
+            // itself throws (exercising LoadOrGenerate's first catch block), not
+            // just the later write, so there's nothing pre-existing to reuse at all.
+            var identityFile = AudiencePaths.IdentityFile(_testDir);
+            Directory.CreateDirectory(AudiencePaths.AudienceDir(_testDir));
+            File.WriteAllText(identityFile, "{\"anonymousId\":\"existing-anon\",\"deviceId\":\"existing-device\"}");
+            using var exclusiveLock = new FileStream(identityFile, FileMode.Open, FileAccess.Read, FileShare.None);
+
+            var anonId = Identity.GetOrCreate(_testDir, ConsentLevel.Anonymous);
+            var deviceId = Identity.GetOrCreateDeviceId(_testDir, ConsentLevel.Anonymous);
+
+            Assert.IsNotNull(anonId, "anonymousId must still be populated even when the read itself fails");
+            Assert.IsNotEmpty(anonId);
+            Assert.IsNotNull(deviceId);
+            Assert.IsNotEmpty(deviceId);
         }
 
         // -----------------------------------------------------------------

@@ -547,9 +547,10 @@ namespace Immutable.Audience
             var config = _config;
             if (config == null) return;
 
+            var anonymousId = Identity.GetOrCreate(config.PersistentDataPath!, state.Level);
             var deviceId = Identity.GetOrCreateDeviceId(config.PersistentDataPath!, state.Level);
             var msg = MessageBuilder.Alias(fromId, fromType.ToLowercaseString(), toId, toType.ToLowercaseString(),
-                deviceId, Constants.LibraryVersion, state.Level.ToLowercaseString(), _session?.SessionId, config.TestMode);
+                anonymousId, deviceId, Constants.LibraryVersion, state.Level.ToLowercaseString(), _session?.SessionId, config.TestMode);
             EnqueueIdentity(msg);
         }
 

@@ -88,6 +88,7 @@ namespace Immutable.Audience
             string fromType,
             string toId,
             string toType,
+            string? anonymousId,
             string? deviceId,
             string packageVersion,
             string consentLevel,
@@ -99,6 +100,9 @@ namespace Immutable.Audience
             msg["fromType"] = Truncate(fromType, Constants.MaxFieldLength);
             msg["toId"] = Truncate(toId, Constants.MaxFieldLength);
             msg["toType"] = Truncate(toType, Constants.MaxFieldLength);
+
+            if (!string.IsNullOrEmpty(anonymousId))
+                msg["anonymousId"] = Truncate(anonymousId, Constants.MaxFieldLength);
 
             if (!string.IsNullOrEmpty(deviceId))
                 msg[MessageFields.DeviceId] = Truncate(deviceId, Constants.MaxFieldLength);

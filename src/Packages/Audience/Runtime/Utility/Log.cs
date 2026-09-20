@@ -206,7 +206,7 @@ namespace Immutable.Audience
 
         internal static string IdentityLoadOrGenerateFailed(Exception ex) =>
             $"Identity file read/write failed. {ex.GetType().Name}: {ex.Message}. " +
-            "Events will ship without identity fields this session.";
+            "Continuing with in-memory ids for this session; any values generated just now will not persist across restarts.";
 
         // ---- Install-time device/context collection ----
 

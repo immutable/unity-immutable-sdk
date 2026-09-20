@@ -958,6 +958,55 @@ namespace Immutable.Audience.Tests
         }
 
         [Test]
+        public void Alias_FullConsent_IncludesAnonymousId()
+        {
+            // anonymousId isn't used for the merge (fromId/toId are), but every
+            // message type, alias included, must still carry it.
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
+            var expectedAnonId = Identity.GetOrCreate(_testDir, ConsentLevel.Full);
+
+            ImmutableAudience.Alias("steam123", IdentityType.Steam, "email|user_456", IdentityType.Passport);
+            ImmutableAudience.Shutdown();
+
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            var contents = Directory.GetFiles(queueDir, "*.json")
+                .Select(File.ReadAllText).ToList();
+            Assert.IsTrue(
+                contents.Any(c => c.Contains("\"alias\"") && c.Contains($"\"anonymousId\":\"{expectedAnonId}\"")),
+                "an Alias() envelope must carry the session's actual anonymousId, not just any anonymousId key");
+        }
+
+        [Test]
+        public void Track_IdentityPersistenceFails_QueuedEventStillIncludesAnonymousId()
+        {
+            // End-to-end regression test for the actual bug: block only the identity
+            // file specifically (not the whole AudienceDir, which the queue also
+            // lives under and must keep working) by pre-creating a directory at the
+            // exact path the identity file needs, then verify a real Track() call
+            // still enqueues an envelope carrying anonymousId.
+            var identityFile = AudiencePaths.IdentityFile(_testDir);
+            Directory.CreateDirectory(identityFile);
+
+            try
+            {
+                ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));
+                ImmutableAudience.Track("test_event");
+                ImmutableAudience.Shutdown();
+
+                var queueDir = AudiencePaths.QueueDir(_testDir);
+                var contents = Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText).ToList();
+                Assert.IsTrue(contents.Any(c => c.Contains("\"test_event\"") && c.Contains("\"anonymousId\"")),
+                    "a track event must still carry anonymousId even when identity persistence fails");
+            }
+            finally
+            {
+                // TearDown calls Identity.Reset, which File.Deletes this path; it must
+                // be a plain file (or absent) again, not the blocking directory.
+                Directory.Delete(identityFile, recursive: true);
+            }
+        }
+
+        [Test]
         public void Alias_PassportToWithInvalidIdFormat_Throws()
         {
             ImmutableAudience.Init(MakeConfig(ConsentLevel.Full));
