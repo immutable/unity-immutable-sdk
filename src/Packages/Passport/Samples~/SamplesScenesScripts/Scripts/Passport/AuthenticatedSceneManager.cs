@@ -4,13 +4,6 @@ using System;
 
 public class AuthenticatedSceneManager : MonoBehaviour
 {
-    [Header("IMX Buttons")]
-    [SerializeField] private Button ConnectButton;
-    [SerializeField] private Button IsRegisteredOffchainButton;
-    [SerializeField] private Button RegisterOffchainButton;
-    [SerializeField] private Button GetAddressButton;
-    [SerializeField] private Button NftTransferButton;
-
     [Header("zkEVM Buttons")]
     [SerializeField] private Button ConnectEvmButton;
     [SerializeField] private Button SendTransactionButton;
@@ -19,27 +12,9 @@ public class AuthenticatedSceneManager : MonoBehaviour
     [SerializeField] private Button GetTransactionReceiptButton;
     [SerializeField] private Button SignTypedDataButton;
 
-    public Action OnImxConnected;
-
-    void Awake()
-    {
-        OnImxConnected = () => { UpdateImxButtonStates(); };
-    }
-
     void Start()
     {
-        UpdateImxButtonStates();
         UpdateZkEvmButtonStates();
-    }
-
-    public void UpdateImxButtonStates()
-    {
-        bool isConnected = SampleAppManager.IsConnectedToImx;
-        if (ConnectButton != null) ConnectButton.gameObject.SetActive(!isConnected);
-        if (IsRegisteredOffchainButton != null) IsRegisteredOffchainButton.gameObject.SetActive(isConnected);
-        if (RegisterOffchainButton != null) RegisterOffchainButton.gameObject.SetActive(isConnected);
-        if (GetAddressButton != null) GetAddressButton.gameObject.SetActive(isConnected);
-        if (NftTransferButton != null) NftTransferButton.gameObject.SetActive(isConnected);
     }
 
     public void UpdateZkEvmButtonStates()

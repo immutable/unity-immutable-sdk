@@ -23,7 +23,6 @@ public class LogoutScript : MonoBehaviour
         try
         {
             await Passport.Instance.Logout();
-            SampleAppManager.IsConnectedToImx = false;
             SampleAppManager.IsConnectedToZkEvm = false;
             AuthenticatedSceneManager.NavigateToUnauthenticatedScene();
         }

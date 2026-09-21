@@ -20,5 +20,4 @@ public class UnauthenticatedSceneManager : MonoBehaviour
             Debug.LogError("[UnauthenticatedSceneManager] Passport.Instance is null");
         }
     }
-    
 }
