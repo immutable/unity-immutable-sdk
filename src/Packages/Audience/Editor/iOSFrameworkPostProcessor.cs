@@ -50,7 +50,7 @@ namespace Immutable.Audience.Editor
             if (target != BuildTarget.iOS) return;
 
 #if UNITY_IOS
-            if (!AttributionDefineEnabled()) return;
+            if (!MobileAttributionDefine.IsEnabled(BuildTargetGroup.iOS)) return;
 
             var pbxPath = PBXProject.GetPBXProjectPath(pathToBuiltProject);
             if (!File.Exists(pbxPath))
@@ -74,19 +74,6 @@ namespace Immutable.Audience.Editor
 
             pbx.WriteToFile(pbxPath);
 #endif
-        }
-
-        // Reads the iOS-target define list specifically. The post-processor
-        // mutates iOS build output regardless of which target the editor is
-        // currently focused on.
-        private static bool AttributionDefineEnabled()
-        {
-            var defines = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.iOS) ?? string.Empty;
-            foreach (var define in defines.Split(';'))
-            {
-                if (define.Trim() == iOSInfoPlistPostProcessor.AttributionDefine) return true;
-            }
-            return false;
         }
     }
 }
