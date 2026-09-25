@@ -29,7 +29,7 @@ namespace Immutable.Audience.Editor
             if (target != BuildTarget.iOS) return;
 
 #if UNITY_IOS
-            if (!AttributionDefineEnabled()) return;
+            if (!MobileAttributionDefine.IsEnabled(BuildTargetGroup.iOS)) return;
 
             var builtManifestPath = FindBuiltManifest(pathToBuiltProject);
             if (builtManifestPath == null)
@@ -119,15 +119,5 @@ namespace Immutable.Audience.Editor
             purposes.AddString("NSPrivacyCollectedDataTypePurposeAnalytics");
         }
 #endif
-
-        private static bool AttributionDefineEnabled()
-        {
-            var defines = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.iOS) ?? string.Empty;
-            foreach (var define in defines.Split(';'))
-            {
-                if (define.Trim() == iOSInfoPlistPostProcessor.AttributionDefine) return true;
-            }
-            return false;
-        }
     }
 }

@@ -34,7 +34,6 @@ namespace Immutable.Audience.Editor
     internal static class iOSInfoPlistPostProcessor
     {
         internal const int CallbackOrder = 9050;
-        internal const string AttributionDefine = "AUDIENCE_MOBILE_ATTRIBUTION";
 
         [PostProcessBuild(CallbackOrder)]
         internal static void OnPostProcessBuild(BuildTarget target, string pathToBuiltProject)
@@ -42,7 +41,7 @@ namespace Immutable.Audience.Editor
             if (target != BuildTarget.iOS) return;
 
 #if UNITY_IOS
-            if (!AttributionDefineEnabled()) return;
+            if (!MobileAttributionDefine.IsEnabled(BuildTargetGroup.iOS)) return;
 
             var plistPath = Path.Combine(pathToBuiltProject, "Info.plist");
             if (!File.Exists(plistPath))
@@ -68,12 +67,11 @@ namespace Immutable.Audience.Editor
         [MenuItem("Tools/Immutable/Audience/Validate iOS Build Settings")]
         private static void ValidateBuildSettings()
         {
-            if (!AttributionDefineEnabled())
+            if (!MobileAttributionDefine.IsEnabled(BuildTargetGroup.iOS))
             {
                 Debug.LogWarning(
-                    "[ImmutableAudience] AUDIENCE_MOBILE_ATTRIBUTION scripting define is not set " +
-                    "for the iOS player target. The post-processor will not modify Info.plist. " +
-                    "Add the define under Player Settings → Other Settings → Scripting Define Symbols.");
+                    "[ImmutableAudience] Mobile attribution is not enabled for iOS. The post-processor " +
+                    "will not modify Info.plist. Enable it on the AudienceMobileBuildSettings asset.");
                 return;
             }
 
@@ -90,19 +88,6 @@ namespace Immutable.Audience.Editor
                 (ids.Length == 0
                     ? "  (no SKAdNetwork ids configured - set them on the AudienceMobileBuildSettings asset)\n"
                     : string.Concat(System.Array.ConvertAll(ids, id => $"    - {id}\n"))));
-        }
-
-        // Reads the iOS-target define list specifically. The post-processor
-        // mutates iOS build output regardless of which target the editor is
-        // currently focused on.
-        private static bool AttributionDefineEnabled()
-        {
-            var defines = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.iOS) ?? string.Empty;
-            foreach (var define in defines.Split(';'))
-            {
-                if (define.Trim() == AttributionDefine) return true;
-            }
-            return false;
         }
 
 #if UNITY_IOS
