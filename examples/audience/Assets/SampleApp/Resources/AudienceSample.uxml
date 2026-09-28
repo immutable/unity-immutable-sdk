@@ -102,6 +102,15 @@
                                      text="Tags all outbound events with test: true so the backend can filter them from production analytics." />
                         </ui:VisualElement>
 
+                        <ui:VisualElement class="field">
+                            <ui:Toggle name="capture-exceptions" label="CAPTURE EXCEPTIONS" />
+                            <ui:Label class="helper-text below-field"
+                                     text="Send uncaught C# exceptions as exception_captured events." />
+                            <ui:VisualElement class="actions last">
+                                <ui:Button name="btn-throw-test-exception" text="Throw Test Exception" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+
                         <ui:VisualElement name="mobile-attribution-field" class="field">
                             <ui:Toggle name="enable-mobile-attribution" label="MOBILE ATTRIBUTION" />
                             <ui:Label class="helper-text below-field"

@@ -41,6 +41,10 @@ namespace Immutable.Audience
         // Gate against overlapping timer ticks (Timer callbacks run on independent ThreadPool threads).
         private static int _sendInFlight;
 
+        // Mutable, not readonly: tests swap this for one using a fake clock.
+        internal static ExceptionRateLimiter ExceptionRateLimiter =
+            new ExceptionRateLimiter(Constants.MaxCapturedExceptions, TimeSpan.FromSeconds(Constants.ExceptionCaptureRefillSeconds));
+
         // Passport IDs are "<connection>|<id>" (e.g. "email|abc123", "google-oauth2|123")
         // or, for some accounts, a bare UUID with no connection prefix.
         // Not RegexOptions.Compiled: that needs Reflection.Emit, unavailable under IL2CPP/AOT.
@@ -239,6 +243,10 @@ namespace Immutable.Audience
 
                 _config = config;
                 Log.Enabled = config.Debug;
+                // Shutdown() doesn't touch this, so a reinit after Shutdown must
+                // clear it here or an exhausted bucket from the prior run would
+                // silently carry over.
+                ExceptionRateLimiter.Reset();
                 // Persisted consent overrides the config default (prior downgrade survives restart).
                 var initialLevel = ConsentStore.Load(config.PersistentDataPath) ?? config.Consent;
                 _state = new ConsentState(initialLevel, null, null);
@@ -416,6 +424,25 @@ namespace Immutable.Audience
             }
             if (missing.Count > 0)
                 throw new ArgumentException(AudienceLogs.TrackStringMissingRequiredProps(eventName, missing), nameof(properties));
+        }
+
+        // Called by the Unity layer for every uncaught C# exception.
+        internal static void CaptureException(string exceptionType, string message, string stackTrace)
+        {
+            if (!_initialized) return;
+            if (_config?.ErrorTracking?.CaptureExceptions != true) return;
+
+            var (allowed, firstTimeLimited) = ExceptionRateLimiter.TryConsume(exceptionType);
+            if (firstTimeLimited)
+                Log.Warn(AudienceLogs.ExceptionCaptureRateLimited(exceptionType, Constants.MaxCapturedExceptions));
+            if (!allowed) return;
+
+            Track("exception_captured", new Dictionary<string, object>
+            {
+                ["exception_type"] = exceptionType,
+                ["message"] = message,
+                ["stack_trace"] = stackTrace,
+            });
         }
 
         // Shared tail for both Track overloads and TrackFromSession.
@@ -1006,6 +1033,7 @@ namespace Immutable.Audience
                 // Defensive: Shutdown nulls _session too, but a future refactor
                 // that bails before that null must not leak a stale Session.
                 _session = null;
+                ExceptionRateLimiter.Reset();
                 Identity.ClearCache();
             }
         }

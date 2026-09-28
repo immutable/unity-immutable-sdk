@@ -35,6 +35,8 @@ namespace Immutable.Audience.Tests
             ImmutableAudience.MobileInstallReferrerProvider = null;
             ImmutableAudience.MobileATTStatusProvider = null;
             ImmutableAudience.MobileIDFAProvider = null;
+            ImmutableAudience.ExceptionRateLimiter =
+                new ExceptionRateLimiter(Constants.MaxCapturedExceptions, TimeSpan.FromSeconds(Constants.ExceptionCaptureRefillSeconds));
             Identity.Reset(_testDir);
             if (Directory.Exists(_testDir))
                 Directory.Delete(_testDir, recursive: true);
@@ -2829,6 +2831,137 @@ namespace Immutable.Audience.Tests
             var blobs = Directory.GetFiles(AudiencePaths.QueueDir(_testDir), "*.json")
                 .Select(File.ReadAllText).ToList();
             Assert.IsFalse(blobs.Any(b => b.Contains("\"tracking_authorization_changed\"")));
+        }
+
+        // -----------------------------------------------------------------
+        // CaptureException / exception_captured
+        //
+        // A no-op unless ErrorTracking.CaptureExceptions is set. Rate limited
+        // per exception type via ExceptionRateLimiter.
+        // -----------------------------------------------------------------
+
+        private List<string> ReadQueuedBlobs()
+        {
+            var queueDir = AudiencePaths.QueueDir(_testDir);
+            if (!Directory.Exists(queueDir)) return new List<string>();
+            return Directory.GetFiles(queueDir, "*.json").Select(File.ReadAllText).ToList();
+        }
+
+        [Test]
+        public void CaptureException_Disabled_DoesNotTrack()
+        {
+            ImmutableAudience.Init(MakeConfig(ConsentLevel.Anonymous));
+
+            ImmutableAudience.CaptureException("NullReferenceException", "Object reference not set", "at Foo()");
+            ImmutableAudience.FlushQueueToDiskForTesting();
+
+            Assert.IsFalse(ReadQueuedBlobs().Any(b => b.Contains("\"exception_captured\"")));
+        }
+
+        [Test]
+        public void CaptureException_Enabled_SendsEventWithProperties()
+        {
+            var config = MakeConfig(ConsentLevel.Anonymous);
+            config.ErrorTracking = new ErrorTrackingConfig { CaptureExceptions = true };
+            ImmutableAudience.Init(config);
+
+            ImmutableAudience.CaptureException("NullReferenceException", "Object reference not set", "at Foo()");
+            ImmutableAudience.FlushQueueToDiskForTesting();
+
+            var blobs = ReadQueuedBlobs();
+            Assert.IsTrue(blobs.Any(b =>
+                b.Contains("\"exception_captured\"") &&
+                b.Contains("NullReferenceException") &&
+                b.Contains("Object reference not set") &&
+                b.Contains("at Foo()")));
+        }
+
+        [Test]
+        public void CaptureException_RespectsConsent_NoneIsANoOp()
+        {
+            var config = MakeConfig(ConsentLevel.None);
+            config.ErrorTracking = new ErrorTrackingConfig { CaptureExceptions = true };
+            ImmutableAudience.Init(config);
+
+            ImmutableAudience.CaptureException("Exception", "boom", "at Foo()");
+            ImmutableAudience.FlushQueueToDiskForTesting();
+
+            Assert.IsFalse(ReadQueuedBlobs().Any(b => b.Contains("\"exception_captured\"")));
+        }
+
+        [Test]
+        public void CaptureException_BurstsUpToCapacity_ThenStops()
+        {
+            var config = MakeConfig(ConsentLevel.Anonymous);
+            config.ErrorTracking = new ErrorTrackingConfig { CaptureExceptions = true };
+            ImmutableAudience.Init(config);
+
+            for (var i = 0; i < Constants.MaxCapturedExceptions + 5; i++)
+                ImmutableAudience.CaptureException("Exception", $"boom {i}", "at Foo()");
+            ImmutableAudience.FlushQueueToDiskForTesting();
+
+            var captured = ReadQueuedBlobs().Count(b => b.Contains("\"exception_captured\""));
+            Assert.AreEqual(Constants.MaxCapturedExceptions, captured,
+                "a single exception type must stop at its burst capacity even though more kept firing");
+        }
+
+        [Test]
+        public void CaptureException_DifferentTypes_DoNotShareABucket()
+        {
+            var config = MakeConfig(ConsentLevel.Anonymous);
+            config.ErrorTracking = new ErrorTrackingConfig { CaptureExceptions = true };
+            ImmutableAudience.Init(config);
+
+            for (var i = 0; i < Constants.MaxCapturedExceptions; i++)
+                ImmutableAudience.CaptureException("NullReferenceException", $"boom {i}", "at Foo()");
+            ImmutableAudience.CaptureException("ArgumentException", "different bug", "at Bar()");
+            ImmutableAudience.FlushQueueToDiskForTesting();
+
+            Assert.IsTrue(ReadQueuedBlobs().Any(b => b.Contains("\"exception_type\":\"ArgumentException\"")),
+                "a different exception type must have its own bucket, unaffected by another type's cap");
+        }
+
+        [Test]
+        public void CaptureException_RefillsOverTime_AllowsMoreOfTheSameType()
+        {
+            var fakeNow = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            ImmutableAudience.ExceptionRateLimiter =
+                new ExceptionRateLimiter(Constants.MaxCapturedExceptions, TimeSpan.FromSeconds(Constants.ExceptionCaptureRefillSeconds), () => fakeNow);
+
+            var config = MakeConfig(ConsentLevel.Anonymous);
+            config.ErrorTracking = new ErrorTrackingConfig { CaptureExceptions = true };
+            ImmutableAudience.Init(config);
+
+            for (var i = 0; i < Constants.MaxCapturedExceptions; i++)
+                ImmutableAudience.CaptureException("Exception", $"boom {i}", "at Foo()");
+            fakeNow = fakeNow.AddSeconds(Constants.ExceptionCaptureRefillSeconds);
+            ImmutableAudience.CaptureException("Exception", "boom after refill", "at Foo()");
+            ImmutableAudience.FlushQueueToDiskForTesting();
+
+            var captured = ReadQueuedBlobs().Count(b => b.Contains("\"exception_captured\""));
+            Assert.AreEqual(Constants.MaxCapturedExceptions + 1, captured,
+                "one refill interval should free exactly one more token for the same type");
+        }
+
+        [Test]
+        public void CaptureException_CapIsResetOnFreshInit()
+        {
+            var config = MakeConfig(ConsentLevel.Anonymous);
+            config.ErrorTracking = new ErrorTrackingConfig { CaptureExceptions = true };
+            ImmutableAudience.Init(config);
+            for (var i = 0; i < Constants.MaxCapturedExceptions; i++)
+                ImmutableAudience.CaptureException("Exception", $"boom {i}", "at Foo()");
+            ImmutableAudience.Shutdown();
+
+            var secondConfig = MakeConfig(ConsentLevel.Anonymous);
+            secondConfig.ErrorTracking = new ErrorTrackingConfig { CaptureExceptions = true };
+            ImmutableAudience.Init(secondConfig);
+            ImmutableAudience.CaptureException("Exception", "boom after restart", "at Foo()");
+            ImmutableAudience.FlushQueueToDiskForTesting();
+
+            Assert.IsTrue(ReadQueuedBlobs().Any(b =>
+                b.Contains("\"exception_captured\"") && b.Contains("boom after restart")),
+                "Init must reset rate limit state left over from a prior run, Shutdown alone does not");
         }
     }
 }

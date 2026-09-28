@@ -199,6 +199,12 @@ namespace Immutable.Audience
             $"GAID fetch threw {ex.GetType().Name}: {ex.Message}. " +
             "gaid will not ship on game_launch this session; next launch retries.";
 
+        // ---- Exception capture ----
+
+        internal static string ExceptionCaptureRateLimited(string exceptionType, int max) =>
+            $"\"{exceptionType}\" hit the exception capture rate limit ({max} burst, refilling over time). " +
+            "Further occurrences of this type are dropped until it refills.";
+
         // ---- Identity ----
 
         internal static string IdentityRotateFailed(Exception ex) =>

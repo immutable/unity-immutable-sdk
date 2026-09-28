@@ -349,6 +349,50 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
             yield return FlushAndAssertNoErrors();
         }
 
+        [UnityTest]
+        public IEnumerator ExceptionCapture_WhenEnabled_QueuesEventAndFlushReportsOk()
+        {
+            yield return LoadAndInit(configure: root =>
+            {
+                root.Q<Toggle>(SampleAppUi.Setup.CaptureExceptions).value = true;
+            });
+
+            var queueLabel = _root!.Q<Label>(SampleAppUi.StatusBar.Queue);
+            int.TryParse(queueLabel.text, out var baseline);
+
+            // ignoreFailingMessages doesn't cover LogType.Exception; must be declared expected here.
+            LogAssert.Expect(LogType.Exception, "Exception: Sample app test exception");
+            _root.Q<Button>(SampleAppUi.Buttons.ThrowTestException).Click();
+            yield return SampleAppTestHelpers.WaitForLogEntry(_root, SampleAppUi.LogLabels.ThrowTestException, LogLevels.Ok, 5f);
+
+            yield return SampleAppTestHelpers.WaitForCondition(
+                () => int.TryParse(queueLabel.text, out var current) && current > baseline,
+                2f, "queue size to grow after throwing a test exception with capture enabled");
+
+            yield return FlushAndAssertNoErrors("exception capture enabled");
+        }
+
+        [UnityTest]
+        public IEnumerator ExceptionCapture_WhenDisabled_DoesNotQueueEvent()
+        {
+            // capture-exceptions defaults to off; LoadAndInit leaves it untouched.
+            yield return LoadAndInit();
+
+            var queueLabel = _root!.Q<Label>(SampleAppUi.StatusBar.Queue);
+            int.TryParse(queueLabel.text, out var baseline);
+
+            LogAssert.Expect(LogType.Exception, "Exception: Sample app test exception");
+            _root.Q<Button>(SampleAppUi.Buttons.ThrowTestException).Click();
+            yield return SampleAppTestHelpers.WaitForLogEntry(_root, SampleAppUi.LogLabels.ThrowTestException, LogLevels.Ok, 5f);
+            yield return null;
+
+            int.TryParse(queueLabel.text, out var afterThrow);
+            Assert.AreEqual(baseline, afterThrow,
+                "queue size must not grow from a thrown exception when capture is disabled");
+
+            yield return FlushAndAssertNoErrors("exception capture disabled");
+        }
+
         // ---- Lifecycle / control-plane tests ----
 
         [UnityTest]

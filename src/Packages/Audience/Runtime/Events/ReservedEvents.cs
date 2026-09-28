@@ -22,6 +22,7 @@ namespace Immutable.Audience
                 ["resource"] = new[] { "flow", "currency", "amount" },
                 ["achievement_unlocked"] = new[] { "achievement_id", "achievement_name" },
                 ["milestone_reached"] = new[] { "name" },
+                ["exception_captured"] = new[] { "exception_type", "message", "stack_trace" },
             };
     }
 }
