@@ -16,6 +16,9 @@ namespace Immutable.Audience
         internal const int MaxClockSkewFutureHours = 24; // Backend rejects eventTimestamp further ahead than this.
         internal const int MaxFieldLength = 256; // Backend schema limit.
         internal const int ControlPlaneRequestTimeoutSeconds = 30;
+        // See ExceptionRateLimiter for how these two are used.
+        internal const int MaxCapturedExceptions = 20;
+        internal const int ExceptionCaptureRefillSeconds = 10;
 
         internal const string LibraryName = "com.immutable.audience";
         internal const string LibraryVersion = "0.7.3";

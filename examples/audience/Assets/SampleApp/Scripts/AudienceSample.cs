@@ -156,6 +156,16 @@ namespace Immutable.Audience.Samples.SampleApp
             return Json.Serialize(echo, 2);
         });
 
+        // Logs a fake exception so exception capture (when enabled on the
+        // Setup tab) has something to pick up. Debug.LogException reaches
+        // Unity's LogType.Exception channel the same way a real uncaught
+        // exception would, without actually crashing anything.
+        private void OnThrowTestException() => RunAndLog("throwTestException()", () =>
+        {
+            Debug.LogException(new Exception("Sample app test exception"));
+            return "Logged a test exception via Debug.LogException.";
+        });
+
         // ---- SDK action handlers: consent ----
 
         // None clears the anonymous ID and stops future collection; already-queued
@@ -333,6 +343,7 @@ namespace Immutable.Audience.Samples.SampleApp
                 Debug                   = form.Debug,
                 TestMode                = form.TestMode,
                 EnableMobileAttribution = form.EnableMobileAttribution,
+                ErrorTracking           = new ErrorTrackingConfig { CaptureExceptions = form.CaptureExceptions },
                 OnError                 = onError,
             };
             if (form.FlushIntervalMs is int flushMs && flushMs > 0)
@@ -356,6 +367,7 @@ namespace Immutable.Audience.Samples.SampleApp
                 ["debug"]                    = config.Debug,
                 ["testMode"]                 = config.TestMode,
                 ["enableMobileAttribution"]  = config.EnableMobileAttribution,
+                ["captureExceptions"]        = config.ErrorTracking?.CaptureExceptions ?? false,
                 ["flushIntervalSeconds"]     = config.FlushIntervalSeconds,
                 ["flushSize"]                = config.FlushSize,
                 ["shutdownFlushTimeoutMs"]   = config.ShutdownFlushTimeoutMs,

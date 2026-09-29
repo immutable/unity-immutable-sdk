@@ -44,6 +44,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
             internal const string TestMode = "test-mode";
             internal const string FlushInterval = "flush-interval";
             internal const string FlushSize = "flush-size";
+            internal const string CaptureExceptions = "capture-exceptions";
         }
 
         internal static class Buttons
@@ -56,6 +57,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
             internal const string ConsentAnon = "btn-consent-anon";
             internal const string ConsentFull = "btn-consent-full";
             internal const string CustomEvent = "btn-custom-event";
+            internal const string ThrowTestException = "btn-throw-test-exception";
             internal const string Identify = "btn-identify";
             internal const string IdentifyTraits = "btn-identify-traits";
             internal const string Alias = "btn-alias";
@@ -152,6 +154,7 @@ namespace Immutable.Audience.Samples.SampleApp.Tests
             internal const string Identify = "identify()";
             internal const string IdentifyTraits = "identify(traits)";
             internal const string Alias = "alias()";
+            internal const string ThrowTestException = "throwTestException()";
 
             // Label AudienceSample.cs.RouteSdkLogToPane gives every mirrored SDK log line.
             internal const string Sdk = "sdk";

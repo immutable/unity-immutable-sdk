@@ -91,6 +91,12 @@ namespace Immutable.Audience
         public string[]? SKAdNetworkIds { get; set; }
 
         /// <summary>
+        /// Opts into sending uncaught C# exceptions as events. Null (the
+        /// default) disables capture entirely.
+        /// </summary>
+        public ErrorTrackingConfig? ErrorTracking { get; set; }
+
+        /// <summary>
         /// Interval between automatic flushes to the backend, in seconds.
         /// </summary>
         public int FlushIntervalSeconds { get; set; } = Constants.DefaultFlushIntervalSeconds;

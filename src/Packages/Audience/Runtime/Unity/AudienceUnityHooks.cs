@@ -28,6 +28,8 @@ namespace Immutable.Audience.Unity
             // Avoid stacked subscriptions on reload.
             Application.quitting -= ImmutableAudience.Shutdown;
             Application.quitting += ImmutableAudience.Shutdown;
+            Application.logMessageReceivedThreaded -= OnLogMessageReceived;
+            Application.logMessageReceivedThreaded += OnLogMessageReceived;
 
             _persistentDataPath = Application.persistentDataPath;
             ImmutableAudience.DefaultPersistentDataPathProvider = () => Application.persistentDataPath;
@@ -81,6 +83,21 @@ namespace Immutable.Audience.Unity
 #endif
 
             UnityLifecycleBridge.EnsureExists();
+        }
+
+        // Threaded variant: fires from background threads/jobs too, not just main.
+        private static void OnLogMessageReceived(string condition, string stackTrace, LogType type)
+        {
+            if (type != LogType.Exception) return;
+
+            // Unity formats this as "<ExceptionType>: <Message>". Splitting on
+            // the first ": " recovers the type for grouping; a message that
+            // happens to start with ": " just yields an empty type, never a crash.
+            var separatorIndex = condition.IndexOf(": ", StringComparison.Ordinal);
+            var exceptionType = separatorIndex >= 0 ? condition.Substring(0, separatorIndex) : string.Empty;
+            var message = separatorIndex >= 0 ? condition.Substring(separatorIndex + 2) : condition;
+
+            ImmutableAudience.CaptureException(exceptionType, message, stackTrace);
         }
 
         // Warms the install referrer cache for the next launch and returns

@@ -53,7 +53,7 @@ namespace Immutable.Audience.Samples.SampleApp
         private TextField _publishableKey, _baseUrl, _flushInterval, _flushSize;
         private Toggle _testMode;
         private DropdownField _initialConsent;
-        private Toggle _debug, _enableMobileAttribution;
+        private Toggle _debug, _enableMobileAttribution, _captureExceptions;
         private Button _btnInit, _btnFlush, _btnReset, _btnShutdown, _btnRequestAtt;
 
         // ---- UXML element fields (Consent tab) ----
@@ -64,7 +64,7 @@ namespace Immutable.Audience.Samples.SampleApp
 
         private VisualElement _typedEventsHost;
         private TextField _customEventName, _customEventProps;
-        private Button _btnCustomEvent;
+        private Button _btnCustomEvent, _btnThrowTestException;
 
         // ---- UXML element fields (Identity tab) ----
 
@@ -184,10 +184,11 @@ namespace Immutable.Audience.Samples.SampleApp
             _debug                    = Require<Toggle>("debug");
             _testMode                 = Require<Toggle>("test-mode");
             _enableMobileAttribution  = Require<Toggle>("enable-mobile-attribution");
+            _captureExceptions        = Require<Toggle>("capture-exceptions");
             // Inject a tick Label — Unity 2021.3 runtime panels render the
             // checked state as a plain coloured square otherwise. USS hides
             // the tick when unchecked.
-            foreach (var toggle in new[] { _debug, _testMode, _enableMobileAttribution })
+            foreach (var toggle in new[] { _debug, _testMode, _enableMobileAttribution, _captureExceptions })
             {
                 var checkmark = toggle.Q<VisualElement>(className: "unity-toggle__checkmark");
                 if (checkmark == null) continue;
@@ -218,6 +219,7 @@ namespace Immutable.Audience.Samples.SampleApp
             _customEventName  = Require<TextField>("custom-event-name");
             _customEventProps = Require<TextField>("custom-event-props");
             _btnCustomEvent   = Require<Button>("btn-custom-event");
+            _btnThrowTestException = Require<Button>("btn-throw-test-exception");
 
             _identityUserId       = Require<Label>("identity-user-id");
             _identityIdentityType = Require<Label>("identity-identity-type");
@@ -327,6 +329,7 @@ namespace Immutable.Audience.Samples.SampleApp
             _initialConsent.RegisterValueChangedCallback(_ => RefreshStatusBar());
             _baseUrl.RegisterValueChangedCallback(_ => RefreshStatusBar());
             _enableMobileAttribution.RegisterValueChangedCallback(_ => UpdateAttButtonGate());
+            _captureExceptions.RegisterValueChangedCallback(_ => UpdateThrowTestExceptionButtonGate());
 
             _btnInit.clicked += OnInit;
 
@@ -338,6 +341,7 @@ namespace Immutable.Audience.Samples.SampleApp
             _btnIdentifyTraits.clicked += OnIdentifyTraits;
             _btnAlias.clicked += OnAlias;
             _btnCustomEvent.clicked += OnSendCustomEvent;
+            _btnThrowTestException.clicked += OnThrowTestException;
 
             var btnCopyLog = Require<Button>("btn-copy-log");
             btnCopyLog.clicked += () =>
@@ -640,6 +644,7 @@ namespace Immutable.Audience.Samples.SampleApp
             _btnInit.SetEnabled(!_initialised && !string.IsNullOrWhiteSpace(_publishableKey.value));
             _btnAlias.SetEnabled(_initialised && IsAliasReady());
             UpdateAttButtonGate();
+            UpdateThrowTestExceptionButtonGate();
         }
 
         // ATT prompt is independent of SDK init, but in the demo flow it's
@@ -651,6 +656,15 @@ namespace Immutable.Audience.Samples.SampleApp
             _btnRequestAtt.SetEnabled(
                 !string.IsNullOrWhiteSpace(_publishableKey.value) &&
                 _enableMobileAttribution.value);
+        }
+
+        // Throwing before Init, or with the toggle off, is a harmless no-op
+        // inside the SDK (CaptureException checks _initialized first), but a
+        // confusing one to test with: the button still reports "Ok" while
+        // quietly capturing nothing.
+        private void UpdateThrowTestExceptionButtonGate()
+        {
+            _btnThrowTestException.SetEnabled(_initialised && _captureExceptions.value);
         }
 
         private void RefreshIdentityPanel()
@@ -673,10 +687,11 @@ namespace Immutable.Audience.Samples.SampleApp
             public readonly bool Debug;
             public readonly bool TestMode;
             public readonly bool EnableMobileAttribution;
+            public readonly bool CaptureExceptions;
             public readonly int? FlushIntervalMs;
             public readonly int? FlushSize;
 
-            public InitForm(string publishableKey, string baseUrl, ConsentLevel consent, bool debug, bool testMode, bool enableMobileAttribution, int? flushIntervalMs, int? flushSize)
+            public InitForm(string publishableKey, string baseUrl, ConsentLevel consent, bool debug, bool testMode, bool enableMobileAttribution, bool captureExceptions, int? flushIntervalMs, int? flushSize)
             {
                 PublishableKey = publishableKey;
                 BaseUrl = baseUrl;
@@ -684,6 +699,7 @@ namespace Immutable.Audience.Samples.SampleApp
                 Debug = debug;
                 TestMode = testMode;
                 EnableMobileAttribution = enableMobileAttribution;
+                CaptureExceptions = captureExceptions;
                 FlushIntervalMs = flushIntervalMs;
                 FlushSize = flushSize;
             }
@@ -701,6 +717,7 @@ namespace Immutable.Audience.Samples.SampleApp
                 debug:                   _debug.value,
                 testMode:                _testMode.value,
                 enableMobileAttribution: _enableMobileAttribution.value,
+                captureExceptions:       _captureExceptions.value,
                 flushIntervalMs:         flushIntervalMs,
                 flushSize:               flushSize);
         }
